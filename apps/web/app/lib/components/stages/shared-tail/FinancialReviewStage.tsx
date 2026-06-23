@@ -1078,6 +1078,26 @@ export function FinancialReviewStage() {
               {ko ? "자동 재무 시뮬" : "Financial Simulation"}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+              {/* 손익분기 월매출 — 사장님 운영비·원가율만으로 계산(매출 가정 없음). "이만큼은 벌어야 흑자". */}
+              <div>
+                <div style={{ fontSize: "11.5px", color: "var(--muted)", marginBottom: "4px" }}>
+                  {ko ? "흑자 전환 목표 매출 / 월" : "Break-even revenue/mo"}
+                </div>
+                <div style={{ fontSize: "22px", fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.025em" }}>
+                  {simulation.breakEven?.monthlyBreakEvenRevenue
+                    ? fmtWon(simulation.breakEven.monthlyBreakEvenRevenue)
+                    : "—"}
+                </div>
+                {simulation.breakEven?.dailyBreakEvenRevenue ? (
+                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                    {ko ? `하루 ${fmtWon(simulation.breakEven.dailyBreakEvenRevenue)}` : `${fmtWon(simulation.breakEven.dailyBreakEvenRevenue)}/day`}
+                    {simulation.breakEven.dailyTransactionsNeeded
+                      ? (ko ? ` · 하루 ${simulation.breakEven.dailyTransactionsNeeded}건` : ` · ${simulation.breakEven.dailyTransactionsNeeded} tx/day`)
+                      : ""}
+                  </div>
+                ) : null}
+              </div>
+              {/* 버틸 수 있는 기간 — 자본금(운전자금) 기준. 매출 0 가정. */}
               <div>
                 <div style={{ fontSize: "11.5px", color: "var(--muted)", marginBottom: "4px" }}>
                   {ko ? "버틸 수 있는 기간" : "Survival period"}
@@ -1087,18 +1107,19 @@ export function FinancialReviewStage() {
                     ? `${simulation.survivabilityMonths.toFixed(1)}${ko ? "개월" : "mo"}`
                     : "—"}
                 </div>
-              </div>
-              <div>
-                <div style={{ fontSize: "11.5px", color: "var(--muted)", marginBottom: "4px" }}>
-                  {ko ? "손익분기 시점" : "Break-even"}
-                </div>
-                <div style={{ fontSize: "22px", fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.025em" }}>
-                  {typeof simulation.breakEven?.estimatedBreakEvenMonth === "number"
-                    ? `${simulation.breakEven.estimatedBreakEvenMonth.toFixed(1)}${ko ? "개월" : "mo"}`
-                    : (ko ? "미달" : "N/A")}
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                  {ko ? "매출 0 가정 · 운전자금 기준" : "at zero revenue"}
                 </div>
               </div>
             </div>
+            {/* 참고 — 같은 업종 월매출 범위(실현 가능성 가늠용). *업종 평균*이라 명시(추정·참고). */}
+            {simulation.revenueRange && simulation.revenueRange.high > 0 && (
+              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "10px", lineHeight: 1.5 }}>
+                {ko
+                  ? `참고 · 같은 업종 월매출은 보통 ${fmtWon(simulation.revenueRange.low)}~${fmtWon(simulation.revenueRange.high)} (업종 평균). 흑자 목표 매출이 이 범위 안이면 현실적이에요. 실매출 기록되면 대시보드에서 실제 기준으로 바뀝니다.`
+                  : `Ref · typical ${fmtWon(simulation.revenueRange.low)}~${fmtWon(simulation.revenueRange.high)}/mo for this industry (avg). Updates to your real sales later.`}
+              </div>
+            )}
           </div>
         )}
 
@@ -1161,7 +1182,7 @@ export function FinancialReviewStage() {
           { label: "1. 고정비 점검", detail: "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교" },
           { label: "2. 변동비 점검", detail: "재료비·일반관리비 2축 — 매출 30% 이내 유지 룰 점검" },
           { label: "3. 기타비 점검", detail: "마케팅·이자·기타 3축 — 광고 ROAS·대출 이자 한계점 검토" },
-          { label: "4. 손익분기·런웨이", detail: "월별 BEP 시뮬 + 보유 자본 잔여 개월 자동 계산" },
+          { label: "4. 손익분기·런웨이", detail: "흑자 목표 매출(운영비 기준) + 보유 자본 잔여 개월 자동 계산" },
         ]}
         verifyItemsKo={[
           "고정비 합계 — 매출 70% 미만 유지, 초과 시 변동비 압박으로 흑자 도달 어려움",

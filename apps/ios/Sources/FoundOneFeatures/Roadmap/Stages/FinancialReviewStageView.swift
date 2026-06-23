@@ -68,6 +68,20 @@ public struct FinancialReviewStageView: View {
     private var totalOther: Int    { marketing + other }
     private var totalCost: Int     { totalFixed + totalVariable + totalOther }
 
+    /// 업종 평균 원가율(%) — 손익분기 매출의 변동비율로 사용(원가율은 업종별로 안정적).
+    private var cogsRatePct: Double {
+        let r = benchmark.materialsPctRange
+        return Double(r.lowerBound + r.upperBound) / 2.0
+    }
+    /// 흑자 목표 월매출(만원) = (재료비 제외 고정·기타 비용) / (1 − 업종평균 원가율).
+    ///   매출 가정 없이 *사장님 운영비*만으로 "이만큼은 벌어야 흑자" 를 역산. (단위 만원)
+    private var breakEvenMonthlyWan: Int? {
+        guard totalCost > 0, cogsRatePct < 95 else { return nil }
+        let fixedish = Double(totalCost - ingredients)   // 매출 연동 변동(재료) 제외
+        guard fixedish > 0 else { return nil }
+        return Int((fixedish / (1.0 - cogsRatePct / 100.0)).rounded())
+    }
+
     private var primeCostPct: Double {
         guard totalCost > 0 else { return 0 }
         return Double(ingredients + labor) / Double(totalCost) * 100
@@ -141,7 +155,7 @@ public struct FinancialReviewStageView: View {
                 .init(label: "1. 고정비 점검", detail: "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교"),
                 .init(label: "2. 변동비 점검", detail: "재료비·일반관리비 2축 — 매출 30% 이내 유지 룰 점검"),
                 .init(label: "3. 기타비 점검", detail: "마케팅·이자·기타 3축 — 광고 ROAS·대출 이자 한계점 검토"),
-                .init(label: "4. 손익분기·런웨이", detail: "월별 BEP 시뮬 + 보유 자본 잔여 개월 자동 계산"),
+                .init(label: "4. 손익분기·런웨이", detail: "흑자 목표 매출(운영비 기준) + 보유 자본 잔여 개월 자동 계산"),
                 ],
                 verifyItems: [
                 "고정비 합계 — 매출 70% 미만 유지, 초과 시 변동비 압박으로 흑자 도달 어려움",
@@ -290,6 +304,18 @@ public struct FinancialReviewStageView: View {
                     simCell(label: "기타", value: totalOther)
                     Spacer()
                     simCell(label: "총 비용", value: totalCost, highlight: true)
+                }
+
+                if let be = breakEvenMonthlyWan {
+                    Divider()
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("흑자 전환 목표 매출 / 월").font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                        Text("\(be.formatted())만원")
+                            .font(BUFont.cardTitle).foregroundStyle(BUColor.midnight).monospacedDigit()
+                        Text("이만큼은 벌어야 흑자 — 하루 약 \(Int((Double(be) / 26.0).rounded()).formatted())만원 (영업 26일). 사장님 운영비 기준, 업종 평균 원가율 \(Int(cogsRatePct))% 가정. 실매출 기록되면 대시보드에서 실제 기준으로 바뀝니다.")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 if totalCost > 0 {
