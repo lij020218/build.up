@@ -209,8 +209,314 @@ private struct BudgetInsight {
     let benchmark: ClusterBudgetBenchmark
 }
 
-private func computeInsight(clusterKey: String, userBudgetWon: Int) -> BudgetInsight? {
-    guard let bench = clusterBenchmarks[clusterKey] else { return nil }
+// MARK: - 세부 업종(specialty) 벤치마크 (web SPECIALTY_BUDGET_BENCHMARKS 코드젠 미러)
+//   cluster 평균은 범위가 넓어 혼동(편의점≠소매 전체). specialty 있으면 그 평균 우선, 없으면 cluster 폴백.
+private let specialtyBenchmarks: [String: ClusterBudgetBenchmark] = [
+    "korean-casual": ClusterBudgetBenchmark(
+        avgWan: 9500, medianWan: 8800, p25Wan: 6000, p75Wan: 12000,
+        source: "식저널 한식 1억436만 · 핀다 서울 외식 7,681만",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 950,
+        noteKo: "권리금 포함 시 1억 초과. 보증금·평수 따라 편차 큼."),
+    "delivery-meals": ClusterBudgetBenchmark(
+        avgWan: 2500, medianWan: 2000, p25Wan: 1000, p75Wan: 4500,
+        source: "요기요파트너·머니캣 공유주방 1~2천만 / 개인배달 ~8천만",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 350,
+        noteKo: "공유주방 입점 최저, 독립 점포 배달은 4~8천만으로 급증."),
+    "salad-healthy": ClusterBudgetBenchmark(
+        avgWan: 7000, medianWan: 6500, p25Wan: 4000, p75Wan: 9000,
+        source: "버즈비즈·뷰리드 샐러드(샐러드박스 5,100·샐러디 8,400)+보증금",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 700,
+        noteKo: "조리 간단·소형 위주. 정보공개서값은 보증금 제외라 +2~3천 가산."),
+    "ramen-noodle": ClusterBudgetBenchmark(
+        avgWan: 8500, medianWan: 8000, p25Wan: 4000, p75Wan: 11000,
+        source: "버즈비즈 멘지 8,900 · 핀다 국물요리 9,209",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 850,
+        noteKo: "주방 화구·덕트 부담 큼. 극소형은 4천대도 가능."),
+    "chicken-burger": ClusterBudgetBenchmark(
+        avgWan: 7500, medianWan: 6000, p25Wan: 4000, p75Wan: 13000,
+        source: "핀다 치킨·닭강정 4,325 / 버거 1억5,713 · 공정위 치킨 9,394",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 700,
+        noteKo: "치킨은 저비용, 버거(매장형)는 1억+로 편차 매우 큼."),
+    "western-pasta-brunch": ClusterBudgetBenchmark(
+        avgWan: 9500, medianWan: 9000, p25Wan: 6000, p75Wan: 14000,
+        source: "큐플레이스·소중함 인테리어 5~7천 + 오픈주방·홀 투자",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 950,
+        noteKo: "오픈주방·고급마감·넓은 홀로 인테리어 비중 높음."),
+    "takeout-coffee": ClusterBudgetBenchmark(
+        avgWan: 6500, medianWan: 6500, p25Wan: 4000, p75Wan: 9000,
+        source: "메가커피 7,424 · 컴포즈 6,708 (10평, 보증금 별도)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 500,
+        noteKo: "10평 소형. 공시값은 보증금·권리금 제외, 전기증설로 +2~4천."),
+    "specialty-coffee": ClusterBudgetBenchmark(
+        avgWan: 11000, medianWan: 10000, p25Wan: 7000, p75Wan: 15000,
+        source: "사이더랩·퍼펙트커피 개인카페 8천~1.2억 + 로스터기",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 900,
+        noteKo: "넓은 평수·고급 머신·자가로스팅 시 1억 초과."),
+    "dessert-cafe": ClusterBudgetBenchmark(
+        avgWan: 7500, medianWan: 7000, p25Wan: 5000, p75Wan: 10000,
+        source: "지식채널·큐플레이스 카페 15평 5천~ / 주방기기 2~4천",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 700,
+        noteKo: "쇼케이스·디저트 주방 추가로 일반 커피점보다 높음."),
+    "bakery-studio": ClusterBudgetBenchmark(
+        avgWan: 11000, medianWan: 10000, p25Wan: 6000, p75Wan: 16000,
+        source: "소중함·한성쇼케이스 5천~1.5억",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 900,
+        noteKo: "오븐·발효기·반죽기 등 제과 설비비 큼. 카페형은 2억+."),
+    "icecream-bingsu": ClusterBudgetBenchmark(
+        avgWan: 6000, medianWan: 5500, p25Wan: 3500, p75Wan: 8500,
+        source: "카페창업 표준 15평 5천 + 빙수기·쇼케이스 가산",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 550,
+        noteKo: "계절성 강함. 빙수기·제빙·냉동 쇼케이스가 설비 핵심."),
+    "self-serve-cafe": ClusterBudgetBenchmark(
+        avgWan: 4000, medianWan: 3600, p25Wan: 2500, p75Wan: 6000,
+        source: "스토랑트·myfounded 무인카페 평균 3,600 (비트 3,600·나우 6,270)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 250,
+        noteKo: "무인이라 인건비·운영비 최저. 머신 구입 시 상단."),
+    "convenience-small": ClusterBudgetBenchmark(
+        avgWan: 7270, medianWan: 7000, p25Wan: 5500, p75Wan: 9000,
+        source: "CU·GS25 정보공개서 (가맹비770+상품준비1,400+보증금5,000+소모품)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 800,
+        noteKo: "보증금 5,000만(회수성)이 비용 대부분, 임차료 별도라 상권 변동 큼."),
+    "lifestyle-goods": ClusterBudgetBenchmark(
+        avgWan: 6000, medianWan: 5500, p25Wan: 3500, p75Wan: 8500,
+        source: "큐플레이스·점포라인 잡화점 + 무인문구점 가이드",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 450,
+        noteKo: "다이소형 대형 제외, 동네 생활용품·문구잡화 10~20평 기준."),
+    "beauty-supplies": ClusterBudgetBenchmark(
+        avgWan: 7000, medianWan: 6500, p25Wan: 4500, p75Wan: 9500,
+        source: "화장품 로드숍 정보공개서 하향 + 인테리어 평당 198만",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 600,
+        noteKo: "올리브영 대형 제외, 독립 화장품·뷰티편집 소규모점 기준."),
+    "fashion-accessories": ClusterBudgetBenchmark(
+        avgWan: 4500, medianWan: 4000, p25Wan: 2500, p75Wan: 6500,
+        source: "큐플레이스 보세 옷가게 · 소중함 소자본 의류(1,000~4,000)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 500,
+        noteKo: "보세·편집 의류, 동대문 사입 초도물품·권리금 포함."),
+    "health-food-store": ClusterBudgetBenchmark(
+        avgWan: 6000, medianWan: 5500, p25Wan: 3800, p75Wan: 8000,
+        source: "소매점 일반 창업비용 가이드 (전용 통계 부재로 차용)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 600,
+        noteKo: "냉장·진열집기 포함. 실데이터 확보 시 교체 권장."),
+    "unmanned-retail": ClusterBudgetBenchmark(
+        avgWan: 5500, medianWan: 5000, p25Wan: 3500, p75Wan: 8000,
+        source: "무인 아이스크림/밀키트 창업가이드 (초기 4,000~7,000)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 250,
+        noteKo: "무인 운영이라 월 운영비 낮음, ROI 약 18개월."),
+    "hair-salon": ClusterBudgetBenchmark(
+        avgWan: 5500, medianWan: 5000, p25Wan: 3000, p75Wan: 8000,
+        source: "소중함·구지닷 미용실 (소자본 2,000~6,000 / 중형 6,000~1억)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 700,
+        noteKo: "1인 동네샵~중형. 샴푸대·미용의자·파마기 장비비 큼."),
+    "nail-studio": ClusterBudgetBenchmark(
+        avgWan: 4000, medianWan: 3500, p25Wan: 1500, p75Wan: 6000,
+        source: "비용백과·구지닷 네일샵 (독립 500~700 최소 / 15평 4,000~7,000)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 400,
+        noteKo: "공유작업실 제외 독립 점포 기준, 소자본 진입 용이."),
+    "skin-care-room": ClusterBudgetBenchmark(
+        avgWan: 4000, medianWan: 3500, p25Wan: 2000, p75Wan: 6000,
+        source: "아주디·큐플레이스 에스테틱 + 1인샵 실사례 2,000",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 450,
+        noteKo: "1인 에스테틱~중형, 대형 스파 제외. 관리기기 유무로 편차."),
+    "waxing-studio": ClusterBudgetBenchmark(
+        avgWan: 2800, medianWan: 2500, p25Wan: 1500, p75Wan: 4000,
+        source: "큐플레이스·2quater 1인 왁싱샵 (10~15평 2,000~3,000)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 350,
+        noteKo: "장비 의존도 낮아 미용 중 최저 초기비용, 1인샵 위주."),
+    "eyelash-brow": ClusterBudgetBenchmark(
+        avgWan: 4000, medianWan: 3500, p25Wan: 2000, p75Wan: 6000,
+        source: "Shopify 속눈썹샵 가이드 (서울 소규모 3,000~7,000)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 400,
+        noteKo: "속눈썹 연장·반영구 결합 소규모샵, 전동베드·LED 포함."),
+    "makeup-bridal": ClusterBudgetBenchmark(
+        avgWan: 4500, medianWan: 4000, p25Wan: 2500, p75Wan: 6500,
+        source: "큐플레이스 메이크업샵 + 미용 소규모샵 구조 차용",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 450,
+        noteKo: "전용 통계 부재로 미용 소규모샵 구조 차용. 거울·조명·화장대 포함."),
+    "pilates-studio": ClusterBudgetBenchmark(
+        avgWan: 11000, medianWan: 10000, p25Wan: 7000, p75Wan: 15000,
+        source: "qplace·gongysd 필라테스 (리포머 4대 25평)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 600,
+        noteKo: "리포머·기구·인테리어가 비용 핵심. 총액 약 1.1억."),
+    "pt-gym": ClusterBudgetBenchmark(
+        avgWan: 13000, medianWan: 11000, p25Wan: 7000, p75Wan: 20000,
+        source: "ssjum·piehealthcare PT샵 + qplace (5천만~2억)",
+        yearReported: 2025, isEstimate: false, monthlyOpsEstimateWan: 700,
+        noteKo: "규모·신품/중고 비율로 편차 큼. 중소형 PT는 1억 안팎."),
+    "yoga-studio": ClusterBudgetBenchmark(
+        avgWan: 8500, medianWan: 7500, p25Wan: 5000, p75Wan: 12000,
+        source: "fiflfifl 요가 + qplace (소규모 50㎡)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 500,
+        noteKo: "리포머 불필요로 필라테스보다 장비비 적어 총액 낮음."),
+    "crossfit-box": ClusterBudgetBenchmark(
+        avgWan: 12000, medianWan: 11000, p25Wan: 8000, p75Wan: 16000,
+        source: "fiflfifl 크로스핏 + qplace",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 700,
+        noteKo: "고천장 대형 + 풀세트 장비로 PT 헬스장 유사~상회. 추정."),
+    "golf-studio": ClusterBudgetBenchmark(
+        avgWan: 25000, medianWan: 22000, p25Wan: 12000, p75Wan: 35000,
+        source: "goojic 스크린골프 · 골프존 (기기 대당 약 6,000)",
+        yearReported: 2025, isEstimate: false, monthlyOpsEstimateWan: 1500,
+        noteKo: "타석 장비비가 대부분, 타석 수가 총액 좌우. 대형 투자."),
+    "unmanned-fitness": ClusterBudgetBenchmark(
+        avgWan: 7000, medianWan: 6000, p25Wan: 4000, p75Wan: 10000,
+        source: "secondsalary·godo 무인창업 (3천만대 시작)",
+        yearReported: 2025, isEstimate: true, monthlyOpsEstimateWan: 300,
+        noteKo: "1인 무인 운영으로 인건비 낮음. 출입시스템+머신 중심. 추정."),
+    "study-room": ClusterBudgetBenchmark(
+        avgWan: 8000, medianWan: 7000, p25Wan: 4000, p75Wan: 12000,
+        source: "mystudycafe·keyzard 스터디카페 (30석)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 500,
+        noteKo: "평수·좌석수가 핵심. 50평급은 인테리어만 1억 넘김."),
+    "kids-academy": ClusterBudgetBenchmark(
+        avgWan: 6000, medianWan: 5000, p25Wan: 3500, p75Wan: 9000,
+        source: "srmommy·qplace 학원 (20~30평)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 450,
+        noteKo: "보증금+인테리어 중심. 아동 학원은 안전시설로 가산."),
+    "adult-class": ClusterBudgetBenchmark(
+        avgWan: 4000, medianWan: 3500, p25Wan: 2000, p75Wan: 6000,
+        source: "packative 공방 + qplace",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 350,
+        noteKo: "취미·자격 클래스(공방형)는 소형·저보증금. 종목별 장비비 편차 커 추정."),
+    "language-academy": ClusterBudgetBenchmark(
+        avgWan: 7000, medianWan: 6000, p25Wan: 4000, p75Wan: 11000,
+        source: "youngbeecenter·srmommy 영어학원 (20~30평)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 500,
+        noteKo: "독립은 가맹비 제외 보증금+인테리어+설비 중심. 강의실 수가 총액 좌우."),
+    "coding-class": ClusterBudgetBenchmark(
+        avgWan: 8000, medianWan: 7000, p25Wan: 5000, p75Wan: 11000,
+        source: "buza.biz 1인 코딩학원 (30평 약 8천)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 450,
+        noteKo: "PC·3D프린터·로봇 등 IT 장비비가 일반 학원보다 큼."),
+    "small-study-room": ClusterBudgetBenchmark(
+        avgWan: 800, medianWan: 500, p25Wan: 200, p75Wan: 1200,
+        source: "prefarmers·localnaeil 가정형 공부방",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 50,
+        noteKo: "자택(가정형) 운영이라 임대·보증금 거의 없음. 책걸상·교구가 초기비 전부. 추정."),
+    "pet-grooming": ClusterBudgetBenchmark(
+        avgWan: 5500, medianWan: 5000, p25Wan: 3500, p75Wan: 7000,
+        source: "큐플레이스·ssjum 애견미용실",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 350,
+        noteKo: "10평 미만 보증금 2천 + 인테리어/장비 3~5천. 중고장비 시 하향."),
+    "pet-supplies": ClusterBudgetBenchmark(
+        avgWan: 6500, medianWan: 6000, p25Wan: 4000, p75Wan: 9500,
+        source: "부자비즈·마이프차 펫샵 (30평)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 400,
+        noteKo: "독립점 30평, 초기 재고매입 포함. 무인 소형은 4천 내외."),
+    "pet-hotel": ClusterBudgetBenchmark(
+        avgWan: 7000, medianWan: 6500, p25Wan: 5000, p75Wan: 9000,
+        source: "마이프차 르하임애견호텔 + 유치원·호텔 가이드 (20~30평)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 450,
+        noteKo: "동물위탁관리업 시설기준 인테리어·케이지가 비용 핵심. 추정."),
+    "pet-cafe": ClusterBudgetBenchmark(
+        avgWan: 15000, medianWan: 13000, p25Wan: 10000, p75Wan: 20000,
+        source: "굿직·오피스꿀팁 애견카페 (1.5~2.5억)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 700,
+        noteKo: "식음+놀이공간으로 넓은 평수·보증금 커 펫 업종 최고가."),
+    "pet-training-school": ClusterBudgetBenchmark(
+        avgWan: 6000, medianWan: 5500, p25Wan: 3000, p75Wan: 9000,
+        source: "다모이·이삭애견훈련소 + 숨고 시세",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 400,
+        noteKo: "교외 저가 부지+훈련장·켄넬. 입지·규모 편차 커 추정."),
+    "pet-walking-visit": ClusterBudgetBenchmark(
+        avgWan: 300, medianWan: 200, p25Wan: 100, p75Wan: 500,
+        source: "와요·서울시50플러스 펫시터 (무점포)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 50,
+        noteKo: "무점포—보증금/인테리어 0. 자격교육·보험·마케팅·이동비만. 추정."),
+    "laundry-service": ClusterBudgetBenchmark(
+        avgWan: 4500, medianWan: 4000, p25Wan: 2500, p75Wan: 6000,
+        source: "easylaw 세탁소 + 크린토피아 비용분석",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 350,
+        noteKo: "유인 일반세탁(취급소형)은 무인보다 설비 적음. 추정."),
+    "cleaning-service": ClusterBudgetBenchmark(
+        avgWan: 800, medianWan: 700, p25Wan: 500, p75Wan: 1200,
+        source: "비즈바이킹·청소의광장 청소업체 (장비 500~1,000, 무점포)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 200,
+        noteKo: "무점포 자택사업자—장비·세제·차량·교육비 중심, 보증금 거의 0."),
+    "repair-service": ClusterBudgetBenchmark(
+        avgWan: 2500, medianWan: 2000, p25Wan: 1200, p75Wan: 3500,
+        source: "의류수선리폼협회 + 중고미싱 시세",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 250,
+        noteKo: "소형 점포 보증금+공업용미싱 수대. 협회 통계 기반 추정."),
+    "self-laundry": ClusterBudgetBenchmark(
+        avgWan: 11000, medianWan: 10000, p25Wan: 7000, p75Wan: 15000,
+        source: "모두코리아·imbeyonder 무인빨래방 + moneycat",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 300,
+        noteKo: "세탁·건조기 6+6 표준형 15평. 장비가 창업비 60% 이상."),
+    "print-copy": ClusterBudgetBenchmark(
+        avgWan: 4000, medianWan: 3500, p25Wan: 2000, p75Wan: 6000,
+        source: "passionatewebsite 인쇄소 (디지털인쇄·후가공)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 300,
+        noteKo: "동네 복사/출력 소형. 디지털인쇄·복합기 중심, 오프셋 제외. 추정."),
+    "device-repair": ClusterBudgetBenchmark(
+        avgWan: 2500, medianWan: 2000, p25Wan: 1200, p75Wan: 3500,
+        source: "에이엠스쿨·천직 폰수리 + 점포라인 시세",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 250,
+        noteKo: "소형 점포·수리장비·부품재고 중심 소자본. 추정."),
+    "guesthouse": ClusterBudgetBenchmark(
+        avgWan: 15000, medianWan: 12000, p25Wan: 8000, p75Wan: 20000,
+        source: "smartbloggerthree·tax25 게스트하우스 가이드",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 500,
+        noteKo: "중소형 1~3억, 보증금+인테리어 비중 큼. 핫플은 보증금만 2억+."),
+    "rental-studio": ClusterBudgetBenchmark(
+        avgWan: 5000, medianWan: 4500, p25Wan: 3000, p75Wan: 7000,
+        source: "qplace·jyedream·hourplace 공간대여",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 250,
+        noteKo: "보증금+호리존·방음+촬영장비. 무인 렌탈형은 3천대도 가능."),
+    "party-room": ClusterBudgetBenchmark(
+        avgWan: 3500, medianWan: 3000, p25Wan: 2000, p75Wan: 5000,
+        source: "마이프차 파티룸 매거진 (3천만) · qplace",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 250,
+        noteKo: "보증금 제외 현실비 2~5천. 인테리어·가구·AV장비 중심."),
+    "study-cafe-space": ClusterBudgetBenchmark(
+        avgWan: 18000, medianWan: 16000, p25Wan: 12000, p75Wan: 25000,
+        source: "policyhelpers·secondsalary 스터디카페",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 400,
+        noteKo: "점포 제외 1억 중후반, 임차 포함 2~3.5억. 무인시스템만 2~4천."),
+    "shared-office": ClusterBudgetBenchmark(
+        avgWan: 12000, medianWan: 10000, p25Wan: 5000, p75Wan: 16700,
+        source: "마이프차 드림캐쳐스 정보공개서 (1억6,730만)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 500,
+        noteKo: "전체 5천만~2억. 보증금·임대·구획 인테리어 중심."),
+    "practice-room": ClusterBudgetBenchmark(
+        avgWan: 5000, medianWan: 4500, p25Wan: 3000, p75Wan: 7000,
+        source: "studionol·glorypine 연습실",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 200,
+        noteKo: "방음시공이 최대 비중(실당 1,500~1,800). 보증금+3~5실 방음+악기. 추정."),
+    "smart-store": ClusterBudgetBenchmark(
+        avgWan: 500, medianWan: 400, p25Wan: 200, p75Wan: 800,
+        source: "KB의생각·TILNOTE·tosspayments 스마트스토어",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 50,
+        noteKo: "플랫폼 무료. 사입형은 초기 재고+상세페이지+마케팅 100만원 현금."),
+    "digital-products": ClusterBudgetBenchmark(
+        avgWan: 30, medianWan: 20, p25Wan: 5, p75Wan: 50,
+        source: "ebook4989·apure·imweb 지식창업",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 5,
+        noteKo: "재고·물류 없음. 도구비+광고 수준. 사실상 무자본, 시간투입형."),
+    "creator-service": ClusterBudgetBenchmark(
+        avgWan: 100, medianWan: 80, p25Wan: 50, p75Wan: 200,
+        source: "cyberlink·a-ha 유튜버 초기비용",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 20,
+        noteKo: "최소 50~100만(스마트폰+무료편집), 고급 장비 200만+."),
+    "consignment-commerce": ClusterBudgetBenchmark(
+        avgWan: 50, medianWan: 30, p25Wan: 10, p75Wan: 100,
+        source: "windly·tosspayments 위탁판매",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 10,
+        noteKo: "재고·물류 없음(도매매/오너클랜). 면허세+소싱툴, 무자본 근접."),
+    "newsletter-membership": ClusterBudgetBenchmark(
+        avgWan: 20, medianWan: 10, p25Wan: 0, p75Wan: 50,
+        source: "스티비 유료 뉴스레터 (무료 500명/월 2회)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 5,
+        noteKo: "초기 무자본. 구독자 500명까지 무료, 결제 수수료 3.2%."),
+    "global-buying": ClusterBudgetBenchmark(
+        avgWan: 50, medianWan: 40, p25Wan: 10, p75Wan: 100,
+        source: "windly·국세청 해외직구대행 (업종 525105)",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 10,
+        noteKo: "주문 후 구매라 무재고. 면허세+주문수집 프로그램. 40~100만."),
+]
+
+private func computeInsight(clusterKey: String, specialtyId: String, userBudgetWon: Int) -> BudgetInsight? {
+    // specialty(세부 업종) 평균 우선 — 편의점 등. 없으면 cluster 평균 폴백.
+    guard let bench = specialtyBenchmarks[specialtyId] ?? clusterBenchmarks[clusterKey] else { return nil }
     let userWan = userBudgetWon / 10_000
     let deltaWan = userWan - bench.avgWan
     let deltaMonths = bench.monthlyOpsEstimateWan > 0
@@ -270,6 +576,7 @@ public struct BudgetInsightCard: View {
     public let userBudgetWon: Int
 
     @AppStorage("roadmap.cluster") private var clusterRaw = "offline-food"
+    @AppStorage("roadmap.selectedIndustryId") private var specialtyId = ""
     // 사용자가 "확인" 을 눌러야 분석이 보임. 같은 sheet 안에서만 유효 (sheet 닫으면 리셋).
     @State private var confirmed = false
 
@@ -278,7 +585,7 @@ public struct BudgetInsightCard: View {
     }
 
     public var body: some View {
-        if let insight = computeInsight(clusterKey: clusterRaw, userBudgetWon: userBudgetWon) {
+        if let insight = computeInsight(clusterKey: clusterRaw, specialtyId: specialtyId, userBudgetWon: userBudgetWon) {
             if confirmed {
                 BUCard(.card) {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {

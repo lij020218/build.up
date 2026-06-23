@@ -73,9 +73,13 @@ export function BudgetInsightCard() {
   const franchiseRecommendedWon = (() => {
     if (startupType !== "franchise" || !selectedFranchiseBrandId) return undefined;
     const brand = getFranchiseBrandById(selectedFranchiseBrandId);
-    return brand?.startupCostWon;
+    // ⚠️ startupCostWon 은 필드명과 달리 *만원* 단위(예: CU 7,390 = 7,390만원). computeBudgetInsight
+    //   는 원 단위를 기대(/10_000 → 만원)하므로 ×10_000 변환. 안 하면 7,390/10,000≈0.7→반올림 "1만원"
+    //   으로 표시되던 버그(2026-06-23 사장님 신고).
+    return brand?.startupCostWon != null ? brand.startupCostWon * 10_000 : undefined;
   })();
-  const insight = computeBudgetInsight(cluster, userBudgetWon, undefined, franchiseRecommendedWon);
+  // selectedIndustryId(세부 업종) 전달 → 편의점 등 specialty 평균 우선, 없으면 cluster 평균.
+  const insight = computeBudgetInsight(cluster, userBudgetWon, undefined, franchiseRecommendedWon, selectedIndustryId ?? undefined);
 
   // 신호등 컬러 금지 — 미드나잇 네이비 한 톤
   const NAVY = "var(--primary, #1d3557)";
