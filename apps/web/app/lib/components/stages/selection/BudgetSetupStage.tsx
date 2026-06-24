@@ -53,11 +53,11 @@ export function BudgetSetupStage() {
         ko={language === "ko"}
         action={{
           title: language === "ko"
-            ? "총 초기 자본의 30%는 운영 예비비로 — 1·2층 망함률을 가르는 한 줄"
-            : "Reserve 30% of total capital as operating buffer — the line that decides survival",
+            ? "창업 자금은 두 통으로 나눕니다 — 한 번 쓰는 돈, 매달 나가는 돈"
+            : "Split startup money into two buckets — one-time setup, monthly runway",
           detail: language === "ko"
-            ? "보증금·인테리어·집기·인허가 외에 6개월 운영비를 따로 떼어 놓아야 첫 매출까지 버틴다. 운영비 없이 시작한 가게의 1년 폐업률이 3배."
-            : "Beyond deposit, interior, equipment, and permits, set aside 6 months of operating costs to survive until first revenue. Stores starting without it close at 3x the 1-year rate.",
+            ? "① 시설·창업 비용(보증금·인테리어·집기·인허가)은 오픈 전에 한 번 지출. ② 운영 예비자금은 매출이 자리 잡기 전까지 버틸 운영비. 운영비를 따로 떼어두지 않은 가게의 1년 폐업률이 3배."
+            : "① Setup cost (deposit, interior, equipment, permits) is spent once before opening. ② Operating reserve is the monthly burn you survive on until revenue lands. Stores without it close at 3x the 1-year rate.",
         }}
       />
       <div style={styles.helper}>
@@ -204,24 +204,22 @@ export function BudgetSetupStage() {
         );
       })()}
 
-      {/* ── 예산 인사이트 + 매칭 지원 프로그램 ── */}
-      <BudgetInsightCard />
-
-      {/* ── 정부 지원·정책자금 동적 매칭 (2026-05-25 신규, iOS SSOT 동기화) ──
-            BudgetInsightCard 는 핵심 7개 hardcoded 안내, 이 카드는 79개 풀에서
-            업종·자본금 기준 상위 4개 (자격 충족 우선) 동적 매칭. */}
-      <BudgetFundingMatchCard />
-
+      {/* ── ① 시설·창업 비용 (한 번 쓰는 돈) ── */}
       <div ref={budgetRef} style={{ ...styles.budgetPanel, ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         <div style={styles.budgetHeader}>
-          <div style={styles.budgetLabel}>
-            {language === "ko" ? "시작 자본금" : "Starting capital"}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--primary)", background: "rgba(29,53,87,0.07)", padding: "2px 8px", borderRadius: "7px" }}>
+              {language === "ko" ? "① 한 번 쓰는 돈" : "① One-time"}
+            </span>
+            <div style={styles.budgetLabel}>
+              {language === "ko" ? "시설·창업 비용" : "Setup cost"}
+            </div>
           </div>
           <div style={styles.budgetValue}>{activeBudgetLabel}</div>
           <div style={styles.helper}>
             {language === "ko"
-              ? "슬라이더로 예산 감을 먼저 잡고, 필요하면 아래 빠른 선택으로 조정하세요."
-              : "Use the slider to set a rough budget, then fine-tune with the quick picks below."}
+              ? "보증금·인테리어·집기·인허가 — 오픈 전에 한 번 지출하는 돈입니다. 슬라이더로 감을 잡고 아래 빠른 선택으로 조정하세요."
+              : "Deposit, interior, equipment, permits — spent once before opening. Set a rough figure, then fine-tune below."}
           </div>
         </div>
         <input
@@ -398,17 +396,17 @@ export function BudgetSetupStage() {
           return `${won.toLocaleString()}원`;
         };
 
-        // ── 라벨·헬퍼 텍스트 (스타트업: "런웨이 자본" / 그 외: "운영 자본금") ──
+        // ── 라벨·헬퍼 텍스트 (시설비와 "별도"가 아니라 "매달 나가는 돈"으로 프레이밍) ──
         const titleLabel = isStartup
-          ? (ko ? "런웨이 자본 (자본금과 별도)" : "Runway capital (separate)")
-          : (ko ? "초기 운영자본금 (자본금과 별도)" : "Initial operating capital (separate)");
+          ? (ko ? "런웨이 자본 · 매달 나가는 돈" : "Runway capital · monthly burn")
+          : (ko ? "운영 예비자금 · 매달 나가는 돈" : "Operating reserve · monthly burn");
         const helperText = isStartup
           ? (ko
-              ? "월 번레이트 × 운영 가능 개월 수입니다. 시리즈A 평균 21개월 런웨이가 표준이며, 매출이 비용을 못 덮는 동안 버틸 자금이에요."
-              : "Monthly burn × runway months. Series A teams target 21 mo runway. This is the cash to survive until revenue covers costs.")
+              ? "월 번레이트 × 버틸 개월 수입니다. 시리즈A 평균 21개월 런웨이가 표준 — 매출이 비용을 덮기 전까지 버티는 자금이에요. 아래에서 개월 수만 고르면 자동 계산됩니다."
+              : "Monthly burn × runway months. Series A teams target 21 mo. Pick the months below and it's auto-calculated.")
           : (ko
-              ? "오픈 직후 몇 달간 월세·인건비·공과금·재료비로 쓸 현금입니다. 매출이 적자를 덮기 전까지 버티는 연료예요."
-              : "Cash for rent, wages, utilities, and materials during the first months before revenue covers costs.");
+              ? "월세·인건비·공과금·재료비로 매달 빠져나가는 돈을, 매출이 자리 잡기 전까지 몇 달치 쌓아둘지 정합니다. 아래에서 개월 수만 고르면 월 추정 고정비로 자동 계산돼요."
+              : "Rent, wages, utilities, materials leave every month. Choose how many months to stockpile before revenue lands — auto-calculated from your monthly estimate below.");
 
         // ── 스타트업 운영 모드 옵션 ──
         const MODE_OPTIONS: Array<{
@@ -438,7 +436,12 @@ export function BudgetSetupStage() {
           },
         ];
 
+        const facilityWon = selectedBudget ?? 0;
+        const totalNeededWon = facilityWon + capitalWon;
+        const runwayMonthsTotal = estimatedMonthly > 0 ? Math.floor(capitalWon / estimatedMonthly) : 0;
+
         return (
+          <>
           <div style={styles.budgetPanel}>
             {/* ── 운영 모드 선택 (스타트업 전용) ── */}
             {isStartup && (
@@ -482,7 +485,12 @@ export function BudgetSetupStage() {
             )}
 
             <div style={styles.budgetHeader}>
-              <div style={styles.budgetLabel}>{titleLabel}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--primary)", background: "rgba(29,53,87,0.07)", padding: "2px 8px", borderRadius: "7px" }}>
+                  {ko ? "② 매달 나가는 돈" : "② Monthly"}
+                </span>
+                <div style={styles.budgetLabel}>{titleLabel}</div>
+              </div>
               <div style={styles.budgetValue}>
                 {capitalWon > 0 ? fmt(capitalWon) : (ko ? "미입력" : "Not set")}
               </div>
@@ -581,8 +589,48 @@ export function BudgetSetupStage() {
               ))}
             </div>
           </div>
+
+          {/* ── 총 필요 자금 = ① 시설비 + ② 운영 예비자금 (두 통의 관계를 항상 노출) ── */}
+          <div style={{
+            marginTop: "14px",
+            borderRadius: "20px",
+            background: "rgba(29,53,87,0.05)",
+            border: "1px solid rgba(29,53,87,0.1)",
+            padding: "18px 20px",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px" }}>
+              <div style={{ fontSize: "13px", color: "var(--primary)", fontWeight: 600 }}>
+                {ko ? "총 필요 자금 = 시설·창업 비용 + 운영 예비자금" : "Total needed = setup + operating reserve"}
+              </div>
+              <div style={{ fontSize: "24px", fontWeight: 720, letterSpacing: "-0.03em", color: "var(--primary)", whiteSpace: "nowrap" as const }}>
+                {totalNeededWon > 0 ? fmt(totalNeededWon) : (ko ? "—" : "—")}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "14px", marginTop: "10px", flexWrap: "wrap" as const, fontSize: "12px", color: "var(--muted)" }}>
+              <span>{ko ? "① 시설·창업 비용" : "① Setup"} <b style={{ color: "var(--primary)", fontWeight: 600 }}>{fmt(facilityWon)}</b></span>
+              <span style={{ opacity: 0.4 }}>+</span>
+              <span>{ko ? "② 운영 예비자금" : "② Operating"} <b style={{ color: "var(--primary)", fontWeight: 600 }}>{fmt(capitalWon)}</b></span>
+            </div>
+            {capitalWon > 0 && estimatedMonthly > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(29,53,87,0.1)" }}>
+                <div style={{ width: 7, height: 7, borderRadius: 4, background: ratioColor, flexShrink: 0 }} />
+                <span style={{ fontSize: "12.5px", color: "var(--muted)" }}>
+                  {ko
+                    ? `운영 예비자금으로 매출 없이 약 ${runwayMonthsTotal}개월 버틸 수 있어요`
+                    : `~${runwayMonthsTotal} months of runway with zero revenue`}
+                </span>
+              </div>
+            )}
+          </div>
+          </>
         );
       })()}
+
+      {/* ── 예산 분석 — ① 시설·창업 비용을 *세부 업종 평균* 과 비교, 미달 시 지원 사업 안내 ──
+            BudgetInsightCard: selectedIndustryId(세부 업종) 우선 평균과 비교 + 매칭 프로그램
+            BudgetFundingMatchCard: 79개 풀에서 업종·자본금 기준 상위 매칭(자격 충족 우선) */}
+      <BudgetInsightCard />
+      <BudgetFundingMatchCard />
 
       <div style={styles.budgetPanel}>
         <div style={styles.budgetHeader}>

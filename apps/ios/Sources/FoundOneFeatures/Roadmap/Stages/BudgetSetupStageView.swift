@@ -6,10 +6,12 @@
 //
 //  섹션 구조:
 //    § 0 — 프랜차이즈 비용 패널 (startupType="franchise" + 브랜드 선택 시만 노출)
-//    § 1 — 시작 자본금 (슬라이더 + 직접입력 + 프리셋)
-//    § 2 — BudgetInsightCard (예산 인사이트 + 정부지원)
-//    § 3 — 운영 자본금 / 런웨이 자본 (업종 + 운영 모드 분기)
+//    § 1 — ① 시설·창업 비용 (한 번 쓰는 돈 — 슬라이더 + 직접입력 + 프리셋)
+//    § 3 — ② 운영 예비자금 (매달 나가는 돈 — 월 고정비 × 개월)
+//    § T — 총 필요 자금 = ① + ② (두 통의 관계를 항상 노출)
+//    § 2 — BudgetInsightCard (시설비 vs 세부 업종 평균 + 미달 시 정부지원)
 //    § 4 — 목표 오픈 시점 (프리셋 chip)
+//    ※ 입력(①②) → 합계 → 분석 순서로 흐름 통합 (웹 SSOT 동일)
 //
 //  데이터:
 //    @AppStorage "stage.budget.startupWon"             — Int
@@ -208,7 +210,7 @@ public struct BudgetSetupStageView: View {
 
     private var advanceHint: String {
         if startupWon == 0 && openDateId.isEmpty { return "자본금과 오픈 시점을 입력하세요" }
-        if startupWon == 0 { return "시작 자본금을 입력하세요" }
+        if startupWon == 0 { return "시설·창업 비용을 입력하세요" }
         if openDateId.isEmpty { return "오픈 시점을 선택하세요" }
         return "예산·일정 입력 완료 — 다음 단계로"
     }
@@ -217,7 +219,7 @@ public struct BudgetSetupStageView: View {
         if isStartup {
             return "자본 규모에 따라 런웨이가 결정됩니다. 시리즈A 표준 18~24개월 — Default Alive (자체 매출 생존) 목표."
         }
-        return "자본 규모에 따라 로드맵 실행 속도와 우선순위가 달라집니다. 권장 운영자본 3~6개월 — 흑자부도 1순위 원인이 운영자본 부족입니다."
+        return "창업 자금은 두 통으로 나눕니다 — ① 시설·창업 비용(오픈 전 한 번)과 ② 운영 예비자금(매달 나가는 돈). 운영비를 따로 떼어두지 않은 가게의 1년 폐업률이 3배입니다."
     }
 
     public var body: some View {
@@ -257,10 +259,11 @@ public struct BudgetSetupStageView: View {
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 franchiseCostPanel
-                startupCapitalSection
-                BudgetInsightCard(userBudgetWon: startupWon)
-                fundingMatchSection
-                operatingCapitalSection
+                startupCapitalSection      // ① 시설·창업 비용
+                operatingCapitalSection    // ② 운영 예비자금
+                totalNeededCard            // 총 필요 자금 = ① + ②
+                BudgetInsightCard(userBudgetWon: startupWon)  // 시설비 vs 세부 업종 평균
+                fundingMatchSection        // 미달 시 지원 사업
                 openDateSection
             }
         }
@@ -555,13 +558,64 @@ public struct BudgetSetupStageView: View {
         }
     }
 
-    // MARK: - § 1 시작 자본금
+    // MARK: - Bucket badge (① 한 번 쓰는 돈 / ② 매달 나가는 돈)
+
+    private func bucketBadge(_ text: String) -> some View {
+        Text(text)
+            .font(BUFont.eyebrow)
+            .foregroundStyle(BUColor.midnight)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(BUColor.midnight.opacity(0.07), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+
+    // MARK: - § T 총 필요 자금 = ① 시설비 + ② 운영 예비자금
+
+    private var totalNeededCard: some View {
+        let total = startupWon + operatingWon
+        let runway = monthlyEstimate > 0 ? operatingWon / monthlyEstimate : 0
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("총 필요 자금 = 시설·창업 비용 + 운영 예비자금")
+                    .font(BUFont.bodyCaption)
+                    .foregroundStyle(BUColor.midnight)
+                Spacer()
+                Text(total > 0 ? formatWon(total) : "—")
+                    .font(BUFont.cardTitleSmall)
+                    .foregroundStyle(BUColor.midnight)
+                    .monospacedDigit()
+            }
+            HStack(spacing: 10) {
+                Text("① 시설·창업 비용 \(formatWon(startupWon))")
+                    .font(BUFont.eyebrow).foregroundStyle(BUColor.inkSecondary)
+                Text("+").font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                Text("② 운영 예비자금 \(formatWon(operatingWon))")
+                    .font(BUFont.eyebrow).foregroundStyle(BUColor.inkSecondary)
+            }
+            if operatingWon > 0 && monthlyEstimate > 0 {
+                HStack(spacing: 8) {
+                    Circle().fill(ratioColor).frame(width: 7, height: 7)
+                    Text("운영 예비자금으로 매출 없이 약 \(runway)개월 버틸 수 있어요")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.inkSecondary)
+                }
+                .padding(.top, 2)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(BUColor.midnight.opacity(0.1), lineWidth: 1))
+    }
+
+    // MARK: - § 1 시설·창업 비용
 
     private var startupCapitalSection: some View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                HStack {
-                    BUEyebrow("시작 자본금")
+                HStack(spacing: 6) {
+                    bucketBadge("① 한 번 쓰는 돈")
+                    BUEyebrow("시설·창업 비용")
                     Spacer()
                     Text(startupWon > 0 ? formatWon(startupWon) : "미입력")
                         .font(BUFont.cardTitleSmall)
@@ -569,7 +623,7 @@ public struct BudgetSetupStageView: View {
                         .monospacedDigit()
                 }
 
-                Text("슬라이더로 대략적인 규모를 먼저 잡고, 아래에서 세밀하게 조정하세요.")
+                Text("보증금·인테리어·집기·인허가 — 오픈 전에 한 번 지출하는 돈입니다. 아래에서 세밀하게 조정하세요.")
                     .font(BUFont.bodyCaption)
                     .foregroundStyle(BUColor.inkSecondary)
 
@@ -624,12 +678,12 @@ public struct BudgetSetupStageView: View {
     // MARK: - § 3 운영 자본금 / 런웨이 자본
 
     private var operatingCapitalTitle: String {
-        isStartup ? "런웨이 자본 (자본금과 별도)" : "초기 운영자본금 (자본금과 별도)"
+        isStartup ? "런웨이 자본 · 매달 나가는 돈" : "운영 예비자금 · 매달 나가는 돈"
     }
     private var operatingCapitalHelper: String {
         isStartup
-            ? "월 번레이트 × 운영 가능 개월 수입니다. 시리즈A 평균 21개월 런웨이가 표준이며, 매출이 비용을 못 덮는 동안 버틸 자금이에요."
-            : "오픈 직후 몇 달간 월세·인건비·공과금·재료비로 쓸 현금입니다. 매출이 적자를 덮기 전까지 버티는 연료예요."
+            ? "월 번레이트 × 버틸 개월 수입니다. 시리즈A 평균 21개월 런웨이가 표준 — 매출이 비용을 덮기 전까지 버티는 자금이에요. 아래에서 개월 수만 고르면 자동 계산됩니다."
+            : "월세·인건비·공과금·재료비로 매달 빠져나가는 돈을, 매출이 자리 잡기 전까지 몇 달치 쌓아둘지 정합니다. 아래에서 개월 수만 고르면 월 추정 고정비로 자동 계산돼요."
     }
 
     private var operatingCapitalSection: some View {
@@ -640,7 +694,8 @@ public struct BudgetSetupStageView: View {
                     startupModeSelector
                 }
 
-                HStack {
+                HStack(spacing: 6) {
+                    bucketBadge("② 매달 나가는 돈")
                     BUEyebrow(operatingCapitalTitle)
                     Spacer()
                     Text(operatingWon > 0 ? formatWon(operatingWon) : "미입력")

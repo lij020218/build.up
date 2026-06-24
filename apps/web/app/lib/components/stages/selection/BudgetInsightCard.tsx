@@ -112,7 +112,7 @@ export function BudgetInsightCard() {
             marginBottom: "8px",
           }}
         >
-          {ko ? "예산 인사이트" : "Budget Insight"}
+          {ko ? "시설 비용 분석 · 세부 업종 평균 비교" : "Setup cost vs sub-industry average"}
         </div>
         <div
           style={{
@@ -290,7 +290,7 @@ function ComparisonBar({
           whiteSpace: "nowrap",
         }}
       >
-        평균 {avgWan.toLocaleString()}만
+세부 업종 평균 {avgWan.toLocaleString()}만
       </div>
 
       {/* 트랙 */}
@@ -361,7 +361,7 @@ function ComparisonBar({
             whiteSpace: "nowrap",
           }}
         >
-          내 예산 {userWan.toLocaleString()}만
+내 시설비 {userWan.toLocaleString()}만
         </div>
       )}
     </div>

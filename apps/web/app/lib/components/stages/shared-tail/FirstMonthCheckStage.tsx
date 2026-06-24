@@ -38,6 +38,7 @@ export function FirstMonthCheckStage() {
     industryCategoryId,
     monthlyCosts,
     selectedBudget,
+    initialOperatingCapital,
     businessLaunched,
     storeName,
     preferredRegionInput,
@@ -63,8 +64,13 @@ export function FirstMonthCheckStage() {
   const hasAnyCost = totalCosts > 0;
   const emergencyTarget6mo = fixedCosts > 0 ? fixedCosts * 6 : 0;
   const emergencyTarget3mo = fixedCosts > 0 ? fixedCosts * 3 : 0;
-  const runwayMonths = fixedCosts > 0 && (selectedBudget ?? 0) > 0
-    ? Math.floor((selectedBudget as number) / fixedCosts)
+  // 런웨이는 *운영 예비자금*(매달 나가는 돈 버퍼) 기준. 시설비(selectedBudget)는 오픈 전 1회 지출이라
+  //   런웨이로 쓰면 과대 계상 → 운영 예비자금 우선, 미입력 시에만 총 자본으로 폴백.
+  const runwayCash = (initialOperatingCapital as number | undefined) && (initialOperatingCapital as number) > 0
+    ? (initialOperatingCapital as number)
+    : (selectedBudget ?? 0);
+  const runwayMonths = fixedCosts > 0 && runwayCash > 0
+    ? Math.floor(runwayCash / fixedCosts)
     : null;
 
   // ─── 업종별 벤치마크 ───

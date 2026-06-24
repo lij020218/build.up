@@ -691,7 +691,7 @@ public struct BudgetInsightCard: View {
 
     private func headerSection(_ insight: BudgetInsight) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            BUEyebrow("예산 인사이트")
+            BUEyebrow("시설 비용 분석 · 세부 업종 평균 비교")
             Text(insight.headlineKo)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(BUColor.midnightDeep)
@@ -720,7 +720,7 @@ public struct BudgetInsightCard: View {
         return VStack(alignment: .leading, spacing: 0) {
             // 평균 라벨 (위)
             GeometryReader { geo in
-                Text("평균 \(bench.avgWan.formatted())만")
+                Text("세부 업종 평균 \(bench.avgWan.formatted())만")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(BUColor.inkMuted)
                     .fixedSize()
@@ -766,7 +766,7 @@ public struct BudgetInsightCard: View {
             // 사용자 값 라벨 (아래)
             if insight.userWan > 0 {
                 GeometryReader { geo in
-                    Text("내 예산 \(insight.userWan.formatted())만")
+                    Text("내 시설비 \(insight.userWan.formatted())만")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(BUColor.midnight)
                         .fixedSize()
