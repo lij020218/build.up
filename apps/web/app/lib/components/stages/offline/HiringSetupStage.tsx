@@ -205,12 +205,12 @@ export function HiringSetupStage() {
   // 페이지 3 — 보험·세금 사이트 4종
   const insuranceLinks: LinkCard[] = ko ? [
     { label: "4대보험 정보연계센터", desc: "국민연금·건강·고용·산재 통합 신고 (필수, 채용 14일 이내)", href: "https://www.4insure.or.kr", brand: "4대" },
-    { label: "홈택스", desc: "원천세 매월 신고·납부, 사업자등록·연말정산", href: "https://www.hometax.go.kr", brand: "홈" },
+    { label: "홈택스", desc: "원천세 매월 신고·납부, 사업자등록·연말정산", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml", brand: "홈" },
     { label: "국민건강보험공단", desc: "직원 보험료 조회·납부", href: "https://www.nhis.or.kr", brand: "건강" },
     { label: "근로복지공단", desc: "산재·고용보험 가입·신고 (사업주 부담)", href: "https://www.kcomwel.or.kr", brand: "근로" },
   ] : [
     { label: "Social Insurance Portal", desc: "All 4 insurances at once (within 14 days of hire)", href: "https://www.4insure.or.kr", brand: "4-IN" },
-    { label: "Hometax", desc: "Monthly payroll tax filing, biz reg, year-end", href: "https://www.hometax.go.kr", brand: "HT" },
+    { label: "Hometax", desc: "Monthly payroll tax filing, biz reg, year-end", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml", brand: "HT" },
     { label: "NHIS", desc: "Employee health premium lookup/payment", href: "https://www.nhis.or.kr", brand: "NH" },
     { label: "KCOMWEL", desc: "Workers comp / employment insurance (employer)", href: "https://www.kcomwel.or.kr", brand: "KC" },
   ];
@@ -226,7 +226,7 @@ export function HiringSetupStage() {
     { cat: "계약서", label: "최저임금위원회", desc: `2026년 최저임금 ${WAGE_2026_DISPLAY}원 · 모의 계산기`, href: "https://www.minimumwage.go.kr" },
     { cat: "계약서", label: "노동OK", desc: "노동부 공식 무료 노무 상담 포털", href: "https://www.nodongok.com" },
     { cat: "보험·세금", label: "4대보험 정보연계센터", desc: "국민연금·건강·고용·산재 통합 신고", href: "https://www.4insure.or.kr" },
-    { cat: "보험·세금", label: "홈택스", desc: "원천세 신고·납부, 사업자 등록 확인", href: "https://www.hometax.go.kr" },
+    { cat: "보험·세금", label: "홈택스", desc: "원천세 신고·납부, 사업자 등록 확인", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml" },
     { cat: "보험·세금", label: "국민건강보험공단", desc: "직원 보험료 조회·납부", href: "https://www.nhis.or.kr" },
     { cat: "보험·세금", label: "근로복지공단", desc: "산재·고용보험 가입·신고", href: "https://www.kcomwel.or.kr" },
   ] : [
@@ -239,7 +239,7 @@ export function HiringSetupStage() {
     { cat: "Contract", label: "Minimum Wage Commission", desc: `2026 KRW ${WAGE_2026_DISPLAY}/h · simulator`, href: "https://www.minimumwage.go.kr" },
     { cat: "Contract", label: "NodongOK", desc: "Free labor consulting", href: "https://www.nodongok.com" },
     { cat: "Insurance/Tax", label: "Social Insurance Portal", desc: "All 4 insurances at once", href: "https://www.4insure.or.kr" },
-    { cat: "Insurance/Tax", label: "Hometax", desc: "Withholding tax filing", href: "https://www.hometax.go.kr" },
+    { cat: "Insurance/Tax", label: "Hometax", desc: "Withholding tax filing", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml" },
     { cat: "Insurance/Tax", label: "NHIS", desc: "Employee premium lookup", href: "https://www.nhis.or.kr" },
     { cat: "Insurance/Tax", label: "KCOMWEL", desc: "Workers comp / employment insurance", href: "https://www.kcomwel.or.kr" },
   ];

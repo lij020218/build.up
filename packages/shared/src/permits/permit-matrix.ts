@@ -45,7 +45,7 @@ const bizRegistration: PermitItem = {
   agency: { ko: "관할 세무서", en: "Local Tax Office" },
   costWon: 0,
   duration: { ko: "즉일~3일", en: "Same day to 3 days" },
-  applyUrl: "https://www.hometax.go.kr",
+  applyUrl: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml",
   documents: [
     { ko: "임대차계약서 사본", en: "Lease contract copy" },
     { ko: "신분증", en: "ID card" },

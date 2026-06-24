@@ -464,7 +464,7 @@ export function TaxGuideStage() {
             <div style={sectionLabel}>{ko ? "바로가기" : "Quick links"}</div>
             <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
               {[
-                { name: "홈택스", desc: ko ? "사업자등록·세금계산서·신고" : "Biz reg, invoices, filing", href: "https://www.hometax.go.kr", icon: "홈" },
+                { name: "홈택스", desc: ko ? "사업자등록·세금계산서·신고" : "Biz reg, invoices, filing", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml", icon: "홈" },
                 { name: ko ? "캐시노트 (무료)" : "CashNote (free)", desc: ko ? "소상공인 매출·경비 자동 분류" : "Auto-categorize for SMBs", href: "https://cashnote.kr", icon: "캐" },
                 { name: ko ? "삼쩜삼" : "3o3", desc: ko ? "프리랜서·소형 사업자 종소세 환급" : "Freelancer income tax refund", href: "https://3o3.co.kr", icon: "3" },
                 { name: ko ? "자비스 (Jobis)" : "Jobis", desc: ko ? "스타트업·법인 회계·세무 SaaS" : "Startup/corp accounting SaaS", href: "https://jobis.co", icon: "자" },

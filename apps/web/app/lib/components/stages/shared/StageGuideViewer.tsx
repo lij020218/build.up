@@ -1228,10 +1228,10 @@ export function StageGuideViewer() {
         { label: "Trade name trademark risk", text: "A name similar to an existing trademark can lead to legal disputes and forced rebranding later. Search on KIPRIS before committing." },
       ],
       links: ko ? [
-        { text: "\uad6d\uc138\uccad \ud648\ud0dd\uc2a4 \u2014 \uc0ac\uc5c5\uc790\ub4f1\ub85d \uc2e0\uccad", href: "https://www.hometax.go.kr" },
+        { text: "\uad6d\uc138\uccad \ud648\ud0dd\uc2a4 \u2014 \uc0ac\uc5c5\uc790\ub4f1\ub85d \uc2e0\uccad", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml" },
         { text: "KIPRIS \u2014 \uc0c1\ud45c\xb7\uc0c1\ud638 \uac80\uc0c9", href: "https://www.kipris.or.kr" },
       ] : [
-        { text: "Hometax \u2014 Business registration", href: "https://www.hometax.go.kr" },
+        { text: "Hometax \u2014 Business registration", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml" },
         { text: "KIPRIS \u2014 Trademark search", href: "https://www.kipris.or.kr" },
       ],
     };
@@ -1475,11 +1475,11 @@ export function StageGuideViewer() {
       ],
       links: ko ? [
         { text: "\uc5ec\uc2e0\uae08\uc735\ud611\ud68c \u2014 \uce74\ub4dc\uac00\ub9f9\uc810 \uc2e0\uccad", href: "https://www.cardsales.or.kr" },
-        { text: "\ud648\ud0dd\uc2a4 \u2014 \ud604\uae08\uc601\uc218\uc99d \uac00\ub9f9 \uc2e0\uccad", href: "https://www.hometax.go.kr" },
+        { text: "\ud648\ud0dd\uc2a4 \u2014 \ud604\uae08\uc601\uc218\uc99d \uac00\ub9f9 \uc2e0\uccad", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml" },
         { text: "\ud1a0\uc2a4\ud398\uc774\uba3c\uce20 \u2014 \uc0ac\uc5c5\uc790 \uac00\ub9f9 \uc2e0\uccad", href: "https://www.tosspayments.com" },
       ] : [
         { text: "Korea Card Consortium \u2014 merchant application", href: "https://www.cardsales.or.kr" },
-        { text: "Hometax \u2014 cash receipt merchant", href: "https://www.hometax.go.kr" },
+        { text: "Hometax \u2014 cash receipt merchant", href: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml" },
         { text: "Toss Payments \u2014 merchant sign-up", href: "https://www.tosspayments.com" },
       ],
     };
