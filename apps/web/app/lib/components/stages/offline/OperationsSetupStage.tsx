@@ -139,7 +139,7 @@ export function OperationsSetupStage() {
       ),
     },
     {
-      id: "google-business", name: "구글 비즈니스", color: "#4285F4", url: "https://business.google.com/ko",
+      id: "google-business", name: "구글 비즈니스", color: "#4285F4", url: "https://business.google.com/kr/business-profile/",
       tagline: "구글맵 노출 · 외국인 관광객 필수 · 무료",
       pros: ["구글맵 노출 — 외국인 관광객 접근성 업계 최고", "무료 운영 + 리뷰·Q&A·예약·메시지", "구글 검색 '내 주변' 자동 노출"],
       cons: ["국내 이용률 네이버 대비 낮음", "허위 리뷰 대응 절차 복잡"],
