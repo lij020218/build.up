@@ -713,6 +713,43 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     return p;
   };
 
+  // ── 초기화 표식(tombstone) 확인 — 다른 기기에서 초기화됐으면 stale 로컬을 flush 하지 말고 wipe ──
+  //   ⚠️ 부활(cross-device resurrection) 차단의 핵심. 반드시 *flush 보다 먼저* 호출해야 함
+  //   (focus 복귀·realtime 재조회가 flush→connectAndLoad 순이라, 뒤에 두면 flush 가 이미 부활시킴).
+  //   reset 감지 시 wipe+reload 하고 true 반환(호출부는 flush·load 중단). 표/네트워크 부재 → false.
+  const detectResetAndWipe = async (uid: string): Promise<boolean> => {
+    const SEEN_KEY = "__foundone_reset_seen";
+    let serverResetAt: string | null = null;
+    try {
+      const markerRes = await (supabase as unknown as {
+        from: (n: string) => { select: (c: string) => { eq: (k: string, v: string) => { maybeSingle: () => Promise<{ data: { reset_at?: string } | null }> } } };
+      }).from("account_reset_markers").select("reset_at").eq("user_id", uid).maybeSingle();
+      serverResetAt = markerRes?.data?.reset_at ?? null;
+    } catch { return false; }
+    if (!serverResetAt) return false;
+    let seen: string | null = null;
+    try { seen = window.localStorage.getItem(SEEN_KEY); } catch { /* */ }
+    if (seen && serverResetAt <= seen) return false;  // 이미 본 초기화 — 정상.
+    // reset_at 이 더 최신 = 다른 기기에서 초기화됨. 로컬에 실제 데이터 있을 때만 wipe(빈/새 브라우저 제외).
+    const hasLocalData = (() => {
+      try {
+        const prof = window.localStorage.getItem("foundone-profile") ?? "";
+        const road = window.localStorage.getItem("foundone-roadmap") ?? "";
+        return prof.length > 40 || road.length > 40;
+      } catch { return false; }
+    })();
+    if (!hasLocalData) {
+      try { window.localStorage.setItem(SEEN_KEY, serverResetAt); } catch { /* */ }
+      return false;
+    }
+    clearLocalUserData();
+    hardWipeBuildupStorage();
+    try { window.localStorage.setItem("pending_force_onboarding", String(Date.now())); } catch { /* */ }
+    try { window.localStorage.setItem(SEEN_KEY, serverResetAt); } catch { /* */ }
+    window.location.assign(`/?reset=${Date.now()}`);
+    return true;
+  };
+
   // ── connectAndLoad ──
   const connectAndLoad = async () => {
     if (connectLoadingRef.current) return;
@@ -746,6 +783,9 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       setRequiresAuth(false);
       setAuthResolved(true);
 
+      // ── 초기화 표식 확인 — 다른 기기에서 초기화됐으면 wipe+reload (load·subscribe 중단) ──
+      if (await detectResetAndWipe(result.user.id)) { connectLoadingRef.current = false; return; }
+
       // ── 2단계 실시간 동기화 — 유저별 채널 1회 구독 (user_store_data·business_profiles 본인 행) ──
       //   변경 수신 시 5초 스로틀된 재조회(flush 우선 → connectAndLoad). connectAndLoad 가 재진입해도
       //   같은 user 면 채널 재생성 skip. iOS·다른 기기에서 저장한 내용이 웹에 즉시 반영되게 한다.
@@ -759,18 +799,41 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           realtimeTrailingRef.current = null;
         }
         const uid = result.user.id;
+        // 다른 기기 초기화(core 행 DELETE)로 트리거된 reload 면, stale 로컬을 서버로 flush 하지 않음
+        //   (flush 하면 방금 지운 데이터가 *부활* — 사장님 신고 "초기화 후 시간 지나면 복구").
+        const isRemoteWipePending = () => {
+          try {
+            const f = window.localStorage.getItem("pending_force_onboarding");
+            return !!f && Date.now() - Number(f) < 120_000;
+          } catch { return false; }
+        };
         // 원격 변경 → 재조회(전체 재수화). 빈 로컬 push 금지(로드 전) + 최신 스냅샷 fetch.
         const doReload = () => {
           void (async () => {
+            // ⚠️ flush 보다 먼저 초기화 표식 확인 — 다른 기기 초기화 후 stale flush 로 부활 차단.
+            if (await detectResetAndWipe(uid)) return;
             try {
               // 🛑 서버 로드 완료 전엔 빈 로컬 push 금지 — 다른 기기 저장이 echo 됐을 때
               //   아직 로드 안 한 이 기기가 빈/기본 상태를 서버에 덮어쓰는 것을 차단(cross-device wipe).
-              if (storeDataReadyRef.current) await flushStoreDataImmediate();
+              // 🛑 remote wipe(다른 기기 초기화) 진행 중이면 flush 금지 — 삭제된 행 부활 차단.
+              if (storeDataReadyRef.current && !isRemoteWipePending()) await flushStoreDataImmediate();
             } catch {
               /* flush 실패해도 재조회 진행 */
             }
             void connectAndLoad();
           })();
+        };
+        // user_store_data / business_profiles / roadmaps 는 사용자당 1행 — DELETE = 초기화/계정삭제.
+        //   다른 기기에서 초기화하면 이 기기는 stale 상태를 flush 하지 말고 *따라서* 초기화 (부활 차단).
+        const onCoreRemote = (payload: { eventType?: string }) => {
+          if (payload?.eventType === "DELETE") {
+            try { window.localStorage.setItem("pending_force_onboarding", String(Date.now())); } catch { /* */ }
+            try { if (realtimeChannelRef.current) void supabase.removeChannel(realtimeChannelRef.current); } catch { /* */ }
+            realtimeChannelRef.current = null;
+            window.location.assign(`/?reset=${Date.now()}`);
+            return;
+          }
+          onRemote();
         };
         // throttle: leading-edge 즉시 + trailing(윈도우 내 추가 변경의 마지막을 반드시 반영).
         //   종전 5초 leading-only 는 (1) 지연이 길고 (2) 윈도우 내 마지막 변경을 *드롭* 해
@@ -796,8 +859,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         };
         const ch = supabase
           .channel(`buildup-sync-${uid}`)
-          .on("postgres_changes", { event: "*", schema: "public", table: "user_store_data", filter: `user_id=eq.${uid}` }, onRemote)
-          .on("postgres_changes", { event: "*", schema: "public", table: "business_profiles", filter: `user_id=eq.${uid}` }, onRemote)
+          .on("postgres_changes", { event: "*", schema: "public", table: "user_store_data", filter: `user_id=eq.${uid}` }, onCoreRemote)
+          .on("postgres_changes", { event: "*", schema: "public", table: "business_profiles", filter: `user_id=eq.${uid}` }, onCoreRemote)
           // coaching_history — 코칭 일지는 Zustand 가 아니라 CoachingHistoryCard 가 자체 fetch.
           //   connectAndLoad 와 무관하므로 가벼운 알림만 발행해 카드가 재-hydrate 하게 한다.
           .on("postgres_changes", { event: "*", schema: "public", table: "coaching_history", filter: `user_id=eq.${uid}` }, () => notifyRemoteDataChanged())
@@ -805,7 +868,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           //   컬럼이 없어 직접 필터 구독 불가하므로, 양쪽(웹 saveRoadmapState / iOS upsert)이 저장 시
           //   roadmaps.updated_at 을 bump 하고, 여기서 roadmaps(user_id 필터)를 구독해 앱·다른 기기의
           //   로드맵 변경을 즉시 재조회한다.
-          .on("postgres_changes", { event: "*", schema: "public", table: "roadmaps", filter: `user_id=eq.${uid}` }, onRemote)
+          .on("postgres_changes", { event: "*", schema: "public", table: "roadmaps", filter: `user_id=eq.${uid}` }, onCoreRemote)
           // ── 동기화 메시 확장(2026-06-22) — owner 편집 테이블 5종 ──
           //   분류: 대시보드(Zustand) 재조회가 필요한 데이터는 onRemote(=flush+connectAndLoad),
           //         Zustand 밖에서 독립 hydrate 하는 카드는 가벼운 notifyRemoteDataChanged() 만 발행
@@ -1234,6 +1297,13 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
 
   /** 즉시 저장 (debounce 없이) — 매출·비용 입력 같은 critical 데이터용. throw on failure. */
   const flushStoreDataImmediate = async (): Promise<void> => {
+    // 🛑 초기화 진행/감지 중(force-onboarding 플래그)이면 flush 금지 — 방금 지운 서버 데이터를
+    //   stale 로컬로 되살리는 부활(cross-device resurrection)을 차단. 플래그는 timestamp 라
+    //   최근(2분 이내)일 때만 차단 → 혹시 플래그가 끼여도 저장이 영구 차단되지 않게 자가복구.
+    try {
+      const f = window.localStorage.getItem("pending_force_onboarding");
+      if (f && Date.now() - Number(f) < 120_000) return;
+    } catch { /* */ }
     const onb = useOnboardingStore.getState();
     if (!onb.persistenceReady) {
       onb.setPersistStatus("error");
@@ -1338,6 +1408,10 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       // 독립 hydrate 카드(코칭 일지 등)도 포커스 복귀 시 재조회 — iOS 에서 바꾼 내용 즉시 반영.
       notifyRemoteDataChanged();
       void (async () => {
+        // ⚠️ flush *보다 먼저* 초기화 표식 확인 — 다른 기기 초기화 후 탭 복귀 시 stale 를 flush 하면
+        //   삭제 데이터가 부활("시간 지나면 초기화 전 상태로 복구"). reset 감지 시 wipe+reload.
+        const uid = realtimeUserRef.current;
+        if (uid && await detectResetAndWipe(uid)) return;
         try {
           await flushStoreDataImmediate();
         } catch {

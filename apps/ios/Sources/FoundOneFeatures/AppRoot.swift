@@ -221,6 +221,11 @@ public struct AppRoot: View {
         .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteDataChanged)) { _ in
             Task { await refreshAllFromRemote() }
         }
+        // 다른 기기에서 초기화(core 행 DELETE) → 이 기기도 따라서 로컬 wipe.
+        //   refreshAllFromRemote(flush-우선/key-merge)를 타면 stale 로컬이 서버에 부활하므로 그 경로 대신 wipe.
+        .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteWipe)) { _ in
+            wipeLocalForRemoteReset()
+        }
         // 단계 번호를 경로 위치 기준으로 계산하도록 현재 클러스터 경로 주입 (5→11 점프 버그 방지).
         .environment(\.roadmapStageOrder, roadmapStore.pathStageIds)
         .environment(resetCoordinator)
@@ -260,6 +265,10 @@ public struct AppRoot: View {
     @MainActor
     private func loadDashboardIfNeeded(coordinator: AuthCoordinator) async {
         guard let session = coordinator.currentSession, dashboardStore == nil else { return }
+
+        // 콜드 런치 시에도 다른 기기 초기화를 감지해 stale 로컬을 비운다(이후 빈 서버 로드 → 온보딩).
+        //   dashboardStore 생성 전이라 roadmapStore.decisions(@AppStorage)로 hasLocalData 판단.
+        _ = await checkResetMarkerAndWipe()
 
         let supabase = BUSupabase.shared.client
         let userId = session.userId
@@ -415,8 +424,51 @@ public struct AppRoot: View {
     ///   순서: (1) 미저장 로컬 편집 flush → (2) 재조회. 기존 store 인스턴스에 재주입(재생성 X).
     ///   syncFromRemote 는 key-merge(로컬-only 입력 보존), storeInfo.refresh 는 flush-우선이라
     ///   진행 중 편집을 덮어쓰지 않는다. best-effort — 네트워크 오류는 무시(기존 값 유지).
+    /// 다른 기기 초기화(core 행 DELETE) 수신 → 로컬을 따라서 비운다 (performReset 의 로컬 정리와 동일).
+    ///   refreshAllFromRemote(flush-우선/key-merge)를 타면 stale 로컬이 서버에 부활하므로 이 경로를 쓴다.
+    @MainActor
+    private func wipeLocalForRemoteReset() {
+        dashboardStore?.resetAll()
+        roadmapStore.clearAllAppStorage()
+        storeInfoStore?.reset()
+    }
+
+    private struct ResetMarkerRow: Decodable { let reset_at: String }
+
+    /// 초기화 표식(tombstone) 확인 — 서버 reset_at 이 내가 마지막으로 본 값보다 최신이면 = 다른 기기에서
+    ///   초기화됨 → 로컬을 *따라서* 비운다(부활 차단). realtime DELETE 전달 여부와 무관한 권위적 신호.
+    ///   표 부재(마이그레이션 미적용)·네트워크 오류 시 graceful no-op. wipe 했으면 true 반환.
+    @MainActor
+    private func checkResetMarkerAndWipe() async -> Bool {
+        guard let session = coordinator.currentSession else { return false }
+        let uid = session.userId.uuidString.lowercased()
+        var serverResetAt: String?
+        do {
+            let rows: [ResetMarkerRow] = try await BUSupabase.shared.client
+                .from("account_reset_markers")
+                .select("reset_at")
+                .eq("user_id", value: uid)
+                .limit(1)
+                .execute()
+                .value
+            serverResetAt = rows.first?.reset_at
+        } catch {
+            return false
+        }
+        guard let serverResetAt else { return false }
+        let seen = UserDefaults.standard.string(forKey: "account.reset.seen")
+        guard seen == nil || serverResetAt > seen! else { return false }
+        // 로컬에 실제 데이터(로드맵 진행·매출 입력)가 있을 때만 wipe. 빈 상태면 표식만 적용.
+        let hasLocalData = !roadmapStore.decisions.isEmpty || !(dashboardStore?.entries.isEmpty ?? true)
+        if hasLocalData { wipeLocalForRemoteReset() }
+        UserDefaults.standard.set(serverResetAt, forKey: "account.reset.seen")
+        return hasLocalData
+    }
+
     private func refreshAllFromRemote() async {
         guard let session = coordinator.currentSession else { return }
+        // 다른 기기 초기화 표식 확인 — 감지 시 로컬 wipe 후 flush-우선 refresh 스킵(stale 부활 차단).
+        if await checkResetMarkerAndWipe() { return }
         let supabase = BUSupabase.shared.client
         let userId = session.userId
 

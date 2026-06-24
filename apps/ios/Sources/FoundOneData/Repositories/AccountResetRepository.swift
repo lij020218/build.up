@@ -22,6 +22,8 @@ public struct AccountResetResult: Sendable {
     public let attemptedTables: Int
     /// 실제 핵심 테이블 (3개) 중 실패한 것 — partial 판단에 사용.
     public let coreFailures: [String]
+    /// 초기화 표식 — 서버가 기록한 reset_at(ISO8601). 다른 기기 부활 차단 비교용.
+    public let resetAt: String?
 
     public var isFullSuccess: Bool { coreFailures.isEmpty }
 }
@@ -88,14 +90,17 @@ public actor AccountResetRepository {
             throw AccountResetError.notAuthenticated
         }
 
-        // 응답 파싱 — ok=false 면 실패한 테이블 목록을 partial 로 전달.
+        // 비-200(서버 오류·인증) → throw. 200 이면 실패 테이블을 coreFailures(핵심 3종) 로 구분해 반환
+        //   → 호출부가 "핵심 데이터가 서버에 남았는가"로 중단 여부를 판단(웹 verifyFailures 미러).
         let decoded = try? JSONDecoder().decode(ResetResponse.self, from: data)
-        if http.statusCode != 200 || decoded?.ok != true {
-            let failed = decoded?.failures?.map { $0.table } ?? ["server"]
-            throw AccountResetError.partial(failures: failed)
+        if http.statusCode != 200 {
+            throw AccountResetError.partial(failures: decoded?.failures?.map { $0.table } ?? ["server"])
         }
+        let failedTables = decoded?.failures?.map { $0.table } ?? (decoded?.ok == true ? [] : ["server"])
+        let coreTables: Set<String> = ["business_profiles", "user_store_data", "roadmaps"]
+        let coreFailures = failedTables.filter { coreTables.contains($0) }
 
-        return AccountResetResult(attemptedTables: decoded?.totalDeleted ?? 0, coreFailures: [])
+        return AccountResetResult(attemptedTables: decoded?.totalDeleted ?? 0, coreFailures: coreFailures, resetAt: decoded?.resetAt)
     }
 
     // MARK: - Response DTO
@@ -104,6 +109,7 @@ public actor AccountResetRepository {
         let ok: Bool
         let totalDeleted: Int?
         let failures: [Failure]?
+        let resetAt: String?
         struct Failure: Decodable { let table: String }
     }
 }

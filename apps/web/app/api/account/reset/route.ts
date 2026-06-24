@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 import { requireApiUserAllowAnon } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { wipeUserData } from "../../_lib/account-wipe";
+import { wipeUserData, isMissingTableError } from "../../_lib/account-wipe";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -42,7 +42,32 @@ export async function POST(request: Request) {
       logPrefix: "[/api/account/reset]",
     });
 
-    return NextResponse.json({ ok: failures.length === 0, deleted, failures, totalDeleted });
+    // ── 초기화 표식 기록 — 다른 기기가 "이 시점 이후로 내 stale 데이터를 서버에 되살리지 말고
+    //    따라 비워라"를 알 수 있게. account_reset_markers 는 USER_TABLES 에 없어 wipe 에 안 지워짐.
+    //    핵심 삭제가 성공한 경우에만 표식(부분 실패로 핵심 데이터가 남았으면 표식 안 함). best-effort.
+    const coreFailed = failures.some((f) =>
+      f.table === "business_profiles" || f.table === "user_store_data" || f.table === "roadmaps",
+    );
+    let resetAt: string | null = null;
+    if (!coreFailed) {
+      try {
+        const nowIso = new Date().toISOString();
+        const { error: markerErr } = await supabase
+          .from("account_reset_markers")
+          .upsert({ user_id: auth.userId, reset_at: nowIso, updated_at: nowIso }, { onConflict: "user_id" });
+        if (markerErr) {
+          if (!isMissingTableError(markerErr.code, markerErr.message)) {
+            console.warn("[/api/account/reset] reset marker upsert failed:", markerErr.message);
+          }
+        } else {
+          resetAt = nowIso;
+        }
+      } catch (e) {
+        console.warn("[/api/account/reset] reset marker exception:", (e as Error).message);
+      }
+    }
+
+    return NextResponse.json({ ok: failures.length === 0, deleted, failures, totalDeleted, resetAt });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     // 내부 오류 상세는 서버 로그에만 — 클라이언트엔 고정 문자열.

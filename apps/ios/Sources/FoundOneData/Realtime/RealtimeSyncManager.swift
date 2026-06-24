@@ -20,6 +20,9 @@ import Supabase
 public extension Notification.Name {
     /// 원격(웹·다른 기기) 데이터 변경 수신 — AppRoot 가 받아서 안전한 재조회 트리거.
     static let buildupRemoteDataChanged = Notification.Name("buildup.remoteDataChanged")
+    /// 원격(다른 기기) 초기화 — core 테이블(사용자당 1행)의 DELETE 수신. AppRoot 가 *따라서* 로컬을
+    ///   비운다. 재조회(refresh)는 flush-우선/key-merge 라 stale 로컬을 서버에 되살리므로 금지.
+    static let buildupRemoteWipe = Notification.Name("buildup.remoteWipe")
 }
 
 @MainActor
@@ -59,15 +62,23 @@ public final class RealtimeSyncManager {
         // saas_funnel_manual_weekly 포함(2026-06-22) — 웹에서 입력한 전환율 funnel 을 iOS 가 read-back.
         //   user_id ∈ PK 라 INSERT/UPDATE/DELETE 모두 필터 적중. ConversionFunnelFocusCard 가
         //   .buildupRemoteDataChanged 수신 시 fetchManualWeek 로 현재 주차 값을 @AppStorage 에 반영.
+        // core 테이블(사용자당 1행) — DELETE = 초기화/계정삭제. 재조회 대신 *로컬 wipe* 트리거.
+        let coreTables: Set<String> = ["user_store_data", "business_profiles", "roadmaps"]
         for table in ["user_store_data", "business_profiles", "roadmaps", "coaching_history", "saas_funnel_manual_weekly"] {
+            let isCore = coreTables.contains(table)
             let sub = ch.onPostgresChange(
                 AnyAction.self,
                 schema: "public",
                 table: table,
                 filter: filter
-            ) { [weak self] _ in
+            ) { [weak self] action in
                 guard let self else { return }
-                Task { @MainActor in self.scheduleFire() }
+                if isCore, case .delete = action {
+                    // 다른 기기에서 초기화 → 이 기기도 따라서 초기화 (부활 차단).
+                    Task { @MainActor in NotificationCenter.default.post(name: .buildupRemoteWipe, object: nil) }
+                } else {
+                    Task { @MainActor in self.scheduleFire() }
+                }
             }
             subscriptions.append(sub)
         }

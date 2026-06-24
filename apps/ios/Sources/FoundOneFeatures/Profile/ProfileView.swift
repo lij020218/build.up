@@ -49,6 +49,8 @@ public struct ProfileView: View {
 
     @State private var showDeleteConfirm: Bool = false
     @State private var showResetConfirm: Bool = false
+    // 서버 초기화 실패 시 — 로컬을 지우지 않고 사장님께 명확히 알림(가짜 "완료" 금지).
+    @State private var resetFailedMsg: String?
     @State private var showDataConnections: Bool = false
     @State private var showFeedbackSheet: Bool = false
     @State private var showStoreEdit: Bool = false
@@ -118,6 +120,11 @@ public struct ProfileView: View {
             }
         } message: {
             Text("모든 단계 결정·입력값·매출 기록이 삭제됩니다. 계정은 유지됩니다.")
+        }
+        .alert("초기화에 실패했습니다", isPresented: Binding(get: { resetFailedMsg != nil }, set: { if !$0 { resetFailedMsg = nil } })) {
+            Button("확인", role: .cancel) { resetFailedMsg = nil }
+        } message: {
+            Text("서버 데이터가 그대로 유지되어 초기화를 중단했습니다. 데이터는 안전합니다 — 네트워크 확인 후 다시 시도해 주세요.\n\n\(resetFailedMsg ?? "")")
         }
     }
 
@@ -650,18 +657,37 @@ public struct ProfileView: View {
         // ── ⓿ 준비 (0 → 0.20)
         await tick(to: 0.20, over: 0.25)
 
-        // ── ① 서버 reset (0.20 → 0.85) — 실패해도 로컬은 이어서 정리됨
+        // ── ① 서버 reset (0.20 → 0.85)
+        //   ⚠️ 서버 삭제가 실패하면 *로컬을 지우지 않고 중단*. 로컬만 비우면 (a) 가짜 "완료" 표시,
+        //      (b) 서버 데이터 잔존 → realtime/재로딩으로 부활 → "초기화 후 데이터 복구" 사장님 신고.
+        //      web(useSelectionHandlers) 의 "검증 실패 시 reload 차단" 패턴 미러.
         let repo = AccountResetRepository(supabase: BUSupabase.shared.client)
         await tick(to: 0.30, over: 0.1)
+        var serverFailMsg: String?
+        var resetResultAt: String?
         do {
-            _ = try await repo.resetAccount()
-            await tick(to: 0.65, over: 0.25)
+            let result = try await repo.resetAccount()
+            if !result.coreFailures.isEmpty {
+                serverFailMsg = "핵심 데이터가 서버에 남아있습니다: \(result.coreFailures.joined(separator: ", "))"
+            } else {
+                resetResultAt = result.resetAt
+                await tick(to: 0.65, over: 0.25)
+            }
         } catch {
-            let msg = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
-            store.recordError("서버 초기화 실패 (로컬은 초기화 완료): \(msg)")
-            // 실패해도 로컬은 정리 — 진행률은 진행
-            await tick(to: 0.65, over: 0.15)
+            serverFailMsg = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
+
+        if let failMsg = serverFailMsg {
+            // 서버 삭제 실패 → 로컬 보존 + 오버레이 중단 + 명확한 알림. (로컬·서버 일관성 유지)
+            store.recordError("초기화 중단 — 서버 데이터 유지: \(failMsg)")
+            resetCoordinator.stop()
+            resetFailedMsg = failMsg
+            return
+        }
+
+        // 초기화 표식(tombstone) — *이 기기*가 본 reset_at 저장. 없으면 재실행 시 본인 초기화를
+        //   "다른 기기 초기화"로 오인해 불필요한 wipe 사이클. ("account." 접두사라 clearAllAppStorage 안 지움)
+        if let ra = resetResultAt { UserDefaults.standard.set(ra, forKey: "account.reset.seen") }
 
         // ── ② 마무리 진행률 (0.65 → 1.0) — 시각적 완료감
         await tick(to: 0.95, over: 0.3)

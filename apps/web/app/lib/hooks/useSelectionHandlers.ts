@@ -337,6 +337,11 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       report.apiOk = !!data?.ok;
       report.apiDeleted = data?.totalDeleted ?? 0;
       report.apiFailures = data?.failures ?? [];
+      // 초기화 표식(tombstone) — API 가 기록한 reset_at 을 *이 기기*가 본 값으로 저장.
+      //   이게 없으면 reload 후 connectAndLoad 의 마커 체크가 "다른 기기 초기화"로 오인해 루프.
+      if (typeof data?.resetAt === "string") {
+        try { localStorage.setItem("__foundone_reset_seen", data.resetAt); } catch { /* */ }
+      }
 
       // ── 2차: client-side 직접 삭제 (RLS 사용) ──
       //  API 가 부분 실패해도 자기 권한으로 핵심 테이블만 다시 시도.
