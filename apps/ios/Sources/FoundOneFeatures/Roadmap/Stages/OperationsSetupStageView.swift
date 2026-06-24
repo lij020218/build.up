@@ -58,7 +58,7 @@ public struct OperationsSetupStageView: View {
 
     /// 채널 페이지 라벨 — 공유 SSOT (웹과 동일).
     private var channelPageLabel: String {
-        OperationsChannelRegistry.label(forCategoryKey: cluster.category.rawValue)
+        OperationsChannelRegistry.label(forCategoryKey: cluster.category.rawValue, subIndustryId: cluster.subIndustryId)
     }
 
     private var pages: [String] {
@@ -91,7 +91,7 @@ public struct OperationsSetupStageView: View {
     // MARK: - Cluster-aware channels (페이지 0) — 공유 SSOT (OperationsChannelRegistry)
 
     private var clusterChannels: [BUOpsChannel] {
-        OperationsChannelRegistry.channels(forCategoryKey: cluster.category.rawValue)
+        OperationsChannelRegistry.channels(forCategoryKey: cluster.category.rawValue, subIndustryId: cluster.subIndustryId)
     }
 
     private var selectedChannelIds: Set<String> {

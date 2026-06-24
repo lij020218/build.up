@@ -23,6 +23,7 @@ public enum OperationsChannelRegistry {
 
     private struct Root: Decodable {
         let categoryToGroup: [String: String]
+        let subIndustryToGroup: [String: String]?
         let groupLabels: [String: String]
         let channelsByGroup: [String: [BUOpsChannel]]
     }
@@ -44,19 +45,25 @@ public enum OperationsChannelRegistry {
         }
     }()
 
-    private static func group(forCategoryKey key: String) -> String {
-        root?.categoryToGroup[key] ?? "food-delivery"
+    /// 채널 그룹 키 결정. 세부업종(subIndustryId, 예: convenience-small) 우선,
+    /// 없으면 큰 분류(categoryKey) → 둘 다 미식별 시 음식 배달 폴백.
+    /// 편의점처럼 큰 분류(retail) 채널이 부적절한 세부업종은 subIndustryToGroup 으로 분기.
+    private static func group(forCategoryKey key: String, subIndustryId: String?) -> String {
+        if let sub = subIndustryId, let g = root?.subIndustryToGroup?[sub] {
+            return g
+        }
+        return root?.categoryToGroup[key] ?? "food-delivery"
     }
 
-    /// 업종 카테고리 키(IndustryCluster.CategoryId.rawValue) → 채널 목록 (4개).
-    public static func channels(forCategoryKey key: String) -> [BUOpsChannel] {
+    /// 업종 키 → 채널 목록 (4개). 세부업종(subIndustryId) 우선.
+    public static func channels(forCategoryKey key: String, subIndustryId: String? = nil) -> [BUOpsChannel] {
         guard let root else { return [] }
-        return root.channelsByGroup[group(forCategoryKey: key)] ?? []
+        return root.channelsByGroup[group(forCategoryKey: key, subIndustryId: subIndustryId)] ?? []
     }
 
-    /// 업종 카테고리 키 → 섹션 라벨 ("배달 플랫폼"/"예약 플랫폼"/...).
-    public static func label(forCategoryKey key: String) -> String {
+    /// 업종 키 → 섹션 라벨 ("배달 플랫폼"/"마켓플레이스"/"배달·부가 채널"/...). 세부업종 우선.
+    public static func label(forCategoryKey key: String, subIndustryId: String? = nil) -> String {
         guard let root else { return "유입 채널" }
-        return root.groupLabels[group(forCategoryKey: key)] ?? "유입 채널"
+        return root.groupLabels[group(forCategoryKey: key, subIndustryId: subIndustryId)] ?? "유입 채널"
     }
 }

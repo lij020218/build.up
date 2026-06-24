@@ -19,11 +19,11 @@ export function OperationsSetupStage() {
   const {
     language, opsStep, setOpsStep,
     opsSelections, setOpsSelections, opsPosChecks, setOpsPosChecks,
-    taskMap, industryCategoryId,
+    taskMap, industryCategoryId, selectedIndustryId,
   } = d;
   const ko = language === "ko";
-  // 채널 섹션 라벨 (업종별: 배달 플랫폼/예약 플랫폼/마켓플레이스/...)
-  const channelSectionLabel = getOpsChannelLabel(industryCategoryId);
+  // 채널 섹션 라벨 (세부업종 우선 → 큰 분류: 배달 플랫폼/마켓플레이스/배달·부가 채널/...)
+  const channelSectionLabel = getOpsChannelLabel(industryCategoryId, selectedIndustryId);
 
   type OpsDetail = { id: string; name: string; tagline: string; color: string; url: string; pros: string[]; cons: string[]; icon?: React.ReactNode };
   type Trap = { label: string; text: string };
@@ -42,7 +42,7 @@ export function OperationsSetupStage() {
   // 채널(배달/예약/마켓플레이스/런칭) — 공유 SSOT(operations-channels) 에서 업종별 로드.
   //   ⚠️ 2026-06-02: 이전엔 음식점 채널을 전 업종에 고정 노출(콘텐츠 버그) + iOS 와 id 불일치.
   //   이제 웹·iOS 가 동일 카탈로그·동일 ops_selections 시맨틱 id(delivery-<id>) 를 공유.
-  const deliveryPlatforms: OpsDetail[] = getOpsChannels(industryCategoryId);
+  const deliveryPlatforms: OpsDetail[] = getOpsChannels(industryCategoryId, selectedIndustryId);
 
   const posSystems: OpsDetail[] = [
     {

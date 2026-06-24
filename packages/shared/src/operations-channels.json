@@ -13,10 +13,15 @@
     "living-service": "space-booking",
     "startup-tech": "launch"
   },
+  "subIndustryToGroup": {
+    "_doc": "세부업종(specialty) 우선 매핑. 큰 분류(categoryToGroup)보다 우선 적용. 큰 분류 채널이 세부업종에 안 맞을 때만 등재(예: 편의점은 retail→marketplace 의 오픈마켓이 부적절 — 사장님 피드백 2026-06-24).",
+    "convenience-small": "convenience-ops"
+  },
   "groupLabels": {
     "food-delivery": "배달 플랫폼",
     "reservation": "예약 플랫폼",
     "marketplace": "마켓플레이스",
+    "convenience-ops": "배달·부가 채널",
     "space-booking": "예약·접수 채널",
     "launch": "런칭 채널"
   },
@@ -97,6 +102,32 @@
         "tagline": "월 사용료 0~7만 + PG 수수료 3% · 브랜드 직판",
         "pros": ["마진 최대화 + CRM 자유", "브랜드 직판 — 고객 데이터 직접 보유"],
         "cons": ["트래픽 직접 확보 필요", "PG·배송 별도 셋업"]
+      }
+    ],
+    "convenience-ops": [
+      {
+        "id": "cvs-delivery", "name": "배달앱 입점 (배민·요기요)", "color": "#00C73C", "url": "https://ceo.baemin.com",
+        "tagline": "편의점 즉시배달 · 심야·우천·1인가구 수요 보완",
+        "pros": ["심야·우천 시간대 비대면 매출 추가 확보", "1인가구 즉석식품·생필품 즉시배달 수요 ↑", "본사 통합배달 지원 점포는 셋업 부담 낮음"],
+        "cons": ["배달 수수료 + 피킹 인력 부담", "객단가 낮아 배달비 비중 큼 — 최소주문금액 설정 필수"]
+      },
+      {
+        "id": "cvs-parcel", "name": "택배·픽업 (반값·알뜰택배)", "color": "#FF5A00", "url": "http://gs25.gsretail.com/gscvs/ko/store-services/courier-service",
+        "tagline": "본사 부가서비스 · 방문 트래픽 + 택배 수수료 수익",
+        "pros": ["택배 접수·픽업 고객의 추가 구매 유발", "GS25 반값택배·CU 알뜰택배·세븐 착한택배 등 본사 제공", "당근·토스 예약 연동으로 접수 편의 ↑"],
+        "cons": ["보관 공간·상주 응대 필요", "본사 정책·수수료 구조에 종속"]
+      },
+      {
+        "id": "daangn-biz", "name": "당근 비즈니스", "color": "#FF7E36", "url": "https://www.daangn.com/kr/business/",
+        "tagline": "지역 기반 무료 광고 · 행사·신상품 동네 알림",
+        "pros": ["동네 반경 단골 확보 · 입점 수수료 X", "1+1·마감할인·신상품 소식 즉시 노출", "지역 신뢰 기반 — 재방문 유도"],
+        "cons": ["광역 노출은 약함", "댓글·문의 직접 응대 필요"]
+      },
+      {
+        "id": "naver-place", "name": "네이버 플레이스", "color": "#03C75A", "url": "https://new.smartplace.naver.com",
+        "tagline": "지도·검색 위치 노출 · 무료 · 영업시간·편의시설 안내",
+        "pros": ["네이버 지도·검색에 매장 위치 자동 노출", "24시 영업·ATM·택배·생활편의 정보 안내", "무료 — 등록만으로 신규 유입"],
+        "cons": ["리뷰·정보 최신화 관리 필요", "편의점은 검색보다 근접성 의존 — 보조 채널"]
       }
     ],
     "space-booking": [
