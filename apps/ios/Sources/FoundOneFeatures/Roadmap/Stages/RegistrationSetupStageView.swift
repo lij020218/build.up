@@ -281,6 +281,8 @@ public struct RegistrationSetupStageView: View {
                 }
             }
 
+            BUHometaxLink()
+
             // 완료 체크
             BUCard(.card) {
                 Toggle(isOn: $bizRegDone) {

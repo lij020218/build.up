@@ -124,6 +124,8 @@ public struct CompanySetupStageView: View {
                 }
             }
 
+            BUHometaxLink()
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("완료 체크")

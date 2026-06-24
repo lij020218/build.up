@@ -118,6 +118,8 @@ public struct OnlineRegistrationStageView: View {
                 }
             }
 
+            BUHometaxLink()
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("세금 유형 선택")

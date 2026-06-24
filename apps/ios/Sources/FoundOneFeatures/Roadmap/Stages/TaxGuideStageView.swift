@@ -237,6 +237,8 @@ public struct TaxGuideStageView: View {
                 }
             }
 
+            BUHometaxLink()
+
             BUInteractiveChecklist(
                 title: "홈택스 세팅 체크리스트",
                 items: [
