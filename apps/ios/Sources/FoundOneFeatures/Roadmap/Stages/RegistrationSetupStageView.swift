@@ -151,7 +151,7 @@ public struct RegistrationSetupStageView: View {
         }
     }
 
-    private let pages = ["왜 중요한가", "사업자등록", "인허가", "유리한 길"]
+    private let pages = ["왜 중요한가", "사업자등록", "인허가", "유리한 길", "마무리"]
 
     private var canCompleteStage: Bool {
         bizRegDone && permitDone && !taxTypeChoice.isEmpty
@@ -217,7 +217,8 @@ public struct RegistrationSetupStageView: View {
                     case 0: whyPage
                     case 1: bizRegPage
                     case 2: permitPage
-                    default: taxPathPage
+                    case 3: taxPathPage
+                    default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시
                     }
                 }
             }

@@ -45,7 +45,7 @@ public struct LocationCandidatesStageView: View {
     @AppStorage("loc.finalDone")          private var finalDone      = false
 
     // 웹 pageLabels 미러
-    private let pages = ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정"]
+    private let pages = ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정", "마무리"]
 
     // AI 라이브 상권 추천 (웹 패리티 — POST /api/data/market-recommend)
     //   @AppStorage 로 영속 — 뷰 이탈 후에도 유지되고, advance 시 stage_decisions.inputs.preferredRegion
@@ -197,7 +197,8 @@ public struct LocationCandidatesStageView: View {
                     case 2: visitPage
                     case 3: scorePage
                     case 4: propertyCheckPage
-                    default: decisionPage
+                    case 5: decisionPage
+                    default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시
                     }
                 }
             }

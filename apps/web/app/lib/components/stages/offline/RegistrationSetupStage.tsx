@@ -467,8 +467,8 @@ export function RegistrationSetupStage() {
 
   // 페이지네이션 — 4페이지 (왜 / 1단계 사업자등록 / 2단계 인허가 / 유리한 길)
   const [page, setPage] = useState(0);
-  const totalPages = 4;
-  const pageLabels = ["왜 필요한가", "1. 사업자등록", "2. 인허가", "유리한 길"];
+  const totalPages = 5;
+  const pageLabels = ["왜 필요한가", "1. 사업자등록", "2. 인허가", "유리한 길", "마무리"];
 
   const permit = useMemo(() => {
     return PERMIT_BY_CATEGORY[industryCategoryId ?? ""] ?? PERMIT_BY_CATEGORY.food;
@@ -969,6 +969,7 @@ export function RegistrationSetupStage() {
         </div>
       </div>
 
+      {page === 4 && (
       <StageWrapup
         ko={language === "ko"}
         nextStageLabelKo="세무 가이드"
@@ -988,6 +989,7 @@ export function RegistrationSetupStage() {
         ]}
         nextSummaryKo="사업자등록·영업신고증 발급 완료 → 세무 가이드(부가세·종소세·간이과세) 단계로 진입"
       />
+      )}
     </div>
   );
 }

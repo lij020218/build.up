@@ -21,7 +21,7 @@ public struct StartupFoundationStageView: View {
     @AppStorage("sf.corpType")  private var corpType  = ""
     @AppStorage("sf.done")      private var done      = false
 
-    private let pages = ["왜 중요한가", "문제 정의", "창업팀 정렬"]
+    private let pages = ["왜 중요한가", "문제 정의", "창업팀 정렬", "마무리"]
 
     public init() {}
 
@@ -93,7 +93,8 @@ public struct StartupFoundationStageView: View {
                     switch page {
                     case 0: whyPage
                     case 1: problemPage
-                    default: teamPage
+                    case 2: teamPage
+                    default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시
                     }
                 }
             }

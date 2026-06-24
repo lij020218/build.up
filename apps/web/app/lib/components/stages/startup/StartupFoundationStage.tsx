@@ -25,10 +25,10 @@ export function StartupFoundationStage() {
     </svg>
   );
   // 페이지네이션: 0=핵심원칙, 1=Step1, 2=Step2, 3=Step3, 4=사례
-  const totalPages = 5;
+  const totalPages = 6;
   const pageLabels = ko
-    ? ["핵심 원칙", "1. 문제 정의", "2. 팀 구성", "3. 법인 vs 개인", "사례"]
-    : ["Principle", "1. Problem", "2. Team", "3. Corp vs Sole", "Cases"];
+    ? ["핵심 원칙", "1. 문제 정의", "2. 팀 구성", "3. 법인 vs 개인", "사례", "마무리"]
+    : ["Principle", "1. Problem", "2. Team", "3. Corp vs Sole", "Cases", "Wrap-up"];
   const page = guideStepIndex;
 
   return (
@@ -1024,6 +1024,7 @@ export function StartupFoundationStage() {
         </>
       )}
 
+      {page === 5 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="고객 발견"
@@ -1043,6 +1044,7 @@ export function StartupFoundationStage() {
         ]}
         nextSummaryKo="공동창업자·지분·비전·팀 셋업 완료 → 고객 발견 단계로 진입"
       />
+      )}
     </div>
   );
 }

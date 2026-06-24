@@ -149,8 +149,8 @@ export function LocationCandidatesStage() {
   const ko = language === "ko";
   // ★ 페이지 0 = 개요. 그 후 작업 흐름.
   const pageLabels = ko
-    ? ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정"]
-    : ["Overview", "1. Region·AI", "2. Visit", "3. Score", "4. Property", "Decide"];
+    ? ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정", "마무리"]
+    : ["Overview", "1. Region·AI", "2. Visit", "3. Score", "4. Property", "Decide", "Wrap-up"];
 
   // 카테고리·예산 별 사장님 상황 권장 — 페이지 2 (점수 비교) 의 inline favorable
   const budgetTier = (selectedBudget ?? 0) >= 200_000_000 ? "high" : (selectedBudget ?? 0) >= 80_000_000 ? "mid" : "low";
@@ -1158,6 +1158,7 @@ export function LocationCandidatesStage() {
         </>
       )}
 
+      {pageIdx === 6 && (
       <StageWrapup
         ko={language === "ko"}
         nextStageLabelKo="계약서 검토"
@@ -1177,6 +1178,7 @@ export function LocationCandidatesStage() {
         ]}
         nextSummaryKo="입지 1곳 확정 → 임대 계약서 검토 단계로 진입"
       />
+      )}
 
       <div style={styles.stageFooter}>
         {/* ⚠️ 항상 노출 — prevTraversedStage 가 null 이어도 (사용자가 미완료 단계를 viewing 중) 로드맵으로 돌아가는 fallback */}

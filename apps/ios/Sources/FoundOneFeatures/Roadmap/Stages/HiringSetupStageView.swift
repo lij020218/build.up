@@ -69,7 +69,7 @@ public struct HiringSetupStageView: View {
         return Int(Double(monthlyTotal) * totalRate)
     }
 
-    private let pages = ["공고", "계약서·임금", "보험·체크"]
+    private let pages = ["공고", "계약서·임금", "보험·체크", "마무리"]
 
     private var canCompleteStage: Bool { contractDone || noHireChoice }
 
@@ -128,7 +128,8 @@ public struct HiringSetupStageView: View {
                     switch page {
                     case 0: postingPage
                     case 1: contractPage
-                    default: insurancePage
+                    case 2: insurancePage
+                    default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시
                     }
                 }
             }

@@ -82,7 +82,7 @@ public struct InsuranceTaxSetupStageView: View {
         ))
     }
 
-    private let pages = ["4대보험", "세무 세팅", "체크리스트"]
+    private let pages = ["4대보험", "세무 세팅", "체크리스트", "마무리"]
 
     private var canCompleteStage: Bool {
         insRegDone && hometaxDone && !cpaChoice.isEmpty
@@ -147,7 +147,8 @@ public struct InsuranceTaxSetupStageView: View {
                     switch page {
                     case 0: insurancePage
                     case 1: taxPage
-                    default: checklistPage
+                    case 2: checklistPage
+                    default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시
                     }
                 }
             }

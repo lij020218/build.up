@@ -240,8 +240,8 @@ export function InsuranceTaxSetupStage() {
   const { industryCategoryId, language } = d;
 
   const [page, setPage] = useState(0);
-  const totalPages = 4;
-  const pageLabels = ["왜 필요한가", "1. 4대보험", "2. 원천세", "3. 급여 + 유리한 길"];
+  const totalPages = 5;
+  const pageLabels = ["왜 필요한가", "1. 4대보험", "2. 원천세", "3. 급여 + 유리한 길", "마무리"];
 
   const accidentInfo = useMemo(() => {
     return ACCIDENT_RATE_BY_CATEGORY[industryCategoryId ?? ""] ?? { rate: "0.7%", label: "일반 서비스업" };
@@ -818,6 +818,7 @@ export function InsuranceTaxSetupStage() {
         </>
       )}
 
+      {page === 4 && (
       <StageWrapup
         ko={language === "ko"}
         nextStageLabelKo="채용·운영 세팅"
@@ -837,6 +838,7 @@ export function InsuranceTaxSetupStage() {
         ]}
         nextSummaryKo="4대보험·원천세·급여 시스템 셋업 완료 → 채용·운영 세팅 단계로 진입"
       />
+      )}
     </div>
   );
 }
