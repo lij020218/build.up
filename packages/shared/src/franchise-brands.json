@@ -16947,55 +16947,6 @@
     ]
   },
   {
-    "id": "paikboycoffee",
-    "subIndustryIds": [
-      "takeout-coffee"
-    ],
-    "categoryId": "cafe-dessert",
-    "name": {
-      "ko": "빽보이커피",
-      "en": "Paik Boy Coffee"
-    },
-    "tagline": {
-      "ko": "빽다방 확장형 - 빽보이 커피 브랜드",
-      "en": "Paik Dabang spin-off coffee"
-    },
-    "startupCostWon": 9000,
-    "franchiseFee": 660,
-    "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 50,
-    "closureRate": 7,
-    "scores": {
-      "profitability": 65,
-      "stability": 65,
-      "accessibility": 70,
-      "brandPower": 80,
-      "support": 78
-    },
-    "roadmapNotes": {
-      "ko": [
-        "더본코리아의 빽다방 자매 브랜드",
-        "신규 브랜드로 출점 초기 단계",
-        "백종원 브랜드 파워 활용",
-        "데이터 확보가 어려운 신규 카테고리"
-      ],
-      "en": [
-        "Theborn Korea sibling of Paik Dabang",
-        "Newer brand, early-stage expansion",
-        "Leverages Paik brand power",
-        "Limited data — new category"
-      ]
-    },
-    "costVerified": false,
-    "costSource": "더본코리아 공식 추정",
-    "franchiseUrl": "https://start.theborn.co.kr/",
-    "dataYear": "2024",
-    "specialtyIds": [
-      "coffee-low-price"
-    ]
-  },
-  {
     "id": "saladdays",
     "subIndustryIds": [
       "salad-healthy"
@@ -17691,7 +17642,7 @@
     },
     "costVerified": true,
     "costSource": "정보공개서 2024 (jshj.net 분석)",
-    "franchiseUrl": "https://www.grazie.co.kr/INQUIRY",
+    "franchiseUrl": "https://franchise.ftc.go.kr",
     "dataYear": "2024",
     "specialtyIds": [
       "fb-pasta"
