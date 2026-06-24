@@ -95,3 +95,5 @@ export * from "./finance/sell-through";
 export * from "./finance/booking-analytics";
 export * from "./finance/ecommerce-analytics";
 export * from "./finance/cash-zero-date";
+// 2026-06-25 — 단계 내용 SSOT (web↔iOS 무드리프트 방지: schema + content/* + 렌더러)
+export * from "./stages";

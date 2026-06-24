@@ -1,0 +1,202 @@
+/**
+ * stages/schema.ts — 로드맵 단계 "내용" SSOT 스키마.
+ *
+ * 목적: 단계의 교육 콘텐츠(왜·단계·요건·함정·유리한 길·체크리스트·마무리)를
+ *   웹(Next/TSX)·iOS(SwiftUI)가 **각자 손으로 재구현**하던 구조를 끝내고,
+ *   여기 한 곳에 데이터로 정의 → 웹은 React 렌더러로, iOS는 codegen JSON + SwiftUI 렌더러로
+ *   **같은 내용을 렌더**한다. 무드리프트(제목·내용 차이)가 구조적으로 불가능해진다.
+ *
+ * 선례:
+ *   - 인-코드 데이터-렌더: ClusterStageContent / ClusterStageTemplate (딥테크 12단계)
+ *   - TS SSOT → iOS JSON codegen: mobile-launch-guide.ts → gen-mobile-launch-json.mts
+ *
+ * 직렬화 규칙(중요): 이 스키마는 JSON 으로 직렬화되어 iOS 가 읽는다.
+ *   - 함수·React 컴포넌트·LucideIcon 레퍼런스 금지 → **모두 평문 데이터**.
+ *   - 아이콘은 문자열 키(IconKey). 웹은 lucide, iOS는 SF Symbol 로 매핑.
+ *   - 색 강조는 의미 토큰(Accent). 플랫폼이 디자인 시스템 색으로 매핑.
+ *
+ * 인터랙티브 위젯(계산기·폼·토글·서버저장 선택)은 **유일한 비공유점**:
+ *   섹션 kind="interactive" + ref(문자열 ID)로 *위치·존재만* 스키마가 보장하고,
+ *   실제 구현은 플랫폼별(웹 React 컴포넌트 / iOS SwiftUI 뷰)로 ref→위젯 매핑.
+ */
+
+/** 아이콘 문자열 키 — 웹(lucide)·iOS(SF Symbol) 가 각자 매핑. */
+export type IconKey =
+  | "fileText"
+  | "shieldCheck"
+  | "building"
+  | "alertTriangle"
+  | "sparkles"
+  | "receipt"
+  | "lightbulb"
+  | "arrowRight"
+  | "checklist";
+
+/** 색 강조 의미 토큰 — 플랫폼이 디자인 시스템 색으로 매핑. */
+export type Accent = "midnight" | "blue" | "danger";
+
+/** 인허가 유형. */
+export type PermitKind = "신고" | "허가" | "등록" | "면허";
+
+/* ───────────────────────── 공용 데이터 조각 ───────────────────────── */
+
+/** KEY ACTION 히어로 미니카드. */
+export type MiniCard = { icon: IconKey; label: string; detail: string };
+
+/** KEY ACTION 히어로(단계 최상단). */
+export type KeyAction = {
+  eyebrow: string;
+  title: string;
+  /** 평문 — 강조는 렌더러가 처리하지 않음(단순 텍스트). */
+  subtitle: string;
+  miniCards: MiniCard[];
+};
+
+/** 왜-카드(악센트 점 + 제목 + 본문). */
+export type WhyItem = { accent: Accent; title: string; body: string };
+
+/** 번호 단계 한 줄. detailFromCategory 가 있으면 byCategory[cat] 의 해당 키 값으로 detail 을 대체/보강. */
+export type Step = {
+  title: string;
+  detail: string;
+  /** byCategory[cat] 에서 가져올 키(예: "industryCodeHint"). 있으면 detail 끝에 이어붙임. */
+  detailFromCategory?: keyof CategoryContent;
+};
+
+/** 비용/소요/장소 같은 메타 3분할. */
+export type Meta = { label: string; value: string; sublabel?: string };
+
+/** 외부 링크 칩. */
+export type LinkRef = { label: string; url: string };
+
+/** 유리한 길 카드. */
+export type PathCard = { condition: string; recommendation: string; reason: string };
+
+/* ─────────────────── 카테고리(업종)별 분기 데이터 ─────────────────── */
+
+/** 웹 PERMIT_BY_CATEGORY 의 풍부한 인허가 정보(서류·요건·비용·기간). */
+export type PermitInfo = {
+  kind: PermitKind;
+  name: string;
+  where: string;
+  cost: string;
+  duration: string;
+  documents: string[];
+  requirements: string[];
+  externalUrl?: string;
+  description: string;
+};
+
+/** iOS requiredPermits 의 인허가 항목(발급기관·처리일 리스트). */
+export type PermitRequirement = {
+  label: string;
+  agency: string;
+  detail: string;
+  estimatedDays: number;
+};
+
+/** 한 업종(카테고리)에 종속된 콘텐츠. 키는 CategoryId.rawValue(=웹 industryCategoryId). */
+export type CategoryContent = {
+  /** 한국어 카테고리 라벨(음식점, 카페·디저트 …). */
+  label: string;
+  /** 국세청 업종코드 힌트(사업자등록 step). */
+  industryCodeHint: string;
+  /** 풍부한 인허가 정보(웹 PermitInfo). */
+  permit: PermitInfo;
+  /** 인허가 항목 리스트(iOS requiredPermits) — 발급기관·처리일. */
+  requiredPermits: PermitRequirement[];
+  /** 자주 거절·지연 사유(iOS pitfalls, 전 업종). */
+  pitfalls: string[];
+  /** 이번 주 체크리스트 — 발급 순서(iOS weeklyChecklist). */
+  weeklyChecklist: string[];
+  /** 업종 특성 유리한 길(웹 카테고리별 PathCard). 없으면 일반 paths 만. */
+  extraPath?: PathCard;
+};
+
+/* ───────────────────────────── 섹션 ──────────────────────────────── */
+
+/** 인터랙티브 위젯 참조 ID — 플랫폼이 ref→네이티브 위젯으로 매핑. */
+export type InteractiveRef =
+  | "storeName"      // 상호명 입력(서버 저장)
+  | "hometaxLink"    // 홈택스 바로가기
+  | "bizRegToggle"   // 사업자등록 완료 토글
+  | "permitToggle"   // 인허가 발급 완료 토글
+  | "taxTypeSelect"  // 과세유형 선택(간이/일반, 서버 저장)
+  | "docUpload";     // 서류 업로드
+
+/**
+ * 섹션 프리미티브. kind 로 분기.
+ *  - 정적(static): whyList·stepList·pathCards·infoCard·wrapup — 전 업종 공통.
+ *  - 업종분기(byCategory): permit·pitfalls·checklist — byCategory[cat] 에서 읽음.
+ *  - interactive: 플랫폼별 위젯(위치·존재만 보장).
+ */
+export type Section =
+  | { kind: "whyList"; eyebrow?: string; subtitle?: string; items: WhyItem[] }
+  | {
+      kind: "stepList";
+      icon?: IconKey;
+      eyebrow: string;
+      subtitle?: string;
+      steps: Step[];
+      meta?: Meta[];
+      links?: LinkRef[];
+    }
+  /** byCategory[cat].permit(+requiredPermits) 렌더. */
+  | { kind: "permit"; icon?: IconKey }
+  /** byCategory[cat].pitfalls 렌더. */
+  | { kind: "pitfalls"; title: string }
+  | {
+      kind: "pathCards";
+      icon?: IconKey;
+      eyebrow: string;
+      subtitle?: string;
+      cards: PathCard[];
+      /** true 면 byCategory[cat].extraPath 를 마지막에 덧붙임. */
+      includeCategoryPath?: boolean;
+    }
+  /** byCategory[cat].weeklyChecklist 렌더. */
+  | { kind: "checklist"; eyebrow: string }
+  | { kind: "infoCard"; icon?: IconKey; accent?: Accent; title: string; body: string }
+  /** 마지막 페이지 마무리 — 단계 최상위 wrapup 데이터를 렌더(웹) / BUStageShell(iOS). */
+  | { kind: "wrapup" }
+  /** 플랫폼별 인터랙티브 위젯. config 는 ref 별 임의 설정(loose). */
+  | {
+      kind: "interactive";
+      ref: InteractiveRef;
+      /** 이 ref 를 렌더할 플랫폼(미지정=양쪽). 미구현 플랫폼은 자연스럽게 생략. */
+      platforms?: Array<"web" | "ios">;
+      config?: Record<string, unknown>;
+    };
+
+/** 한 페이지(위저드 탭). */
+export type StagePage = {
+  id: string;
+  /** 페이지 네비 라벨. */
+  label: string;
+  sections: Section[];
+};
+
+/** 마무리(StageWrapup / BUStageShell wrapup) 데이터. */
+export type WrapupData = {
+  nextStageLabel: string;
+  doneItems: Array<{ label: string; detail: string }>;
+  verifyItems: string[];
+  nextSummary: string;
+};
+
+/** 한 단계의 전체 콘텐츠 SSOT. */
+export type StageContent = {
+  /** stageId(예: "registration-setup"). */
+  stageId: string;
+  /** iOS BUStageShell 상단 + 게이팅 카피. */
+  shell: {
+    title: string;
+    stageEyebrow: string;
+    helperText: string;
+  };
+  keyAction: KeyAction;
+  pages: StagePage[];
+  /** 업종(카테고리)별 분기 데이터. 키 = CategoryId.rawValue. */
+  byCategory: Record<string, CategoryContent>;
+  wrapup: WrapupData;
+};
