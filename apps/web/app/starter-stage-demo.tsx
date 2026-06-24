@@ -306,10 +306,6 @@ export default function StarterStageDemo({
     return () => window.removeEventListener("bup:navigate-feature", handler);
   }, [d]);
 
-  const isStartupCategory = d.industryCategoryId === "startup-tech";
-  const startupTypeOptions: Array<"independent" | "franchise" | "undecided"> = isStartupCategory
-    ? ["independent", "undecided"]
-    : ["independent", "franchise", "undecided"];
   const analyticsInventoryRef = useRef<HTMLElement | null>(null);
   const analyticsStaffRef = useRef<HTMLElement | null>(null);
   const lastAnalyticsActionRef = useRef("");

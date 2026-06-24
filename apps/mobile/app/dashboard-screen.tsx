@@ -3491,7 +3491,7 @@ export default function DashboardScreen({
                   {copy.home.startupTypeHelp}
                 </Text>
                 <View style={styles.toggleRow}>
-                  {(["independent", "franchise", "undecided"] as const).map((type) => (
+                  {(["independent", "franchise"] as const).map((type) => (
                     <Pressable
                       key={type}
                       onPress={() => setStartupType(type)}

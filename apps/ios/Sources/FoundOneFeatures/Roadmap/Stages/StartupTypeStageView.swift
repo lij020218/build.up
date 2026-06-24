@@ -6,7 +6,7 @@
 //
 //  레이아웃 (BUStageShell 사용):
 //   ① helper line
-//   ② 3-card 그리드 — 독립창업 / 프랜차이즈 / 미정
+//   ② 그리드 — 독립창업 / 프랜차이즈 (스타트업은 독립창업만)
 //   ③ 선택 시 카테고리별 가이드 카드 (펼침)
 //   ④ 하단 Continue 바
 //
@@ -89,12 +89,7 @@ public struct StartupTypeStageView: View {
             color: Color(red: 0.486, green: 0.227, blue: 0.929),
             titleKo: "프랜차이즈", subtitleKo: "검증된 브랜드로 빠르게 시작"
         )
-        let undecided = StartupTypeOption(
-            id: "undecided", icon: "questionmark.circle.fill",
-            color: Color(red: 0.420, green: 0.451, blue: 0.502),
-            titleKo: "미정", subtitleKo: "아직 결정하지 않음"
-        )
-        return isStartupTech ? [independent, undecided] : [independent, franchise, undecided]
+        return isStartupTech ? [independent] : [independent, franchise]
     }
 
     public init() {}
@@ -139,7 +134,7 @@ public struct StartupTypeStageView: View {
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈·미정 3옵션 비교 (스타트업은 독립·미정만 노출)"),
+                .init(label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈 2옵션 비교 (스타트업은 독립창업만 노출)"),
                 .init(label: "2. 형태별 장단점 인식", detail: "독립=자유도/리스크, 프랜차이즈=즉시런칭/로열티"),
                 .init(label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단"),
                 .init(label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 5개 비교 후 1개 확정"),

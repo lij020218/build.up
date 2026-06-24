@@ -235,9 +235,6 @@ export function CurrentStageView() {
 
   // Computed locals (originally defined in the parent component)
   const isStartupCategory = industryCategoryId === "startup-tech";
-  const startupTypeOptions: Array<"independent" | "franchise" | "undecided"> = isStartupCategory
-    ? ["independent", "undecided"]
-    : ["independent", "franchise", "undecided"];
 
   return (
     <>

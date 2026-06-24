@@ -36,9 +36,9 @@ export function StartupTypeSelectionStage() {
   const [shakeWarning, setShakeWarning] = useState(false);
 
   const isStartupCategory = industryCategoryId === "startup-tech";
-  const startupTypeOptions: Array<"independent" | "franchise" | "undecided"> = isStartupCategory
-    ? ["independent", "undecided"]
-    : ["independent", "franchise", "undecided"];
+  const startupTypeOptions: Array<"independent" | "franchise"> = isStartupCategory
+    ? ["independent"]
+    : ["independent", "franchise"];
 
   return (
     <>
@@ -128,7 +128,7 @@ export function StartupTypeSelectionStage() {
             ko={language === "ko"}
             nextStageLabelKo={isStartupCategory ? "운영 모델" : "운영 모델"}
             doneItemsKo={[
-              { label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈·미정 3옵션 비교 (스타트업은 독립·미정만 노출)" },
+              { label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈 2옵션 비교 (스타트업은 독립창업만 노출)" },
               { label: "2. 형태별 장단점 인식", detail: "독립=자유도/리스크, 프랜차이즈=즉시런칭/로열티" },
               { label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단" },
               { label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 5개 비교 후 1개 확정" },
