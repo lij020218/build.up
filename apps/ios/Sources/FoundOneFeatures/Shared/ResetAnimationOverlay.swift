@@ -7,7 +7,7 @@
 //    • 미드나이트 블루 (BUColor.midnight) 브랜드 컬러
 //    • 3겹 회전 링 + 펄스 중앙 아이콘
 //    • 진행률 바 (0 → 100%) + shimmer 효과
-//    • 4단계 메시지 (준비 / 로컬 정리 / 서버 정리 / 마무리)
+//    • 4단계 메시지 (준비 / 사업 정보 초기화 ×2 / 마무리) — 사장님 친화 문구
 //    • 완료 시 체크마크 + 폭발 링
 //
 
@@ -36,10 +36,10 @@ public struct ResetAnimationOverlay: View {
 
     private var stageMessages: [(primary: String, secondary: String)] {
         [
-            ("준비 중",            "초기화를 안전하게 시작합니다"),
-            ("로컬 데이터 정리 중", "기기에 저장된 진행 상태를 비웁니다"),
-            ("서버 데이터 초기화 중", "Supabase 에서 가게·로드맵 데이터를 삭제합니다"),
-            ("마무리 중",          "온보딩 첫 화면으로 이동합니다"),
+            ("초기화를 준비하고 있어요", "안전하게 시작할게요"),
+            ("모든 사업 정보를 초기화하는 중", "이 기기에 저장된 입력 내용을 정리하고 있어요"),
+            ("모든 사업 정보를 초기화하는 중", "가게·로드맵 기록을 깨끗이 비우고 있어요"),
+            ("거의 다 됐어요", "처음 시작 화면으로 이동합니다"),
         ]
     }
 
@@ -205,10 +205,14 @@ public struct ResetAnimationOverlay: View {
                 .shadow(color: BUColor.midnight.opacity(isDone ? 0.45 : 0.28),
                         radius: isDone ? 20 : 12, y: isDone ? 12 : 8)
                 .overlay {
-                    Image(systemName: isDone ? "checkmark" : "arrow.counterclockwise")
-                        .font(.system(size: isDone ? 26 : 22, weight: .bold))
-                        .foregroundStyle(.white)
-                        .rotationEffect(.degrees(isDone ? 0 : rotation1 * 0.5))
+                    if isDone {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(.white)
+                    } else {
+                        // 브랜드 마크를 중앙에 — 바깥 3겹 링이 회전으로 진행감을 주므로 로고는 정적으로 또렷하게
+                        FoundOneSpiralLogo(size: 30, color: .white)
+                    }
                 }
 
             // 완료 시 폭발 링

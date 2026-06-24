@@ -20,8 +20,9 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, RotateCcw } from "lucide-react";
+import { Check } from "lucide-react";
 import { useMemo } from "react";
+import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
 
 const MIDNIGHT = "#191970";
 
@@ -43,16 +44,16 @@ export function ResetAnimationOverlay({ progress, ko = true }: ResetAnimationOve
 
   const stageMessages = ko
     ? [
-        { primary: "준비 중", secondary: "초기화를 안전하게 시작합니다" },
-        { primary: "로컬 데이터 정리 중", secondary: "기기에 저장된 진행 상태를 비웁니다" },
-        { primary: "서버 데이터 초기화 중", secondary: "Supabase 에서 가게·로드맵 데이터를 삭제합니다" },
-        { primary: "마무리 중", secondary: "온보딩 첫 화면으로 이동합니다" },
+        { primary: "초기화를 준비하고 있어요", secondary: "안전하게 시작할게요" },
+        { primary: "모든 사업 정보를 초기화하는 중", secondary: "이 기기에 저장된 입력 내용을 정리하고 있어요" },
+        { primary: "모든 사업 정보를 초기화하는 중", secondary: "가게·로드맵 기록을 깨끗이 비우고 있어요" },
+        { primary: "거의 다 됐어요", secondary: "처음 시작 화면으로 이동합니다" },
       ]
     : [
-        { primary: "Preparing", secondary: "Starting reset safely" },
-        { primary: "Clearing local data", secondary: "Wiping device-stored progress" },
-        { primary: "Resetting server data", secondary: "Deleting Supabase records" },
-        { primary: "Finishing up", secondary: "Returning to onboarding" },
+        { primary: "Getting ready", secondary: "Starting safely" },
+        { primary: "Resetting all your business info", secondary: "Clearing entries saved on this device" },
+        { primary: "Resetting all your business info", secondary: "Wiping your store & roadmap records" },
+        { primary: "Almost done", secondary: "Returning to the start screen" },
       ];
 
   const message = isDone
@@ -197,16 +198,15 @@ export function ResetAnimationOverlay({ progress, ko = true }: ResetAnimationOve
                 </motion.div>
               ) : (
                 <motion.div
-                  key="spin"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, rotate: 360 }}
+                  key="logo"
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
-                  transition={{
-                    opacity: { duration: 0.2 },
-                    rotate: { duration: 2, ease: "linear", repeat: Infinity },
-                  }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
-                  <RotateCcw size={22} strokeWidth={2.5} color="#fff" />
+                  {/* 브랜드 마크를 중앙에 — 바깥 3겹 링이 회전으로 진행감을 주므로 로고는 정적으로 또렷하게 */}
+                  <FoundOneSpiralLogo size={30} color="#fff" />
                 </motion.div>
               )}
             </AnimatePresence>
