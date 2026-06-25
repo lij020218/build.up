@@ -24,6 +24,7 @@
 import Foundation
 import Observation
 import OSLog
+import FoundOneCore
 
 private let logger = Logger(subsystem: "com.foundone.ios", category: "RoadmapStore")
 
@@ -312,6 +313,20 @@ public final class RoadmapStore {
         } catch {
             logger.error("syncFromRemote 실패: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - hiring-setup 채용계획(staffPlan) — inputs 중첩 객체 직접 I/O
+
+    /// 서버에서 staffPlan + hiringStatus 로드(없으면 nil). 데모/오프라인은 nil.
+    public func loadStaffPlan() async -> (plan: StaffPlan?, status: String?) {
+        guard let repo else { return (nil, nil) }
+        return (try? await repo.fetchStaffPlan()) ?? (nil, nil)
+    }
+
+    /// staffPlan + hiringStatus 저장(fire-and-forget, 웹 호환 inputs.staffPlan). 실패해도 UI 진행.
+    public func saveStaffPlan(_ plan: StaffPlan, status: String) {
+        guard let repo else { return }
+        Task { try? await repo.saveStaffPlan(plan, status: status) }
     }
 
     /// 사장님이 로그아웃·재로그인 했을 때 — 로컬 캐시 비우고 원격 hydrate.

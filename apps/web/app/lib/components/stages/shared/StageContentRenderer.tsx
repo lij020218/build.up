@@ -55,6 +55,7 @@ import { KeyActionHero, StageOverview, WorkStep } from "./StageActionHero";
 import { LiveDataPanel, PermitCardsPanel, AxisChecklistWidget } from "./PermitInteractivePanels";
 import { ContractAiAnalysisPanel } from "./ContractAiAnalysisPanel";
 import { HiringCalculatorPanel, HiringTogglePanel } from "./HiringInteractivePanels";
+import { MyHiringPlanCard } from "../offline/MyHiringPlanCard";
 
 /* ───────────────────────── 토큰 매핑(문자열 → 웹) ───────────────────────── */
 
@@ -835,6 +836,8 @@ function renderSection(
         }
         case "contractAiAnalysis":
           return <ContractAiAnalysisPanel key={key} ko={ko} />;
+        case "hiringPlan":
+          return <MyHiringPlanCard key={key} ko={ko} />;
         case "hiringCalculator":
           return <HiringCalculatorPanel key={key} ko={ko} catId={catId} />;
         case "soloOperator":

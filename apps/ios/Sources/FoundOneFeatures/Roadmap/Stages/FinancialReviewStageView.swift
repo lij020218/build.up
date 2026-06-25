@@ -203,6 +203,16 @@ public struct FinancialReviewStageView: View {
             mktText = marketing > 0 ? "\(marketing)" : ""
             otherText = other > 0 ? "\(other)" : ""
         }
+        // 채용계획(hiring-setup staffPlan) → 인건비 프리필(웹 재무검토와 동일 소비). 미입력일 때만.
+        .task {
+            guard labor == 0 else { return }
+            let (plan, _) = await roadmapStore.loadStaffPlan()
+            guard let plan else { return }
+            let total = calculateMonthlyTeamLaborCost(plan).total
+            guard total > 0 else { return }
+            labor = Int((Double(total) / 10_000).rounded())
+            laborText = "\(labor)"
+        }
     }
 
     // MARK: - 고정비 탭

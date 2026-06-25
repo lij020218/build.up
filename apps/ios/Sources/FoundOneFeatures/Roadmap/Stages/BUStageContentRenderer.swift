@@ -964,6 +964,8 @@ public struct BUStageContentRenderer: View {
             }
         case "contractAiAnalysis":
             BUContractAnalysisCard()
+        case "hiringPlan":
+            BUHiringPlanCard()
         case "hiringCalculator":
             BUHiringCalculator()
         case "soloOperator":

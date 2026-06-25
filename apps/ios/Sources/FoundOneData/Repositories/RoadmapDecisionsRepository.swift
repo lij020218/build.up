@@ -30,6 +30,11 @@ public protocol RoadmapDecisionsRepositoryProtocol: Sendable {
     func fetchAll() async throws -> [StageDecision]
     func upsert(_ decision: StageDecision) async throws
     func delete(stageId: String) async throws
+    /// hiring-setup 채용계획 — inputs.staffPlan(중첩 객체) + inputs.hiringStatus(문자열) 직접 I/O.
+    /// 웹 MyHiringPlanCard 와 같은 위치(stage_decisions.inputs)에 web 호환 JSON 으로 저장.
+    /// [String:String] 모델로는 중첩 객체 표현 불가 → 전용 경로(AnyJSON).
+    func fetchStaffPlan() async throws -> (plan: StaffPlan?, status: String?)
+    func saveStaffPlan(_ plan: StaffPlan, status: String) async throws
 }
 
 // MARK: - Supabase 실제 구현
@@ -110,6 +115,67 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
         // roadmaps.updated_at bump — realtime(roadmaps user_id 필터) 발화용.
         //   stage_decisions 는 user_id 컬럼이 없어 직접 필터 구독 불가하므로, 부모 roadmaps 를
         //   touch 해 웹·다른 기기가 즉시 재조회하게 한다. (웹 saveRoadmapState 도 동일하게 bump)
+        await touchRoadmap(roadmapId)
+    }
+
+    // MARK: - staffPlan (hiring-setup 채용계획) — AnyJSON 객체 직접 I/O
+
+    public func fetchStaffPlan() async throws -> (plan: StaffPlan?, status: String?) {
+        let userId = try await getUserId()
+        guard let roadmapId = try await resolveRoadmapId(userId: userId, createIfMissing: false) else {
+            return (nil, nil)
+        }
+        let inputs = try await fetchServerInputs(roadmapId: roadmapId, stageCode: "hiring-setup")
+        let status: String?
+        if case let .string(s) = inputs["hiringStatus"] { status = s } else { status = nil }
+        var plan: StaffPlan?
+        if case let .object(obj) = inputs["staffPlan"] {
+            func int(_ k: String) -> Int? {
+                switch obj[k] {
+                case let .integer(n): return n
+                case let .double(d): return Int(d)
+                default: return nil
+                }
+            }
+            plan = StaffPlan(
+                fullTimeCount: int("fullTimeCount"),
+                partTimeCount: int("partTimeCount"),
+                fullTimeMonthlyBase: int("fullTimeMonthlyBase"),
+                partTimeHourlyWage: int("partTimeHourlyWage"),
+                partTimeHoursPerWeek: int("partTimeHoursPerWeek")
+            )
+        }
+        return (plan, status)
+    }
+
+    public func saveStaffPlan(_ plan: StaffPlan, status: String) async throws {
+        let userId = try await getUserId()
+        let roadmapId = try await resolveRoadmapId(userId: userId, createIfMissing: true)!
+
+        // read-merge-write — 기존 inputs 보존(웹 전용 키·완료 토글 등), staffPlan·hiringStatus 만 patch.
+        var merged = try await fetchServerInputs(roadmapId: roadmapId, stageCode: "hiring-setup")
+        var planObj: [String: AnyJSON] = [:]
+        if let v = plan.fullTimeCount { planObj["fullTimeCount"] = .integer(v) }
+        if let v = plan.partTimeCount { planObj["partTimeCount"] = .integer(v) }
+        if let v = plan.fullTimeMonthlyBase { planObj["fullTimeMonthlyBase"] = .integer(v) }
+        if let v = plan.partTimeHourlyWage { planObj["partTimeHourlyWage"] = .integer(v) }
+        if let v = plan.partTimeHoursPerWeek { planObj["partTimeHoursPerWeek"] = .integer(v) }
+        merged["staffPlan"] = .object(planObj)
+        merged["hiringStatus"] = .string(status)
+
+        let nowIso = ISO8601DateFormatter().string(from: Date())
+        let payload = StageDecisionWriteDTO(
+            roadmap_id: roadmapId,
+            stage_code: "hiring-setup",
+            selected_primary_option_id: nil,
+            inputs: merged,
+            completed_at: nil,
+            updated_at: nowIso
+        )
+        try await supabase
+            .from("stage_decisions")
+            .upsert(payload, onConflict: "roadmap_id,stage_code")
+            .execute()
         await touchRoadmap(roadmapId)
     }
 
@@ -383,5 +449,15 @@ public actor MockRoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol 
 
     public func delete(stageId: String) async throws {
         storage.removeValue(forKey: stageId)
+    }
+
+    private var mockStaffPlan: StaffPlan?
+    private var mockStatus: String?
+    public func fetchStaffPlan() async throws -> (plan: StaffPlan?, status: String?) {
+        (mockStaffPlan, mockStatus)
+    }
+    public func saveStaffPlan(_ plan: StaffPlan, status: String) async throws {
+        mockStaffPlan = plan
+        mockStatus = status
     }
 }
