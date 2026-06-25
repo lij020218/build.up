@@ -30,7 +30,15 @@ export type IconKey =
   | "receipt"
   | "lightbulb"
   | "arrowRight"
-  | "checklist";
+  | "checklist"
+  // tax-guide 절세팁 등에서 추가
+  | "banknote"
+  | "clipboard"
+  | "percent"
+  | "creditCard"
+  | "users"
+  | "rosette"
+  | "calendar";
 
 /** 색 강조 의미 토큰 — 플랫폼이 디자인 시스템 색으로 매핑. */
 export type Accent = "midnight" | "blue" | "danger";
@@ -72,6 +80,27 @@ export type LinkRef = { label: string; url: string };
 /** 유리한 길 카드. */
 export type PathCard = { condition: string; recommendation: string; reason: string };
 
+/** 페이지별 KEY ACTION 히어로(tax-guide 처럼 페이지마다 다른 단계). */
+export type PageKeyAction = { title: string; detail: string };
+
+/** 신고/일정 행(날짜 칩 + 제목 + 상세). */
+export type ScheduleRow = { date: string; title: string; detail: string };
+
+/** 아이콘 카드(절세팁 등). */
+export type IconCard = { icon: IconKey; label: string; detail: string };
+
+/** 경고 콜아웃 항목. */
+export type TrapItem = { label: string; text: string };
+
+/** 세무사(전문가) 필요 시점 카드. recommend=false 면 "직접 처리 OK" 톤. */
+export type CpaNeed = { condition: string; reason: string; recommend?: boolean };
+
+/** 비교 카드(과세유형 가이드 등). */
+export type ComparisonCard = { title: string; criteria?: string; desc: string };
+
+/** 아이콘 배지 링크 카드(공식 사이트 바로가기). */
+export type LinkCard = { name: string; desc: string; url: string; badge: string };
+
 /* ─────────────────── 카테고리(업종)별 분기 데이터 ─────────────────── */
 
 /** 웹 PERMIT_BY_CATEGORY 의 풍부한 인허가 정보(서류·요건·비용·기간). */
@@ -95,34 +124,59 @@ export type PermitRequirement = {
   estimatedDays: number;
 };
 
-/** 한 업종(카테고리)에 종속된 콘텐츠. 키는 CategoryId.rawValue(=웹 industryCategoryId). */
+/**
+ * 한 업종(카테고리)에 종속된 콘텐츠. 키는 CategoryId.rawValue(=웹 industryCategoryId).
+ * 필드는 stage 별로 필요한 것만 채운다(label 만 필수). 예: registration-setup 은
+ * permit/pitfalls/weeklyChecklist, tax-guide 는 schedule/taxTips/cpaNeeded 등.
+ */
 export type CategoryContent = {
   /** 한국어 카테고리 라벨(음식점, 카페·디저트 …). */
   label: string;
+
+  /* ── registration-setup 등에서 쓰는 인허가 데이터(모두 optional) ── */
   /** 국세청 업종코드 힌트(사업자등록 step). */
-  industryCodeHint: string;
+  industryCodeHint?: string;
   /** 풍부한 인허가 정보(웹 PermitInfo). */
-  permit: PermitInfo;
+  permit?: PermitInfo;
   /** 인허가 항목 리스트(iOS requiredPermits) — 발급기관·처리일. */
-  requiredPermits: PermitRequirement[];
+  requiredPermits?: PermitRequirement[];
   /** 자주 거절·지연 사유(iOS pitfalls, 전 업종). */
-  pitfalls: string[];
+  pitfalls?: string[];
   /** 이번 주 체크리스트 — 발급 순서(iOS weeklyChecklist). */
-  weeklyChecklist: string[];
+  weeklyChecklist?: string[];
   /** 업종 특성 유리한 길(웹 카테고리별 PathCard). 없으면 일반 paths 만. */
   extraPath?: PathCard;
+
+  /* ── tax-guide 등에서 쓰는 페이지·업종 종속 데이터(모두 optional) ── */
+  /** 페이지 id → 페이지별 KEY ACTION 히어로. */
+  pageKeyActions?: Record<string, PageKeyAction>;
+  /** 신고/일정 표(date·title·detail). */
+  schedule?: ScheduleRow[];
+  /** 절세팁 등 아이콘 카드. */
+  taxTips?: IconCard[];
+  /** 페이지 id → 경고 콜아웃 항목. */
+  trapsByPage?: Record<string, TrapItem[]>;
+  /** 전문가(세무사) 필요 시점. */
+  cpaNeeded?: CpaNeed[];
+  /** 게이팅 체크리스트(id·label·detail). interactive taxChecklist 가 렌더+게이트.
+   *  required=true 인 항목만 "다음 단계" 게이트에 포함(나머지는 권장). */
+  taxChecklist?: Array<{ id: string; label: string; detail: string; required?: boolean }>;
 };
 
 /* ───────────────────────────── 섹션 ──────────────────────────────── */
 
 /** 인터랙티브 위젯 참조 ID — 플랫폼이 ref→네이티브 위젯으로 매핑. */
 export type InteractiveRef =
-  | "storeName"      // 상호명 입력(서버 저장)
-  | "hometaxLink"    // 홈택스 바로가기
-  | "bizRegToggle"   // 사업자등록 완료 토글
-  | "permitToggle"   // 인허가 발급 완료 토글
-  | "taxTypeSelect"  // 과세유형 선택(간이/일반, 서버 저장)
-  | "docUpload";     // 서류 업로드
+  | "storeName"        // 상호명 입력(서버 저장)
+  | "hometaxLink"      // 홈택스 바로가기
+  | "bizRegToggle"     // 사업자등록 완료 토글
+  | "permitToggle"     // 인허가 발급 완료 토글
+  | "taxTypeSelect"    // 과세유형 선택(간이/일반, 서버 저장)
+  | "docUpload"        // 서류 업로드
+  | "vatCalendarToggle" // 세금 신고 캘린더 등록 완료 토글(tax-guide)
+  | "taxChecklist"     // 필수 세무 세팅 체크리스트(게이팅)
+  | "cpaDecision"      // 세무사/직접 결정(서버 저장, 게이팅)
+  | "taxFaq";          // 세무 FAQ(+AI) 위젯
 
 /**
  * 섹션 프리미티브. kind 로 분기.
@@ -157,6 +211,20 @@ export type Section =
   /** byCategory[cat].weeklyChecklist 렌더. */
   | { kind: "checklist"; eyebrow: string }
   | { kind: "infoCard"; icon?: IconKey; accent?: Accent; title: string; body: string }
+  /** 페이지별 KEY ACTION 히어로 — byCategory[cat].pageKeyActions[현재 pageId]. */
+  | { kind: "pageKeyAction"; icon?: IconKey }
+  /** 신고/일정 표 — byCategory[cat].schedule. */
+  | { kind: "scheduleList"; eyebrow: string }
+  /** 아이콘 카드 목록(절세팁 등) — byCategory[cat].taxTips. */
+  | { kind: "iconCardList"; eyebrow: string; subtitle?: string }
+  /** 경고 콜아웃 — byCategory[cat].trapsByPage[현재 pageId]. */
+  | { kind: "calloutWarning"; severity?: "danger" | "warn"; title?: string }
+  /** 비교 카드(과세유형 가이드 등) — 정적. */
+  | { kind: "comparisonCards"; eyebrow: string; cards: ComparisonCard[] }
+  /** 전문가 필요 시점 — byCategory[cat].cpaNeeded. */
+  | { kind: "cpaCriteria"; eyebrow: string; subtitle?: string }
+  /** 아이콘 배지 링크 카드 — 정적. */
+  | { kind: "linkCards"; eyebrow: string; links: LinkCard[] }
   /** 마지막 페이지 마무리 — 단계 최상위 wrapup 데이터를 렌더(웹) / BUStageShell(iOS). */
   | { kind: "wrapup" }
   /** 플랫폼별 인터랙티브 위젯. config 는 ref 별 임의 설정(loose). */
@@ -194,9 +262,14 @@ export type StageContent = {
     stageEyebrow: string;
     helperText: string;
   };
-  keyAction: KeyAction;
+  /** 단계 상단 히어로(nav 위). 페이지별 히어로를 쓰는 단계(tax-guide)는 생략하고
+   *  섹션 kind="pageKeyAction" 사용. */
+  keyAction?: KeyAction;
   pages: StagePage[];
   /** 업종(카테고리)별 분기 데이터. 키 = CategoryId.rawValue. */
   byCategory: Record<string, CategoryContent>;
   wrapup: WrapupData;
+  /** wrapup 렌더 위치: "page"=전용 마무리 페이지의 kind:"wrapup" 섹션(기본),
+   *  "always"=웹은 모든 페이지 하단에 항상 표시(iOS는 BUStageShell 처리). */
+  wrapupMode?: "page" | "always";
 };

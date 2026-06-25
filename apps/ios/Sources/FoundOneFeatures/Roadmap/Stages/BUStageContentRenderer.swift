@@ -21,11 +21,18 @@ public struct BUStageContentRenderer: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
-    @State private var toggles: [String: Bool] = [:]
-    @State private var taxType: String = ""
+    @State private var toggles: [String: Bool] = [:]      // bizRegToggle·permitToggle·vatCalendarToggle
+    @State private var selections: [String: String] = [:] // taxTypeSelect·cpaDecision (단일 선택)
+    @State private var checklist: Set<String> = []        // taxChecklist 체크된 id
 
     public let content: BUStageContent
     public init(content: BUStageContent) { self.content = content }
+
+    /// 단일 선택 ref → advance inputs 의 정식 키(StageInputProjector 가 컬럼 투영).
+    private static let inputKeyForRef: [String: String] = [
+        "taxTypeSelect": "taxTypeChoice",
+        "cpaDecision": "cpaDecision",
+    ]
 
     // MARK: - 카테고리 해석 (CategoryId.rawValue == 웹 industryCategoryId == byCategory 키)
 
@@ -49,39 +56,78 @@ public struct BUStageContentRenderer: View {
         }
         return refs
     }
-    private var requiresBizReg: Bool { iosRefs.contains("bizRegToggle") }
-    private var requiresPermit: Bool { iosRefs.contains("permitToggle") }
-    private var requiresTax: Bool { iosRefs.contains("taxTypeSelect") }
+    /// 게이팅에 필요한 taxChecklist required id 목록.
+    private var requiredChecklistIds: [String] {
+        (cat?.taxChecklist ?? []).filter { $0.required == true }.map { $0.id }
+    }
 
     private var canComplete: Bool {
-        (!requiresBizReg || toggles["bizRegToggle"] == true) &&
-        (!requiresPermit || toggles["permitToggle"] == true) &&
-        (!requiresTax || !taxType.isEmpty)
+        let refs = iosRefs
+        if refs.contains("bizRegToggle"), toggles["bizRegToggle"] != true { return false }
+        if refs.contains("permitToggle"), toggles["permitToggle"] != true { return false }
+        if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return false }
+        if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return false }
+        if refs.contains("taxChecklist"), !requiredChecklistIds.allSatisfy({ checklist.contains($0) }) { return false }
+        return true
     }
     private var advanceHint: String {
-        if requiresBizReg && toggles["bizRegToggle"] != true { return "사업자등록 완료 토글을 켜세요" }
-        if requiresPermit && toggles["permitToggle"] != true { return "영업신고증 발급 완료를 체크하세요" }
-        if requiresTax && taxType.isEmpty { return "과세유형을 선택하세요" }
-        return "등록·인허가 완료 — 다음 단계로"
+        let refs = iosRefs
+        if refs.contains("bizRegToggle"), toggles["bizRegToggle"] != true { return "사업자등록 완료 토글을 켜세요" }
+        if refs.contains("permitToggle"), toggles["permitToggle"] != true { return "영업신고증 발급 완료를 체크하세요" }
+        if refs.contains("taxChecklist") {
+            let done = requiredChecklistIds.filter { checklist.contains($0) }.count
+            let total = requiredChecklistIds.count
+            if done < total { return "기본 셋업 \(done)/\(total) — 모두 완료해야 진행" }
+        }
+        if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return "과세유형을 선택하세요" }
+        if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return "세무 처리 방식을 선택하세요" }
+        return "완료 — 다음 단계로"
     }
 
-    private func defaultsKey(_ ref: String) -> String { "stage.\(content.stageId).\(ref)" }
+    private func defaultsKey(_ s: String) -> String { "stage.\(content.stageId).\(s)" }
 
     private func loadInteractiveState() {
         let d = UserDefaults.standard
-        if requiresBizReg { toggles["bizRegToggle"] = d.bool(forKey: defaultsKey("bizRegToggle")) }
-        if requiresPermit { toggles["permitToggle"] = d.bool(forKey: defaultsKey("permitToggle")) }
-        if requiresTax { taxType = d.string(forKey: defaultsKey("taxTypeSelect")) ?? "" }
+        let refs = iosRefs
+        for t in ["bizRegToggle", "permitToggle", "vatCalendarToggle"] where refs.contains(t) {
+            toggles[t] = d.bool(forKey: defaultsKey(t))
+        }
+        for s in ["taxTypeSelect", "cpaDecision"] where refs.contains(s) {
+            selections[s] = d.string(forKey: defaultsKey(s)) ?? ""
+        }
+        if refs.contains("taxChecklist") {
+            checklist = Set(d.stringArray(forKey: defaultsKey("taxChecklist")) ?? [])
+        }
     }
     private func persistToggle(_ ref: String, _ value: Bool) {
         toggles[ref] = value
         UserDefaults.standard.set(value, forKey: defaultsKey(ref))
     }
-    private func selectTaxType(_ value: String) {
-        taxType = value
-        UserDefaults.standard.set(value, forKey: defaultsKey("taxTypeSelect"))
-        // 선택 즉시 Supabase 동기화 (advance 안 해도 웹과 일치).
-        StoreProfileRepository.persistVatTypeForCurrentUser(value)
+    private func select(_ ref: String, _ value: String) {
+        selections[ref] = value
+        UserDefaults.standard.set(value, forKey: defaultsKey(ref))
+        if ref == "taxTypeSelect" {
+            // 선택 즉시 Supabase 동기화 (advance 안 해도 웹과 일치).
+            StoreProfileRepository.persistVatTypeForCurrentUser(value)
+        }
+    }
+    private func setChecklist(_ ids: Set<String>) {
+        checklist = ids
+        UserDefaults.standard.set(Array(ids), forKey: defaultsKey("taxChecklist"))
+    }
+    private func advanceInputs() -> [String: String] {
+        var inputs: [String: String] = [:]
+        for (ref, key) in Self.inputKeyForRef {
+            if let v = selections[ref], !v.isEmpty { inputs[key] = v }
+        }
+        return inputs
+    }
+
+    /// 현재 페이지의 페이지별 KEY ACTION (있으면 BUStageShell hero 로 override).
+    private var currentPageKeyAction: BUStageKeyAction? {
+        guard let pid = content.pages[safe: page]?.id,
+              let ka = cat?.pageKeyActions?[pid] else { return nil }
+        return BUStageKeyAction(title: ka.title, detail: ka.detail)
     }
 
     private var wrapupData: BUStageWrapupData {
@@ -103,15 +149,16 @@ public struct BUStageContentRenderer: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(content.stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: content.stageId, inputs: ["taxTypeChoice": taxType])
+                roadmapStore.advanceToNext(currentStageId: content.stageId, inputs: advanceInputs())
             },
             onUncomplete: { roadmapStore.uncompleteStage(content.stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: content.stageId, inputs: ["taxTypeChoice": taxType])
+                roadmapStore.saveStageEdit(currentStageId: content.stageId, inputs: advanceInputs())
             },
             wrapup: wrapupData,
             currentPage: page,
-            totalPages: content.pages.count
+            totalPages: content.pages.count,
+            keyActionOverride: currentPageKeyAction
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 BUWizardPageNav(
@@ -123,7 +170,7 @@ public struct BUStageContentRenderer: View {
                 if let p = content.pages[safe: page] {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         ForEach(Array(p.sections.enumerated()), id: \.offset) { _, section in
-                            sectionView(section)
+                            sectionView(section, pageId: p.id)
                         }
                     }
                 }
@@ -135,7 +182,7 @@ public struct BUStageContentRenderer: View {
     // MARK: - 섹션 렌더
 
     @ViewBuilder
-    private func sectionView(_ section: BUStageContent.Section) -> some View {
+    private func sectionView(_ section: BUStageContent.Section, pageId: String) -> some View {
         switch section {
         case let .whyList(_, _, items):
             VStack(alignment: .leading, spacing: BUSpacing.md) {
@@ -144,15 +191,31 @@ public struct BUStageContentRenderer: View {
         case let .stepList(icon, eyebrow, subtitle, steps, meta, links):
             stepListSection(icon: icon, eyebrow: eyebrow, subtitle: subtitle, steps: steps, meta: meta, links: links)
         case .permit:
-            if let cat { permitSection(cat) }
+            if let cat, let permit = cat.permit { permitSection(cat, permit: permit) }
         case let .pitfalls(title):
-            if let cat { pitfallsSection(title: title, items: cat.pitfalls) }
+            if let items = cat?.pitfalls, !items.isEmpty { pitfallsSection(title: title, items: items) }
         case let .pathCards(_, eyebrow, subtitle, cards, includeCategoryPath):
             pathCardsSection(eyebrow: eyebrow, subtitle: subtitle, cards: cards, includeCategoryPath: includeCategoryPath)
         case let .checklist(eyebrow):
-            if let cat { checklistSection(eyebrow: eyebrow, items: cat.weeklyChecklist) }
+            if let items = cat?.weeklyChecklist, !items.isEmpty { checklistSection(eyebrow: eyebrow, items: items) }
         case let .infoCard(_, accent, title, body):
             infoCardSection(accent: accent, title: title, body: body)
+        case .pageKeyAction:
+            EmptyView()   // iOS 는 BUStageShell hero(keyActionOverride)로 표시
+        case let .scheduleList(eyebrow):
+            if let rows = cat?.schedule, !rows.isEmpty { scheduleListSection(eyebrow: eyebrow, rows: rows) }
+        case let .iconCardList(eyebrow, subtitle):
+            if let tips = cat?.taxTips, !tips.isEmpty { iconCardListSection(eyebrow: eyebrow, subtitle: subtitle, cards: tips) }
+        case let .calloutWarning(severity, title):
+            if let traps = cat?.trapsByPage?[pageId], !traps.isEmpty {
+                calloutWarningSection(title: title, items: traps, severity: severity)
+            }
+        case let .comparisonCards(eyebrow, cards):
+            comparisonCardsSection(eyebrow: eyebrow, cards: cards)
+        case let .cpaCriteria(eyebrow, subtitle):
+            if let needs = cat?.cpaNeeded, !needs.isEmpty { cpaCriteriaSection(eyebrow: eyebrow, subtitle: subtitle, needs: needs) }
+        case let .linkCards(eyebrow, links):
+            linkCardsSection(eyebrow: eyebrow, links: links)
         case .wrapup:
             EmptyView()   // BUStageShell 이 마지막 페이지에서 wrapup 표시
         case let .interactive(ref, platforms, config):
@@ -206,8 +269,7 @@ public struct BUStageContentRenderer: View {
         }
     }
 
-    private func permitSection(_ cat: BUStageContent.CategoryContent) -> some View {
-        let p = cat.permit
+    private func permitSection(_ cat: BUStageContent.CategoryContent, permit p: BUStageContent.PermitInfo) -> some View {
         return VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.hero) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -263,7 +325,7 @@ public struct BUStageContentRenderer: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("필수 인허가 — \(cat.label)")
-                    ForEach(Array(cat.requiredPermits.enumerated()), id: \.offset) { idx, rp in
+                    ForEach(Array((cat.requiredPermits ?? []).enumerated()), id: \.offset) { idx, rp in
                         if idx > 0 { Divider() }
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -373,6 +435,179 @@ public struct BUStageContentRenderer: View {
         }
     }
 
+    // MARK: tax-guide 신규 섹션
+
+    private func scheduleListSection(eyebrow: String, rows: [BUStageContent.ScheduleRow]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(eyebrow)
+                ForEach(rows, id: \.title) { row in
+                    HStack(alignment: .top, spacing: BUSpacing.sm) {
+                        Text(row.date)
+                            .font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .fixedSize()
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(row.title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text(row.detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+
+    private func iconCardListSection(eyebrow: String, subtitle: String?, cards: [BUStageContent.IconCard]) -> some View {
+        VStack(alignment: .leading, spacing: BUSpacing.sm) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow(eyebrow)
+                    if let subtitle {
+                        Text(subtitle).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    ForEach(cards, id: \.label) { c in
+                        HStack(alignment: .top, spacing: BUSpacing.sm) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(BUColor.midnight.opacity(0.08)).frame(width: 32, height: 32)
+                                Image(systemName: Self.sfSymbol(c.icon)).font(.system(size: 13)).foregroundStyle(BUColor.midnight)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(c.label).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text(c.detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func calloutWarningSection(title: String?, items: [BUStageContent.TrapItem], severity: String?) -> some View {
+        let color = severity == "warn" ? BUColor.warn : BUColor.danger
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.xs) {
+                if let title {
+                    Text(title).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(color)
+                }
+                ForEach(items, id: \.label) { item in
+                    HStack(alignment: .top, spacing: 6) {
+                        Circle().fill(color).frame(width: 4, height: 4).padding(.top, 6)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.label).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(color)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(item.text).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func comparisonCardsSection(eyebrow: String, cards: [BUStageContent.ComparisonCard]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(eyebrow)
+                ForEach(cards, id: \.title) { c in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(c.title).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                            if let criteria = c.criteria {
+                                Text(criteria).font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                            }
+                        }
+                        Text(c.desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+
+    private func cpaCriteriaSection(eyebrow: String, subtitle: String?, needs: [BUStageContent.CpaNeed]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(eyebrow)
+                if let subtitle {
+                    Text(subtitle).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(needs, id: \.condition) { n in
+                    let rec = n.recommend ?? true
+                    HStack(alignment: .top, spacing: BUSpacing.sm) {
+                        Image(systemName: rec ? "checkmark.circle.fill" : "minus.circle")
+                            .font(.system(size: 16))
+                            .foregroundStyle(rec ? BUColor.success : BUColor.inkMuted)
+                            .padding(.top, 1)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(n.condition).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(n.reason).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+
+    private func linkCardsSection(eyebrow: String, links: [BUStageContent.LinkCard]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(eyebrow)
+                ForEach(links, id: \.url) { link in
+                    if let url = URL(string: link.url) {
+                        Link(destination: url) {
+                            HStack(spacing: BUSpacing.sm) {
+                                Text(link.badge)
+                                    .font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                                    .frame(width: 32, height: 32)
+                                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(link.name).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                    Text(link.desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right").font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.inkMuted)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static func sfSymbol(_ icon: String) -> String {
+        switch icon {
+        case "fileText":      return "doc.text.fill"
+        case "banknote":      return "banknote.fill"
+        case "sparkles":      return "sparkles"
+        case "clipboard":     return "list.clipboard.fill"
+        case "percent":       return "percent"
+        case "creditCard":    return "creditcard.fill"
+        case "users":         return "person.2.fill"
+        case "rosette":       return "rosette"
+        case "shieldCheck":   return "checkmark.shield"
+        case "building":      return "building.2"
+        case "receipt":       return "receipt"
+        case "lightbulb":     return "lightbulb"
+        case "arrowRight":    return "arrow.right"
+        case "checklist":     return "checklist"
+        case "calendar":      return "calendar"
+        case "alertTriangle": return "exclamationmark.triangle.fill"
+        default:              return "circle.fill"
+        }
+    }
+
     // MARK: 인터랙티브 섹션 (ref → 네이티브 위젯)
 
     @ViewBuilder
@@ -402,10 +637,74 @@ public struct BUStageContentRenderer: View {
             }
         case "taxTypeSelect":
             taxTypeSelector(config: config)
+        case "vatCalendarToggle":
+            BUCard(.card) {
+                Toggle(isOn: Binding(
+                    get: { toggles["vatCalendarToggle"] ?? false },
+                    set: { persistToggle("vatCalendarToggle", $0) }
+                )) {
+                    Text(config?.label ?? "세금 신고 캘린더 등록 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                }
+                .tint(BUColor.midnight)
+            }
+        case "taxChecklist":
+            BUInteractiveChecklist(
+                title: config?.title ?? "필수 세팅",
+                items: (cat?.taxChecklist ?? []).map { .init(id: $0.id, label: $0.label, detail: $0.detail) },
+                checked: Binding(get: { checklist }, set: { setChecklist($0) })
+            )
+        case "cpaDecision":
+            cpaDecisionSelector(config: config)
+        case "taxFaq":
+            BUTaxFAQCard()
         default:
             // storeName·docUpload 등 현재 웹 전용 ref → iOS 미구현(후속 이식).
             EmptyView()
         }
+    }
+
+    private func cpaDecisionSelector(config: BUStageContent.InteractiveConfig?) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(config?.eyebrow ?? "세무 처리 방식 선택")
+                HStack(spacing: BUSpacing.sm) {
+                    ForEach(config?.options ?? [], id: \.value) { opt in
+                        cpaOptionCard(opt)
+                    }
+                }
+            }
+        }
+    }
+
+    private func cpaOptionCard(_ opt: BUStageContent.TaxOption) -> some View {
+        let isSelected = (selections["cpaDecision"] ?? "") == opt.value
+        return Button {
+            select("cpaDecision", isSelected ? "" : opt.value)
+        } label: {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                HStack {
+                    Text(opt.title).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    Spacer()
+                    if isSelected { Image(systemName: "checkmark.circle.fill").foregroundStyle(BUColor.success) }
+                }
+                ForEach(opt.pros ?? [], id: \.self) { pro in
+                    HStack(alignment: .top, spacing: 4) {
+                        Text("·").foregroundStyle(BUColor.midnight)
+                        Text(pro).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(1.5)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                if let cost = opt.cost {
+                    Text(cost).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(BUColor.midnight).padding(.top, 2)
+                }
+            }
+            .padding(BUSpacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(BUColor.surface, in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
+                .strokeBorder(isSelected ? BUColor.midnight.opacity(0.4) : Color.clear, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
     }
 
     private func taxTypeSelector(config: BUStageContent.InteractiveConfig?) -> some View {
@@ -426,9 +725,9 @@ public struct BUStageContentRenderer: View {
     }
 
     private func taxTypeChip(value: String, title: String, subtitle: String) -> some View {
-        let isSelected = taxType == value
+        let isSelected = (selections["taxTypeSelect"] ?? "") == value
         return Button {
-            selectTaxType(value)
+            select("taxTypeSelect", value)
         } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(isSelected ? BUColor.midnightInk : BUColor.ink)

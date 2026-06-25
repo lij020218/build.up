@@ -19,10 +19,11 @@ import Foundation
 public struct BUStageContent: Decodable, Sendable, Hashable {
     public let stageId: String
     public let shell: Shell
-    public let keyAction: KeyAction
+    public let keyAction: KeyAction?
     public let pages: [Page]
     public let byCategory: [String: CategoryContent]
     public let wrapup: Wrapup
+    public let wrapupMode: String?
 
     public struct Shell: Decodable, Sendable, Hashable {
         public let title: String
@@ -96,14 +97,70 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         public let estimatedDays: Int
     }
 
+    public struct PageKeyAction: Decodable, Sendable, Hashable {
+        public let title: String
+        public let detail: String
+    }
+
+    public struct ScheduleRow: Decodable, Sendable, Hashable {
+        public let date: String
+        public let title: String
+        public let detail: String
+    }
+
+    public struct IconCard: Decodable, Sendable, Hashable {
+        public let icon: String
+        public let label: String
+        public let detail: String
+    }
+
+    public struct TrapItem: Decodable, Sendable, Hashable {
+        public let label: String
+        public let text: String
+    }
+
+    public struct CpaNeed: Decodable, Sendable, Hashable {
+        public let condition: String
+        public let reason: String
+        public let recommend: Bool?
+    }
+
+    public struct ComparisonCard: Decodable, Sendable, Hashable {
+        public let title: String
+        public let criteria: String?
+        public let desc: String
+    }
+
+    public struct LinkCard: Decodable, Sendable, Hashable {
+        public let name: String
+        public let desc: String
+        public let url: String
+        public let badge: String
+    }
+
+    public struct ChecklistItem: Decodable, Sendable, Hashable {
+        public let id: String
+        public let label: String
+        public let detail: String
+        public let required: Bool?
+    }
+
     public struct CategoryContent: Decodable, Sendable, Hashable {
         public let label: String
-        public let industryCodeHint: String
-        public let permit: PermitInfo
-        public let requiredPermits: [PermitRequirement]
-        public let pitfalls: [String]
-        public let weeklyChecklist: [String]
+        // registration-setup 인허가 데이터(optional)
+        public let industryCodeHint: String?
+        public let permit: PermitInfo?
+        public let requiredPermits: [PermitRequirement]?
+        public let pitfalls: [String]?
+        public let weeklyChecklist: [String]?
         public let extraPath: PathCard?
+        // tax-guide 등 페이지·업종 종속 데이터(optional)
+        public let pageKeyActions: [String: PageKeyAction]?
+        public let schedule: [ScheduleRow]?
+        public let taxTips: [IconCard]?
+        public let trapsByPage: [String: [TrapItem]]?
+        public let cpaNeeded: [CpaNeed]?
+        public let taxChecklist: [ChecklistItem]?
     }
 
     public struct WrapItem: Decodable, Sendable, Hashable {
@@ -128,6 +185,10 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         public let value: String
         public let title: String
         public let subtitle: String
+        // cpaDecision 옵션에서 추가로 쓰는 필드(optional)
+        public let desc: String?
+        public let pros: [String]?
+        public let cost: String?
     }
 
     /// 인터랙티브 위젯 설정(ref 별 임의값을 평탄화해 디코드).
@@ -150,6 +211,13 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         case pathCards(icon: String?, eyebrow: String, subtitle: String?, cards: [PathCard], includeCategoryPath: Bool)
         case checklist(eyebrow: String)
         case infoCard(icon: String?, accent: String?, title: String, body: String)
+        case pageKeyAction(icon: String?)
+        case scheduleList(eyebrow: String)
+        case iconCardList(eyebrow: String, subtitle: String?)
+        case calloutWarning(severity: String?, title: String?)
+        case comparisonCards(eyebrow: String, cards: [ComparisonCard])
+        case cpaCriteria(eyebrow: String, subtitle: String?)
+        case linkCards(eyebrow: String, links: [LinkCard])
         case wrapup
         case interactive(ref: String, platforms: [String]?, config: InteractiveConfig?)
         /// 미지원 kind(스키마 확장 시 그레이스풀 스킵).
@@ -158,6 +226,7 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         private enum K: String, CodingKey {
             case kind, eyebrow, subtitle, items, icon, steps, meta, links
             case title, cards, includeCategoryPath, accent, body, ref, platforms, config
+            case severity
         }
 
         public init(from decoder: any Decoder) throws {
@@ -196,6 +265,30 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
                     accent: try c.decodeIfPresent(String.self, forKey: .accent),
                     title: try c.decode(String.self, forKey: .title),
                     body: try c.decode(String.self, forKey: .body))
+            case "pageKeyAction":
+                self = .pageKeyAction(icon: try c.decodeIfPresent(String.self, forKey: .icon))
+            case "scheduleList":
+                self = .scheduleList(eyebrow: try c.decode(String.self, forKey: .eyebrow))
+            case "iconCardList":
+                self = .iconCardList(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle))
+            case "calloutWarning":
+                self = .calloutWarning(
+                    severity: try c.decodeIfPresent(String.self, forKey: .severity),
+                    title: try c.decodeIfPresent(String.self, forKey: .title))
+            case "comparisonCards":
+                self = .comparisonCards(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    cards: try c.decode([ComparisonCard].self, forKey: .cards))
+            case "cpaCriteria":
+                self = .cpaCriteria(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle))
+            case "linkCards":
+                self = .linkCards(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    links: try c.decode([LinkCard].self, forKey: .links))
             case "wrapup":
                 self = .wrapup
             case "interactive":

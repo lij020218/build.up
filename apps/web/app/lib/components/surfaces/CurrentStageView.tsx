@@ -43,7 +43,8 @@ import { PreLaunchStage } from "../stages/offline/PreLaunchStage";
 import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage";
 import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
-import { TaxGuideStage } from "../stages/shared-tail/TaxGuideStage";
+import { StageContentRenderer } from "../stages/shared/StageContentRenderer";
+import { TAX_GUIDE_CONTENT } from "@foundone/shared";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
@@ -1125,7 +1126,35 @@ export function CurrentStageView() {
             );
           })() : isGuideStage ? (
             currentStage.code === "tax_guide" ? (
-              <TaxGuideStage />
+              <>
+                {/* 2026-06-25 SSOT 전환: 콘텐츠는 @foundone/shared tax-guide(웹·iOS 공통).
+                    footer 게이팅(필수 세팅 체크리스트 완료)은 여기서 유지. */}
+                <StageContentRenderer content={TAX_GUIDE_CONTENT} />
+                {(() => {
+                  const taxItems = (TAX_GUIDE_CONTENT.byCategory[industryCategoryId ?? "food"] ?? TAX_GUIDE_CONTENT.byCategory["food"]).taxChecklist ?? [];
+                  const taxAllDone = taxItems.length > 0 && taxItems.every((t) => taxChecks[t.id]);
+                  const doneCount = taxItems.filter((t) => taxChecks[t.id]).length;
+                  return (
+                    <div style={styles.stageFooter}>
+                      <button type="button" style={styles.button} onClick={() => {
+                        if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+                        else setViewingStageId(null);
+                      }}>
+                        {language === "ko" ? "← 이전 단계" : "← Back"}
+                      </button>
+                      <button
+                        type="button"
+                        style={{ ...styles.primaryButton, opacity: taxAllDone ? 1 : 0.45, cursor: taxAllDone ? "pointer" : "not-allowed" }}
+                        title={taxAllDone ? undefined : (language === "ko" ? `필수 세팅 ${doneCount}/${taxItems.length} — 「필수 세팅」 탭에서 모두 체크 후 진행` : `Complete all ${taxItems.length} setup items first`)}
+                        onClick={() => { if (!taxAllDone) return; handleVerificationContinue("tax-guide"); }}
+                        disabled={!taxAllDone}
+                      >
+                        {taxAllDone ? copy.home.markTaxReviewed : (language === "ko" ? `↑ 필수 세팅 ${doneCount}/${taxItems.length}` : `↑ Setup ${doneCount}/${taxItems.length}`)}
+                      </button>
+                    </div>
+                  );
+                })()}
+              </>
             ) : currentStage.code === "loan_guide" ? (
               <>
                 <LoanGuideStage />
