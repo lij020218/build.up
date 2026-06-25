@@ -43,7 +43,7 @@ import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage
 import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
 import { StageContentRenderer } from "../stages/shared/StageContentRenderer";
-import { TAX_GUIDE_CONTENT, PERMIT_CHECK_CONTENT } from "@foundone/shared";
+import { TAX_GUIDE_CONTENT, PERMIT_CHECK_CONTENT, CONTRACT_REVIEW_CONTENT } from "@foundone/shared";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
@@ -54,7 +54,6 @@ import { AuroraBackground } from "../../../../components/ui/aurora-background";
 import { FranchiseSupplyPanel } from "../stages/franchise/FranchiseSupplyPanel";
 import { StartupToolkitPanel } from "../stages/startup/StartupToolkitPanel";
 import { IndustrySelectionStage } from "../stages/selection/IndustrySelectionStage";
-import { ContractReviewStage } from "../stages/selection/ContractReviewStage";
 import { StartupTypeSelectionStage } from "../stages/selection/StartupTypeSelectionStage";
 import { BusinessModelSelectionStage } from "../stages/selection/BusinessModelSelectionStage";
 import { BudgetSetupStage } from "../stages/selection/BudgetSetupStage";
@@ -514,7 +513,62 @@ export function CurrentStageView() {
           ) : currentStage.code === "location_candidates" ? (
             <LocationCandidatesStage />
           ) : currentStage.code === "contract_review" ? (
-            <ContractReviewStage />
+            <>
+              {/* 2026-06-26 SSOT 전환: 콘텐츠는 @foundone/shared contract-review(웹·iOS 공통).
+                  footer 게이팅(9대 핵심 조항 + 서명 완료)은 여기서 유지(tax-guide 패턴). */}
+              <StageContentRenderer content={CONTRACT_REVIEW_CONTENT} />
+              {(() => {
+                const gate = CONTRACT_REVIEW_CONTENT.pages.flatMap((p) => p.sections).find((s) => s.kind === "gateChecklist");
+                const ids = gate && gate.kind === "gateChecklist" ? gate.items.map((i) => i.id) : [];
+                const checks = d.contractSubChecks ?? {};
+                const doneCount = ids.filter((id) => checks[`__final:${id}`]).length;
+                const allClause = ids.length > 0 && doneCount === ids.length;
+                const signed = !!checks["__final:signed"];
+                const canContinue = allClause && signed;
+                const isStageCompleted = !!decisions["contract-review"]?.completedAt && isViewingPastStage;
+                const editStatus = d.editSaveStatus?.stageId === "contract-review" ? d.editSaveStatus.status : null;
+                const editLabel = editStatus === "saving" ? (language === "ko" ? "저장 중..." : "Saving...")
+                  : editStatus === "saved" ? (language === "ko" ? "✓ 수정 완료" : "✓ Saved")
+                  : editStatus === "error" ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
+                  : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
+                const continueLabel = !allClause
+                  ? (language === "ko" ? `↑ 9대 핵심 조항 ${doneCount}/${ids.length}` : `↑ Clauses ${doneCount}/${ids.length}`)
+                  : !signed
+                    ? (language === "ko" ? "↑ 서명 완료 토글을 켜세요" : "↑ Toggle 'signed'")
+                    : (language === "ko" ? "계약 검토 완료 — 다음 단계로" : "Contract reviewed — continue");
+                return (
+                  <div style={styles.stageFooter}>
+                    <button type="button" style={styles.button} onClick={() => {
+                      if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+                      else setViewingStageId(null);
+                    }}>
+                      {language === "ko" ? "← 이전 단계" : "← Back"}
+                    </button>
+                    {isStageCompleted && (
+                      <button
+                        type="button"
+                        style={{ ...styles.primaryButton, opacity: canContinue && editStatus !== "saving" ? 1 : 0.5, background: editStatus === "error" ? "#b64c4c" : "#1d3557", cursor: editStatus === "saving" ? "wait" : "pointer" }}
+                        disabled={editStatus === "saving"}
+                        onClick={() => { if (!canContinue) return; void handleStageEdit("contract-review"); }}
+                      >
+                        {editLabel}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      style={{ ...styles.primaryButton, opacity: canContinue ? 1 : 0.45, cursor: canContinue ? "pointer" : "not-allowed" }}
+                      disabled={!canContinue}
+                      onClick={() => { if (!canContinue) return; handleContractContinue(); }}
+                    >
+                      {continueLabel}
+                    </button>
+                    <button type="button" style={styles.button} onClick={resetDemo}>
+                      {copy.common.resetDemo}
+                    </button>
+                  </div>
+                );
+              })()}
+            </>
           ) : (
             currentStage.code === "permit_check" ||
             currentStage.code === "construction_setup" ||

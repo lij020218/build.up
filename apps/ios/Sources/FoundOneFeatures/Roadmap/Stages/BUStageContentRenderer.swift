@@ -25,6 +25,7 @@ public struct BUStageContentRenderer: View {
     @State private var selections: [String: String] = [:] // taxTypeSelect·cpaDecision (단일 선택)
     @State private var checklist: Set<String> = []        // taxChecklist 체크된 id
     @State private var axisChecks: Set<String> = []       // axisChecklist(permit-check 3축) 체크된 task id
+    @State private var gateChecks: Set<String> = []       // gateChecklist(contract-review 9대 조항) 체크된 item id
 
     public let content: BUStageContent
     public init(content: BUStageContent) { self.content = content }
@@ -76,6 +77,18 @@ public struct BUStageContentRenderer: View {
     }
     private var hasAxisChecklist: Bool { !axisChecklistTaskIds.isEmpty }
 
+    /// gateChecklist 섹션의 전체 item id(게이팅 — 모두 체크). contract-review 9대 조항.
+    private var gateChecklistIds: [String] {
+        var ids: [String] = []
+        for p in content.pages {
+            for s in p.sections {
+                if case let .gateChecklist(_, _, items, _) = s { ids.append(contentsOf: items.map(\.id)) }
+            }
+        }
+        return ids
+    }
+    private var hasGateChecklist: Bool { !gateChecklistIds.isEmpty }
+
     private var canComplete: Bool {
         let refs = iosRefs
         if refs.contains("bizRegToggle"), toggles["bizRegToggle"] != true { return false }
@@ -84,6 +97,8 @@ public struct BUStageContentRenderer: View {
         if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return false }
         if refs.contains("taxChecklist"), !requiredChecklistIds.allSatisfy({ checklist.contains($0) }) { return false }
         if hasAxisChecklist, !axisChecklistTaskIds.allSatisfy({ axisChecks.contains($0) }) { return false }
+        if hasGateChecklist, !gateChecklistIds.allSatisfy({ gateChecks.contains($0) }) { return false }
+        if refs.contains("contractSign"), toggles["contractSign"] != true { return false }
         return true
     }
     private var advanceHint: String {
@@ -100,6 +115,12 @@ public struct BUStageContentRenderer: View {
             let done = axisChecklistTaskIds.filter { axisChecks.contains($0) }.count
             if done < total { return "「체크리스트」 탭에서 내 매물 점검 (\(done)/\(total)) — 3축 모두 통과해야 진행" }
         }
+        if hasGateChecklist {
+            let total = gateChecklistIds.count
+            let done = gateChecklistIds.filter { gateChecks.contains($0) }.count
+            if done < total { return "「마무리」 탭에서 핵심 조항을 모두 체크하세요 (\(done)/\(total))" }
+        }
+        if refs.contains("contractSign"), toggles["contractSign"] != true { return "임대 계약서 서명 완료 토글을 켜세요" }
         if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return "과세유형을 선택하세요" }
         if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return "세무 처리 방식을 선택하세요" }
         return "완료 — 다음 단계로"
@@ -110,7 +131,7 @@ public struct BUStageContentRenderer: View {
     private func loadInteractiveState() {
         let d = UserDefaults.standard
         let refs = iosRefs
-        for t in ["bizRegToggle", "permitToggle", "vatCalendarToggle"] where refs.contains(t) {
+        for t in ["bizRegToggle", "permitToggle", "vatCalendarToggle", "contractSign"] where refs.contains(t) {
             toggles[t] = d.bool(forKey: defaultsKey(t))
         }
         for s in ["taxTypeSelect", "cpaDecision"] where refs.contains(s) {
@@ -122,10 +143,17 @@ public struct BUStageContentRenderer: View {
         if hasAxisChecklist {
             axisChecks = Set(d.stringArray(forKey: defaultsKey("axisChecks")) ?? [])
         }
+        if hasGateChecklist {
+            gateChecks = Set(d.stringArray(forKey: defaultsKey("gateChecks")) ?? [])
+        }
     }
     private func setAxisChecks(_ ids: Set<String>) {
         axisChecks = ids
         UserDefaults.standard.set(Array(ids), forKey: defaultsKey("axisChecks"))
+    }
+    private func setGateChecks(_ ids: Set<String>) {
+        gateChecks = ids
+        UserDefaults.standard.set(Array(ids), forKey: defaultsKey("gateChecks"))
     }
     private func persistToggle(_ ref: String, _ value: Bool) {
         toggles[ref] = value
@@ -256,6 +284,10 @@ public struct BUStageContentRenderer: View {
             workStepSection(axis: axis, stepLabel: stepLabel, time: time, headline: headline, why: why, tasks: tasks, watchouts: watchouts, showFavorable: showFavorable)
         case let .axisChecklist(eyebrow, subtitle, axes):
             axisChecklistSection(eyebrow: eyebrow, subtitle: subtitle, axes: axes)
+        case let .gateChecklist(eyebrow, subtitle, items, doneNote):
+            gateChecklistSection(eyebrow: eyebrow, subtitle: subtitle, items: items, doneNote: doneNote)
+        case let .noteList(severity, title, items):
+            noteListSection(severity: severity, title: title, items: items)
         case .unsupported:
             EmptyView()
         }
@@ -772,6 +804,79 @@ public struct BUStageContentRenderer: View {
         .buttonStyle(.plain)
     }
 
+    private func gateChecklistSection(eyebrow: String, subtitle: String?, items: [BUStageContent.GateItem], doneNote: String?) -> some View {
+        let done = items.filter { gateChecks.contains($0.id) }.count
+        let allDone = !items.isEmpty && done == items.count
+        return VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    HStack {
+                        BUEyebrow(eyebrow)
+                        Spacer()
+                        Text("\(done)/\(items.count)")
+                            .font(.system(size: 11, weight: .bold)).foregroundStyle(allDone ? .white : BUColor.inkSecondary)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(allDone ? BUColor.success : BUColor.midnight.opacity(0.08), in: Capsule())
+                    }
+                    if let subtitle {
+                        Text(subtitle).font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    ForEach(items, id: \.id) { item in
+                        gateCheckRow(item)
+                    }
+                    if allDone, let doneNote {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success)
+                            Text(doneNote).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
+                        }.padding(.top, 4)
+                    }
+                }
+            }
+        }
+    }
+
+    private func gateCheckRow(_ item: BUStageContent.GateItem) -> some View {
+        let isChecked = gateChecks.contains(item.id)
+        return Button {
+            var next = gateChecks
+            if next.contains(item.id) { next.remove(item.id) } else { next.insert(item.id) }
+            setGateChecks(next)
+        } label: {
+            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                Image(systemName: isChecked ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 18)).foregroundStyle(isChecked ? BUColor.success : BUColor.inkSubtle).padding(.top, 1)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.label).font(BUFont.bodySmall).foregroundStyle(isChecked ? BUColor.ink : BUColor.inkMuted)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    if let detail = item.detail, !isChecked {
+                        Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.vertical, 8).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func noteListSection(severity: String?, title: String, items: [String]) -> some View {
+        let color = severity == "danger" ? BUColor.danger : BUColor.warn
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.xs) {
+                Text(title).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(color)
+                ForEach(items, id: \.self) { item in
+                    HStack(alignment: .top, spacing: 6) {
+                        Circle().fill(color).frame(width: 4, height: 4).padding(.top, 5)
+                        Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+
     private static func sfSymbol(_ icon: String) -> String {
         switch icon {
         case "fileText":      return "doc.text.fill"
@@ -843,8 +948,18 @@ public struct BUStageContentRenderer: View {
             cpaDecisionSelector(config: config)
         case "taxFaq":
             BUTaxFAQCard()
+        case "contractSign":
+            BUCard(.card) {
+                Toggle(isOn: Binding(
+                    get: { toggles["contractSign"] ?? false },
+                    set: { persistToggle("contractSign", $0) }
+                )) {
+                    Text("임대 계약서 서명 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                }
+                .tint(BUColor.midnight)
+            }
         default:
-            // storeName·docUpload 등 현재 웹 전용 ref → iOS 미구현(후속 이식).
+            // storeName·docUpload·contractAiAnalysis 등 현재 웹 전용/후속 ref → iOS 미구현(후속 이식).
             EmptyView()
         }
     }

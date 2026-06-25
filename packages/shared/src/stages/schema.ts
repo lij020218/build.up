@@ -123,6 +123,12 @@ export type WorkStepData = { why: string; tasks: WorkStepTask[]; watchouts: Trap
 /** 사장님 상황 권장(WorkStep 하단) — 업종별. */
 export type Favorable = { context: string; recommendation: string; rationale: string };
 
+/** 정적 게이팅 체크리스트 항목(contract-review 9대 조항 등) — 인라인, 전 업종 공통. */
+export type GateItem = { id: string; label: string; detail?: string };
+
+/** 정적 안내 콜아웃 한 줄(contract-review "계약 후 즉시 할 일" 등). */
+export type NoteItem = string;
+
 /* ─────────────────── 카테고리(업종)별 분기 데이터 ─────────────────── */
 
 /** 웹 PERMIT_BY_CATEGORY 의 풍부한 인허가 정보(서류·요건·비용·기간). */
@@ -206,7 +212,9 @@ export type InteractiveRef =
   | "cpaDecision"      // 세무사/직접 결정(서버 저장, 게이팅)
   | "taxFaq"           // 세무 FAQ(+AI) 위젯
   | "liveData"         // 영업 현황/생존율 라이브 데이터(API, permit-check)
-  | "permitCards";     // 업종별 인허가 체크리스트 카드(getPermitsForCategory)
+  | "permitCards"      // 업종별 인허가 체크리스트 카드(getPermitsForCategory)
+  | "contractSign"     // 임대 계약서 서명 완료 토글(게이팅, contract-review)
+  | "contractAiAnalysis"; // 계약서 원문 붙여넣기 → AI 위험조항 분석(contract-review)
 
 /**
  * 섹션 프리미티브. kind 로 분기.
@@ -293,6 +301,20 @@ export type Section =
       subtitle?: string;
       axes: Array<{ axis: string; icon: IconKey; title: string }>;
     }
+  /**
+   * 정적 게이팅 체크리스트 — 인라인 items(전 업종 공통). contract-review 9대 핵심 조항.
+   * 모든 항목 체크 시 게이트 통과(상태·게이팅은 렌더러/footer 가 관리).
+   */
+  | {
+      kind: "gateChecklist";
+      eyebrow: string;
+      subtitle?: string;
+      items: GateItem[];
+      /** 전부 체크되면 표시할 완료 메시지(예: "모든 항목 확인 완료! 계약 체결 가능"). */
+      doneNote?: string;
+    }
+  /** 정적 안내 콜아웃(제목 + 인라인 항목) — contract-review "계약 후 즉시 할 일". */
+  | { kind: "noteList"; severity?: "danger" | "warn"; title: string; items: NoteItem[] }
   /** 마지막 페이지 마무리 — 단계 최상위 wrapup 데이터를 렌더(웹) / BUStageShell(iOS). */
   | { kind: "wrapup" }
   /** 플랫폼별 인터랙티브 위젯. config 는 ref 별 임의 설정(loose). */

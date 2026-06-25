@@ -189,6 +189,12 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         public let title: String
     }
 
+    public struct GateItem: Decodable, Sendable, Hashable {
+        public let id: String
+        public let label: String
+        public let detail: String?
+    }
+
     public struct CategoryContent: Decodable, Sendable, Hashable {
         public let label: String
         // registration-setup 인허가 데이터(optional)
@@ -270,6 +276,8 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         case stageOverview(headline: String, intro: String, stat: Stat, outlineEyebrow: String, workOutline: [OutlineItem], outcomeTitle: String, outcome: String)
         case workStep(axis: String, stepLabel: String, time: String?, headline: String, why: String?, tasks: [WorkStepTask]?, watchouts: [TrapItem]?, showFavorable: Bool)
         case axisChecklist(eyebrow: String, subtitle: String?, axes: [AxisRef])
+        case gateChecklist(eyebrow: String, subtitle: String?, items: [GateItem], doneNote: String?)
+        case noteList(severity: String?, title: String, items: [String])
         /// 미지원 kind(스키마 확장 시 그레이스풀 스킵).
         case unsupported(String)
 
@@ -277,9 +285,10 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
             case kind, eyebrow, subtitle, items, icon, steps, meta, links
             case title, cards, includeCategoryPath, accent, body, ref, platforms, config
             case severity
-            // stageOverview / workStep / axisChecklist
+            // stageOverview / workStep / axisChecklist / gateChecklist
             case headline, intro, stat, outlineEyebrow, workOutline, outcomeTitle, outcome
             case axis, stepLabel, time, why, tasks, watchouts, showFavorable, axes
+            case doneNote
         }
 
         public init(from decoder: any Decoder) throws {
@@ -373,6 +382,17 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
                     eyebrow: try c.decode(String.self, forKey: .eyebrow),
                     subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
                     axes: try c.decode([AxisRef].self, forKey: .axes))
+            case "gateChecklist":
+                self = .gateChecklist(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                    items: try c.decode([GateItem].self, forKey: .items),
+                    doneNote: try c.decodeIfPresent(String.self, forKey: .doneNote))
+            case "noteList":
+                self = .noteList(
+                    severity: try c.decodeIfPresent(String.self, forKey: .severity),
+                    title: try c.decode(String.self, forKey: .title),
+                    items: try c.decode([String].self, forKey: .items))
             default:
                 self = .unsupported(kind)
             }

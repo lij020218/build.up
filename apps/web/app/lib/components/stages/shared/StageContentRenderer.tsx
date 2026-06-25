@@ -375,6 +375,9 @@ type InteractiveBindings = {
   setTaxChecks: (fn: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   cpaDecision: string | null;
   setCpaDecision: (v: string) => void;
+  /** contract-review 9대 조항 + 서명 토글(영속) — gateChecklist/contractSign 공유. */
+  contractSubChecks: Record<string, boolean>;
+  setContractSubChecks: (fn: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   faq: {
     qaText: string;
     setQaText: (v: string) => void;
@@ -716,6 +719,69 @@ function renderSection(
         />
       );
 
+    case "gateChecklist": {
+      const checks = iact.contractSubChecks;
+      const setCheck = (id: string) =>
+        iact.setContractSubChecks((prev) => ({ ...prev, [`__final:${id}`]: !prev[`__final:${id}`] }));
+      const done = section.items.filter((it) => checks[`__final:${it.id}`]).length;
+      const total = section.items.length;
+      const allDone = total > 0 && done === total;
+      return (
+        <div key={key} style={{ marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <span style={sectionLabelStyle}>{section.eyebrow}</span>
+            <span style={{ fontSize: "11.5px", fontWeight: 700, color: allDone ? "#fff" : "var(--text)", background: allDone ? "#1d3557" : "rgba(0,0,0,0.08)", padding: "3px 10px", borderRadius: "999px" }}>{done} / {total}</span>
+          </div>
+          {section.subtitle && <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55, marginBottom: "10px" }}>{section.subtitle}</div>}
+          <CardShell>
+            {section.items.map((it, idx) => {
+              const isDone = !!checks[`__final:${it.id}`];
+              return (
+                <div key={it.id}>
+                  {idx > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "48px" }} />}
+                  <button type="button" onClick={() => setCheck(it.id)} style={{ display: "flex", gap: "12px", alignItems: "flex-start", width: "100%", textAlign: "left", padding: "13px 16px", background: isDone ? "rgba(29,53,87,0.04)" : "transparent", border: "none", cursor: "pointer" }}>
+                    <div style={{ flexShrink: 0, marginTop: "1px", width: 22, height: 22, borderRadius: 7, border: isDone ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: isDone ? "#1d3557" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {isDone && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: isDone ? "rgba(0,0,0,0.4)" : "var(--text)", lineHeight: 1.45, textDecoration: isDone ? "line-through" : "none" }}>{it.label}</div>
+                      {it.detail && !isDone && <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, marginTop: "3px" }}>{it.detail}</div>}
+                    </div>
+                  </button>
+                </div>
+              );
+            })}
+          </CardShell>
+          {allDone && section.doneNote && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px", fontSize: "13px", fontWeight: 700, color: "#2f8f4e" }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2f8f4e" /><path d="M4 8.2L6.6 11L12 5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {section.doneNote}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    case "noteList": {
+      const warn = section.severity !== "danger";
+      const c = warn ? "#b8860b" : "#b64c4c";
+      const bg = warn ? "rgba(184,134,11,0.05)" : "rgba(182,76,76,0.04)";
+      const border = warn ? "rgba(184,134,11,0.18)" : "rgba(182,76,76,0.16)";
+      return (
+        <div key={key} style={{ marginBottom: "16px", padding: "14px 16px", borderRadius: "14px", background: bg, border: `1px solid ${border}` }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: c, letterSpacing: "0.02em", marginBottom: "8px" }}>{section.title}</div>
+          <div style={{ display: "grid", gap: "6px" }}>
+            {section.items.map((t) => (
+              <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: c, marginTop: "6px", flexShrink: 0 }} />
+                <div style={{ fontSize: "12.5px", lineHeight: 1.55, color: "rgba(15,23,42,0.72)" }}>{t}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     case "wrapup":
       return (
         <StageWrapup
@@ -750,6 +816,21 @@ function renderSection(
           return <LiveDataPanel key={key} ko={ko} />;
         case "permitCards":
           return <PermitCardsPanel key={key} catId={catId} ko={ko} />;
+        case "contractSign": {
+          const signed = !!iact.contractSubChecks["__final:signed"];
+          return (
+            <div key={key} style={{ marginBottom: "16px" }}>
+              <CardShell>
+                <button type="button" onClick={() => iact.setContractSubChecks((prev) => ({ ...prev, "__final:signed": !prev["__final:signed"] }))} style={{ display: "flex", gap: "12px", alignItems: "center", width: "100%", textAlign: "left", padding: "14px 16px", background: "transparent", border: "none", cursor: "pointer" }}>
+                  <div style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 7, border: signed ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: signed ? "#1d3557" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {signed && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>{ko ? "임대 계약서 서명 완료" : "Lease signed"}</div>
+                </button>
+              </CardShell>
+            </div>
+          );
+        }
         default:
           // hometaxLink·bizRegToggle·permitToggle·taxTypeSelect·vatCalendarToggle 는 현재 iOS 전용.
           return null;
@@ -769,6 +850,7 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
     industryCategoryId, language,
     taxChecks, setTaxChecks,
     cpaDecision, setCpaDecision,
+    contractSubChecks, setContractSubChecks,
     knowledgeQaText, setKnowledgeQaText,
     knowledgeQaStatus, knowledgeQaError,
     handleKnowledgeQuestion,
@@ -790,6 +872,8 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
     setTaxChecks,
     cpaDecision,
     setCpaDecision: (v: string) => setCpaDecision(v as "self" | "cpa"),
+    contractSubChecks,
+    setContractSubChecks,
     faq: {
       qaText: knowledgeQaText,
       setQaText: setKnowledgeQaText,

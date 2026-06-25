@@ -16,9 +16,26 @@ struct StageContentRegistryTests {
 
     @Test("등록된 SSOT 단계가 모두 디코드된다")
     func decodesKnownStages() {
-        for stageId in ["registration-setup", "tax-guide", "permit-check"] {
+        for stageId in ["registration-setup", "tax-guide", "permit-check", "contract-review"] {
             #expect(StageContentRegistry.content(for: stageId) != nil, "\(stageId) 디코드 실패 — JSON 키 불일치 의심")
         }
+    }
+
+    @Test("contract-review 신규 섹션(gateChecklist/noteList)이 unsupported 로 떨어지지 않는다")
+    func contractReviewNewSections() throws {
+        let content = try #require(StageContentRegistry.content(for: "contract-review"))
+        #expect(content.pages.count == 6)
+        var sawGate = false, sawNote = false
+        for s in content.pages.flatMap({ $0.sections }) {
+            switch s {
+            case let .gateChecklist(_, _, items, _): sawGate = items.count == 9
+            case .noteList: sawNote = true
+            case .unsupported(let k): Issue.record("unsupported 섹션: \(k)")
+            default: break
+            }
+        }
+        #expect(sawGate && sawNote)
+        #expect(content.byCategory["food"]?.favorable != nil)
     }
 
     @Test("permit-check 신규 섹션이 unsupported 로 떨어지지 않는다")
