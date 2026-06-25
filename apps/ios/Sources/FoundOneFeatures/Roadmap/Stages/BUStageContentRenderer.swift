@@ -24,6 +24,7 @@ public struct BUStageContentRenderer: View {
     @State private var toggles: [String: Bool] = [:]      // bizRegToggle·permitToggle·vatCalendarToggle
     @State private var selections: [String: String] = [:] // taxTypeSelect·cpaDecision (단일 선택)
     @State private var checklist: Set<String> = []        // taxChecklist 체크된 id
+    @State private var axisChecks: Set<String> = []       // axisChecklist(permit-check 3축) 체크된 task id
 
     public let content: BUStageContent
     public init(content: BUStageContent) { self.content = content }
@@ -61,6 +62,20 @@ public struct BUStageContentRenderer: View {
         (cat?.taxChecklist ?? []).filter { $0.required == true }.map { $0.id }
     }
 
+    /// axisChecklist 섹션의 전체 task id(게이팅 — 3축 모두 통과). permit-check.
+    private var axisChecklistTaskIds: [String] {
+        var ids: [String] = []
+        for p in content.pages {
+            for s in p.sections {
+                if case let .axisChecklist(_, _, axes) = s {
+                    for a in axes { ids.append(contentsOf: (cat?.workSteps?[a.axis]?.tasks ?? []).map(\.id)) }
+                }
+            }
+        }
+        return ids
+    }
+    private var hasAxisChecklist: Bool { !axisChecklistTaskIds.isEmpty }
+
     private var canComplete: Bool {
         let refs = iosRefs
         if refs.contains("bizRegToggle"), toggles["bizRegToggle"] != true { return false }
@@ -68,6 +83,7 @@ public struct BUStageContentRenderer: View {
         if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return false }
         if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return false }
         if refs.contains("taxChecklist"), !requiredChecklistIds.allSatisfy({ checklist.contains($0) }) { return false }
+        if hasAxisChecklist, !axisChecklistTaskIds.allSatisfy({ axisChecks.contains($0) }) { return false }
         return true
     }
     private var advanceHint: String {
@@ -78,6 +94,11 @@ public struct BUStageContentRenderer: View {
             let done = requiredChecklistIds.filter { checklist.contains($0) }.count
             let total = requiredChecklistIds.count
             if done < total { return "기본 셋업 \(done)/\(total) — 모두 완료해야 진행" }
+        }
+        if hasAxisChecklist {
+            let total = axisChecklistTaskIds.count
+            let done = axisChecklistTaskIds.filter { axisChecks.contains($0) }.count
+            if done < total { return "「체크리스트」 탭에서 내 매물 점검 (\(done)/\(total)) — 3축 모두 통과해야 진행" }
         }
         if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return "과세유형을 선택하세요" }
         if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return "세무 처리 방식을 선택하세요" }
@@ -98,6 +119,13 @@ public struct BUStageContentRenderer: View {
         if refs.contains("taxChecklist") {
             checklist = Set(d.stringArray(forKey: defaultsKey("taxChecklist")) ?? [])
         }
+        if hasAxisChecklist {
+            axisChecks = Set(d.stringArray(forKey: defaultsKey("axisChecks")) ?? [])
+        }
+    }
+    private func setAxisChecks(_ ids: Set<String>) {
+        axisChecks = ids
+        UserDefaults.standard.set(Array(ids), forKey: defaultsKey("axisChecks"))
     }
     private func persistToggle(_ ref: String, _ value: Bool) {
         toggles[ref] = value
@@ -222,6 +250,12 @@ public struct BUStageContentRenderer: View {
             if (platforms ?? ["web", "ios"]).contains("ios") {
                 interactiveSection(ref: ref, config: config)
             }
+        case let .stageOverview(headline, intro, stat, outlineEyebrow, workOutline, outcomeTitle, outcome):
+            stageOverviewSection(headline: headline, intro: intro, stat: stat, outlineEyebrow: outlineEyebrow, workOutline: workOutline, outcomeTitle: outcomeTitle, outcome: outcome)
+        case let .workStep(axis, stepLabel, time, headline, why, tasks, watchouts, showFavorable):
+            workStepSection(axis: axis, stepLabel: stepLabel, time: time, headline: headline, why: why, tasks: tasks, watchouts: watchouts, showFavorable: showFavorable)
+        case let .axisChecklist(eyebrow, subtitle, axes):
+            axisChecklistSection(eyebrow: eyebrow, subtitle: subtitle, axes: axes)
         case .unsupported:
             EmptyView()
         }
@@ -584,6 +618,158 @@ public struct BUStageContentRenderer: View {
                 }
             }
         }
+    }
+
+    // MARK: permit-check 신규 섹션 (stageOverview / workStep / axisChecklist)
+
+    private func stageOverviewSection(headline: String, intro: String, stat: BUStageContent.Stat, outlineEyebrow: String, workOutline: [BUStageContent.OutlineItem], outcomeTitle: String, outcome: String) -> some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: 12) {
+                    BUEyebrow("이 단계 개요")
+                    Text(headline)
+                        .font(.system(size: 18, weight: .heavy)).tracking(-0.3)
+                        .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(intro)
+                        .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 12) {
+                        Text(stat.value).font(.system(size: 30, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                        Text(stat.label).font(.system(size: 12, weight: .medium)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(outlineEyebrow)
+                        .font(.system(size: 11, weight: .heavy)).tracking(0.6).textCase(.uppercase)
+                        .foregroundStyle(BUColor.midnight.opacity(0.7))
+                    ForEach(Array(workOutline.enumerated()), id: \.offset) { i, o in
+                        outlineRow(i + 1, o.title, o.detail, o.time)
+                    }
+                }
+            }
+            HStack(alignment: .top, spacing: 9) {
+                Image(systemName: "arrow.up.right.circle.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.success).padding(.top, 1)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(outcomeTitle).font(.system(size: 11, weight: .heavy)).tracking(0.3).foregroundStyle(BUColor.success)
+                    Text(outcome).font(.system(size: 12.5)).foregroundStyle(BUColor.ink.opacity(0.78)).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.success.opacity(0.16), lineWidth: 1))
+        }
+    }
+
+    private func outlineRow(_ num: Int, _ title: String, _ detail: String, _ time: String?) -> some View {
+        HStack(alignment: .top, spacing: 11) {
+            Text("\(num)").font(.system(size: 12, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                .frame(width: 22, height: 22).background(BUColor.midnight.opacity(0.10), in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(BUColor.ink)
+                    if let time {
+                        Text(time).font(.system(size: 10.5, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
+                            .padding(.horizontal, 6).padding(.vertical, 1)
+                            .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                    }
+                }
+                Text(detail).font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private func workStepSection(axis: String, stepLabel: String, time: String?, headline: String, why: String?, tasks: [BUStageContent.WorkStepTask]?, watchouts: [BUStageContent.TrapItem]?, showFavorable: Bool) -> some View {
+        let ws = cat?.workSteps?[axis]
+        let resolvedTasks = (tasks ?? ws?.tasks ?? []).map { BUWorkStepTask(title: $0.title, detail: $0.detail) }
+        let resolvedWatch = (watchouts ?? ws?.watchouts ?? []).map { BUWorkStepWatchout(label: $0.label, text: $0.text) }
+        let resolvedWhy = why ?? ws?.why
+        let fav: BUWorkStepFavorable? = (showFavorable ? cat?.favorable.map { BUWorkStepFavorable(context: $0.context, recommendation: $0.recommendation, rationale: $0.rationale) } : nil)
+        BUWorkStep(
+            stepLabel: stepLabel,
+            time: time,
+            headline: headline,
+            why: resolvedWhy,
+            tasks: resolvedTasks,
+            watchouts: resolvedWatch,
+            favorable: fav
+        )
+    }
+
+    private func axisChecklistSection(eyebrow: String, subtitle: String?, axes: [BUStageContent.AxisRef]) -> some View {
+        let allIds = axes.flatMap { (cat?.workSteps?[$0.axis]?.tasks ?? []).map(\.id) }
+        let doneCount = allIds.filter { axisChecks.contains($0) }.count
+        let allPassed = !allIds.isEmpty && doneCount == allIds.count
+        return VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: 6) {
+                    BUEyebrow(eyebrow)
+                    Text("\(doneCount)/\(allIds.count) 확인 완료")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(allPassed ? BUColor.success : BUColor.midnightDeep)
+                    if let subtitle {
+                        Text(subtitle).font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            ForEach(axes, id: \.axis) { a in
+                let rows = cat?.workSteps?[a.axis]?.tasks ?? []
+                let passed = !rows.isEmpty && rows.allSatisfy { axisChecks.contains($0.id) }
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    HStack(spacing: BUSpacing.sm) {
+                        Image(systemName: Self.sfSymbol(a.icon)).font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(passed ? BUColor.success : BUColor.midnight)
+                        Text(a.title).font(BUFont.cardTitleSmall).foregroundStyle(BUColor.midnightDeep)
+                        Spacer()
+                        if passed {
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(BUColor.success).font(.system(size: 18))
+                        }
+                    }
+                    BUCard(.card) {
+                        VStack(spacing: 0) {
+                            ForEach(rows, id: \.id) { row in
+                                axisCheckRow(row)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func axisCheckRow(_ row: BUStageContent.WorkStepTask) -> some View {
+        let isChecked = axisChecks.contains(row.id)
+        return Button {
+            var next = axisChecks
+            if next.contains(row.id) { next.remove(row.id) } else { next.insert(row.id) }
+            setAxisChecks(next)
+        } label: {
+            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                Image(systemName: isChecked ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 18)).foregroundStyle(isChecked ? BUColor.success : BUColor.inkSubtle).padding(.top, 1)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(row.title).font(BUFont.bodySmall).foregroundStyle(isChecked ? BUColor.ink : BUColor.inkMuted)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    Text(row.detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 10).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private static func sfSymbol(_ icon: String) -> String {

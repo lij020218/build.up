@@ -37,14 +37,13 @@ import { InsuranceTaxSetupStage } from "../stages/offline/InsuranceTaxSetupStage
 import { VendorSetupStage } from "../stages/offline/VendorSetupStage";
 import { HiringSetupStage } from "../stages/offline/HiringSetupStage";
 import { OperationsSetupStage } from "../stages/offline/OperationsSetupStage";
-import { PermitCheckPanels } from "../stages/offline/PermitCheckPanels";
 import { BizRegistrationPanel } from "../stages/offline/BizRegistrationPanel";
 import { PreLaunchStage } from "../stages/offline/PreLaunchStage";
 import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage";
 import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
 import { StageContentRenderer } from "../stages/shared/StageContentRenderer";
-import { TAX_GUIDE_CONTENT } from "@foundone/shared";
+import { TAX_GUIDE_CONTENT, PERMIT_CHECK_CONTENT } from "@foundone/shared";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
@@ -682,8 +681,8 @@ export function CurrentStageView() {
                 {/* ── 마케팅 및 론칭 가이드 (online_marketing) ── */}
                 {currentStage.code === "online_marketing" && <OnlineMarketingStage />}
 
-                {/* ── 인허가 스테이지 패널 (분리됨) ── */}
-                {currentStage.code === "permit_check" && <PermitCheckPanels />}
+                {/* ── 인허가 사전 확인 (permit_check) — SSOT 공통 렌더(web↔iOS). footer는 generic taskMap 게이팅 유지. ── */}
+                {currentStage.code === "permit_check" && <StageContentRenderer content={PERMIT_CHECK_CONTENT} />}
 
                 {/* ── 스타트업 법인설립 (분리됨) ── */}
                 {currentStage.code === "company_setup" && <CompanySetupStage />}

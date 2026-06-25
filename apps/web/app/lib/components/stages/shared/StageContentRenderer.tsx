@@ -51,6 +51,8 @@ import { StageWrapup } from "./StageWrapup";
 import { StoreNameInput } from "./StoreNameInput";
 import { TaxFaqCard } from "./TaxFaqCard";
 import { BusinessDocumentUpload } from "../../my-store/BusinessDocumentUpload";
+import { KeyActionHero, StageOverview, WorkStep } from "./StageActionHero";
+import { LiveDataPanel, PermitCardsPanel, AxisChecklistWidget } from "./PermitInteractivePanels";
 
 /* ───────────────────────── 토큰 매핑(문자열 → 웹) ───────────────────────── */
 
@@ -668,6 +670,52 @@ function renderSection(
         </div>
       );
 
+    case "stageOverview":
+      return (
+        <StageOverview
+          key={key}
+          ko={ko}
+          headline={section.headline}
+          why={section.intro}
+          stat={section.stat}
+          workOutline={section.workOutline.map((o) => ({ stepLabel: o.title, title: o.detail, time: o.time }))}
+          outcome={section.outcome}
+          nextStage={content.wrapup.nextStageLabel}
+        />
+      );
+
+    case "workStep": {
+      const ws = cat.workSteps?.[section.axis];
+      const tasks = section.tasks ?? ws?.tasks ?? [];
+      const watchouts = section.watchouts ?? ws?.watchouts ?? [];
+      const why = section.why ?? ws?.why;
+      const favorable = section.showFavorable ? cat.favorable : undefined;
+      return (
+        <WorkStep
+          key={key}
+          ko={ko}
+          stepLabel={section.stepLabel}
+          time={section.time}
+          headline={section.headline}
+          why={why}
+          how={tasks.map((t) => ({ title: t.title, detail: t.detail }))}
+          watchouts={watchouts}
+          favorable={favorable}
+        />
+      );
+    }
+
+    case "axisChecklist":
+      return (
+        <AxisChecklistWidget
+          key={key}
+          eyebrow={section.eyebrow}
+          subtitle={section.subtitle}
+          axes={section.axes}
+          cat={cat}
+        />
+      );
+
     case "wrapup":
       return (
         <StageWrapup
@@ -698,6 +746,10 @@ function renderSection(
           return <CpaDecisionWidget key={key} config={section.config} value={iact.cpaDecision} onSelect={iact.setCpaDecision} />;
         case "taxFaq":
           return <TaxFaqCard key={key} ko={ko} {...iact.faq} />;
+        case "liveData":
+          return <LiveDataPanel key={key} ko={ko} />;
+        case "permitCards":
+          return <PermitCardsPanel key={key} catId={catId} ko={ko} />;
         default:
           // hometaxLink·bizRegToggle·permitToggle·taxTypeSelect·vatCalendarToggle 는 현재 iOS 전용.
           return null;
@@ -749,14 +801,23 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
 
   return (
     <div className="bento-fade-in" style={{ marginBottom: "16px" }}>
-      {keyAction && (
+      {keyAction && (keyAction.pillars && keyAction.pillars.length > 0 ? (
+        <KeyActionHero
+          ko={ko}
+          action={{ title: keyAction.title, detail: keyAction.subtitle }}
+          pillars={keyAction.pillars.map((p) => {
+            const Icon = ICONS[p.icon];
+            return { icon: <Icon size={12} strokeWidth={1.5} />, label: p.label, meta: p.meta };
+          })}
+        />
+      ) : (
         <StartupKeyActionHero
           eyebrow={keyAction.eyebrow}
           title={keyAction.title}
           subtitle={keyAction.subtitle}
           miniCards={(keyAction.miniCards ?? []).map((m) => ({ icon: ICONS[m.icon], label: m.label, detail: m.detail }))}
         />
-      )}
+      ))}
 
       <div style={{ marginBottom: "16px" }}>
         <StartupPageNav page={page} totalPages={content.pages.length} labels={pageLabels} onChange={setPage} />
