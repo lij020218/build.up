@@ -53,6 +53,7 @@ import { TaxFaqCard } from "./TaxFaqCard";
 import { BusinessDocumentUpload } from "../../my-store/BusinessDocumentUpload";
 import { KeyActionHero, StageOverview, WorkStep } from "./StageActionHero";
 import { LiveDataPanel, PermitCardsPanel, AxisChecklistWidget } from "./PermitInteractivePanels";
+import { ContractAiAnalysisPanel } from "./ContractAiAnalysisPanel";
 
 /* ───────────────────────── 토큰 매핑(문자열 → 웹) ───────────────────────── */
 
@@ -831,6 +832,8 @@ function renderSection(
             </div>
           );
         }
+        case "contractAiAnalysis":
+          return <ContractAiAnalysisPanel key={key} ko={ko} />;
         default:
           // hometaxLink·bizRegToggle·permitToggle·taxTypeSelect·vatCalendarToggle 는 현재 iOS 전용.
           return null;

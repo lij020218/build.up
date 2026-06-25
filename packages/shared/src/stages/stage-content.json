@@ -4713,6 +4713,10 @@
             ]
           },
           {
+            "kind": "interactive",
+            "ref": "contractAiAnalysis"
+          },
+          {
             "kind": "wrapup"
           }
         ]

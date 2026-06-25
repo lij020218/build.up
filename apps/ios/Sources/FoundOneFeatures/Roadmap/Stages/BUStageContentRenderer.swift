@@ -958,8 +958,10 @@ public struct BUStageContentRenderer: View {
                 }
                 .tint(BUColor.midnight)
             }
+        case "contractAiAnalysis":
+            BUContractAnalysisCard()
         default:
-            // storeName·docUpload·contractAiAnalysis 등 현재 웹 전용/후속 ref → iOS 미구현(후속 이식).
+            // storeName·docUpload 등 현재 웹 전용 ref → iOS 미구현(후속 이식).
             EmptyView()
         }
     }

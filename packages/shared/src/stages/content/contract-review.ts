@@ -210,6 +210,7 @@ export const CONTRACT_REVIEW_CONTENT: StageContent = {
             "전입신고 (사업장 주소) — 확정일자와 함께 대항력 확보",
           ],
         },
+        { kind: "interactive", ref: "contractAiAnalysis" },
         { kind: "wrapup" },
       ],
     },
