@@ -214,7 +214,14 @@ export type InteractiveRef =
   | "liveData"         // 영업 현황/생존율 라이브 데이터(API, permit-check)
   | "permitCards"      // 업종별 인허가 체크리스트 카드(getPermitsForCategory)
   | "contractSign"     // 임대 계약서 서명 완료 토글(게이팅, contract-review)
-  | "contractAiAnalysis"; // 계약서 원문 붙여넣기 → AI 위험조항 분석(contract-review)
+  | "contractAiAnalysis" // 계약서 원문 붙여넣기 → AI 위험조항 분석(contract-review)
+  // ── hiring-setup ──
+  | "hiringPlan"          // 내 채용 계획 입력(staffPlan 영속 → 재무검토 연동)
+  | "hiringCalculator"    // 시급·시간 → 사업주 4대보험 포함 실부담 시뮬
+  | "soloOperator"        // 1인 운영(직원 없음) 토글 — 채용 없이 단계 통과
+  | "hiringContractDone"  // 근로계약서 작성·교부 완료 토글(게이팅)
+  | "hiringInsuranceDone" // 4대보험 신고 완료 토글
+  | "hiringPayslipDone";  // 급여명세서 자동 발송 셋업 토글
 
 /**
  * 섹션 프리미티브. kind 로 분기.

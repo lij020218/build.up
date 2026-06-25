@@ -16,7 +16,7 @@ struct StageContentRegistryTests {
 
     @Test("등록된 SSOT 단계가 모두 디코드된다")
     func decodesKnownStages() {
-        for stageId in ["registration-setup", "tax-guide", "permit-check", "contract-review"] {
+        for stageId in ["registration-setup", "tax-guide", "permit-check", "contract-review", "hiring-setup"] {
             #expect(StageContentRegistry.content(for: stageId) != nil, "\(stageId) 디코드 실패 — JSON 키 불일치 의심")
         }
     }

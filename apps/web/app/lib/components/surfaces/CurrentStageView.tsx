@@ -35,7 +35,6 @@ import { SourcingSetupStage } from "../stages/online/SourcingSetupStage";
 import { RegistrationSetupStage } from "../stages/offline/RegistrationSetupStage";
 import { InsuranceTaxSetupStage } from "../stages/offline/InsuranceTaxSetupStage";
 import { VendorSetupStage } from "../stages/offline/VendorSetupStage";
-import { HiringSetupStage } from "../stages/offline/HiringSetupStage";
 import { OperationsSetupStage } from "../stages/offline/OperationsSetupStage";
 import { BizRegistrationPanel } from "../stages/offline/BizRegistrationPanel";
 import { PreLaunchStage } from "../stages/offline/PreLaunchStage";
@@ -43,7 +42,7 @@ import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage
 import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
 import { StageContentRenderer } from "../stages/shared/StageContentRenderer";
-import { TAX_GUIDE_CONTENT, PERMIT_CHECK_CONTENT, CONTRACT_REVIEW_CONTENT } from "@foundone/shared";
+import { TAX_GUIDE_CONTENT, PERMIT_CHECK_CONTENT, CONTRACT_REVIEW_CONTENT, HIRING_SETUP_CONTENT } from "@foundone/shared";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
@@ -842,7 +841,8 @@ export function CurrentStageView() {
                   </div>
                 )}
 
-                {currentStage.code === "hiring_setup" && <HiringSetupStage />}
+                {/* 2026-06-26 SSOT 전환: 콘텐츠는 @foundone/shared hiring-setup(웹·iOS 공통). generic taskMap footer 게이팅 유지. */}
+                {currentStage.code === "hiring_setup" && <StageContentRenderer content={HIRING_SETUP_CONTENT} />}
 
                 {currentStage.code === "operations_setup" && <OperationsSetupStage />}
 

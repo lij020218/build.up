@@ -99,6 +99,8 @@ public struct BUStageContentRenderer: View {
         if hasAxisChecklist, !axisChecklistTaskIds.allSatisfy({ axisChecks.contains($0) }) { return false }
         if hasGateChecklist, !gateChecklistIds.allSatisfy({ gateChecks.contains($0) }) { return false }
         if refs.contains("contractSign"), toggles["contractSign"] != true { return false }
+        // hiring-setup: 근로계약서 작성 완료 OR 1인 운영 선택이면 통과.
+        if refs.contains("hiringContractDone"), toggles["hiringContractDone"] != true, toggles["soloOperator"] != true { return false }
         return true
     }
     private var advanceHint: String {
@@ -121,6 +123,7 @@ public struct BUStageContentRenderer: View {
             if done < total { return "「마무리」 탭에서 핵심 조항을 모두 체크하세요 (\(done)/\(total))" }
         }
         if refs.contains("contractSign"), toggles["contractSign"] != true { return "임대 계약서 서명 완료 토글을 켜세요" }
+        if refs.contains("hiringContractDone"), toggles["hiringContractDone"] != true, toggles["soloOperator"] != true { return "근로계약서 작성 완료 또는 1인 운영 선택" }
         if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return "과세유형을 선택하세요" }
         if refs.contains("cpaDecision"), (selections["cpaDecision"] ?? "").isEmpty { return "세무 처리 방식을 선택하세요" }
         return "완료 — 다음 단계로"
@@ -131,7 +134,8 @@ public struct BUStageContentRenderer: View {
     private func loadInteractiveState() {
         let d = UserDefaults.standard
         let refs = iosRefs
-        for t in ["bizRegToggle", "permitToggle", "vatCalendarToggle", "contractSign"] where refs.contains(t) {
+        for t in ["bizRegToggle", "permitToggle", "vatCalendarToggle", "contractSign",
+                  "soloOperator", "hiringContractDone", "hiringInsuranceDone", "hiringPayslipDone"] where refs.contains(t) {
             toggles[t] = d.bool(forKey: defaultsKey(t))
         }
         for s in ["taxTypeSelect", "cpaDecision"] where refs.contains(s) {
@@ -960,9 +964,37 @@ public struct BUStageContentRenderer: View {
             }
         case "contractAiAnalysis":
             BUContractAnalysisCard()
+        case "hiringCalculator":
+            BUHiringCalculator()
+        case "soloOperator":
+            labeledToggle(ref, title: "1인 운영 — 직원 채용 없음", subtitle: "초기 1년 1인 운영을 선택하면 이 단계 통과 가능")
+        case "hiringContractDone":
+            labeledToggle(ref, title: "근로계약서 작성·교부 완료")
+        case "hiringInsuranceDone":
+            labeledToggle(ref, title: "4대보험 신고 완료 (D+14)")
+        case "hiringPayslipDone":
+            labeledToggle(ref, title: "급여명세서 자동 발송 셋업")
         default:
             // storeName·docUpload 등 현재 웹 전용 ref → iOS 미구현(후속 이식).
             EmptyView()
+        }
+    }
+
+    private func labeledToggle(_ ref: String, title: String, subtitle: String? = nil) -> some View {
+        BUCard(.card) {
+            Toggle(isOn: Binding(
+                get: { toggles[ref] ?? false },
+                set: { persistToggle(ref, $0) }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    if let subtitle {
+                        Text(subtitle).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .tint(BUColor.midnight)
         }
     }
 

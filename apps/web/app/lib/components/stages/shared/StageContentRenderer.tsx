@@ -54,6 +54,7 @@ import { BusinessDocumentUpload } from "../../my-store/BusinessDocumentUpload";
 import { KeyActionHero, StageOverview, WorkStep } from "./StageActionHero";
 import { LiveDataPanel, PermitCardsPanel, AxisChecklistWidget } from "./PermitInteractivePanels";
 import { ContractAiAnalysisPanel } from "./ContractAiAnalysisPanel";
+import { HiringCalculatorPanel, HiringTogglePanel } from "./HiringInteractivePanels";
 
 /* ───────────────────────── 토큰 매핑(문자열 → 웹) ───────────────────────── */
 
@@ -834,6 +835,16 @@ function renderSection(
         }
         case "contractAiAnalysis":
           return <ContractAiAnalysisPanel key={key} ko={ko} />;
+        case "hiringCalculator":
+          return <HiringCalculatorPanel key={key} ko={ko} catId={catId} />;
+        case "soloOperator":
+          return <HiringTogglePanel key={key} label={ko ? "1인 운영 — 직원 채용 없음" : "Solo operation — no hires"} subtitle={ko ? "초기 1년 1인 운영을 선택하면 이 단계 통과 가능" : "Choosing solo operation passes this stage"} />;
+        case "hiringContractDone":
+          return <HiringTogglePanel key={key} label={ko ? "근로계약서 작성·교부 완료" : "Contract written & delivered"} />;
+        case "hiringInsuranceDone":
+          return <HiringTogglePanel key={key} label={ko ? "4대보험 신고 완료 (D+14)" : "4-insurance filed (D+14)"} />;
+        case "hiringPayslipDone":
+          return <HiringTogglePanel key={key} label={ko ? "급여명세서 자동 발송 셋업" : "Auto payslip set up"} />;
         default:
           // hometaxLink·bizRegToggle·permitToggle·taxTypeSelect·vatCalendarToggle 는 현재 iOS 전용.
           return null;
