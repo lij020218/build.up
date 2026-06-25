@@ -51,13 +51,18 @@ export type PermitKind = "신고" | "허가" | "등록" | "면허";
 /** KEY ACTION 히어로 미니카드. */
 export type MiniCard = { icon: IconKey; label: string; detail: string };
 
-/** KEY ACTION 히어로(단계 최상단). */
+/** KEY ACTION 히어로 기둥(아이콘 + 라벨 + 메타) — permit-check 식 pillars 히어로. */
+export type Pillar = { icon: IconKey; label: string; meta: string };
+
+/** KEY ACTION 히어로(단계 최상단). miniCards 또는 pillars 중 하나 사용. */
 export type KeyAction = {
   eyebrow: string;
   title: string;
   /** 평문 — 강조는 렌더러가 처리하지 않음(단순 텍스트). */
   subtitle: string;
-  miniCards: MiniCard[];
+  miniCards?: MiniCard[];
+  /** pillars 가 있으면 웹은 KeyActionHero(pillars) 렌더(permit-check). */
+  pillars?: Pillar[];
 };
 
 /** 왜-카드(악센트 점 + 제목 + 본문). */
@@ -100,6 +105,23 @@ export type ComparisonCard = { title: string; criteria?: string; desc: string };
 
 /** 아이콘 배지 링크 카드(공식 사이트 바로가기). */
 export type LinkCard = { name: string; desc: string; url: string; badge: string };
+
+/* ── permit-check 식 stageOverview / workStep / axisChecklist ── */
+
+/** 통계 강조(예: 70% · "사전점검 안하는 사장님 비율"). */
+export type Stat = { value: string; label: string };
+
+/** 작업 목차 한 줄. */
+export type OutlineItem = { title: string; detail: string; time?: string };
+
+/** WorkStep 할 일 한 줄(id 는 axisChecklist 토글·게이팅과 공유). */
+export type WorkStepTask = { id: string; title: string; detail: string };
+
+/** WorkStep 본문(업종별 분기 데이터) — why + 할 일 + 주의. */
+export type WorkStepData = { why: string; tasks: WorkStepTask[]; watchouts: TrapItem[] };
+
+/** 사장님 상황 권장(WorkStep 하단) — 업종별. */
+export type Favorable = { context: string; recommendation: string; rationale: string };
 
 /* ─────────────────── 카테고리(업종)별 분기 데이터 ─────────────────── */
 
@@ -161,6 +183,12 @@ export type CategoryContent = {
   /** 게이팅 체크리스트(id·label·detail). interactive taxChecklist 가 렌더+게이트.
    *  required=true 인 항목만 "다음 단계" 게이트에 포함(나머지는 권장). */
   taxChecklist?: Array<{ id: string; label: string; detail: string; required?: boolean }>;
+
+  /* ── permit-check 등에서 쓰는 축(axis)별 데이터(optional) ── */
+  /** axis(building/person/facility/...) → WorkStep 본문(why·tasks·watchouts). */
+  workSteps?: Record<string, WorkStepData>;
+  /** 사장님 상황 권장(협상 페이지). */
+  favorable?: Favorable;
 };
 
 /* ───────────────────────────── 섹션 ──────────────────────────────── */
@@ -176,7 +204,9 @@ export type InteractiveRef =
   | "vatCalendarToggle" // 세금 신고 캘린더 등록 완료 토글(tax-guide)
   | "taxChecklist"     // 필수 세무 세팅 체크리스트(게이팅)
   | "cpaDecision"      // 세무사/직접 결정(서버 저장, 게이팅)
-  | "taxFaq";          // 세무 FAQ(+AI) 위젯
+  | "taxFaq"           // 세무 FAQ(+AI) 위젯
+  | "liveData"         // 영업 현황/생존율 라이브 데이터(API, permit-check)
+  | "permitCards";     // 업종별 인허가 체크리스트 카드(getPermitsForCategory)
 
 /**
  * 섹션 프리미티브. kind 로 분기.
@@ -225,6 +255,44 @@ export type Section =
   | { kind: "cpaCriteria"; eyebrow: string; subtitle?: string }
   /** 아이콘 배지 링크 카드 — 정적. */
   | { kind: "linkCards"; eyebrow: string; links: LinkCard[] }
+  /** 단계 개요(헤드라인+stat+작업목차+결과박스) — 정적. permit-check 페이지0. */
+  | {
+      kind: "stageOverview";
+      headline: string;
+      intro: string;
+      stat: Stat;
+      outlineEyebrow: string;
+      workOutline: OutlineItem[];
+      outcomeTitle: string;
+      outcome: string;
+    }
+  /**
+   * 작업 단계(WorkStep) — stepLabel·time·headline·why·tasks·watchouts·favorable.
+   * axis 로 byCategory[cat].workSteps[axis] 에서 why/tasks/watchouts 조회.
+   * inline tasks/why/watchouts 가 있으면 그것을 우선(정적 단계: 협상).
+   */
+  | {
+      kind: "workStep";
+      axis: string;
+      stepLabel: string;
+      time?: string;
+      headline: string;
+      why?: string;
+      tasks?: WorkStepTask[];
+      watchouts?: TrapItem[];
+      /** true 면 byCategory[cat].favorable 를 하단에 표시. */
+      showFavorable?: boolean;
+    }
+  /**
+   * 축별 게이팅 체크리스트 — building/person/facility 토글(byCategory[cat].workSteps[axis].tasks).
+   * interactive 가 아닌 정적 선언이지만 토글 상태·게이팅은 렌더러가 관리.
+   */
+  | {
+      kind: "axisChecklist";
+      eyebrow: string;
+      subtitle?: string;
+      axes: Array<{ axis: string; icon: IconKey; title: string }>;
+    }
   /** 마지막 페이지 마무리 — 단계 최상위 wrapup 데이터를 렌더(웹) / BUStageShell(iOS). */
   | { kind: "wrapup" }
   /** 플랫폼별 인터랙티브 위젯. config 는 ref 별 임의 설정(loose). */

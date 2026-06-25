@@ -37,11 +37,18 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         public let detail: String
     }
 
+    public struct Pillar: Decodable, Sendable, Hashable {
+        public let icon: String
+        public let label: String
+        public let meta: String
+    }
+
     public struct KeyAction: Decodable, Sendable, Hashable {
         public let eyebrow: String
         public let title: String
         public let subtitle: String
-        public let miniCards: [MiniCard]
+        public let miniCards: [MiniCard]?
+        public let pillars: [Pillar]?
     }
 
     public struct WhyItem: Decodable, Sendable, Hashable {

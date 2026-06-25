@@ -754,7 +754,7 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
           eyebrow={keyAction.eyebrow}
           title={keyAction.title}
           subtitle={keyAction.subtitle}
-          miniCards={keyAction.miniCards.map((m) => ({ icon: ICONS[m.icon], label: m.label, detail: m.detail }))}
+          miniCards={(keyAction.miniCards ?? []).map((m) => ({ icon: ICONS[m.icon], label: m.label, detail: m.detail }))}
         />
       )}
 
