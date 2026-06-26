@@ -5,12 +5,18 @@ import { useRoadmapStore } from "../../stores";
 import type { AiRoadmapSnapshot } from "../../stores/roadmap-store";
 
 /* ── helpers ── */
-const fmt = (n: number) =>
-  n >= 1_0000_0000
-    ? `${(n / 1_0000_0000).toFixed(1)}억`
-    : n >= 1_0000
-      ? `${Math.round(n / 1_0000).toLocaleString()}만`
-      : n.toLocaleString();
+// budgetAllocation 은 *만원 단위* — 원으로 오인하면 4,000만원→"4,000", 합 15,000만원→"2만원" 으로 깨진다.
+//   (이 컴포넌트의 fmt 는 예산 표시 전용. 단위 문자열(만원/억원)을 포함해 반환.)
+const fmt = (manwon: number) => {
+  if (!isFinite(manwon) || isNaN(manwon)) return "—";
+  const v = Math.round(Math.abs(manwon));
+  if (v >= 1_0000) {
+    const eok = Math.floor(v / 1_0000);
+    const rest = v % 1_0000;
+    return rest > 0 ? `${eok}억 ${rest.toLocaleString()}만원` : `${eok}억원`;
+  }
+  return `${v.toLocaleString()}만원`;
+};
 
 const pct = (part: number, total: number) =>
   total === 0 ? "0" : ((part / total) * 100).toFixed(1);
@@ -264,7 +270,7 @@ export function AiRoadmapSummary() {
 
         {/* Total */}
         <div style={{ fontSize: "26px", fontWeight: 780, letterSpacing: "-0.04em", color: "#0f172a", marginBottom: "16px" }}>
-          {fmt(ba.total)}<span style={{ fontSize: "14px", fontWeight: 500, color: "var(--muted)", marginLeft: "4px" }}>{ko ? "원" : "KRW"}</span>
+          {fmt(ba.total)}
         </div>
 
         {/* Stacked bar */}

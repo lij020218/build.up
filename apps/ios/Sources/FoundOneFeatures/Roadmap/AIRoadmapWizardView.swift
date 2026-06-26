@@ -617,11 +617,16 @@ private struct ReviewStepView: View {
 
     private var totalBudget: Int { result.budgetAllocation.displayTotal }
 
-    private func fmt(_ n: Int) -> String {
-        if n <= 0 { return "—" }
-        if n >= 100_000_000 { return "\(n / 100_000_000)억원" }
-        if n >= 10_000 { return "\(n / 10_000)만원" }
-        return "\(n)원"
+    // budgetAllocation 은 *만원 단위* (웹과 동일) — 원으로 오인하면 합 15,000만원→"1만원" 으로 깨진다.
+    private func fmt(_ manwon: Int) -> String {
+        if manwon <= 0 { return "—" }
+        let v = abs(manwon)
+        if v >= 10_000 {
+            let eok = v / 10_000
+            let rest = v % 10_000
+            return rest > 0 ? "\(eok)억 \(rest.formatted())만원" : "\(eok)억원"
+        }
+        return "\(v.formatted())만원"
     }
 
     var body: some View {

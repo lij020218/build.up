@@ -108,6 +108,18 @@ const fmt = (n: number) => {
   return `${abs.toLocaleString()}원`;
 };
 
+// 예산(budgetAllocation)은 *만원 단위* — fmt(원 단위)로 포맷하면 4,000만원→"4,000원", 합 15,000만원→"1만원" 으로 깨진다.
+const fmtBudget = (manwon: number) => {
+  if (!isFinite(manwon) || isNaN(manwon)) return "—";
+  const v = Math.round(Math.abs(manwon));
+  if (v >= 10000) {
+    const eok = Math.floor(v / 10000);
+    const rest = v % 10000;
+    return rest > 0 ? `${eok}억 ${rest.toLocaleString()}만원` : `${eok}억원`;
+  }
+  return `${v.toLocaleString()}만원`;
+};
+
 export default function AIRoadmapWizard({ language, onComplete, onBack }: Props) {
   const ko = language === "ko";
   const [step, setStep] = useState<Step>("idea");
@@ -551,7 +563,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               Found.One AI
             </div>
             <h1 style={{ ...title, fontSize: "clamp(26px, 4vw, 34px)", textAlign: "center" as const }}>{ko ? "로드맵 초안이 완성되었습니다" : "Your roadmap is ready"}</h1>
-            <p style={{ ...subtitle, textAlign: "center" as const }}>{storeName ? `${storeName} · ` : ""}{result.parsed.industryLabel} · {result.parsed.preferredRegion || (ko ? "지역 미정" : "Location TBD")} · {fmt(totalBudget)}</p>
+            <p style={{ ...subtitle, textAlign: "center" as const }}>{storeName ? `${storeName} · ` : ""}{result.parsed.industryLabel} · {result.parsed.preferredRegion || (ko ? "지역 미정" : "Location TBD")} · {fmtBudget(totalBudget)}</p>
           </div>
 
           {/* ⭐ 사업 컨셉 hero 박스 — 사용자 아이디어를 정제한 2-3줄 정의 */}
@@ -595,7 +607,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                 {result.parsed.preferredRegion && (
                   <span style={conceptTagStyle("#191970")}>📍 {result.parsed.preferredRegion}</span>
                 )}
-                <span style={conceptTagStyle("#1d3557")}>{fmt(totalBudget)}</span>
+                <span style={conceptTagStyle("#1d3557")}>{fmtBudget(totalBudget)}</span>
               </div>
             </div>
           )}
@@ -788,7 +800,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
 
             {/* 예산 배분 — budgetAllocation */}
             <StageCard icon={Wallet} label={ko ? "예산 배분" : "Budget allocation"}>
-              <div style={{ ...STAGE_VALUE, marginBottom: 12, fontVariantNumeric: "tabular-nums" as const }}>{fmt(totalBudget)}</div>
+              <div style={{ ...STAGE_VALUE, marginBottom: 12, fontVariantNumeric: "tabular-nums" as const }}>{fmtBudget(totalBudget)}</div>
               <div style={{ display: "flex", height: 10, borderRadius: 5, overflow: "hidden", background: "rgba(25,25,112,0.04)" }}>
                 {budgetItems.map((b, i) => {
                   // midnight 톤 단일 — 명도 단계만 다르게
@@ -805,7 +817,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                     <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{ width: 8, height: 8, borderRadius: 2, background: shades[i % shades.length] }} />
                       <span style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 500 }}>{b.label}</span>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>{fmt(b.value)}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>{fmtBudget(b.value)}</span>
                     </div>
                   );
                 })}
