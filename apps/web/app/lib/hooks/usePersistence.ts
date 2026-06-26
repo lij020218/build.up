@@ -698,6 +698,10 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
    */
   const storeDataReadyRef = useRef(false);
 
+  // ⚡ 최초 1회 빠른 게이트 해제 여부 — 무거운 로드맵 DB 로드를 기다리지 않고 로컬 세션·캐시로
+  //   UI 를 즉시 띄우기 위함. reconnect(realtime 재조회) 때는 다시 안 함(스테일 캐시 재적용 방지).
+  const fastGateDoneRef = useRef(false);
+
   // ── In-flight serializer for store data upsert ──
   // 4채널 (800ms autosave / 1s debounce / 5s interval / immediate) 이 동시 호출되면 stale 가
   // fresh 를 덮을 수 있다. 모든 saveStoreData 호출은 이 함수를 거쳐 직전 in-flight 이 끝난
@@ -755,6 +759,28 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     if (connectLoadingRef.current) return;
     connectLoadingRef.current = true;
     try {
+      // ⚡ 빠른 게이트 해제 (최초 1회) — bootstrapAccountWorkspace 는 loadRoadmapState(로드맵 DB
+      //   전체 로드)까지 await 하므로 setAuthResolved 가 5초가량 늦어진다. 그동안 *정적 번들* 화면
+      //   (프랜차이즈 탐색 등)까지 스켈레톤에 갇힌다. 로컬 세션(즉시) + 계정별 로컬 캐시 hydrate 로
+      //   게이트를 먼저 열어 캐시/정적 데이터를 바로 보여주고, DB 최신값은 아래 정식 흐름이 이어서 적용.
+      //   ⚠️ 정식 흐름(reset 감지·applyStoreData·realtime)은 그대로 — 이건 *추가* 최적화일 뿐.
+      //   ⚠️ 내 uid 캐시만 읽어 계정 격리 유지. reconnect 시엔 skip(스테일 캐시 재적용 방지).
+      if (!fastGateDoneRef.current) {
+        try {
+          const { data: { session: fastSession } } = await supabase.auth.getSession();
+          if (fastSession?.user) {
+            // switched=true(계정 전환)면 이전 계정의 trip 된 저장 차단을 이월하지 않도록 resetCircuit
+            //   (아래 777 정식 호출은 같은 uid 라 switched=false → 여기서 처리해야 누락 안 됨).
+            const { switched: fastSwitched } = await hydrateStoresForUser(fastSession.user.id);
+            if (fastSwitched) resetCircuit();
+            storeDataReadyRef.current = false; // 서버 applyStoreData 전 — 빈 store flush 금지(격리/wipe 가드)
+            setRequiresAuth(false);
+            setAuthResolved(true);
+            fastGateDoneRef.current = true;
+          }
+        } catch { /* 무시 — 아래 정식 흐름이 처리 */ }
+      }
+
       const result = await bootstrapAccountWorkspace(supabase);
       const userLabel = result.user.email ?? copy.common.account;
       // 사용자 표시 이름 — 이메일 가입은 user_metadata.name, 소셜(카카오 등)은 provider 별로
