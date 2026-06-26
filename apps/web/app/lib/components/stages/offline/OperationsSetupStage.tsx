@@ -52,16 +52,18 @@ export function OperationsSetupStage() {
       cons: ["주방 디스플레이(KDS) 등 일부 고급 기능 부재", "단말기 무상 지원이라 약정·해지 조건 사전 확인"],
     },
     {
-      id: "kis",   name: "KIS정보통신", color: "#1E3A8A", url: "https://www.kisinfo.co.kr",
+      id: "kis",   name: "KIS정보통신", color: "#1E3A8A", url: "https://www.kisvan.co.kr",
       tagline: "국내 POS 시장 1위 · 전국 방문 A/S망",
       pros: ["전국 방문 A/S — 고장 시 빠른 처리", "배민·쿠팡이츠 주문 자동 수신 연동", "업종별 전용 모듈 (카페·음식점·소매)"],
       cons: ["초기 구매·렌탈 비용 (월 3~8만원)", "UI 구식 — 익히는 데 시간 소요"],
     },
     {
-      id: "orderplace", name: "오더플레이스", color: "#00B85E", url: "https://www.orderplace.co.kr",
-      tagline: "F&B 특화 태블릿 POS · 배달앱 3사 통합 수신",
-      pros: ["배민·쿠팡이츠·요기요 주문 통합 수신", "테이블·주방 디스플레이(KDS) 연동", "태블릿 기반 — 공간 유연성 ↑"],
-      cons: ["월 구독료 발생 (약 3~5만원)", "F&B 특화 — 소매·서비스업 부적합"],
+      // 2026-06-26 검증: orderplace.co.kr 접속 거부(폐업), "오더플레이스" 명칭은 외국인 배달앱(orderplace.kr)으로
+      //   재배정 → 동일 니치(F&B 태블릿 클라우드 POS·KDS·배달 통합) 실존 현행 제품 페이히어로 교체.
+      id: "payhere", name: "페이히어", color: "#00B85E", url: "https://payhere.in/",
+      tagline: "F&B 클라우드 태블릿 POS · 배달앱 통합 + KDS",
+      pros: ["배민·쿠팡이츠·요기요 배달 주문 통합 수신", "테이블오더·키오스크·주방 디스플레이(KDS) 연동", "클라우드 — 태블릿 하나로 매장 관리, 단말기 무료"],
+      cons: ["고급 기능·다매장은 유료 플랜", "F&B 특화 — 소매·서비스업 부적합"],
     },
     {
       id: "smartro", name: "스마트로", color: "#FF6B2B", url: "https://www.smartro.co.kr",
@@ -70,7 +72,7 @@ export function OperationsSetupStage() {
       cons: ["재고·메뉴 관리 등 POS 기능 제한적", "배달앱 연동·KDS 없음"],
     },
     {
-      id: "ipos", name: "아임포스", color: "#7C3AED", url: "https://www.ipos.co.kr",
+      id: "ipos", name: "아임포스(iPOS)", color: "#7C3AED", url: "https://www.iposx.co.kr/",
       tagline: "태블릿 + 앱 · 통계·재고 기본 제공",
       pros: ["초기 비용 ↓ — 태블릿 + 앱으로 즉시 시작", "배달앱 연동·매출 통계·재고 관리 기본", "요금제 다양 — 규모에 맞게 선택"],
       cons: ["주방 디스플레이 등 고급 기능 유료 업그레이드", "대형 매장 멀티 단말 환경 부적합"],
@@ -198,7 +200,7 @@ export function OperationsSetupStage() {
       cons: ["3개 단체 각각 신고·납부 — 절차 복잡", "음원 직접 보유·재생 필요 (CD/MP3 등)", "유튜브·스포티파이 등 개인용 스트리밍은 사용 불가"],
     },
     {
-      id: "shopcast", name: "샵캐스트(ShopCast)", color: "#1A6CF6", url: "https://www.shopcast.co.kr",
+      id: "shopcast", name: "샵캐스트(ShopCast)", color: "#1A6CF6", url: "https://www.shopcast.kr",
       tagline: "월 9천원~ · 자동 정산 · 광고 음악 X",
       pros: ["저작권료 자동 정산 — 별도 KOMCA 신고 불필요", "수만 곡 큐레이션, 업종·시간대별 플레이리스트 추천", "광고 끼어들지 않는 매장 전용 음악 서비스"],
       cons: ["월정액 9천원~ (직접 신고보다 다소 비쌈)", "자체 큐레이션 의존 — 곡 선택 자유도 ↓"],

@@ -476,7 +476,7 @@ export function InsuranceTaxSetupStage() {
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, padding: "0 16px 14px" }}>
               {[
                 { label: "4대사회보험 정보연계센터", url: "https://www.4insure.or.kr" },
-                { label: "두루누리 지원 확인", url: "https://insurancesupport.or.kr" },
+                { label: "두루누리 지원 확인", url: "https://www.4insure.or.kr" },
                 { label: "산재보험 업종별 요율", url: "https://www.kcomwel.or.kr" },
               ].map((link) => (
                 <a

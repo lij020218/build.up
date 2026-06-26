@@ -21,7 +21,7 @@ public enum OperationsDetailRegistry {
     ]
     public static let music: [Item] = [
         .init(name: "직접 신고 (KOMCA + KOSCAP + KAFOC)", tagline: "월 4천원~ · 가장 저렴 · 3개 단체 개별 신고", url: "https://www.komca.or.kr", pros: ["50㎡ 커피전문점 기준 월 약 4,000원 — 가장 저렴", "한국음악저작권협회(KOMCA) + 음반산업협회(KOSCAP) + 음반제작자협회(KAFOC) 3곳 신고", "오랜 운영 매장의 정통 방식"], cons: ["3개 단체 각각 신고·납부 — 절차 복잡", "음원 직접 보유·재생 필요 (CD/MP3 등)", "유튜브·스포티파이 등 개인용 스트리밍은 사용 불가"]),
-        .init(name: "샵캐스트(ShopCast)", tagline: "월 9천원~ · 자동 정산 · 광고 음악 X", url: "https://www.shopcast.co.kr", pros: ["저작권료 자동 정산 — 별도 KOMCA 신고 불필요", "수만 곡 큐레이션, 업종·시간대별 플레이리스트 추천", "광고 끼어들지 않는 매장 전용 음악 서비스"], cons: ["월정액 9천원~ (직접 신고보다 다소 비쌈)", "자체 큐레이션 의존 — 곡 선택 자유도 ↓"]),
+        .init(name: "샵캐스트(ShopCast)", tagline: "월 9천원~ · 자동 정산 · 광고 음악 X", url: "https://www.shopcast.kr", pros: ["저작권료 자동 정산 — 별도 KOMCA 신고 불필요", "수만 곡 큐레이션, 업종·시간대별 플레이리스트 추천", "광고 끼어들지 않는 매장 전용 음악 서비스"], cons: ["월정액 9천원~ (직접 신고보다 다소 비쌈)", "자체 큐레이션 의존 — 곡 선택 자유도 ↓"]),
         .init(name: "멜론 비즈(Melon Biz)", tagline: "멜론 음원 + 매장 라이센스 통합", url: "https://www.melonbiz.com", pros: ["멜론 최신 차트 음원 합법적 매장 사용", "다양한 매장 카테고리 플레이리스트", "월정액 약 9천원~ · 자동 저작권 처리"], cons: ["월정액 의무 — 작은 매장에는 부담", "매장 외 가정용·개인용 사용은 별도"]),
         .init(name: "프리뮤직 (AI/저작권 무료 음원)", tagline: "AI 음악만 사용 — 공연권료 면제", url: "https://freemusic.co.kr", pros: ["KOMCA에 등록되지 않은 AI 음악은 공연권료 징수 대상 X (2025 기준)", "월정액 무료~소액", "법적 분쟁 리스크 0"], cons: ["인기곡·차트곡 사용 불가 — 매장 분위기 영향", "AI 음악 품질·다양성 일반 음원 대비 제한적"]),
     ]

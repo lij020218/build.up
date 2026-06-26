@@ -188,9 +188,10 @@ public struct OperationsSetupStageView: View {
         m["sns-naver-place"] = snsNaver
         m["sns-instagram"]   = snsInstagram
         m["sns-kakao-channel"] = snsKakao
-        // POS (오프라인 공통, 웹 pos-system 고정 id). iOS "order" → 웹 "orderplace".
+        // POS (오프라인 공통, 웹 pos-system 고정 id). iOS 로컬 "order" → 웹 "payhere"
+        //   (2026-06-26: 오더플레이스 폐업, 동일 니치 페이히어로 교체. iOS 로컬 id는 영속화 안정 위해 유지).
         if cluster.category.isOffline {
-            let posMap = ["toss": "toss", "kis": "kis", "order": "orderplace", "smartro": "smartro", "ipos": "ipos"]
+            let posMap = ["toss": "toss", "kis": "kis", "order": "payhere", "smartro": "smartro", "ipos": "ipos"]
             for (iosId, webId) in posMap {
                 m["pos-system-\(webId)"] = (posSelected == iosId)
             }
@@ -355,7 +356,7 @@ public struct OperationsSetupStageView: View {
                     let systems: [(String, String, String)] = [
                         ("토스플레이스",  "단말기·프로그램 무료 · D+1 정산 · 신규 점주 1순위", "toss"),
                         ("KIS정보통신",   "국내 POS 1위 · 전국 방문 A/S · 배달앱 자동 연동", "kis"),
-                        ("오더플레이스",  "F&B 특화 태블릿 · 배민·쿠팡·요기요 통합 수신", "order"),
+                        ("페이히어",      "F&B 클라우드 태블릿 POS · 배민·쿠팡·요기요 통합 + KDS", "order"),
                         ("스마트로",      "카드 단말기 중심 · 소규모 최적 · 월정액 없음", "smartro"),
                         ("아임포스",      "태블릿+앱 · 매출 통계·재고 기본 · 다양한 요금제", "ipos"),
                     ]

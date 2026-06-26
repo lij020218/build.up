@@ -158,7 +158,7 @@ export function checkMinimumWage(monthlySalary: number, weeklyHours = 40): {
 
 // ─── 두루누리 사회보험 + 단시간 분기 (시뮬레이터 강화) ──────────────────
 //
-// 출처: 두루누리(insurancesupport.or.kr) — 270만원 미만 + 10인 미만 사업장의
+// 출처: 두루누리(4insure.or.kr 신청) — 270만원 미만 + 10인 미만 사업장의
 //       신규 가입자 36개월간 국민연금·고용보험 80% 지원.
 //
 // 단시간(주 15h 미만): 국민연금·건강보험 면제, 고용·산재만 가입.
