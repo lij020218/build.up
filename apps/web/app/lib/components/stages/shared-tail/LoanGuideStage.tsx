@@ -214,7 +214,11 @@ export function LoanGuideStage() {
   );
 
   /* ── Startup Support Programs ── */
-  const matched = getMatchedPrograms(startupType);
+  // 2026-06-26 fix: 업종 무관 노출 버그 — industries 가 지정된 프로그램은 내 업종일 때만 노출.
+  //   (미용실에 startup-tech·agriculture 전용 프로그램이 뜨던 문제) industries 미설정 = 전원 대상.
+  const matched = getMatchedPrograms(startupType).filter(
+    (p) => !p.industries || p.industries.length === 0 || (!!industryCategoryId && p.industries.includes(industryCategoryId)),
+  );
   const filtered = progFilter === "all" ? matched : matched.filter(p => p.category === progFilter);
   const categories: Array<{ id: ProgramCategory | "all"; label: string }> = [
     { id: "all", label: ko ? "전체" : "All" },
@@ -525,12 +529,17 @@ export function LoanGuideStage() {
             <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", maxHeight: 360, overflowY: "auto" }}>
               {filtered.map((prog, i) => {
                 const catColor = getProgramCategoryColor(prog.category);
-                return (
-                  <a key={prog.id} href={prog.url} target="_blank" rel="noopener noreferrer" style={{
-                    display: "flex", alignItems: "flex-start", gap: "12px", padding: "13px 16px",
-                    borderTop: i > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none",
-                    textDecoration: "none", color: "inherit",
-                  }}>
+                // 2026-06-26 fix: internalApply(파운드원 자체 지원금)·url 없는 프로그램은 외부 링크가 아니라
+                //   빈 href(<a href="">) 로 렌더돼 클릭 시 현재 페이지 재로드(=대출가이드로 반복)되는 버그.
+                //   → 외부 URL 있는 것만 <a>, 없으면 비링크 카드 + 안내(앱 내 「지원금」 메뉴에서 신청).
+                const hasExternal = !prog.internalApply && !!prog.url;
+                const rowStyle: React.CSSProperties = {
+                  display: "flex", alignItems: "flex-start", gap: "12px", padding: "13px 16px",
+                  borderTop: i > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none",
+                  textDecoration: "none", color: "inherit",
+                };
+                const inner = (
+                  <>
                     <div style={{ padding: "3px 8px", borderRadius: "6px", background: `${catColor}15`, color: catColor, fontSize: "10px", fontWeight: 700, flexShrink: 0, marginTop: "2px", whiteSpace: "nowrap" as const }}>
                       {getProgramCategoryLabel(prog.category, language)}
                     </div>
@@ -538,9 +547,15 @@ export function LoanGuideStage() {
                       <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: "2px" }}>{prog.name[language]}</div>
                       <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(0,0,0,0.5)" }}>{prog.target[language]}</div>
                       {prog.amount && <div style={{ fontSize: "12px", fontWeight: 700, color: MIDNIGHT, marginTop: "3px" }}>{prog.amount}</div>}
+                      {prog.internalApply && <div style={{ fontSize: "11px", fontWeight: 600, color: MIDNIGHT, marginTop: "4px" }}>{ko ? "→ 앱 「지원금」 메뉴에서 바로 신청" : "→ Apply in the in-app Funding menu"}</div>}
                     </div>
-                    <ChevronRight size={16} strokeWidth={2} style={{ color: "rgba(0,0,0,0.25)", flexShrink: 0, marginTop: "3px" }} />
-                  </a>
+                    {hasExternal && <ChevronRight size={16} strokeWidth={2} style={{ color: "rgba(0,0,0,0.25)", flexShrink: 0, marginTop: "3px" }} />}
+                  </>
+                );
+                return hasExternal ? (
+                  <a key={prog.id} href={prog.url} target="_blank" rel="noopener noreferrer" style={rowStyle}>{inner}</a>
+                ) : (
+                  <div key={prog.id} style={rowStyle}>{inner}</div>
                 );
               })}
             </div>
