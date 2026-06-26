@@ -68,8 +68,24 @@ public enum VendorDataRegistry {
     /// - sub-industry 매칭 우선 → 없으면 categoryId 폴백 → 없으면 food 폴백.
     public static func bundle(forSubIndustry subIndustryId: String, categoryId: String? = nil) -> BUVendorBundle? {
         guard let root else { return nil }
-        if !subIndustryId.isEmpty, let b = root.subIndustries[subIndustryId] { return b }
-        if let cat = categoryId, let b = root.categories[cat] { return b }
-        return root.categories["food"]
+        let raw: BUVendorBundle?
+        if !subIndustryId.isEmpty, let b = root.subIndustries[subIndustryId] { raw = b }
+        else if let cat = categoryId, let b = root.categories[cat] { raw = b }
+        else { raw = root.categories["food"] }
+        return raw.map(dedupe)
+    }
+
+    // 2026-06-26 fix: 같은 공급처가 다른 이름으로 중복 노출되던 버그(예: 헤어앤미·코제트/헤어2000/헤어앤미
+    //   모두 hairnmi.co.kr). vendor-data.json 은 웹 getVendorData(머지) 산출이라 dup 포함 → 런타임 dedup.
+    //   url(없으면 name) 기준, 첫 항목 유지. (웹 getVendorData 와 동일 규칙)
+    private static func dedupe(_ b: BUVendorBundle) -> BUVendorBundle {
+        func d(_ items: [BUVendorItem]) -> [BUVendorItem] {
+            var seen = Set<String>()
+            return items.filter { it in
+                let key = (it.url?.trimmingCharacters(in: .whitespaces)).flatMap { $0.isEmpty ? nil : $0 } ?? "name:\(it.name.trimmingCharacters(in: .whitespaces))"
+                return seen.insert(key).inserted
+            }
+        }
+        return BUVendorBundle(category: b.category, suppliers: d(b.suppliers), equipment: d(b.equipment), pos: d(b.pos))
     }
 }

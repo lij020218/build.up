@@ -2918,9 +2918,22 @@ export function getVendorData(
   const subOverride = subIndustryId ? SUB_INDUSTRY_VENDOR_DATA[subIndustryId] : undefined;
   const specialtyOverride = specialtyId ? SPECIALTY_VENDOR_DATA[specialtyId] : undefined;
 
-  // 예산 단계 태그 부여 — 명시값 우선, 없으면 가격대·키워드에서 결정.
+  // 2026-06-26 fix: 같은 공급처가 tier별(specialty/sub/base) 다른 이름으로 중복 노출되던 버그
+  //   (예: 미용 「헤어앤미·코제트」·「헤어앤미·헤어2000」·「헤어앤미」 가 모두 hairnmi.co.kr).
+  //   → concat 후 url(없으면 name) 기준 dedup. 첫 항목(=가장 specific tier) 유지.
+  const dedupe = (items: VendorItem[]): VendorItem[] => {
+    const seen = new Set<string>();
+    return items.filter((it) => {
+      const key = it.url?.trim() || `name:${it.name.trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  // 예산 단계 태그 부여 — 명시값 우선, 없으면 가격대·키워드에서 결정. (dedup 후 태깅)
   const withTier = (items: VendorItem[]): VendorItem[] =>
-    items.map((it) => ({ ...it, budgetTier: classifyBudgetTier(it) }));
+    dedupe(items).map((it) => ({ ...it, budgetTier: classifyBudgetTier(it) }));
 
   // 우선순위 머지: specialty (가장 우선) → sub → base
   return {
