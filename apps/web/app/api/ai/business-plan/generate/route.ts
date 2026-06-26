@@ -183,7 +183,12 @@ PSST 프레임워크 (창업진흥원 평가 기준):
         model: "gpt-5.4-mini",
         // ⚠️ GPT-5.4 시리즈는 max_tokens 미지원(2026 API 변경) → max_completion_tokens.
         //   종전 max_tokens 는 400(unsupported parameter) → 502 로 사업계획서 100% 실패.
-        max_completion_tokens: 8192,
+        // ⚠️ 2026-06-26 A2 버그: response_format 미지정 시 모델이 산문/마크다운 + 말미 부분 JSON을
+        //   내보내 cleanup regex(첫 { ~ 마지막 })가 마지막 객체(섹션 7)만 남겨 "섹션 7만 뜸" 발생.
+        //   타 OpenAI 라우트(industry-daily·marketing/cases·funding/score)와 동일하게 json_object 강제.
+        response_format: { type: "json_object" },
+        // 7개 장문 섹션(각 3~5문단) 전량 수용 — 8192는 7섹션 한국어 본문에서 truncate 위험. 상향.
+        max_completion_tokens: 12288,
         messages: [
           { role: "system", content: systemPrompt },
           {
