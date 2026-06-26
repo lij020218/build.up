@@ -65,6 +65,9 @@ private struct FranchiseBrandView: Identifiable, Equatable {
     let dataYear: String?
     let confidence: String?
 
+    // 공정위 공식 통계 (data.go.kr 15110241) — 미매칭이면 nil
+    let officialStats: FranchiseBrandOfficialStats?
+
     init(_ b: FranchiseBrand) {
         self.id = b.id
         self.name = b.name.ko
@@ -91,6 +94,7 @@ private struct FranchiseBrandView: Identifiable, Equatable {
         self.costSource = b.costSource
         self.dataYear = b.dataYear
         self.confidence = b.confidence
+        self.officialStats = b.officialStats
     }
 
     private static func categoryLabel(_ id: String) -> String {
@@ -552,9 +556,14 @@ private struct FranchiseDetailSheet: View {
                         // 종합 점수 + 5 score breakdown
                         scoresBlock
 
-                        // 핵심 지표 4 (공정위 정보공개서 기반)
+                        // 핵심 지표 4 (손큐레이션 — 참고)
                         if brand.avgRevenueOku != nil || brand.closureRatePct != nil || brand.storeCount != nil {
                             officialStatsBlock
+                        }
+
+                        // 공정위 공식 통계 (data.go.kr 15110241) — 매칭된 브랜드만
+                        if brand.officialStats != nil {
+                            kftcOfficialBlock
                         }
 
                         // 초기 비용 분석
@@ -702,6 +711,46 @@ private struct FranchiseDetailSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white.opacity(0.85)))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+    }
+
+    @ViewBuilder
+    private var kftcOfficialBlock: some View {
+        if let os = brand.officialStats {
+            let net = os.newOpenings - os.terminations - os.cancellations
+            VStack(alignment: .leading, spacing: 10) {
+                Text("공정위 공식 통계 · \(os.year)년")
+                    .font(.system(size: 11, weight: .heavy))
+                    .tracking(0.5)
+                    .textCase(.uppercase)
+                    .foregroundStyle(BUColor.midnight.opacity(0.8))
+                HStack(spacing: 8) {
+                    statTile(label: "가맹점수 (전국)", value: "\(os.storeCount.formatted())개", tint: BUColor.midnight)
+                    statTile(label: "그해 신규개점", value: "+\(os.newOpenings.formatted())")
+                    statTile(label: "순증감",
+                             value: "\(net > 0 ? "+" : "")\(net.formatted())",
+                             tint: net > 0 ? BUColor.success : net < 0 ? BUColor.danger : BUColor.ink)
+                }
+                if os.avgSalesWon != nil || os.avgSalesPerAreaWon != nil {
+                    HStack(spacing: 8) {
+                        if let s = os.avgSalesWon {
+                            statTile(label: "점당 연매출", value: String(format: "%.1f억", Double(s) / 10_000.0), tint: BUColor.midnight)
+                        }
+                        if let a = os.avgSalesPerAreaWon {
+                            statTile(label: "3.3㎡당 매출", value: "\(a.formatted())만")
+                        }
+                        statTile(label: "그해 계약종료", value: "\(os.terminations.formatted())개")
+                    }
+                }
+                Text("공정거래위원회 정보공개서 기준 실데이터. 위 참고 수치와 연도·집계 기준이 다를 수 있습니다.")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.7))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(BUSpacing.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(BUColor.midnight.opacity(0.04)))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.15), lineWidth: 1))
+        }
     }
 
     private func statTile(label: String, value: String, tint: Color = BUColor.ink) -> some View {

@@ -205,6 +205,51 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
           ))}
         </div>
 
+        {/* 공정위 공식 통계 — data.go.kr 15110241 (officialStats 있을 때만) */}
+        {fb.officialStats && (
+          <Section
+            title={ko ? "공정위 공식 통계" : "KFTC Official Stats"}
+            subtitle={ko
+              ? `공정거래위원회 정보공개서 · ${fb.officialStats.year}년 기준`
+              : `KFTC franchise disclosure · FY${fb.officialStats.year}`}
+          >
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+              {(() => {
+                const os = fb.officialStats!;
+                const netChange = os.newOpenings - os.terminations - os.cancellations;
+                const cells: Array<{ l: string; v: string; sub?: string }> = [
+                  { l: ko ? "가맹점수" : "Stores", v: os.storeCount.toLocaleString(), sub: ko ? `전국 · ${os.year}` : `Nation · ${os.year}` },
+                  { l: ko ? "신규개점" : "New", v: `+${os.newOpenings.toLocaleString()}`, sub: ko ? "그해 개점" : "Opened" },
+                  {
+                    l: ko ? "순증감" : "Net",
+                    v: `${netChange > 0 ? "+" : ""}${netChange.toLocaleString()}`,
+                    sub: ko ? "개점−종료·해지" : "Open−Close",
+                  },
+                  ...(os.avgSalesWon
+                    ? [{ l: ko ? "점당 연매출" : "Sales/store", v: formatFranchiseCost(os.avgSalesWon), sub: ko ? "공식 평균" : "Official avg" }]
+                    : []),
+                  ...(os.avgSalesPerAreaWon
+                    ? [{ l: ko ? "평당 매출" : "Sales/3.3㎡", v: formatFranchiseCost(os.avgSalesPerAreaWon), sub: ko ? "면적 3.3㎡당" : "per 3.3㎡" }]
+                    : []),
+                  { l: ko ? "계약종료" : "Closed", v: os.terminations.toLocaleString(), sub: ko ? "그해 종료" : "Ended" },
+                ];
+                return cells.map((m) => (
+                  <div key={m.l} style={{ padding: "12px 10px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", textAlign: "center" }}>
+                    <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#191970" }}>{m.v}</div>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{m.l}</div>
+                    {m.sub && <div style={{ fontSize: "10px", color: "var(--muted)", opacity: 0.7 }}>{m.sub}</div>}
+                  </div>
+                ));
+              })()}
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "8px", lineHeight: 1.5 }}>
+              {ko
+                ? "공정거래위원회가 매년 공개하는 가맹사업 정보공개서 기준 실데이터입니다. 위 카드의 손큐레이션 수치와 연도·집계 기준이 다를 수 있습니다."
+                : "Official figures from the KFTC annual franchise disclosure. May differ from the curated metrics above due to year/method."}
+            </div>
+          </Section>
+        )}
+
         {/* Score breakdown */}
         <Section title={ko ? "5축 점수 분석" : "5-Axis Score Analysis"}>
           <div style={{ display: "grid", gap: "10px" }}>

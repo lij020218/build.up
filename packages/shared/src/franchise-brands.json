@@ -166,7 +166,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2238,
+      "newOpenings": 182,
+      "terminations": 0,
+      "cancellations": 71,
+      "avgSalesWon": 49684,
+      "avgSalesPerAreaWon": 3261,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bhc",
@@ -504,7 +514,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1377,
+      "newOpenings": 21,
+      "terminations": 9,
+      "cancellations": 0,
+      "avgSalesWon": 69430,
+      "avgSalesPerAreaWon": 3183,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "goobne",
@@ -667,7 +687,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1118,
+      "newOpenings": 22,
+      "terminations": 1,
+      "cancellations": 27,
+      "avgSalesWon": 49264,
+      "avgSalesPerAreaWon": 2719,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "moms-touch",
@@ -872,7 +902,17 @@
     "specialtyIds": [
       "fb-burger",
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1409,
+      "newOpenings": 58,
+      "terminations": 41,
+      "cancellations": 0,
+      "avgSalesWon": 50009,
+      "avgSalesPerAreaWon": 1793,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "60gye-chicken",
@@ -1019,7 +1059,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 661,
+      "newOpenings": 22,
+      "terminations": 24,
+      "cancellations": 0,
+      "avgSalesWon": 46812,
+      "avgSalesPerAreaWon": 2345,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "dominos",
@@ -1176,7 +1226,17 @@
     "specialtyIds": [
       "fb-pizza"
     ],
-    "royaltyPercent": 6
+    "royaltyPercent": 6,
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 369,
+      "newOpenings": 2,
+      "terminations": 2,
+      "cancellations": 0,
+      "avgSalesWon": 74956,
+      "avgSalesPerAreaWon": 2596,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "nene-chicken",
@@ -1330,7 +1390,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 951,
+      "newOpenings": 13,
+      "terminations": 73,
+      "cancellations": 0,
+      "avgSalesWon": 19755,
+      "avgSalesPerAreaWon": 1582,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hosik-chicken",
@@ -1500,7 +1570,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 730,
+      "newOpenings": 47,
+      "terminations": 72,
+      "cancellations": 17,
+      "avgSalesWon": 24193,
+      "avgSalesPerAreaWon": 1812,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "norang-tongdak",
@@ -1692,7 +1772,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 650,
+      "newOpenings": 83,
+      "terminations": 65,
+      "cancellations": 0,
+      "avgSalesWon": 39323,
+      "avgSalesPerAreaWon": 1923,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "puradak",
@@ -1847,7 +1937,17 @@
     "confidence": "high",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 714,
+      "newOpenings": 15,
+      "terminations": 25,
+      "cancellations": 4,
+      "avgSalesWon": 41562,
+      "avgSalesPerAreaWon": 2232,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "cheogapjib",
@@ -2015,7 +2115,17 @@
     "confidence": "high",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1233,
+      "newOpenings": 89,
+      "terminations": 74,
+      "cancellations": 3,
+      "avgSalesWon": 30455,
+      "avgSalesPerAreaWon": 2135,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pizza-hut",
@@ -2188,7 +2298,17 @@
     "confidence": "high",
     "specialtyIds": [
       "fb-pizza"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 297,
+      "newOpenings": 5,
+      "terminations": 32,
+      "cancellations": 4,
+      "avgSalesWon": 43755,
+      "avgSalesPerAreaWon": 1620,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pizza-school",
@@ -2308,7 +2428,17 @@
     },
     "specialtyIds": [
       "fb-pizza"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 615,
+      "newOpenings": 19,
+      "terminations": 14,
+      "cancellations": 0,
+      "avgSalesWon": 16252,
+      "avgSalesPerAreaWon": 1539,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "lotteria",
@@ -2432,7 +2562,17 @@
     },
     "specialtyIds": [
       "fb-burger"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1191,
+      "newOpenings": 19,
+      "terminations": 16,
+      "cancellations": 5,
+      "avgSalesWon": 86903,
+      "avgSalesPerAreaWon": 1825,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "perikana",
@@ -2499,7 +2639,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1019,
+      "newOpenings": 25,
+      "terminations": 62,
+      "cancellations": 0,
+      "avgSalesWon": 13229,
+      "avgSalesPerAreaWon": 1124,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "jadam-chicken",
@@ -2597,7 +2747,17 @@
     "dataYear": "2022",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 686,
+      "newOpenings": 48,
+      "terminations": 17,
+      "cancellations": 61,
+      "avgSalesWon": 34751,
+      "avgSalesPerAreaWon": 2064,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "toraeorae",
@@ -2659,7 +2819,17 @@
     "dataYear": "2023",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 554,
+      "newOpenings": 58,
+      "terminations": 67,
+      "cancellations": 0,
+      "avgSalesWon": 12462,
+      "avgSalesPerAreaWon": 829,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "mexicana",
@@ -2757,7 +2927,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 867,
+      "newOpenings": 88,
+      "terminations": 94,
+      "cancellations": 0,
+      "avgSalesWon": 19823,
+      "avgSalesPerAreaWon": 1370,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "nobrand-burger",
@@ -2825,7 +3005,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-burger"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 169,
+      "newOpenings": 43,
+      "terminations": 12,
+      "cancellations": 0,
+      "avgSalesWon": 57787,
+      "avgSalesPerAreaWon": 1699,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "kfc-korea",
@@ -2894,7 +3084,15 @@
     "specialtyIds": [
       "fb-chicken",
       "fb-burger"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pinachigong",
@@ -3088,7 +3286,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-burger"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 591,
+      "newOpenings": 170,
+      "terminations": 40,
+      "cancellations": 0,
+      "avgSalesWon": 36506,
+      "avgSalesPerAreaWon": 2505,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "kkanbu-chicken",
@@ -3151,7 +3359,17 @@
     "specialtyIds": [
       "fb-chicken",
       "fb-chimaek-bar"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 169,
+      "newOpenings": 9,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 43860,
+      "avgSalesPerAreaWon": 1618,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hongkong-banjum",
@@ -3320,7 +3538,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "noodle-jjajang"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 282,
+      "newOpenings": 31,
+      "terminations": 27,
+      "cancellations": 0,
+      "avgSalesWon": 65621,
+      "avgSalesPerAreaWon": 2009,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "new-maeul",
@@ -3491,7 +3719,17 @@
     "specialtyIds": [
       "korean-gukbap",
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 101,
+      "newOpenings": 12,
+      "terminations": 20,
+      "cancellations": 0,
+      "avgSalesWon": 49819,
+      "avgSalesPerAreaWon": 1309,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "kimbap-cheonguk",
@@ -3648,7 +3886,15 @@
     "dataYear": "2025",
     "specialtyIds": [
       "korean-bunsik"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 285,
+      "newOpenings": 6,
+      "terminations": 0,
+      "cancellations": 10,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bonjuk",
@@ -3819,7 +4065,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "korean-juk"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 647,
+      "newOpenings": 0,
+      "terminations": 101,
+      "cancellations": 0,
+      "avgSalesWon": 26635,
+      "avgSalesPerAreaWon": 2269,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hansot-lunchbox",
@@ -3971,7 +4227,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "delivery-korean-lunch"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 793,
+      "newOpenings": 56,
+      "terminations": 27,
+      "cancellations": 3,
+      "avgSalesWon": 46102,
+      "avgSalesPerAreaWon": 3144,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bon-dosirak",
@@ -4092,7 +4358,17 @@
     },
     "specialtyIds": [
       "delivery-korean-lunch"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 439,
+      "newOpenings": 25,
+      "terminations": 21,
+      "cancellations": 0,
+      "avgSalesWon": 29833,
+      "avgSalesPerAreaWon": 2154,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "myungryun-galbi",
@@ -4195,7 +4471,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 560,
+      "newOpenings": 121,
+      "terminations": 24,
+      "cancellations": 0,
+      "avgSalesWon": 94236,
+      "avgSalesPerAreaWon": 1464,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hancheon-seolleongtang",
@@ -4294,7 +4580,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 140,
+      "newOpenings": 21,
+      "terminations": 10,
+      "cancellations": 0,
+      "avgSalesWon": 58551,
+      "avgSalesPerAreaWon": 1334,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "todari",
@@ -4362,7 +4658,17 @@
     "dataYear": "2021",
     "specialtyIds": [
       "korean-pocha"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1349,
+      "newOpenings": 59,
+      "terminations": 79,
+      "cancellations": 9,
+      "avgSalesWon": 17800,
+      "avgSalesPerAreaWon": 1154,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "kimgane",
@@ -4460,7 +4766,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-bunsik"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 424,
+      "newOpenings": 25,
+      "terminations": 39,
+      "cancellations": 10,
+      "avgSalesWon": 41905,
+      "avgSalesPerAreaWon": 3014,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bonjuk-bibimbap",
@@ -4528,7 +4844,17 @@
     "specialtyIds": [
       "korean-bibimbap",
       "korean-juk"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1003,
+      "newOpenings": 180,
+      "terminations": 13,
+      "cancellations": 0,
+      "avgSalesWon": 36979,
+      "avgSalesPerAreaWon": 2415,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "chaesundang",
@@ -4590,7 +4916,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hanampigjib",
@@ -4652,7 +4986,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 168,
+      "newOpenings": 28,
+      "terminations": 1,
+      "cancellations": 20,
+      "avgSalesWon": 69274,
+      "avgSalesPerAreaWon": 1811,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "yeokjeon-udon",
@@ -4823,7 +5167,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "noodle-udon"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 192,
+      "newOpenings": 31,
+      "terminations": 5,
+      "cancellations": 0,
+      "avgSalesWon": 36136,
+      "avgSalesPerAreaWon": 2286,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "misoya",
@@ -4954,7 +5308,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "ramen-japanese"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 189,
+      "newOpenings": 5,
+      "terminations": 0,
+      "cancellations": 14,
+      "avgSalesWon": 36217,
+      "avgSalesPerAreaWon": 1937,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "keunmal-halmae",
@@ -5103,7 +5467,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 401,
+      "newOpenings": 97,
+      "terminations": 0,
+      "cancellations": 70,
+      "avgSalesWon": 20088,
+      "avgSalesPerAreaWon": 792,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hyundaeok",
@@ -5235,7 +5609,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 154,
+      "newOpenings": 10,
+      "terminations": 4,
+      "cancellations": 0,
+      "avgSalesWon": 52959,
+      "avgSalesPerAreaWon": 1350,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "yupdduk",
@@ -5565,7 +5949,17 @@
     ],
     "confidence": "high",
     "dataYear": "2025",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 701,
+      "newOpenings": 9,
+      "terminations": 0,
+      "cancellations": 29,
+      "avgSalesWon": 27748,
+      "avgSalesPerAreaWon": 2150,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "tanghuo-kungfu",
@@ -5631,7 +6025,17 @@
     ],
     "confidence": "medium",
     "dataYear": "2025",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 419,
+      "newOpenings": 99,
+      "terminations": 7,
+      "cancellations": 0,
+      "avgSalesWon": 50035,
+      "avgSalesPerAreaWon": 1860,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "dookki",
@@ -5831,7 +6235,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-bunsik"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 178,
+      "newOpenings": 4,
+      "terminations": 19,
+      "cancellations": 9,
+      "avgSalesWon": 18614,
+      "avgSalesPerAreaWon": 598,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "myungrang-hotdog",
@@ -5930,7 +6344,17 @@
     "dataYear": "2022",
     "specialtyIds": [
       "fb-hotdog"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 525,
+      "newOpenings": 20,
+      "terminations": 40,
+      "cancellations": 12,
+      "avgSalesWon": 20179,
+      "avgSalesPerAreaWon": 2012,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bonggus-burger",
@@ -5992,7 +6416,17 @@
     "dataYear": "2023",
     "specialtyIds": [
       "delivery-korean-lunch"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 489,
+      "newOpenings": 35,
+      "terminations": 47,
+      "cancellations": 0,
+      "avgSalesWon": 9583,
+      "avgSalesPerAreaWon": 827,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "subway",
@@ -6300,7 +6734,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "salad-bowl"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 322,
+      "newOpenings": 35,
+      "terminations": 13,
+      "cancellations": 0,
+      "avgSalesWon": 31643,
+      "avgSalesPerAreaWon": 2493,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "vips",
@@ -6611,7 +7055,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-pasta"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 126,
+      "newOpenings": 11,
+      "terminations": 5,
+      "cancellations": 0,
+      "avgSalesWon": 60027,
+      "avgSalesPerAreaWon": 1348,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pasta-eyo",
@@ -6745,7 +7199,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-pasta"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 13,
+      "newOpenings": 13,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 97132,
+      "avgSalesPerAreaWon": 10596,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pasta-ibnida",
@@ -6876,7 +7340,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-pasta"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 183,
+      "newOpenings": 10,
+      "terminations": 8,
+      "cancellations": 9,
+      "avgSalesWon": 29074,
+      "avgSalesPerAreaWon": 1987,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pasta-jibiya",
@@ -6998,7 +7472,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-pasta"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 42,
+      "newOpenings": 28,
+      "terminations": 6,
+      "cancellations": 3,
+      "avgSalesWon": 15944,
+      "avgSalesPerAreaWon": 1352,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "tutti-cucina",
@@ -7512,7 +7996,17 @@
     "specialtyIds": [
       "coffee-low-price",
       "coffee-drive-thru"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2681,
+      "newOpenings": 539,
+      "terminations": 14,
+      "cancellations": 0,
+      "avgSalesWon": 36262,
+      "avgSalesPerAreaWon": 2091,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "compose-coffee",
@@ -7715,7 +8209,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "coffee-low-price"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2360,
+      "newOpenings": 474,
+      "terminations": 15,
+      "cancellations": 0,
+      "avgSalesWon": 26501,
+      "avgSalesPerAreaWon": 2600,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "paiks-dabang",
@@ -7897,7 +8401,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "coffee-low-price"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1449,
+      "newOpenings": 241,
+      "terminations": 20,
+      "cancellations": 0,
+      "avgSalesWon": 31909,
+      "avgSalesPerAreaWon": 2136,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "ediya-coffee",
@@ -8108,7 +8622,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "coffee-franchise"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2805,
+      "newOpenings": 143,
+      "terminations": 343,
+      "cancellations": 0,
+      "avgSalesWon": 19529,
+      "avgSalesPerAreaWon": 645,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "the-venti",
@@ -8309,7 +8833,17 @@
     "specialtyIds": [
       "coffee-low-price",
       "coffee-drive-thru"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1129,
+      "newOpenings": 197,
+      "terminations": 19,
+      "cancellations": 42,
+      "avgSalesWon": 23001,
+      "avgSalesPerAreaWon": 1833,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "twosome-place",
@@ -8496,7 +9030,17 @@
       "coffee-cafe-roastery",
       "dessert-cake-shop"
     ],
-    "royaltyPercent": 3
+    "royaltyPercent": 3,
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1484,
+      "newOpenings": 125,
+      "terminations": 53,
+      "cancellations": 0,
+      "avgSalesWon": 52212,
+      "avgSalesPerAreaWon": 895,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "baskin-robbins",
@@ -8725,7 +9269,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "ice-icecream"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1687,
+      "newOpenings": 47,
+      "terminations": 10,
+      "cancellations": 3,
+      "avgSalesWon": 50665,
+      "avgSalesPerAreaWon": 2419,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "sulbing",
@@ -8856,7 +9410,17 @@
     "specialtyIds": [
       "dessert-traditional",
       "ice-bingsu"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 560,
+      "newOpenings": 34,
+      "terminations": 4,
+      "cancellations": 0,
+      "avgSalesWon": 45116,
+      "avgSalesPerAreaWon": 847,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "paris-baguette",
@@ -9191,7 +9755,17 @@
     "specialtyIds": [
       "bakery-cake-bread",
       "dessert-cake-shop"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 1307,
+      "newOpenings": 87,
+      "terminations": 14,
+      "cancellations": 68,
+      "avgSalesWon": 56345,
+      "avgSalesPerAreaWon": 1894,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gongcha",
@@ -9353,7 +9927,17 @@
     "confidence": "high",
     "specialtyIds": [
       "coffee-tea-hybrid"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 834,
+      "newOpenings": 84,
+      "terminations": 43,
+      "cancellations": 0,
+      "avgSalesWon": 27468,
+      "avgSalesPerAreaWon": 1393,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hollys",
@@ -9513,7 +10097,17 @@
     "specialtyIds": [
       "coffee-franchise",
       "coffee-cafe-roastery"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 424,
+      "newOpenings": 42,
+      "terminations": 20,
+      "cancellations": 37,
+      "avgSalesWon": 34427,
+      "avgSalesPerAreaWon": 585,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "mammoth-coffee",
@@ -9604,7 +10198,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "coffee-low-price"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 30,
+      "newOpenings": 0,
+      "terminations": 9,
+      "cancellations": 0,
+      "avgSalesWon": 30407,
+      "avgSalesPerAreaWon": 2248,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "the-liter",
@@ -9666,7 +10270,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-low-price"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 433,
+      "newOpenings": 59,
+      "terminations": 34,
+      "cancellations": 0,
+      "avgSalesWon": 14243,
+      "avgSalesPerAreaWon": 943,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "dunkin",
@@ -9735,7 +10349,17 @@
     "specialtyIds": [
       "coffee-franchise",
       "dessert-donut"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 631,
+      "newOpenings": 43,
+      "terminations": 24,
+      "cancellations": 21,
+      "avgSalesWon": 36616,
+      "avgSalesPerAreaWon": 1810,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "dessert39",
@@ -9803,7 +10427,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "dessert-cake-shop"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 529,
+      "newOpenings": 100,
+      "terminations": 16,
+      "cancellations": 19,
+      "avgSalesWon": 32580,
+      "avgSalesPerAreaWon": 1448,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "caffebene",
@@ -9871,7 +10505,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-franchise"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 119,
+      "newOpenings": 3,
+      "terminations": 50,
+      "cancellations": 0,
+      "avgSalesWon": 18919,
+      "avgSalesPerAreaWon": 406,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "billyangel",
@@ -9940,7 +10584,17 @@
     "specialtyIds": [
       "bakery-cake-bread",
       "dessert-cake-shop"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 22,
+      "newOpenings": 0,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 22149,
+      "avgSalesPerAreaWon": 719,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "yoajeong",
@@ -10010,7 +10664,17 @@
     "specialtyIds": [
       "ice-frozen-yogurt",
       "ice-self-serve"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 166,
+      "newOpenings": 28,
+      "terminations": 3,
+      "cancellations": 17,
+      "avgSalesWon": 14613,
+      "avgSalesPerAreaWon": 1220,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "cu",
@@ -10188,7 +10852,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2025"
+    "dataYear": "2025",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 17576,
+      "newOpenings": 1715,
+      "terminations": 461,
+      "cancellations": 293,
+      "avgSalesWon": 62797,
+      "avgSalesPerAreaWon": 2658,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gs25",
@@ -10366,7 +11040,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2025"
+    "dataYear": "2025",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 17272,
+      "newOpenings": 1660,
+      "terminations": 401,
+      "cancellations": 324,
+      "avgSalesWon": 64146,
+      "avgSalesPerAreaWon": 2799,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "seven-eleven",
@@ -10542,7 +11226,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2025"
+    "dataYear": "2025",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 12783,
+      "newOpenings": 1607,
+      "terminations": 707,
+      "cancellations": 670,
+      "avgSalesWon": 50347,
+      "avgSalesPerAreaWon": 2209,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "emart24",
@@ -10693,7 +11387,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2025"
+    "dataYear": "2025",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 6348,
+      "newOpenings": 942,
+      "terminations": 475,
+      "cancellations": 295,
+      "avgSalesWon": 43969,
+      "avgSalesPerAreaWon": 2190,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "daiso",
@@ -10758,7 +11462,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2024"
+    "dataYear": "2024",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 497,
+      "newOpenings": 26,
+      "terminations": 5,
+      "cancellations": 15,
+      "avgSalesWon": 165187,
+      "avgSalesPerAreaWon": 1429,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "olive-young",
@@ -10822,7 +11536,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2024"
+    "dataYear": "2024",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 226,
+      "newOpenings": 0,
+      "terminations": 3,
+      "cancellations": 3,
+      "avgSalesWon": 209628,
+      "avgSalesPerAreaWon": 5238,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "nobrand",
@@ -10887,7 +11611,17 @@
       }
     ],
     "confidence": "high",
-    "dataYear": "2025"
+    "dataYear": "2025",
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 48,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 333133,
+      "avgSalesPerAreaWon": 3023,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "juno-hair",
@@ -11031,7 +11765,17 @@
     "specialtyIds": [
       "hair-general",
       "hair-color-perm"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 170,
+      "newOpenings": 8,
+      "terminations": 1,
+      "cancellations": 0,
+      "avgSalesWon": 152478,
+      "avgSalesPerAreaWon": 1850,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "lian-hair",
@@ -11169,7 +11913,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "hair-general"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 441,
+      "newOpenings": 42,
+      "terminations": 27,
+      "cancellations": 2,
+      "avgSalesWon": 30544,
+      "avgSalesPerAreaWon": 887,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "blue-club",
@@ -11310,7 +12064,17 @@
     "specialtyIds": [
       "hair-mens-only",
       "hair-cut-only"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 319,
+      "newOpenings": 20,
+      "terminations": 12,
+      "cancellations": 0,
+      "avgSalesWon": 5142,
+      "avgSalesPerAreaWon": 490,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "park-seungchul",
@@ -11440,7 +12204,17 @@
     "specialtyIds": [
       "hair-general",
       "hair-color-perm"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 200,
+      "newOpenings": 9,
+      "terminations": 12,
+      "cancellations": 2,
+      "avgSalesWon": 47324,
+      "avgSalesPerAreaWon": 1024,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "golden-nail",
@@ -11570,7 +12344,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "nail-art"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 11,
+      "newOpenings": 0,
+      "terminations": 9,
+      "cancellations": 0,
+      "avgSalesWon": 14515,
+      "avgSalesPerAreaWon": 848,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "yuhu-nail",
@@ -12066,7 +12850,17 @@
     "dataYear": "2022",
     "specialtyIds": [
       "hair-general"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 162,
+      "newOpenings": 10,
+      "terminations": 16,
+      "cancellations": 0,
+      "avgSalesWon": 67032,
+      "avgSalesPerAreaWon": 1626,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "anytime-fitness",
@@ -12204,7 +12998,15 @@
       "pt-unmanned-24",
       "pt-gym-pt-hybrid",
       "uf-24h-gym"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "curves",
@@ -12347,7 +13149,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "pt-women-only"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 199,
+      "newOpenings": 3,
+      "terminations": 18,
+      "cancellations": 0,
+      "avgSalesWon": 7286,
+      "avgSalesPerAreaWon": 189,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "golfzon-park",
@@ -12500,7 +13312,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "gs-screen"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2544,
+      "newOpenings": 374,
+      "terminations": 7,
+      "cancellations": 0,
+      "avgSalesWon": 43602,
+      "avgSalesPerAreaWon": 257,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "noonnoppi",
@@ -12941,7 +13763,17 @@
     "specialtyIds": [
       "ka-foreign-culture",
       "ac-language-adult"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 206,
+      "newOpenings": 0,
+      "terminations": 11,
+      "cancellations": 5,
+      "avgSalesWon": 10817,
+      "avgSalesPerAreaWon": 373,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "jungsang",
@@ -13084,7 +13916,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "ka-foreign-culture"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 72,
+      "newOpenings": 2,
+      "terminations": 0,
+      "cancellations": 2,
+      "avgSalesWon": 130473,
+      "avgSalesPerAreaWon": 950,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "polypark",
@@ -13248,7 +14090,17 @@
     "specialtyIds": [
       "ps-food",
       "ps-toys"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 78,
+      "newOpenings": 11,
+      "terminations": 2,
+      "cancellations": 8,
+      "avgSalesWon": 35175,
+      "avgSalesPerAreaWon": 775,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "petmart",
@@ -13391,7 +14243,17 @@
       "ps-food",
       "ps-toys",
       "ps-fashion"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 110,
+      "newOpenings": 12,
+      "terminations": 0,
+      "cancellations": 2,
+      "avgSalesWon": 52533,
+      "avgSalesPerAreaWon": 783,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "london-pet",
@@ -13703,7 +14565,17 @@
     "specialtyIds": [
       "ls-laundry-shop",
       "ls-dry-cleaning"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2860,
+      "newOpenings": 206,
+      "terminations": 107,
+      "cancellations": 0,
+      "avgSalesWon": 11432,
+      "avgSalesPerAreaWon": 924,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "washnjoy",
@@ -14088,7 +14960,17 @@
     "specialtyIds": [
       "edu-study-cafe",
       "edu-cafe-mid"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 194,
+      "newOpenings": 22,
+      "terminations": 6,
+      "cancellations": 17,
+      "avgSalesWon": 9031,
+      "avgSalesPerAreaWon": 139,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "toz-study",
@@ -14239,7 +15121,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "edu-cafe-premium"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 16,
+      "newOpenings": 0,
+      "terminations": 4,
+      "cancellations": 0,
+      "avgSalesWon": 25694,
+      "avgSalesPerAreaWon": 205,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "seldog24-study",
@@ -14287,7 +15179,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "space-coworking"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 71,
+      "newOpenings": 3,
+      "terminations": 0,
+      "cancellations": 1,
+      "avgSalesWon": 8735,
+      "avgSalesPerAreaWon": 165,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "seven-star-coin",
@@ -14468,7 +15370,17 @@
       "delivery-diet-meal",
       "delivery-protein-meal",
       "salad-meal-prep"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 15,
+      "newOpenings": 6,
+      "terminations": 1,
+      "cancellations": 0,
+      "avgSalesWon": 50600,
+      "avgSalesPerAreaWon": 3472,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "chunli-malatang",
@@ -14515,7 +15427,17 @@
     "costSource": "정보공개서 2022 + 공식사이트 2024",
     "franchiseUrl": "https://chunlimalatang.com/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 180,
+      "newOpenings": 53,
+      "terminations": 0,
+      "cancellations": 1,
+      "avgSalesWon": 64332,
+      "avgSalesPerAreaWon": 2597,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "maragongbang",
@@ -14562,7 +15484,17 @@
     "costSource": "정보공개서 2023",
     "franchiseUrl": "http://www.maragongbang.com/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 87,
+      "newOpenings": 26,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 58690,
+      "avgSalesPerAreaWon": 2126,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "lahongbang",
@@ -14609,7 +15541,17 @@
     "costSource": "정보공개서 2024",
     "franchiseUrl": "https://lahongbang.com/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 125,
+      "newOpenings": 30,
+      "terminations": 3,
+      "cancellations": 3,
+      "avgSalesWon": 32450,
+      "avgSalesPerAreaWon": 1573,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "sorimmara",
@@ -14656,7 +15598,17 @@
     "costSource": "정보공개서 2022",
     "franchiseUrl": "https://sorimmara.co.kr/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 183,
+      "newOpenings": 33,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 32748,
+      "avgSalesPerAreaWon": 1760,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "youngdabang",
@@ -14703,7 +15655,17 @@
     "costSource": "공식사이트 2024",
     "franchiseUrl": "https://www.youngdabang.com/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 399,
+      "newOpenings": 12,
+      "terminations": 34,
+      "cancellations": 0,
+      "avgSalesWon": 46362,
+      "avgSalesPerAreaWon": 2181,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gamtan-tteokbokki",
@@ -14750,7 +15712,17 @@
     "costSource": "정보공개서 2023",
     "franchiseUrl": "http://www.gamtan.co.kr/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 210,
+      "newOpenings": 4,
+      "terminations": 38,
+      "cancellations": 0,
+      "avgSalesWon": 12471,
+      "avgSalesPerAreaWon": 1360,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "samcheop-bunsik",
@@ -14797,7 +15769,16 @@
     "costSource": "정보공개서 2023",
     "franchiseUrl": "https://samcheop.com/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 254,
+      "newOpenings": 55,
+      "terminations": 47,
+      "cancellations": 15,
+      "avgSalesWon": 25475,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "geoljak-tteokbokki",
@@ -14847,7 +15828,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 103,
+      "newOpenings": 10,
+      "terminations": 54,
+      "cancellations": 8,
+      "avgSalesWon": 22142,
+      "avgSalesPerAreaWon": 886,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gopizza",
@@ -14895,7 +15886,17 @@
     "costSource": "정보공개서 2023",
     "franchiseUrl": "https://gopizza.kr/franchise",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 105,
+      "newOpenings": 26,
+      "terminations": 29,
+      "cancellations": 0,
+      "avgSalesWon": 27690,
+      "avgSalesPerAreaWon": 1847,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bbaekboy-pizza",
@@ -14942,7 +15943,17 @@
     "costSource": "정보공개서 2024",
     "franchiseUrl": "https://www.theborn.co.kr/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 202,
+      "newOpenings": 109,
+      "terminations": 4,
+      "cancellations": 0,
+      "avgSalesWon": 36109,
+      "avgSalesPerAreaWon": 2966,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "pizza-maru",
@@ -14989,7 +16000,17 @@
     "costSource": "정보공개서 2022",
     "franchiseUrl": null,
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 524,
+      "newOpenings": 11,
+      "terminations": 58,
+      "cancellations": 0,
+      "avgSalesWon": 18490,
+      "avgSalesPerAreaWon": 1777,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "59-rice-pizza",
@@ -15083,7 +16104,17 @@
     "costSource": "정보공개서 2023",
     "franchiseUrl": "https://www.isaac-toast.co.kr/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 917,
+      "newOpenings": 39,
+      "terminations": 22,
+      "cancellations": 0,
+      "avgSalesWon": 21130,
+      "avgSalesPerAreaWon": 1971,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "barda-kimsunsaeng",
@@ -15133,7 +16164,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-bunsik"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 124,
+      "newOpenings": 2,
+      "terminations": 15,
+      "cancellations": 6,
+      "avgSalesWon": 36205,
+      "avgSalesPerAreaWon": 2191,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gobongmin-kimbap",
@@ -15182,7 +16223,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-bunsik"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 507,
+      "newOpenings": 23,
+      "terminations": 50,
+      "cancellations": 0,
+      "avgSalesWon": 24688,
+      "avgSalesPerAreaWon": 1527,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "burger-king-kr",
@@ -15232,7 +16283,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-burger"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 130,
+      "newOpenings": 13,
+      "terminations": 6,
+      "cancellations": 2,
+      "avgSalesWon": 107741,
+      "avgSalesPerAreaWon": 1599,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "ziccoba-chicken",
@@ -15281,7 +16342,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 736,
+      "newOpenings": 16,
+      "terminations": 0,
+      "cancellations": 13,
+      "avgSalesWon": 24447,
+      "avgSalesPerAreaWon": 1950,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "chicken-plus",
@@ -15330,7 +16401,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 287,
+      "newOpenings": 23,
+      "terminations": 14,
+      "cancellations": 57,
+      "avgSalesWon": 20519,
+      "avgSalesPerAreaWon": 1311,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "duldul-chicken",
@@ -15379,7 +16460,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 82,
+      "newOpenings": 5,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 18359,
+      "avgSalesPerAreaWon": 877,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "marahao",
@@ -15473,7 +16564,17 @@
     "costSource": "정보공개서 2024",
     "franchiseUrl": null,
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 297,
+      "newOpenings": 5,
+      "terminations": 17,
+      "cancellations": 1,
+      "avgSalesWon": 30289,
+      "avgSalesPerAreaWon": 1663,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "ebadom-gamjatang",
@@ -15521,7 +16622,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 58,
+      "newOpenings": 1,
+      "terminations": 13,
+      "cancellations": 0,
+      "avgSalesWon": 58607,
+      "avgSalesPerAreaWon": 568,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "salad-box",
@@ -15571,7 +16682,17 @@
     "specialtyIds": [
       "salad-meal-prep",
       "salad-bowl"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 54,
+      "newOpenings": 13,
+      "terminations": 28,
+      "cancellations": 0,
+      "avgSalesWon": 17214,
+      "avgSalesPerAreaWon": 1290,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "togo-salad",
@@ -15621,7 +16742,17 @@
     "specialtyIds": [
       "salad-bowl",
       "salad-meal-prep"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 28,
+      "newOpenings": 3,
+      "terminations": 7,
+      "cancellations": 6,
+      "avgSalesWon": 18878,
+      "avgSalesPerAreaWon": 1486,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "saboten",
@@ -15669,7 +16800,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "bongatofu",
@@ -15718,7 +16857,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 18,
+      "newOpenings": 2,
+      "terminations": 9,
+      "cancellations": 0,
+      "avgSalesWon": 61114,
+      "avgSalesPerAreaWon": 523,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hansinpocha",
@@ -15767,7 +16916,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pocha"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 116,
+      "newOpenings": 19,
+      "terminations": 32,
+      "cancellations": 0,
+      "avgSalesWon": 53705,
+      "avgSalesPerAreaWon": 1065,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "insaengseolnongtang",
@@ -15816,7 +16975,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 27,
+      "newOpenings": 4,
+      "terminations": 9,
+      "cancellations": 0,
+      "avgSalesWon": 31274,
+      "avgSalesPerAreaWon": 1143,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "mijungguksu",
@@ -15866,7 +17035,17 @@
     "specialtyIds": [
       "noodle-kalguksu",
       "noodle-udon"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 19,
+      "newOpenings": 0,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 35423,
+      "avgSalesPerAreaWon": 2444,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "paikbakery",
@@ -15915,7 +17094,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "bakery-bread"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 15,
+      "newOpenings": 4,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 81752,
+      "avgSalesPerAreaWon": 994,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "shinseonseolnongtang",
@@ -16013,7 +17202,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "yukmijedang",
@@ -16062,7 +17259,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "uongteorisaengogi",
@@ -16111,7 +17316,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-pork-belly"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 20,
+      "newOpenings": 0,
+      "terminations": 3,
+      "cancellations": 2,
+      "avgSalesWon": 87829,
+      "avgSalesPerAreaWon": 1678,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "tongkeungalbi",
@@ -16210,7 +17425,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 111,
+      "newOpenings": 9,
+      "terminations": 8,
+      "cancellations": 0,
+      "avgSalesWon": 15500,
+      "avgSalesPerAreaWon": 833,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "barunchicken",
@@ -16259,7 +17484,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 243,
+      "newOpenings": 6,
+      "terminations": 72,
+      "cancellations": 0,
+      "avgSalesWon": 22099,
+      "avgSalesPerAreaWon": 1214,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "boderam",
@@ -16308,7 +17543,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-chicken"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 189,
+      "newOpenings": 18,
+      "terminations": 0,
+      "cancellations": 10,
+      "avgSalesWon": 27306,
+      "avgSalesPerAreaWon": 1558,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "7thpizza",
@@ -16357,7 +17602,17 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-pizza"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 201,
+      "newOpenings": 5,
+      "terminations": 23,
+      "cancellations": 0,
+      "avgSalesWon": 19656,
+      "avgSalesPerAreaWon": 1223,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "coffeebay",
@@ -16406,7 +17661,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-franchise"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 377,
+      "newOpenings": 24,
+      "terminations": 24,
+      "cancellations": 94,
+      "avgSalesWon": 7869,
+      "avgSalesPerAreaWon": 376,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "tomntoms",
@@ -16455,7 +17720,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-franchise"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 257,
+      "newOpenings": 11,
+      "terminations": 0,
+      "cancellations": 47,
+      "avgSalesWon": 38513,
+      "avgSalesPerAreaWon": 908,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "cafetiamo",
@@ -16504,7 +17779,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "ice-icecream"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "waffleuniv",
@@ -16551,7 +17834,17 @@
     "costSource": "와플대학 공식 + 부자비즈 2024",
     "franchiseUrl": "https://www.waffleuniv.com/",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 378,
+      "newOpenings": 48,
+      "terminations": 43,
+      "cancellations": 4,
+      "avgSalesWon": 16514,
+      "avgSalesPerAreaWon": 242,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "tangsbudaejjigae",
@@ -16600,7 +17893,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-gukbap"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 594,
+      "newOpenings": 64,
+      "terminations": 21,
+      "cancellations": 0,
+      "avgSalesWon": 17081,
+      "avgSalesPerAreaWon": 1751,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "dosigotgan",
@@ -16650,7 +17953,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "delivery-korean-lunch"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 34,
+      "newOpenings": 9,
+      "terminations": 9,
+      "cancellations": 1,
+      "avgSalesWon": 45888,
+      "avgSalesPerAreaWon": 1577,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "megastudyacademy",
@@ -16748,7 +18061,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "pt-gym-pt-hybrid"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "leekajahair",
@@ -16797,7 +18118,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "hair-general"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 114,
+      "newOpenings": 6,
+      "terminations": 12,
+      "cancellations": 0,
+      "avgSalesWon": 48757,
+      "avgSalesPerAreaWon": 1032,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "parkjunbeautylab",
@@ -16846,7 +18177,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "hair-general"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 69,
+      "newOpenings": 3,
+      "terminations": 13,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "mammothexpress",
@@ -16895,7 +18234,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-low-price"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 630,
+      "newOpenings": 201,
+      "terminations": 25,
+      "cancellations": 0,
+      "avgSalesWon": 23078,
+      "avgSalesPerAreaWon": 1870,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "topresso",
@@ -16944,7 +18293,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-low-price"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 129,
+      "newOpenings": 1,
+      "terminations": 31,
+      "cancellations": 0,
+      "avgSalesWon": 7822,
+      "avgSalesPerAreaWon": 363,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "saladdays",
@@ -16993,7 +18352,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "salad-bowl"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 36,
+      "newOpenings": 6,
+      "terminations": 0,
+      "cancellations": 9,
+      "avgSalesWon": 18678,
+      "avgSalesPerAreaWon": 1171,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "slowcalorie",
@@ -17043,7 +18412,17 @@
     "specialtyIds": [
       "salad-meal-prep",
       "salad-bowl"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 117,
+      "newOpenings": 43,
+      "terminations": 1,
+      "cancellations": 2,
+      "avgSalesWon": 31272,
+      "avgSalesPerAreaWon": 2172,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "jukstory",
@@ -17093,7 +18472,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-juk"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 346,
+      "newOpenings": 18,
+      "terminations": 40,
+      "cancellations": 0,
+      "avgSalesWon": 12897,
+      "avgSalesPerAreaWon": 998,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "yumsem",
@@ -17143,7 +18532,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "korean-bunsik"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 230,
+      "newOpenings": 29,
+      "terminations": 28,
+      "cancellations": 0,
+      "avgSalesWon": 30977,
+      "avgSalesPerAreaWon": 1851,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "matpizza",
@@ -17192,7 +18591,15 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-pizza"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2,
+      "newOpenings": 2,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "kcoinwash",
@@ -17393,7 +18800,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "delivery-korean-lunch"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 38,
+      "newOpenings": 2,
+      "terminations": 3,
+      "cancellations": 12,
+      "avgSalesWon": 17373,
+      "avgSalesPerAreaWon": 477,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "fave-bakery",
@@ -17444,7 +18861,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "bakery-pastry"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 17,
+      "newOpenings": 2,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 15214,
+      "avgSalesPerAreaWon": 374,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "latteking",
@@ -17495,7 +18922,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "coffee-local-mid"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 10,
+      "newOpenings": 3,
+      "terminations": 2,
+      "cancellations": 0,
+      "avgSalesWon": 21046,
+      "avgSalesPerAreaWon": 1226,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "samsong-bakery",
@@ -17546,7 +18983,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "bakery-bread"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 24,
+      "newOpenings": 10,
+      "terminations": 0,
+      "cancellations": 1,
+      "avgSalesWon": 90186,
+      "avgSalesPerAreaWon": 2513,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "daebaktong",
@@ -17595,7 +19042,17 @@
     "costSource": "정보공개서 2024 (jshj.net 분석)",
     "franchiseUrl": "https://franchise.ftc.go.kr",
     "dataYear": "2024",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 20,
+      "newOpenings": 2,
+      "terminations": 5,
+      "cancellations": 0,
+      "avgSalesWon": 33927,
+      "avgSalesPerAreaWon": 1216,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "grazie",
@@ -17646,7 +19103,17 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-pasta"
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 38,
+      "newOpenings": 1,
+      "terminations": 0,
+      "cancellations": 1,
+      "avgSalesWon": 11079,
+      "avgSalesPerAreaWon": 330,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "cheers-pub",
@@ -17756,7 +19223,15 @@
         "url": "https://tnnews.co.kr/archives/254006",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 0,
+      "newOpenings": 0,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "dos-tacos",
@@ -17810,7 +19285,17 @@
         "url": "http://www.dostacos.co.kr/",
         "tier": "primary"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 15,
+      "newOpenings": 1,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 43205,
+      "avgSalesPerAreaWon": 2607,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "taco-bell-korea",
@@ -18134,7 +19619,15 @@
         "url": "https://www.mt.co.kr/industry/2025/07/04/2025070411131255380",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 2,
+      "newOpenings": 2,
+      "terminations": 0,
+      "cancellations": 0,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "phomein",
@@ -18193,7 +19686,17 @@
         "url": "https://news.nate.com/view/20250422n10059",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 95,
+      "newOpenings": 2,
+      "terminations": 3,
+      "cancellations": 11,
+      "avgSalesWon": 50869,
+      "avgSalesPerAreaWon": 1258,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hoabinh",
@@ -18247,7 +19750,17 @@
         "url": "https://hoabinh.co.kr/",
         "tier": "primary"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 17,
+      "newOpenings": 0,
+      "terminations": 7,
+      "cancellations": 0,
+      "avgSalesWon": 34234,
+      "avgSalesPerAreaWon": 1103,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "miss-saigon",
@@ -18410,7 +19923,17 @@
         "url": "https://pokeallday.co.kr/",
         "tier": "primary"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 115,
+      "newOpenings": 35,
+      "terminations": 1,
+      "cancellations": 0,
+      "avgSalesWon": 41477,
+      "avgSalesPerAreaWon": 1710,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "cafein24",
@@ -18464,7 +19987,17 @@
         "url": "https://cafein24.co.kr/franchise",
         "tier": "primary"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 35,
+      "newOpenings": 35,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 6537,
+      "avgSalesPerAreaWon": 751,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "hands-coffee",
@@ -18519,7 +20052,17 @@
         "url": "https://handscoffee.com/new_hands/franchise/sub2-1.php",
         "tier": "primary"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 66,
+      "newOpenings": 1,
+      "terminations": 0,
+      "cancellations": 15,
+      "avgSalesWon": 31131,
+      "avgSalesPerAreaWon": 433,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "modern-pilates",
@@ -18629,7 +20172,17 @@
         "url": "https://myfranchise.kr/20210300/",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 38,
+      "newOpenings": 0,
+      "terminations": 1,
+      "cancellations": 2,
+      "avgSalesWon": 29189,
+      "avgSalesPerAreaWon": 355,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "ablegym",
@@ -18848,7 +20401,17 @@
         "url": "https://www.artandheart.co.kr/",
         "tier": "primary"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 444,
+      "newOpenings": 59,
+      "terminations": 7,
+      "cancellations": 50,
+      "avgSalesWon": 8363,
+      "avgSalesPerAreaWon": 579,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gymboree",
@@ -18903,7 +20466,17 @@
         "url": "https://www.koreadaily.com/article/3895498",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 28,
+      "newOpenings": 0,
+      "terminations": 1,
+      "cancellations": 1,
+      "avgSalesWon": 28527,
+      "avgSalesPerAreaWon": 197,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "woorikiri-kids",
@@ -18957,7 +20530,17 @@
         "url": "https://myfranchise.kr/",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 106,
+      "newOpenings": 51,
+      "terminations": 0,
+      "cancellations": 0,
+      "avgSalesWon": 6265,
+      "avgSalesPerAreaWon": 187,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "gyensaeng-nyangpum",
@@ -19014,7 +20597,17 @@
         "url": "https://myfranchise.kr/",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 90,
+      "newOpenings": 45,
+      "terminations": 6,
+      "cancellations": 5,
+      "avgSalesWon": 7538,
+      "avgSalesPerAreaWon": 708,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "chakhan-guzu",
@@ -19068,7 +20661,17 @@
         "url": "https://sosangong.com/franchise-startup-costs/",
         "tier": "aggregator"
       }
-    ]
+    ],
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 37,
+      "newOpenings": 12,
+      "terminations": 2,
+      "cancellations": 0,
+      "avgSalesWon": 22028,
+      "avgSalesPerAreaWon": 937,
+      "fetchedAt": "2026-06-26"
+    }
   },
   {
     "id": "papa-johns",
@@ -19193,6 +20796,16 @@
         "Royalty is 5% of sales; 45% multi-store ownership shows confirmed owner-profit stability.",
         "While the US parent closes ~300 North-American stores in 2026, the Korean entity grows independently. Note: franchise closure rate is estimated from net-growth trend as the disclosure detail was unverified."
       ]
+    },
+    "officialStats": {
+      "year": "2024",
+      "storeCount": 239,
+      "newOpenings": 14,
+      "terminations": 1,
+      "cancellations": 0,
+      "avgSalesWon": 56762,
+      "avgSalesPerAreaWon": 2868,
+      "fetchedAt": "2026-06-26"
     }
   }
 ]

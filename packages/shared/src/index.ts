@@ -65,6 +65,7 @@ export * from "./adapters/tax-calendar-api";
 export * from "./adapters/population";
 export * from "./adapters/support-programs";
 export * from "./adapters/kftc-disclosure";
+export * from "./adapters/kftc-brand-stats";
 export * from "./adapters/commercial-rent";
 export * from "./adapters/building-registry";
 export * from "./startup-tools";

@@ -86,6 +86,29 @@ export type FranchiseBrand = {
    * 적합 상권 — "어떤 위치에 입점하면 잘 맞는가" (오피스·주거·역세권·대학가 등).
    */
   bestLocation?: { ko: string[]; en: string[] };
+  /**
+   * 공정거래위원회 브랜드별 가맹점 현황 (공식). data.go.kr 15110241 자동 보강.
+   *  손큐레이션 storeCount/avgAnnualRevenueWon 을 덮어쓰지 않고 *공식 출처*로 병기.
+   *  scripts/enrich-franchise-official-stats.mts 가 채운다(연 1회). 미매칭 브랜드는 없음.
+   */
+  officialStats?: {
+    /** 기준년도 (예: "2024") */
+    year: string;
+    /** 전국 가맹점수 (공식) */
+    storeCount: number;
+    /** 그 해 신규개점 수 */
+    newOpenings: number;
+    /** 그 해 계약종료 수 */
+    terminations: number;
+    /** 그 해 계약해지 수 */
+    cancellations: number;
+    /** 가맹점 연 평균매출 (만원). 0/미공개면 미설정. */
+    avgSalesWon?: number;
+    /** 면적(3.3㎡)당 연 평균매출 (만원). 0/미공개면 미설정. */
+    avgSalesPerAreaWon?: number;
+    /** 데이터 수집 시점 (YYYY-MM-DD) */
+    fetchedAt: string;
+  };
 };
 
 export type FranchiseCostBreakdown = {

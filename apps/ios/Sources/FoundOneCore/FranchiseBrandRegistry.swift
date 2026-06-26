@@ -85,6 +85,20 @@ public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
     public let cons: FranchiseBrandStringsLocalized?
     public let description: FranchiseBrandStringsLocalized?
     public let bestLocation: FranchiseBrandStringsLocalized?
+    /// 공정거래위원회 브랜드별 가맹점 현황(공식). scripts/enrich-franchise-official-stats.mts 가 채움.
+    ///   손큐레이션 storeCount/avgAnnualRevenueWon 을 덮어쓰지 않고 공식 출처로 병기. 미매칭이면 nil.
+    public let officialStats: FranchiseBrandOfficialStats?
+}
+
+public struct FranchiseBrandOfficialStats: Decodable, Sendable, Hashable {
+    public let year: String
+    public let storeCount: Int
+    public let newOpenings: Int
+    public let terminations: Int
+    public let cancellations: Int
+    public let avgSalesWon: Int?           // 만원 단위 (미공개면 nil)
+    public let avgSalesPerAreaWon: Int?    // 만원 단위, 3.3㎡당 (미공개면 nil)
+    public let fetchedAt: String
 }
 
 // MARK: - Registry

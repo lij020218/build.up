@@ -206,6 +206,43 @@ export function FranchiseApplicationStage() {
           <span>{ko ? `가맹비 ${formatFranchiseCost(fb.franchiseFee)}원` : `Fee ${formatFranchiseCost(fb.franchiseFee)}`}</span>
           <span>{ko ? `로열티 ${fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "만/월" : "없음"}` : `Royalty ${fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "K/mo" : "None"}`}</span>
         </div>
+        {fb.officialStats && (
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap" as const,
+              alignItems: "center",
+              fontSize: "11.5px",
+            }}
+          >
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "999px",
+                background: MIDNIGHT,
+                color: "#fff",
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {ko ? `공정위 ${fb.officialStats.year}` : `KFTC ${fb.officialStats.year}`}
+            </span>
+            <span style={{ color: "var(--muted)" }}>
+              {ko ? `가맹점 ${fb.officialStats.storeCount.toLocaleString()}개` : `${fb.officialStats.storeCount.toLocaleString()} stores`}
+            </span>
+            {fb.officialStats.avgSalesWon ? (
+              <span style={{ color: "var(--muted)" }}>
+                {ko ? `· 점당 연매출 ${formatFranchiseCost(fb.officialStats.avgSalesWon)}원` : `· ${formatFranchiseCost(fb.officialStats.avgSalesWon)}/store`}
+              </span>
+            ) : null}
+            <span style={{ color: "var(--muted)" }}>
+              {ko
+                ? `· 신규 +${fb.officialStats.newOpenings} / 종료 ${fb.officialStats.terminations}`
+                : `· +${fb.officialStats.newOpenings} new / ${fb.officialStats.terminations} closed`}
+            </span>
+          </div>
+        )}
         {fb.franchiseUrl && (
           <a
             href={fb.franchiseUrl}
