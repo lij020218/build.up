@@ -202,7 +202,16 @@ export function useTaskHandlers(
     //  이 경우 *array 순서의 다음 unlocked stage* 를 추정해서 사용 (가장 가까운 path 추정).
     const completedIdx = result.roadmap.stages.findIndex((s) => s.stageId === stageId);
     const explicitIdx = explicitNext ? result.roadmap.stages.findIndex((s) => s.stageId === explicitNext.stageId) : -1;
+    // ⚠️ 2026-06-26 fix (사장님 신고: 19단계 소프트오픈 완료→다음→13단계 대출가이드 점프):
+    //   array 순서 ≠ path 순서. pre-launch(offline 섹션, idx 낮음) → financial-review(tail 섹션,
+    //   idx 높음) 는 *정상* 전환인데 array 거리가 4 초과라 false-positive 로 suspicious 판정 →
+    //   fallback 이 array 상 다음 non-locked(=loan-guide, tail 앞쪽 unlocked) 를 잘못 선택했다.
+    //   nextStageConditions 가 *없는* stage 는 다음이 결정적(조건 fallthrough 불가능) → explicitNext
+    //   를 무조건 신뢰해야 한다. zombie 점프(조건 매칭 실패→default fall through)는 조건분기 보유
+    //   stage 에서만 발생하므로 heuristic 도 그 경우에만 적용.
+    const hasNextConditions = (completedStageDef?.nextStageConditions?.length ?? 0) > 0;
     const isSuspiciousJump =
+      hasNextConditions &&
       completedIdx >= 0 &&
       explicitIdx >= 0 &&
       explicitIdx - completedIdx > 4;
@@ -210,13 +219,13 @@ export function useTaskHandlers(
     let viewingTarget: string | null = null;
     if (isSuspiciousJump) {
       console.warn(
-        `[handleStageContinue] zombie 점프 감지: ${stageId} (idx ${completedIdx}) → ${explicitNext?.stageId} (idx ${explicitIdx}). decisions 의 industry-selection.inputs.categoryId / startup-type.inputs.startupType 누락 의심. array 순서의 직계 다음 unlocked stage 로 fallback.`,
+        `[handleStageContinue] zombie 점프 감지: ${stageId} (idx ${completedIdx}) → ${explicitNext?.stageId} (idx ${explicitIdx}). decisions 의 industry-selection.inputs.categoryId / startup-type.inputs.startupType 누락 의심. array 순서의 직계 다음 available stage 로 fallback.`,
         { decisions: result.decisions },
       );
-      // array 순서로 직계 다음 *locked 가 아닌* stage 찾기 (cluster path 위반은 인정, 큰 점프보다 안전)
+      // array 순서로 직계 다음 *available* stage (완료·locked 제외 — 완료 단계로 되돌아가지 않게)
       const fallback = result.roadmap.stages
         .slice(completedIdx + 1)
-        .find((s) => s.status !== "locked");
+        .find((s) => s.status === "available");
       viewingTarget = fallback?.stageId ?? null;
     } else if (explicitNext && explicitNext.stageId !== result.roadmap.currentStageId) {
       // 정상 path: explicit next 로 viewing
