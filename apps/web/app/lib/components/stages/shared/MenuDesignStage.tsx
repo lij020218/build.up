@@ -493,6 +493,9 @@ function ServiceLineupPanel({ ko }: { ko: boolean }) {
       hint={ko
         ? "서비스명·소요시간·가격을 명시하면 예약·결제·인력 배치 모든 결정의 기준선이 됩니다. (cluster 별 전용 패널 작업 중 — 우선순위 외식 → 카페 → 서비스 순)"
         : "Service name + duration + price = anchor for booking, payment, staffing. (Per-cluster panel WIP — priority food → cafe → service)"}
+      example={ko
+        ? "예: [{\"name\":\"여성 커트\",\"price\":25000,\"category\":\"커트\",\"notes\":\"소요 40분\"},{\"name\":\"뿌리 염색\",\"price\":60000,\"category\":\"염색\",\"notes\":\"소요 90분\"}]"
+        : "e.g., [{\"name\":\"Women's cut\",\"price\":25000,\"category\":\"cut\",\"notes\":\"40 min\"}]"}
     />
   );
 }
@@ -511,6 +514,9 @@ function ProductCatalogPanel({ ko, kind }: { ko: boolean; kind: "retail" | "onli
       hint={ko
         ? "SKU 별 매입가·판매가·초기 재고를 등록하면 재고 관리 카드에 자동 반영됩니다. (전용 패널 작업 중)"
         : "SKU + cost + price + initial stock — auto-syncs to inventory card. (Full panel WIP)"}
+      example={ko
+        ? "예: [{\"name\":\"상품명\",\"price\":19000,\"cost\":9000,\"category\":\"SKU\",\"notes\":\"초기 재고 30\"}]"
+        : "e.g., [{\"name\":\"Item\",\"price\":19000,\"cost\":9000,\"category\":\"SKU\"}]"}
     />
   );
 }
@@ -534,7 +540,7 @@ function SubscriptionPlanPanel({ ko }: { ko: boolean }) {
 // ─────────────────────────────────────────────────────────────────────────
 //  SimplePlaceholderPanel — 클러스터별 패널 작업 중 표시
 // ─────────────────────────────────────────────────────────────────────────
-function SimplePlaceholderPanel({ ko, eyebrow, title, hint }: { ko: boolean; eyebrow: string; title: string; hint: string }) {
+function SimplePlaceholderPanel({ ko, eyebrow, title, hint, example }: { ko: boolean; eyebrow: string; title: string; hint: string; example?: string }) {
   const d = useDashboardCtx();
   const decisions = d.decisions;
   const setDecisions = d.setDecisions;
@@ -565,9 +571,9 @@ function SimplePlaceholderPanel({ ko, eyebrow, title, hint }: { ko: boolean; eye
             : "Until the full cluster panel ships, you can save lineup info as free-form JSON or notes."}
         </div>
         <textarea
-          placeholder={ko
+          placeholder={example ?? (ko
             ? "예: [{\"name\":\"Pro\",\"price\":29000,\"category\":\"plan\",\"notes\":\"AI 무제한 + 1000 calls\"}]"
-            : "e.g., [{\"name\":\"Pro\",\"price\":29000,...}]"}
+            : "e.g., [{\"name\":\"Pro\",\"price\":29000,...}]")}
           value={sel["menu-design-freeform"] ?? currentJson}
           onChange={(e) => {
             setSel((prev: Record<string, string>) => ({ ...prev, "menu-design-freeform": e.target.value }));
