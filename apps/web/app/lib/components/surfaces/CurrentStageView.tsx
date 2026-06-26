@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { usePageNavStore } from "../../stores/page-nav-store";
 import { styles } from "../../styles";
 import { VentureCertificationStage } from "../stages/startup/VentureCertificationStage";
 import { CompanySetupStage } from "../stages/startup/CompanySetupStage";
@@ -222,6 +223,11 @@ export function CurrentStageView() {
     livePermitInsights, setLivePermitInsights,
     liveBudgetBenchmark, setLiveBudgetBenchmark,
   } = d;
+
+  // 페이지형 스테이지의 현재 페이지 — StartupPageNav 가 publish. 마지막 페이지 전이면 푸터를
+  //   "다음 단계로" 대신 "다음 페이지" 로 전환(페이지 건너뛰기·미열람 advance 방지).
+  const pageNav = usePageNavStore((s) => s.nav);
+  const hasMoreReadingPages = !!pageNav && pageNav.page < pageNav.totalPages - 1;
 
   // ── 로컬 상태 (DashboardContext에 포함되지 않는 것들) ──
   const [mvpPage, setMvpPage] = useState(0);
@@ -1072,7 +1078,28 @@ export function CurrentStageView() {
                   }}>
                     {language === "ko" ? "← 이전 단계" : "← Back"}
                   </button>
-                  {correctedProgressPercent >= 100 ? (
+                  {/* ⚠️ 2026-06-26 fix (사장님 신고: "마지막 단계에서 개업 시작 버튼이 활성화 안 됨"):
+                       pre-launch-final 의 required_tasks 5개를 모두 체크하면 buildRoadmapState 가
+                       이 단계를 completedStageIds 에 넣어 correctedProgressPercent 가 100 이 됨
+                       (completedAt 없이 규칙만으로 완료 판정 — workflow.ts evaluateStageCompletion).
+                       그 결과 아래 분기에서 "🚀 개업하기" 대신 "수정 내용 저장" 버튼이 떠서
+                       사용자가 런칭을 트리거할 수 없었음. 아직 개업(businessLaunched) 전이라면
+                       final 단계에서는 항상 런칭 버튼 분기로 떨어지게 예외 처리. */}
+                  {hasMoreReadingPages ? (
+                    /* 아직 읽을 페이지가 남음 → "다음 단계로" 대신 "다음 페이지" (건너뛰기·미열람 advance 방지) */
+                    <button
+                      type="button"
+                      style={{ ...styles.primaryButton }}
+                      onClick={() => {
+                        pageNav!.onChange(pageNav!.page + 1);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      {language === "ko"
+                        ? `다음 페이지 (${pageNav!.page + 2}/${pageNav!.totalPages}) ›`
+                        : `Next page (${pageNav!.page + 2}/${pageNav!.totalPages}) ›`}
+                    </button>
+                  ) : correctedProgressPercent >= 100 && !(stageId === "pre-launch-final" && !businessLaunched) ? (
                     <button
                       type="button"
                       disabled={saveStatus === "saving"}

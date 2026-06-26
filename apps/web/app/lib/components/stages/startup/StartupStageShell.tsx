@@ -15,8 +15,9 @@
  * 모든 startup 단계는 이 shell 을 통해 시각적 일관성을 확보.
  */
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { ExternalLink, type LucideIcon } from "lucide-react";
+import { usePageNavStore } from "../../../stores/page-nav-store";
 
 export const MIDNIGHT = "#191970";
 export const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
@@ -301,6 +302,17 @@ export function StartupPageNav({
   onChange: (p: number) => void;
   ko?: boolean;
 }) {
+  // 현재 페이지 네비 상태를 공유 store 에 publish → 부모 푸터(CurrentStageView)가 페이지 인식형
+  //   "다음 페이지 / 다음 단계로" 버튼을 렌더. 언마운트(비페이지형 스테이지로 전환) 시 clear.
+  const setNav = usePageNavStore((s) => s.setNav);
+  // onChange 를 ref 로 — inline 핸들러를 넘기는 스테이지에서 매 렌더 publish→리렌더 루프 방지.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  useEffect(() => {
+    setNav({ page, totalPages, onChange: (p) => onChangeRef.current(p) });
+    return () => setNav(null);
+  }, [page, totalPages, setNav]);
+
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       <button
