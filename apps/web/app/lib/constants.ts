@@ -14,7 +14,7 @@ export const SURFACE_HREFS: Record<DashboardSurface, string> = {
   reports: "/reports"
 };
 export const VENDOR_URL_MAP: Record<string, string> = {
-  "홈택스(Hometax)": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml",
+  "홈택스(Hometax)": "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml",
   "비즈플레이(Bizplay)": "https://www.bizplay.co.kr",
   "캐시노트(CashNote)": "https://cashnote.kr",
   "마켓컬리 비즈(Kurly Biz)": "https://biz.kurly.com",

@@ -257,7 +257,7 @@ export const TAX_GUIDE_CONTENT: StageContent = {
           kind: "linkCards",
           eyebrow: "바로가기",
           links: [
-            { name: "홈택스", desc: "사업자등록·세금계산서·신고", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml", badge: "홈" },
+            { name: "홈택스", desc: "사업자등록·세금계산서·신고", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", badge: "홈" },
             { name: "캐시노트 (무료)", desc: "소상공인 매출·경비 자동 분류", url: "https://cashnote.kr", badge: "캐" },
             { name: "삼쩜삼", desc: "프리랜서·소형 사업자 종소세 환급", url: "https://3o3.co.kr", badge: "3" },
             { name: "자비스 (Jobis)", desc: "스타트업·법인 회계·세무 SaaS", url: "https://jobis.co", badge: "자" },

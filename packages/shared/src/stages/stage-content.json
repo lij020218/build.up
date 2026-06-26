@@ -117,7 +117,7 @@
             "links": [
               {
                 "label": "홈택스 사업자등록",
-                "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml"
+                "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml"
               },
               {
                 "label": "정부24 사업자등록",
@@ -721,7 +721,7 @@
             "담배 판매 — 담배소매인 지정 별도",
             "의약품·의료기기 — 별도 인허가"
           ],
-          "externalUrl": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml",
+          "externalUrl": "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml",
           "description": "일반 소매(잡화·의류·생활용품)는 사업자등록만으로 영업 가능. 단, 특수 품목은 별도 인허가"
         },
         "requiredPermits": [
@@ -1155,7 +1155,7 @@
               {
                 "name": "홈택스",
                 "desc": "사업자등록·세금계산서·신고",
-                "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml",
+                "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml",
                 "badge": "홈"
               },
               {
@@ -5082,8 +5082,8 @@
               },
               {
                 "name": "노동OK",
-                "desc": "노동부 공식 무료 노무 상담 포털",
-                "url": "https://www.nodongok.com",
+                "desc": "무료 노동법률 상담·노무 서식 포털",
+                "url": "https://www.nodong.or.kr",
                 "badge": "노동"
               }
             ]
@@ -5156,7 +5156,7 @@
               {
                 "name": "홈택스",
                 "desc": "원천세 매월 신고·납부, 사업자등록·연말정산",
-                "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml",
+                "url": "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml",
                 "badge": "홈"
               },
               {

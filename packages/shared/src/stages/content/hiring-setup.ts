@@ -159,7 +159,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           links: [
             { name: "고용노동부 표준 근로계약서", desc: "공식 근로계약서 무료 다운로드 (정규·기간제·단시간)", url: "https://www.moel.go.kr/policy/policydata/list.do", badge: "고용" },
             { name: "최저임금위원회", desc: `2026년 최저임금 ${WAGE_D}원 · 모의 계산기`, url: "https://www.minimumwage.go.kr", badge: "최임" },
-            { name: "노동OK", desc: "노동부 공식 무료 노무 상담 포털", url: "https://www.nodongok.com", badge: "노동" },
+            { name: "노동OK", desc: "무료 노동법률 상담·노무 서식 포털", url: "https://www.nodong.or.kr", badge: "노동" },
           ],
         },
         { kind: "interactive", ref: "hiringContractDone" },
@@ -194,7 +194,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           eyebrow: "보험·세금 공식 사이트 — 클릭하면 바로 이동",
           links: [
             { name: "4대보험 정보연계센터", desc: "국민연금·건강·고용·산재 통합 신고 (필수, 채용 14일 이내)", url: "https://www.4insure.or.kr", badge: "4대" },
-            { name: "홈택스", desc: "원천세 매월 신고·납부, 사업자등록·연말정산", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml", badge: "홈" },
+            { name: "홈택스", desc: "원천세 매월 신고·납부, 사업자등록·연말정산", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", badge: "홈" },
             { name: "국민건강보험공단", desc: "직원 보험료 조회·납부", url: "https://www.nhis.or.kr", badge: "건강" },
             { name: "근로복지공단", desc: "산재·고용보험 가입·신고 (사업주 부담)", url: "https://www.kcomwel.or.kr", badge: "근로" },
           ],
