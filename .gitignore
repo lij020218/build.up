@@ -10,3 +10,9 @@ coverage
 .env.local
 .env.*.local
 .mcp.json
+
+# build outputs (Xcode DerivedData, SPM, TS incremental)
+apps/ios/build/
+apps/ios/.build/
+**/DerivedData/
+*.tsbuildinfo
