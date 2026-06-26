@@ -392,7 +392,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "초기 스타트업 (매월 선발)", en: "Early startups (monthly selection)" },
     benefit: { ko: "월간 피칭 대회 + 투자 연계 + 디캠프/프론트원 입주 기회 (최대 1년)", en: "Monthly pitch + investment linkage + D.CAMP/FRONT1 residency (up to 1yr)" },
     season: { ko: "매월 진행", en: "Monthly" },
-    url: "https://dcamp.kr/dday",
+    // 2026-06-26 검증: dcamp.kr/dday 폐지 → 현행 D.DAY 포털 서브도메인
+    url: "https://dday.dcamp.kr/",
     forSmallBiz: false,
     forFranchise: false,
     highlight: true,
@@ -468,7 +469,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "서울 소재 (예비)창업자", en: "Seoul-based (pre-)founders" },
     benefit: { ko: "사무공간 6개월~1년 무상 + 창업 프로그램 + 네트워킹", en: "Free office 6-12mo + programs + networking" },
     season: { ko: "연 1~2회 공고 (3월, 9월)", en: "1-2 notices/year (Mar, Sep)" },
-    url: "https://seoulstartuphub.com",
+    // 2026-06-26 검증: 메인 도메인 정상(입주 신청은 startup-plus.kr 플랫폼)
+    url: "https://seoulstartuphub.com/",
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
@@ -630,7 +632,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "폐업 시 인테리어 철거·폐기물 처리비 최대 600만원. 보조금 (상환 X).", en: "Up to 6M KRW for store removal/disposal. Grant (no repayment)." },
     amount: "최대 600만원 (보조금)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://www.sbiz.or.kr/nhrp",
+    url: "https://www.sbiz.or.kr/nhrp/main.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -649,7 +651,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "폐업 후 재창업 시 최대 2,000만원. 교육·컨설팅 패키지 포함.", en: "Up to 20M KRW restart fund + training/consulting." },
     amount: "최대 2,000만원 (보조금)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://www.sbiz.or.kr/nhrp",
+    url: "https://www.sbiz.or.kr/nhrp/main.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -727,11 +729,12 @@ export const startupPrograms: StartupProgram[] = [
     category: "government",
     name: { ko: "모두의 창업 프로젝트 2026", en: "Modoo Startup Project 2026" },
     organizer: { ko: "중소벤처기업부 + 창업진흥원", en: "MSS + KISED" },
-    target: { ko: "예비창업자 + 7년 이내 창업기업 (5,000명 모집)", en: "Pre-founders + 7-yr companies (5,000 selected)" },
+    target: { ko: "예비창업자 + 7년 이내 창업기업 (2차 1만명 모집)", en: "Pre-founders + 7-yr companies (10,000 in round 2)" },
     benefit: { ko: "사업화 자금 + 글로벌 진출 + 멘토링 + 투자 연계", en: "Biz funds + global expansion + mentoring + investment" },
     amount: "최대 10억원 (단계별 차등)",
-    season: { ko: "2026 1Q 통합 공고, 2-5월 신청", en: "Integrated launch 2026 Q1" },
-    url: "https://www.k-startup.go.kr",
+    // 2026-06-26 검증: 1차(3.26~5.15) 마감, 2차 모집 7월 초 1만명 확대 — 활성 유지(삭제 아님)
+    season: { ko: "2026 2차 모집 7월 초 시작 (1만명 확대)", en: "Round 2 opens early Jul 2026 (10,000)" },
+    url: "https://www.modoo.or.kr",
     forSmallBiz: true,
     forFranchise: false,
     highlight: true,
@@ -771,22 +774,8 @@ export const startupPrograms: StartupProgram[] = [
     maxAge: 35,
     applicationStatus: "upcoming",
   },
-  {
-    id: "naver-ai-hackathon",
-    category: "competition",
-    name: { ko: "네이버 AI 해커톤", en: "NAVER AI Hackathon" },
-    organizer: { ko: "네이버 클라우드", en: "NAVER Cloud" },
-    target: { ko: "AI·머신러닝 개발자·연구자", en: "AI/ML developers & researchers" },
-    benefit: { ko: "상금 1천만원 + 네이버 클라우드 크레딧 1억원 + 입사 기회", en: "10M KRW prize + 100M cloud credits + job offers" },
-    amount: "총 상금·크레딧 1.1억원",
-    season: { ko: "매년 하반기 (8-10월)", en: "Annual H2 (Aug-Oct)" },
-    url: "https://github.com/naver/ai-hackathon",
-    forSmallBiz: false,
-    forFranchise: false,
-    dataYear: "2026",
-    industries: ["startup-tech"],
-    applicationStatus: "upcoming",
-  },
+  // 2026-06-26 삭제: 네이버 AI 해커톤 — github.com/naver/ai-hackathon 2018년 자료에서 멈춤,
+  //   현행 모집 페이지 없음. WebSearch로도 2026 진행 확인 불가 → 만료 제거.
   {
     id: "snowflake-hackathon-2026",
     category: "competition",
@@ -809,8 +798,9 @@ export const startupPrograms: StartupProgram[] = [
     organizer: { ko: "고용노동부 + 한국산업인력공단", en: "MOEL + HRDK" },
     target: { ko: "K-디지털 트레이닝 수료생·디지털 인재", en: "K-Digital Training graduates & digital talents" },
     benefit: { ko: "상금 + 채용 연계 + 현업 멘토링", en: "Prize + hiring + mentoring" },
-    season: { ko: "매년 하반기", en: "Annual H2" },
-    url: "http://www.k-digitalhackathon.kr/",
+    season: { ko: "매년 하반기 (제8회 진행)", en: "Annual H2 (8th edition)" },
+    // 2026-06-26 검증: k-digitalhackathon.kr 폐지, HRD-Net→고용24 통합. 대회는 진행 중(제8회).
+    url: "https://www.work24.go.kr/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -931,12 +921,13 @@ export const startupPrograms: StartupProgram[] = [
   {
     id: "shinhan-sol",
     category: "corporate",
-    name: { ko: "신한 SOL 인큐베이팅", en: "Shinhan SOL Incubating" },
+    // 2026-06-26 검증: "SOL 인큐베이팅"은 현행 미존재 → 실제 운영 프로그램 신한 퓨처스랩으로 정정.
+    name: { ko: "신한 퓨처스랩", en: "Shinhan Future's Lab" },
     organizer: { ko: "신한금융그룹", en: "Shinhan Financial Group" },
     target: { ko: "핀테크·디지털금융 (예비)창업자", en: "Fintech & digital finance founders" },
     benefit: { ko: "투자 + 신한 인프라·고객 연계", en: "Investment + Shinhan infra/customer" },
     season: { ko: "연 1-2회", en: "1-2 cohorts/year" },
-    url: "https://www.shinhanfutureslab.com/",
+    url: "https://futureslab.kr/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -951,7 +942,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "ICT·AI·통신 인프라 활용 창업자", en: "ICT/AI/telecom-leveraging founders" },
     benefit: { ko: "투자 + SK 인프라 PoC + 글로벌 진출", en: "Investment + SK infra PoC + global expansion" },
     season: { ko: "연 1-2회 모집", en: "1-2 cohorts/year" },
-    url: "https://truinnovation.sktelecom.com/",
+    // 2026-06-26 검증: truinnovation.sktelecom.com 폐지 → 현행 공식 도메인
+    url: "https://www.true-inno.com/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -1032,13 +1024,14 @@ export const startupPrograms: StartupProgram[] = [
   {
     id: "softbank-ventures-asia",
     category: "private",
-    name: { ko: "소프트뱅크 벤처스 아시아", en: "SoftBank Ventures Asia" },
-    organizer: { ko: "SoftBank Ventures Asia", en: "SoftBank Ventures Asia" },
+    // 2026-06-26 검증: 2024.2 사명 변경 소프트뱅크벤처스→SBVA, 공식 도메인 sbvacorp.com
+    name: { ko: "SBVA (구 소프트뱅크벤처스)", en: "SBVA (fmr. SoftBank Ventures Asia)" },
+    organizer: { ko: "SBVA", en: "SBVA" },
     target: { ko: "시리즈A~C 한국·아시아 스타트업", en: "Korea & Asia Series A-C" },
     benefit: { ko: "대규모 투자 + 글로벌 네트워크 + 일본·아시아 진출", en: "Mega investment + global network + Japan/Asia entry" },
     amount: "Series A-C (10억-100억+)",
     season: { ko: "상시", en: "Always" },
-    url: "https://www.sbva.com/",
+    url: "https://sbvacorp.com/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -1108,7 +1101,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "10주 인큐베이션 + 시드 투자 + 글로벌 네트워크", en: "10-week residency + seed + global network" },
     amount: "$100k+ 시드",
     season: { ko: "연 2회 코호트", en: "2 cohorts/year" },
-    url: "https://www.antler.co/locations/seoul",
+    // 2026-06-26 검증: /locations/seoul 경로 폐지 → 안정 메인 도메인
+    url: "https://www.antler.co/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -1193,15 +1187,16 @@ export const startupPrograms: StartupProgram[] = [
     organizer: { ko: "서울시", en: "Seoul Metropolitan Government" },
     target: { ko: "서울 거주 여성 (예비)창업자", en: "Seoul-resident women founders" },
     benefit: { ko: "상금 + 서울창업허브 입주 우선권 + 멘토링", en: "Prize + Seoul Startup Hub priority + mentoring" },
-    season: { ko: "매년 여름", en: "Annual summer" },
-    url: "https://www.seoulwoman.or.kr/",
+    season: { ko: "매년 봄 (3~4월 접수)", en: "Annual spring (Mar-Apr)" },
+    // 2026-06-26 검증: 주관기관은 서울여성능력개발원(seoulwomanup), seoulwoman.or.kr은 별도기관 오기.
+    //   2026 제6회 접수 3.30~4.23 마감 → 미검증 deadline(2026-07-15) 제거(허위 D-day 방지).
+    url: "https://swrd.seoulwomanup.or.kr/",
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
     regions: ["서울"],
     applicationStatus: "upcoming",
     fundingType: "grant",
-    applicationDeadline: "2026-07-15",
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -1460,7 +1455,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "금융·부동산·농업 등 디지털 혁신 분야 스타트업", en: "Finance / real estate / agriculture digital innovation startups" },
     benefit: { ko: "NH디지털혁신캠퍼스(양재) 입주 + 범농협 계열사 협업 + 투자 + 1년 액셀러레이팅", en: "NH Digital Innovation Campus (Yangjae) + NH affiliate partnership + investment + 1yr accel" },
     season: { ko: "매년 상반기 공고 — 8기 진행", en: "Annual H1 (now cohort 8)" },
-    url: "http://nhd-challengeplus.com/",
+    // 2026-06-26 검증: http nhd-challengeplus.com 불안정 → 운영사 포털(https) NH OPEN BUSINESS HUB
+    url: "https://nhdic.com/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -2069,7 +2065,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "근로자 10명 미만, 월보수 270만 미만 신규가입", en: "<10 employees, new enrollees" },
     benefit: { ko: "고용보험·국민연금 80% 지원, 최대 36개월", en: "80% of EI/NP, up to 36mo" },
     amount: "보험료 80% 지원", season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://insurancesupport.or.kr/", forSmallBiz: true, forFranchise: true, dataYear: "2026",
+    // 2026-06-26 검증: insurancesupport.or.kr는 http 전용(경고) → 신청 채널 4대사회보험 정보연계센터로 통일
+    url: "https://www.4insure.or.kr", forSmallBiz: true, forFranchise: true, dataYear: "2026",
     applicationStatus: "open", fundingType: "other",
   },
   // ── 기타 ──
@@ -2088,6 +2085,20 @@ export const startupPrograms: StartupProgram[] = [
 /** Get programs filtered by category */
 export function getProgramsByCategory(cat: ProgramCategory): StartupProgram[] {
   return startupPrograms.filter(p => p.category === cat);
+}
+
+/**
+ * 만료 여부 — 마감 상태이거나 알려진 마감일이 지났으면 true.
+ *  딥링크 만료 사업이 목록에 남아 죽은 링크로 보이는 문제(2026-06-26 QA)를 막기 위함.
+ *  상시·연중 사업(deadline·closed 둘 다 없음)은 만료로 보지 않는다.
+ */
+export function isProgramExpired(p: StartupProgram, now: Date = new Date()): boolean {
+  if (p.applicationStatus === "closed") return true;
+  if (p.applicationDeadline) {
+    const d = new Date(p.applicationDeadline);
+    if (!Number.isNaN(d.getTime()) && d < now) return true;
+  }
+  return false;
 }
 
 /** Get highlighted programs (for home surface) */

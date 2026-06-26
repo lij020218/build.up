@@ -9,6 +9,7 @@ import {
   getProgramCategoryColor,
   getProgramCategoryLabel,
   formatBudgetPresetLabel,
+  isProgramExpired,
   type ProgramCategory,
 } from "@foundone/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
@@ -217,7 +218,9 @@ export function LoanGuideStage() {
   // 2026-06-26 fix: 업종 무관 노출 버그 — industries 가 지정된 프로그램은 내 업종일 때만 노출.
   //   (미용실에 startup-tech·agriculture 전용 프로그램이 뜨던 문제) industries 미설정 = 전원 대상.
   const matched = getMatchedPrograms(startupType).filter(
-    (p) => !p.industries || p.industries.length === 0 || (!!industryCategoryId && p.industries.includes(industryCategoryId)),
+    (p) =>
+      !isProgramExpired(p) &&
+      (!p.industries || p.industries.length === 0 || (!!industryCategoryId && p.industries.includes(industryCategoryId))),
   );
   const filtered = progFilter === "all" ? matched : matched.filter(p => p.category === progFilter);
   const categories: Array<{ id: ProgramCategory | "all"; label: string }> = [

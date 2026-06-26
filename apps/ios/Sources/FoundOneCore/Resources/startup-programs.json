@@ -505,7 +505,7 @@
       "ko": "매월 진행",
       "en": "Monthly"
     },
-    "url": "https://dcamp.kr/dday",
+    "url": "https://dday.dcamp.kr/",
     "forSmallBiz": false,
     "forFranchise": false,
     "highlight": true,
@@ -654,7 +654,7 @@
       "ko": "연 1~2회 공고 (3월, 9월)",
       "en": "1-2 notices/year (Mar, Sep)"
     },
-    "url": "https://seoulstartuphub.com",
+    "url": "https://seoulstartuphub.com/",
     "forSmallBiz": true,
     "forFranchise": false,
     "dataYear": "2026",
@@ -970,7 +970,7 @@
       "ko": "연중 상시",
       "en": "Year-round"
     },
-    "url": "https://www.sbiz.or.kr/nhrp",
+    "url": "https://www.sbiz.or.kr/nhrp/main.do",
     "forSmallBiz": true,
     "forFranchise": true,
     "dataYear": "2026",
@@ -1008,7 +1008,7 @@
       "ko": "연중 상시",
       "en": "Year-round"
     },
-    "url": "https://www.sbiz.or.kr/nhrp",
+    "url": "https://www.sbiz.or.kr/nhrp/main.do",
     "forSmallBiz": true,
     "forFranchise": true,
     "dataYear": "2026",
@@ -1160,8 +1160,8 @@
       "en": "MSS + KISED"
     },
     "target": {
-      "ko": "예비창업자 + 7년 이내 창업기업 (5,000명 모집)",
-      "en": "Pre-founders + 7-yr companies (5,000 selected)"
+      "ko": "예비창업자 + 7년 이내 창업기업 (2차 1만명 모집)",
+      "en": "Pre-founders + 7-yr companies (10,000 in round 2)"
     },
     "benefit": {
       "ko": "사업화 자금 + 글로벌 진출 + 멘토링 + 투자 연계",
@@ -1169,10 +1169,10 @@
     },
     "amount": "최대 10억원 (단계별 차등)",
     "season": {
-      "ko": "2026 1Q 통합 공고, 2-5월 신청",
-      "en": "Integrated launch 2026 Q1"
+      "ko": "2026 2차 모집 7월 초 시작 (1만명 확대)",
+      "en": "Round 2 opens early Jul 2026 (10,000)"
     },
-    "url": "https://www.k-startup.go.kr",
+    "url": "https://www.modoo.or.kr",
     "forSmallBiz": true,
     "forFranchise": false,
     "highlight": true,
@@ -1248,39 +1248,6 @@
     "applicationStatus": "upcoming"
   },
   {
-    "id": "naver-ai-hackathon",
-    "category": "competition",
-    "name": {
-      "ko": "네이버 AI 해커톤",
-      "en": "NAVER AI Hackathon"
-    },
-    "organizer": {
-      "ko": "네이버 클라우드",
-      "en": "NAVER Cloud"
-    },
-    "target": {
-      "ko": "AI·머신러닝 개발자·연구자",
-      "en": "AI/ML developers & researchers"
-    },
-    "benefit": {
-      "ko": "상금 1천만원 + 네이버 클라우드 크레딧 1억원 + 입사 기회",
-      "en": "10M KRW prize + 100M cloud credits + job offers"
-    },
-    "amount": "총 상금·크레딧 1.1억원",
-    "season": {
-      "ko": "매년 하반기 (8-10월)",
-      "en": "Annual H2 (Aug-Oct)"
-    },
-    "url": "https://github.com/naver/ai-hackathon",
-    "forSmallBiz": false,
-    "forFranchise": false,
-    "dataYear": "2026",
-    "industries": [
-      "startup-tech"
-    ],
-    "applicationStatus": "upcoming"
-  },
-  {
     "id": "snowflake-hackathon-2026",
     "category": "competition",
     "name": {
@@ -1332,10 +1299,10 @@
       "en": "Prize + hiring + mentoring"
     },
     "season": {
-      "ko": "매년 하반기",
-      "en": "Annual H2"
+      "ko": "매년 하반기 (제8회 진행)",
+      "en": "Annual H2 (8th edition)"
     },
-    "url": "http://www.k-digitalhackathon.kr/",
+    "url": "https://www.work24.go.kr/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -1568,8 +1535,8 @@
     "id": "shinhan-sol",
     "category": "corporate",
     "name": {
-      "ko": "신한 SOL 인큐베이팅",
-      "en": "Shinhan SOL Incubating"
+      "ko": "신한 퓨처스랩",
+      "en": "Shinhan Future's Lab"
     },
     "organizer": {
       "ko": "신한금융그룹",
@@ -1587,7 +1554,7 @@
       "ko": "연 1-2회",
       "en": "1-2 cohorts/year"
     },
-    "url": "https://www.shinhanfutureslab.com/",
+    "url": "https://futureslab.kr/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -1619,7 +1586,7 @@
       "ko": "연 1-2회 모집",
       "en": "1-2 cohorts/year"
     },
-    "url": "https://truinnovation.sktelecom.com/",
+    "url": "https://www.true-inno.com/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -1760,12 +1727,12 @@
     "id": "softbank-ventures-asia",
     "category": "private",
     "name": {
-      "ko": "소프트뱅크 벤처스 아시아",
-      "en": "SoftBank Ventures Asia"
+      "ko": "SBVA (구 소프트뱅크벤처스)",
+      "en": "SBVA (fmr. SoftBank Ventures Asia)"
     },
     "organizer": {
-      "ko": "SoftBank Ventures Asia",
-      "en": "SoftBank Ventures Asia"
+      "ko": "SBVA",
+      "en": "SBVA"
     },
     "target": {
       "ko": "시리즈A~C 한국·아시아 스타트업",
@@ -1780,7 +1747,7 @@
       "ko": "상시",
       "en": "Always"
     },
-    "url": "https://www.sbva.com/",
+    "url": "https://sbvacorp.com/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -1912,7 +1879,7 @@
       "ko": "연 2회 코호트",
       "en": "2 cohorts/year"
     },
-    "url": "https://www.antler.co/locations/seoul",
+    "url": "https://www.antler.co/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -2078,10 +2045,10 @@
       "en": "Prize + Seoul Startup Hub priority + mentoring"
     },
     "season": {
-      "ko": "매년 여름",
-      "en": "Annual summer"
+      "ko": "매년 봄 (3~4월 접수)",
+      "en": "Annual spring (Mar-Apr)"
     },
-    "url": "https://www.seoulwoman.or.kr/",
+    "url": "https://swrd.seoulwomanup.or.kr/",
     "forSmallBiz": true,
     "forFranchise": false,
     "dataYear": "2026",
@@ -2089,8 +2056,7 @@
       "서울"
     ],
     "applicationStatus": "upcoming",
-    "fundingType": "grant",
-    "applicationDeadline": "2026-07-15"
+    "fundingType": "grant"
   },
   {
     "id": "redo-success-package",
@@ -2659,7 +2625,7 @@
       "ko": "매년 상반기 공고 — 8기 진행",
       "en": "Annual H1 (now cohort 8)"
     },
-    "url": "http://nhd-challengeplus.com/",
+    "url": "https://nhdic.com/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -4285,7 +4251,7 @@
       "ko": "연중 상시",
       "en": "Year-round"
     },
-    "url": "https://insurancesupport.or.kr/",
+    "url": "https://www.4insure.or.kr",
     "forSmallBiz": true,
     "forFranchise": true,
     "dataYear": "2026",
