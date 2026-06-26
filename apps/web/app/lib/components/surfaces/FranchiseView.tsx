@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import {
-  franchiseBrands,
+  franchiseBrandsAll,
   computeOverallScore,
   formatFranchiseCost,
   getScoreColor,
@@ -23,7 +23,7 @@ const TEXT_SUBTLE = "rgba(15,23,42,0.45)";
 export function FranchiseView() {
   const { language } = useDashboardCtx();
   const ko = language === "ko";
-  const allBrands = franchiseBrands;
+  const allBrands = franchiseBrandsAll;
   const categories = [
     { id: "all", label: ko ? "전체" : "All" },
     { id: "cafe-dessert", label: ko ? "카페·디저트" : "Cafe" },
@@ -39,6 +39,7 @@ export function FranchiseView() {
   const [filterCat, setFilterCat] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(60);
   const q = searchQuery.trim().toLowerCase();
   const filtered = allBrands.filter(b => {
     if (filterCat !== "all" && b.categoryId !== filterCat) return false;
@@ -48,7 +49,13 @@ export function FranchiseView() {
     }
     return true;
   });
-  const sorted = [...filtered].sort((a, b) => computeOverallScore(b.scores) - computeOverallScore(a.scores));
+  // 큐레이션(편집 검증) 우선 → 그 다음 종합 점수. 공정위 자동 브랜드는 뒤에서 점수순.
+  const sorted = [...filtered].sort((a, b) => {
+    const ta = a.tier === "kftc" ? 1 : 0, tb = b.tier === "kftc" ? 1 : 0;
+    if (ta !== tb) return ta - tb;
+    return computeOverallScore(b.scores) - computeOverallScore(a.scores);
+  });
+  const visible = sorted.slice(0, visibleCount);
   const selectedBrand = selectedBrandId ? allBrands.find(b => b.id === selectedBrandId) ?? null : null;
 
   return (
@@ -113,9 +120,10 @@ export function FranchiseView() {
 
       {/* Brand cards grid */}
       <div className="bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
-        {sorted.map(fb => {
+        {visible.map(fb => {
           const overall = computeOverallScore(fb.scores);
-          const hasDetailedData = !!(fb.sources?.length || fb.pros || fb.cons);
+          const isKftc = fb.tier === "kftc";
+          const hasDetailedData = !isKftc && !!(fb.sources?.length || fb.pros || fb.cons);
 
           return (
             <button
@@ -146,6 +154,11 @@ export function FranchiseView() {
                         ✓
                       </span>
                     )}
+                    {isKftc && (
+                      <span title={ko ? "공정위 공개데이터 자동 수록 · 점수는 실데이터 산출" : "Auto-listed from KFTC open data"} style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "999px", background: "rgba(25,25,112,0.06)", color: "rgba(25,25,112,0.7)", fontWeight: 600 }}>
+                        {ko ? "공정위" : "KFTC"}
+                      </span>
+                    )}
                   </div>
                   <div style={{
                     fontSize: "13px", color: "var(--muted)", lineHeight: 1.4,
@@ -167,10 +180,10 @@ export function FranchiseView() {
               {/* Row 2: Key metrics */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
                 {[
-                  { l: ko ? "창업비용" : "Startup", v: formatFranchiseCost(fb.startupCostWon) },
-                  { l: ko ? "연매출" : "Revenue", v: formatFranchiseCost(fb.avgAnnualRevenueWon) },
-                  { l: ko ? "폐점률" : "Closure", v: `${fb.closureRate}%` },
-                  { l: ko ? "매장수" : "Stores", v: fb.storeCount.toLocaleString() },
+                  { l: ko ? "창업비용" : "Startup", v: fb.startupCostWon > 0 ? formatFranchiseCost(fb.startupCostWon) : "—" },
+                  { l: ko ? "연매출" : "Revenue", v: fb.avgAnnualRevenueWon > 0 ? formatFranchiseCost(fb.avgAnnualRevenueWon) : "—" },
+                  { l: ko ? "폐점률" : "Closure", v: fb.closureRate > 0 ? `${fb.closureRate}%` : "—" },
+                  { l: ko ? "매장수" : "Stores", v: fb.storeCount > 0 ? fb.storeCount.toLocaleString() : "—" },
                 ].map(m => (
                   <div key={m.l} style={{ padding: "6px 4px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", textAlign: "center" }}>
                     <div style={{ fontSize: "13px", fontWeight: 700 }}>{m.v}</div>
@@ -212,6 +225,25 @@ export function FranchiseView() {
           );
         })}
       </div>
+
+      {visibleCount < sorted.length && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 18 }}>
+          <button
+            type="button"
+            onClick={() => setVisibleCount(c => c + 60)}
+            style={{
+              padding: "11px 26px", borderRadius: 999, border: `1px solid ${MIDNIGHT_BORDER}`,
+              background: MIDNIGHT_TINT, color: MIDNIGHT, fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            {ko ? `더 보기 (${sorted.length - visibleCount}개 남음)` : `Show more (${sorted.length - visibleCount} left)`}
+          </button>
+          <span style={{ fontSize: 11, color: TEXT_SUBTLE }}>
+            {ko ? `${visible.length} / 총 ${sorted.length}개 브랜드` : `${visible.length} / ${sorted.length} brands`}
+          </span>
+        </div>
+      )}
 
       {sorted.length === 0 && (
         <div style={emptyBoxStyle}>

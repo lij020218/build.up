@@ -68,6 +68,9 @@ private struct FranchiseBrandView: Identifiable, Equatable {
     // 공정위 공식 통계 (data.go.kr 15110241) — 미매칭이면 nil
     let officialStats: FranchiseBrandOfficialStats?
 
+    // 공정위 공개데이터 자동 수록 브랜드 (tier "kftc") — 배지·정렬용
+    let isKftc: Bool
+
     init(_ b: FranchiseBrand) {
         self.id = b.id
         self.name = b.name.ko
@@ -95,6 +98,7 @@ private struct FranchiseBrandView: Identifiable, Equatable {
         self.dataYear = b.dataYear
         self.confidence = b.confidence
         self.officialStats = b.officialStats
+        self.isKftc = b.tier == "kftc"
     }
 
     private static func categoryLabel(_ id: String) -> String {
@@ -153,8 +157,11 @@ public struct FranchiseView: View {
             }
             return true
         }
-        // overall score 내림차순 정렬 (웹과 동일)
-        return base.sorted { overallScore($0) > overallScore($1) }
+        // 큐레이션(편집 검증) 우선 → 그 다음 overall score 내림차순 (웹 franchiseBrandsAll 과 동일)
+        return base.sorted { a, b in
+            if a.isKftc != b.isKftc { return !a.isKftc }
+            return overallScore(a) > overallScore(b)
+        }
     }
 
     private func categoryCount(_ id: String) -> Int {
@@ -295,7 +302,8 @@ public struct FranchiseView: View {
     // MARK: - Brand cards (vertical stack — mobile 1-col)
 
     private var brandCards: some View {
-        VStack(spacing: 12) {
+        // 공정위 자동 브랜드 합류로 최대 ~1,600개 → LazyVStack 으로 on-demand 렌더(성능).
+        LazyVStack(spacing: 12) {
             ForEach(filteredBrands) { brand in
                 FranchiseBrandCard(brand: brand) {
                     selectedBrand = brand
@@ -388,11 +396,20 @@ private struct FranchiseBrandCard: View {
             // Row 1: Name + category chip
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(brand.name)
-                        .font(.system(size: 18, weight: .bold))
-                        .tracking(-0.36)
-                        .foregroundStyle(BUColor.ink)
-                        .lineLimit(1)
+                    HStack(spacing: 5) {
+                        Text(brand.name)
+                            .font(.system(size: 18, weight: .bold))
+                            .tracking(-0.36)
+                            .foregroundStyle(BUColor.ink)
+                            .lineLimit(1)
+                        if brand.isKftc {
+                            Text("공정위")
+                                .font(.system(size: 9.5, weight: .heavy))
+                                .foregroundStyle(BUColor.midnight.opacity(0.7))
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                        }
+                    }
                     Text(brand.tagline)
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(BUColor.inkMuted)

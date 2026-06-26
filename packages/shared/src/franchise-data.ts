@@ -20,6 +20,11 @@ export type FranchiseCostItem = {
 
 export type FranchiseBrand = {
   id: string;
+  /**
+   * 데이터 출처 티어. 미설정/"curated" = 손큐레이션(편집 검증). "kftc" = 공정위 공개데이터
+   *  자동 생성(점수는 실데이터 산출, confidence "low"). UI 가 배지로 구분.
+   */
+  tier?: "curated" | "kftc";
   subIndustryIds: string[];
   specialtyIds?: string[];
   categoryId: string;
@@ -130,7 +135,13 @@ export type FranchiseCostBreakdown = {
 //   - iOS:       apps/ios/Sources/FoundOneCore/Resources/franchise-brands.json → 이 파일로 symlink
 //   - 웹:        이 import 로 직접 로드
 import franchiseBrandsJson from "./franchise-brands.json";
+import franchiseBrandsKftcJson from "./franchise-brands-kftc.json";
+/** 손큐레이션 브랜드 (편집 검증). 기존 소비처 호환을 위해 이 export 는 큐레이션만 유지. */
 export const franchiseBrands: FranchiseBrand[] = franchiseBrandsJson as unknown as FranchiseBrand[];
+/** 공정위 공개데이터 자동 생성 브랜드 (tier "kftc", 점수는 실데이터 산출). */
+export const franchiseBrandsKftc: FranchiseBrand[] = franchiseBrandsKftcJson as unknown as FranchiseBrand[];
+/** 전체 = 큐레이션 + 공정위. 큐레이션이 항상 앞(우선 노출). 브라우즈·lookup 의 기본 풀. */
+export const franchiseBrandsAll: FranchiseBrand[] = [...franchiseBrands, ...franchiseBrandsKftc];
 
 // ── 독립 창업 평균 비용 데이터 (프랜차이즈 아닌 독립 개인 창업 시) ──────────
 // 출처: 소상공인시장진흥공단 창업비용 통계, 업종별 평균 (2024–2025)
@@ -275,9 +286,9 @@ export function getFranchiseBrandsForCategory(categoryId: string): FranchiseBran
   return franchiseBrands.filter((fb) => fb.categoryId === categoryId);
 }
 
-/** Get a single franchise brand by ID */
+/** Get a single franchise brand by ID — 큐레이션 + 공정위 전체에서 조회 */
 export function getFranchiseBrandById(brandId: string): FranchiseBrand | undefined {
-  return franchiseBrands.find((fb) => fb.id === brandId);
+  return franchiseBrandsAll.find((fb) => fb.id === brandId);
 }
 
 /** Compute overall score (weighted average) */

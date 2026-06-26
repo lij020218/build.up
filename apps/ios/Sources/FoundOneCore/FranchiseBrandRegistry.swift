@@ -52,6 +52,8 @@ public struct FranchiseBrandSource: Decodable, Sendable, Hashable {
 
 public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
     public let id: String
+    /// "curated"(미설정 포함) = 손큐레이션, "kftc" = 공정위 공개데이터 자동 수록.
+    public let tier: String?
     public let subIndustryIds: [String]
     /// 세부업종(specialty) 매핑 — sub-industry 보다 세밀한 필터.
     ///   예: korean-casual 안의 "국밥·해장국 전문점" / "한정식" / "분식" 등.
@@ -186,20 +188,22 @@ public enum FranchiseBrandRegistry {
     // MARK: - Bundle loader
 
     private static func loadFromBundle() -> [FranchiseBrand] {
-        guard let url = Bundle.module.url(forResource: "franchise-brands", withExtension: "json") else {
-            // 번들 누락은 dev/test 환경 문제 — production 에서는 빈 리스트로 graceful degrade.
+        // 큐레이션 우선 + 공정위 자동 브랜드 병합 (웹 franchiseBrandsAll 과 동일 순서).
+        decodeResource("franchise-brands") + decodeResource("franchise-brands-kftc")
+    }
+
+    private static func decodeResource(_ name: String) -> [FranchiseBrand] {
+        guard let url = Bundle.module.url(forResource: name, withExtension: "json") else {
             #if DEBUG
-            print("⚠️ franchise-brands.json 번들에 누락")
+            print("⚠️ \(name).json 번들에 누락")
             #endif
             return []
         }
         do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([FranchiseBrand].self, from: data)
+            return try JSONDecoder().decode([FranchiseBrand].self, from: try Data(contentsOf: url))
         } catch {
-            // 디코딩 실패 시 production 크래시 방지 — 빈 리스트로 graceful degrade + 디버그 로그.
             #if DEBUG
-            print("⚠️ franchise-brands.json 디코딩 실패: \(error)")
+            print("⚠️ \(name).json 디코딩 실패: \(error)")
             #endif
             return []
         }
