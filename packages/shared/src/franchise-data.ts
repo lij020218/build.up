@@ -269,6 +269,8 @@ export function getFranchiseBrandsForSubIndustry(
   subIndustryId: string,
   specialtyId?: string,
 ): FranchiseBrand[] {
+  // 로드맵 선택은 큐레이션(검증된 추천)만 — 공정위 자동 1,400+ 가 선택 UI 를 범람시키지 않도록.
+  //  공정위 자동 브랜드는 '프랜차이즈 탐색' 페이지(franchiseBrandsAll)에서 노출.
   const inSub = franchiseBrands.filter((fb) => fb.subIndustryIds.includes(subIndustryId));
   if (!specialtyId) return inSub;
 
@@ -281,7 +283,7 @@ export function getFranchiseBrandsForSubIndustry(
   return matched.length > 0 ? matched : inSub;
 }
 
-/** Get franchise brands for a category (fallback) */
+/** Get franchise brands for a category (fallback) — 로드맵 선택용이라 큐레이션만 (탐색은 franchiseBrandsAll) */
 export function getFranchiseBrandsForCategory(categoryId: string): FranchiseBrand[] {
   return franchiseBrands.filter((fb) => fb.categoryId === categoryId);
 }

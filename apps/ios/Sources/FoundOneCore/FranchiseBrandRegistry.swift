@@ -112,6 +112,10 @@ public enum FranchiseBrandRegistry {
     /// (예: saladit + salady 둘 다 "샐러디"), costVerified=true 또는 더 풍부한 sources 를 가진 쪽만 유지.
     public static let all: [FranchiseBrand] = dedupe(loadFromBundle())
 
+    /// 손큐레이션만 (로드맵 선택용 — 공정위 자동 1,400+ 가 선택 UI 를 범람시키지 않도록).
+    ///  탐색(FranchiseView)·id 조회는 all(전체) 을 쓴다. 웹 getFranchiseBrandsForCategory 와 일치.
+    public static let curated: [FranchiseBrand] = dedupe(decodeResource("franchise-brands"))
+
     private static func dedupe(_ brands: [FranchiseBrand]) -> [FranchiseBrand] {
         // 그룹화 키: (한국어 명) + (있다면 franchiseUrl). url 없으면 한국어 명만으로.
         func key(_ b: FranchiseBrand) -> String {
@@ -155,9 +159,9 @@ public enum FranchiseBrandRegistry {
         byId[id]
     }
 
-    /// categoryId 매칭 브랜드 (정렬: startupCost 낮은 순).
+    /// categoryId 매칭 브랜드 (정렬: startupCost 낮은 순). 로드맵 선택용 → curated 만.
     public static func brands(forCategory categoryId: String) -> [FranchiseBrand] {
-        all.filter { $0.categoryId == categoryId }
+        curated.filter { $0.categoryId == categoryId }
             .sorted { $0.startupCostWon < $1.startupCostWon }
     }
 
@@ -170,7 +174,8 @@ public enum FranchiseBrandRegistry {
     /// Graceful fallback: specialty 필터 결과가 0개면 (예: '냉면'처럼 한국에 전용
     /// 가맹 프랜차이즈가 없는 세부업종) sub-industry 전체로 fallback — 빈 화면 방지.
     public static func brands(forSubIndustry subIndustryId: String, specialtyId: String? = nil) -> [FranchiseBrand] {
-        let inSub = all
+        // 로드맵 선택용 → curated 만 (탐색은 all).
+        let inSub = curated
             .filter { $0.subIndustryIds.contains(subIndustryId) }
             .sorted { $0.startupCostWon < $1.startupCostWon }
         guard let sid = specialtyId else { return inSub }
