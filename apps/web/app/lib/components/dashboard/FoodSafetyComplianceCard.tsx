@@ -363,15 +363,17 @@ export function FoodSafetyComplianceCard({
         })}
       </div>
 
-      {/* 외부 링크 */}
+      {/* 외부 링크 — 2026-06-27 fix: 기존 boardDetail 딥링크가 ntctxt_no 누락 + 식품제조가공업용
+          매뉴얼로 연결돼 음식점/카페와 무관한 엉뚱한 페이지로 갔다(사장님 신고). 식품안전나라
+          위생등급제 섹션(음식점 대상, 검증된 공식)으로 교체하고 라벨도 도착지에 맞게 정직하게. */}
       <a
-        href="https://www.foodsafetykorea.go.kr/portal/board/boardDetail.do?bbs_no=bbs110&menu_no=2880"
+        href="https://www.foodsafetykorea.go.kr/portal/fooddanger/foodSafetyInfo/hgledgList.do?menu_grp=MENU_NEW02&menu_no=4436"
         target="_blank"
         rel="noreferrer"
         style={externalLink}
       >
         <ExternalLink size={11} strokeWidth={2} />
-        {ko ? "식약처 자율 위생점검 매뉴얼 (공식)" : "KFDA Official Self-Inspection Manual"}
+        {ko ? "식약처 음식점 위생등급제 (식품안전나라)" : "KFDA Restaurant Hygiene Rating (official)"}
       </a>
     </article>
   );
