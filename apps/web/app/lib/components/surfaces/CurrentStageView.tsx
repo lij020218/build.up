@@ -270,6 +270,19 @@ export function CurrentStageView() {
     );
   })() : null;
 
+  // 단계 advance 게이트 힌트 — 마지막 페이지 전엔 "다음 단계로" 대신 이걸 노출(죽은 비활성 버튼 회피).
+  const stageLockedHint = pageNav ? (
+    <div style={{
+      display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto",
+      padding: "11px 16px", fontSize: "13px", fontWeight: 600, color: "rgba(25,25,112,0.5)",
+    }}>
+      <Lock size={13} strokeWidth={2.2} aria-hidden />
+      {language === "ko"
+        ? `마지막 페이지에서 다음 단계로 (${pageNav.page + 1}/${pageNav.totalPages})`
+        : `Continue on the last page (${pageNav.page + 1}/${pageNav.totalPages})`}
+    </div>
+  ) : null;
+
   // ── 로컬 상태 (DashboardContext에 포함되지 않는 것들) ──
   const [mvpPage, setMvpPage] = useState(0);
   const [expandedPermitId, setExpandedPermitId] = useState<string | null>(null);
@@ -563,6 +576,7 @@ export function CurrentStageView() {
               {/* 2026-06-26 SSOT 전환: 콘텐츠는 @foundone/shared contract-review(웹·iOS 공통).
                   footer 게이팅(9대 핵심 조항 + 서명 완료)은 여기서 유지(tax-guide 패턴). */}
               <StageContentRenderer content={CONTRACT_REVIEW_CONTENT} />
+              {pageNavBlock}
               {(() => {
                 const gate = CONTRACT_REVIEW_CONTENT.pages.flatMap((p) => p.sections).find((s) => s.kind === "gateChecklist");
                 const ids = gate && gate.kind === "gateChecklist" ? gate.items.map((i) => i.id) : [];
@@ -600,14 +614,16 @@ export function CurrentStageView() {
                         {editLabel}
                       </button>
                     )}
-                    <button
-                      type="button"
-                      style={{ ...styles.primaryButton, opacity: canContinue ? 1 : 0.45, cursor: canContinue ? "pointer" : "not-allowed" }}
-                      disabled={!canContinue}
-                      onClick={() => { if (!canContinue) return; handleContractContinue(); }}
-                    >
-                      {continueLabel}
-                    </button>
+                    {hasMoreReadingPages ? stageLockedHint : (
+                      <button
+                        type="button"
+                        style={{ ...styles.primaryButton, opacity: canContinue ? 1 : 0.45, cursor: canContinue ? "pointer" : "not-allowed" }}
+                        disabled={!canContinue}
+                        onClick={() => { if (!canContinue) return; handleContractContinue(); }}
+                      >
+                        {continueLabel}
+                      </button>
+                    )}
                     <button type="button" style={styles.button} onClick={resetDemo}>
                       {copy.common.resetDemo}
                     </button>
@@ -1130,16 +1146,7 @@ export function CurrentStageView() {
                   {hasMoreReadingPages ? (
                     /* 단계 advance 게이트: 아직 읽을 페이지가 남음 → "다음 단계로" 대신 잠금 힌트.
                        페이지 이동은 위 콘텐츠 영역의 페이지 네비로 (단계 이동과 시각적으로 분리). */
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: "6px",
-                      padding: "11px 16px", fontSize: "13px", fontWeight: 600,
-                      color: "rgba(25,25,112,0.5)", marginLeft: "auto",
-                    }}>
-                      <Lock size={13} strokeWidth={2.2} aria-hidden />
-                      {language === "ko"
-                        ? `마지막 페이지에서 다음 단계로 (${pageNav!.page + 1}/${pageNav!.totalPages})`
-                        : `Continue on the last page (${pageNav!.page + 1}/${pageNav!.totalPages})`}
-                    </div>
+                    stageLockedHint
                   ) : correctedProgressPercent >= 100 && !(stageId === "pre-launch-final" && !businessLaunched) ? (
                     <button
                       type="button"
@@ -1251,6 +1258,7 @@ export function CurrentStageView() {
                 {/* 2026-06-25 SSOT 전환: 콘텐츠는 @foundone/shared tax-guide(웹·iOS 공통).
                     footer 게이팅(필수 세팅 체크리스트 완료)은 여기서 유지. */}
                 <StageContentRenderer content={TAX_GUIDE_CONTENT} />
+                {pageNavBlock}
                 {(() => {
                   const taxItems = (TAX_GUIDE_CONTENT.byCategory[industryCategoryId ?? "food"] ?? TAX_GUIDE_CONTENT.byCategory["food"]).taxChecklist ?? [];
                   const taxAllDone = taxItems.length > 0 && taxItems.every((t) => taxChecks[t.id]);
@@ -1263,15 +1271,17 @@ export function CurrentStageView() {
                       }}>
                         {language === "ko" ? "← 이전 단계" : "← Back"}
                       </button>
-                      <button
-                        type="button"
-                        style={{ ...styles.primaryButton, opacity: taxAllDone ? 1 : 0.45, cursor: taxAllDone ? "pointer" : "not-allowed" }}
-                        title={taxAllDone ? undefined : (language === "ko" ? `필수 세팅 ${doneCount}/${taxItems.length} — 「필수 세팅」 탭에서 모두 체크 후 진행` : `Complete all ${taxItems.length} setup items first`)}
-                        onClick={() => { if (!taxAllDone) return; handleVerificationContinue("tax-guide"); }}
-                        disabled={!taxAllDone}
-                      >
-                        {taxAllDone ? copy.home.markTaxReviewed : (language === "ko" ? `↑ 필수 세팅 ${doneCount}/${taxItems.length}` : `↑ Setup ${doneCount}/${taxItems.length}`)}
-                      </button>
+                      {hasMoreReadingPages ? stageLockedHint : (
+                        <button
+                          type="button"
+                          style={{ ...styles.primaryButton, opacity: taxAllDone ? 1 : 0.45, cursor: taxAllDone ? "pointer" : "not-allowed" }}
+                          title={taxAllDone ? undefined : (language === "ko" ? `필수 세팅 ${doneCount}/${taxItems.length} — 「필수 세팅」 탭에서 모두 체크 후 진행` : `Complete all ${taxItems.length} setup items first`)}
+                          onClick={() => { if (!taxAllDone) return; handleVerificationContinue("tax-guide"); }}
+                          disabled={!taxAllDone}
+                        >
+                          {taxAllDone ? copy.home.markTaxReviewed : (language === "ko" ? `↑ 필수 세팅 ${doneCount}/${taxItems.length}` : `↑ Setup ${doneCount}/${taxItems.length}`)}
+                        </button>
+                      )}
                     </div>
                   );
                 })()}
@@ -1279,6 +1289,7 @@ export function CurrentStageView() {
             ) : currentStage.code === "loan_guide" ? (
               <>
                 <LoanGuideStage />
+                {pageNavBlock}
                 {/* 2026-05-12 P0 fix (사장님 신고): 종전엔 버튼 게이트 없어 페이지 열자마자 클릭 시
                     즉시 advance + reviewed:true 저장 (정부 지원사업 0초 검토 가능).
                     LoanGuideStage 가 loanChecks["loan-final-review"] 명시적 confirmation 박스를
@@ -1293,24 +1304,26 @@ export function CurrentStageView() {
                       }}>
                         {language === "ko" ? "← 이전 단계" : "← Back"}
                       </button>
-                      <button
-                        type="button"
-                        style={{
-                          ...styles.primaryButton,
-                          opacity: loanReviewed ? 1 : 0.45,
-                          cursor: loanReviewed ? "pointer" : "not-allowed",
-                        }}
-                        title={loanReviewed ? undefined : (language === "ko" ? "위 「검토했습니다」 박스 체크 후 진행 가능" : "Tick the 'I have reviewed' box above first")}
-                        onClick={() => {
-                          if (!loanReviewed) return; // 게이트
-                          handleVerificationContinue("loan-guide");
-                        }}
-                        disabled={!loanReviewed}
-                      >
-                        {loanReviewed
-                          ? copy.home.markLoanReviewed
-                          : (language === "ko" ? "↑ 검토 완료 박스 먼저 체크" : "↑ Tick the review box first")}
-                      </button>
+                      {hasMoreReadingPages ? stageLockedHint : (
+                        <button
+                          type="button"
+                          style={{
+                            ...styles.primaryButton,
+                            opacity: loanReviewed ? 1 : 0.45,
+                            cursor: loanReviewed ? "pointer" : "not-allowed",
+                          }}
+                          title={loanReviewed ? undefined : (language === "ko" ? "위 「검토했습니다」 박스 체크 후 진행 가능" : "Tick the 'I have reviewed' box above first")}
+                          onClick={() => {
+                            if (!loanReviewed) return; // 게이트
+                            handleVerificationContinue("loan-guide");
+                          }}
+                          disabled={!loanReviewed}
+                        >
+                          {loanReviewed
+                            ? copy.home.markLoanReviewed
+                            : (language === "ko" ? "↑ 검토 완료 박스 먼저 체크" : "↑ Tick the review box first")}
+                        </button>
+                      )}
                     </div>
                   );
                 })()}
