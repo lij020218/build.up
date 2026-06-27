@@ -240,10 +240,16 @@ export function OperationsSetupStage() {
       cons: ["견적 다수 비교는 필요 — 첫 견적이 합리적이라는 보장 X", "실력 편차 — 포트폴리오 사전 확인 필수"],
     },
     {
-      id: "miricanvas", name: "미리캔버스/Canva", color: "#7C3AED", url: "https://www.miricanvas.com",
-      tagline: "셀프 디자인 · 무료~월 6천원 · 시간 투입 필요",
-      pros: ["로고·메뉴판·간판 시안 셀프 제작 (수십만 템플릿)", "무료 플랜 + 프로 월 6,000원~", "수정·재사용 무한 — 시즌 변경 시 빠르게 대응"],
+      id: "miricanvas", name: "미리캔버스", color: "#7C3AED", url: "https://www.miricanvas.com",
+      tagline: "셀프 디자인 · 한국어 템플릿 · 무료~월 6천원",
+      pros: ["로고·메뉴판·간판 시안 셀프 제작 (수십만 한국어 템플릿)", "무료 플랜 + 프로 월 6,000원~", "수정·재사용 무한 — 시즌 변경 시 빠르게 대응"],
       cons: ["디자인 시간 투입 多 (1~2주)", "독창성 ↓ — 다른 매장과 비슷할 수 있음"],
+    },
+    {
+      id: "canva", name: "Canva", color: "#00C4CC", url: "https://www.canva.com/",
+      tagline: "셀프 디자인 · Magic Design AI · 무료~월 1.5만원",
+      pros: ["Magic Design AI 로 로고·메뉴판·SNS 시안 1클릭 생성", "무료 플랜 충분 + 프로 월 1.5만원~", "글로벌 최대 템플릿 풀 · 한국어 UI 지원"],
+      cons: ["한국 전용 템플릿은 미리캔버스보다 적음", "디자인 시간 투입 필요"],
     },
   ];
 

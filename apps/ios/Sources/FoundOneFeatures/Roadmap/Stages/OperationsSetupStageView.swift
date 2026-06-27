@@ -472,7 +472,7 @@ public struct OperationsSetupStageView: View {
                 // 매장 음악 저작권 (웹 musicLicenseOptions 미러) — 50㎡↑ 의무.
                 opsDetailCard(title: "매장 음악 저작권 — 4개 옵션 (50㎡↑ 의무)", items: OperationsDetailRegistry.music)
                 // 브랜드 디자인 (웹 designPlatforms 미러) — 간판·메뉴판·로고.
-                opsDetailCard(title: "브랜드 디자인 — 4개 플랫폼 (간판·메뉴판·로고)", items: OperationsDetailRegistry.design)
+                opsDetailCard(title: "브랜드 디자인 — 5개 플랫폼 (간판·메뉴판·로고)", items: OperationsDetailRegistry.design)
             }
 
             if cluster.category.isOffline {
