@@ -10,6 +10,8 @@ export { TAX_GUIDE_CONTENT } from "./content/tax-guide";
 export { PERMIT_CHECK_CONTENT } from "./content/permit-check";
 export { CONTRACT_REVIEW_CONTENT } from "./content/contract-review";
 export { HIRING_SETUP_CONTENT } from "./content/hiring-setup";
+// 소프트 오픈(가오픈) 업종 맞춤 콘텐츠 — 자체 스키마(아키타입), StageContent 레지스트리 미사용.
+export * from "./content/pre-launch";
 
 import type { StageContent } from "./schema";
 import { REGISTRATION_SETUP_CONTENT } from "./content/registration-setup";

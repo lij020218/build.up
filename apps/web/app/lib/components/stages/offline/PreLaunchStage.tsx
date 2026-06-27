@@ -7,11 +7,14 @@ import { useRoadmapStore } from "../../../stores";
 import { AIFeedbackFormGenerator } from "./AIFeedbackFormGenerator";
 import { StageWrapup } from "../shared/StageWrapup";
 import {
-  getVisibleDayIds,
   getVisibleFeedbackIds,
   getVisibleFinalIds,
   getVisibleImprovementIds,
 } from "./pre-launch-checks-meta";
+import {
+  getSoftOpenContent,
+  getSoftOpenDayChecks,
+} from "@foundone/shared";
 import {
   KeyActionHero,
   StageTabNav,
@@ -48,22 +51,42 @@ export function PreLaunchStage() {
   // (참고: 종전 `void setSoftOpenChecks` 는 잘못된 표기. setSoftOpenChecks 는 toggleCheck 에서 실제 사용 중)
   const ko = language === "ko";
 
+  // ── 업종 맞춤 소프트오픈 콘텐츠 SSOT (운영모델 아키타입 + 세부업종 당일운영) ──
+  //   2026-06-27: 음식 중심 하드코딩 → 업종 맞춤. 무인=시범운영/소모품, 서비스=체험예약 등.
+  const L = (o: { ko: string; en: string }) => (ko ? o.ko : o.en);
+  const soft = getSoftOpenContent(selectedIndustryId, industryCategoryId);
+  const subDayChecks = getSoftOpenDayChecks(selectedIndustryId);
+  // 모든 운영모델 공통 당일 점검(직원·분위기 등 대면 전용 제외 — 무인에도 적용 가능).
+  const universalDayTail = ko
+    ? [
+        { id: "day-observation", label: "운영 중 관찰·기록", detail: "이용·동선·반응을 실시간 메모. 병목·불편 지점 기록." },
+        { id: "day-settlement", label: "마감 정산·재고 확인", detail: "매출·결제 내역 정산 + 소모품·재고 잔량 확인." },
+        { id: "day-sns", label: "오픈 SNS 1건 게시", detail: "현장 사진·후기 1건 — 네이버 플레이스·인스타 노출 시작." },
+      ]
+    : [
+        { id: "day-observation", label: "Observe & note during ops", detail: "Log usage, flow, reactions live. Note bottlenecks." },
+        { id: "day-settlement", label: "Closing settle & stock check", detail: "Reconcile sales/payments + check supplies/stock." },
+        { id: "day-sns", label: "Post 1 opening SNS", detail: "1 on-site photo/review — start Naver Place/IG exposure." },
+      ];
+
   const [pageIdx, setPageIdx] = useState(0);
 
-  // 룰 검증을 위한 visible IDs — 기존 시스템 유지 (CurrentStageView 가 100% 룰 적용에 사용).
+  // 룰 검증을 위한 visible IDs — 렌더되는 체크 ID 와 동일하게(drift 방지: 보이는 것만 게이트).
   const setPreLaunchVisibleIds = useRoadmapStore((s) => s.setPreLaunchVisibleIds);
   useEffect(() => {
     setPreLaunchVisibleIds({
-      dayIds: getVisibleDayIds(industryCategoryId, selectedIndustryId, startupType ?? null),
+      dayIds: [...subDayChecks.map((c) => c.id), ...universalDayTail.map((c) => c.id)],
       feedbackIds: getVisibleFeedbackIds(industryCategoryId),
       finalIds: getVisibleFinalIds(),
       improvementIds: getVisibleImprovementIds(),
     });
-  }, [industryCategoryId, selectedIndustryId, startupType, setPreLaunchVisibleIds]);
+    // subDayChecks/universalDayTail 는 selectedIndustryId·language 파생이라 deps 로 대표.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [industryCategoryId, selectedIndustryId, startupType, language, setPreLaunchVisibleIds]);
 
   const pageLabels = ko
-    ? ["개요", "1. 손님 초대", "2. 당일 운영", "3. 피드백", "4. 본 오픈 준비", "마무리"]
-    : ["Overview", "1. Guests", "2. Day-of", "3. Feedback", "4. Grand Open", "Wrap-up"];
+    ? ["개요", L(soft.page1Label), "2. 당일 운영", "3. 피드백", "4. 본 오픈 준비", "마무리"]
+    : ["Overview", L(soft.page1Label), "2. Day-of", "3. Feedback", "4. Grand Open", "Wrap-up"];
 
   // ── 카테고리별 권장 ───────────────────────────────────────────
   const myAdvice: Record<string, { context: string; recommendation: string; rationale: string }> = ko ? {
@@ -125,18 +148,8 @@ export function PreLaunchStage() {
   };
   const myFavorable = myAdvice[industryCategoryId] ?? myAdvice.food;
 
-  // ── 손님 초대 4종 (page 1) ────────────────────────────────────
-  const guestTypes = ko ? [
-    { label: "가족 / 친한 지인", desc: "솔직한 피드백의 최고 소스 — 창피함 없이 날카롭게 말해줄 사람 우선" },
-    { label: "동네 주민 / 이웃", desc: "잠재 단골 고객 — 오픈 후에도 가장 자주 올 수 있는 사람들" },
-    { label: "인스타 팔로워 / 마이크로 인플루언서", desc: "SNS 바이럴 효과 — 팔로워 1,000~10,000명 수준 권장" },
-    { label: "업계 지인 / 블로거", desc: "전문적 관점의 날카로운 피드백 — 개업 전 마지막 검증" },
-  ] : [
-    { label: "Family / close friends", desc: "Best source of honest feedback — they'll tell you straight." },
-    { label: "Local neighbors", desc: "Future regulars — first impression decides repeat visits." },
-    { label: "IG followers / micro-influencers", desc: "SNS virality — 1k-10k follower range recommended." },
-    { label: "Industry peers / bloggers", desc: "Expert critique — last validation before grand open." },
-  ];
+  // ── 체험/초대 대상 (page 1) — 운영모델 맞춤(무인은 '첫 이용자 관찰' 등) ──
+  const guestTypes = soft.trialTypes.map((t) => ({ label: L(t.label), desc: L(t.desc) }));
 
   // ── 가격 결정 옵션 (page 1) ───────────────────────────────────
   const pricingOptions = [
@@ -145,42 +158,21 @@ export function PreLaunchStage() {
     { id: "full",     label: ko ? "정가 운영" : "Full price", desc: ko ? "할인·이벤트를 아껴뒀다 본오픈에 사용. 실수익 구조 그대로 테스트." : "Save discounts for grand open; test real revenue model." },
   ];
 
-  // ── 당일 운영 체크리스트 (page 2 — 모든 매장 공통 핵심 8개) ──
-  const dayChecks = ko ? [
-    { id: "day-cleanliness",    label: "매장·시설 청결 & 위생 최종 점검", detail: "바닥·테이블·화장실·쓰레기통 모두 점검·소독" },
-    { id: "day-staff-briefing", label: "직원 역할 배분 & 브리핑",         detail: "포지션·응대 멘트·비상 대응 방법 공유" },
-    { id: "day-pos",            label: "POS & 결제 단말기 정상 작동",     detail: "카드·현금·간편결제 테스트 결제 후 즉시 취소" },
-    { id: "day-ambiance",       label: "조명·음악·온도·향기 설정",         detail: "원하는 브랜드 분위기 연출, 손님 입장 전 최종 확인" },
-    { id: "day-observation",    label: "운영 중 병목 & 손님 반응 관찰",   detail: "표정·대화·남기는 것·오래 머무는 곳 실시간 기록" },
-    { id: "day-payment",        label: "결제 오류·지연 여부 체크",         detail: "영수증 출력, 결제 완료 문자 발송 여부 확인" },
-    { id: "day-feedback-card",  label: "피드백 카드 수거 & 정리",         detail: "무기명 가능 → 솔직한 의견 유도" },
-    { id: "day-debrief",        label: "직원 회의 진행",                  detail: "잘된 점 3가지 + 개선점 3가지 모두 발언하게 하기" },
-  ] : [
-    { id: "day-cleanliness",    label: "Final cleanliness/hygiene", detail: "Floors, tables, restrooms, trash — disinfect" },
-    { id: "day-staff-briefing", label: "Staff roles & briefing",    detail: "Positions, scripts, emergency response" },
-    { id: "day-pos",            label: "POS & terminal check",      detail: "Test all payments + immediate cancel" },
-    { id: "day-ambiance",       label: "Lighting / music / temp",   detail: "Brand atmosphere ready before guests" },
-    { id: "day-observation",    label: "Watch bottlenecks & guests",detail: "Faces, conversations, leftovers, hot spots" },
-    { id: "day-payment",        label: "Payment errors / delays",   detail: "Receipts print, confirmation SMS sent" },
-    { id: "day-feedback-card",  label: "Collect feedback cards",    detail: "Anonymous OK → honest opinions" },
-    { id: "day-debrief",        label: "Staff debrief",             detail: "3 good points + 3 improvements per person" },
+  // ── 당일 운영 체크리스트 (page 2) — 세부업종 맞춤(SSOT) + 공통 tail ──
+  const dayChecks = [
+    ...subDayChecks.map((c) => ({ id: c.id, label: L(c.label), detail: L(c.detail) })),
+    ...universalDayTail,
   ];
   const dayDoneCount = dayChecks.filter((c) => softOpenChecks[c.id]).length;
 
-  // ── 본 오픈 준비 체크리스트 (page 4) ──────────────────────────
-  const finalChecks = ko ? [
-    { id: "final-menu-fix",    label: "메뉴·가격·옵션 최종 확정",      detail: "피드백 반영해 1~2가지 조정. 그 이상은 본 오픈 후" },
-    { id: "final-staff-train", label: "직원 재교육 (피드백 기반)",     detail: "당일 발견된 동선·응대 이슈 1:1 코칭" },
-    { id: "final-marketing",   label: "본 오픈 마케팅 콘텐츠 발행",    detail: "인스타 게시물 3개 + 릴스 1개 + 네이버 플레이스 영수증 리뷰 5개" },
-    { id: "final-vendor",      label: "본 오픈 식자재·장비·소모품 발주", detail: "예상 인원 1.5배로 발주 — 첫 주말 결품 방지" },
-    { id: "final-soft-recap",  label: "소프트 오픈 결과 1페이지 요약 작성", detail: "잘된 점·개선점·예상 이슈 — 직원·운영 자료" },
-  ] : [
-    { id: "final-menu-fix",    label: "Finalize menu / prices / options", detail: "Adjust 1-2 from feedback; more after grand open" },
-    { id: "final-staff-train", label: "Re-train staff (from feedback)",   detail: "1:1 coach on flow/response issues" },
-    { id: "final-marketing",   label: "Publish grand-open marketing",      detail: "3 IG posts + 1 reel + 5 Naver receipt reviews" },
-    { id: "final-vendor",      label: "Order ingredients/supplies",        detail: "1.5× expected to avoid weekend stockouts" },
-    { id: "final-soft-recap",  label: "Soft-open 1-page recap",            detail: "Wins / fixes / risks — staff & ops doc" },
-  ];
+  // ── 본 오픈 준비 체크리스트 (page 4) — 운영모델 맞춤(SSOT). ID 5종 유지(저장 호환). ──
+  const FINAL_PREP_IDS = ["final-menu-fix", "final-staff-train", "final-marketing", "final-vendor", "final-soft-recap"];
+  const finalChecks = FINAL_PREP_IDS.map((id, i) => {
+    const fp = soft.finalPrep[i];
+    return fp
+      ? { id, label: L(fp.label), detail: L(fp.detail) }
+      : { id, label: ko ? "본 오픈 준비" : "Grand-open prep", detail: "" };
+  });
   const finalDoneCount = finalChecks.filter((c) => softOpenChecks[c.id]).length;
 
   // 토글 헬퍼
@@ -201,14 +193,12 @@ export function PreLaunchStage() {
           title: ko
             ? "소프트 오픈 90분 — 본 오픈 첫 달 매출을 결정하는 시간"
             : "90 min soft open decides month-1 grand-open revenue",
-          detail: ko
-            ? "지인·동네 주민·인플루언서 초대 → 실 운영 1회전 → 피드백 → 본 오픈 직전 보강. 사인된 직원·POS·SNS 가 처음으로 함께 돌아가는 통합 테스트입니다."
-            : "Invite friends/neighbors/influencers → 1 real cycle → feedback → harden before grand open. First integrated test of staff + POS + SNS.",
+          detail: L(soft.softOpenMeaning),
         }}
         pillars={[
-          { icon: <Users size={12} strokeWidth={1.5} />, label: ko ? "초대" : "Invite", meta: ko ? "10~30명 + 가격 결정" : "10-30 ppl + price" },
-          { icon: <ClipboardList size={12} strokeWidth={1.5} />, label: ko ? "운영" : "Ops", meta: ko ? "8축 체크 + 관찰" : "8-axis + watch" },
-          { icon: <MessageSquare size={12} strokeWidth={1.5} />, label: ko ? "피드백" : "Feedback", meta: ko ? "맛·서비스·가격·분위기" : "Taste/svc/price/vibe" },
+          { icon: <Users size={12} strokeWidth={1.5} />, label: ko ? "초대·유치" : "Invite", meta: L(soft.page1Label).replace(/^\d+\.\s*/, "") },
+          { icon: <ClipboardList size={12} strokeWidth={1.5} />, label: ko ? "운영" : "Ops", meta: ko ? "당일 점검 + 관찰" : "Day-of check + watch" },
+          { icon: <MessageSquare size={12} strokeWidth={1.5} />, label: ko ? "피드백" : "Feedback", meta: soft.feedbackAxes.map((a) => L(a.label)).join(ko ? "·" : "/") },
         ]}
       />
 
@@ -229,17 +219,17 @@ export function PreLaunchStage() {
             ? "소프트 오픈 90분이 본 오픈의 첫 달 매출 곡선을 결정합니다"
             : "90 min soft open shapes month-1 grand-open revenue"}
           why={ko
-            ? "본 오픈 직전 마지막 검증. 지인·이웃·인플루언서 10~30명을 초대해 운영 1회전을 돌리면 POS·동선·메뉴·서비스의 실 문제가 모두 드러납니다. 본 오픈 직전 1~2개만 보강해도 첫 달 별점·재방문률이 크게 좌우됩니다."
-            : "Final pre-launch validation. Inviting 10-30 guests through one real cycle surfaces issues in POS/flow/menu/service. Fixing 1-2 issues before grand open can shift month-1 ratings and repeats dramatically."}
+            ? `본 오픈 직전 마지막 검증. ${L(soft.softOpenMeaning)} 직전 1~2개만 보강해도 첫 달 평판·재방문률이 크게 좌우됩니다.`
+            : `Final pre-launch validation. ${L(soft.softOpenMeaning)} Fixing 1-2 issues before grand open shifts month-1 reputation and repeats.`}
           stat={{
-            value: ko ? "별점 +0.3" : "+0.3 stars",
-            label: ko ? "소프트 오픈 진행 매장 평균 별점 차이" : "avg rating delta with soft-open",
+            value: ko ? "평판 +0.3" : "+0.3 rating",
+            label: ko ? "소프트 오픈 진행 매장 평균 평판 차이" : "avg rating delta with soft-open",
           }}
           workOutline={[
-            { stepLabel: ko ? "1. 손님 초대" : "1. Guests", title: ko ? "10~30명 초대 + 가격 결정 (무료/할인/정가)" : "Invite 10-30 + pricing", time: ko ? "사전" : "Pre" },
-            { stepLabel: ko ? "2. 당일 운영" : "2. Day-of", title: ko ? "8축 체크 + 운영 중 손님·직원 관찰" : "8-axis check + observe", time: ko ? "90분" : "90m" },
-            { stepLabel: ko ? "3. 피드백" : "3. Feedback", title: ko ? "맛·서비스·가격·분위기 — AI 폼 또는 카드" : "Collect via AI form / cards", time: ko ? "30분" : "30m" },
-            { stepLabel: ko ? "4. 본 오픈 준비" : "4. Grand open", title: ko ? "메뉴·직원·마케팅·발주 최종 보강" : "Lock menu / staff / ads / orders", time: ko ? "당일" : "Same day" },
+            { stepLabel: L(soft.page1Label), title: L(soft.softOpenMeaning), time: ko ? "사전" : "Pre" },
+            { stepLabel: ko ? "2. 당일 운영" : "2. Day-of", title: ko ? "세부업종 맞춤 당일 점검 + 운영 관찰" : "Industry day-of checks + observe", time: ko ? "당일" : "Day" },
+            { stepLabel: ko ? "3. 피드백" : "3. Feedback", title: (ko ? "수집: " : "Collect: ") + soft.feedbackAxes.map((a) => L(a.label)).join(ko ? "·" : "/"), time: ko ? "30분" : "30m" },
+            { stepLabel: ko ? "4. 본 오픈 준비" : "4. Grand open", title: soft.finalPrep.map((f) => L(f.label)).slice(0, 3).join(ko ? "·" : "/") + (ko ? " 등 보강" : " etc."), time: ko ? "당일" : "Same day" },
             { stepLabel: ko ? "체크리스트" : "Checklist", title: ko ? "자주 빠뜨리는 항목 + 진행 상태 요약" : "Common-miss + progress summary" },
           ]}
           outcome={ko
@@ -255,24 +245,19 @@ export function PreLaunchStage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <WorkStep
             ko={ko}
-            stepLabel={ko ? "1. 손님 초대" : "1. Guest invite"}
+            stepLabel={L(soft.page1Label)}
             time={ko ? "사전 7~14일" : "7-14d ahead"}
-            headline={ko ? "10~30명 초대 + 4가지 손님 유형 + 가격 결정" : "Invite 10-30 + 4 guest types + price decision"}
+            headline={L(soft.softOpenMeaning)}
             why={ko
-              ? "본 오픈 매출의 30~50%는 첫 1주 단골이 결정. 소프트 오픈 손님이 그 단골 풀의 시드. 솔직한 가족·잠재 단골 동네 주민·바이럴 인플루언서·전문 동료 — 4유형을 섞어야 균형 있는 피드백."
-              : "30-50% of grand-open revenue is decided by week-1 regulars. Soft-open guests are that pool's seed. Mix 4 types — family, neighbors, influencers, peers — for balanced feedback."}
-            how={[
-              { title: ko ? "오픈 7~14일 전 초대장 발송 — 카톡 + DM" : "Send invites 7-14 days early — KakaoTalk + DM", detail: ko ? "「○○ 매장 소프트 오픈에 초대합니다」 + 일시·주소·메뉴 사진. 가족·이웃·인플루언서·동료 4분류 명단." : "Include date/address/menu photos. Categorize: family / neighbors / influencers / peers." },
-              { title: ko ? "가격 결정 — 무료 / 30~50% 할인 / 정가 중 선택" : "Pricing — free / 30-50% off / full", detail: ko ? "무료=인상 최대 / 할인=결제·POS 검증 / 정가=실수익 모델 검증. 매장 컨셉·예산·검증 목표에 맞춰 결정." : "Free maxes impression; discount validates POS; full validates real revenue. Pick by goal/budget." },
-              { title: ko ? "예상 인원 1.5배로 식자재·소모품 발주" : "Order ingredients at 1.5× expected", detail: ko ? "결품 = 첫 인상 폭락. 핵심 메뉴는 충분히, 사이드는 1.2배. 남으면 직원 식사·다음날 사용." : "Stockout ruins first impression. Core menus 1.5×; sides 1.2×. Reuse leftover for staff or next day." },
-              { title: ko ? "초대 명단·확정 인원 카톡방 또는 구글폼으로 관리" : "Manage invitees via KakaoTalk group or Google Form", detail: ko ? "「몇 명 + 시간대」 사전 확정 — 노쇼 방지 + 좌석·서비스 사전 분배." : "Confirm 'how many + when' — prevents no-shows, plans seating/service." },
-            ]}
+              ? "본 오픈 전 마지막 검증 — 실제 운영을 1회전 돌려 문제를 미리 잡습니다. 아래 대상을 골고루 초대·유치해야 균형 잡힌 피드백을 얻습니다."
+              : "Final validation before grand open — run one real cycle to catch issues early. Invite/attract a balanced mix below for honest feedback."}
+            how={soft.page1Steps.map((s) => ({ title: L(s.title), detail: L(s.detail) }))}
             watchouts={ko ? [
-              { label: "가족·지인만 초대하면 진짜 시장 검증 안 됨", text: "그들은 무조건 좋다고 함. 동네 주민 + 인플루언서 + 동료를 반드시 섞어야 솔직한 피드백 확보." },
-              { label: "결품·POS 미작동 = 첫 인상 즉사", text: "1.5배 발주 + 결제 단말 사전 테스트 + 백업 결제 수단 (계좌이체 QR) 까지 준비." },
+              { label: "가까운 지인만 부르면 진짜 검증이 안 됨", text: "무조건 좋다고 합니다 — 잠재 고객·외부인을 반드시 섞어 솔직한 피드백을 확보하세요." },
+              { label: "결제·핵심 설비 미점검 = 첫인상 즉사", text: "오픈 전 결제 1건 실테스트 + 핵심 설비·소모품 사전 점검 + 백업 수단 준비." },
             ] : [
-              { label: "Friends-only = no real validation", text: "They'll just say it's great. Mix neighbors + influencers + peers for honest feedback." },
-              { label: "Stockouts/POS issues = first-impression death", text: "1.5× orders + pre-test all payment terminals + backup transfer QR." },
+              { label: "Inviting only close contacts = no real validation", text: "They'll just say it's great. Mix in potential customers/outsiders for honest feedback." },
+              { label: "Unchecked payment/core equipment = first-impression death", text: "1 real payment test + pre-check core equipment/supplies + backup method." },
             ]}
             favorable={myFavorable}
           />
@@ -373,22 +358,21 @@ export function PreLaunchStage() {
             ko={ko}
             stepLabel={ko ? "2. 당일 운영" : "2. Day-of operations"}
             time={ko ? "90분" : "90m"}
-            headline={ko ? "8축 체크 + 운영 중 손님·직원 관찰 — 본 오픈 보강 포인트 발견" : "8-axis check + watch guests/staff — find pre-launch fixes"}
+            headline={ko ? "세부업종 맞춤 당일 점검 + 운영 관찰 — 본 오픈 보강 포인트 발견" : "Industry day-of checks + observe — find pre-launch fixes"}
             why={ko
-              ? "소프트 오픈은 「운영 점검」이 핵심. 사인·POS·간판이 따로 작동하던 것을 처음으로 합쳐 돌리는 자리. 청결·직원·결제·분위기·관찰·결제오류·피드백 카드·디브리핑 8축을 빠짐없이 체크."
-              : "Soft open is operations validation. First time staff/POS/signage run together. Cover 8 axes — clean / brief / POS / vibe / observe / errors / cards / debrief."}
+              ? "소프트 오픈은 「운영 점검」이 핵심. 설비·결제·시스템이 따로 작동하던 것을 처음으로 합쳐 돌리는 자리. 아래 세부업종 핵심 점검 항목을 빠짐없이 확인하세요."
+              : "Soft open is operations validation. First time equipment/payment/systems run together. Cover every industry-specific check below."}
             how={[
-              { title: ko ? "오픈 1시간 전 — 청결·POS·분위기 최종 점검" : "1h before — clean/POS/vibe final", detail: ko ? "청소·결제 테스트·조명·음악 다시 한 번. 손님 입장 직전 매장 톤 셋업." : "Re-clean, test payments, set lighting/music; brand tone before doors open." },
-              { title: ko ? "오픈 직후 — 직원 역할·응대 멘트 마지막 브리핑" : "Open: staff brief", detail: ko ? "포지션·응대 스크립트·비상 시 대응 (결제 오류·컴플레인) 한 번 더 합의." : "Positions, scripts, emergency (payment err, complaint) protocols." },
-              { title: ko ? "운영 중 — 손님·직원 관찰 + 사진·메모" : "During — watch + notes", detail: ko ? "표정·대화·남기는 음식·머무는 위치 실시간 기록. 직원 동선 병목 메모." : "Note faces, conversations, leftovers, hot spots, staff bottlenecks." },
-              { title: ko ? "마감 직후 — 직원 디브리핑 30분" : "After — 30m debrief", detail: ko ? "잘된 점 3 + 개선점 3 모두 발언. 회의록 1페이지 — 내일 본 오픈 보강 자료." : "Each: 3 wins + 3 fixes. 1-page doc → fuel for grand-open prep." },
+              { title: ko ? "오픈 전 — 핵심 설비·결제·청결 최종 점검" : "Before open — core equipment/payment/cleanliness", detail: ko ? "결제 테스트, 핵심 설비 시운전, 매장·시설 청결을 입장/이용 직전 한 번 더." : "Test payments, dry-run core equipment, final cleanliness before use." },
+              { title: ko ? "운영 중 — 이용 흐름·반응 관찰 + 사진·메모" : "During — watch flow/reactions + notes", detail: ko ? "동선·대기·불편 지점을 실시간 기록. 병목과 오류를 즉시 메모." : "Log flow, waits, friction live. Note bottlenecks and errors immediately." },
+              { title: ko ? "마감 — 정산·재고 확인 + 1페이지 회고" : "Close — settle/stock + 1-page recap", detail: ko ? "매출·결제 정산, 소모품·재고 확인, 잘된 점 3·개선점 3 정리." : "Reconcile sales/payments, check supplies/stock, 3 wins + 3 fixes." },
             ]}
             watchouts={ko ? [
-              { label: "결제 단 1건 오류 = 별점 -0.4", text: "오픈 전날 카드 1건 실결제 후 즉시 취소로 흐름까지 검증. 백업 결제 수단(계좌이체 QR) 준비." },
-              { label: "직원 임의 응대 = 첫인상 흐트러짐", text: "응대 멘트 1줄이라도 통일. 「어서오세요」 + 「○○ 매장입니다」 + 메뉴 추천 1문장." },
+              { label: "결제 단 1건 오류 = 평판 즉락", text: "오픈 전 결제 1건 실테스트 후 즉시 취소로 흐름 검증. 백업 결제 수단(계좌이체 QR) 준비." },
+              { label: "핵심 설비 미점검 = 첫날 운영 정지", text: "업종 핵심 설비(기기·키오스크·예약·시스템)를 반드시 사전 시운전." },
             ] : [
-              { label: "1 payment error = -0.4 stars", text: "Test 1 real card the night before. Backup transfer QR ready." },
-              { label: "Improvised greetings = inconsistent first impression", text: "Standardize one line. 'Welcome' + brand name + 1 menu rec." },
+              { label: "1 payment error = instant reputation drop", text: "Run 1 real payment test then cancel. Backup transfer QR ready." },
+              { label: "Unchecked core equipment = day-1 shutdown", text: "Dry-run your industry's core equipment (machines/kiosk/booking/systems)." },
             ]}
             favorable={myFavorable}
           />
@@ -399,7 +383,7 @@ export function PreLaunchStage() {
               display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
             }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
-                {ko ? "당일 운영 8축 체크" : "8-axis day-of check"}
+                {ko ? "당일 운영 체크 (세부업종 맞춤)" : "Day-of checks (industry-specific)"}
               </span>
               <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: 999 }}>
                 {dayDoneCount} / {dayChecks.length}
@@ -417,7 +401,7 @@ export function PreLaunchStage() {
             ko={ko}
             stepLabel={ko ? "3. 피드백 수집" : "3. Feedback"}
             time={ko ? "30분" : "30m"}
-            headline={ko ? "맛·서비스·가격·분위기 — 4축 피드백을 구조화해 받기" : "Taste · service · price · vibe — 4-axis structured feedback"}
+            headline={(ko ? "" : "") + soft.feedbackAxes.map((a) => L(a.label)).join(ko ? "·" : " · ") + (ko ? " — 피드백을 구조화해 받기" : " — structured feedback")}
             why={ko
               ? "「어땠어요?」 → 「좋았어요」 = 무의미. 4축으로 구조화해야 본 오픈 보강 포인트가 나옵니다. AI 폼 생성기로 매장 맞춤 피드백 폼 즉석 생성 + 카톡으로 전송."
               : "'How was it?' → 'Good' is useless. Structure into 4 axes. Use AI form generator → personalize → KakaoTalk to guests."}
@@ -604,32 +588,32 @@ export function PreLaunchStage() {
           nextStageLabelKo="다음 단계(본 오픈) 전 반드시 확인"
           nextStageLabelEn="Verify before grand open"
           doneItemsKo={[
-            { label: "1. 손님 초대 + 가격 결정", detail: "10~30명 4유형(가족·이웃·인플루언서·동료) 균형 + 무료/할인/정가 결정" },
-            { label: "2. 당일 운영 8축 점검", detail: "청결·브리핑·POS·분위기·관찰·결제·피드백카드·디브리핑" },
-            { label: "3. 피드백 4축 수집", detail: "맛·서비스·가격·분위기 — AI 폼 + 종이 카드 + 폼 빌더(구글/네이버/카카오)" },
-            { label: "4. 본 오픈 준비 5종 보강", detail: "메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·1.5배 발주·1페이지 요약" },
+            { label: soft.page1Label.ko, detail: soft.trialTypes.map((t) => t.label.ko).join("·") + " 균형 유치" },
+            { label: "2. 당일 운영 점검 (세부업종 맞춤)", detail: (subDayChecks.length ? subDayChecks.map((c) => c.label.ko).join("·") : "핵심 설비·결제·청결") + "·관찰·정산" },
+            { label: "3. 피드백 수집", detail: soft.feedbackAxes.map((a) => a.label.ko).join("·") + " — AI 폼 + 종이 카드" },
+            { label: "4. 본 오픈 준비", detail: soft.finalPrep.map((f) => f.label.ko).join("·") },
           ]}
           doneItemsEn={[
-            { label: "1. Invite guests + set pricing", detail: "Mix 4 types (family/neighbors/IG/peers) + free/discount/full" },
-            { label: "2. Day-of 8-axis ops check", detail: "Clean/brief/POS/vibe/observe/payment/cards/debrief" },
-            { label: "3. 4-axis feedback collection", detail: "Taste/svc/price/vibe — AI form + paper + form builder" },
-            { label: "4. Grand-open 5 fixes", detail: "Menu 1-2 / staff retrain / marketing / 1.5× order / recap" },
+            { label: soft.page1Label.en, detail: soft.trialTypes.map((t) => t.label.en).join("/") },
+            { label: "2. Day-of checks (industry)", detail: (subDayChecks.length ? subDayChecks.map((c) => c.label.en).join("/") : "Core equipment/payment/cleanliness") + " + observe/settle" },
+            { label: "3. Feedback collection", detail: soft.feedbackAxes.map((a) => a.label.en).join("/") + " — AI form + paper" },
+            { label: "4. Grand-open prep", detail: soft.finalPrep.map((f) => f.label.en).join("/") },
           ]}
           verifyItemsKo={[
-            "결제 단말 1건 실 카드 테스트 + 즉시 취소 — 결제 오류 1건 = 별점 -0.4",
-            "직원 응대 멘트·포지션·비상 대응 통일 (당일 발견 이슈 모두 코칭)",
-            "본 오픈 식자재·소모품 1.5배 발주 입고 시간 확정",
-            "인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 — 본 오픈 D-3 까지",
-            "피드백 응답 10명 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
-            "소프트 오픈 1페이지 요약 직원 공유 — 본 오픈 운영 자료",
+            "결제 1건 실테스트 + 즉시 취소 — 결제 오류 1건 = 평판 즉락",
+            "당일 발견 이슈 모두 정리·보완 (응대·동선·설비·시스템)",
+            `본 오픈 준비 확정 — ${soft.finalPrep.map((f) => f.label.ko).slice(0, 2).join("·")} 등`,
+            "네이버 플레이스·인스타 노출 시드 — 본 오픈 D-3 까지",
+            "피드백 응답 10건 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
+            "소프트 오픈 1페이지 요약 정리 — 본 오픈 운영 자료",
           ]}
           verifyItemsEn={[
-            "Test 1 real card on terminal + cancel — 1 error = -0.4 stars",
-            "Standardize staff scripts/positions/emergency — coach all day-of issues",
-            "Confirm 1.5× ingredients/supplies delivery timing",
-            "Seed 3 IG + 1 reel + 5 Naver reviews by D-3",
+            "1 real payment test + cancel — 1 error = instant reputation drop",
+            "Resolve all day-of issues (service/flow/equipment/systems)",
+            `Confirm grand-open prep — ${soft.finalPrep.map((f) => f.label.en).slice(0, 2).join(", ")} etc.`,
+            "Seed Naver Place / IG exposure by D-3",
             "10+ feedback responses + apply only 1-2 common themes",
-            "Share soft-open 1-page recap with staff — grand-open ops doc",
+            "Compile soft-open 1-page recap — grand-open ops doc",
           ]}
           nextSummaryKo="운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
           nextSummaryEn="1 cycle validated → enter grand-open (pre-launch-final)"

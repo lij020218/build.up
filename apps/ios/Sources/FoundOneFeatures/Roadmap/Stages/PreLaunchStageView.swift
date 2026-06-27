@@ -45,15 +45,21 @@ public struct PreLaunchStageView: View {
     // 가격 정책 선택
     @AppStorage("prelaunch.pricing") private var pricingChoice = "" // "free" / "discount" / "full"
 
-    // 당일 8축 체크 (웹 8축 미러)
-    @AppStorage("prelaunch.clean")     private var dayClean     = false
-    @AppStorage("prelaunch.staff")     private var dayStaff     = false
-    @AppStorage("prelaunch.pos")       private var dayPOS       = false
-    @AppStorage("prelaunch.ambiance")  private var dayAmbiance  = false
-    @AppStorage("prelaunch.observe")   private var dayObserve   = false
-    @AppStorage("prelaunch.payment")   private var dayPayment   = false
-    @AppStorage("prelaunch.fbcard")    private var dayFbCard    = false
-    @AppStorage("prelaunch.debrief")   private var dayDebrief   = false
+    // 당일 운영 체크 — 세부업종 맞춤(SoftOpenRegistry, 웹 SSOT 미러). 동적 ID Set 저장.
+    @AppStorage("prelaunch.daychecks") private var dayChecksRaw = ""
+
+    private func K(_ l: BULoc) -> String { l.ko }
+    private var soft: BUSoftOpenContent { SoftOpenRegistry.content(subIndustryId: industryId, categoryId: nil) }
+    /// 공통 당일 점검 tail (운영모델 무관 — 대면 전용 직원·분위기 제외).
+    private var universalDayTail: [BUSoftOpenDayCheck] {
+        [
+            .init(id: "day-observation", label: BULoc(ko: "운영 중 관찰·기록", en: "Observe & note"), detail: BULoc(ko: "이용·동선·반응을 실시간 메모. 병목·불편 기록.", en: "Log usage/flow/reactions; note bottlenecks.")),
+            .init(id: "day-settlement", label: BULoc(ko: "마감 정산·재고 확인", en: "Closing settle & stock"), detail: BULoc(ko: "매출·결제 정산 + 소모품·재고 확인.", en: "Reconcile sales + check supplies/stock.")),
+            .init(id: "day-sns", label: BULoc(ko: "오픈 SNS 1건 게시", en: "Post 1 opening SNS"), detail: BULoc(ko: "현장 사진·후기 1건 — 네이버·인스타 노출 시작.", en: "1 photo/review — start Naver/IG.")),
+        ]
+    }
+    private var dayItems: [BUSoftOpenDayCheck] { SoftOpenRegistry.dayChecks(subIndustryId: industryId) + universalDayTail }
+    private var dayCheckedSet: Set<String> { Set(dayChecksRaw.split(separator: ",").map(String.init)) }
 
     // 피드백
     @AppStorage("prelaunch.feedback.note")  private var feedbackNote = ""
@@ -63,41 +69,29 @@ public struct PreLaunchStageView: View {
     @AppStorage("prelaunch.grandopen.date")  private var grandOpenDate = ""
     @AppStorage("prelaunch.grandopen.done")  private var grandOpenDone = false
 
-    private let pages = ["개요", "1. 손님 초대", "2. 당일 운영", "3. 피드백", "4. 본 오픈 준비", "마무리"]
+    private var pages: [String] { ["개요", K(soft.page1Label), "2. 당일 운영", "3. 피드백", "4. 본 오픈 준비", "마무리"] }
 
     private var dayCheckCount: Int {
-        [dayClean, dayStaff, dayPOS, dayAmbiance, dayObserve, dayPayment, dayFbCard, dayDebrief].filter { $0 }.count
+        let ids = Set(dayItems.map { $0.id }); return dayCheckedSet.intersection(ids).count
     }
 
     private var dayChecksBinding: Binding<Set<String>> {
         Binding(
-            get: {
-                var s: Set<String> = []
-                if dayClean { s.insert("clean") }; if dayStaff { s.insert("staff") }
-                if dayPOS { s.insert("pos") }; if dayAmbiance { s.insert("ambiance") }
-                if dayObserve { s.insert("observe") }; if dayPayment { s.insert("payment") }
-                if dayFbCard { s.insert("fbcard") }; if dayDebrief { s.insert("debrief") }
-                return s
-            },
-            set: { new in
-                dayClean = new.contains("clean"); dayStaff = new.contains("staff")
-                dayPOS = new.contains("pos"); dayAmbiance = new.contains("ambiance")
-                dayObserve = new.contains("observe"); dayPayment = new.contains("payment")
-                dayFbCard = new.contains("fbcard"); dayDebrief = new.contains("debrief")
-            }
+            get: { dayCheckedSet },
+            set: { dayChecksRaw = $0.sorted().joined(separator: ",") }
         )
     }
 
     /// 웹 gateTasks (required:true) 미러 — 모든 게이트 만족 시에만 다음 단계로.
     private var canCompleteStage: Bool {
-        !pricingChoice.isEmpty && dayCheckCount == 8 && feedbackDone && grandOpenDone
+        !pricingChoice.isEmpty && dayCheckCount == dayItems.count && feedbackDone && grandOpenDone
     }
 
     public init() {}
 
     private var advanceHint: String {
-        if pricingChoice.isEmpty { return "「손님 초대」 탭에서 가격 정책을 선택하세요" }
-        if dayCheckCount < 8 { return "당일 체크 \(dayCheckCount)/8 — 모두 체크해야 진행" }
+        if pricingChoice.isEmpty { return "「\(K(soft.page1Label))」 탭에서 가격 정책을 선택하세요" }
+        if dayCheckCount < dayItems.count { return "당일 체크 \(dayCheckCount)/\(dayItems.count) — 모두 체크해야 진행" }
         if !feedbackDone { return "피드백 수집·정리 완료 토글을 켜세요" }
         if !grandOpenDone { return "본 오픈 준비 완료 토글을 켜세요" }
         return "소프트 오픈 완료 — 본 오픈으로!"
@@ -119,18 +113,18 @@ public struct PreLaunchStageView: View {
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["pricing": pricingChoice]) },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 손님 초대 + 가격 결정", detail: "10~30명 4유형(가족·이웃·인플루언서·동료) 균형 + 무료/할인/정가 결정"),
-                .init(label: "2. 당일 운영 8축 점검", detail: "청결·브리핑·POS·분위기·관찰·결제·피드백카드·디브리핑"),
-                .init(label: "3. 피드백 4축 수집", detail: "맛·서비스·가격·분위기 — 종이 카드 + 폼(구글/네이버/카카오)"),
-                .init(label: "4. 본 오픈 준비 5종 보강", detail: "메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·1.5배 발주·1페이지 요약"),
+                .init(label: K(soft.page1Label), detail: soft.trialTypes.map { K($0.label) }.joined(separator: "·") + " 균형 유치"),
+                .init(label: "2. 당일 운영 점검 (세부업종 맞춤)", detail: (dayItems.isEmpty ? "핵심 설비·결제·청결" : dayItems.prefix(5).map { K($0.label) }.joined(separator: "·"))),
+                .init(label: "3. 피드백 수집", detail: soft.feedbackAxes.map { K($0.label) }.joined(separator: "·")),
+                .init(label: "4. 본 오픈 준비", detail: soft.finalPrep.map { K($0.label) }.joined(separator: "·")),
                 ],
                 verifyItems: [
-                "결제 단말 1건 실 카드 테스트 + 즉시 취소 — 결제 오류 1건 = 별점 -0.4",
-                "직원 응대 멘트·포지션·비상 대응 통일 (당일 발견 이슈 모두 코칭)",
-                "본 오픈 식자재·소모품 1.5배 발주 입고 시간 확정",
-                "인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 — 본 오픈 D-3 까지",
-                "피드백 응답 10명 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
-                "소프트 오픈 1페이지 요약 직원 공유 — 본 오픈 운영 자료",
+                "결제 1건 실테스트 + 즉시 취소 — 결제 오류 1건 = 평판 즉락",
+                "당일 발견 이슈 모두 정리·보완 (응대·동선·설비·시스템)",
+                "본 오픈 준비 확정 — " + soft.finalPrep.prefix(2).map { K($0.label) }.joined(separator: "·") + " 등",
+                "네이버 플레이스·인스타 노출 시드 — 본 오픈 D-3 까지",
+                "피드백 응답 10건 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
+                "소프트 오픈 1페이지 요약 정리 — 본 오픈 운영 자료",
                 ],
                 nextStageLabel: "다음 단계(본 오픈) 전 반드시 확인",
                 nextSummary: "운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
@@ -187,17 +181,17 @@ public struct PreLaunchStageView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("이 단계에서 진행 — 총 5단계")
                         .font(BUFont.eyebrow).foregroundStyle(BUColor.midnight.opacity(0.7))
-                    outlineRow("1. 손님 초대", "10~30명 초대 + 가격 결정 (무료/할인/정가)", "사전")
-                    outlineRow("2. 당일 운영", "8축 체크 + 운영 중 손님·직원 관찰", "90분")
-                    outlineRow("3. 피드백", "맛·서비스·가격·분위기 — 폼 또는 카드", "30분")
-                    outlineRow("4. 본 오픈 준비", "메뉴·직원·마케팅·발주 최종 보강", "당일")
+                    outlineRow(K(soft.page1Label), "체험·초대 대상 유치 + 가격 결정", "사전")
+                    outlineRow("2. 당일 운영", "세부업종 맞춤 당일 점검 + 운영 관찰", "당일")
+                    outlineRow("3. 피드백", soft.feedbackAxes.map { K($0.label) }.joined(separator: "·") + " — 폼 또는 카드", "30분")
+                    outlineRow("4. 본 오픈 준비", soft.finalPrep.prefix(3).map { K($0.label) }.joined(separator: "·") + " 등", "당일")
                     outlineRow("마무리", "자주 빠뜨리는 항목 + 진행 상태 요약", nil)
                 }
 
                 HStack(alignment: .top, spacing: 9) {
                     Image(systemName: "arrow.up.right.circle.fill").font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(BUColor.success).padding(.top, 1)
-                    Text("운영 1회전이 검증된 상태로 본 오픈 진입. 메뉴·동선·POS·SNS 가 통합 작동하는 것을 확인 + 첫 별점 5개 이상을 사전 확보. 다음 단계(본 오픈) 부터 신규 고객 매출 곡선이 안정적.")
+                    Text("운영 1회전이 검증된 상태로 본 오픈 진입. 설비·결제·시스템·SNS 가 통합 작동하는 것을 확인 + 첫 후기 5개 이상을 사전 확보. 다음 단계(본 오픈) 부터 신규 고객 매출 곡선이 안정적.")
                         .font(.system(size: 12.5)).foregroundStyle(BUColor.ink.opacity(0.78)).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
@@ -362,31 +356,21 @@ public struct PreLaunchStageView: View {
     private var invitePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             workStepCard(
-                stepLabel: "1. 손님 초대", time: "사전 7~14일",
-                headline: "10~30명 초대 + 4가지 손님 유형 + 가격 결정",
-                why: "본 오픈 매출의 30~50%는 첫 1주 단골이 결정. 소프트 오픈 손님이 그 단골 풀의 시드. 솔직한 가족·잠재 단골 동네 주민·바이럴 인플루언서·전문 동료 — 4유형을 섞어야 균형 있는 피드백.",
-                how: [
-                    ("오픈 7~14일 전 초대장 발송 — 카톡 + DM", "「○○ 매장 소프트 오픈에 초대합니다」 + 일시·주소·메뉴 사진. 가족·이웃·인플루언서·동료 4분류 명단."),
-                    ("가격 결정 — 무료 / 30~50% 할인 / 정가 중 선택", "무료=인상 최대 / 할인=결제·POS 검증 / 정가=실수익 모델 검증. 매장 컨셉·예산·검증 목표에 맞춰 결정."),
-                    ("예상 인원 1.5배로 식자재·소모품 발주", "결품 = 첫 인상 폭락. 핵심 메뉴는 충분히, 사이드는 1.2배. 남으면 직원 식사·다음날 사용."),
-                    ("초대 명단·확정 인원 카톡방 또는 구글폼으로 관리", "「몇 명 + 시간대」 사전 확정 — 노쇼 방지 + 좌석·서비스 사전 분배."),
-                ],
+                stepLabel: K(soft.page1Label), time: "사전 7~14일",
+                headline: K(soft.softOpenMeaning),
+                why: "본 오픈 전 마지막 검증 — 실제 운영을 1회전 돌려 문제를 미리 잡습니다. 아래 대상을 골고루 초대·유치해야 균형 잡힌 피드백을 얻습니다.",
+                how: soft.page1Steps.map { (K($0.title), K($0.detail)) },
                 watchouts: [
-                    ("가족·지인만 초대하면 진짜 시장 검증 안 됨", "그들은 무조건 좋다고 함. 동네 주민 + 인플루언서 + 동료를 반드시 섞어야 솔직한 피드백 확보."),
-                    ("결품·POS 미작동 = 첫 인상 즉사", "1.5배 발주 + 결제 단말 사전 테스트 + 백업 결제 수단 (계좌이체 QR) 까지 준비."),
+                    ("가까운 지인만 부르면 진짜 검증이 안 됨", "무조건 좋다고 합니다 — 잠재 고객·외부인을 반드시 섞어 솔직한 피드백을 확보하세요."),
+                    ("결제·핵심 설비 미점검 = 첫인상 즉사", "오픈 전 결제 1건 실테스트 + 핵심 설비·소모품 사전 점검 + 백업 수단 준비."),
                 ]
             )
             favorableCard
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("초대 손님 4유형 — 균형 있게 섞기")
-                    let guests: [(String, String)] = [
-                        ("가족 / 친한 지인", "솔직한 피드백의 최고 소스 — 창피함 없이 날카롭게 말해줄 사람 우선"),
-                        ("동네 주민 / 이웃", "잠재 단골 고객 — 오픈 후에도 가장 자주 올 수 있는 사람들"),
-                        ("인스타 팔로워 / 마이크로 인플루언서", "SNS 바이럴 효과 — 팔로워 1,000~10,000명 수준 권장"),
-                        ("업계 지인 / 블로거", "전문적 관점의 날카로운 피드백 — 개업 전 마지막 검증"),
-                    ]
+                    BUEyebrow("체험·초대 대상 — 균형 있게 섞기")
+                    let guests: [(String, String)] = soft.trialTypes.map { (K($0.label), K($0.desc)) }
                     ForEach(Array(guests.enumerated()), id: \.offset) { idx, g in
                         HStack(alignment: .top, spacing: BUSpacing.sm) {
                             Text("\(idx + 1)")
@@ -446,40 +430,30 @@ public struct PreLaunchStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             workStepCard(
                 stepLabel: "2. 당일 운영", time: "90분",
-                headline: "8축 체크 + 운영 중 손님·직원 관찰 — 본 오픈 보강 포인트 발견",
-                why: "소프트 오픈은 「운영 점검」이 핵심. 사인·POS·간판이 따로 작동하던 것을 처음으로 합쳐 돌리는 자리. 청결·직원·결제·분위기·관찰·결제오류·피드백 카드·디브리핑 8축을 빠짐없이 체크.",
+                headline: "세부업종 맞춤 당일 점검 + 운영 관찰 — 본 오픈 보강 포인트 발견",
+                why: "소프트 오픈은 「운영 점검」이 핵심. 설비·결제·시스템이 따로 작동하던 것을 처음으로 합쳐 돌리는 자리. 아래 세부업종 핵심 점검 항목을 빠짐없이 확인하세요.",
                 how: [
-                    ("오픈 1시간 전 — 청결·POS·분위기 최종 점검", "청소·결제 테스트·조명·음악 다시 한 번. 손님 입장 직전 매장 톤 셋업."),
-                    ("오픈 직후 — 직원 역할·응대 멘트 마지막 브리핑", "포지션·응대 스크립트·비상 시 대응 (결제 오류·컴플레인) 한 번 더 합의."),
-                    ("운영 중 — 손님·직원 관찰 + 사진·메모", "표정·대화·남기는 음식·머무는 위치 실시간 기록. 직원 동선 병목 메모."),
-                    ("마감 직후 — 직원 디브리핑 30분", "잘된 점 3 + 개선점 3 모두 발언. 회의록 1페이지 — 내일 본 오픈 보강 자료."),
+                    ("오픈 전 — 핵심 설비·결제·청결 최종 점검", "결제 테스트, 핵심 설비 시운전, 매장·시설 청결을 이용 직전 한 번 더."),
+                    ("운영 중 — 이용 흐름·반응 관찰 + 사진·메모", "동선·대기·불편 지점을 실시간 기록. 병목과 오류를 즉시 메모."),
+                    ("마감 — 정산·재고 확인 + 1페이지 회고", "매출·결제 정산, 소모품·재고 확인, 잘된 점 3·개선점 3 정리."),
                 ],
                 watchouts: [
-                    ("결제 단 1건 오류 = 별점 -0.4", "오픈 전날 카드 1건 실결제 후 즉시 취소로 흐름까지 검증. 백업 결제 수단(계좌이체 QR) 준비."),
-                    ("직원 임의 응대 = 첫인상 흐트러짐", "응대 멘트 1줄이라도 통일. 「어서오세요」 + 「○○ 매장입니다」 + 메뉴 추천 1문장."),
+                    ("결제 단 1건 오류 = 평판 즉락", "오픈 전 결제 1건 실테스트 후 즉시 취소로 흐름 검증. 백업 결제 수단(계좌이체 QR) 준비."),
+                    ("핵심 설비 미점검 = 첫날 운영 정지", "업종 핵심 설비(기기·키오스크·예약·시스템)를 반드시 사전 시운전."),
                 ]
             )
 
             BUInteractiveChecklist(
-                title: "당일 운영 8축 체크 (\(dayCheckCount)/8)",
-                items: [
-                    .init(id: "clean",     label: "매장·시설 청결 & 위생 최종 점검", detail: "바닥·테이블·화장실·쓰레기통 모두 점검·소독"),
-                    .init(id: "staff",     label: "직원 역할 배분 & 브리핑",         detail: "포지션·응대 멘트·비상 대응 방법 공유"),
-                    .init(id: "pos",       label: "POS & 결제 단말기 정상 작동",     detail: "카드·현금·간편결제 테스트 결제 후 즉시 취소"),
-                    .init(id: "ambiance",  label: "조명·음악·온도·향기 설정",         detail: "원하는 브랜드 분위기 연출, 손님 입장 전 최종 확인"),
-                    .init(id: "observe",   label: "운영 중 병목 & 손님 반응 관찰",   detail: "표정·대화·남기는 것·오래 머무는 곳 실시간 기록"),
-                    .init(id: "payment",   label: "결제 오류·지연 여부 체크",         detail: "영수증 출력, 결제 완료 문자 발송 여부 확인"),
-                    .init(id: "fbcard",    label: "피드백 카드 수거 & 정리",         detail: "무기명 가능 → 솔직한 의견 유도"),
-                    .init(id: "debrief",   label: "직원 회의 진행",                  detail: "잘된 점 3가지 + 개선점 3가지 모두 발언하게 하기"),
-                ],
+                title: "당일 운영 체크 — 세부업종 맞춤 (\(dayCheckCount)/\(dayItems.count))",
+                items: dayItems.map { .init(id: $0.id, label: K($0.label), detail: K($0.detail)) },
                 checked: dayChecksBinding
             )
 
-            if dayCheckCount == 8 {
+            if dayCheckCount == dayItems.count {
                 BUCard(.card) {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success).font(.system(size: 22))
-                        Text("8축 모두 완료! 소프트 오픈 운영 준비 완료입니다.")
+                        Text("모든 점검 완료! 소프트 오픈 운영 준비 완료입니다.")
                             .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
                     }
                 }
@@ -567,14 +541,9 @@ public struct PreLaunchStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             workStepCard(
                 stepLabel: "4. 본 오픈 준비", time: "당일~D+1",
-                headline: "메뉴·직원·마케팅·발주 4축 최종 보강 + 1페이지 요약",
-                why: "소프트 오픈 결과를 본 오픈 직전 24~48시간 안에 반영해야 효과. 메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·발주 1.5배 — 4축만 빠르게 보강하면 됩니다.",
-                how: [
-                    ("메뉴·가격 1~2개 조정 — 그 이상은 본 오픈 후", "공통 피드백 1~2개만 즉시 반영. 모두 반영하면 직원·POS 혼선 → 본 오픈 더 큰 사고."),
-                    ("직원 재교육 — 1:1 코칭 30분", "당일 발견된 동선·응대 이슈 직원별로 짧게 코칭. 멘트·포지션·결제 흐름 통일."),
-                    ("본 오픈 마케팅 콘텐츠 발행", "인스타 게시물 3개 + 릴스 1개 + 네이버 플레이스 영수증 리뷰 5개 (지인 부탁) — 첫 주 노출 폭발의 시드."),
-                    ("본 오픈 식자재·소모품 1.5배 발주", "첫 주말 결품 = 첫 신규 고객 인상 즉사. 공급처 사전 알림으로 입고 시간까지 확정."),
-                ],
+                headline: "세부업종 맞춤 본 오픈 준비 보강 + 1페이지 요약",
+                why: "소프트 오픈 결과를 본 오픈 직전 24~48시간 안에 반영해야 효과. 아래 세부업종 맞춤 준비 항목을 빠르게 보강하세요.",
+                how: soft.finalPrep.map { (K($0.label), K($0.detail)) },
                 watchouts: [
                     ("피드백 모두 반영 시 본 오픈 지연", "공통 의견 1~2개만. 그 이상은 본 오픈 후 실데이터 기반으로 결정."),
                     ("마케팅 콘텐츠 사전 준비 안 하면 첫 주 노출 0", "본 오픈 D-3 까지 인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 확보 — 알고리즘 첫인상 결정."),
@@ -583,14 +552,8 @@ public struct PreLaunchStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("본 오픈 준비 5종")
-                    let checks: [(String, String)] = [
-                        ("메뉴·가격·옵션 최종 확정", "피드백 반영해 1~2가지 조정. 그 이상은 본 오픈 후"),
-                        ("직원 재교육 (피드백 기반)", "당일 발견된 동선·응대 이슈 1:1 코칭"),
-                        ("본 오픈 마케팅 콘텐츠 발행", "인스타 게시물 3개 + 릴스 1개 + 네이버 플레이스 영수증 리뷰 5개"),
-                        ("본 오픈 식자재·장비·소모품 발주", "예상 인원 1.5배로 발주 — 첫 주말 결품 방지"),
-                        ("소프트 오픈 결과 1페이지 요약 작성", "잘된 점·개선점·예상 이슈 — 직원·운영 자료"),
-                    ]
+                    BUEyebrow("본 오픈 준비 — 세부업종 맞춤")
+                    let checks: [(String, String)] = soft.finalPrep.map { (K($0.label), K($0.detail)) }
                     ForEach(checks, id: \.0) { title, detail in
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "checkmark.circle").font(.system(size: 16)).foregroundStyle(BUColor.inkSubtle)
@@ -627,7 +590,7 @@ public struct PreLaunchStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("진행 상황 요약")
                     summaryRow("가격 정책 결정", done: !pricingChoice.isEmpty)
-                    summaryRow("당일 운영 8축 점검", done: dayCheckCount == 8)
+                    summaryRow("당일 운영 점검", done: dayCheckCount == dayItems.count)
                     summaryRow("피드백 수집·정리", done: feedbackDone)
                     summaryRow("본 오픈 준비 완료", done: grandOpenDone)
                     if canCompleteStage {
