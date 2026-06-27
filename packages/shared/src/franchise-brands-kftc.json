@@ -262,7 +262,7 @@
     "id": "kftc-ohybgv",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -315,7 +315,9 @@
   {
     "id": "kftc-tu54s",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "아소비",
@@ -367,7 +369,7 @@
     "id": "kftc-13h032l",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -421,7 +423,7 @@
     "id": "kftc-w1f03s",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -528,7 +530,9 @@
   {
     "id": "kftc-or70x0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "블루핸즈",
@@ -579,7 +583,7 @@
     "id": "kftc-1cmrt3b",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -633,7 +637,7 @@
     "id": "kftc-t9tfnb",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -895,7 +899,9 @@
   {
     "id": "kftc-15g8oky",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "역전할머니맥주1982",
@@ -998,7 +1004,7 @@
     "id": "kftc-oayoeu",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -1103,7 +1109,9 @@
   {
     "id": "kftc-u1l90",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "오토큐",
@@ -1156,7 +1164,7 @@
     "id": "kftc-oxl619",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -1207,7 +1215,9 @@
   {
     "id": "kftc-u5jsq",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "정관장",
@@ -1314,7 +1324,7 @@
     "id": "kftc-3kwptd",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -1472,7 +1482,9 @@
   {
     "id": "kftc-ypts",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "알파",
@@ -1524,8 +1536,10 @@
   {
     "id": "kftc-19n0ckq",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "icecream-bingsu"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "픽미픽미아이스크림할인점",
       "en": "픽미픽미아이스크림할인점"
@@ -1681,7 +1695,7 @@
     "id": "kftc-vsgc",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -1734,7 +1748,9 @@
   {
     "id": "kftc-tssil5",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "불닭발땡초동대문엽기떡볶이",
@@ -1840,7 +1856,9 @@
   {
     "id": "kftc-s5vfo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "마스타",
@@ -1892,7 +1910,9 @@
   {
     "id": "kftc-z811o3",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "한우리독서토론논술",
@@ -1945,7 +1965,7 @@
     "id": "kftc-1fbuvps",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -1998,7 +2018,9 @@
   {
     "id": "kftc-1uuenr",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "V-KOOL",
@@ -2051,9 +2073,9 @@
     "id": "kftc-1xrqj9y",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "dessert-cafe"
     ],
-    "categoryId": "food",
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "달콤왕가탕후루",
       "en": "달콤왕가탕후루"
@@ -2105,7 +2127,7 @@
     "id": "kftc-rn2zy1",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -2158,7 +2180,9 @@
   {
     "id": "kftc-18nq8u8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "T’Station",
@@ -2371,7 +2395,9 @@
   {
     "id": "kftc-mrk23f",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "크라운호프보리장인",
@@ -2477,7 +2503,9 @@
   {
     "id": "kftc-rpk5fg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "autoOasis",
@@ -2583,7 +2611,9 @@
   {
     "id": "kftc-ojtj68",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "밥스토랑",
@@ -2688,7 +2718,9 @@
   {
     "id": "kftc-pnsfw8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "아리따움",
@@ -2741,7 +2773,7 @@
     "id": "kftc-g2wz64",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -2955,7 +2987,7 @@
     "id": "kftc-1w5kitn",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -3008,8 +3040,10 @@
   {
     "id": "kftc-pytugo",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "인생네컷",
       "en": "인생네컷"
@@ -3060,8 +3094,10 @@
   {
     "id": "kftc-12060w7",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "포토이즘박스",
       "en": "포토이즘박스"
@@ -3110,7 +3146,9 @@
   {
     "id": "kftc-q61od",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "간이역",
@@ -3216,7 +3254,9 @@
   {
     "id": "kftc-2xzd98",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "풀무원녹즙",
@@ -3269,7 +3309,7 @@
     "id": "kftc-1ewv118",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -3377,7 +3417,7 @@
     "id": "kftc-hqj0rw",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -3534,7 +3574,9 @@
   {
     "id": "kftc-rh6b7t",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "펀비어킹",
@@ -3587,7 +3629,7 @@
     "id": "kftc-1nmcbjs",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -3639,7 +3681,9 @@
   {
     "id": "kftc-tx7a8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "오렌즈",
@@ -3746,7 +3790,7 @@
     "id": "kftc-qkcuob",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -3799,7 +3843,9 @@
   {
     "id": "kftc-pd1y7c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "엑스오엑스오푸드카페",
@@ -3903,7 +3949,9 @@
   {
     "id": "kftc-1w0zccj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "바다양푼이동태탕찜",
@@ -4009,7 +4057,9 @@
   {
     "id": "kftc-u1jsl",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "유니팝",
@@ -4059,7 +4109,9 @@
   {
     "id": "kftc-nlb0s8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "드림디포",
@@ -4274,7 +4326,7 @@
     "id": "kftc-1nocgml",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -4328,7 +4380,7 @@
     "id": "kftc-hodpwq",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -4381,7 +4433,9 @@
   {
     "id": "kftc-nforcs",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "더 스미스",
@@ -4433,8 +4487,10 @@
   {
     "id": "kftc-1uk1bl",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "icecream-bingsu"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "THE달달",
       "en": "THE달달"
@@ -4593,7 +4649,9 @@
   {
     "id": "kftc-p9hxm3",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "제3교실",
@@ -4645,7 +4703,9 @@
   {
     "id": "kftc-15xldyp",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "다비치안경체인",
@@ -4805,7 +4865,9 @@
   {
     "id": "kftc-mnf1ar",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "공임나라",
@@ -4909,7 +4971,9 @@
   {
     "id": "kftc-qmvpn5",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "초록마을",
@@ -5069,7 +5133,9 @@
   {
     "id": "kftc-1ngd67j",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "빵꾸똥꾸 문구야!",
@@ -5121,7 +5187,9 @@
   {
     "id": "kftc-17tkeam",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "일공공일안경콘택트",
@@ -5174,7 +5242,7 @@
     "id": "kftc-1nc1g4v",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -5227,7 +5295,9 @@
   {
     "id": "kftc-4obu8c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "으뜸50안경",
@@ -5279,7 +5349,9 @@
   {
     "id": "kftc-w1fvg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "풀무원",
@@ -5541,7 +5613,9 @@
   {
     "id": "kftc-o9l5i0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "마왕족발",
@@ -5647,7 +5721,9 @@
   {
     "id": "kftc-5vsybh",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "으뜸플러스안경",
@@ -5752,7 +5828,9 @@
   {
     "id": "kftc-q00fy8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "자연드림",
@@ -5804,7 +5882,9 @@
   {
     "id": "kftc-lvxw8o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "이니스프리",
@@ -5910,7 +5990,9 @@
   {
     "id": "kftc-qxqmfu",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "족발야시장",
@@ -5960,7 +6042,9 @@
   {
     "id": "kftc-rxsak",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "렌즈미",
@@ -6121,7 +6205,7 @@
     "id": "kftc-1xrznk9",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -6331,7 +6415,9 @@
   {
     "id": "kftc-us68x",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "책나무",
@@ -6705,7 +6791,9 @@
   {
     "id": "kftc-18evavs",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "문구야놀자",
@@ -6757,7 +6845,9 @@
   {
     "id": "kftc-1um1fnu",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "김복남맥주",
@@ -6809,7 +6899,9 @@
   {
     "id": "kftc-pz7ew8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "인쌩맥주",
@@ -6969,7 +7061,9 @@
   {
     "id": "kftc-1w0qgh",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "압구정 봉구비어",
@@ -7073,7 +7167,7 @@
     "id": "kftc-1r4gax7",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "specialty-coffee"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -7126,8 +7220,10 @@
   {
     "id": "kftc-h80h8x",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "self-serve-cafe"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "데이롱카페",
       "en": "데이롱카페"
@@ -7286,8 +7382,10 @@
   {
     "id": "kftc-11b7xcw",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "포토시그니처",
       "en": "포토시그니처"
@@ -7447,7 +7545,7 @@
     "id": "kftc-1l5egce",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -7500,7 +7598,9 @@
   {
     "id": "kftc-fxktd7",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "어린음악대",
@@ -7660,7 +7760,9 @@
   {
     "id": "kftc-qjtxo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "까투리",
@@ -7710,7 +7812,9 @@
   {
     "id": "kftc-15id821",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "철길부산집",
@@ -7871,7 +7975,7 @@
     "id": "kftc-pxgqs4",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -8079,8 +8183,11 @@
   {
     "id": "kftc-6pzq18",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "르하임스터디카페",
       "en": "르하임스터디카페"
@@ -8291,7 +8398,9 @@
   {
     "id": "kftc-p80wly",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "생활맥주",
@@ -8343,7 +8452,9 @@
   {
     "id": "kftc-fsiaqf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "에듀플렉스",
@@ -8504,7 +8615,7 @@
     "id": "kftc-1arsyk",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -8881,7 +8992,9 @@
   {
     "id": "kftc-u7fa0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "이차돌",
@@ -8934,7 +9047,7 @@
     "id": "kftc-1de3qoj",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -8987,8 +9100,11 @@
   {
     "id": "kftc-1cioi5p",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "CHOSIM",
       "en": "CHOSIM"
@@ -9093,7 +9209,9 @@
   {
     "id": "kftc-ppodbo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "에듀코치",
@@ -9200,7 +9318,7 @@
     "id": "kftc-pc3gol",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "icecream-bingsu"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -9253,7 +9371,9 @@
   {
     "id": "kftc-1kh16n",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "33떡볶이",
@@ -9359,7 +9479,9 @@
   {
     "id": "kftc-qvdkn4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "카앤피플",
@@ -9520,7 +9642,7 @@
     "id": "kftc-u2b9u",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -9627,7 +9749,9 @@
   {
     "id": "kftc-1lbl2bt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "북촌손만두",
@@ -9896,7 +10020,7 @@
     "id": "kftc-1kwz842",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -10003,7 +10127,9 @@
   {
     "id": "kftc-puc3w4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "엠티에이",
@@ -10053,7 +10179,9 @@
   {
     "id": "kftc-clclvj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "안경매니져",
@@ -10159,7 +10287,9 @@
   {
     "id": "kftc-107qk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "카젠",
@@ -10427,7 +10557,9 @@
   {
     "id": "kftc-tg6so",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "시매쓰",
@@ -10588,7 +10720,7 @@
     "id": "kftc-rqepft",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -10641,7 +10773,9 @@
   {
     "id": "kftc-4tk88g",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "print-copy"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "프린트카페",
@@ -10907,8 +11041,10 @@
   {
     "id": "kftc-oj0b6d",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "bakery-studio"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "떡보의하루",
       "en": "떡보의하루"
@@ -11067,7 +11203,9 @@
   {
     "id": "kftc-pojzh5",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "에그드랍",
@@ -11120,7 +11258,7 @@
     "id": "kftc-lp5lk9",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -11275,7 +11413,9 @@
   {
     "id": "kftc-tnjsr2",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "주식회사포차천국",
@@ -11433,7 +11573,9 @@
   {
     "id": "kftc-jlrqhj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "최고당돈가스",
@@ -11858,8 +12000,10 @@
   {
     "id": "kftc-rasym",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "skin-care-room"
+    ],
+    "categoryId": "beauty",
     "name": {
       "ko": "더풋샵",
       "en": "THE FOOT SHOP"
@@ -11910,8 +12054,10 @@
   {
     "id": "kftc-tumr7",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "pet-supplies"
+    ],
+    "categoryId": "pet",
     "name": {
       "ko": "씨유펫",
       "en": "씨유펫"
@@ -11962,7 +12108,9 @@
   {
     "id": "kftc-tgkmc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "슈올즈",
@@ -12227,7 +12375,9 @@
   {
     "id": "kftc-k9fqmk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "풀무원로하스",
@@ -12441,7 +12591,9 @@
   {
     "id": "kftc-u1jly",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "육대장",
@@ -12547,8 +12699,10 @@
   {
     "id": "kftc-g31hw0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "party-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "만화카페 벌툰",
       "en": "만화카페 벌툰"
@@ -12599,7 +12753,9 @@
   {
     "id": "kftc-gv9igd",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "영렘브란트",
@@ -12704,7 +12860,7 @@
     "id": "kftc-4hp4to",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -12758,7 +12914,7 @@
     "id": "kftc-byhqtc",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -12811,7 +12967,9 @@
   {
     "id": "kftc-rsgi4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "라무진",
@@ -13077,7 +13235,9 @@
   {
     "id": "kftc-t6ltp",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "샤브향",
@@ -13130,7 +13290,7 @@
     "id": "kftc-5hg19g",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -13183,7 +13343,9 @@
   {
     "id": "kftc-ne5aqz",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "닥엔돈스",
@@ -13289,8 +13451,10 @@
   {
     "id": "kftc-1bnmrw9",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "waxing-studio"
+    ],
+    "categoryId": "beauty",
     "name": {
       "ko": "ANADEN",
       "en": "ANADEN"
@@ -13341,7 +13505,9 @@
   {
     "id": "kftc-1mlb9o7",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "바른보쌈1990",
@@ -13499,7 +13665,9 @@
   {
     "id": "kftc-rv8jb0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "홍익아트",
@@ -13604,8 +13772,11 @@
   {
     "id": "kftc-bou1m0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "화이트펜슬",
       "en": "white pencil"
@@ -13710,7 +13881,9 @@
   {
     "id": "kftc-vad5g",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "코바코",
@@ -13816,7 +13989,9 @@
   {
     "id": "kftc-mpx64w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "unmanned-retail"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "까까주까",
@@ -13920,7 +14095,9 @@
   {
     "id": "kftc-plxxjt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "안경나라",
@@ -14241,7 +14418,7 @@
     "id": "kftc-1n2gkdx",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -14454,7 +14631,9 @@
   {
     "id": "kftc-zm7ah8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "렌즈페이스",
@@ -14668,7 +14847,9 @@
   {
     "id": "kftc-11gh9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "호맥",
@@ -14989,7 +15170,7 @@
     "id": "kftc-1iqkkd0",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -15042,8 +15223,11 @@
   {
     "id": "kftc-cpjyv0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "어라운드스터디카페",
       "en": "A.round study cafe"
@@ -15095,7 +15279,7 @@
     "id": "kftc-rbeu3m",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -15257,7 +15441,7 @@
     "id": "kftc-14k9cs7",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -15473,7 +15657,7 @@
     "id": "kftc-1frjvo5",
     "tier": "kftc",
     "subIndustryIds": [
-      "bakery-studio"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -15580,8 +15764,10 @@
   {
     "id": "kftc-prl83o",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
     "name": {
       "ko": "오레시피",
       "en": "오레시피"
@@ -15632,7 +15818,9 @@
   {
     "id": "kftc-l3hisk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "오피스디포",
@@ -15738,7 +15926,9 @@
   {
     "id": "kftc-mlghdg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "고반식당",
@@ -15844,8 +16034,10 @@
   {
     "id": "kftc-rotyds",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "하루필름",
       "en": "하루필름"
@@ -15896,7 +16088,9 @@
   {
     "id": "kftc-rubqg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "레디카",
@@ -15948,7 +16142,9 @@
   {
     "id": "kftc-1bnlp0u",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "머리에그리는홍선생미술",
@@ -16000,7 +16196,9 @@
   {
     "id": "kftc-pv1mj8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "위드렌즈",
@@ -16052,8 +16250,10 @@
   {
     "id": "kftc-u2qlo",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "dessert-cafe"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "와플칸",
       "en": "와플칸"
@@ -16424,8 +16624,11 @@
   {
     "id": "kftc-w2mhd",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "플랜A",
       "en": "플랜A"
@@ -16638,7 +16841,9 @@
   {
     "id": "kftc-pw2vod",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "용용선생",
@@ -16744,8 +16949,10 @@
   {
     "id": "kftc-v99u",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "놀숲",
       "en": "놀숲"
@@ -16797,7 +17004,7 @@
     "id": "kftc-sgdf1",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -16851,7 +17058,7 @@
     "id": "kftc-11c9c",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -16904,7 +17111,9 @@
   {
     "id": "kftc-r6x99o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "토니모리",
@@ -16956,7 +17165,9 @@
   {
     "id": "kftc-lnad9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "수내닭꼬치",
@@ -17216,7 +17427,9 @@
   {
     "id": "kftc-ammzbc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "바로덮밥,바로파스타&amp;경양식",
@@ -17482,8 +17695,11 @@
   {
     "id": "kftc-wk5mh8",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "그루스터디센터",
       "en": "그루스터디센터"
@@ -17535,7 +17751,7 @@
     "id": "kftc-eyrwf2",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -18021,7 +18237,7 @@
     "id": "kftc-14hadqk",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -18236,7 +18452,9 @@
   {
     "id": "kftc-le4k9c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "순수타코야끼",
@@ -18342,7 +18560,9 @@
   {
     "id": "kftc-plzxpo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "안경박사",
@@ -18392,7 +18612,9 @@
   {
     "id": "kftc-oaddi9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "막창도둑",
@@ -18499,7 +18721,7 @@
     "id": "kftc-108097o",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -18552,7 +18774,9 @@
   {
     "id": "kftc-q2nq6d",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "제육대가",
@@ -18658,7 +18882,9 @@
   {
     "id": "kftc-dbco78",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "뉴욕야시장",
@@ -18710,7 +18936,9 @@
   {
     "id": "kftc-lsajc1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "이노티안경",
@@ -18870,7 +19098,9 @@
   {
     "id": "kftc-uizvme",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "담소 소사골 순대 육개장",
@@ -18922,7 +19152,9 @@
   {
     "id": "kftc-vrpr76",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "고래맥주창고",
@@ -18974,7 +19206,9 @@
   {
     "id": "kftc-18sx47s",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "대구반야월막창",
@@ -19026,7 +19260,9 @@
   {
     "id": "kftc-mj704s",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "convenience-small"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "가자주류",
@@ -19180,7 +19416,9 @@
   {
     "id": "kftc-1btmc7b",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "무지개맥주",
@@ -19340,7 +19578,9 @@
   {
     "id": "kftc-n42wmc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "노군꼬치",
@@ -19501,7 +19741,7 @@
     "id": "kftc-5ibwyc",
     "tier": "kftc",
     "subIndustryIds": [
-      "pt-gym"
+      "golf-studio"
     ],
     "categoryId": "fitness",
     "name": {
@@ -19555,7 +19795,7 @@
     "id": "kftc-rqebmo",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -19716,7 +19956,9 @@
   {
     "id": "kftc-6vw8nc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "싸움의고수",
@@ -19928,7 +20170,9 @@
   {
     "id": "kftc-mxvjr4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "꼬지사께",
@@ -20034,7 +20278,9 @@
   {
     "id": "kftc-knoqav",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "우리집다음에맛있는집양평해장국",
@@ -20355,7 +20601,7 @@
     "id": "kftc-pdixdw",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -20406,7 +20652,9 @@
   {
     "id": "kftc-2z7ut0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "adult-class"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "아랑고고장구",
@@ -20564,8 +20812,11 @@
   {
     "id": "kftc-14v0653",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "시작스터디카페",
       "en": "시작스터디카페"
@@ -20616,8 +20867,10 @@
   {
     "id": "kftc-b0j536",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "shared-office"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "카페24창업센터",
       "en": "카페24창업센터"
@@ -20668,7 +20921,9 @@
   {
     "id": "kftc-1fqfd9q",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "인생건어물맥주",
@@ -20882,7 +21137,9 @@
   {
     "id": "kftc-mt5qhz",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "귀한족발",
@@ -21043,7 +21300,7 @@
     "id": "kftc-7yrdqw",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -21097,7 +21354,7 @@
     "id": "kftc-ym2rp",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -21151,7 +21408,7 @@
     "id": "kftc-dvj4f0",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -21204,7 +21461,9 @@
   {
     "id": "kftc-lvflyc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "오늘,와인한잔",
@@ -21256,7 +21515,9 @@
   {
     "id": "kftc-t84ro",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "소담촌",
@@ -21362,7 +21623,9 @@
   {
     "id": "kftc-tti24",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "아비꼬",
@@ -21414,8 +21677,10 @@
   {
     "id": "kftc-hq9cv8",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "icecream-bingsu"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "요거트월드",
       "en": "요거트월드"
@@ -21466,7 +21731,9 @@
   {
     "id": "kftc-txr19",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "unmanned-retail"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "오밀당",
@@ -21897,7 +22164,7 @@
     "id": "kftc-f1bo4j",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -22000,8 +22267,10 @@
   {
     "id": "kftc-3et1v4",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "포토그레이",
       "en": "포토그레이"
@@ -22106,8 +22375,10 @@
   {
     "id": "kftc-183c3z7",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "convenience-small"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "24시 무인 반려용품 편의점 아무도없개",
       "en": "24시 무인 반려용품 편의점 아무도없개"
@@ -22266,7 +22537,9 @@
   {
     "id": "kftc-v4fpm0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "라라코스트",
@@ -22318,8 +22591,10 @@
   {
     "id": "kftc-1otvack",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "icecream-bingsu"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "설아아이스크림",
       "en": "설아아이스크림"
@@ -22370,7 +22645,9 @@
   {
     "id": "kftc-ncx52c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "더꼬치다",
@@ -22530,7 +22807,9 @@
   {
     "id": "kftc-xvep",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "설맥",
@@ -22583,7 +22862,7 @@
     "id": "kftc-rqcpzz",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -22636,7 +22915,9 @@
   {
     "id": "kftc-1w84sp9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "투투정비서비스",
@@ -22688,8 +22969,10 @@
   {
     "id": "kftc-1huthwm",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "pilates-studio"
+    ],
+    "categoryId": "fitness",
     "name": {
       "ko": "모던필라테스MPI",
       "en": "모던필라테스MPI"
@@ -22738,7 +23021,9 @@
   {
     "id": "kftc-x14c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "미샤",
@@ -22845,7 +23130,7 @@
     "id": "kftc-od1al3",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -22952,7 +23237,9 @@
   {
     "id": "kftc-n8wp6v",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "윤이불닭발",
@@ -23004,7 +23291,9 @@
   {
     "id": "kftc-1vwi6",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "79대포",
@@ -23164,7 +23453,9 @@
   {
     "id": "kftc-14ptkt9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "만복국수집",
@@ -23216,7 +23507,9 @@
   {
     "id": "kftc-vl1kg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "타코비",
@@ -23485,7 +23778,7 @@
     "id": "kftc-f0ynwz",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -23538,7 +23831,9 @@
   {
     "id": "kftc-11cdtd7",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "혜화동 돈까스극장",
@@ -23590,7 +23885,9 @@
   {
     "id": "kftc-yxenm3",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "웅이네 오돌뼈",
@@ -23642,7 +23939,9 @@
   {
     "id": "kftc-171teww",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "그림아트스튜디오",
@@ -23800,7 +24099,9 @@
   {
     "id": "kftc-225i39",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "치교치밥&amp;치킨",
@@ -23852,7 +24153,9 @@
   {
     "id": "kftc-cchsw4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "unmanned-retail"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "아이스앤 스낵창고",
@@ -24013,7 +24316,7 @@
     "id": "kftc-bgan6g",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -24174,7 +24477,9 @@
   {
     "id": "kftc-p2zdht",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "소낙스 카케어",
@@ -24226,7 +24531,9 @@
   {
     "id": "kftc-ppyjw8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "아이피아",
@@ -24279,7 +24586,7 @@
     "id": "kftc-10q407m",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -24383,7 +24690,9 @@
   {
     "id": "kftc-10ckj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "콩심",
@@ -24436,7 +24745,7 @@
     "id": "kftc-1j07jh4",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -24543,8 +24852,11 @@
   {
     "id": "kftc-roukzn",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "공간샘스터디카페",
       "en": "공간샘스터디카페"
@@ -24864,7 +25176,9 @@
   {
     "id": "kftc-1mq78cr",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "청담동말자싸롱",
@@ -24917,7 +25231,7 @@
     "id": "kftc-16cb6ys",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -24971,7 +25285,7 @@
     "id": "kftc-rqaka5",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -25078,7 +25392,9 @@
   {
     "id": "kftc-q7ack",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "고돼지",
@@ -25292,7 +25608,9 @@
   {
     "id": "kftc-5437kf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "뿅가야채곱창",
@@ -25344,7 +25662,9 @@
   {
     "id": "kftc-tydrg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "예스셈",
@@ -25500,7 +25820,9 @@
   {
     "id": "kftc-oih14q",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "뮤직뮤직",
@@ -25821,7 +26143,7 @@
     "id": "kftc-nfp2d6",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -25874,8 +26196,10 @@
   {
     "id": "kftc-1h71aac",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "kids-academy"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "어드벤처피아노",
       "en": "어드벤처피아노"
@@ -26087,8 +26411,11 @@
   {
     "id": "kftc-z0jf",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "작심",
       "en": "작심"
@@ -26139,8 +26466,10 @@
   {
     "id": "kftc-l3wdyk",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "shared-office"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "드림오피스",
       "en": "드림오피스"
@@ -26516,7 +26845,7 @@
     "id": "kftc-rk48wn",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -26731,8 +27060,10 @@
   {
     "id": "kftc-dbcsvw",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "플랜비 스튜디오",
       "en": "플랜비 스튜디오"
@@ -26783,8 +27114,10 @@
   {
     "id": "kftc-pzah0r",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "유캔두잇",
       "en": "유캔두잇"
@@ -26944,7 +27277,7 @@
     "id": "kftc-3webyf",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -27049,8 +27382,11 @@
   {
     "id": "kftc-1yz24eo",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "타임유스터디카페",
       "en": "타임유스터디카페"
@@ -27100,7 +27436,7 @@
     "id": "kftc-v6w2sc",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -27207,7 +27543,9 @@
   {
     "id": "kftc-z122hx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "짝태&amp;노가리",
@@ -27368,7 +27706,7 @@
     "id": "kftc-1ot9pn",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -27474,7 +27812,9 @@
   {
     "id": "kftc-qkesqf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "청담곱떡",
@@ -27524,7 +27864,9 @@
   {
     "id": "kftc-e0eqc9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "팔팔포장마차",
@@ -27576,8 +27918,11 @@
   {
     "id": "kftc-1f05ck",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "education",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "토즈 스터디센터",
       "en": "토즈 스터디센터"
@@ -27628,8 +27973,11 @@
   {
     "id": "kftc-173taxr",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "공부인 스터디카페",
       "en": "공부인 스터디카페"
@@ -27734,8 +28082,11 @@
   {
     "id": "kftc-1pwlv1l",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "공본스터디카페",
       "en": "공본스터디카페"
@@ -27946,7 +28297,9 @@
   {
     "id": "kftc-ojxz9f",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "백스비어",
@@ -28053,7 +28406,7 @@
     "id": "kftc-3zh88d",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -28160,7 +28513,9 @@
   {
     "id": "kftc-mqdb4a",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "길동우동",
@@ -28212,7 +28567,9 @@
   {
     "id": "kftc-1hvlyyc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "캠토토스트",
@@ -28262,7 +28619,9 @@
   {
     "id": "kftc-1iywjy8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "대패가1900",
@@ -28369,7 +28728,7 @@
     "id": "kftc-1fbajux",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -28528,7 +28887,9 @@
   {
     "id": "kftc-s3xts",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "루트원",
@@ -28796,7 +29157,9 @@
   {
     "id": "kftc-1h2wjx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "꼬치의품격",
@@ -28900,8 +29263,10 @@
   {
     "id": "kftc-9soe0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "icecream-bingsu"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "도깨비냉장고 아이스크림할인점",
       "en": "도깨비냉장고 아이스크림할인점"
@@ -28952,7 +29317,9 @@
   {
     "id": "kftc-1hod4w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "플래뮤아트센터",
@@ -29004,8 +29371,10 @@
   {
     "id": "kftc-x52cps",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "rental-studio"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "그믐달셀프스튜디오",
       "en": "그믐달셀프스튜디오"
@@ -29056,8 +29425,10 @@
   {
     "id": "kftc-n525m0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "practice-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "엔젤스 코인노래연습장",
       "en": "엔젤스 코인노래연습장"
@@ -29270,8 +29641,10 @@
   {
     "id": "kftc-y9of7d",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "skin-care-room"
+    ],
+    "categoryId": "beauty",
     "name": {
       "ko": "더하노이풋앤바디",
       "en": "더하노이풋앤바디"
@@ -29322,7 +29695,9 @@
   {
     "id": "kftc-fznscc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "어린화가들",
@@ -29750,8 +30125,10 @@
   {
     "id": "kftc-nemyrz",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "pet-supplies"
+    ],
+    "categoryId": "pet",
     "name": {
       "ko": "도그마캣",
       "en": "DOG MARCAT"
@@ -29803,7 +30180,7 @@
     "id": "kftc-7eveng",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -29854,7 +30231,9 @@
   {
     "id": "kftc-ji39ig",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "군자대한곱창",
@@ -30013,7 +30392,7 @@
     "id": "kftc-p3b9os",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "salad-healthy"
     ],
     "categoryId": "food",
     "name": {
@@ -30174,7 +30553,9 @@
   {
     "id": "kftc-tvbec",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "씨채널",
@@ -30334,7 +30715,9 @@
   {
     "id": "kftc-1o7l2h",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "JINY's",
@@ -30386,7 +30769,9 @@
   {
     "id": "kftc-ndxg3c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "샘앤플레이스",
@@ -30438,7 +30823,9 @@
   {
     "id": "kftc-1vsx0vn",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "육회바른연어",
@@ -30490,7 +30877,9 @@
   {
     "id": "kftc-1e2k4lt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "미스터빠삭",
@@ -30543,7 +30932,7 @@
     "id": "kftc-tbmwcp",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -30596,8 +30985,10 @@
   {
     "id": "kftc-tse9t1",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "device-repair"
+    ],
+    "categoryId": "living-service",
     "name": {
       "ko": "소녀폰중고폰",
       "en": "소녀폰중고폰"
@@ -31296,7 +31687,9 @@
   {
     "id": "kftc-s5u65",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "리얼펍",
@@ -31348,7 +31741,9 @@
   {
     "id": "kftc-rhor5w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "틴트어카",
@@ -31401,7 +31796,7 @@
     "id": "kftc-7f9oj9",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -31453,7 +31848,9 @@
   {
     "id": "kftc-1vopotx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "convenience-small"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "홈플러스익스프레스",
@@ -32095,7 +32492,9 @@
   {
     "id": "kftc-nesqc1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "돈까스짱",
@@ -32201,7 +32600,9 @@
   {
     "id": "kftc-4w9hra",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "한남동그집",
@@ -32253,8 +32654,10 @@
   {
     "id": "kftc-19hqfvh",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "엑스오엑스오핫도그앤커피",
       "en": "엑스오엑스오핫도그앤커피"
@@ -32465,7 +32868,9 @@
   {
     "id": "kftc-fyopk4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "아이젠트리",
@@ -32517,7 +32922,9 @@
   {
     "id": "kftc-cnrwff",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "안경,진정성",
@@ -32624,7 +33031,7 @@
     "id": "kftc-lcy06k",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -32732,7 +33139,7 @@
     "id": "kftc-8xmsd4",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -32837,7 +33244,9 @@
   {
     "id": "kftc-w6x08",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "한삼인",
@@ -32889,7 +33298,9 @@
   {
     "id": "kftc-1lw4hzs",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "크린파트너",
@@ -33319,8 +33730,10 @@
   {
     "id": "kftc-oafq68",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "모노맨션",
       "en": "모노맨션"
@@ -33371,7 +33784,9 @@
   {
     "id": "kftc-1fcbysb",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "98도씨 국밥",
@@ -33478,7 +33893,7 @@
     "id": "kftc-11ake5c",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -33531,8 +33946,10 @@
   {
     "id": "kftc-191yj7v",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "dessert-cafe"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "크로플덕오리아가씨",
       "en": "크로플덕오리아가씨"
@@ -33583,8 +34000,10 @@
   {
     "id": "kftc-skryi0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "kids-academy"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "점프셈교실",
       "en": "점프셈교실"
@@ -33635,8 +34054,10 @@
   {
     "id": "kftc-3iagtk",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "포토아이브",
       "en": "포토아이브"
@@ -33741,7 +34162,9 @@
   {
     "id": "kftc-odun5b",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "배달의쌀국수",
@@ -33847,8 +34270,11 @@
   {
     "id": "kftc-px4tg",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "위넌스터디카페",
       "en": "위넌스터디카페"
@@ -33899,7 +34325,9 @@
   {
     "id": "kftc-zksxjt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "adult-class"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "한국치매예방협회",
@@ -34003,7 +34431,9 @@
   {
     "id": "kftc-o27zlc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "렌즈타운",
@@ -34055,7 +34485,9 @@
   {
     "id": "kftc-qkjd9w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "청담이상",
@@ -34269,7 +34701,9 @@
   {
     "id": "kftc-rokfvb",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "한라맥주",
@@ -34427,7 +34861,9 @@
   {
     "id": "kftc-1id1gm4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "브라운돈까스",
@@ -34587,7 +35023,9 @@
   {
     "id": "kftc-1561pgx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "네이처리퍼블릭",
@@ -34855,7 +35293,9 @@
   {
     "id": "kftc-e57jsn",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "별난아재맥주",
@@ -34962,7 +35402,7 @@
     "id": "kftc-4002l7",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -35173,8 +35613,10 @@
   {
     "id": "kftc-tccav",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "셀픽스",
       "en": "Selpix"
@@ -35279,7 +35721,9 @@
   {
     "id": "kftc-u447g",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "우쿠야",
@@ -35437,7 +35881,9 @@
   {
     "id": "kftc-1myomj1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "화화돼지왕갈비",
@@ -35490,7 +35936,7 @@
     "id": "kftc-1as0r7c",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -35647,7 +36093,9 @@
   {
     "id": "kftc-rt4neb",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "화로상회",
@@ -35699,7 +36147,9 @@
   {
     "id": "kftc-o8z51o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "1도씨맥주",
@@ -35752,7 +36202,7 @@
     "id": "kftc-spzy0w",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -35803,7 +36253,9 @@
   {
     "id": "kftc-whwn",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "1943",
@@ -35910,7 +36362,7 @@
     "id": "kftc-u6buc",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -36125,7 +36577,9 @@
   {
     "id": "kftc-1a41ts4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "스콜라몬테소리",
@@ -36231,8 +36685,10 @@
   {
     "id": "kftc-frxang",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "repair-service"
+    ],
+    "categoryId": "living-service",
     "name": {
       "ko": "전국열쇠공사",
       "en": "전국열쇠공사"
@@ -36284,7 +36740,7 @@
     "id": "kftc-ql3kt4",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -36390,7 +36846,7 @@
     "id": "kftc-1yiop79",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -36443,7 +36899,9 @@
   {
     "id": "kftc-oamnut",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "매직터치",
@@ -36493,8 +36951,10 @@
   {
     "id": "kftc-d1qu6q",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "skin-care-room"
+    ],
+    "categoryId": "beauty",
     "name": {
       "ko": "클럽밸런스5",
       "en": "CLUBBALANCE5"
@@ -36545,7 +37005,9 @@
   {
     "id": "kftc-r0nu4f",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "코코래빗",
@@ -36757,8 +37219,10 @@
   {
     "id": "kftc-15q4eis",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "포토이즘컬러드",
       "en": "포토이즘컬러드"
@@ -36864,7 +37328,7 @@
     "id": "kftc-6grved",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -37346,7 +37810,7 @@
     "id": "kftc-1fx9nhb",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -37399,7 +37863,9 @@
   {
     "id": "kftc-1hm9t0e",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "병아리김밥",
@@ -37451,7 +37917,9 @@
   {
     "id": "kftc-cnhsyc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "브런치앤다이닝37.5",
@@ -37504,7 +37972,7 @@
     "id": "kftc-t5n3gk",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -37557,7 +38025,9 @@
   {
     "id": "kftc-mq12lp",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "토마토도시락",
@@ -37609,7 +38079,9 @@
   {
     "id": "kftc-1vttw5x",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "세광양대창",
@@ -37662,7 +38134,7 @@
     "id": "kftc-187y7y7",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -37715,7 +38187,9 @@
   {
     "id": "kftc-842rlg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "달빛경성술집",
@@ -37820,7 +38294,7 @@
     "id": "kftc-1ha6ia3",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -37873,7 +38347,9 @@
   {
     "id": "kftc-4fbxj5",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "프리미어 뮤직",
@@ -38247,7 +38723,9 @@
   {
     "id": "kftc-pzy5mh",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "일일수작",
@@ -38300,7 +38778,7 @@
     "id": "kftc-2f2gyr",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -38351,7 +38829,9 @@
   {
     "id": "kftc-gkurz8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "에바돈가츠",
@@ -38403,7 +38883,9 @@
   {
     "id": "kftc-oqpeno",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "비끄아트",
@@ -38456,7 +38938,7 @@
     "id": "kftc-xmusvr",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -38670,7 +39152,7 @@
     "id": "kftc-1x0izv7",
     "tier": "kftc",
     "subIndustryIds": [
-      "pt-gym"
+      "golf-studio"
     ],
     "categoryId": "fitness",
     "name": {
@@ -38722,7 +39204,7 @@
     "id": "kftc-m23v7",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -38883,7 +39365,9 @@
   {
     "id": "kftc-qwiq9w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "카츠루와",
@@ -38933,7 +39417,9 @@
   {
     "id": "kftc-mpw30w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "글라스미",
@@ -38985,7 +39471,9 @@
   {
     "id": "kftc-tttk4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "unmanned-retail"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "에그플",
@@ -39091,8 +39579,11 @@
   {
     "id": "kftc-7i473w",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "하우스터디스터디카페",
       "en": "하우스터디스터디카페"
@@ -39142,7 +39633,7 @@
     "id": "kftc-332a6",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -39303,7 +39794,9 @@
   {
     "id": "kftc-sj39n",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "범맥주",
@@ -39409,7 +39902,9 @@
   {
     "id": "kftc-qpvr48",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "글라스스토리",
@@ -39514,7 +40009,7 @@
     "id": "kftc-8g1jyh",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -39675,7 +40170,9 @@
   {
     "id": "kftc-wzw7",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "백돈",
@@ -39942,7 +40439,7 @@
     "id": "kftc-5tg0xd",
     "tier": "kftc",
     "subIndustryIds": [
-      "bakery-studio"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -39996,7 +40493,7 @@
     "id": "kftc-erz5ya",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -40104,7 +40601,7 @@
     "id": "kftc-n6dys4",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -40157,7 +40654,9 @@
   {
     "id": "kftc-1bgqf2p",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "돈통마늘보쌈",
@@ -40264,7 +40763,7 @@
     "id": "kftc-1po64zi",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -40533,7 +41032,9 @@
   {
     "id": "kftc-ncnzhq",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "니뽕내뽕",
@@ -40585,7 +41086,9 @@
   {
     "id": "kftc-rbgi4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "돈쫄돈",
@@ -40746,7 +41249,7 @@
     "id": "kftc-11lig",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -40961,7 +41464,9 @@
   {
     "id": "kftc-grc3d1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "아카데미창",
@@ -41013,7 +41518,9 @@
   {
     "id": "kftc-1outk9l",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "고릴라캠핑",
@@ -41119,8 +41626,10 @@
   {
     "id": "kftc-1db7o1s",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "skin-care-room"
+    ],
+    "categoryId": "beauty",
     "name": {
       "ko": "아하데이스파",
       "en": "AHA DAY S.P.A."
@@ -41171,8 +41680,10 @@
   {
     "id": "kftc-1s5kf04",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "golf-studio"
+    ],
+    "categoryId": "fitness",
     "name": {
       "ko": "김헌의행복골프",
       "en": "김헌의행복골프"
@@ -41277,7 +41788,9 @@
   {
     "id": "kftc-mpw74o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "글라스타",
@@ -41329,7 +41842,9 @@
   {
     "id": "kftc-14lzqdb",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "참다한홍삼",
@@ -41648,7 +42163,7 @@
     "id": "kftc-p3d26o",
     "tier": "kftc",
     "subIndustryIds": [
-      "laundry-service"
+      "cleaning-service"
     ],
     "categoryId": "living-service",
     "name": {
@@ -41806,7 +42321,7 @@
     "id": "kftc-120d4xn",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -41913,8 +42428,10 @@
   {
     "id": "kftc-thx9o",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
     "name": {
       "ko": "쉐프엠",
       "en": "쉐프엠"
@@ -41965,7 +42482,9 @@
   {
     "id": "kftc-puepaw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "와이키즈",
@@ -42017,8 +42536,10 @@
   {
     "id": "kftc-qcdm2",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
     "name": {
       "ko": "국선생",
       "en": "국선생"
@@ -42124,7 +42645,7 @@
     "id": "kftc-obai0f",
     "tier": "kftc",
     "subIndustryIds": [
-      "pet-supplies"
+      "pet-cafe"
     ],
     "categoryId": "pet",
     "name": {
@@ -42232,7 +42753,7 @@
     "id": "kftc-1ieovv9",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -42285,7 +42806,9 @@
   {
     "id": "kftc-ppt32o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "아이디어",
@@ -42710,8 +43233,10 @@
   {
     "id": "kftc-1j9uq8w",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "커피마마퀸",
       "en": "커피마마퀸"
@@ -42868,7 +43393,9 @@
   {
     "id": "kftc-ner9as",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "돈기부여",
@@ -42974,7 +43501,7 @@
     "id": "kftc-chjy92",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -43027,7 +43554,9 @@
   {
     "id": "kftc-1fxnre0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "준코노래타운",
@@ -43079,7 +43608,9 @@
   {
     "id": "kftc-vl69t",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "타코형",
@@ -43130,7 +43661,9 @@
   {
     "id": "kftc-tcwzg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "소코아",
@@ -43342,7 +43875,9 @@
   {
     "id": "kftc-13mnjze",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "리얼안심탕수육",
@@ -43501,7 +44036,7 @@
     "id": "kftc-hzhm5c",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "delivery-meals"
     ],
     "categoryId": "food",
     "name": {
@@ -43555,7 +44090,7 @@
     "id": "kftc-cv6h57",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -43608,7 +44143,9 @@
   {
     "id": "kftc-vhiuhw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "쿡1015",
@@ -43660,7 +44197,9 @@
   {
     "id": "kftc-l3graj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "오피스넥스",
@@ -43713,9 +44252,9 @@
     "id": "kftc-h9s3j8",
     "tier": "kftc",
     "subIndustryIds": [
-      "convenience-small"
+      "bakery-studio"
     ],
-    "categoryId": "retail",
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "데이앤데이",
       "en": "day&amp;day"
@@ -43924,7 +44463,9 @@
   {
     "id": "kftc-q1st0o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "정성카츠",
@@ -44031,7 +44572,7 @@
     "id": "kftc-1uzgblp",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -44084,7 +44625,9 @@
   {
     "id": "kftc-1fbor6g",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "카스페이스",
@@ -44134,7 +44677,9 @@
   {
     "id": "kftc-ukruw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "짐키친",
@@ -44187,7 +44732,7 @@
     "id": "kftc-1s5lahw",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -44241,7 +44786,7 @@
     "id": "kftc-12h4y82",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -44294,8 +44839,10 @@
   {
     "id": "kftc-9k8rg8",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "skin-care-room"
+    ],
+    "categoryId": "beauty",
     "name": {
       "ko": "웰킨두피탈모센터",
       "en": "웰킨두피탈모센터"
@@ -44400,8 +44947,10 @@
   {
     "id": "kftc-tzhm4",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "device-repair"
+    ],
+    "categoryId": "living-service",
     "name": {
       "ko": "에코폰",
       "en": "에코폰"
@@ -44504,7 +45053,9 @@
   {
     "id": "kftc-1fvzz6b",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "자라다남아미술학원",
@@ -44556,7 +45107,9 @@
   {
     "id": "kftc-o24hs8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "렌즈베리",
@@ -44660,7 +45213,9 @@
   {
     "id": "kftc-n9ftt5",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "육미명가옛날아우내순대&amp;보쌈",
@@ -44712,7 +45267,9 @@
   {
     "id": "kftc-14iro8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "세컨페이스",
@@ -44764,7 +45321,9 @@
   {
     "id": "kftc-qcjct",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "굴세상",
@@ -44924,7 +45483,9 @@
   {
     "id": "kftc-pkl5q8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "은화수식당",
@@ -44976,7 +45537,9 @@
   {
     "id": "kftc-r724k",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "convenience-small"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "델리퀸",
@@ -45029,7 +45592,7 @@
     "id": "kftc-n2fhgh",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -45242,7 +45805,9 @@
   {
     "id": "kftc-7l10kw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "진1926",
@@ -45295,7 +45860,7 @@
     "id": "kftc-d2ny7s",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -45402,7 +45967,9 @@
   {
     "id": "kftc-pp5pqk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "씨엠에스",
@@ -45454,7 +46021,9 @@
   {
     "id": "kftc-1p2j30k",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "버거앤프라이즈",
@@ -45506,7 +46075,9 @@
   {
     "id": "kftc-vq0ep",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "투사랑",
@@ -45666,7 +46237,9 @@
   {
     "id": "kftc-tj8uk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "스팀맨",
@@ -45718,7 +46291,9 @@
   {
     "id": "kftc-py93a8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "육장갈비",
@@ -45770,7 +46345,9 @@
   {
     "id": "kftc-o5nzoo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "룩옵티컬",
@@ -45822,7 +46399,9 @@
   {
     "id": "kftc-r3tiga",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "테그42",
@@ -45874,7 +46453,9 @@
   {
     "id": "kftc-14vbyk9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "토스트굽는사람들",
@@ -45924,7 +46505,9 @@
   {
     "id": "kftc-clrhdf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "해산물직화구이전문점삼바리",
@@ -45977,7 +46560,7 @@
     "id": "kftc-1kuuugb",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -46247,7 +46830,7 @@
     "id": "kftc-9fz6uv",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -46300,7 +46883,9 @@
   {
     "id": "kftc-155wcw3",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "Egg2000",
@@ -46352,7 +46937,9 @@
   {
     "id": "kftc-11pnmyh",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "쉼, 어묵 그리고 한잔 술",
@@ -46404,7 +46991,9 @@
   {
     "id": "kftc-1dgsesn",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "정동진칼국수",
@@ -46508,7 +47097,9 @@
   {
     "id": "kftc-v2t51",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "추오정",
@@ -46668,7 +47259,9 @@
   {
     "id": "kftc-k71rd4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "바이오미스트",
@@ -46720,7 +47313,9 @@
   {
     "id": "kftc-ohirzv",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "반딧불이",
@@ -46771,7 +47366,10 @@
   {
     "id": "kftc-oc46wl",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "커넥츠 프랩 공시관",
@@ -46824,7 +47422,7 @@
     "id": "kftc-ompu8p",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -46981,8 +47579,10 @@
   {
     "id": "kftc-159qw45",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "pet-supplies"
+    ],
+    "categoryId": "pet",
     "name": {
       "ko": "멍냥의민족",
       "en": "멍냥의민족"
@@ -47193,7 +47793,9 @@
   {
     "id": "kftc-1postgg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "광명대창집",
@@ -47245,7 +47847,9 @@
   {
     "id": "kftc-rf289",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "딩딩딩",
@@ -47836,7 +48440,7 @@
     "id": "kftc-qklr0b",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -47889,7 +48493,9 @@
   {
     "id": "kftc-3rbrgt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "나드리김밥",
@@ -47996,7 +48602,7 @@
     "id": "kftc-rqeux9",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -48050,7 +48656,7 @@
     "id": "kftc-1exvoci",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -48103,7 +48709,9 @@
   {
     "id": "kftc-11fs5f6",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "YANKEE CANDLE",
@@ -48155,7 +48763,9 @@
   {
     "id": "kftc-prpkos",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "language-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "알티오라",
@@ -48257,7 +48867,9 @@
   {
     "id": "kftc-8yssbt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "coding-class"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "코딩앤플레이",
@@ -48309,7 +48921,9 @@
   {
     "id": "kftc-av3ogy",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "눈사랑안경",
@@ -48361,7 +48975,9 @@
   {
     "id": "kftc-ok8f16",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "보고싶다",
@@ -48574,7 +49190,7 @@
     "id": "kftc-1xhc0mg",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -48950,7 +49566,7 @@
     "id": "kftc-f8hlzm",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -49003,7 +49619,9 @@
   {
     "id": "kftc-q2c68s",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "종로김밥",
@@ -49161,7 +49779,9 @@
   {
     "id": "kftc-1lyh5vk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "클린앤제이",
@@ -49529,7 +50149,7 @@
     "id": "kftc-1j2l8cf",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -49635,7 +50255,7 @@
     "id": "kftc-r2ef39",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -49899,7 +50519,7 @@
     "id": "kftc-2ovymh",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -49950,7 +50570,9 @@
   {
     "id": "kftc-o7olun",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "마마몽떼",
@@ -50000,7 +50622,9 @@
   {
     "id": "kftc-iawcg0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "롤리폴리캔디",
@@ -50106,7 +50730,9 @@
   {
     "id": "kftc-157a062",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "백남옥달인손만두",
@@ -50212,7 +50838,9 @@
   {
     "id": "kftc-kifyc8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "위드피아노",
@@ -50264,7 +50892,9 @@
   {
     "id": "kftc-pu8jvt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "convenience-small"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "와인곳간",
@@ -50425,7 +51055,7 @@
     "id": "kftc-v0agji",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -50476,7 +51106,9 @@
   {
     "id": "kftc-13fbmyo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "명동찌개마을",
@@ -50528,7 +51160,9 @@
   {
     "id": "kftc-skmyx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "convenience-small"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "바틀샵",
@@ -50580,7 +51214,9 @@
   {
     "id": "kftc-1yoptv9",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "하노이맥주밤거리",
@@ -50633,7 +51269,7 @@
     "id": "kftc-1hb91oj",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "icecream-bingsu"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -50741,7 +51377,7 @@
     "id": "kftc-ptrgcd",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -50795,7 +51431,7 @@
     "id": "kftc-1wv20w0",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -50954,7 +51590,9 @@
   {
     "id": "kftc-1ydzvkw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "자갈치브라더스",
@@ -51006,7 +51644,9 @@
   {
     "id": "kftc-pswnl3",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "월간맥주",
@@ -51058,7 +51698,9 @@
   {
     "id": "kftc-f9o6xp",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "달인의찜닭",
@@ -51160,7 +51802,9 @@
   {
     "id": "kftc-ol7txp",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "보돌미역",
@@ -51212,7 +51856,9 @@
   {
     "id": "kftc-q0ks5b",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "육회지존",
@@ -51265,9 +51911,9 @@
     "id": "kftc-w0l4k",
     "tier": "kftc",
     "subIndustryIds": [
-      "convenience-small"
+      "pet-supplies"
     ],
-    "categoryId": "retail",
+    "categoryId": "pet",
     "name": {
       "ko": "펫클럽",
       "en": "펫클럽"
@@ -51318,7 +51964,9 @@
   {
     "id": "kftc-12eerkg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "Detailer明",
@@ -51368,7 +52016,9 @@
   {
     "id": "kftc-qwyvtx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "coding-class"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "코딩하루",
@@ -51528,7 +52178,9 @@
   {
     "id": "kftc-1k6boe8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "경성한우국밥",
@@ -51580,7 +52232,9 @@
   {
     "id": "kftc-nf8be3",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "덮밥슈퍼",
@@ -51793,7 +52447,7 @@
     "id": "kftc-vzmp4",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -52006,8 +52660,11 @@
   {
     "id": "kftc-7ofh2o",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "하우스터디",
       "en": "하우스터디"
@@ -52110,7 +52767,9 @@
   {
     "id": "kftc-ineypq",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "김영희아구찜&amp;코다리냉면",
@@ -52162,7 +52821,9 @@
   {
     "id": "kftc-pqwxgs",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "어사출또",
@@ -52214,7 +52875,9 @@
   {
     "id": "kftc-qsmgc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "나비엘",
@@ -52266,7 +52929,9 @@
   {
     "id": "kftc-xtyy7n",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "Office Way",
@@ -53129,7 +53794,7 @@
     "id": "kftc-hl7xl8",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -53182,7 +53847,9 @@
   {
     "id": "kftc-1ghp1aj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "쪽갈비전문점 예감",
@@ -53234,7 +53901,9 @@
   {
     "id": "kftc-tvyrt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "엘리팝",
@@ -53286,7 +53955,9 @@
   {
     "id": "kftc-prmguf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "오렌지팟",
@@ -53338,7 +54009,9 @@
   {
     "id": "kftc-vzapg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "풍국면",
@@ -53390,8 +54063,10 @@
   {
     "id": "kftc-10245kf",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "포토랩플러스",
       "en": "포토랩플러스"
@@ -53604,8 +54279,10 @@
   {
     "id": "kftc-1r0as0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "shared-office"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "슈가맨워크",
       "en": "슈가맨워크"
@@ -53710,7 +54387,9 @@
   {
     "id": "kftc-qyam95",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "캠핑고래",
@@ -53762,7 +54441,9 @@
   {
     "id": "kftc-ppveyl",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "unmanned-retail"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "아이스짱",
@@ -54297,7 +54978,7 @@
     "id": "kftc-fxz7n3",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -54404,7 +55085,9 @@
   {
     "id": "kftc-p2tciw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "샌드리아",
@@ -54834,7 +55517,9 @@
   {
     "id": "kftc-ffp7ys",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "돈까스회관",
@@ -55478,7 +56163,9 @@
   {
     "id": "kftc-1sejckq",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "클리니어 WITH",
@@ -55635,7 +56322,9 @@
   {
     "id": "kftc-mqv43t",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "금복주류",
@@ -55741,7 +56430,9 @@
   {
     "id": "kftc-pzvjv7",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "일월육일",
@@ -55793,7 +56484,9 @@
   {
     "id": "kftc-q2e2cy",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "종로맥가",
@@ -55845,7 +56538,9 @@
   {
     "id": "kftc-197kzg4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "리브로아르츠",
@@ -55895,8 +56590,10 @@
   {
     "id": "kftc-l7olp4",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "이고플러스",
       "en": "이고플러스"
@@ -56001,7 +56698,9 @@
   {
     "id": "kftc-vk78",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "더샘",
@@ -56105,7 +56804,9 @@
   {
     "id": "kftc-zlmwps",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "메이크어딜리버리",
@@ -56642,7 +57343,7 @@
     "id": "kftc-1ku2s04",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -56696,7 +57397,7 @@
     "id": "kftc-q078of",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -56749,7 +57450,9 @@
   {
     "id": "kftc-ueya1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "징기스",
@@ -56853,7 +57556,9 @@
   {
     "id": "kftc-19mcgry",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "청춘닭꼬치",
@@ -56905,7 +57610,9 @@
   {
     "id": "kftc-ot6blm",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "빨봉분식",
@@ -57063,7 +57770,9 @@
   {
     "id": "kftc-q02qw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "순남시래기",
@@ -57329,8 +58038,10 @@
   {
     "id": "kftc-a1jkls",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "폴라 스튜디오",
       "en": "폴라 스튜디오"
@@ -58030,7 +58741,7 @@
     "id": "kftc-fy7j7r",
     "tier": "kftc",
     "subIndustryIds": [
-      "bakery-studio"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -58407,7 +59118,9 @@
   {
     "id": "kftc-qeqbcf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "종로계림닭도리탕원조",
@@ -58459,7 +59172,9 @@
   {
     "id": "kftc-15x363",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "청춘감성쌀핫도그",
@@ -58511,7 +59226,9 @@
   {
     "id": "kftc-2m33tz",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "동네포차주민",
@@ -58563,7 +59280,9 @@
   {
     "id": "kftc-l3k9xo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "오피스알파",
@@ -58616,7 +59335,7 @@
     "id": "kftc-t9tdyn",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -58669,7 +59388,9 @@
   {
     "id": "kftc-r2mkzg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "클린보이",
@@ -58721,7 +59442,9 @@
   {
     "id": "kftc-1emqu1j",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "행복한꼬마거북이",
@@ -58772,7 +59495,9 @@
   {
     "id": "kftc-r4grj8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "스파게티스토리",
@@ -58824,7 +59549,9 @@
   {
     "id": "kftc-pat970",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "순수치킨",
@@ -58984,7 +59711,9 @@
   {
     "id": "kftc-skrg4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "밀회관",
@@ -59036,7 +59765,9 @@
   {
     "id": "kftc-vsiiw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "판다팜",
@@ -59087,7 +59818,7 @@
     "id": "kftc-o9e55s",
     "tier": "kftc",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -59303,7 +60034,7 @@
     "id": "kftc-1lxcuth",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "delivery-meals"
     ],
     "categoryId": "food",
     "name": {
@@ -59357,7 +60088,7 @@
     "id": "kftc-u1dcl",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -59464,7 +60195,9 @@
   {
     "id": "kftc-s4jrd",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "2도맥주",
@@ -59839,7 +60572,7 @@
     "id": "kftc-ppuci0",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -59942,8 +60675,10 @@
   {
     "id": "kftc-pubg3d",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "와이블랙",
       "en": "와이블랙"
@@ -60048,7 +60783,9 @@
   {
     "id": "kftc-6pjcs8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "시즌글라스",
@@ -60154,7 +60891,9 @@
   {
     "id": "kftc-rx65ec",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "화포식당",
@@ -60844,8 +61583,10 @@
   {
     "id": "kftc-1uo57pv",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "WITCH COFFEE",
       "en": "WITCH COFFEE"
@@ -60896,7 +61637,9 @@
   {
     "id": "kftc-qh1kns",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "K비젼안경",
@@ -61002,8 +61745,10 @@
   {
     "id": "kftc-ravx0",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "더필름",
       "en": "더필름"
@@ -61055,7 +61800,7 @@
     "id": "kftc-rqde2j",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -61587,7 +62332,7 @@
     "id": "kftc-qmzkot",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -61638,7 +62383,9 @@
   {
     "id": "kftc-mlaa1n",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "공룡닭발",
@@ -61691,7 +62438,7 @@
     "id": "kftc-i2tryb",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -61744,7 +62491,9 @@
   {
     "id": "kftc-1ojikkj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "79네수육국밥",
@@ -61850,7 +62599,9 @@
   {
     "id": "kftc-rk4be4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "포아이니",
@@ -61902,7 +62653,9 @@
   {
     "id": "kftc-175sqtw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "모든오피스",
@@ -62438,8 +63191,10 @@
   {
     "id": "kftc-8frwen",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "커피랑도서관",
       "en": "커피랑도서관"
@@ -62490,8 +63245,10 @@
   {
     "id": "kftc-r5r49b",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "kids-academy"
+    ],
+    "categoryId": "education",
     "name": {
       "ko": "키즈닥터",
       "en": "키즈닥터"
@@ -62596,8 +63353,11 @@
   {
     "id": "kftc-h9ik1w",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "데이스터디",
       "en": "데이스터디"
@@ -63016,7 +63776,9 @@
   {
     "id": "kftc-1j2nq75",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "코앤코 뮤직",
@@ -63069,7 +63831,7 @@
     "id": "kftc-1wx3omt",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -63176,7 +63938,9 @@
   {
     "id": "kftc-u1j3c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "repair-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "오토앤",
@@ -63280,7 +64044,9 @@
   {
     "id": "kftc-tv64c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "에뛰드",
@@ -63332,7 +64098,9 @@
   {
     "id": "kftc-q2blwv",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "전일맥주",
@@ -63384,7 +64152,9 @@
   {
     "id": "kftc-qm619o",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "촌댁맥주",
@@ -63436,7 +64206,9 @@
   {
     "id": "kftc-z1j4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "잔잔",
@@ -63489,7 +64261,7 @@
     "id": "kftc-js2y1b",
     "tier": "kftc",
     "subIndustryIds": [
-      "pt-gym"
+      "crossfit-box"
     ],
     "categoryId": "fitness",
     "name": {
@@ -63596,8 +64368,10 @@
   {
     "id": "kftc-c33j46",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "dessert-cafe"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "황제탕후루",
       "en": "황제탕후루"
@@ -63646,7 +64420,9 @@
   {
     "id": "kftc-rs49gv",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "홍대개미",
@@ -63698,7 +64474,9 @@
   {
     "id": "kftc-1t0n74n",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "글라스박스",
@@ -63748,7 +64526,9 @@
   {
     "id": "kftc-qr0nk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "health-food-store"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "나디브",
@@ -63908,7 +64688,7 @@
     "id": "kftc-uo68",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -64015,7 +64795,9 @@
   {
     "id": "kftc-1wvorhq",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "101번지 남산돈까스",
@@ -64175,8 +64957,10 @@
   {
     "id": "kftc-s1dp8",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "루쏘소",
       "en": "루쏘소"
@@ -64441,7 +65225,7 @@
     "id": "kftc-w7b41",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -64600,8 +65384,10 @@
   {
     "id": "kftc-f9hq2k",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "비룸스튜디오",
       "en": "BROOM STUDIO"
@@ -64815,7 +65601,7 @@
     "id": "kftc-tgtf0",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -64923,7 +65709,7 @@
     "id": "kftc-1j7kbbb",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -65082,7 +65868,9 @@
   {
     "id": "kftc-pyy6vf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "장미맨숀",
@@ -65134,7 +65922,9 @@
   {
     "id": "kftc-1vs1emb",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "독서심리지도 열림",
@@ -65186,7 +65976,9 @@
   {
     "id": "kftc-1k51ztc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "강경불고기",
@@ -65238,8 +66030,10 @@
   {
     "id": "kftc-xgyu",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "bakery-studio"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "빚은",
       "en": "빚은"
@@ -65613,7 +66407,7 @@
     "id": "kftc-1ut8i",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -65721,7 +66515,7 @@
     "id": "kftc-ptxtkf",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -65774,7 +66568,9 @@
   {
     "id": "kftc-dku1xe",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "이태리양조장",
@@ -65826,7 +66622,9 @@
   {
     "id": "kftc-n1elz1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "남도술상",
@@ -65878,7 +66676,9 @@
   {
     "id": "kftc-1n1ap",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "오니기리와이규동",
@@ -65930,7 +66730,9 @@
   {
     "id": "kftc-th96s",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "스위스",
@@ -65982,7 +66784,10 @@
   {
     "id": "kftc-10uz9vk",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "시너지플레이스",
@@ -66034,7 +66839,9 @@
   {
     "id": "kftc-1n6e690",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "가위이야기",
@@ -66085,7 +66892,9 @@
   {
     "id": "kftc-1rqiqcq",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "목우촌웰빙마을",
@@ -66138,7 +66947,7 @@
     "id": "kftc-aurpgx",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -66406,7 +67215,9 @@
   {
     "id": "kftc-1ichble",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "캠핑트렁크",
@@ -66458,7 +67269,9 @@
   {
     "id": "kftc-qdvx0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "그리너",
@@ -66672,7 +67485,9 @@
   {
     "id": "kftc-r26lok",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "탄광맥주",
@@ -66725,7 +67540,7 @@
     "id": "kftc-w3vc57",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -67151,7 +67966,7 @@
     "id": "kftc-rm0zwk",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -67417,8 +68232,10 @@
   {
     "id": "kftc-11hbedr",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
     "name": {
       "ko": "두가지떡볶이",
       "en": "두가지떡볶이"
@@ -67470,7 +68287,7 @@
     "id": "kftc-ftq493",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -67524,7 +68341,7 @@
     "id": "kftc-1o6slgp",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -67578,7 +68395,7 @@
     "id": "kftc-w7eoc",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -67737,7 +68554,9 @@
   {
     "id": "kftc-pkoktt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "벌레잡는 총각들",
@@ -67787,7 +68606,9 @@
   {
     "id": "kftc-n6w8up",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "용호동낙지",
@@ -67839,7 +68660,9 @@
   {
     "id": "kftc-1co1io5",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "백년불고기",
@@ -67945,7 +68768,9 @@
   {
     "id": "kftc-vymyo",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "포베이",
@@ -68106,7 +68931,7 @@
     "id": "kftc-h64ek8",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -68320,7 +69145,7 @@
     "id": "kftc-yaro",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "korean-casual"
     ],
     "categoryId": "food",
     "name": {
@@ -68428,7 +69253,7 @@
     "id": "kftc-rnoels",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -68590,7 +69415,7 @@
     "id": "kftc-gqzjz4",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "delivery-meals"
     ],
     "categoryId": "food",
     "name": {
@@ -68805,7 +69630,9 @@
   {
     "id": "kftc-wb7dt",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "헤즈업",
@@ -69072,7 +69899,7 @@
     "id": "kftc-ozgqtl",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -69125,7 +69952,9 @@
   {
     "id": "kftc-1foqvyg",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "정우의 도시락",
@@ -69445,7 +70274,9 @@
   {
     "id": "kftc-kahyhh",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "엉터리생고기 두번째이야기 무한삼겹",
@@ -69498,7 +70329,7 @@
     "id": "kftc-1qgulxs",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -69551,7 +70382,9 @@
   {
     "id": "kftc-qnpn3r",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "청주본가",
@@ -69603,8 +70436,10 @@
   {
     "id": "kftc-1jb5qpk",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "커피스미스",
       "en": "커피스미스"
@@ -69655,7 +70490,9 @@
   {
     "id": "kftc-16ozaff",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "병천황토방순대",
@@ -69869,7 +70706,9 @@
   {
     "id": "kftc-p1dou1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "삼겹식당",
@@ -69921,8 +70760,10 @@
   {
     "id": "kftc-paope9",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "스냅치즈",
       "en": "스냅치즈"
@@ -69973,8 +70814,10 @@
   {
     "id": "kftc-1d5ujrk",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "침대토피아",
       "en": "침대토피아"
@@ -70024,7 +70867,9 @@
   {
     "id": "kftc-1td01t8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "cleaning-service"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "깔끄미계단",
@@ -70288,7 +71133,7 @@
     "id": "kftc-ffo8tl",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -70342,7 +71187,7 @@
     "id": "kftc-105d80g",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -70395,8 +71240,10 @@
   {
     "id": "kftc-mq5nup",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "dessert-cafe"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "그릭하다",
       "en": "그릭하다"
@@ -70448,7 +71295,7 @@
     "id": "kftc-1vg29rr",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "chicken-burger"
     ],
     "categoryId": "food",
     "name": {
@@ -70501,7 +71348,9 @@
   {
     "id": "kftc-ttr2k",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "에그존",
@@ -70553,7 +71402,9 @@
   {
     "id": "kftc-nd7fty",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "달빛맥주",
@@ -70660,7 +71511,7 @@
     "id": "kftc-1vvve94",
     "tier": "kftc",
     "subIndustryIds": [
-      "korean-casual"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -71089,8 +71940,11 @@
   {
     "id": "kftc-uimeqq",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "지니24스터디카페",
       "en": "지니24스터디카페"
@@ -71249,7 +72103,9 @@
   {
     "id": "kftc-ljtatv",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "씨네마얼음맥주",
@@ -71301,7 +72157,9 @@
   {
     "id": "kftc-1hyxs1z",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "옥탑방오봉자싸롱",
@@ -71408,7 +72266,7 @@
     "id": "kftc-j7izhq",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -71569,7 +72427,9 @@
   {
     "id": "kftc-1s6f3z4",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "가르텐호프앤레스트",
@@ -71780,7 +72640,9 @@
   {
     "id": "kftc-edou0w",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "beauty-supplies"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "홀리카홀리카",
@@ -72047,7 +72909,7 @@
     "id": "kftc-1cubjv3",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -72154,7 +73016,9 @@
   {
     "id": "kftc-t7jk8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "산쪼메",
@@ -72207,7 +73071,7 @@
     "id": "kftc-ff3u6z",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -72260,8 +73124,10 @@
   {
     "id": "kftc-pfaalo",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "retail",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
     "name": {
       "ko": "슈퍼키친",
       "en": "슈퍼키친"
@@ -72795,7 +73661,7 @@
     "id": "kftc-12e7mqx",
     "tier": "kftc",
     "subIndustryIds": [
-      "ramen-noodle"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -72848,7 +73714,9 @@
   {
     "id": "kftc-sy37vx",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "풍덕천 두꺼비집",
@@ -73062,8 +73930,11 @@
   {
     "id": "kftc-rrzv4g",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "living-service",
+    "subIndustryIds": [
+      "study-cafe-space",
+      "study-room"
+    ],
+    "categoryId": "space",
     "name": {
       "ko": "챌린지스터디카페",
       "en": "챌린지스터디카페"
@@ -73115,7 +73986,7 @@
     "id": "kftc-1pbhoix",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -73169,7 +74040,7 @@
     "id": "kftc-174y4w0",
     "tier": "kftc",
     "subIndustryIds": [
-      "western-pasta-brunch"
+      "ramen-noodle"
     ],
     "categoryId": "food",
     "name": {
@@ -73222,7 +74093,9 @@
   {
     "id": "kftc-1i0lyi0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "장혁민의 부대찌개",
@@ -73329,7 +74202,7 @@
     "id": "kftc-z75g",
     "tier": "kftc",
     "subIndustryIds": [
-      "takeout-coffee"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -73434,7 +74307,9 @@
   {
     "id": "kftc-w8fvcc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "박선생 창의역사지리교실",
@@ -73486,7 +74361,7 @@
     "id": "kftc-i0s80b",
     "tier": "kftc",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -73540,7 +74415,7 @@
     "id": "kftc-7dl5f0",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -73591,7 +74466,9 @@
   {
     "id": "kftc-nqkils",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "땡초우동",
@@ -73644,7 +74521,7 @@
     "id": "kftc-w8hh1",
     "tier": "kftc",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -73697,7 +74574,9 @@
   {
     "id": "kftc-1a18bz1",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "글라스바바안경",
@@ -73801,7 +74680,9 @@
   {
     "id": "kftc-prhdec",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "kids-academy"
+    ],
     "categoryId": "education",
     "name": {
       "ko": "아트모마",
@@ -73960,7 +74841,9 @@
   {
     "id": "kftc-oa7dt0",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "unmanned-retail"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "메리엘스",
@@ -74120,7 +75003,9 @@
   {
     "id": "kftc-ogiwuc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "fashion-accessories"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "미니골드",
@@ -74172,7 +75057,9 @@
   {
     "id": "kftc-11ggc",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "행컵",
@@ -74978,7 +75865,9 @@
   {
     "id": "kftc-n6x5er",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "눈꽃대패",
@@ -75084,8 +75973,10 @@
   {
     "id": "kftc-wqer",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "lifestyle-goods"
+    ],
+    "categoryId": "retail",
     "name": {
       "ko": "링코",
       "en": "RINKO"
@@ -75190,7 +76081,9 @@
   {
     "id": "kftc-1uxnylf",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "닭이봉춘천닭갈비",
@@ -75242,7 +76135,9 @@
   {
     "id": "kftc-ayhgo8",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "크래프트한스",
@@ -75348,7 +76243,9 @@
   {
     "id": "kftc-wvcwdw",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "convenience-small"
+    ],
     "categoryId": "retail",
     "name": {
       "ko": "우리동네과일편의점 오롯",
@@ -75400,7 +76297,9 @@
   {
     "id": "kftc-p3cguj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "샐러바웃",
@@ -75668,7 +76567,9 @@
   {
     "id": "kftc-10pkj",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "korean-casual"
+    ],
     "categoryId": "food",
     "name": {
       "ko": "통불",
@@ -75720,7 +76621,9 @@
   {
     "id": "kftc-1smjv8c",
     "tier": "kftc",
-    "subIndustryIds": [],
+    "subIndustryIds": [
+      "device-repair"
+    ],
     "categoryId": "living-service",
     "name": {
       "ko": "에이치모바일",
@@ -75773,7 +76676,7 @@
     "id": "kftc-1id612i",
     "tier": "kftc",
     "subIndustryIds": [
-      "bakery-studio"
+      "dessert-cafe"
     ],
     "categoryId": "cafe-dessert",
     "name": {
@@ -75826,8 +76729,10 @@
   {
     "id": "kftc-1t0ygam",
     "tier": "kftc",
-    "subIndustryIds": [],
-    "categoryId": "food",
+    "subIndustryIds": [
+      "bakery-studio"
+    ],
+    "categoryId": "cafe-dessert",
     "name": {
       "ko": "궁 잔기지떡",
       "en": "궁 잔기지떡"

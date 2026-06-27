@@ -255,32 +255,162 @@ export function getIndependentCostForSubIndustry(subIndustryId: string): Indepen
   return INDEPENDENT_STARTUP_COSTS.find((c) => c.subIndustryId === subIndustryId);
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// 프랜차이즈 ↔ 세부업종 매칭 (2026-06-26 재설계 — 사장님 신고:
+//   "스터디카페 골랐는데 눈높이·구몬(아동교육)이 뜬다")
+//
+// 근본 원인 3가지:
+//   1) study cafe 세부업종 id 가 둘로 갈림: study-room(교육 클러스터) /
+//      study-cafe-space(공간 클러스터). 브랜드(작심·토즈)는 한쪽만 태깅됨.
+//   2) 매칭 실패 시 categoryId 전체로 폴백 → 무관 브랜드 오염(교육 카테고리의
+//      눈높이·구몬 등 학습지 브랜드가 스터디카페 자리에 노출).
+//   3) 공정위 자동 브랜드 1,400+ 중 스터디카페(하우스터디·르하임 등)가
+//      subIndustryIds: [] 라 영영 매칭 불가.
+//
+// 해결: ① 세부업종 동의어 그룹으로 확장 ② 이름 기반 분류기로 브랜드 업종
+//   보강 ③ 큐레이션+공정위 통합 풀에서 그룹 매칭 + 중복 병합 ④ 카테고리
+//   오염 폴백 제거(없으면 정직하게 빈 결과 → UI 가 빈 상태 안내).
+// ════════════════════════════════════════════════════════════════════════
+
 /**
- * subIndustryId + (선택) specialtyId 매칭 brand.
- * - specialtyId 없음: sub-industry 매칭만 (기존 동작 유지)
- * - specialtyId 있음 + brand.specialtyIds 정의: specialty 포함 brand 만 (정확 필터)
- * - specialtyId 있음 + brand.specialtyIds 미정의: sub-industry fallback (계속 노출)
- * - specialtyId 있음 + brand.specialtyIds == []: 명시적 제외 (한식 매핑 오류 brand)
- *
- * Graceful fallback: specialty 필터 결과가 0개면 (예: '냉면'처럼 한국에 전용
- * 가맹 프랜차이즈가 없는 세부업종) sub-industry 전체로 fallback — 빈 화면 방지.
+ * 세부업종 동의어 그룹 — 같은 실제 업종을 가리키는 id 들을 하나의 브랜드 풀로 묶음.
+ * 사용자가 어느 진입 경로(교육 클러스터 study-room vs 공간 클러스터 study-cafe-space)로
+ * 들어와도 동일한 프랜차이즈가 뜨도록. 각 그룹의 모든 id 가 서로 별칭.
+ */
+export const SUB_INDUSTRY_GROUPS: string[][] = [
+  ["study-cafe-space", "study-room", "small-study-room"],
+];
+
+const SUB_GROUP_INDEX: Record<string, string[]> = (() => {
+  const idx: Record<string, string[]> = {};
+  for (const grp of SUB_INDUSTRY_GROUPS) for (const id of grp) idx[id] = grp;
+  return idx;
+})();
+
+/** 조회 id → 동의어 그룹(자기 자신 포함). 그룹 미정의면 [id]. */
+export function expandSubIndustryGroup(subIndustryId: string): string[] {
+  return SUB_GROUP_INDEX[subIndustryId] ?? [subIndustryId];
+}
+
+/**
+ * 이름 기반 세부업종 분류기 — 고정밀 키워드만 사용.
+ *  공정위 자동 브랜드는 업종 분류(중분류)가 거칠어 스터디카페·독서실 등이
+ *  "기타 서비스/교육"으로 빠지며 subIndustryIds 가 비어 매칭 불가. 영업표지(이름)에
+ *  명확한 신호가 있으면 보강한다. exclude 가드로 오분류(학습지·학원) 방지.
+ *  ⚠️ 새 규칙은 *오탐 0* 을 원칙으로 — 모호하면 추가하지 말 것.
+ */
+const NAME_SUBINDUSTRY_RULES: Array<{ test: RegExp; exclude?: RegExp; subs: string[] }> = [
+  // 스터디카페·독서실 — "교육/학원/과외/어학/아카데미"(학습지·교습소)는 제외
+  {
+    test: /(스터디|독서실|스터디\s*카페|스터디\s*센터|스터디\s*룸|스터디\s*라운지)/,
+    exclude: /(교육|학원|과외|어학|아카데미|학습)/,
+    subs: ["study-cafe-space"],
+  },
+];
+
+/** 브랜드 이름에서 추론한 세부업종 id 들(0개 이상). 규칙 미매칭이면 []. */
+export function classifySubIndustriesByName(nameKo: string): string[] {
+  const out = new Set<string>();
+  for (const rule of NAME_SUBINDUSTRY_RULES) {
+    if (rule.test.test(nameKo) && !(rule.exclude && rule.exclude.test(nameKo))) {
+      for (const s of rule.subs) out.add(s);
+    }
+  }
+  return [...out];
+}
+
+/** 브랜드의 subIndustryIds 를 이름 분류 결과와 합집합으로 보강. 원본 불변. */
+function enrichBrandSubIndustries(b: FranchiseBrand): FranchiseBrand {
+  const inferred = classifySubIndustriesByName(b.name.ko);
+  if (inferred.length === 0) return b;
+  const merged = Array.from(new Set([...(b.subIndustryIds ?? []), ...inferred]));
+  if (merged.length === (b.subIndustryIds?.length ?? 0)) return b;
+  return { ...b, subIndustryIds: merged };
+}
+
+/** 보강된 전체 풀(큐레이션 우선 + 공정위). 매칭의 기준 데이터. */
+export const franchiseBrandsAllEnriched: FranchiseBrand[] =
+  franchiseBrandsAll.map(enrichBrandSubIndustries);
+
+// 교차명 중복 — 공정위 영업표지와 큐레이션 마케팅명이 다른 동일 브랜드.
+//  접미사 제거(스터디카페·치킨 등) 자동 매칭은 위험(피자마루↔치킨마루 오병합)하므로
+//  검증된 쌍만 명시. 키/값 모두 공백 제거·소문자 정규화된 이름.
+const norm = (s: string) => s.replace(/\s+/g, "").toLowerCase();
+const KFTC_CURATED_ALIAS: Record<string, string> = {
+  [norm("작심")]: norm("작심스터디카페"),
+  [norm("토즈 스터디센터")]: norm("토즈"),
+};
+const brandIdentityKey = (b: FranchiseBrand): string => {
+  const n = norm(b.name.ko);
+  return KFTC_CURATED_ALIAS[n] ?? n;
+};
+
+/**
+ * 중복 병합 — 큐레이션을 베이스(검증 비용·공식 가맹문의 URL·로드맵 노트 보존)로,
+ *  공정위 공식 통계(officialStats)는 비어있을 때만 overlay. franchiseBrandsAllEnriched
+ *  가 큐레이션 우선 정렬이라 같은 키의 첫 등장이 곧 큐레이션.
+ */
+function dedupeMergeBrands(brands: FranchiseBrand[]): FranchiseBrand[] {
+  const byKey = new Map<string, FranchiseBrand>();
+  const order: string[] = [];
+  for (const b of brands) {
+    const k = brandIdentityKey(b);
+    const prev = byKey.get(k);
+    if (!prev) {
+      byKey.set(k, b);
+      order.push(k);
+      continue;
+    }
+    // prev = 먼저 등장(큐레이션 우선). 공정위 공식 통계만 보강.
+    if (!prev.officialStats && b.officialStats) {
+      byKey.set(k, { ...prev, officialStats: b.officialStats });
+    }
+  }
+  return order.map((k) => byKey.get(k)!);
+}
+
+/**
+ * subIndustryId + (선택) specialtyId 매칭 브랜드 (로드맵 선택 + 탐색 공용).
+ *  - 동의어 그룹으로 id 확장 → 어느 진입 경로든 동일 풀.
+ *  - 큐레이션 + 공정위 통합(보강된 분류 사용) → 중복 병합.
+ *  - specialtyId 있음 + brand.specialtyIds 정의: specialty 포함 brand 만(정확 필터).
+ *  - specialtyId 있음 + brand.specialtyIds 미정의: 노출(fallback).
+ *  - specialty 결과 0개: sub-industry 전체로 graceful fallback(빈 화면 방지).
+ *  - ⚠️ categoryId 전체 폴백은 제거 — 무관 업종 브랜드 오염 방지. 매칭 0개면
+ *    빈 배열 반환(UI 가 "등록된 프랜차이즈 없음" 안내).
+ *  정렬: 검증 비용 우선 → 가맹점수 큰 순(실재·신뢰 신호).
  */
 export function getFranchiseBrandsForSubIndustry(
   subIndustryId: string,
   specialtyId?: string,
+  limit = 60,
 ): FranchiseBrand[] {
-  // 로드맵 선택은 큐레이션(검증된 추천)만 — 공정위 자동 1,400+ 가 선택 UI 를 범람시키지 않도록.
-  //  공정위 자동 브랜드는 '프랜차이즈 탐색' 페이지(franchiseBrandsAll)에서 노출.
-  const inSub = franchiseBrands.filter((fb) => fb.subIndustryIds.includes(subIndustryId));
-  if (!specialtyId) return inSub;
-
-  const matched = inSub.filter((fb) =>
-    fb.specialtyIds !== undefined
-      ? fb.specialtyIds.includes(specialtyId)
-      : true, // specialtyIds 미정의 → fallback 노출
+  const group = expandSubIndustryGroup(subIndustryId);
+  const inSubRaw = franchiseBrandsAllEnriched.filter((fb) =>
+    fb.subIndustryIds.some((s) => group.includes(s)),
   );
-  // specialty 전용 가맹 브랜드가 없는 세부업종 → sub-industry 전체로 graceful fallback
-  return matched.length > 0 ? matched : inSub;
+  const inSub = sortBrandsForPicker(dedupeMergeBrands(inSubRaw));
+  // specialty 필터
+  const result = (() => {
+    if (!specialtyId) return inSub;
+    const matched = inSub.filter((fb) =>
+      fb.specialtyIds !== undefined
+        ? fb.specialtyIds.includes(specialtyId)
+        : true, // specialtyIds 미정의 → fallback 노출
+    );
+    return matched.length > 0 ? matched : inSub;
+  })();
+  // 인기 sub-industry 는 공정위 포함 수백 개 → 선택 UI 범람 방지 상한.
+  //  정렬상 검증 큐레이션 + 가맹점수 큰 순이라 상한 내에 핵심 브랜드 포함. limit<=0 이면 전체.
+  return limit > 0 ? result.slice(0, limit) : result;
+}
+
+/** 선택 UI 정렬: 검증 비용(큐레이션) 우선 → 가맹점수 내림차순. */
+function sortBrandsForPicker(brands: FranchiseBrand[]): FranchiseBrand[] {
+  return [...brands].sort((a, b) => {
+    if (a.costVerified !== b.costVerified) return a.costVerified ? -1 : 1;
+    return (b.storeCount ?? 0) - (a.storeCount ?? 0);
+  });
 }
 
 /** Get franchise brands for a category (fallback) — 로드맵 선택용이라 큐레이션만 (탐색은 franchiseBrandsAll) */

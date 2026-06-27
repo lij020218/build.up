@@ -177,7 +177,8 @@ export function StartupTypeSelectionStage() {
       ) : (
         /* ── Screen 2: Franchise brand picker ── */
         (() => {
-          const brands = (() => { const sub = selectedIndustryId ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId) : []; return sub.length > 0 ? sub : getFranchiseBrandsForCategory(industryCategoryId); })();
+          // ⚠️ 2026-06-27: 세부업종 매칭만 — categoryId 폴백 금지(무관 브랜드 오염 방지). 세부업종 없을 때만 카테고리.
+          const brands = selectedIndustryId ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId) : getFranchiseBrandsForCategory(industryCategoryId);
           const ko = language === "ko";
           return (
             <>

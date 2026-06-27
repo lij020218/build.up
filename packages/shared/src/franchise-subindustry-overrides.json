@@ -1,0 +1,8477 @@
+{
+"kftc-117tlw": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-u7m2hk": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1nex1o8": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-goj1sw": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-1jw0ln": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-ohybgv": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-tu54s": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-13h032l": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-w1f03s": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1cmr88l": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-or70x0": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1cmrt3b": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-t9tfnb": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-s6gnw": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-u7qgo": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-ei82ys": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-14m2wq9": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-15g8oky": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u21fx": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-oayoeu": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-kl4ar": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-u1l90": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-oxl619": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-u5jsq": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1ljdai0": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-3kwptd": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-327tw": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-fx02fl": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-ypts": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-19n0ckq": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1aguvew": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1xgn7sc": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-vsgc": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-tssil5": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-6v858t": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-s5vfo": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-z811o3": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1fbuvps": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1uuenr": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1xrqj9y": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rn2zy1": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-18nq8u8": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-n3yga8": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-q8et2r": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-jrahlh": {
+"subIndustryIds": [
+"laundry-service"
+],
+"categoryId": "living-service"
+},
+"kftc-mrk23f": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-15z9ln5": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-rpk5fg": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-qxc7qc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ojtj68": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-x08h": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pnsfw8": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-g2wz64": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-sgkzhi": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-q4ov8d": {
+"subIndustryIds": [
+"pt-gym"
+],
+"categoryId": "fitness"
+},
+"kftc-1wbf54d": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1w5kitn": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-pytugo": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-12060w7": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-q61od": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-veit": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-2xzd98": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1ewv118": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-a9rzjg": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-hqj0rw": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-nxx1cc": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-1m7d47w": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-rh6b7t": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1nmcbjs": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-tx7a8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-pljvof": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qkcuob": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-pd1y7c": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-p7l0rw": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-1w0zccj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-15uqmj2": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-u1jsl": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-nlb0s8": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-ajuczt": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-miks6x": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-i6kgow": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1nocgml": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-hodpwq": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-nforcs": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1uk1bl": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1jw89u6": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-pyw4dc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p9hxm3": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-15xldyp": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-1lu4tis": {
+"subIndustryIds": [
+"laundry-service"
+],
+"categoryId": "living-service"
+},
+"kftc-11cl8jc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mnf1ar": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-cji0t1": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-qmvpn5": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-dg0370": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-wcu9w": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1ngd67j": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-17tkeam": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-1nc1g4v": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-4obu8c": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-w1fvg": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-mor38n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-7sev6o": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-2y1wjk": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-7cpb1e": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o9l5i0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-zccc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-5vsybh": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-144a6eg": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-q00fy8": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-lvxw8o": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-pszfeh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qxqmfu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rxsak": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-6523zw": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-oqettw": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1xrznk9": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-y0aceg": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-8do15m": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-uup2h": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-us68x": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-zdtuqd": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-ouf9yd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nmmsxc": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1gkq948": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-i1wzls": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-onnnzs": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-18evavs": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1um1fnu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pz7ew8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-i1sufv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ps4tzg": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1w0qgh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-oimn4v": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1r4gax7": {
+"subIndustryIds": [
+"specialty-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-h80h8x": {
+"subIndustryIds": [
+"self-serve-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-3fm7d9": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-o37b6o": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-11b7xcw": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-kyovm4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-is7mor": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1l5egce": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-fxktd7": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1bko5qo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hcvp5d": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qjtxo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-15id821": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u07k4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-2phj48": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-pxgqs4": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-r5oit": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s0eynv": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-1e1qlb3": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-6pzq18": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-1wa7qkd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1647xh4": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-tfin1q": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-p80wly": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fsiaqf": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1b4prs0": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1ecnupw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1arsyk": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-psa8lr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-paokc3": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qwe9v4": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-r0szkc": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-x4qb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vr94n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u7fa0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1de3qoj": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1cioi5p": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-1lk1tr0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ppodbo": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1gle5y8": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-pc3gol": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1kh16n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-f03m4o": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-qvdkn4": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1cp2tv4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-r82afw": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-u2b9u": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ncahfx": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1lbl2bt": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-vvjn3q": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-re6lc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-omg3w4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-q30m98": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1kwz842": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-qfs11": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-puc3w4": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-clclvj": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-16qgs3e": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-107qk": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-2pq17k": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-njmzhk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1xdxlov": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rc848": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-tg6so": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-16gildx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hew7jc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rqepft": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-4tk88g": {
+"subIndustryIds": [
+"print-copy"
+],
+"categoryId": "living-service"
+},
+"kftc-q0h97g": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-11gnbz5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1os9jrz": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-r9vco": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-oj0b6d": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-gmqdyd": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-qei17": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pojzh5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-lp5lk9": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-sky51": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1krnz9": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-tnjsr2": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s6rwq": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pdnm2p": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-jlrqhj": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1r1hfzx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rt44h3": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-u5iz6p": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tsiow": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-squ5hl": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1gk2ia8": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-pyt9m9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rasym": {
+"subIndustryIds": [
+"skin-care-room"
+],
+"categoryId": "beauty"
+},
+"kftc-tumr7": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-tgkmc": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-750guf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1dtw6sr": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1puuhsl": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-ombowi": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-k9fqmk": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-vrl4f": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-pnv9d4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-pyto8g": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u1jly": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pgkqg5": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-g31hw0": {
+"subIndustryIds": [
+"party-room"
+],
+"categoryId": "space"
+},
+"kftc-gv9igd": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-32cko4": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-4hp4to": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-byhqtc": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-rsgi4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-798eow": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1hay59o": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-c8ssrz": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ycgaxj": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-t6ltp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5hg19g": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ne5aqz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-n8px21": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1bnmrw9": {
+"subIndustryIds": [
+"waxing-studio"
+],
+"categoryId": "beauty"
+},
+"kftc-1mlb9o7": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wdtag": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1alvc5x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rv8jb0": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-har62g": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-bou1m0": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-p4ea20": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vad5g": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-s3enu": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-mpx64w": {
+"subIndustryIds": [
+"unmanned-retail"
+],
+"categoryId": "retail"
+},
+"kftc-13kdlha": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-plxxjt": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-nnl7ew": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1lfz31w": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-psr8cf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-oorkuh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o7nn5d": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1n2gkdx": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-18j445n": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1pnnost": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qngio8": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-zm7ah8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-opftq4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-17sdmkt": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1f6ulis": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-11gh9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mjysul": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1u47sco": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-8sapod": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1gxbwq1": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-mjbqn7": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1iqkkd0": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-cpjyv0": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-rbeu3m": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1uer17k": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o1jc03": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-14k9cs7": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-ppz7da": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-satxxr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-7b16zx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1frjvo5": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1e9vit8": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-prl83o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-l3hisk": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1a37rwl": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-mlghdg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-psfbt8": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-rotyds": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-rubqg": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1bnlp0u": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-pv1mj8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-u2qlo": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-u6tec": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-w3s14": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-qxdzxo": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1gnyt0a": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-1etuxtb": {
+"subIndustryIds": [
+"laundry-service"
+],
+"categoryId": "living-service"
+},
+"kftc-q91pt": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-w2mhd": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-1h0ypy0": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-nqa5tb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p1cooa": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pw2vod": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1jz40t4": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-v99u": {
+"subIndustryIds": [
+"study-cafe-space"
+],
+"categoryId": "space"
+},
+"kftc-sgdf1": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-11c9c": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-r6x99o": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-lnad9": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ilr2al": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-1mla93j": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-bv2yzv": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-nk75jl": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ammzbc": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-spsjx": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-2svriv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-aqkx5h": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-r2j318": {
+"subIndustryIds": [
+"laundry-service"
+],
+"categoryId": "living-service"
+},
+"kftc-wk5mh8": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-eyrwf2": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1uk87bh": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-qzjt94": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-o7jks5": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-r68mg": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qhqg5w": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-r52dl": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-irr4o4": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1ot7rn1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-14hadqk": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-10t1o46": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1yp6axj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rno79d": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-le4k9c": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1qlitel": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-plzxpo": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-oaddi9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pelxvc": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-108097o": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-q2nq6d": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nkarvp": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-dbco78": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-lsajc1": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-1hgt7l7": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-nebatc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-uizvme": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vrpr76": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-18sx47s": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mj704s": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-1bkirtr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-r6p2o": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1btmc7b": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qacjhp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-170bevk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-n42wmc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nlqi8g": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ii27rl": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5ibwyc": {
+"subIndustryIds": [
+"golf-studio"
+],
+"categoryId": "fitness"
+},
+"kftc-rqebmo": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-10abmjs": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ieuf6": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-6vw8nc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u3zya": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-m8f4rk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-181jo74": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mxvjr4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-18dib90": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-knoqav": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1z0zwsz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hetu1o": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1e2o8qs": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-u6779": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mq1ng5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pdixdw": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-2z7ut0": {
+"subIndustryIds": [
+"adult-class"
+],
+"categoryId": "education"
+},
+"kftc-tetbx7": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rt6uta": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-14v0653": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-b0j536": {
+"subIndustryIds": [
+"shared-office"
+],
+"categoryId": "space"
+},
+"kftc-1fqfd9q": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-sm3e5k": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5y91y0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-pwq3fs": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-mt5qhz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1q8z5gc": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-itfddh": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-7yrdqw": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-ym2rp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-dvj4f0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-lvflyc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-t84ro": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1qdg4q0": {
+"subIndustryIds": [
+"laundry-service"
+],
+"categoryId": "living-service"
+},
+"kftc-tti24": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-hq9cv8": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-txr19": {
+"subIndustryIds": [
+"unmanned-retail"
+],
+"categoryId": "retail"
+},
+"kftc-1360dm7": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1d285nh": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-zt5w": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ok1qbr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-r3k7s": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mjf7bd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q21lwv": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-f1bo4j": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-22ykna": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-3et1v4": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-hk2q5f": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-183c3z7": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-179wskp": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-q8ti94": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-v4fpm0": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1otvack": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ncx52c": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-13m4qc4": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-n3rbx0": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-xvep": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-rqcpzz": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1w84sp9": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1huthwm": {
+"subIndustryIds": [
+"pilates-studio"
+],
+"categoryId": "fitness"
+},
+"kftc-x14c": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-1y7jzz6": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-od1al3": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-6upwx2": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-n8wp6v": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1vwi6": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1diio5a": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-d4ugnk": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-14ptkt9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vl1kg": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-mt4hyc": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1rpz0qy": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-og4hfv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-txdk1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-f0ynwz": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-11cdtd7": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-yxenm3": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-171teww": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-q9uwyl": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1tna6gf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-225i39": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-cchsw4": {
+"subIndustryIds": [
+"unmanned-retail"
+],
+"categoryId": "retail"
+},
+"kftc-13mmwu4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1wn0mfw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-bgan6g": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-okh27w": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-nhg1rc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-p2zdht": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-ppyjw8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-10q407m": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-5qytpq": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-10ckj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1j07jh4": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-rwcjo": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-roukzn": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-qq1mfn": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-sjp6w": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-odeyb5": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-wt55jf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1717ac1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1mq78cr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-16cb6ys": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-rqaka5": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-79wnmp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q7ack": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fvwvqs": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-ube7m": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1koeobr": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-5437kf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tydrg": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1limsd0": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-vnxuii": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-oih14q": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-2emy6d": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ckn0p4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-pdzzeb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p8u5th": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1rk9jnv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nfp2d6": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1h71aac": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-pxljwy": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o6ffby": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-r1a5uf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-z0jf": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-l3wdyk": {
+"subIndustryIds": [
+"shared-office"
+],
+"categoryId": "space"
+},
+"kftc-1corfpw": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1snthgs": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-1gm173n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-4h8hto": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pcbzrl": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1r9jao1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rk48wn": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1e0z1ps": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-3se7ho": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1j6wj94": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-dbcsvw": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-pzah0r": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-e7fdy5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-4mlm3o": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-3webyf": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-qmkv1g": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1yz24eo": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-v6w2sc": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-9q1pa0": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-z122hx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-r1zue8": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-2m245g": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ot9pn": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1903csw": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qkesqf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-e0eqc9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1f05ck": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-173taxr": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-pdh5nv": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1pwlv1l": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-c13s2o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-6l24h5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wr0zj3": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ojxz9f": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1lpmhg1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-3zh88d": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-qxcj5e": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mqdb4a": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1hvlyyc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1iywjy8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-lnal2g": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1fbajux": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-17ml4dh": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1vjt4sq": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s3xts": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-ubt01": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-6vv28s": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fyrf0g": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ed980i": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1h2wjx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mjt8kl": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-9soe0": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1hod4w": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-x52cps": {
+"subIndustryIds": [
+"rental-studio"
+],
+"categoryId": "space"
+},
+"kftc-n525m0": {
+"subIndustryIds": [
+"practice-room"
+],
+"categoryId": "space"
+},
+"kftc-vikd7y": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tcg00": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-typm4n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-y9of7d": {
+"subIndustryIds": [
+"skin-care-room"
+],
+"categoryId": "beauty"
+},
+"kftc-fznscc": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1ieg9d4": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-jj9emd": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-awymhc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1i1d8zb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rf3hb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-v6mdzg": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-u2nup": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nemyrz": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-7eveng": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-ji39ig": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-jmieqc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nve3do": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p3b9os": {
+"subIndustryIds": [
+"salad-healthy"
+],
+"categoryId": "food"
+},
+"kftc-h4bptl": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-go8ews": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-tvbec": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-r8v3x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-r66ac": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1o7l2h": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-ndxg3c": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1vsx0vn": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1e2k4lt": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-tbmwcp": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-tse9t1": {
+"subIndustryIds": [
+"device-repair"
+],
+"categoryId": "living-service"
+},
+"kftc-1vdlacv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o94ier": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-q2x4x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-moym30": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1y1b2yh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ypdh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tkvrs": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-mil9i4": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-qwdc5g": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-12w1auo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fhoqfm": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1gnloy8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s5u65": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rhor5w": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-7f9oj9": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1vopotx": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-ogf3bf": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-13drcbc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-gj4z7n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-g9ce7x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5ssmzs": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o79ofv": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-lxlgzo": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-10uwq84": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-pquw24": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1l53fti": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-x3es": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-nesqc1": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-pqqx11": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-4w9hra": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-19hqfvh": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qzce8g": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-tvhyk": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-51wm1i": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-fyopk4": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-cnrwff": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-1ffwmf4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-lcy06k": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-wdfme": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-8xmsd4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ro1qzf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-w6x08": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1lw4hzs": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-olvchw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pf9tew": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-915pa2": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1nwd2vs": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pwottw": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1rfj0xu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1h5uhre": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-oafq68": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1fcbysb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qgju8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-11ake5c": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-191yj7v": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-skryi0": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-3iagtk": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-x9eu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-odun5b": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1mm4oph": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-px4tg": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-zksxjt": {
+"subIndustryIds": [
+"adult-class"
+],
+"categoryId": "education"
+},
+"kftc-14b5xmz": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-o27zlc": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-qkjd9w": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-we3gx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wqrwy8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tyb1t": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-rokfvb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-4p2108": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qa2n0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1id1gm4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-oq5n6f": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-rq8s1p": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1561pgx": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-1l1pppy": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-u35ip": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-2yknul": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ni5mht": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-e57jsn": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nfkq6b": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-4002l7": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-mriu7": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-xl619u": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-nz1218": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-tccav": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-15fi9h0": {
+"subIndustryIds": [
+"pt-gym"
+],
+"categoryId": "fitness"
+},
+"kftc-u447g": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-obqnrw": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1c306mq": {
+"subIndustryIds": [],
+"categoryId": "food"
+},
+"kftc-1myomj1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1as0r7c": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-qtrygx": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-o8v54o": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-rt4neb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o8z51o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-spzy0w": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-whwn": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-xzuzrc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-u6buc": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-uabch": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1pn1ugd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-uifc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1a41ts4": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-pdk535": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-frxang": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-ql3kt4": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-pafpqu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1yiop79": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-oamnut": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-d1qu6q": {
+"subIndustryIds": [
+"skin-care-room"
+],
+"categoryId": "beauty"
+},
+"kftc-r0nu4f": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-stewp": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-mipmw0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-19hz206": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-15q4eis": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1ume085": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-6grved": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ig886v": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ptfuzy": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-14zo37h": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-hxf1a3": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-1lp92od": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1oosw6l": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-rqrful": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-15eg9xc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1fx9nhb": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1hm9t0e": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-cnhsyc": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-t5n3gk": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-mq12lp": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-1vttw5x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-187y7y7": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-842rlg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-sdaz10": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ha6ia3": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-4fbxj5": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-19cglcp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nq804j": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qo7bvp": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-uj36o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pi7zxg": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-5duw2k": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pzy5mh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-2f2gyr": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-gkurz8": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-oqpeno": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-xmusvr": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-tuytq": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1dnfd9s": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ooh4l7": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1x0izv7": {
+"subIndustryIds": [
+"golf-studio"
+],
+"categoryId": "fitness"
+},
+"kftc-m23v7": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-5xfrqt": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1p3sqbz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qwiq9w": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-mpw30w": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-tttk4": {
+"subIndustryIds": [
+"unmanned-retail"
+],
+"categoryId": "retail"
+},
+"kftc-oqrh3g": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-7i473w": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-332a6": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-us6py": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1k2gb9f": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-sj39n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-16i8jdf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qpvr48": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-5gv9mx": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-8g1jyh": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-fb3sbp": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-oha1m4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-wzw7": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1b0v5l0": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-riqflp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qkb4zr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-oegxwo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5tg0xd": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-erz5ya": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-19h3ezh": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-n6dys4": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1bgqf2p": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1wkl2yr": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1po64zi": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-nbxxrn": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mjfz6h": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rt9fj4": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-y7d0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ncnzhq": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-rbgi4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ngy2go": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ngeoni": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-11lig": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nipc40": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-mgeuxa": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1tdi7tg": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-grc3d1": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1outk9l": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1ph9us5": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-1db7o1s": {
+"subIndustryIds": [
+"skin-care-room"
+],
+"categoryId": "beauty"
+},
+"kftc-1s5kf04": {
+"subIndustryIds": [
+"golf-studio"
+],
+"categoryId": "fitness"
+},
+"kftc-mpseav": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-mpw74o": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-14lzqdb": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1ry9da8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1l4pqh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-oqvj9w": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-oakspx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1bjjdkq": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-p3d26o": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-tstpo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-13thwzb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-120d4xn": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-txys7": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-thx9o": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-puepaw": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-qcdm2": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-re7jp4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-obai0f": {
+"subIndustryIds": [
+"pet-cafe"
+],
+"categoryId": "pet"
+},
+"kftc-vs2w4x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ieovv9": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ppt32o": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-grwrl4": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-z4a684": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-n2k7ag": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1d4bzyg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-oax1sd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mm76uy": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vvvk": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1j9uq8w": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-sh5yo": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1tho27c": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ner9as": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-14akihw": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-chjy92": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1fxnre0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vl69t": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-tcwzg": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-of7lk0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-zwuc50": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-sqjxb": {
+"subIndustryIds": [],
+"categoryId": "food"
+},
+"kftc-13mnjze": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-pwz9xk": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1ty138t": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-hzhm5c": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-cv6h57": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-vhiuhw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-l3graj": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-h9s3j8": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-vc6i8": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-q1sg50": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-utk1m": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q1st0o": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-q84n7": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1uzgblp": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1fbor6g": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-ukruw": {
+"subIndustryIds": [
+"salad-healthy"
+],
+"categoryId": "food"
+},
+"kftc-1s5lahw": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-12h4y82": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-9k8rg8": {
+"subIndustryIds": [
+"skin-care-room"
+],
+"categoryId": "beauty"
+},
+"kftc-jknw83": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-tzhm4": {
+"subIndustryIds": [
+"device-repair"
+],
+"categoryId": "living-service"
+},
+"kftc-1dcr5u4": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1fvzz6b": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-o24hs8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-1f9hc4g": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-n9ftt5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-14iro8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-qcjct": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-y1gx1v": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-fs0x5c": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-pkl5q8": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-r724k": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-n2fhgh": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-xzm9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-xxhwp3": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fnod6o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-7l10kw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-d2ny7s": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-rcoefs": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-pp5pqk": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1p2j30k": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-vq0ep": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wvbgo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-w980x": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-tj8uk": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-py93a8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o5nzoo": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-r3tiga": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-14vbyk9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-clrhdf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1kuuugb": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-r4kdh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-12h2436": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p3n0mo": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1yn0iiv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-9fz6uv": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-155wcw3": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-11pnmyh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1dgsesn": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ndcjvb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-v2t51": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1irnry4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-17iysfw": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-k71rd4": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-ohirzv": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-oc46wl": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-ompu8p": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-qmdh2x": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-14460yj": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-159qw45": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-on84rk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ih1ys6": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-n34nk5": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1postgg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rf289": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-v8ps5": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-qrrlcd": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-mwjofx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vivf": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-ezm43u": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tggz00": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tzvgbw": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1mjwxj3": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ogyj3a": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nccgrh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qklr0b": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-3rbrgt": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-g2acsw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rqeux9": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1exvoci": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-11fs5f6": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-prpkos": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-rrb7lj": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-8yssbt": {
+"subIndustryIds": [
+"coding-class"
+],
+"categoryId": "education"
+},
+"kftc-av3ogy": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-ok8f16": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1q86efe": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ef6lyx": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-p2zrkx": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1xhc0mg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-3q6o03": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1c6ypq4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1x9ynwo": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1r40gvo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mma7c0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-qkrpb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-f8hlzm": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-q2c68s": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qcd5ex": {
+"subIndustryIds": [
+"pt-gym"
+],
+"categoryId": "fitness"
+},
+"kftc-18lfwzh": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1lyh5vk": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-zggw": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-w1ia9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-dq567z": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-qhfzqu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nfuayo": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-4ydtqc": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1j2l8cf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ok6dg0": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-r2ef39": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qx8rfd": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1yx12ms": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-19i8i8j": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-rfykl": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-2ovymh": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-o7olun": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-iawcg0": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1u6eo5x": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-157a062": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-fpdpzr": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-kifyc8": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-pu8jvt": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-u0fix": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rqppqd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-v0agji": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-13fbmyo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-skmyx": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-1yoptv9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hb91oj": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1z1qr0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ptrgcd": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1wv20w0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-llyxr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rnagrk": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-1ydzvkw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pswnl3": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-f9o6xp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1tc4na": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ol7txp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q0ks5b": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-w0l4k": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-12eerkg": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-qwyvtx": {
+"subIndustryIds": [
+"coding-class"
+],
+"categoryId": "education"
+},
+"kftc-99868o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rv6sg": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-1k6boe8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-nf8be3": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pdacya": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1r3iwlw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-73heat": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vzmp4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-152xxyr": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-19i2aev": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-skrgp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-7ofh2o": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-8mstan": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ineypq": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pqwxgs": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qsmgc": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-xtyy7n": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-xogzip": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qgjy3o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-sgdz4": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1nlnd9o": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-p5zbw": {
+"subIndustryIds": [
+"pt-gym"
+],
+"categoryId": "fitness"
+},
+"kftc-qqnlz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-7xu2fa": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-o6dj6l": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hx64yd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-kn2dzb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o5n57e": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-l2qjhz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1aqxd2i": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-omcp00": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-u8b5z": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-hl7xl8": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1ghp1aj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tvyrt": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-prmguf": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-vzapg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-10245kf": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-8clrlw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1agrpc4": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-6rto2i": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1r0as0": {
+"subIndustryIds": [
+"shared-office"
+],
+"categoryId": "space"
+},
+"kftc-onix2x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qyam95": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-ppveyl": {
+"subIndustryIds": [
+"unmanned-retail"
+],
+"categoryId": "retail"
+},
+"kftc-vi2e": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-v5x9gw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pyb9uj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p2f339": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-5abm5z": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ufonxl": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-17k1s1u": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-n2ilcl": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-q85ilo": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-fxz7n3": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-bycalo": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-p2tciw": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1m1n1gx": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-pnyq4g": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-rxlofg": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-5rmzm4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1kxhpei": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qxc8gk": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-re2hq4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ffp7ys": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-rh8lg": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-s7vbd": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-s4o58": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vi2u": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mnw6ck": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-6nrwew": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u1nh4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1t90694": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-160zv5w": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1o514zh": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ivluev": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1sejckq": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-puft13": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1aysijg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mqv43t": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1solhhw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pzvjv7": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q2e2cy": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-197kzg4": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-l7olp4": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-h20pu8": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-vk78": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-1117c": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-zlmwps": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-qzibp4": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-10fqvao": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p5oe7": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-by3l49": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fu2pmq": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ncp8sw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1gqicu6": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-puhjcc": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-ook2l7": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1ku2s04": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-q078of": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-ueya1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1xvs3jo": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-19mcgry": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ot6blm": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1cpdehc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1wnse59": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-q02qw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1q1ir48": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s4dko": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-qkbq9z": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1cbwlug": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-a1jkls": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-11cy0": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qzjv1v": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-us9d5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1a7iw5q": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5zh36m": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-y1lo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-17zde2k": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-wjmzdk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ohirqe": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tvuaap": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1x6jxm5": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1dwgpms": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fy7j7r": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-17glaiv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rft86k": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-f4g1z3": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-mucf1f": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1dbbt5n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q6mj1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qeqbcf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-15x363": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-2m33tz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-l3k9xo": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-t9tdyn": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-r2mkzg": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-1emqu1j": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-r4grj8": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-pat970": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1yzsijs": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ooz3n9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-skrg4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-vsiiw": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-o9e55s": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-nh6hwr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o9ik6o": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-17f4qzu": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1lxcuth": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-u1dcl": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-s81aw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s4jrd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qu3uo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-17qqmfs": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1jfw9mw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-54dzym": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-10s2f3s": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-qwerz3": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ppuci0": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-olne4w": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-pubg3d": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-o9d2yp": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-6pjcs8": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1tdimkh": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-rx65ec": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ivo3tr": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-n722qh": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-w3se0": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-pv0ig4": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-s3qbv": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-q2tgb9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1skmfek": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-21p7js": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-jksem1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-890w0z": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-smph7": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-prp4st": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1uo57pv": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qh1kns": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-1o73xwy": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ravx0": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-rqde2j": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1rp0ff": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-jkt3uh": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1xx4b70": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-18dqc2n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ulpg33": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-bpllhw": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-r2bwrn": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-w5hel": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-o7c3hn": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-qmzkot": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-mlaa1n": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-i2tryb": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-1ojikkj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1kti05c": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-rk4be4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-175sqtw": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-hpadzw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rxrm2c": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1n1ama9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-17ta8cz": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-4852n5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-18mzp6o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-yrkk": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1xe07jg": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-s4d0h": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-8frwen": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-r5r49b": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-7fky1j": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-h9ik1w": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-o948ok": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1fo20r8": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-o9ksuw": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1hwy4hg": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-x3k9": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-11zvwi2": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1qjbuk0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1j2nq75": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1wx3omt": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-153kkr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u1j3c": {
+"subIndustryIds": [
+"repair-service"
+],
+"categoryId": "living-service"
+},
+"kftc-rtg7i4": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-tv64c": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-q2blwv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qm619o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-z1j4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-js2y1b": {
+"subIndustryIds": [
+"crossfit-box"
+],
+"categoryId": "fitness"
+},
+"kftc-1jndvq8": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-c33j46": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rs49gv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1t0n74n": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-qr0nk": {
+"subIndustryIds": [
+"health-food-store"
+],
+"categoryId": "retail"
+},
+"kftc-1580xhy": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1ffst95": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-uo68": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-pukxxg": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1wvorhq": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-17fnwgc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q2plb5": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-s1dp8": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-xcxf": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-55f6ip": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-paqdwk": {
+"subIndustryIds": [
+"icecream-bingsu"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-nxvkpw": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-w7b41": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-yopg": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-15zw8zx": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-f9hq2k": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1nlw5o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1dsth3p": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ep49l8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tgtf0": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-4ma1l4": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1j7kbbb": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-j8wjyi": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1j3kgat": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-pyy6vf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1vs1emb": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1k51ztc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-xgyu": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qzlx0c": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-r5nbg": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-12bfbbo": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-mm6hwj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tse5d": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ks1cy6": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1ut8i": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1rimapo": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ptxtkf": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-dku1xe": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-n1elz1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1n1ap": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-th96s": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-10uz9vk": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "education"
+},
+"kftc-1n6e690": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-1rqiqcq": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-aurpgx": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-s1tis4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-u6w41": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-2u2zhm": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-7bio": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-1ichble": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-qdvx0": {
+"subIndustryIds": [
+"salad-healthy"
+],
+"categoryId": "food"
+},
+"kftc-axy1h4": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-r8h5ns": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-bttxpd": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-r26lok": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-w3vc57": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-tve18": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ui81j": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1n7ijbl": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-13dzsbk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1sizetp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-gqyecw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1k87i42": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rm0zwk": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-euti3k": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1hy302t": {
+"subIndustryIds": [
+"pet-supplies"
+],
+"categoryId": "pet"
+},
+"kftc-1pbns49": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-wam04": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-11hbedr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ftq493": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1o6slgp": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-w7eoc": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-j58sf0": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-ps3es8": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pkoktt": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-n6w8up": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1co1io5": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-fvrlm1": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-vymyo": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-po3qqk": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-profas": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-h64ek8": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-q4lx1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ng47": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-18e858g": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-yaro": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-uafd0": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rnoels": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-q1qk2o": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-mnw73x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-gqzjz4": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-1dl6r24": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-yon4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-27ko": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wb7dt": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-awvy0w": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-rwd4p9": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-6ltknd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1nfbigk": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ozgqtl": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-1foqvyg": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-pslp90": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-g01h3p": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1pw64rc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1c9n4p9": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hd2eev": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-kahyhh": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1qgulxs": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-qnpn3r": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1jb5qpk": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-16ozaff": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-tv11k": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-2kjvs9": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-15hdjlu": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-p1dou1": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-paope9": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1d5ujrk": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-1td01t8": {
+"subIndustryIds": [
+"cleaning-service"
+],
+"categoryId": "living-service"
+},
+"kftc-om0c54": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-uzjtk": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-k1evaj": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-1djdu05": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-ffo8tl": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-105d80g": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-mq5nup": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1vg29rr": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ttr2k": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-nd7fty": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qfypg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1vvve94": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-xl1ubg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-txmck": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1x6hxrg": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ezvoou": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-72bbft": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1v0nz": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-17cpm1n": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-uimeqq": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-lk44df": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q7tnkj": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-ljtatv": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1hyxs1z": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-139fpzp": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-j7izhq": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-11hab3d": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-pqx9qo": {
+"subIndustryIds": [
+"hair-salon"
+],
+"categoryId": "beauty"
+},
+"kftc-1s6f3z4": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-te89ml": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ui8ek3": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-eyafrk": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-edou0w": {
+"subIndustryIds": [
+"beauty-supplies"
+],
+"categoryId": "retail"
+},
+"kftc-woyy31": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-1jnj4dt": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ohi7rg": {
+"subIndustryIds": [
+"pt-gym"
+],
+"categoryId": "fitness"
+},
+"kftc-yv7l": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1cubjv3": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-rr8tht": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-t7jk8": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ff3u6z": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-pfaalo": {
+"subIndustryIds": [
+"delivery-meals"
+],
+"categoryId": "food"
+},
+"kftc-pps8wo": {
+"subIndustryIds": [],
+"categoryId": "retail"
+},
+"kftc-ps9xxi": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-5h4s97": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s1pqp": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-paxcu0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1bocaek": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-pcwgjb": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-p7j1zr": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wapw": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-12e7mqx": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-sy37vx": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-qv51yp": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1x9sn20": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-oi06kc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-rrzv4g": {
+"subIndustryIds": [
+"study-cafe-space",
+"study-room"
+],
+"categoryId": "space"
+},
+"kftc-1pbhoix": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-174y4w0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-1i0lyi0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-u2lvd": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-z75g": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-tz605": {
+"subIndustryIds": [],
+"categoryId": "living-service"
+},
+"kftc-w8fvcc": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-i0s80b": {
+"subIndustryIds": [
+"language-academy"
+],
+"categoryId": "education"
+},
+"kftc-7dl5f0": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-nqkils": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-w8hh1": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-1a18bz1": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-p60nsx": {
+"subIndustryIds": [],
+"categoryId": "space"
+},
+"kftc-prhdec": {
+"subIndustryIds": [
+"kids-academy"
+],
+"categoryId": "education"
+},
+"kftc-rsxhf4": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-qrbj9k": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-oa7dt0": {
+"subIndustryIds": [
+"unmanned-retail"
+],
+"categoryId": "retail"
+},
+"kftc-1xplppc": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-pt3gt8": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-ogiwuc": {
+"subIndustryIds": [
+"fashion-accessories"
+],
+"categoryId": "retail"
+},
+"kftc-11ggc": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-wr2tlz": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1y9t5rp": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-dikhhw": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-uv5h0": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1wlxo1f": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-s7xqx": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-udjpg": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-163yf3m": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-o1ddf0": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-ryrt58": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-q80xg1": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-bk6hcj": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-qghpc": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-p1gm8x": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-n6x5er": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-afwq5h": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+},
+"kftc-wqer": {
+"subIndustryIds": [
+"lifestyle-goods"
+],
+"categoryId": "retail"
+},
+"kftc-sewv6": {
+"subIndustryIds": [
+"takeout-coffee"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1uxnylf": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-ayhgo8": {
+"subIndustryIds": [
+"western-pasta-brunch"
+],
+"categoryId": "food"
+},
+"kftc-6w34in": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-wvcwdw": {
+"subIndustryIds": [
+"convenience-small"
+],
+"categoryId": "retail"
+},
+"kftc-p3cguj": {
+"subIndustryIds": [
+"salad-healthy"
+],
+"categoryId": "food"
+},
+"kftc-fwz9mf": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-i4kift": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-r26i9r": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-mu0ceg": {
+"subIndustryIds": [
+"chicken-burger"
+],
+"categoryId": "food"
+},
+"kftc-10pkj": {
+"subIndustryIds": [
+"korean-casual"
+],
+"categoryId": "food"
+},
+"kftc-1smjv8c": {
+"subIndustryIds": [
+"device-repair"
+],
+"categoryId": "living-service"
+},
+"kftc-1id612i": {
+"subIndustryIds": [
+"dessert-cafe"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-1t0ygam": {
+"subIndustryIds": [
+"bakery-studio"
+],
+"categoryId": "cafe-dessert"
+},
+"kftc-iixnd5": {
+"subIndustryIds": [
+"ramen-noodle"
+],
+"categoryId": "food"
+}
+}

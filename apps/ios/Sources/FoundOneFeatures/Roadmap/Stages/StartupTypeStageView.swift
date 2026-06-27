@@ -62,13 +62,14 @@ public struct StartupTypeStageView: View {
     /// 1순위: 세부업종 매칭, 2순위: 대분류 매칭 (웹 SSOT — getFranchiseBrandsForSubIndustry → forCategory 폴백).
     /// 정렬: 5축 종합 점수 내림차순 (웹의 computeOverallScore 패턴 미러).
     private var franchiseCandidates: [FranchiseBrand] {
-        let base: [FranchiseBrand]
-        let sub = FranchiseBrandRegistry.brands(
-            forSubIndustry: industryId,
-            specialtyId: selectedSpecialtyId.isEmpty ? nil : selectedSpecialtyId
-        )
-        if !sub.isEmpty { base = sub }
-        else { base = FranchiseBrandRegistry.brands(forCategory: categoryId) }
+        // ⚠️ 2026-06-27: 세부업종이 있으면 *그 세부업종 매칭만* — categoryId 전체 폴백 금지
+        //   (무관 업종 오염 방지, 웹 SSOT 미러). 세부업종이 없을 때만 카테고리 폴백.
+        let base: [FranchiseBrand] = industryId.isEmpty
+            ? FranchiseBrandRegistry.brands(forCategory: categoryId)
+            : FranchiseBrandRegistry.brands(
+                forSubIndustry: industryId,
+                specialtyId: selectedSpecialtyId.isEmpty ? nil : selectedSpecialtyId
+            )
         return base.sorted { overallScore($0.scores) > overallScore($1.scores) }
     }
 

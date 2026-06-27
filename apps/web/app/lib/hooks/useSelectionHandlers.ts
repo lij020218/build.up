@@ -182,12 +182,12 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
     // If franchise selected but brand picker not shown yet → show it
     if (startupType === "franchise" && !showFranchisePicker) {
-      const brands = (() => {
-        const sub = selectedIndustryId
-          ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId)
-          : [];
-        return sub.length > 0 ? sub : getFranchiseBrandsForCategory(industryCategoryId);
-      })();
+      // ⚠️ 2026-06-27: 세부업종 선택 시 *그 세부업종 매칭만* — categoryId 폴백 금지.
+      //   종전엔 매칭 0개면 카테고리 전체로 폴백해 무관 브랜드 오염(스터디카페→눈높이·구몬).
+      //   세부업종 자체가 없을 때(selectedIndustryId 없음)만 카테고리 폴백.
+      const brands = selectedIndustryId
+        ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId)
+        : getFranchiseBrandsForCategory(industryCategoryId);
       if (brands.length > 0) {
         setShowFranchisePicker(true);
         return;

@@ -1074,7 +1074,7 @@
   {
     "id": "dominos",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -2130,7 +2130,7 @@
   {
     "id": "pizza-hut",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -2313,7 +2313,7 @@
   {
     "id": "pizza-school",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -3166,7 +3166,7 @@
   {
     "id": "mister-pizza",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -13778,7 +13778,7 @@
   {
     "id": "jungsang",
     "subIndustryIds": [
-      "kids-academy"
+      "language-academy"
     ],
     "categoryId": "education",
     "name": {
@@ -15843,7 +15843,7 @@
   {
     "id": "gopizza",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -15901,7 +15901,7 @@
   {
     "id": "bbaekboy-pizza",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -15958,7 +15958,7 @@
   {
     "id": "pizza-maru",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -16015,7 +16015,7 @@
   {
     "id": "59-rice-pizza",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -16522,7 +16522,7 @@
   {
     "id": "pizza-alvolo",
     "subIndustryIds": [
-      "delivery-meals"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -17558,7 +17558,7 @@
   {
     "id": "7thpizza",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -18547,7 +18547,7 @@
   {
     "id": "matpizza",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "categoryId": "food",
     "name": {
@@ -20676,7 +20676,7 @@
   {
     "id": "papa-johns",
     "subIndustryIds": [
-      "chicken-burger"
+      "western-pasta-brunch"
     ],
     "specialtyIds": [
       "fb-pizza"

@@ -47,7 +47,7 @@ const M_MAP: Record<string, { c: string; s: string[] }> = {
   "치킨": { c: "food", s: ["chicken-burger"] },
   "패스트푸드": { c: "food", s: ["chicken-burger"] },
   "피자": { c: "food", s: ["delivery-meals"] },
-  "주점": { c: "food", s: [] },
+  "주점": { c: "food", s: ["korean-casual"] },
   "일식": { c: "food", s: ["ramen-noodle"] },
   "중식": { c: "food", s: ["ramen-noodle"] },
   "서양식": { c: "food", s: ["western-pasta-brunch"] },
@@ -59,12 +59,12 @@ const M_MAP: Record<string, { c: string; s: string[] }> = {
   "아이스크림/빙수": { c: "cafe-dessert", s: ["icecream-bingsu"] },
   "아이스크림/빙수 ": { c: "cafe-dessert", s: ["icecream-bingsu"] },
   "이미용": { c: "beauty", s: ["hair-salon"] },
-  "화장품": { c: "retail", s: [] },
-  "안경": { c: "retail", s: [] },
+  "화장품": { c: "retail", s: ["beauty-supplies"] },
+  "안경": { c: "retail", s: ["fashion-accessories"] },
   "편의점": { c: "retail", s: ["convenience-small"] },
   "종합소매점": { c: "retail", s: ["convenience-small"] },
   "기타도소매": { c: "retail", s: [] },
-  "(건강)식품": { c: "retail", s: [] },
+  "(건강)식품": { c: "retail", s: ["health-food-store"] },
   "농수산물": { c: "retail", s: [] },
   "의류 / 패션": { c: "retail", s: [] },
   "약국": { c: "retail", s: [] },
@@ -74,7 +74,7 @@ const M_MAP: Record<string, { c: string; s: string[] }> = {
   "유아 관련 (교육 외)": { c: "education", s: ["kids-academy"] },
   "유아관련": { c: "education", s: ["kids-academy"] },
   "세탁": { c: "living-service", s: ["laundry-service"] },
-  "자동차 관련": { c: "living-service", s: [] },
+  "자동차 관련": { c: "living-service", s: ["repair-service"] },
   "부동산 중개 ": { c: "living-service", s: [] },
   "인력 파견": { c: "living-service", s: [] },
   "이사": { c: "living-service", s: [] },
@@ -158,6 +158,15 @@ async function main() {
     const alias = CURATED_ALIASES[String(b.id)];
     if (alias) curatedNames.add(norm(alias));
   }
+  // 2026-06-27: 세부업종 분류 override — 결정적 분류기 + 웹리서치 결과 영속화.
+  //   KFTC 중분류(mapCategory)는 거칠어 '기타*' 다수가 빈 subIndustryIds 로 빠짐.
+  //   이 override(id → {subIndustryIds, categoryId})가 그 결과를 덮어써 재생성 시 분류 보존.
+  //   생성: scripts(classify-franchise-subindustries) + 워크플로우. id 는 hashId(name) 로 안정적.
+  let overrides: Record<string, { subIndustryIds: string[]; categoryId: string }> = {};
+  try {
+    overrides = JSON.parse(readFileSync(new URL("../packages/shared/src/franchise-subindustry-overrides.json", import.meta.url), "utf8"));
+  } catch { /* override 파일 없으면 중분류 매핑만 사용 */ }
+
   const subCost: Record<string, { cost: number[]; fee: number[] }> = {};
   const catCost: Record<string, { cost: number[]; fee: number[] }> = {};
   for (const b of curated) {
@@ -186,7 +195,15 @@ async function main() {
     const nk = norm(r.brandName);
     if (curatedNames.has(nk)) { skippedCurated++; continue; }
 
-    const { c: categoryId, s: subIndustryIds } = mapCategory(r.industryL, r.industryM);
+    let id = hashId(nk);
+    while (usedIds.has(id)) id += "x";
+    usedIds.add(id);
+
+    // 중분류 기반 매핑 → override(분류기·리서치 결과) 가 있으면 우선 적용.
+    let { c: categoryId, s: subIndustryIds } = mapCategory(r.industryL, r.industryM);
+    const ov = overrides[id];
+    if (ov) { subIndustryIds = ov.subIndustryIds; categoryId = ov.categoryId; }
+
     const closurePct = r.storeCount > 0 ? ((r.terminations + r.cancellations) / r.storeCount) * 100 : 0;
     const avgSalesWon = r.avgSalesThousandWon > 0 ? Math.round(r.avgSalesThousandWon / 10) : 0;
     const avgSalesPerAreaWon = r.avgSalesPerAreaThousandWon > 0 ? Math.round(r.avgSalesPerAreaThousandWon / 10) : 0;
@@ -202,10 +219,6 @@ async function main() {
     const enMatch = r.brandName.match(/[(（]([A-Za-z][^)）]*)[)）]/);
     const ko = r.brandName.replace(/\s*[(（][^)）]*[)）]\s*/g, "").trim() || r.brandName;
     const en = enMatch ? enMatch[1].trim() : ko;
-
-    let id = hashId(nk);
-    while (usedIds.has(id)) id += "x";
-    usedIds.add(id);
 
     const tagKo = `전국 ${r.storeCount.toLocaleString()}개 가맹점` + (avgSalesWon ? ` · 점당 연매출 ${(avgSalesWon / 10000).toFixed(1)}억` : "");
     const tagEn = `${r.storeCount.toLocaleString()} stores nationwide` + (avgSalesWon ? ` · ${(avgSalesWon / 10000).toFixed(1)}억/store` : "");

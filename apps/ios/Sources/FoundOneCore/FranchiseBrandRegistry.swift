@@ -173,21 +173,55 @@ public enum FranchiseBrandRegistry {
     ///
     /// Graceful fallback: specialty 필터 결과가 0개면 (예: '냉면'처럼 한국에 전용
     /// 가맹 프랜차이즈가 없는 세부업종) sub-industry 전체로 fallback — 빈 화면 방지.
-    public static func brands(forSubIndustry subIndustryId: String, specialtyId: String? = nil) -> [FranchiseBrand] {
-        // 로드맵 선택용 → curated 만 (탐색은 all).
-        let inSub = curated
-            .filter { $0.subIndustryIds.contains(subIndustryId) }
-            .sorted { $0.startupCostWon < $1.startupCostWon }
-        guard let sid = specialtyId else { return inSub }
+    // ── 세부업종 매칭 (웹 getFranchiseBrandsForSubIndustry 1:1 미러, 2026-06-27 재설계) ──
+    //   ① 동의어 그룹 확장(스터디카페 study-room≡study-cafe-space) ② 큐레이션+공정위 통합 풀
+    //   ③ 중복 병합(큐레이션 우선) ④ 정렬(검증 비용 → 가맹점수) ⑤ 상한(범람 방지).
+    //   categoryId 전체 폴백은 호출부에서도 제거 — 무관 업종 오염 방지.
 
-        let matched = inSub.filter { brand in
-            if let specs = brand.specialtyIds {
-                return specs.contains(sid)
+    /// 세부업종 동의어 그룹 (웹 SUB_INDUSTRY_GROUPS 미러).
+    public static let subIndustryGroups: [[String]] = [
+        ["study-cafe-space", "study-room", "small-study-room"],
+    ]
+    public static func expandSubIndustryGroup(_ id: String) -> [String] {
+        subIndustryGroups.first { $0.contains(id) } ?? [id]
+    }
+
+    private static func normName(_ s: String) -> String {
+        s.replacingOccurrences(of: " ", with: "").lowercased()
+    }
+    /// 교차명 중복 — 공정위 영업표지 ↔ 큐레이션 마케팅명 (웹 KFTC_CURATED_ALIAS 미러).
+    private static let kftcCuratedAlias: [String: String] = [
+        normName("작심"): normName("작심스터디카페"),
+        normName("토즈 스터디센터"): normName("토즈"),
+    ]
+    private static func identityKey(_ b: FranchiseBrand) -> String {
+        let n = normName(b.name.ko)
+        return kftcCuratedAlias[n] ?? n
+    }
+
+    public static func brands(forSubIndustry subIndustryId: String, specialtyId: String? = nil, limit: Int = 60) -> [FranchiseBrand] {
+        let group = Set(expandSubIndustryGroup(subIndustryId))
+        let sorted = all
+            .filter { !Set($0.subIndustryIds).isDisjoint(with: group) }
+            .sorted { a, b in
+                if a.costVerified != b.costVerified { return a.costVerified } // 검증(큐레이션) 우선
+                return a.storeCount > b.storeCount                            // 가맹점수 큰 순
             }
-            return true // specialtyIds 미정의 → fallback 노출
+        // 중복 병합 — 정렬 후 첫 등장(큐레이션·검증 우선) 유지.
+        var seen = Set<String>()
+        let inSub = sorted.filter { seen.insert(identityKey($0)).inserted }
+
+        let result: [FranchiseBrand]
+        if let sid = specialtyId {
+            let matched = inSub.filter { brand in
+                if let specs = brand.specialtyIds { return specs.contains(sid) }
+                return true // specialtyIds 미정의 → 노출
+            }
+            result = matched.isEmpty ? inSub : matched
+        } else {
+            result = inSub
         }
-        // specialty 전용 가맹 브랜드가 없는 세부업종 → sub-industry 전체로 graceful fallback
-        return matched.isEmpty ? inSub : matched
+        return limit > 0 ? Array(result.prefix(limit)) : result
     }
 
     // MARK: - Bundle loader
