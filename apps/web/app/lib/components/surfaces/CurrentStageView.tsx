@@ -64,7 +64,7 @@ import {
   getFranchiseBrandById,
   localizeTaskTitle,
 } from "@foundone/shared";
-import { Star, Store } from "lucide-react";
+import { Star, Store, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 // SecurityChecklist 는 LaunchGtmStage 내부에서 collapsible 로 직접 import.
 // import { SecurityChecklist } from "../knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "../knowledge/InvestmentGlossary";
@@ -228,6 +228,47 @@ export function CurrentStageView() {
   //   "다음 단계로" 대신 "다음 페이지" 로 전환(페이지 건너뛰기·미열람 advance 방지).
   const pageNav = usePageNavStore((s) => s.nav);
   const hasMoreReadingPages = !!pageNav && pageNav.page < pageNav.totalPages - 1;
+
+  // 단계 "안"의 페이지 이동 — 콘텐츠 레벨(밝은 블루·점 표시). 단계 "밖" 이동(푸터의 딥네이비
+  //   "다음 단계로")과 위치·색·단어("페이지" vs "단계")로 분리해 혼동 방지. 단계 끝 콘텐츠에 배치.
+  const PAGE_BLUE = "#2563eb";
+  const pageNavBlock = pageNav && pageNav.totalPages > 1 ? (() => {
+    const atFirst = pageNav.page <= 0;
+    const atLast = pageNav.page >= pageNav.totalPages - 1;
+    const go = (p: number) => { pageNav.onChange(p); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px",
+        padding: "9px 12px", marginBottom: "10px", borderRadius: "14px",
+        border: `1px solid ${PAGE_BLUE}2e`, background: `${PAGE_BLUE}0d`,
+      }}>
+        <button type="button" disabled={atFirst} onClick={() => go(pageNav.page - 1)}
+          style={{ display: "inline-flex", alignItems: "center", gap: "1px", border: "none", background: "transparent",
+            color: atFirst ? `${PAGE_BLUE}55` : PAGE_BLUE, fontSize: "13px", fontWeight: 600,
+            cursor: atFirst ? "default" : "pointer", padding: "4px 4px", fontFamily: "inherit" }}>
+          <ChevronLeft size={15} strokeWidth={2.4} aria-hidden />{language === "ko" ? "이전 페이지" : "Prev"}
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", gap: "5px" }}>
+            {Array.from({ length: pageNav.totalPages }).map((_, i) => (
+              <span key={i} style={{ width: 6, height: 6, borderRadius: "50%",
+                background: i <= pageNav.page ? PAGE_BLUE : `${PAGE_BLUE}40` }} />
+            ))}
+          </div>
+          <span style={{ fontSize: "12px", color: "#1d3a8a", fontWeight: 600, whiteSpace: "nowrap" }}>
+            {language === "ko" ? `페이지 ${pageNav.page + 1}/${pageNav.totalPages}` : `${pageNav.page + 1}/${pageNav.totalPages}`}
+          </span>
+        </div>
+        <button type="button" disabled={atLast} onClick={() => go(pageNav.page + 1)}
+          style={{ display: "inline-flex", alignItems: "center", gap: "1px", border: "none",
+            background: atLast ? "transparent" : `${PAGE_BLUE}1a`,
+            color: atLast ? `${PAGE_BLUE}55` : PAGE_BLUE, fontSize: "13px", fontWeight: 700,
+            borderRadius: "10px", cursor: atLast ? "default" : "pointer", padding: "6px 12px", fontFamily: "inherit" }}>
+          {language === "ko" ? "다음 페이지" : "Next"}<ChevronRight size={15} strokeWidth={2.4} aria-hidden />
+        </button>
+      </div>
+    );
+  })() : null;
 
   // ── 로컬 상태 (DashboardContext에 포함되지 않는 것들) ──
   const [mvpPage, setMvpPage] = useState(0);
@@ -1070,6 +1111,7 @@ export function CurrentStageView() {
                     );
                   })}
                 </div>
+                {pageNavBlock}
                 <div style={styles.stageFooter}>
                   {/* ⚠️ 항상 노출 — null 이면 로드맵으로 복귀 */}
                   <button type="button" style={styles.button} onClick={() => {
@@ -1086,19 +1128,18 @@ export function CurrentStageView() {
                        사용자가 런칭을 트리거할 수 없었음. 아직 개업(businessLaunched) 전이라면
                        final 단계에서는 항상 런칭 버튼 분기로 떨어지게 예외 처리. */}
                   {hasMoreReadingPages ? (
-                    /* 아직 읽을 페이지가 남음 → "다음 단계로" 대신 "다음 페이지" (건너뛰기·미열람 advance 방지) */
-                    <button
-                      type="button"
-                      style={{ ...styles.primaryButton }}
-                      onClick={() => {
-                        pageNav!.onChange(pageNav!.page + 1);
-                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                    >
+                    /* 단계 advance 게이트: 아직 읽을 페이지가 남음 → "다음 단계로" 대신 잠금 힌트.
+                       페이지 이동은 위 콘텐츠 영역의 페이지 네비로 (단계 이동과 시각적으로 분리). */
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: "6px",
+                      padding: "11px 16px", fontSize: "13px", fontWeight: 600,
+                      color: "rgba(25,25,112,0.5)", marginLeft: "auto",
+                    }}>
+                      <Lock size={13} strokeWidth={2.2} aria-hidden />
                       {language === "ko"
-                        ? `다음 페이지 (${pageNav!.page + 2}/${pageNav!.totalPages}) ›`
-                        : `Next page (${pageNav!.page + 2}/${pageNav!.totalPages}) ›`}
-                    </button>
+                        ? `마지막 페이지에서 다음 단계로 (${pageNav!.page + 1}/${pageNav!.totalPages})`
+                        : `Continue on the last page (${pageNav!.page + 1}/${pageNav!.totalPages})`}
+                    </div>
                   ) : correctedProgressPercent >= 100 && !(stageId === "pre-launch-final" && !businessLaunched) ? (
                     <button
                       type="button"
