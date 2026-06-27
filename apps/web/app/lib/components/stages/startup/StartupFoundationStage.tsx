@@ -716,7 +716,7 @@ export function StartupFoundationStage() {
               "✓ 1-day shutdown vs 6+ months corp liquidation",
             ],
             tools: [
-              { name: "홈택스 (개인사업자 등록)", desc: ko ? "5분 온라인 무료 등록" : "Free online registration", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" },
+              { name: "홈택스 (개인사업자 등록)", desc: ko ? "5분 온라인 무료 등록" : "Free online registration", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" },
               { name: "KIPRIS (상표 검색·출원)", desc: ko ? "직접 출원 4-6만원" : "Direct filing 40-60K KRW", url: "https://www.kipris.or.kr" },
               { name: "삼쩜삼 (종소세 환급)", desc: ko ? "1인 종소세 자동 신고" : "Auto income tax", url: "https://3o3.co.kr" },
             ],

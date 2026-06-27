@@ -11,7 +11,7 @@ import SwiftUI
 import FoundOneDesignSystem
 
 struct BUHometaxLink: View {
-    static let url = URL(string: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml")!
+    static let url = URL(string: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3")!
 
     var label: String = "홈택스 바로가기"
 

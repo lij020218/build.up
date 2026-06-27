@@ -633,14 +633,14 @@ export function AnalyticsSurface() {
 
                 const allEvents = [
                   ...(hasEmployees ? [
-                    { label: ko ? "원천세 납부" : "Withholding tax", sub: ko ? "매월 10일" : "Monthly 10th", date: withholdingDate, icon: "원", color: "#3b5c8c", alwaysShow: false, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                    { label: ko ? "원천세 납부" : "Withholding tax", sub: ko ? "매월 10일" : "Monthly 10th", date: withholdingDate, icon: "원", color: "#3b5c8c", alwaysShow: false, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                     { label: ko ? "4대보험료 납부" : "Social insurance", sub: ko ? "매월 10일" : "Monthly 10th", date: insuranceDate, icon: "4", color: "#1d3557", alwaysShow: false, url: "https://www.4insure.or.kr", urlLabel: ko ? "4대보험 포털" : "4 Insurance" },
                   ] : []),
-                  { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#191970", alwaysShow: true, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                  { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#191970", alwaysShow: true, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   ...(vatType === "general" ? [
-                    { label: ko ? "부가세 예정신고" : "VAT provisional", sub: ko ? "일반과세자 — 4·10월 25일" : "General VAT — Apr & Oct 25", date: vatProvisionalDate, icon: "예", color: "#ff6b00", alwaysShow: false, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                    { label: ko ? "부가세 예정신고" : "VAT provisional", sub: ko ? "일반과세자 — 4·10월 25일" : "General VAT — Apr & Oct 25", date: vatProvisionalDate, icon: "예", color: "#ff6b00", alwaysShow: false, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   ] : []),
-                  { label: ko ? "종합소득세" : "Income tax", sub: ko ? "매년 5월 31일" : "May 31 annually", date: incomeTaxDate, icon: "소", color: "#af52de", alwaysShow: true, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                  { label: ko ? "종합소득세" : "Income tax", sub: ko ? "매년 5월 31일" : "May 31 annually", date: incomeTaxDate, icon: "소", color: "#af52de", alwaysShow: true, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   { label: ko ? "산재보험료 정산" : "Industrial accident ins.", sub: ko ? "매년 3월 31일" : "March 31 annually", date: industrialDate, icon: "산", color: "#5856d6", alwaysShow: false, url: "https://www.comwel.or.kr", urlLabel: ko ? "근로복지공단" : "COMWEL" },
                 ].sort((a, b) => diffDays(a.date) - diffDays(b.date));
 
@@ -744,7 +744,7 @@ export function AnalyticsSurface() {
                     {/* 유용한 링크 */}
                     <div style={{ padding: "12px 22px 16px", borderTop: "0.5px solid rgba(0,0,0,0.06)", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                       {[
-                        { label: ko ? "홈택스" : "HomeTax", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml", color: "#5856d6" },
+                        { label: ko ? "홈택스" : "HomeTax", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", color: "#5856d6" },
                         { label: ko ? "4대보험 포털" : "4 Insurance", url: "https://www.4insure.or.kr", color: "#1d3557" },
                         { label: ko ? "근로복지공단" : "COMWEL", url: "https://www.comwel.or.kr", color: "#3b5c8c" },
                         { label: ko ? "캐시노트" : "CashNote", url: "https://cashnote.kr", color: "#191970" },
@@ -1115,7 +1115,7 @@ export function AnalyticsSurface() {
                     {/* 지원 링크 */}
                     <div style={{ padding: "14px 22px 18px", display: "grid", gap: "6px" }}>
                       {[
-                        { label: ko ? "폐업 절차 안내 (국세청)" : "Closure procedures (NTS)", desc: ko ? "사업자 폐업 신고, 부가세 확정신고, 폐업 세금 정리" : "Business closure filing, VAT final return, tax settlement", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" },
+                        { label: ko ? "폐업 절차 안내 (국세청)" : "Closure procedures (NTS)", desc: ko ? "사업자 폐업 신고, 부가세 확정신고, 폐업 세금 정리" : "Business closure filing, VAT final return, tax settlement", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" },
                         { label: ko ? "희망리턴패키지 (소진공)" : "Hope Return Package (SEMAS)", desc: ko ? "폐업 후 재창업 최대 2,000만원 + 점포 철거비 600만원 지원" : "Re-startup up to 20M + store demolition 6M KRW support", url: "https://www.semas.or.kr" },
                         { label: ko ? "고용보험 실업급여 (사업주)" : "Employment insurance (business owner)", desc: ko ? "사업주 고용보험 임의가입 시 폐업 후 실업급여 수급 가능" : "Business owner unemployment benefits if voluntarily insured", url: "https://www.ei.go.kr" },
                       ].map((item, idx) => (

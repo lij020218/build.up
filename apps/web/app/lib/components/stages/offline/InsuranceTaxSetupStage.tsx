@@ -570,9 +570,9 @@ export function InsuranceTaxSetupStage() {
 
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, padding: "0 16px 14px" }}>
               {[
-                { label: "홈택스 간이세액표", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" },
+                { label: "홈택스 간이세액표", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" },
                 { label: "원천세 신고 매뉴얼", url: "https://www.nts.go.kr" },
-                { label: "반기납부 신청", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" },
+                { label: "반기납부 신청", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" },
               ].map((link) => (
                 <a
                   key={link.label}

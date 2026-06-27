@@ -174,7 +174,7 @@ export function CompanySetupStage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-            <a href="https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" target="_blank" rel="noopener noreferrer" style={linkStyle}>홈택스 바로가기 ↗</a>
+            <a href="https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" target="_blank" rel="noopener noreferrer" style={linkStyle}>홈택스 바로가기 ↗</a>
             <a href="https://www.gov.kr/portal/service/serviceInfo/PTR000050466" target="_blank" rel="noopener noreferrer" style={linkStyle}>정부24 사업자등록 ↗</a>
           </div>
         </div>
@@ -225,7 +225,7 @@ export function CompanySetupStage() {
             <a href="https://www.help-me.kr" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: MIDNIGHT, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>헬프미 법인설립 ↗</a>
             <a href="https://zuzu.network" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: MIDNIGHT, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>ZUZU 법인설립 ↗</a>
             <a href="https://www.startbiz.go.kr" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: MIDNIGHT, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>온라인법인설립 ↗</a>
-            <a href="https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: MIDNIGHT, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>홈택스 ↗</a>
+            <a href="https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: MIDNIGHT, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>홈택스 ↗</a>
           </div>
 
           {/* 스톡옵션 팁 */}
@@ -651,7 +651,7 @@ export function CompanySetupStage() {
           </div>
         </div>
         <div style={{ marginTop: "10px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          <a href="https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" target="_blank" rel="noopener noreferrer" style={linkStyle}>홈택스 ↗</a>
+          <a href="https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" target="_blank" rel="noopener noreferrer" style={linkStyle}>홈택스 ↗</a>
           <a href="https://cashnote.kr" target="_blank" rel="noopener noreferrer" style={linkStyle}>캐시노트 (무료) ↗</a>
           <a href="https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7693&mi=2272" target="_blank" rel="noopener noreferrer" style={linkStyle}>{ko ? "부가세 안내" : "VAT Guide"} ↗</a>
         </div>

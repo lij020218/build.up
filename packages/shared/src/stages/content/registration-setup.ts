@@ -351,7 +351,7 @@ const byCategory: Record<string, CategoryContent> = {
         "담배 판매 — 담배소매인 지정 별도",
         "의약품·의료기기 — 별도 인허가",
       ],
-      externalUrl: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml",
+      externalUrl: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3",
       description: "일반 소매(잡화·의류·생활용품)는 사업자등록만으로 영업 가능. 단, 특수 품목은 별도 인허가",
     },
     requiredPermits: [
@@ -657,7 +657,7 @@ export const REGISTRATION_SETUP_CONTENT: StageContent = {
             { label: "장소", value: "홈택스", sublabel: "또는 세무서" },
           ],
           links: [
-            { label: "홈택스 사업자등록", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=%2Fui%2Fpp%2Findex_pp.xml" },
+            { label: "홈택스 사업자등록", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3" },
             { label: "정부24 사업자등록", url: "https://www.gov.kr/portal/service/serviceInfo/PTR000050466" },
             { label: "업종코드 조회", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=2444&cntntsId=7777" },
             { label: "간이과세 기준 (2026)", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7693&mi=2272" },
