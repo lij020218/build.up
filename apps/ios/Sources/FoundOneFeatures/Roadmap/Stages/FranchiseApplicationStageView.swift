@@ -41,7 +41,7 @@ private let franchiseSteps: [FranchiseStep] = [
           linkLabel: nil, linkUrl: nil),
     .init(taskId: "fc-legal", title: "가맹계약 법률 검토", time: "2~3일",
           detail: "변호사·가맹거래사 자문 — 영업지역 보호·필수구매 비율·중도 해지 위약금 조항을 review.",
-          linkLabel: "표준가맹계약서 양식 (공정위)", linkUrl: "https://www.ftc.go.kr/www/cop/bbs/selectBoardList.do?key=203&bbsId=BBSMSTR_000000002321"),
+          linkLabel: "표준가맹계약서 양식 (공정위)", linkUrl: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204"),
     .init(taskId: "fc-contract", title: "가맹계약 체결 및 가맹비 납부", time: "1일",
           detail: "가맹비·교육비·인테리어비·로열티 조건 최종 확인. 중도 해지 위약금이 총 투자비 50% 초과면 재협상.",
           linkLabel: nil, linkUrl: nil),
@@ -438,9 +438,9 @@ public struct FranchiseApplicationStageView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     BUEyebrow("참고 링크")
                     linkRow(title: "공정위 정보공개서 조회",     url: "https://franchise.ftc.go.kr")
-                    linkRow(title: "표준가맹계약서 양식 (공정위)", url: "https://www.ftc.go.kr/www/cop/bbs/selectBoardList.do?key=203&bbsId=BBSMSTR_000000002321")
+                    linkRow(title: "표준가맹계약서 양식 (공정위)", url: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204")
                     linkRow(title: "한국프랜차이즈산업협회",       url: "https://www.ikfa.or.kr/")
-                    linkRow(title: "가맹사업법 안내 (법령정보)",   url: "https://www.law.go.kr/법령/가맹사업거래의공정화에관한법률")
+                    linkRow(title: "가맹사업법 안내 (생활법령)",   url: "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=647&ccfNo=1&cciNo=1&cnpClsNo=1")
                 }
             }
         }

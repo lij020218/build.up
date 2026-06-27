@@ -85,7 +85,7 @@ const PROCESS_STEPS_KO: ReadonlyArray<{
     title: "가맹계약 법률 검토",
     time: "2~3일",
     detail: "변호사·가맹거래사 자문 — 영업지역 보호·필수구매 비율·중도 해지 위약금 조항을 review.",
-    link: { url: "https://www.ftc.go.kr/www/cop/bbs/selectBoardList.do?key=203&bbsId=BBSMSTR_000000002321", label: "표준가맹계약서 양식" },
+    link: { url: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204", label: "표준가맹계약서 양식" },
   },
   {
     taskId: "fc-contract",
@@ -111,7 +111,7 @@ const PROCESS_STEPS_EN: ReadonlyArray<{
   { taskId: "fc-inquiry", title: "Request franchise consultation", time: "1-2 wk", detail: "Book HQ consultation. Share experience, capital, preferred area." },
   { taskId: "fc-disclosure", title: "Review disclosure document (14-day period)", time: "14 days", detail: "Legally required. Check store count, closure rate, avg profit, dispute history.", link: { url: "https://franchise.ftc.go.kr", label: "KFTC Disclosure Lookup" } },
   { taskId: "fc-visit", title: "Visit 3+ existing franchisees", time: "1 wk", detail: "Visit stores from disclosure list. Ask about real daily revenue, HQ support quality, logistics issues." },
-  { taskId: "fc-legal", title: "Legal review of franchise contract", time: "2-3 days", detail: "Lawyer review. Verify territory protection, required purchase ratio, early termination penalties.", link: { url: "https://www.ftc.go.kr/www/cop/bbs/selectBoardList.do?key=203&bbsId=BBSMSTR_000000002321", label: "Standard Contract Form (FTC)" } },
+  { taskId: "fc-legal", title: "Legal review of franchise contract", time: "2-3 days", detail: "Lawyer review. Verify territory protection, required purchase ratio, early termination penalties.", link: { url: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204", label: "Standard Contract Form (FTC)" } },
   { taskId: "fc-contract", title: "Sign franchise agreement, pay fee", time: "1 day", detail: "Final check of fees, royalty, interior costs, termination penalties. Renegotiate if penalty > 50% of investment." },
   { taskId: "fc-training", title: "Complete HQ training program", time: "2-4 wk", detail: "Recipes, operations, POS, hygiene training. Weak HQ manuals = high post-opening risk." },
 ];
@@ -428,10 +428,20 @@ export function FranchiseApplicationStage() {
               {processSteps.map((step, idx) => {
                 const done = isTaskDone(step.taskId);
                 return (
-                  <button
+                  // ⚠️ 2026-06-27 fix: 외부 링크(<a>)를 품으므로 <button> 금지 — <a> 중첩은
+                  //   비유효 HTML 이라 브라우저가 DOM 을 재구성해 stopPropagation·target=_blank 가
+                  //   깨지고, 링크 클릭이 task 토글→단계 advance 로 새어나감(사장님 신고). <div role>로 교체.
+                  <div
                     key={step.taskId}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleTaskToggle(STAGE_ID, step.taskId)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleTaskToggle(STAGE_ID, step.taskId);
+                      }
+                    }}
                     style={{
                       display: "grid",
                       gridTemplateColumns: "26px 1fr auto",
@@ -542,7 +552,7 @@ export function FranchiseApplicationStage() {
 
                     {/* placeholder right cell (grid 안정성) */}
                     <span style={{ width: "1px" }} />
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -615,9 +625,9 @@ export function FranchiseApplicationStage() {
             </div>
             {[
               { label: ko ? "공정거래위원회 정보공개서 조회" : "KFTC Disclosure Lookup", url: "https://franchise.ftc.go.kr" },
-              { label: ko ? "가맹사업법 안내 (생활법령)" : "Franchise Act Guide", url: "https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=647" },
+              { label: ko ? "가맹사업법 안내 (생활법령)" : "Franchise Act Guide", url: "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=647&ccfNo=1&cciNo=1&cnpClsNo=1" },
               { label: ko ? "분쟁조정 신청 (한국프랜차이즈산업협회)" : "Dispute Mediation (KFA)", url: "https://www.ikfa.or.kr/" },
-              { label: ko ? "표준가맹계약서 양식 (공정위)" : "Standard Contract Form (FTC)", url: "https://www.ftc.go.kr/www/cop/bbs/selectBoardList.do?key=203&bbsId=BBSMSTR_000000002321" },
+              { label: ko ? "표준가맹계약서 양식 (공정위)" : "Standard Contract Form (FTC)", url: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204" },
             ].map((link) => (
               <a
                 key={link.url}
