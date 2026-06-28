@@ -182,8 +182,15 @@ public struct FoodSafetyCard: View {
                 }
                 .buttonStyle(.plain)
 
-                Text("식약처 자율 위생점검 매뉴얼 (공식)")
-                    .font(.system(size: 9.5, weight: .medium)).foregroundStyle(BUColor.inkSubtle)
+                // 2026-06-29 fix: 직전엔 "(공식)" 캡션만 있고 실제 링크가 없었다(+웹은 엉뚱한 페이지로 감).
+                // 법제처 '찾기쉬운 생활법령정보' 음식점 위생등급제 안내로 연결(웹과 동일 URL·검증됨).
+                Link(destination: URL(string: "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=840&ccfNo=2&cciNo=1&cnpClsNo=4")!) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.up.right.square").font(.system(size: 9.5, weight: .semibold))
+                        Text("음식점 위생등급제 안내 (생활법령정보)").font(.system(size: 9.5, weight: .medium))
+                    }
+                    .foregroundStyle(BUColor.midnight)
+                }
             }
         }
     }

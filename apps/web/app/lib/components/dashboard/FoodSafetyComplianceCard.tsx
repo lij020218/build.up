@@ -363,17 +363,18 @@ export function FoodSafetyComplianceCard({
         })}
       </div>
 
-      {/* 외부 링크 — 2026-06-27 fix: 기존 boardDetail 딥링크가 ntctxt_no 누락 + 식품제조가공업용
-          매뉴얼로 연결돼 음식점/카페와 무관한 엉뚱한 페이지로 갔다(사장님 신고). 식품안전나라
-          위생등급제 섹션(음식점 대상, 검증된 공식)으로 교체하고 라벨도 도착지에 맞게 정직하게. */}
+      {/* 외부 링크 — 2026-06-29 재fix: 직전 foodsafetykorea hgledgList(menu_no=4436)는 라벨과 달리
+          실제로 '식품안심업소/위생등급 지정현황 검색 DB'로 떠서 여전히 엉뚱했다(사장님 재신고).
+          foodsafetykorea는 JS SPA라 deep-link 검증 불가 → 법제처 '찾기쉬운 생활법령정보'의 음식점
+          위생등급제(위생등급의 지정) 안내(서버렌더·WebFetch 검증·2026 현행)로 교체. 라벨도 도착지 일치. */}
       <a
-        href="https://www.foodsafetykorea.go.kr/portal/fooddanger/foodSafetyInfo/hgledgList.do?menu_grp=MENU_NEW02&menu_no=4436"
+        href="https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=840&ccfNo=2&cciNo=1&cnpClsNo=4"
         target="_blank"
         rel="noreferrer"
         style={externalLink}
       >
         <ExternalLink size={11} strokeWidth={2} />
-        {ko ? "식약처 음식점 위생등급제 (식품안전나라)" : "KFDA Restaurant Hygiene Rating (official)"}
+        {ko ? "음식점 위생등급제 안내 (생활법령정보)" : "Restaurant Hygiene Grading Guide (Korea gov)"}
       </a>
     </article>
   );
