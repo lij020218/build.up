@@ -358,7 +358,7 @@ public struct InsuranceTaxSetupStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("홈택스 필수 세팅")
                     let items: [(String, String)] = [
-                        ("홈택스 회원가입·사업장 등록", "공인인증서 또는 금융인증서로 로그인 후 사업자 등록"),
+                        ("홈택스 회원가입·사업장 등록", "공동인증서 또는 금융인증서로 로그인 후 사업자 등록"),
                         ("부가세 신고 일정 확인", "간이과세: 1월 신고 1회. 일반과세: 1월·7월 신고 2회"),
                         ("원천세 자동이체 설정", "직원 월급 지급 후 다음달 10일까지 홈택스 납부"),
                         ("현금영수증 가맹점 등록", "연 매출 2,400만원+ 의무. 미등록 시 가산세 5%"),
@@ -413,7 +413,7 @@ public struct InsuranceTaxSetupStageView: View {
                     Toggle(isOn: $hometaxDone) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("홈택스 회원가입·사업장 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("공인인증서 또는 금융인증서 필요").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                            Text("공동인증서 또는 금융인증서 필요").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
                         }
                     }.tint(BUColor.midnight)
                     Toggle(isOn: $bizCardDone) {

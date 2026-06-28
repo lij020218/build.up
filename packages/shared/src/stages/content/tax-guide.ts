@@ -29,7 +29,7 @@ const SMB_KEY_ACTIONS: Record<string, { title: string; detail: string }> = {
   },
   setup: {
     title: "지금 홈택스 가입 + 사업용 카드 1개 분리 — 첫 영업일부터 적용",
-    detail: "공인인증서 등록 → 세금계산서 발행 가능 + 사업용 카드로 모든 경비 결제. 개인카드 혼용은 비용처리 거부 사유.",
+    detail: "공동인증서 등록 → 세금계산서 발행 가능 + 사업용 카드로 모든 경비 결제. 개인카드 혼용은 비용처리 거부 사유.",
   },
   savings: {
     title: "매입세금계산서 받기 — VAT 환급의 시작점",
@@ -84,7 +84,7 @@ const TRAP_CALENDAR: TrapItem[] = [
 ];
 const TRAP_SETUP_SMB: TrapItem[] = [
   { label: "현금영수증 미발급 = 거래액의 20% 가산세 (소득세법 §162의3)", text: "고객이 요청하지 않아도 의무 발급 거래(10만원 이상). 자영업 적발 1순위 항목." },
-  { label: "사업장 신고 결제단말기 미신고 시 가산세", text: "홈택스 → 사업장 현황신고 → 결제단말기 신고. 단말기 변경 시 즉시 재신고." },
+  { label: "카드단말기는 홈택스 별도 신고 의무 없음 (VAN사가 자동 등록)", text: "단말기 개통 시 VAN사가 국세청에 가맹점 데이터를 자동 전송. 사업자가 '사업장 현황신고'로 단말기를 신고하는 절차는 없음(사업장 현황신고는 면세사업자 매출신고로 별개). 직전기 수입 2,400만+ 또는 의료·약사·전문직은 신용카드가맹점 가입 의무자 — 단말기 개통으로 충족." },
 ];
 const TRAP_SETUP_STARTUP: TrapItem[] = [
   { label: "개인카드로 경비 결제 시 비용 불인정", text: "법인 경비는 무조건 법인카드. 회식·소모품도 예외 없음. 모르고 섞어 쓰면 1년 결산 때 수백만원 차이." },
@@ -101,10 +101,10 @@ const TRAP_CPA: TrapItem[] = [
 
 /* ── 체크리스트(게이팅) ── */
 const SMB_CHECKLIST = [
-  { id: "tc-hometax", label: "홈택스 사업자 회원가입", detail: "hometax.go.kr → 사업자 공인인증서 가입. 세금계산서 발행·조회 필수", required: true },
+  { id: "tc-hometax", label: "홈택스 사업자 회원가입", detail: "hometax.go.kr → 사업자 공동인증서 가입. 세금계산서 발행·조회 필수", required: true },
   { id: "tc-bizcard", label: "사업용 카드 별도 개설", detail: "개인 카드 혼용 시 비용처리 불인정 위험. 전용 카드 1개+ 필수", required: true },
   { id: "tc-cash", label: "현금영수증 가맹점 등록", detail: "10만원+ 거래는 의무 발급. 미발급 시 거래액의 20% 가산세 (소득세법 §162의3)", required: true },
-  { id: "tc-pos", label: "카드단말기 국세청 신고", detail: "홈택스 → 사업장 현황신고 → 결제단말기 신고. 미신고 시 가산세" },
+  { id: "tc-pos", label: "신용카드 가맹점 가입 확인", detail: "단말기 설치 시 VAN사가 국세청에 가맹점을 자동 등록 — 사업자가 홈택스에 별도 신고할 의무는 없음. 정상 개통·정산 계좌만 확인" },
   { id: "tc-receipt", label: "매입 영수증 5년 보관 체계", detail: "앱(삼쩜삼·자비스·캐시노트) 또는 월별 폴더로 분류. 5년 보관 의무" },
   { id: "tc-vat-type", label: "과세유형 확인 (일반 / 간이)", detail: `★ 간이과세 기준 8천만 → ${TH} 상향 (부가가치세법 시행령 §109, 2024.1.1 시행). 직전연도 매출 ${TH} 미만이면 간이 가능` },
 ];
@@ -249,7 +249,7 @@ export const TAX_GUIDE_CONTENT: StageContent = {
           kind: "comparisonCards",
           eyebrow: "과세유형 가이드",
           cards: [
-            { title: "간이과세", criteria: `연 매출 ${TH} 미만`, desc: "부가세 면제 or 대폭 경감. 세금계산서 발행 불가. 1월 신고 1회." },
+            { title: "간이과세", criteria: `연 매출 ${TH} 미만`, desc: "부가세 면제(4,800만 미만) or 대폭 경감. 세금계산서 발행 불가 — 단, 직전연도 공급대가 4,800만원 이상 간이과세자는 발급 의무. 1월 신고 1회." },
             { title: "일반과세", criteria: `연 매출 ${TH} 이상`, desc: "부가세 10% (매입세액 공제). 세금계산서 발행 가능. 1·7월 신고 2회." },
           ],
         },

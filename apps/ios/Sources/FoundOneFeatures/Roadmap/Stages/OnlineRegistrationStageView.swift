@@ -31,7 +31,7 @@ public struct OnlineRegistrationStageView: View {
     }
 
     private let taxOptions: [TaxOption] = [
-        TaxOption(id: "simplified", name: "간이과세 (연매출 1억 400만원 미만 예상)", desc: "세금계산서 발행 불가. 사업자 간 거래 제한. 초기 소규모에 적합."),
+        TaxOption(id: "simplified", name: "간이과세 (연매출 1억 400만원 미만 예상)", desc: "세금계산서 발행 불가(단, 직전 공급대가 4,800만원 이상은 발급 의무). 사업자 간 거래 제한. 초기 소규모에 적합."),
         TaxOption(id: "general",    name: "일반과세",                               desc: "세금계산서 발행 가능. 매입세액 공제. B2B 거래 필수."),
     ]
 

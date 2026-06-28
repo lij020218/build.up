@@ -399,7 +399,7 @@ export function CompanySetupStage() {
 
           {(ko ? [
             { step: "1", title: "선행 기술 조사 (KIPRIS·Google Patents 무료)", detail: "유사 발명 검색. 진보성·신규성 사전 확인. 특허 80% 거절은 이 단계 부실에서 발생." },
-            { step: "2", title: "특허고객번호 발급 (특허로, 무료)", detail: "patent.go.kr → 공인인증서 등록" },
+            { step: "2", title: "특허고객번호 발급 (특허로, 무료)", detail: "patent.go.kr → 공동인증서 등록" },
             { step: "3", title: "명세서 작성 + 청구항 (변리사 권장 100~250만원)", detail: "청구항 작성이 핵심 — 셀프 작성 시 거절·축소 위험. 변리사 위임이 ROI 높음." },
             { step: "4", title: "심사 청구 + 대기 (12~18개월) ⏳", detail: "스타트업 (사업자 3년 이내) 등록료 70% 감면 (~2026.2.28). 우선심사 신청 시 3~6개월." },
             { step: "5", title: "등록 결정 + 등록료 납부", detail: "1~3년차 등록료 일시 납부. 4년차부터 매년 갱신료 납부 (총 20년)." },
