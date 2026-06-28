@@ -107,8 +107,8 @@ export function LoanGuideStage() {
           ? { title: "내 예산·업종·신용 상황을 입력하면 자금 경로가 자동 매칭됨", detail: "5천만원 이하면 소진공 정책자금(2.96%) → 5천~2억 보증서 결합 → 2억+ 중진공 직접대출. 비수도권은 0.2%p 우대." }
           : { title: "Enter budget/industry/credit → auto-matched funding path", detail: "≤50M = SEMAS direct (2.96%), 50M-200M = guarantee+bank, 200M+ = KOSMES direct. -0.2%p for non-metro." },
         1: ko
-          ? { title: "3~4월 신청 — 1년 예산이 가장 많을 때. 하반기 소진 가능", detail: "소상공인정책자금 누리집(ols.semas.or.kr) 방문 → 자격 확인 → 온라인 신청 → 현장 실사 1~2주 → 자금 집행." }
-          : { title: "Apply Mar-Apr — fullest budget. May deplete by H2", detail: "ols.semas.or.kr → eligibility check → online apply → 1-2wk site visit → disbursement." },
+          ? { title: "연초(1~2월) 신청 — 통합공고 직후 신규 예산이 가장 많을 때. 상반기 중 인기자금 소진 가능", detail: "소상공인정책자금 누리집(ols.semas.or.kr) 방문 → 자격 확인 → 온라인 신청 → 현장 실사 1~2주 → 자금 집행." }
+          : { title: "Apply Jan-Feb — fullest new budget right after the annual notice. Popular funds deplete by mid-year", detail: "ols.semas.or.kr → eligibility check → online apply → 1-2wk site visit → disbursement." },
         2: ko
           ? { title: "AI 사업계획서로 신청서 초안 30초 완성 + 프린트 가능 PDF", detail: "지금까지 입력한 업종·상권·재무 시뮬레이션 데이터 기반으로 정책자금 신청에 적합한 초안 자동 생성." }
           : { title: "AI-draft your application in 30 seconds + printable PDF", detail: "Auto-generates plan suitable for policy fund applications." },
@@ -140,10 +140,10 @@ export function LoanGuideStage() {
   } : {
     0: ko ? [
       { label: "기존 고금리 대출이 있으면 대환대출(4.5%)부터 검토", text: "시중은행 6~10% 대출을 정책자금 4.5%로 전환 = 연 수백만원 절감. 신청 자격: 소상공인 + 6개월 이상 정상 상환 이력." },
-      { label: "신용 6등급 이하면 햇살론 우선 — 정책자금 거절 가능성", text: "2026 햇살론 일반·특례로 개편. 저신용자 무담보 가능. 신용점수 먼저 확인 후 경로 선택." },
+      { label: "개인신용평점 하위 20%(NICE 744점·KCB 700점 이하)면 햇살론 우선 — 정책자금 거절 가능성", text: "신용등급제(1~10등급)는 2021년 폐지·신용점수제로 전환. 2026 햇살론 일반·특례로 개편, 저신용자 무담보 가능. 신용점수 먼저 확인 후 경로 선택." },
     ] : [
       { label: "Refinance high-rate loans first via 4.5% policy fund", text: "Convert 6-10% bank loans → 4.5%. Save millions yearly. Need 6+ mo good repayment record." },
-      { label: "Credit grade 6+ should try Haetsal Loan first", text: "2026 reformed Haetsal — unsecured for low-credit. Check score first." },
+      { label: "Low credit score (NICE ≤744 / KCB ≤700) → try Haetsal Loan first", text: "Credit-grade system (1-10) abolished in 2021 → score-based. 2026 reformed Haetsal — unsecured for low-credit. Check score first." },
     ],
     1: ko ? [
       { label: "신청서 '운전자금' 한 줄로 작성하면 거절 — 항목별 명시", text: "임차료 1천만 / 인건비 2천만 / 재고 1천만 / 마케팅 5백만 등 구체 금액. 정책자금 거절 1순위 사유." },
@@ -186,7 +186,7 @@ export function LoanGuideStage() {
   ]) : (
     // 사장님 — 예산별 차등 추천 (각 bucket 첫 번째가 추천 1순위)
     budgetBucket === "small" ? (ko ? [
-      { icon: Banknote, title: "소상공인 정책자금 (소진공)", bucket: "5천만원 이하 추천 1순위", rate: "연 2.96%~ (비수도권 -0.2%p)", limit: "최대 7천만원", why: "신규 창업자 + 무담보 가능 + 1~2년 거치. 시중 대비 2~3%p 저렴. 3~4월 신청이 예산 가장 많음", href: "https://ols.semas.or.kr", primary: true },
+      { icon: Banknote, title: "소상공인 정책자금 (소진공)", bucket: "5천만원 이하 추천 1순위", rate: "연 2.96%~ (비수도권 -0.2%p)", limit: "최대 7천만원", why: "신규 창업자 + 무담보 가능 + 1~2년 거치. 시중 대비 2~3%p 저렴. 연초(1~2월) 신청이 신규 예산 가장 많음", href: "https://ols.semas.or.kr", primary: true },
       { icon: Sparkles, title: "소상공인 스마트화 / 디지털 바우처", bucket: "장비·POS·키오스크 도입 시", rate: "무상 (갚지 않음)", limit: "POS·키오스크 비용 70% 지원", why: "선정률 10~30%. 견적서 + 도입 계획만 필요. 신청 진입 장벽 낮음", href: "https://www.semas.or.kr" },
       { icon: ShieldCheck, title: "지자체 정책자금 + 신보 보증", bucket: "지역별 추가 지원", rate: "1~2%대", limit: "지자체별 최대 5천만원", why: "서울신보·경기신보 등 지자체 보증재단. 본 정책자금과 중복 수혜 가능", href: "https://www.kodit.co.kr" },
     ] : [
@@ -738,7 +738,7 @@ export function LoanGuideStage() {
               {(ko ? [
                 "사업계획서 '자금 사용 계획'은 항목별 구체 금액을 적으세요 — '운전자금' 한 줄은 거절 1순위",
                 "재무 시뮬레이션을 먼저 돌리세요 — 손익분기 매출과 런웨이가 사업계획서의 근거",
-                "정책자금은 3~4월에 신청하세요 — 예산이 가장 많고, 하반기는 소진 가능",
+                "정책자금은 연초(1~2월)에 신청하세요 — 통합공고 직후 신규 예산이 가장 많고, 인기자금은 상반기 중 소진 가능",
                 "여러 프로그램에 동시 지원하세요 — 정책자금 + 바우처 + 지자체 중복 수혜 가능",
               ] : [
                 "Itemize 'fund usage plan' — vague 'working capital' is the #1 rejection reason",

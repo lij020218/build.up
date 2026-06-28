@@ -7,7 +7,7 @@
 //  2026 검증 데이터:
 //    - 소진공(SEMAS) 정책자금 기준금리: 2.96% (2026 기준)
 //    - 소상공인정책자금 신청: ols.semas.or.kr
-//    - 3~4월 신청 권장 (연간 예산 가장 많을 때)
+//    - 연초(1~2월) 신청 권장 (통합공고 직후 신규 예산 가장 많을 때)
 //    - 비수도권 0.2%p 우대
 //
 //  3-page (세그먼트):
@@ -50,7 +50,7 @@ public struct LoanGuideStageView: View {
             return .init(title: "내 예산·업종·신용 상황을 입력하면 자금 경로가 자동 매칭됨",
                          detail: "5천만원 이하면 소진공 정책자금(2.96%) → 5천~2억 보증서 결합 → 2억+ 중진공 직접대출. 비수도권은 0.2%p 우대.")
         case (false, 1):
-            return .init(title: "3~4월 신청 — 1년 예산이 가장 많을 때. 하반기 소진 가능",
+            return .init(title: "연초(1~2월) 신청 — 통합공고 직후 신규 예산이 가장 많을 때. 상반기 중 인기자금 소진 가능",
                          detail: "소상공인정책자금 누리집(ols.semas.or.kr) 방문 → 자격 확인 → 온라인 신청 → 현장 실사 1~2주 → 자금 집행.")
         default:
             return nil   // 주의사항·FAQ → 레지스트리 단일 KEY ACTION 폴백
@@ -84,7 +84,7 @@ public struct LoanGuideStageView: View {
             stageId: stageId,
             title: "대출 가이드",
             stageEyebrow: "단계 12 · 대출 가이드",
-            helperText: "소상공인 정책자금 연간 예산은 3~4월에 가장 많습니다. 하반기는 소진 가능 — 빠른 신청이 유리.",
+            helperText: "소상공인 정책자금 신규 예산은 1월 통합공고 직후(연초) 가장 많습니다. 인기자금은 상반기 중 소진 가능 — 빠른 신청이 유리.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -148,9 +148,9 @@ public struct LoanGuideStageView: View {
                         Text("초기 밸류에이션 낮을 때 지분을 내어주면 수십억 손실. 무상 R&D·바우처·보증 자금으로 마일스톤 달성 후 시리즈 A를 노리세요.")
                             .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                     } else {
-                        Text("내 예산에 맞는 자금 경로 —\n3~4월 신청이 연중 최적")
+                        Text("내 예산에 맞는 자금 경로 —\n연초(1~2월) 신청이 연중 최적")
                             .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                        Text("소상공인정책자금 연간 예산은 3~4월에 가장 많습니다. 하반기는 소진 가능 — 빠른 신청이 유리합니다.")
+                        Text("소상공인정책자금 신규 예산은 1월 통합공고 직후(연초) 가장 많습니다. 인기자금은 상반기 중 소진 가능 — 빠른 신청이 유리합니다.")
                             .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                     }
                 }
