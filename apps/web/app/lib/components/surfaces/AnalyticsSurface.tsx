@@ -638,7 +638,7 @@ export function AnalyticsSurface() {
                   ] : []),
                   { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#191970", alwaysShow: true, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   ...(vatType === "general" ? [
-                    { label: ko ? "부가세 예정신고" : "VAT provisional", sub: ko ? "일반과세자 — 4·10월 25일" : "General VAT — Apr & Oct 25", date: vatProvisionalDate, icon: "예", color: "#ff6b00", alwaysShow: false, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                    { label: ko ? "부가세 예정고지·신고" : "VAT provisional", sub: ko ? "4·10월 25일 · 개인=예정고지(직전기 50%)/법인=예정신고" : "Apr & Oct 25 · individual=notice / corp=filing", date: vatProvisionalDate, icon: "예", color: "#ff6b00", alwaysShow: false, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   ] : []),
                   { label: ko ? "종합소득세" : "Income tax", sub: ko ? "매년 5월 31일" : "May 31 annually", date: incomeTaxDate, icon: "소", color: "#af52de", alwaysShow: true, url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   { label: ko ? "산재보험료 정산" : "Industrial accident ins.", sub: ko ? "매년 3월 31일" : "March 31 annually", date: industrialDate, icon: "산", color: "#5856d6", alwaysShow: false, url: "https://www.comwel.or.kr", urlLabel: ko ? "근로복지공단" : "COMWEL" },
