@@ -168,7 +168,7 @@ const TAX_TIPS: Record<string, IconCard[]> = {
 // 전용 절세팁 없는 SMB 업종(학원·펫·소매·생활·공간) 폴백 — 공통 비용처리 원칙.
 const SMB_DEFAULT_TIPS: IconCard[] = [
   { icon: "fileText", label: "매입세금계산서 수취", detail: "공급업체에 사업자등록증 전달 → 세금계산서 요청. 부가세 매입세액 공제 = VAT 절감 핵심" },
-  { icon: "creditCard", label: "사업용 카드 경비 처리", detail: "모든 사업 경비를 사업용 카드로 — 연말 소득 차감. 회식·소모품·교통비 포함" },
+  { icon: "creditCard", label: "사업용 카드 경비 처리", detail: "모든 사업 경비를 사업용 카드로 결제 → 다음 해 5월 종합소득세에서 필요경비로 차감(소득↓). 회식·소모품·교통비 포함. (개인사업자는 연말정산 아님)" },
   { icon: "users", label: "인건비·4대보험 비용 처리", detail: "직원 급여 + 사업주 부담 4대보험 전액 비용 처리 가능" },
   { icon: "sparkles", label: "인테리어·설비 감가상각", detail: "5~10년 감가상각으로 매년 비용 분산. 초기 투자 세금 효과 장기화" },
 ];
