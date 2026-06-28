@@ -789,18 +789,25 @@ export function useDataLoading(
       }
     }
 
-    // 18. 현금영수증 의무발행 업종 안내 — 1회성 (이미 알면 dismiss)
-    //  소득세법 시행령 210조의2: 음식점·카페·학원·미용·헬스 등 의무. 미발행 시 거래대금 20% 부과금.
-    //  (해당 업종 + businessLaunched + employees 1명+ 인 경우만 — 운영 본격화)
+    // 18. 현금영수증 의무 안내 — 1회성 (이미 알면 dismiss)
+    //  ⚠️ 구분: ① 가맹점 의무(소비자상대업종, 직전기 수입 2,400만+) = 요청 시 발급, 미발급 5% 가산세.
+    //          ② 의무발행업종(소득세법 시행령 별표3의3: 학원·병원·전문직·숙박·골프장·네일 등) = 10만원+
+    //             현금 시 요청 없어도 무조건 발급, 미발급 20% 가산세.
+    //  ⚠️ 일반 음식점·카페·헤어미용은 의무발행업종 아님(요청 시 발급). 학원(education)만 별표3의3 의무발행.
     if (businessLaunched && (employees as { id: string }[]).length > 0
         && ["food", "cafe-dessert", "education", "beauty", "fitness", "pet"].includes(industryCategoryId ?? "")) {
+      const mustIssue = industryCategoryId === "education"; // 학원 = 의무발행업종(별표3의3)
       items.push({
         id: "cash-receipt-mandatory",
         severity: "warning",
-        title: ko ? "현금영수증 의무발행 업종" : "Cash receipt required",
+        title: ko ? (mustIssue ? "현금영수증 의무발행 업종" : "현금영수증 가맹점 의무") : "Cash receipt obligation",
         detail: ko
-          ? "10만원 이상 현금 거래 시 현금영수증 의무 발행 (요구 없어도). 미발행 = 거래대금 20% 부과금."
-          : "≥100K KRW cash transactions require receipt. Non-issue = 20% penalty.",
+          ? (mustIssue
+              ? "학원 등 의무발행업종 — 10만원 이상 현금 거래 시 요청 없어도 의무 발행. 미발행 = 거래대금 20% 가산세."
+              : "소비자상대업종은 현금영수증 가맹점 가입 의무 — 손님 요청 시 발급(미발급 5% 가산세). ※일반 음식점·카페·미용은 요청 없으면 발급 의무 없음(의무발행업종 아님).")
+          : (mustIssue
+              ? "Mandatory-issue업종: ≥100K KRW cash → must issue even without request. Non-issue = 20% penalty."
+              : "Consumer-facing: must join cash-receipt program + issue on request (5% penalty if refused)."),
         navigate: { surface: "analytics", selector: "[data-cost-management]" },
       });
     }
