@@ -122,7 +122,7 @@ const SMB_CPA = [
   { condition: "직원 고용", reason: "4대보험·원천세 신고 오류 가능성 ↑. 월 수임료 < 가산세", recommend: true },
   { condition: `연 매출 ${TH}+ 예상`, reason: "★ 일반과세 전환·VAT·종소세 복잡도 급증", recommend: true },
   { condition: "인테리어·설비 투자 3,000만원+", reason: "고액 시설투자는 자산별 내용연수·상각방법 분산이 복잡 — 스케줄 오류 시 수년간 비용 누락 (감가상각 대상 자산 자체는 100만원 초과부터)", recommend: true },
-  { condition: "복수 사업장 운영", reason: "사업장별 세금 분리 신고 필요", recommend: true },
+  { condition: "복수 사업장 운영", reason: "부가세는 사업장별 각각 신고·납부, 종소세는 대표자 개인 소득으로 전 사업장 합산 신고 — 신고 난이도 급증", recommend: true },
   { condition: "1인 매장·연 매출 5천만 미만", reason: "삼쩜삼·캐시노트 SaaS 직접 신고 OK", recommend: false },
 ];
 const STARTUP_CPA = [
