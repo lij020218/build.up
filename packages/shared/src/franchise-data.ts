@@ -190,7 +190,7 @@ export const INDEPENDENT_STARTUP_COSTS: IndependentStartupCost[] = [
   { subIndustryId: "pet-cafe", label: { ko: "펫 카페", en: "Pet Cafe" }, deposit: 3000, interior: 4000, equipment: 2000, workingCapital: 2000, totalEstimate: 11000, basePyeong: 30, note: { ko: "동물전시업 등록 필수. 위생·소독 관리 핵심", en: "Animal display registration required. Hygiene management critical" } },
   // ── SPACE ──
   { subIndustryId: "shared-office", label: { ko: "공유오피스", en: "Shared Office" }, deposit: 5000, interior: 8000, equipment: 3000, workingCapital: 3000, totalEstimate: 19000, basePyeong: 60, note: { ko: "대형 면적 필요. 회의실·라운지·네트워크 설비 핵심", en: "Large area needed. Meeting rooms, lounge, network key" } },
-  { subIndustryId: "study-room", label: { ko: "스터디카페", en: "Study Cafe" }, deposit: 3000, interior: 5000, equipment: 3000, workingCapital: 1500, totalEstimate: 12500, basePyeong: 40, note: { ko: "좌석 관리 키오스크·CCTV·조명 설비 핵심", en: "Seat management kiosk, CCTV, lighting key" } },
+  { subIndustryId: "study-room", label: { ko: "독서실·스터디룸", en: "Reading Room" }, deposit: 3000, interior: 5000, equipment: 3000, workingCapital: 1500, totalEstimate: 12500, basePyeong: 40, note: { ko: "좌석 관리 키오스크·CCTV·조명 설비 핵심", en: "Seat management kiosk, CCTV, lighting key" } },
   // ── LIVING SERVICE ──
   { subIndustryId: "self-laundry", label: { ko: "셀프 빨래방", en: "Self Laundry" }, deposit: 2000, interior: 2000, equipment: 5000, workingCapital: 1000, totalEstimate: 10000, basePyeong: 15, note: { ko: "세탁기·건조기 장비가 투자비 50%. 무인 운영 가능", en: "Washer/dryer equipment 50% of cost. Unmanned possible" } },
 

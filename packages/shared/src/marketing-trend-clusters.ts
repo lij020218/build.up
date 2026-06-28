@@ -158,7 +158,7 @@ export const TREND_GROUP_LABELS: Record<TrendGroupKey, { ko: string; en: string;
   "strength-fitness":     { ko: "PT·크로스핏·무인 짐",   en: "Strength & gym",          categoryId: "fitness" },
   "golf-studio":          { ko: "스크린골프",            en: "Screen golf",             categoryId: "fitness" },
   "kids-academy":         { ko: "아동 학원·영어·코딩",   en: "Kids academy",            categoryId: "education" },
-  "study-space":          { ko: "스터디카페·독서실",     en: "Study cafe",              categoryId: "education" },
+  "study-space":          { ko: "독서실·스터디룸",       en: "Reading room",            categoryId: "education" },
   "adult-class":          { ko: "성인 취미·자격증",      en: "Adult class",             categoryId: "education" },
   "pet-care":             { ko: "펫 그루밍·호텔·훈련",   en: "Pet care service",        categoryId: "pet" },
   "pet-supplies":         { ko: "펫 용품",               en: "Pet supplies",            categoryId: "pet" },

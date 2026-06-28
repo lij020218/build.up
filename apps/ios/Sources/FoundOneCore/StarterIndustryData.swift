@@ -110,7 +110,7 @@ public enum StarterIndustryData {
         StarterIndustryOption(id: "unmanned-fitness",      titleKo: "무인/24시 피트니스",     categoryId: "fitness", iconSF: "timer",                            iconLucide: "timer",                colorHex: "#6366f1"),
 
         // ── 교육 (education) ──  웹: BookOpen/School/GraduationCap/Languages/Code/Library
-        StarterIndustryOption(id: "study-room",            titleKo: "스터디룸/스터디카페",    categoryId: "education", iconSF: "book.fill",                      iconLucide: "book-open",            colorHex: "#2563eb"),
+        StarterIndustryOption(id: "study-room",            titleKo: "독서실·스터디룸",        categoryId: "education", iconSF: "book.fill",                      iconLucide: "book-open",            colorHex: "#2563eb"),
         StarterIndustryOption(id: "kids-academy",          titleKo: "아동 학원",              categoryId: "education", iconSF: "building.columns.fill",          iconLucide: "school",               colorHex: "#f59e0b"),
         StarterIndustryOption(id: "adult-class",           titleKo: "성인 취미 클래스",       categoryId: "education", iconSF: "graduationcap.fill",             iconLucide: "graduation-cap",       colorHex: "#7c3aed"),
         StarterIndustryOption(id: "language-academy",      titleKo: "어학 학원",              categoryId: "education", iconSF: "character.book.closed.fill",     iconLucide: "languages",            colorHex: "#0891b2"),

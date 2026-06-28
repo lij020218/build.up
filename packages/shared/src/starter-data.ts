@@ -420,9 +420,9 @@ export const starterIndustryOptions: RecommendationItem[] = [
   },
   {
     id: "study-room",
-    title: "Study Room / Study Cafe",
+    title: "Reading Room / Study Room",
     score: 78,
-    summary: "Stable demand in education-heavy zones with disciplined seat utilization.",
+    summary: "Stable demand in education-heavy zones with disciplined seat utilization. (Cafe-style unmanned study cafe is under Space & Stay)",
     reasons: ["Clear target market", "Strong fit for recurring pass models"],
     warnings: ["Location and quiet-space quality are critical"],
     meta: { categoryId: "education", categoryLabel: "Education" }

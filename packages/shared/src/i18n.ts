@@ -422,7 +422,7 @@ const recCopy: Record<
   "crossfit-box": { ko: { title: "크로스핏/그룹 트레이닝", summary: "커뮤니티가 강한 그룹 운동 모델로 코칭 품질이 핵심입니다.", reasons: ["그룹 수업 에너지와 커뮤니티 형성", "멤버십 충성도가 생기기 쉬움"], warnings: ["소음, 안전, 코치 품질 영향이 큼"], categoryLabel: "피트니스" } },
   "golf-studio": { ko: { title: "스크린골프/골프 스튜디오", summary: "초기 비용은 높지만 프리미엄 포지셔닝이 쉬운 운동/레저형 업종입니다.", reasons: ["반복 레저 수요가 분명함", "프리미엄 가격 전략 가능"], warnings: ["장비와 임대료 부담이 큼"], categoryLabel: "피트니스" } },
   "unmanned-fitness": { ko: { title: "무인/24시 피트니스", summary: "운영은 가벼울 수 있지만 출입, 안전, 장비 관리가 더 중요해지는 피트니스 모델입니다.", reasons: ["프런트 인력 의존도를 줄일 수 있음", "회원 편의성을 만들기 좋음"], warnings: ["장비 유지보수와 안전 시스템이 중요"], categoryLabel: "피트니스" } },
-  "study-room": { ko: { title: "스터디룸/스터디카페", summary: "교육 수요가 강한 지역에서 좌석 가동률 관리가 중요합니다.", reasons: ["타깃 고객이 분명함", "정기권 모델과 잘 맞음"], warnings: ["위치와 공간 품질이 핵심"], categoryLabel: "교육" } },
+  "study-room": { ko: { title: "독서실·스터디룸", summary: "교육 수요가 강한 지역에서 좌석 가동률 관리가 중요합니다. (카페형 무인 스터디카페는 「공간/숙박」 카테고리)", reasons: ["타깃 고객이 분명함", "정기권 모델과 잘 맞음"], warnings: ["위치와 공간 품질이 핵심"], categoryLabel: "교육" } },
   "kids-academy": { ko: { title: "아동 학원", summary: "반복 매출 가능성은 높지만 신뢰와 규정 준비가 더 중요합니다.", reasons: ["가족 단위 반복 수요가 분명함", "성과가 보이면 유지율 상승"], warnings: ["강사 품질과 규정 준수 부담이 큼"], categoryLabel: "교육" } },
   "adult-class": { ko: { title: "성인 취미 클래스", summary: "브랜드화가 가능하고 소규모 예약형으로 시작하기 좋습니다.", reasons: ["가볍게 시작 가능", "예약형 소규모 운영과 잘 맞음"], warnings: ["수요가 계절 영향을 받을 수 있음"], categoryLabel: "교육" } },
   "language-academy": { ko: { title: "어학 학원", summary: "성과와 반복 등록 구조가 비교적 분명한 교육형 비즈니스입니다.", reasons: ["재등록 가능성이 높음", "성과 메시지를 설명하기 쉬움"], warnings: ["강사 품질과 유지율이 중요"], categoryLabel: "교육" } },
