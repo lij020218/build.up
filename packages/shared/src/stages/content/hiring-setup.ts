@@ -21,7 +21,7 @@ const WAGE = LEGAL.MINIMUM_WAGE_HOURLY; // 10,320
 const WAGE_D = WAGE.toLocaleString("en-US"); // "10,320"
 const MONTH_HOURS = 209; // (40 + 주휴 8) × 4.345 — 주휴 포함 월 환산
 const MONTH_WAGE_D = (WAGE * MONTH_HOURS).toLocaleString("en-US"); // "2,156,880"
-const WEEKLY_30H_D = (30 * WAGE + WAGE * 8).toLocaleString("en-US"); // "392,160"
+const WEEKLY_30H_D = (30 * WAGE + WAGE * (30 / 5)).toLocaleString("en-US"); // 주 30h: 주급 + 주휴 6h(=주소정 30÷5, 비례) = 371,520
 
 const OFFLINE_CATS = ["food", "cafe-dessert", "beauty", "fitness", "education", "pet", "retail", "living-service", "space", "online-digital", "startup-tech"];
 const LABELS: Record<string, string> = {
@@ -52,7 +52,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
   shell: {
     title: "직원 채용 및 근로계약",
     stageEyebrow: "단계 16 · 채용 설정",
-    helperText: "알바 1명도 정직원과 동일한 법적 절차 적용. 계약서 미교부 = 500만원 이하 과태료. 1인 운영을 선택할 수도 있습니다.",
+    helperText: "알바도 근로계약서·급여명세서 교부는 동일 의무 (단, 주 15시간·월 60시간 미만은 4대보험 가입 기준 상이 — 확인 필요). 계약서 미교부 = 500만원 이하 과태료. 1인 운영을 선택할 수도 있습니다.",
   },
   keyAction: {
     eyebrow: "이 단계에서 꼭 할 일",
@@ -73,7 +73,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           kind: "stageOverview",
           headline: "첫 직원 채용 60분이 인건비 리스크 1년치를 결정합니다",
           intro:
-            "근로계약서 미교부·4대보험 미신고·원천세 누락 — 셋 다 노동청 신고 + 세무조사 사유. 사인 전·신고 전에 모든 항목을 표준에 맞춰야 분쟁·과태료를 막습니다. 알바 1명도 정직원과 동일한 법적 절차 적용.",
+            "근로계약서 미교부·4대보험 미신고·원천세 누락 — 셋 다 노동청 신고 + 세무조사 사유. 사인 전·신고 전에 모든 항목을 표준에 맞춰야 분쟁·과태료를 막습니다. 알바도 근로계약서·급여명세서 교부는 동일 의무 (단, 주 15시간·월 60시간 미만은 4대보험 가입 기준 상이 — 확인 필요).",
           stat: { value: "₩1,500만", label: "위반 1건당 평균 과태료·체불 합계" },
           outlineEyebrow: "이 단계에서 진행 — 총 5단계",
           workOutline: [
@@ -111,6 +111,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
             { label: "공고에 「최저시급」 만 쓰면 지원자 없음", text: "시급·근무 시간·요일·식사 제공 여부를 구체적으로 써야 지원률 3배 ↑. 「쉬운 일」 같은 모호한 표현 금지." },
             { label: "오픈 직전 채용은 위험", text: "교육·적응 기간 없이 오픈 당일 투입 = 실수 폭발. 최소 1~2주 전 채용 필수." },
             { label: "면접에서 「최저시급보다 적게」 협상 시 위법", text: `2026 최저시급 ${WAGE_D}원. 어떤 형태로도 미달 시 임금 체불 신고 대상.` },
+            { label: "연령·성별·신체조건 차별 표현 금지", text: "「20대 환영」·「여직원 구함」·용모/키 등 신체조건 요구는 모집·채용 차별 — 고용상 연령차별금지법·남녀고용평등법·채용절차법 위반, 최대 500만원 벌금/과태료." },
           ],
           showFavorable: true,
         },
@@ -147,8 +148,8 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           ],
           watchouts: [
             { label: "계약서 미교부 시 500만원 이하 과태료", text: "「나중에 줄게」 = 즉시 신고 사유. 사인 후 그 자리에서 1부 교부 필수." },
-            { label: "수습 90% 감액은 조건 엄격", text: "1년 이상 계약 + 수습 3개월 이내만. 단순 노무직 (배달·청소·서빙) 은 적용 X. 잘못 적용 시 차액 소급 + 과태료." },
-            { label: "주휴수당 모르면 임금 체불", text: "주 15시간↑ 개근 시 1일치(시급 × 8시간) 추가. 계약서에 「주휴수당 포함/별도」 명시 필수." },
+            { label: "수습 90% 감액은 조건 엄격", text: "1년 이상 계약 + 수습 3개월 이내만. 단순노무직(청소·배달·패스트푸드 준비 등)은 적용 X — 일반 서빙은 감액 가능. 잘못 적용 시 차액 소급 + 과태료." },
+            { label: "주휴수당 모르면 임금 체불", text: "주 15시간↑ 개근 시 주휴수당 발생 — 소정근로시간 비례, 시급 × (주 소정근로시간 ÷ 5)분 (주 40h=8h·30h=6h·20h=4h). 계약서에 「주휴수당 포함/별도」 명시 필수." },
           ],
           showFavorable: true,
         },
@@ -215,7 +216,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           headline: "주휴수당·연장수당 정확히 계산 + 급여명세서 의무 교부",
           why: "급여명세서 미교부는 2021년부터 과태료 대상 (500만원 이하). 주휴수당·연장수당 계산 실수가 가장 흔한 임금 체불 신고 사유. 세무사·급여 SaaS 사용 시 자동.",
           tasks: [
-            { id: "m1-1", title: "주휴수당 — 주 15h↑ 개근 시 시급 × 8h 추가", detail: `예: 시급 ${WAGE_D}원, 주 30시간 근무 → 30 × ${WAGE_D} + (${WAGE_D} × 8) = ${WEEKLY_30H_D}원. 결근 1일이라도 주휴수당 X.` },
+            { id: "m1-1", title: "주휴수당 — 주 15h↑ 개근 시 1일 소정근로시간 분 추가 (주 40h=8h)", detail: `소정근로시간 비례 — 주휴시간 = 주 소정근로시간 ÷ 5. 예: 시급 ${WAGE_D}원, 주 30h → 주급 (30 × ${WAGE_D}) + 주휴 (6h = 30÷5 × ${WAGE_D}) = ${WEEKLY_30H_D}원. 결근 1일이라도 주휴수당 X.` },
             { id: "m1-2", title: "연장수당 — 주 40h 또는 1일 8h 초과 시 1.5배", detail: "5인 이상 사업장만 의무. 5인 미만은 일반 임금. 야간(22~06시)·휴일 연장은 추가 가산 검토." },
             { id: "m1-3", title: "퇴직금 — 5인 미만도 의무 (주 15h↑ + 1년↑ 근속)", detail: "연장수당과 달리 퇴직금은 사업장 규모 무관. 「5인 미만은 안 줘도 된다」는 흔한 오해 — 주 15시간 이상 + 1년 이상 근속이면 알바·일용직도 의무. 30일분 평균임금 이상, 미지급 시 임금체불(형사처벌·지연이자). 매달 1/12씩 적립 권장." },
             { id: "m1-4", title: "급여명세서 의무 교부 — PDF 또는 종이", detail: "임금·근무시간·공제 내역·실수령액 명시. 카카오톡 전송도 합법 (수신 확인). 미교부 500만원 이하 과태료." },

@@ -27,7 +27,8 @@ public struct BUHiringCalculator: View {
     private var wage: Int { Int(wageText) ?? minWage }
     private var hours: Double { Double(hoursText) ?? 30 }
     private var weeklyBase: Int { Int(hours) * wage }
-    private var weeklyHoliday: Int { Int(hours) >= 15 ? wage * 8 : 0 }
+    // 주휴수당: 소정근로시간 비례 — 주휴시간 = 주 소정근로시간 ÷ 5 (주 40h 상한 = 8h). 비례라 시간 무관 8h 적용은 오류.
+    private var weeklyHoliday: Int { hours >= 15 ? Int((min(hours, 40.0) / 5.0) * Double(wage)) : 0 }
     private var weeklyTotal: Int { weeklyBase + weeklyHoliday }
     private var monthlyTotal: Int { Int(Double(weeklyTotal) * 4.345) }
 
