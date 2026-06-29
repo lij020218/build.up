@@ -515,7 +515,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "모든 (예비)창업자 — 단계·분야별 사업 검색", en: "All founders — search by stage & field" },
     benefit: { ko: "전국 모든 정부·지자체 창업지원사업 통합 검색 + 신청", en: "Search & apply for all government startup support programs" },
     season: { ko: "상시", en: "Always open" },
-    url: "https://www.k-startup.go.kr",
+    url: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -538,7 +538,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "임대료·인건비·재료비 등 운전자금 부족 시 신청. 가장 보편적인 정책자금.", en: "Operating capital — rent/labor/materials. Most common policy fund." },
     amount: "최대 7,000만원 (금리 3-4.5%)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -556,7 +556,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "신용취약자 대상 특례보증. 한도 3천만, 금리 4.5-5.5%.", en: "Special guarantee for low-credit owners." },
     amount: "최대 3,000만원 (금리 4.5-5.5%)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -575,7 +575,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "기존 고금리 대출을 저금리 정책자금으로 전환. 이자 부담 즉시 감소. 2026 한도 확대.", en: "Refinance high-rate loans into policy fund. 2026 expansion." },
     amount: "최대 5,000만원 (금리 연 4.5% 고정, 최대 10년)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -594,7 +594,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "청년 우대 — 정책자금 기준금리만 부담. 한도 1억원.", en: "Youth-favored rate. 100M KRW limit." },
     amount: "최대 1억원 (금리 2.5-3.5%)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -613,7 +613,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "폐업 경험자 우대 + 재출발 자금. 유형별(재창업·채무조정·재도약) 한도 차등.", en: "Re-entry support for owners after closure; limit varies by type." },
     amount: "유형별 최대 7,000만~2억원 (기준금리 연동 변동)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -670,7 +670,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "시설·매장 확장·디지털 전환 자금. 한도 2억원 (장기 분할상환).", en: "Facility expansion/digital transformation. 200M KRW limit." },
     amount: "최대 2억원 (금리 3-4%, 7년)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -689,7 +689,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "장애인 우대 금리 + 한도 확대. 한도 1억원, 금리 2-2.5%.", en: "Preferred rate (2-2.5%) + extended limit." },
     amount: "최대 1억원 (금리 2-2.5%)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://ols.semas.or.kr",
+    url: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -1583,7 +1583,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "키오스크·테이블오더·서빙로봇·디지털사이니지 + 경영관리 SW 도입비 지원", en: "Kiosk, table-order, serving robot, signage + management SW subsidy" },
     amount: "도입비 일부 지원 (자부담 일부)",
     season: { ko: "매년 3~4월 공고 (2026: 3/13~4/1)", en: "Annual Mar-Apr (2026: 3/13-4/1)" },
-    url: "https://www.semas.or.kr/",
+    url: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -1700,7 +1700,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "사업화 자금 + 창업교육 — 예비패키지보다 진입장벽 낮음", en: "Commercialization funds + training; lower barrier than pre-startup package" },
     amount: "평균 4,700만 (최대 1억)",
     season: { ko: "매년 3~4월 공고 (통합공고 내)", en: "Annual Mar-Apr (integrated notice)" },
-    url: "https://www.k-startup.go.kr/",
+    url: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -1752,7 +1752,7 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "융자 — 운전 최대 5억(심층평가 시 10억). 희망리턴(재기교육)과 별개 융자 트랙.", en: "Loan — operating up to 500M (1B on deep review); separate from Hope-Return" },
     amount: "운전 최대 5억 / 시설자금 별도",
     season: { ko: "중진공 디지털지점 상시", en: "Year-round (KOSMES digital branch)" },
-    url: "https://www.kosmes.or.kr/",
+    url: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -1933,7 +1933,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "VC 투자받은 설립 3년경과 기술중소기업", en: "VC-backed tech SMEs (3yr+)" },
     benefit: { ko: "운전 70억·시설 100억(최대 200억), 보증료 1% 우대", en: "Up to 20B guarantee, 1% fee" },
     amount: "최대 200억 보증", season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://www.kibo.or.kr/", forSmallBiz: false, forFranchise: false, dataYear: "2026",
+    url: "https://www.kibo.or.kr/main/work/work010301.do", forSmallBiz: false, forFranchise: false, dataYear: "2026",
     businessYearRange: [3, 99], applicationStatus: "open", fundingType: "credit",
   },
   {
@@ -1943,7 +1943,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "미투자·업력 3년 이내 신성장 스타트업·예비창업", en: "Pre-investment <3yr startups" },
     benefit: { ko: "맞춤 보증·직접투자·컨설팅·해외진출 (반기 150개사)", en: "Guarantee, equity, consulting" },
     amount: "보증·투자·컨설팅", season: { ko: "기수별 모집", en: "By cohort" },
-    url: "https://www.kodit.co.kr/", forSmallBiz: false, forFranchise: false, dataYear: "2026",
+    url: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307", forSmallBiz: false, forFranchise: false, dataYear: "2026",
     businessYearRange: [0, 3], applicationStatus: "open", fundingType: "credit",
   },
   {
@@ -2014,7 +2014,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "6대 전략·12대 신산업 딥테크 스타트업 (업력 10년내)", en: "Deeptech startups (<10yr)" },
     benefit: { ko: "3년 최대 6억 사업화 (+R&D 6억=최대 12억)", en: "Up to 1.2B over 3yr" },
     amount: "최대 12억 (사업화+R&D)", season: { ko: "1월 모집 (120팀)", en: "January" },
-    url: "https://www.k-startup.go.kr/", forSmallBiz: false, forFranchise: false, dataYear: "2026",
+    url: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do", forSmallBiz: false, forFranchise: false, dataYear: "2026",
     businessYearRange: [0, 10], applicationStatus: "closed", fundingType: "grant",
   },
   {
@@ -2024,7 +2024,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "딥테크 분야 (예비)창업", en: "Deeptech pre/early founders" },
     benefit: { ko: "생태계혁신형 시행, 사업화·R&D", en: "Ecosystem-innovation, commercialization" },
     amount: "사업화·R&D", season: { ko: "2026 시행계획", en: "2026 plan" },
-    url: "https://www.k-startup.go.kr/", forSmallBiz: false, forFranchise: false, dataYear: "2026",
+    url: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do", forSmallBiz: false, forFranchise: false, dataYear: "2026",
     businessYearRange: [0, 7], applicationStatus: "open", fundingType: "grant",
   },
   // ── 소상공인 추가 ──
@@ -2035,7 +2035,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "백년가게 업력 30년↑(음식·서비스) / 백년소공인 15년↑(제조)", en: "30yr+ shops / 15yr+ makers" },
     benefit: { ko: "지정·인증현판·스토리보드·홍보 (300곳 신규지정)", en: "Certification, branding, promotion" },
     amount: "인증·홍보 지원", season: { ko: "2~3월 모집", en: "Feb-Mar" },
-    url: "https://www.semas.or.kr/", forSmallBiz: true, forFranchise: false, dataYear: "2026",
+    url: "https://www.semas.or.kr/web/SUP01/SUP0121.kmdc", forSmallBiz: true, forFranchise: false, dataYear: "2026",
     businessYearRange: [15, 99], applicationStatus: "closed", fundingType: "other",
   },
   {
@@ -2045,7 +2045,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "전통시장·상점가·골목형상점가 상인회", en: "Market merchant associations" },
     benefit: { ko: "문화관광형·디지털전환(온라인 입점)·청년상인 (연 362곳)", en: "Culture-tourism, digital, youth" },
     amount: "시장별 차등", season: { ko: "전년 10~11월 + 차수별", en: "Oct-Nov prior + rounds" },
-    url: "https://www.semas.or.kr/", forSmallBiz: true, forFranchise: false, dataYear: "2026",
+    url: "https://www.semas.or.kr/web/SUP01/SUP0113/SUP011301.kmdc", forSmallBiz: true, forFranchise: false, dataYear: "2026",
     industries: ["retail"], applicationStatus: "open", fundingType: "grant",
   },
   {
@@ -2055,7 +2055,7 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "자영업자 고용보험 가입 1인 소상공인", en: "Self-employed insurance enrollees" },
     benefit: { ko: "납부 보험료 50~80% 환급, 최대 5년", en: "50-80% premium refund, 5yr" },
     amount: "보험료 50~80% 환급", season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://www.semas.or.kr/", forSmallBiz: true, forFranchise: true, dataYear: "2026",
+    url: "https://www.semas.or.kr/web/SUP01/SUP0117/SUP011704.kmdc", forSmallBiz: true, forFranchise: true, dataYear: "2026",
     applicationStatus: "open", fundingType: "other",
   },
   {
@@ -2220,6 +2220,17 @@ export function getMatchedProgramsV2(
     //   forFranchise=false 는 *프랜차이즈 부적합* 의도이므로 hard filter.
     if (isFranchise && p.forFranchise === false) eligible = false;
     if (!isFranchise && p.forFranchise === true && p.forSmallBiz === false) eligible = false;
+
+    // ⚠️ 대상자(audience) 하드필터 (2026-06-29 사장님 신고: 미용실에 AI스타트업·모빌리티/
+    //   로보틱스 등 순수 스타트업 지원이 추천됨):
+    //   forSmallBiz=false & forFranchise=false = 스타트업·VC·액셀러레이터·딥테크 전용 집합
+    //   (현재 64개 전부 이 조건과 정확히 일치). 기술 스타트업 사용자(industryCategoryId=
+    //   "startup-tech")에게만 노출하고, 소상공인·프랜차이즈 사장님에겐 제외한다.
+    //   industries 태그가 없어 아래 industries 필터로는 안 걸리던 누수를 닫는다.
+    const isTechStartupUser = criteria.industryCategoryId === "startup-tech";
+    if (!isTechStartupUser && p.forSmallBiz === false && p.forFranchise === false) {
+      eligible = false;
+    }
 
     // ⚠️ industries hard filter (2026-05-19): 종전엔 industries 매칭 시 *+15 보너스* 만 주고
     //   매칭 실패해도 통과 → agriculture-only 같은 업종 전용 프로그램이 음식·소매 사장님에게도

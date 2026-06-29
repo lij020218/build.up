@@ -5,7 +5,7 @@ import {
   ExternalLink, Banknote, Loader2, Copy, type LucideIcon,
 } from "lucide-react";
 import {
-  getMatchedPrograms,
+  getMatchedProgramsV2,
   getProgramCategoryColor,
   getProgramCategoryLabel,
   formatBudgetPresetLabel,
@@ -174,54 +174,56 @@ export function LoanGuideStage() {
   };
 
   const recommendations: Recommendation[] = isStartup ? (ko ? [
-    { icon: Sparkles, title: "예비창업패키지 / 청년창업사관학교", bucket: "1억 이하 시드 전", rate: "무상 (갚지 않음)", limit: "최대 1억", why: "사업자등록 전·만 39세 이하·창업 3년 이내. 1월~2월 모집. 사업비 70% 지원 + 공간·교육·코칭", href: "https://www.k-startup.go.kr", primary: true },
+    { icon: Sparkles, title: "예비창업패키지 / 청년창업사관학교", bucket: "1억 이하 시드 전", rate: "무상 (갚지 않음)", limit: "최대 1억", why: "사업자등록 전·만 39세 이하·창업 3년 이내. 1월~2월 모집. 사업비 70% 지원 + 공간·교육·코칭", href: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do", primary: true },
     { icon: Banknote, title: "TIPS (민간투자주도형)", bucket: "5억~8억 시드~프리A", rate: "무상 + 매칭투자", limit: "최대 8억 (R&D 5억 + 사업화 3억)", why: "기술 기반 스타트업 핵심 트랙. 149개 운영사 중 매칭 → 운영사 선투자 → 정부 매칭. 벤처인증 가산점", href: "https://www.jointips.or.kr" },
     { icon: FileText, title: "AI·데이터·클라우드 바우처", bucket: "도입 비용 부담 시", rate: "70~90% 정부 부담", limit: "AI 3억 / 데이터 5천 / 클라우드 크레딧", why: "사업계획서 간소 — 견적서 + 도입 계획만. 신청 진입 장벽 가장 낮음", href: "https://www.nipa.kr" },
-    { icon: ShieldCheck, title: "기보 + 시중은행 (지분 X)", bucket: "운영자금 1~5억", rate: "보증료 0.5~1.5%", limit: "최대 5억 무담보", why: "기술보증기금 기술평가 → 보증서 → 시중은행 저금리 대출. 벤처인증 시 보증료 우대", href: "https://www.kibo.or.kr" },
+    { icon: ShieldCheck, title: "기보 + 시중은행 (지분 X)", bucket: "운영자금 1~5억", rate: "보증료 0.5~1.5%", limit: "최대 5억 무담보", why: "기술보증기금 기술평가 → 보증서 → 시중은행 저금리 대출. 벤처인증 시 보증료 우대", href: "https://www.kibo.or.kr/main/work/work010301.do" },
   ] : [
-    { icon: Sparkles, title: "Pre-Startup / Youth Startup Academy", bucket: "≤100M seed", rate: "Grant (no repayment)", limit: "Up to 100M", why: "Pre-registration, under 39, <3yr old. Jan-Feb. 70% project cost + space + coaching", href: "https://www.k-startup.go.kr", primary: true },
+    { icon: Sparkles, title: "Pre-Startup / Youth Startup Academy", bucket: "≤100M seed", rate: "Grant (no repayment)", limit: "Up to 100M", why: "Pre-registration, under 39, <3yr old. Jan-Feb. 70% project cost + space + coaching", href: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do", primary: true },
     { icon: Banknote, title: "TIPS Program", bucket: "500M-800M seed-preA", rate: "Grant + matched investment", limit: "Up to 800M (R&D 500M + GTM 300M)", why: "Core tech-startup track. 149 operators match → invest → gov matches", href: "https://www.jointips.or.kr" },
     { icon: FileText, title: "AI / Data / Cloud Vouchers", bucket: "Adoption cost relief", rate: "70-90% gov-covered", limit: "AI 300M / Data 50M / Cloud credits", why: "Simplest application — quote + adoption plan only", href: "https://www.nipa.kr" },
-    { icon: ShieldCheck, title: "KIBO + Bank (no equity)", bucket: "OpEx 100-500M", rate: "Guarantee fee 0.5-1.5%", limit: "Up to 500M unsecured", why: "KIBO tech assessment → guarantee → bank low-rate", href: "https://www.kibo.or.kr" },
+    { icon: ShieldCheck, title: "KIBO + Bank (no equity)", bucket: "OpEx 100-500M", rate: "Guarantee fee 0.5-1.5%", limit: "Up to 500M unsecured", why: "KIBO tech assessment → guarantee → bank low-rate", href: "https://www.kibo.or.kr/main/work/work010301.do" },
   ]) : (
     // 사장님 — 예산별 차등 추천 (각 bucket 첫 번째가 추천 1순위)
     budgetBucket === "small" ? (ko ? [
-      { icon: Banknote, title: "소상공인 정책자금 (소진공)", bucket: "5천만원 이하 추천 1순위", rate: "연 2.96%~ (비수도권 -0.2%p)", limit: "최대 7천만원", why: "신규 창업자 + 무담보 가능 + 1~2년 거치. 시중 대비 2~3%p 저렴. 연초(1~2월) 신청이 신규 예산 가장 많음", href: "https://ols.semas.or.kr", primary: true },
-      { icon: Sparkles, title: "소상공인 스마트화 / 디지털 바우처", bucket: "장비·POS·키오스크 도입 시", rate: "무상 (갚지 않음)", limit: "POS·키오스크 비용 70% 지원", why: "선정률 10~30%. 견적서 + 도입 계획만 필요. 신청 진입 장벽 낮음", href: "https://www.semas.or.kr" },
-      { icon: ShieldCheck, title: "지자체 정책자금 + 신보 보증", bucket: "지역별 추가 지원", rate: "1~2%대", limit: "지자체별 최대 5천만원", why: "서울신보·경기신보 등 지자체 보증재단. 본 정책자금과 중복 수혜 가능", href: "https://www.kodit.co.kr" },
+      { icon: Banknote, title: "소상공인 정책자금 (소진공)", bucket: "5천만원 이하 추천 1순위", rate: "연 2.96%~ (비수도권 -0.2%p)", limit: "최대 7천만원", why: "신규 창업자 + 무담보 가능 + 1~2년 거치. 시중 대비 2~3%p 저렴. 연초(1~2월) 신청이 신규 예산 가장 많음", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do", primary: true },
+      { icon: Sparkles, title: "소상공인 스마트화 / 디지털 바우처", bucket: "장비·POS·키오스크 도입 시", rate: "무상 (갚지 않음)", limit: "POS·키오스크 비용 70% 지원", why: "선정률 10~30%. 견적서 + 도입 계획만 필요. 신청 진입 장벽 낮음", href: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc" },
+      { icon: ShieldCheck, title: "지자체 정책자금 + 신보 보증", bucket: "지역별 추가 지원", rate: "1~2%대", limit: "지자체별 최대 5천만원", why: "서울신보·경기신보 등 지자체 보증재단. 본 정책자금과 중복 수혜 가능", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307" },
     ] : [
-      { icon: Banknote, title: "SEMAS Policy Fund", bucket: "Top pick ≤50M", rate: "From 2.96% (-0.2%p non-metro)", limit: "Up to 70M", why: "New owners + unsecured + 1-2yr grace. 2-3%p below market. Mar-Apr fullest budget", href: "https://ols.semas.or.kr", primary: true },
-      { icon: Sparkles, title: "Smart SME / Digital Voucher", bucket: "POS/kiosk adoption", rate: "Grant", limit: "70% of POS/kiosk cost", why: "10-30% selection. Quote + plan only", href: "https://www.semas.or.kr" },
-      { icon: ShieldCheck, title: "Local Gov + KODIT Guarantee", bucket: "Regional add-on", rate: "1-2%", limit: "Up to 50M (varies)", why: "Seoul/Gyeonggi guarantee foundations. Stackable with main policy fund", href: "https://www.kodit.co.kr" },
+      { icon: Banknote, title: "SEMAS Policy Fund", bucket: "Top pick ≤50M", rate: "From 2.96% (-0.2%p non-metro)", limit: "Up to 70M", why: "New owners + unsecured + 1-2yr grace. 2-3%p below market. Mar-Apr fullest budget", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do", primary: true },
+      { icon: Sparkles, title: "Smart SME / Digital Voucher", bucket: "POS/kiosk adoption", rate: "Grant", limit: "70% of POS/kiosk cost", why: "10-30% selection. Quote + plan only", href: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc" },
+      { icon: ShieldCheck, title: "Local Gov + KODIT Guarantee", bucket: "Regional add-on", rate: "1-2%", limit: "Up to 50M (varies)", why: "Seoul/Gyeonggi guarantee foundations. Stackable with main policy fund", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307" },
     ])
     : budgetBucket === "medium" ? (ko ? [
-      { icon: ShieldCheck, title: "신보·기보 보증 + 시중은행", bucket: "5천만~2억 추천 1순위", rate: "보증료 0.5~1.5% + 은행 4~5%", limit: "최대 2억 무담보", why: "보증서 발급 후 국민·신한·하나 등 시중은행 저금리 대출. 기보가 한도·금리 우위(기술기업)", href: "https://www.kodit.co.kr", primary: true },
-      { icon: Banknote, title: "소상공인 일반경영안정자금", bucket: "운영자금 부족 시", rate: "연 2.96%~", limit: "최대 7천만원", why: "정책자금 + 보증서 결합으로 1억+ 가능. 거치 1년·상환 4년", href: "https://ols.semas.or.kr" },
-      { icon: FileText, title: "대환대출 (기존 고금리 부채 시)", bucket: "기존 6~10% 대출 보유", rate: "고정 4.5%", limit: "기존 부채 한도", why: "시중은행 6~10% → 정책자금 4.5%. 연 수백만원 이자 절감", href: "https://ols.semas.or.kr" },
+      { icon: ShieldCheck, title: "신보·기보 보증 + 시중은행", bucket: "5천만~2억 추천 1순위", rate: "보증료 0.5~1.5% + 은행 4~5%", limit: "최대 2억 무담보", why: "보증서 발급 후 국민·신한·하나 등 시중은행 저금리 대출. 기보가 한도·금리 우위(기술기업)", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307", primary: true },
+      { icon: Banknote, title: "소상공인 일반경영안정자금", bucket: "운영자금 부족 시", rate: "연 2.96%~", limit: "최대 7천만원", why: "정책자금 + 보증서 결합으로 1억+ 가능. 거치 1년·상환 4년", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
+      { icon: FileText, title: "대환대출 (기존 고금리 부채 시)", bucket: "기존 6~10% 대출 보유", rate: "고정 4.5%", limit: "기존 부채 한도", why: "시중은행 6~10% → 정책자금 4.5%. 연 수백만원 이자 절감", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
     ] : [
-      { icon: ShieldCheck, title: "KODIT/KIBO Guarantee + Bank", bucket: "Top pick 50M-200M", rate: "Fee 0.5-1.5% + 4-5% bank", limit: "Up to 200M unsecured", why: "Get letter → KB/Shinhan/Hana low-rate. KIBO better for tech", href: "https://www.kodit.co.kr", primary: true },
-      { icon: Banknote, title: "SEMAS General Stabilization Fund", bucket: "OpEx shortfall", rate: "From 2.96%", limit: "Up to 70M", why: "Combine with guarantee = 100M+. 1yr grace + 4yr term", href: "https://ols.semas.or.kr" },
-      { icon: FileText, title: "Refinance Loan (high-rate debt)", bucket: "Existing 6-10% debt", rate: "Fixed 4.5%", limit: "Existing debt amount", why: "Save millions yearly converting bank → policy", href: "https://ols.semas.or.kr" },
+      { icon: ShieldCheck, title: "KODIT/KIBO Guarantee + Bank", bucket: "Top pick 50M-200M", rate: "Fee 0.5-1.5% + 4-5% bank", limit: "Up to 200M unsecured", why: "Get letter → KB/Shinhan/Hana low-rate. KIBO better for tech", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307", primary: true },
+      { icon: Banknote, title: "SEMAS General Stabilization Fund", bucket: "OpEx shortfall", rate: "From 2.96%", limit: "Up to 70M", why: "Combine with guarantee = 100M+. 1yr grace + 4yr term", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
+      { icon: FileText, title: "Refinance Loan (high-rate debt)", bucket: "Existing 6-10% debt", rate: "Fixed 4.5%", limit: "Existing debt amount", why: "Save millions yearly converting bank → policy", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
     ])
     : (ko ? [
-      { icon: Banknote, title: "중진공 직접대출", bucket: "2억+ 추천 1순위", rate: "연 2.0~4.5%", limit: "최대 1억 (운영자금) / 시설 5억", why: "성장기반자금·혁신성장촉진자금. 상환능력 + 사업계획서 정밀 평가", href: "https://www.kosmes.or.kr", primary: true },
-      { icon: ShieldCheck, title: "기보 + 시중은행 (대규모)", bucket: "시설·확장자금", rate: "보증료 + 은행 3~5%", limit: "최대 5억 무담보", why: "기보 보증으로 시중은행 5억까지. 인테리어·장비·확장 시 활용", href: "https://www.kibo.or.kr" },
-      { icon: FileText, title: "정책자금 + 보증 + 바우처 패키지", bucket: "복합 수혜 전략", rate: "혼합", limit: "10억+", why: "여러 자금을 결합 — 정책자금 7천 + 보증 2억 + 시설 3억 + 무상 바우처. 세무사·금융자문 동반 권장", href: "https://www.kosmes.or.kr" },
+      { icon: Banknote, title: "중진공 직접대출", bucket: "2억+ 추천 1순위", rate: "연 2.0~4.5%", limit: "최대 1억 (운영자금) / 시설 5억", why: "성장기반자금·혁신성장촉진자금. 상환능력 + 사업계획서 정밀 평가", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do", primary: true },
+      { icon: ShieldCheck, title: "기보 + 시중은행 (대규모)", bucket: "시설·확장자금", rate: "보증료 + 은행 3~5%", limit: "최대 5억 무담보", why: "기보 보증으로 시중은행 5억까지. 인테리어·장비·확장 시 활용", href: "https://www.kibo.or.kr/main/work/work010301.do" },
+      { icon: FileText, title: "정책자금 + 보증 + 바우처 패키지", bucket: "복합 수혜 전략", rate: "혼합", limit: "10억+", why: "여러 자금을 결합 — 정책자금 7천 + 보증 2억 + 시설 3억 + 무상 바우처. 세무사·금융자문 동반 권장", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do" },
     ] : [
-      { icon: Banknote, title: "KOSMES Direct Loan", bucket: "Top pick 200M+", rate: "2.0-4.5%", limit: "Up to 100M OpEx / 500M facility", why: "Growth fund / Innovation fund. Strict plan + repayment evaluation", href: "https://www.kosmes.or.kr", primary: true },
-      { icon: ShieldCheck, title: "KIBO + Bank (large)", bucket: "Facility/expansion", rate: "Fee + 3-5% bank", limit: "Up to 500M unsecured", why: "KIBO guarantee → bank up to 500M for interior/equipment", href: "https://www.kibo.or.kr" },
-      { icon: FileText, title: "Stack: Policy + Guarantee + Voucher", bucket: "Multi-source strategy", rate: "Mixed", limit: "1B+", why: "Combine: 70M policy + 200M guarantee + 300M facility + voucher. Use CPA/financial advisor", href: "https://www.kosmes.or.kr" },
+      { icon: Banknote, title: "KOSMES Direct Loan", bucket: "Top pick 200M+", rate: "2.0-4.5%", limit: "Up to 100M OpEx / 500M facility", why: "Growth fund / Innovation fund. Strict plan + repayment evaluation", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do", primary: true },
+      { icon: ShieldCheck, title: "KIBO + Bank (large)", bucket: "Facility/expansion", rate: "Fee + 3-5% bank", limit: "Up to 500M unsecured", why: "KIBO guarantee → bank up to 500M for interior/equipment", href: "https://www.kibo.or.kr/main/work/work010301.do" },
+      { icon: FileText, title: "Stack: Policy + Guarantee + Voucher", bucket: "Multi-source strategy", rate: "Mixed", limit: "1B+", why: "Combine: 70M policy + 200M guarantee + 300M facility + voucher. Use CPA/financial advisor", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do" },
     ])
   );
 
   /* ── Startup Support Programs ── */
   // 2026-06-26 fix: 업종 무관 노출 버그 — industries 가 지정된 프로그램은 내 업종일 때만 노출.
   //   (미용실에 startup-tech·agriculture 전용 프로그램이 뜨던 문제) industries 미설정 = 전원 대상.
-  const matched = getMatchedPrograms(startupType).filter(
-    (p) =>
-      !isProgramExpired(p) &&
-      (!p.industries || p.industries.length === 0 || (!!industryCategoryId && p.industries.includes(industryCategoryId))),
-  );
+  // 2026-06-29: 약한 매처(getMatchedPrograms, 정렬만)에서 강한 매처(getMatchedProgramsV2)로 전환.
+  //   종전엔 industries 태그 *있는* 프로그램만 걸러서, 태그 없는 스타트업/VC/딥테크 지원(예: AI
+  //   스타트업·모빌리티/로보틱스)이 미용실 같은 소상공인에게도 노출되던 버그. V2 의 대상자·업종·
+  //   프랜차이즈 하드필터 + eligible 필터로 부적격 프로그램을 완전히 숨긴다. 펀딩페이지·예산카드·
+  //   iOS 와 동일 로직·정렬·매칭사유 상속.
+  const matched = getMatchedProgramsV2({ startupType, industryCategoryId })
+    .filter((p) => p.eligible && !isProgramExpired(p));
   const filtered = progFilter === "all" ? matched : matched.filter(p => p.category === progFilter);
   const categories: Array<{ id: ProgramCategory | "all"; label: string }> = [
     { id: "all", label: ko ? "전체" : "All" },

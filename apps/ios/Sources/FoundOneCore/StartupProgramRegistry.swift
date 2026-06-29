@@ -177,6 +177,14 @@ public enum StartupProgramRegistry {
             if isFranchise && p.forFranchise == false { eligible = false }
             if !isFranchise && p.forFranchise == true && p.forSmallBiz == false { eligible = false }
 
+            // 대상자(audience) 하드필터 (2026-06-29, 웹 startup-programs.ts V2 와 동일):
+            //   forSmallBiz=false & forFranchise=false = 순수 스타트업/VC/딥테크 전용.
+            //   기술 스타트업 사용자에게만 노출, 소상공인·프랜차이즈 사장님에겐 제외.
+            let isTechStartupUser = criteria.industryCategoryId == "startup-tech"
+            if !isTechStartupUser && p.forSmallBiz == false && p.forFranchise == false {
+                eligible = false
+            }
+
             // industries hard filter — 업종 제한이 있으면 미설정·불일치 모두 부적격
             //   (웹 match.ts 와 동일: industryCategoryId 미설정 시에도 업종 격리 프로그램은 제외)
             if let inds = p.industries, !inds.isEmpty {
