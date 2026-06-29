@@ -755,7 +755,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   };
 
   // ── connectAndLoad ──
-  const connectAndLoad = async () => {
+  //   opts.skipHeal: 재조회(포커스/가시성 복귀·realtime)에서 true. healCompletedAtChain 은 *최초
+  //   로드 시 유실된 진행 복구용* 인데, 외부링크 복귀(visibilitychange)마다 돌면 "현재 단계에 완료
+  //   task 1개라도 있으면 그 단계 완료 처리(completedAt 부여) → 다음 단계로 advance" 버그가 난다
+  //   (2026-06-29 인테리어 업체 링크 복귀 신고). 재조회 땐 원격 데이터만 반영하고 heal(완료 변형)은 건너뛴다.
+  const connectAndLoad = async (opts?: { skipHeal?: boolean }) => {
     if (connectLoadingRef.current) return;
     connectLoadingRef.current = true;
     try {
@@ -846,7 +850,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
             } catch {
               /* flush 실패해도 재조회 진행 */
             }
-            void connectAndLoad();
+            void connectAndLoad({ skipHeal: true }); // realtime 재조회 — 원격만 반영, heal 변형 금지
           })();
         };
         // user_store_data / business_profiles / roadmaps 는 사용자당 1행 — DELETE = 초기화/계정삭제.
@@ -975,11 +979,13 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       //   franchise-application=idx26)에 신호가 생기면 그 앞 *배열* 전체를 완료 처리 → "21·22단계
       //   완료로 건너뜀" 버그. healCompletedAtChain 이 resolveNextStageIds 로 사용자 path 를 따라가며
       //   path 상 furthest 신호 이전 path stage 만 backfill 한다.
-      const { decisions: decisionsToHeal, healed } = healCompletedAtChain(
-        result.state.decisions,
-        loadedTasks,
-        result.state.roadmap.stages,
-      );
+      const { decisions: decisionsToHeal, healed } = opts?.skipHeal === true
+        ? { decisions: result.state.decisions, healed: false }
+        : healCompletedAtChain(
+            result.state.decisions,
+            loadedTasks,
+            result.state.roadmap.stages,
+          );
       // healed 여부는 Sentry breadcrumb 로 추적 (프로덕션 콘솔 노출 방지)
       setDecisions(decisionsToHeal);
 
@@ -1443,7 +1449,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         } catch {
           /* flush 실패해도 재조회는 진행 */
         }
-        void connectAndLoad();
+        void connectAndLoad({ skipHeal: true }); // 포커스/가시성 복귀 — heal 변형 금지(외부링크 복귀 advance 버그 방지)
       })();
     };
     window.addEventListener("focus", refetchOnFocus);

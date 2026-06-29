@@ -73,16 +73,21 @@ describe("heal completedAt — path-aware (단계 점프 회귀 가드)", () => 
     expect(count, `완료 ${count} — 약신호 chain backfill 폭발(모두 완료 버그 재발)`).toBeLessThan(20);
   });
 
-  it("현재 진행 stage 의 약신호는 정상 heal (룰 강화 회귀 보정 보존)", () => {
-    // loan-guide(idx12)까지 강신호 → 현재 stage = menu-design(idx13). 거기 완료 task 토글만 한 상태.
+  // ── 2026-06-29 근본 원칙: "사용자가 '다음 단계로'를 누르기 전엔 절대 자동 advance 금지" ──
+  //   (사장님 신고: 19단계 [운영·마케팅] → 누르지도 않았는데 [소프트오픈]으로 넘어감.)
+  //   task 완료 ≠ 단계 통과. 약신호(완료 task)로는 *현재 진행 stage* 도 완료 처리하지 않는다.
+  //   유실된 *통과 이력* 복구는 강신호(completedAt) chain backfill 만 담당.
+  it("현재 진행 stage 의 약신호(완료 task)는 완료 처리 안 함 — '다음 단계' 전 자동 advance 금지", () => {
+    // loan-guide 까지 강신호 → 현재 stage = menu-design. 거기 task 1개만 완료 토글한 상태(아직 미통과).
     const decisions: AnyDec = {
       "industry-selection": { stageId: "industry-selection", inputs: { categoryId: "food" }, completedAt: ISO },
       "loan-guide": { stageId: "loan-guide", completedAt: ISO },
     };
     const tasks: AnyDec = { "menu-design": [{ taskId: "t1", status: "completed" }] };
     const { decisions: healed } = healCompletedAtChain(decisions, tasks, starterRoadmap.stages as AnyDec);
-    expect(healed["menu-design"]?.completedAt, "현재 stage 약신호 heal 누락(룰강화 회귀 미보정)").toBeTruthy();
-    // 단, 그 다음 단계(vendor-setup)까지 번지면 안 됨.
+    // 현재 stage(menu-design) 는 '다음 단계로'를 안 눌렀으니 completedAt 없어야 함(자동 advance 금지).
+    expect(healed["menu-design"]?.completedAt, "약신호로 현재 stage 오완료 — 자동 advance 버그").toBeFalsy();
+    // 그 다음 단계로도 당연히 번지면 안 됨.
     expect(healed["vendor-setup"]?.completedAt, "현재 stage 너머로 번짐").toBeFalsy();
   });
 });

@@ -472,17 +472,15 @@ export function healCompletedAtChain(
       healedStageIds.add(sid);
     }
   }
-  // ① 약신호(완료 task)는 *현재 진행 stage*(강신호 체인 바로 다음 path stage) 의 자기 완료만 인정.
-  //    룰 강화 후 현재 stage 의 옛 task 만 토글하고 "다음 단계로" 안 누른 회귀를 보정한다.
-  //    stray 말단 약신호(예: pre-launch-final 의 완료 task 1개)는 무시 → over-completion 원천 차단.
-  const currentIdx = maxCompletedPathIdx + 1;
-  if (currentIdx >= 0 && currentIdx < pathOrder.length) {
-    const sid = pathOrder[currentIdx];
-    if (!result[sid]?.completedAt && taskOnlyStageIds.has(sid)) {
-      result[sid] = { ...(result[sid] ?? { stageId: sid }), stageId: sid, completedAt: new Date(baseTime).toISOString() };
-      healedStageIds.add(sid);
-    }
-  }
+  // ⚠️ 약신호(완료 task)로는 *어떤 stage 도* 완료(completedAt) 처리하지 않는다 (2026-06-29 근본 수정).
+  //    원칙: "사용자가 '다음 단계로'를 누르기 전엔 절대 자동 advance 금지" (사장님 신고: 19단계
+  //    [운영·마케팅] → 누르지도 않았는데 [소프트오픈]으로 넘어감). task 완료 ≠ 단계 통과 — task 는
+  //    여러 개고 1개 완료가 통과를 뜻하지 않으며, '다음 단계로'(=completedAt 강신호)만이 통과의 유일한 근거.
+  //    종전 "현재 stage 약신호 자기 완료 인정" 규칙은 초기로드/인증/복귀 시 heal 이 현재 stage 에
+  //    completedAt 을 주입 → 다음 stage 로 자동 advance 시키는 버그의 원인이었다. 제거함.
+  //    (유실된 *통과 이력* 복구는 위 강신호 chain backfill 이 담당 — 더 뒤에 강신호가 있으면 그 앞은
+  //     실제 통과한 것이므로 안전. 현재 진행 중인 stage 를 약신호로 완료시키는 일은 없어야 한다.)
+  //    taskOnlyStageIds 는 이제 상단 early-return(신호 전무 시 no-op) 판정에만 쓰인다.
 
   return { decisions: result, healed: healedStageIds.size > 0 };
 }

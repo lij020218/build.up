@@ -477,7 +477,7 @@ export function InsuranceTaxSetupStage() {
               {[
                 { label: "4대사회보험 정보연계센터", url: "https://www.4insure.or.kr" },
                 { label: "두루누리 지원 확인", url: "https://www.4insure.or.kr" },
-                { label: "산재보험 업종별 요율", url: "https://www.kcomwel.or.kr" },
+                { label: "산재보험 업종별 요율", url: "https://www.comwel.or.kr/comwel/paym/insu/chek1.jsp" },
               ].map((link) => (
                 <a
                   key={link.url}

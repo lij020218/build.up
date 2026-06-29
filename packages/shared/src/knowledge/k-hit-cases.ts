@@ -1543,7 +1543,7 @@ export const K_HIT_CASES: KHitCase[] = [
     location: "서울",
     founder: "이승건",
     oneLiner: { ko: "MAU 2,480만·연결매출 1.96조·2024년 첫 흑자 — 한국 핀테크의 표준", en: "Korea's fintech standard: 24.8M MAU, 1.96T revenue, first profit in 2024" },
-    successFactors: { ko: ["공인인증서 없는 간편송금으로 핀테크 시장 자체 창출", "은행·증권·보험·결제 슈퍼앱 — 단일 진입점 락인", "8번 피벗 끝에 송금 PMF 발견한 집요함", "디자인·UX 인재 집중 채용 — 사용성으로 차별화"], en: ["Created the Korean fintech market via certificate-free transfers", "Super-app spanning banking, securities, insurance, payments", "Tenacity through 8 pivots before finding transfer PMF", "Concentrated design and UX talent for usability moat"] },
+    successFactors: { ko: ["복잡한 인증 없는 간편송금으로 핀테크 시장 자체 창출", "은행·증권·보험·결제 슈퍼앱 — 단일 진입점 락인", "8번 피벗 끝에 송금 PMF 발견한 집요함", "디자인·UX 인재 집중 채용 — 사용성으로 차별화"], en: ["Created the Korean fintech market via certificate-free transfers", "Super-app spanning banking, securities, insurance, payments", "Tenacity through 8 pivots before finding transfer PMF", "Concentrated design and UX talent for usability moat"] },
     lesson: { ko: "정부 규제 산업도 UX 한 가지로 뒤집을 수 있다", en: "Even regulated industries can be flipped by UX alone" },
     sources: [{ label: "비바리퍼블리카 - 위키백과", url: "https://ko.wikipedia.org/wiki/%EB%B9%84%EB%B0%94%EB%A6%AC%ED%8D%BC%EB%B8%94%EB%A6%AC%EC%B9%B4", accessedAt: "2026-04-24" }]
   },
