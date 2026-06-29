@@ -528,12 +528,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -1254,38 +1254,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "푸드팡 (Foodpang)",
-          "desc": "외식업 사장님 1순위 B2B 도매. 전날 22시까지 주문 → 다음날 08시 이전 매장 냉장고로 직접 배송",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "https://foodpang.co/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "가락시장 (가락몰)",
-          "desc": "국내 최대 농수산물 도매시장. 청과·수산 도매권역 + 가락몰 소포장. 새벽 직접 매입 또는 위탁상 정기 배송",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "https://www.garak.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "마장축산물시장",
-          "desc": "수도권 정육 60%+ 유통. 약 2,000 점포 도소매. 새벽 4시~저녁 7시 운영, 당일배송 가능",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "http://www.mjmm.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "CJ프레시웨이 (온리원푸드넷)",
-          "desc": "대형 외식 식자재 정기배송. B2B 주문 시스템 + 입고 검수 + 재고 관리. 3톤 이상 매장 추천",
-          "priceRange": "월정액 협의",
-          "priority": "recommended",
-          "url": "https://www.cjfreshway.com/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "이마트 트레이더스 / 코스트코",
           "desc": "소형 매장 직접 매입 옵션. 회원가 도매",
           "priceRange": "회원가",
@@ -1468,14 +1436,6 @@
           "name": "푸드팡 (식자재) — 도시락 패키지",
           "desc": "1인분 단위 묶음 식자재",
           "priceRange": "월 200-400만",
-          "priority": "primary",
-          "url": "https://foodpang.co/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "푸드팡 (Foodpang)",
-          "desc": "외식업 사장님 1순위 B2B 도매. 전날 22시까지 주문 → 다음날 08시 이전 매장 냉장고로 직접 배송",
-          "priceRange": "도매가",
           "priority": "primary",
           "url": "https://foodpang.co/",
           "budgetTier": "standard"
@@ -1701,27 +1661,11 @@
           "budgetTier": "standard"
         },
         {
-          "name": "가락시장 (가락몰)",
-          "desc": "국내 최대 농수산물 도매시장. 청과·수산 도매권역 + 가락몰 소포장. 새벽 직접 매입 또는 위탁상 정기 배송",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "https://www.garak.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "마장축산물시장",
           "desc": "수도권 정육 60%+ 유통. 약 2,000 점포 도소매. 새벽 4시~저녁 7시 운영, 당일배송 가능",
           "priceRange": "도매가",
           "priority": "primary",
           "url": "http://www.mjmm.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "CJ프레시웨이 (온리원푸드넷)",
-          "desc": "대형 외식 식자재 정기배송. B2B 주문 시스템 + 입고 검수 + 재고 관리. 3톤 이상 매장 추천",
-          "priceRange": "월정액 협의",
-          "priority": "recommended",
-          "url": "https://www.cjfreshway.com/",
           "budgetTier": "standard"
         },
         {
@@ -2695,14 +2639,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "테라로사 (TERAROSA)",
-          "desc": "강릉 본사 스페셜티 표준. 학산 도매 채널 별도 운영. kg당 25,000-45,000원",
-          "priceRange": "kg당 2.5-4.5만",
-          "priority": "primary",
-          "url": "https://www.terarosa.com/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "커피 리브레 (Coffee Libre)",
           "desc": "한국 1세대 스페셜티. 250+ 산지 다이렉트 트레이드, 매월 기술지원 세미나",
           "priceRange": "kg당 3-6만",
@@ -2769,14 +2705,6 @@
           "priceRange": "10~50만",
           "priority": "recommended",
           "budgetTier": "value"
-        },
-        {
-          "name": "에스프레소 머신 (라마르조코·페마·VBM)",
-          "desc": "라마르조코 GB5 800-1,300만 / 페마 E61 400-700만 / VBM 250-450만",
-          "priceRange": "250~1,300만",
-          "priority": "primary",
-          "url": "https://lamarzoccokorea.co.kr/",
-          "budgetTier": "premium"
         },
         {
           "name": "그라인더 (말코닉·EUREKA·DITTING)",
@@ -3904,14 +3832,6 @@
           "budgetTier": "value"
         },
         {
-          "name": "페이히어 (PayHere) 리테일",
-          "desc": "실시간 상품/재고 관리, 매출 분석. 카페24 자체몰 연동",
-          "priceRange": "월 0원~5만",
-          "priority": "primary",
-          "url": "https://payhere.in/",
-          "budgetTier": "value"
-        },
-        {
           "name": "오케이포스 리테일",
           "desc": "재고 관리·바코드·반품 처리",
           "priceRange": "월 3-5만",
@@ -4061,14 +3981,6 @@
           "priceRange": "월 0원~",
           "priority": "primary",
           "url": "https://tossplace.com/",
-          "budgetTier": "value"
-        },
-        {
-          "name": "페이히어 (PayHere) 리테일",
-          "desc": "실시간 상품/재고 관리, 매출 분석. 카페24 자체몰 연동",
-          "priceRange": "월 0원~5만",
-          "priority": "primary",
-          "url": "https://payhere.in/",
           "budgetTier": "value"
         },
         {
@@ -4231,14 +4143,6 @@
           "priority": "primary",
           "url": "https://payhere.in/",
           "budgetTier": "value"
-        },
-        {
-          "name": "오케이포스 리테일",
-          "desc": "재고 관리·바코드·반품 처리",
-          "priceRange": "월 3-5만",
-          "priority": "recommended",
-          "url": "https://www.okpos.co.kr/",
-          "budgetTier": "value"
         }
       ],
       "channels": [
@@ -4390,14 +4294,6 @@
           "priceRange": "월 0원~5만",
           "priority": "primary",
           "url": "https://payhere.in/",
-          "budgetTier": "value"
-        },
-        {
-          "name": "오케이포스 리테일",
-          "desc": "재고 관리·바코드·반품 처리",
-          "priceRange": "월 3-5만",
-          "priority": "recommended",
-          "url": "https://www.okpos.co.kr/",
           "budgetTier": "value"
         }
       ],
@@ -4604,14 +4500,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤어앤미 (Hair&Me)",
-          "desc": "프로페셔널 미용재료 도매 플랫폼. 정품 도매 헤어전문몰",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "https://hairnmi.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "헤어2000 미용재료할인점",
           "desc": "전국 최대규모 미용인전용 도매 할인점",
           "priceRange": "도매가",
@@ -4676,13 +4564,6 @@
           "priceRange": "100~300만",
           "priority": "primary",
           "budgetTier": "standard"
-        },
-        {
-          "name": "디지털 펌기 (Hair Pro·정수기형)",
-          "desc": "디지털 펌기 200-500만 (사용 시 적정)",
-          "priceRange": "200~500만",
-          "priority": "recommended",
-          "budgetTier": "standard"
         }
       ],
       "pos": [
@@ -4703,12 +4584,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -4760,14 +4641,6 @@
           "priceRange": "수입가",
           "priority": "recommended",
           "budgetTier": "premium"
-        },
-        {
-          "name": "헤어앤미 (Hair&Me)",
-          "desc": "프로페셔널 미용재료 도매 플랫폼. 정품 도매 헤어전문몰",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "https://hairnmi.co.kr/",
-          "budgetTier": "standard"
         },
         {
           "name": "헤어2000 미용재료할인점",
@@ -4868,12 +4741,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -5027,12 +4900,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -5186,12 +5059,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -5343,12 +5216,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -5502,12 +5375,12 @@
           "budgetTier": "standard"
         },
         {
-          "name": "헤이뷰티 (Hey Beauty)",
-          "desc": "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약",
-          "priceRange": "월 입점 협의",
+          "name": "콜라보살롱 (Colla:vo)",
+          "desc": "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동",
+          "priceRange": "무료~유료(플랜별)",
           "priority": "recommended",
-          "url": "https://heybeauty.me/",
-          "budgetTier": "standard"
+          "url": "https://www.colavo.kr/",
+          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 (결제만)",
@@ -5647,14 +5520,6 @@
           "priority": "recommended",
           "url": "https://bodycodi.com/",
           "budgetTier": "standard"
-        },
-        {
-          "name": "바디코디 (BodyCodi) — 헬스 회원관리 1위",
-          "desc": "4,000+ 헬스장 도입. 회원·결제·출입(얼굴/QR)·키오스크·PT 통합 SaaS. 프로 요금제",
-          "priceRange": "월 4-15만 (2년 약정 시 월 3.7만~)",
-          "priority": "primary",
-          "url": "https://bodycodi.com/",
-          "budgetTier": "value"
         },
         {
           "name": "하이파이브 (Hi5) — 필라테스/요가",
@@ -5803,14 +5668,6 @@
           "priority": "recommended",
           "url": "https://fittobe.oopy.io/",
           "budgetTier": "standard"
-        },
-        {
-          "name": "바디코디 (BodyCodi) — 헬스 회원관리 1위",
-          "desc": "4,000+ 헬스장 도입. 회원·결제·출입(얼굴/QR)·키오스크·PT 통합 SaaS. 프로 요금제",
-          "priceRange": "월 4-15만 (2년 약정 시 월 3.7만~)",
-          "priority": "primary",
-          "url": "https://bodycodi.com/",
-          "budgetTier": "value"
         },
         {
           "name": "하이파이브 (Hi5) — 필라테스/요가",
@@ -6405,14 +6262,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "바디코디 (BodyCodi) — 헬스 회원관리 1위",
-          "desc": "4,000+ 헬스장 도입. 회원·결제·출입(얼굴/QR)·키오스크·PT 통합 SaaS. 프로 요금제",
-          "priceRange": "월 4-15만 (2년 약정 시 월 3.7만~)",
-          "priority": "primary",
-          "url": "https://bodycodi.com/",
-          "budgetTier": "value"
-        },
-        {
           "name": "하이파이브 (Hi5) — 필라테스/요가",
           "desc": "650+ 센터 도입. 예약·재등록 알림·출석·매출 리포트 카카오 일일 발송",
           "priceRange": "월 5-20만",
@@ -6713,14 +6562,6 @@
           "priceRange": "무료~월 협의",
           "priority": "primary",
           "url": "https://classup.io/",
-          "budgetTier": "value"
-        },
-        {
-          "name": "학원조아 (Hakwonjoa)",
-          "desc": "학생관리·출결·수납 통합 SaaS. 학부모 알림",
-          "priceRange": "월 5-15만",
-          "priority": "primary",
-          "url": "https://hakwonjoa.com/",
           "budgetTier": "value"
         },
         {
@@ -7380,14 +7221,6 @@
           "budgetTier": "value"
         },
         {
-          "name": "펫도매 (petdome)",
-          "desc": "펫 사료·간식·용품 B2B 입점형 도매 1순위. 정기 배송",
-          "priceRange": "도매가",
-          "priority": "primary",
-          "url": "https://petdome.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "펫허그 B2B (pethugb2b)",
           "desc": "사업자 전용 도매 플랫폼. 사료·간식·용품",
           "priceRange": "B2B 도매",
@@ -7476,14 +7309,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "공비서 (gongbiz) — 펫 그루밍 지원",
-          "desc": "펫 그루밍·뷰티 통합 CRM. 8,000+ 매장. 예약·매출·알림톡",
-          "priceRange": "월 5-15만",
-          "priority": "primary",
-          "url": "https://gongbiz.kr/",
-          "budgetTier": "value"
-        },
-        {
           "name": "토스플레이스 + 카카오 알림톡",
           "desc": "결제 + 예약 알림톡 분리 운영",
           "priceRange": "월 0원~",
@@ -7532,14 +7357,6 @@
           "desc": "위탁배송 무재고 소매 가능",
           "priceRange": "사업자가",
           "priority": "recommended",
-          "url": "https://petdome.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "펫도매 (petdome)",
-          "desc": "펫 사료·간식·용품 B2B 입점형 도매 1순위. 정기 배송",
-          "priceRange": "도매가",
-          "priority": "primary",
           "url": "https://petdome.co.kr/",
           "budgetTier": "standard"
         },
@@ -7676,14 +7493,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "펫허그 B2B (pethugb2b)",
-          "desc": "사업자 전용 도매 플랫폼. 사료·간식·용품",
-          "priceRange": "B2B 도매",
-          "priority": "primary",
-          "url": "https://pethugb2b.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "더펫마트 (thepetmart)",
           "desc": "B2B 도매 쇼핑몰. 사료·간식·미용·각종 용품 도매가",
           "priceRange": "도매가",
@@ -7762,14 +7571,6 @@
           "priority": "recommended",
           "url": "https://home.knockdog.net/",
           "budgetTier": "standard"
-        },
-        {
-          "name": "공비서 (gongbiz) — 펫 그루밍 지원",
-          "desc": "펫 그루밍·뷰티 통합 CRM. 8,000+ 매장. 예약·매출·알림톡",
-          "priceRange": "월 5-15만",
-          "priority": "primary",
-          "url": "https://gongbiz.kr/",
-          "budgetTier": "value"
         },
         {
           "name": "토스플레이스 + 카카오 알림톡",
@@ -7902,14 +7703,6 @@
           "priority": "primary",
           "url": "https://gongbiz.kr/",
           "budgetTier": "value"
-        },
-        {
-          "name": "토스플레이스 + 카카오 알림톡",
-          "desc": "결제 + 예약 알림톡 분리 운영",
-          "priceRange": "월 0원~",
-          "priority": "recommended",
-          "url": "https://tossplace.com/",
-          "budgetTier": "value"
         }
       ],
       "channels": [
@@ -7953,14 +7746,6 @@
           "priceRange": "도매가",
           "priority": "primary",
           "url": "https://petdome.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "펫허그 B2B (pethugb2b)",
-          "desc": "사업자 전용 도매 플랫폼. 사료·간식·용품",
-          "priceRange": "B2B 도매",
-          "priority": "primary",
-          "url": "https://pethugb2b.co.kr/",
           "budgetTier": "standard"
         },
         {
@@ -8084,14 +7869,6 @@
           "desc": "산책줄·하네스·배변봉투 소량 사입",
           "priceRange": "사업자가",
           "priority": "recommended",
-          "url": "https://petdome.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "펫도매 (petdome)",
-          "desc": "펫 사료·간식·용품 B2B 입점형 도매 1순위. 정기 배송",
-          "priceRange": "도매가",
-          "priority": "primary",
           "url": "https://petdome.co.kr/",
           "budgetTier": "standard"
         },
@@ -9211,14 +8988,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "스페이스클라우드 (SpaceCloud) — 공간대여 1위",
-          "desc": "공간 예약·결제·관리 통합. 파티룸·연습실·촬영·공유주방·세미나실",
-          "priceRange": "월 5-30만",
-          "priority": "primary",
-          "url": "https://www.spacecloud.kr/",
-          "budgetTier": "value"
-        },
-        {
           "name": "패스트파이브 빌딩솔루션",
           "desc": "공유오피스 1위(60지점) 운영 노하우 외부 제공. 사옥구축·플렉스",
           "priceRange": "협의",
@@ -9326,14 +9095,6 @@
           "priority": "primary",
           "url": "https://www.spacecloud.kr/",
           "budgetTier": "standard"
-        },
-        {
-          "name": "스페이스클라우드 (SpaceCloud) — 공간대여 1위",
-          "desc": "공간 예약·결제·관리 통합. 파티룸·연습실·촬영·공유주방·세미나실",
-          "priceRange": "월 5-30만",
-          "priority": "primary",
-          "url": "https://www.spacecloud.kr/",
-          "budgetTier": "value"
         },
         {
           "name": "패스트파이브 빌딩솔루션",
@@ -9514,14 +9275,6 @@
           "budgetTier": "standard"
         },
         {
-          "name": "퍼시스 (fursys) · 시디즈 · 데스커",
-          "desc": "퍼시스그룹 통합 라인업. 사무·SOHO·에르고노믹 의자 표준",
-          "priceRange": "B2B가",
-          "priority": "primary",
-          "url": "https://www.fursys.com/",
-          "budgetTier": "standard"
-        },
-        {
           "name": "리바트·일룸 (인테리어 가구)",
           "desc": "게스트하우스·파티룸 침구·소파. 일룸은 퍼시스그룹 라이프스타일",
           "priceRange": "B2B가",
@@ -9576,14 +9329,6 @@
           "priority": "recommended",
           "url": "https://www.spacecloud.kr/",
           "budgetTier": "standard"
-        },
-        {
-          "name": "스페이스클라우드 (SpaceCloud) — 공간대여 1위",
-          "desc": "공간 예약·결제·관리 통합. 파티룸·연습실·촬영·공유주방·세미나실",
-          "priceRange": "월 5-30만",
-          "priority": "primary",
-          "url": "https://www.spacecloud.kr/",
-          "budgetTier": "value"
         },
         {
           "name": "패스트파이브 빌딩솔루션",
@@ -9701,14 +9446,6 @@
           "priority": "recommended",
           "url": "https://bub.searchroom.kr/",
           "budgetTier": "standard"
-        },
-        {
-          "name": "스페이스클라우드 (SpaceCloud) — 공간대여 1위",
-          "desc": "공간 예약·결제·관리 통합. 파티룸·연습실·촬영·공유주방·세미나실",
-          "priceRange": "월 5-30만",
-          "priority": "primary",
-          "url": "https://www.spacecloud.kr/",
-          "budgetTier": "value"
         },
         {
           "name": "패스트파이브 빌딩솔루션",
@@ -9841,14 +9578,6 @@
           "priceRange": "월 구독",
           "priority": "recommended",
           "url": "https://sabangnet.co.kr/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "네이버 스마트스토어",
-          "desc": "한국 1위 온라인몰. 2025-6 개편: 판매수수료 1-3%, 마케팅 링크 0.91% (외부 유입), 주문관리 수수료 별도. 정산 3-4일",
-          "priceRange": "수수료 1-3%",
-          "priority": "primary",
-          "url": "https://sell.smartstore.naver.com/",
           "budgetTier": "standard"
         },
         {
@@ -10474,14 +10203,6 @@
           "priceRange": "도매가",
           "priority": "primary",
           "budgetTier": "standard"
-        },
-        {
-          "name": "1688·타오바오 (해외 도매)",
-          "desc": "구매대행·중국 도매. 도매꾹/희명무역 등 통한 한국어 지원",
-          "priceRange": "해외 도매",
-          "priority": "recommended",
-          "url": "https://www.1688.com/",
-          "budgetTier": "value"
         }
       ],
       "equipment": [
@@ -10529,14 +10250,6 @@
           "desc": "구매대행 상품 판매 오픈마켓",
           "priceRange": "수수료",
           "priority": "recommended",
-          "url": "https://sell.smartstore.naver.com/",
-          "budgetTier": "standard"
-        },
-        {
-          "name": "네이버 스마트스토어",
-          "desc": "한국 1위 온라인몰. 2025-6 개편: 판매수수료 1-3%, 마케팅 링크 0.91% (외부 유입), 주문관리 수수료 별도. 정산 3-4일",
-          "priceRange": "수수료 1-3%",
-          "priority": "primary",
           "url": "https://sell.smartstore.naver.com/",
           "budgetTier": "standard"
         },

@@ -232,7 +232,7 @@ export const CATEGORY_VENDOR_BASE: Record<string, SubIndustryVendorData> = {
     pos: [
       { name: "공비서 (gongbiz) 원장님", desc: "8,000+ 뷰티샵 도입. 네이버 예약 연동, 매출 분석, 알림톡 자동", priceRange: "월 5-15만", priority: "primary", url: "https://gongbiz.kr/" },
       { name: "마메드네 (구 카카오헤어샵)", desc: "뷰티 예약 점유율 70%+, 6,000+ 매장. AI 헤어 시뮬레이션", priceRange: "월 입점 협의", priority: "primary", url: "https://apps.apple.com/kr/app/%EB%A7%88%EB%A9%94%EB%93%9C%EB%84%A4/id1173776109" },
-      { name: "헤이뷰티 (Hey Beauty)", desc: "헤어/네일/왁싱/속눈썹 통합 예약. 시간대별 즉시 예약", priceRange: "월 입점 협의", priority: "recommended", url: "https://heybeauty.me/" },
+      { name: "콜라보살롱 (Colla:vo)", desc: "헤어/네일/왁싱/속눈썹 통합 예약·고객관리(CRM). 네이버 예약·페이 결제·쿠폰 연동", priceRange: "무료~유료(플랜별)", priority: "recommended", url: "https://www.colavo.kr/" },
       { name: "토스플레이스 (결제만)", desc: "예약 앱과 분리 사용 — 결제만", priceRange: "월 0원~", priority: "recommended", url: "https://tossplace.com/" },
     ],
     channels: [
