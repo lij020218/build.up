@@ -55,7 +55,7 @@ public enum BUStageTaskRegistry {
         "menu-design": [
             .init(id: "md-signature-items",      title: "시그니처 메뉴(또는 서비스) 3-5개 확정", estimatedMinutes: 30),
             .init(id: "md-side-items",           title: "사이드·보조 메뉴 2-3개 확정", estimatedMinutes: 15),
-            .init(id: "md-pricing-set",          title: "각 항목 가격 책정 — 원가율 33% 이하 목표", estimatedMinutes: 30),
+            .init(id: "md-pricing-set",          title: "각 항목 가격 책정 — 원가율 목표 설정 (외식업 기준 33% 이하)", estimatedMinutes: 30),
             .init(id: "md-categories-organized", title: "카테고리·노출 순서 정리 — 재고 카드에 자동 등록되는 베이스", estimatedMinutes: 15),
         ],
         "franchise-application": [

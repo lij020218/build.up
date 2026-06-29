@@ -61,6 +61,8 @@ public struct BUStageShell<Content: View>: View {
     public let industryCategoryId: String?
     public let currentPage: Int?
     public let totalPages: Int?
+    /// 페이지형 단계 — 마지막 페이지 전 continue bar 가 "다음 페이지"로 넘김(웹 통일). nil 이면 기존 "다음 단계로".
+    public let onNextPage: (() -> Void)?
     public let onEditSave: (() -> Void)?
     /// 페이지별 KEY ACTION 오버라이드 (웹 패리티 — operations/loan/tax/pre-launch-final 처럼
     /// 페이지마다 KEY ACTION 이 다른 단계). nil 이면 BUStageKeyActionRegistry 단일값 사용.
@@ -111,6 +113,7 @@ public struct BUStageShell<Content: View>: View {
         wrapup: BUStageWrapupData? = nil,
         industryCategoryId: String? = nil,
         currentPage: Int? = nil,
+        onNextPage: (() -> Void)? = nil,
         totalPages: Int? = nil,
         keyActionOverride: BUStageKeyAction? = nil,
         @ViewBuilder content: () -> Content
@@ -129,6 +132,7 @@ public struct BUStageShell<Content: View>: View {
         self.industryCategoryId = industryCategoryId
         self.currentPage = currentPage
         self.totalPages = totalPages
+        self.onNextPage = onNextPage
         self.onEditSave = onEditSave
         self.keyActionOverride = keyActionOverride
         self.content = content()
@@ -216,7 +220,10 @@ public struct BUStageShell<Content: View>: View {
                     isCompleted: isCompleted,
                     onAdvance: onAdvance,
                     onUncomplete: onUncomplete,
-                    onEditSave: onEditSave
+                    onEditSave: onEditSave,
+                    currentPage: currentPage,
+                    totalPages: totalPages,
+                    onNextPage: onNextPage
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -280,6 +287,18 @@ public struct BUStageContinueBar: View {
     /// 제공되면 isCompleted 일 때 "✓ 수정 저장" 버튼 노출.
     public let onEditSave: (() -> Void)?
 
+    /// 페이지형 단계 — 마지막 페이지 전엔 "다음 단계로" 대신 "다음 페이지" 버튼을 노출(웹 통일).
+    ///   currentPage/totalPages/onNextPage 가 모두 있고 마지막 페이지가 아니면 페이지 넘김 버튼.
+    public let currentPage: Int?
+    public let totalPages: Int?
+    public let onNextPage: (() -> Void)?
+
+    /// 마지막 페이지 전 = 페이지 넘김 모드. (읽기 게이트: 끝까지 본 뒤 "다음 단계로")
+    private var hasNextPage: Bool {
+        guard let cur = currentPage, let total = totalPages, onNextPage != nil, total > 1 else { return false }
+        return cur < total - 1
+    }
+
     /// "수정 저장" 버튼 시각 상태 — idle/saving/saved/error (2초 후 idle 복귀).
     private enum EditState { case idle, saving, saved, error }
     @State private var editState: EditState = .idle
@@ -297,7 +316,10 @@ public struct BUStageContinueBar: View {
         isCompleted: Bool = false,
         onAdvance: @escaping () -> Void,
         onUncomplete: (() -> Void)? = nil,
-        onEditSave: (() -> Void)? = nil
+        onEditSave: (() -> Void)? = nil,
+        currentPage: Int? = nil,
+        totalPages: Int? = nil,
+        onNextPage: (() -> Void)? = nil
     ) {
         self.stageEyebrow = stageEyebrow
         self.advanceLabel = advanceLabel
@@ -307,6 +329,9 @@ public struct BUStageContinueBar: View {
         self.onAdvance = onAdvance
         self.onUncomplete = onUncomplete
         self.onEditSave = onEditSave
+        self.currentPage = currentPage
+        self.totalPages = totalPages
+        self.onNextPage = onNextPage
     }
 
     public var body: some View {
@@ -390,6 +415,33 @@ public struct BUStageContinueBar: View {
                     .layoutPriority(1)
                 }
 
+                if hasNextPage {
+                    // 페이지형 단계 — 마지막 페이지 전: "다음 페이지"(페이지 넘김, 항상 활성). 단계 advance 아님.
+                    Button { onNextPage?() } label: {
+                        HStack(spacing: 6) {
+                            Text("다음 페이지")
+                                .font(.system(size: 14, weight: .heavy))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .heavy))
+                        }
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 12)
+                        .background(
+                            LinearGradient(
+                                colors: [BUColor.midnight, BUColor.midnight.opacity(0.85)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ),
+                            in: Capsule()
+                        )
+                        .shadow(color: BUColor.midnight.opacity(0.18), radius: 8, x: 0, y: 3)
+                    }
+                    .buttonStyle(.plain)
+                    .layoutPriority(1)
+                } else {
                 Button {
                     // 1. 사용자 정의 (예: roadmapStore.advanceToNext + 입력 저장)
                     onAdvance()
@@ -425,6 +477,7 @@ public struct BUStageContinueBar: View {
                 .buttonStyle(.plain)
                 .disabled(!canAdvance)
                 .layoutPriority(1)
+                }
             }
             .padding(.horizontal, BUSpacing.md)
             .padding(.vertical, 12)

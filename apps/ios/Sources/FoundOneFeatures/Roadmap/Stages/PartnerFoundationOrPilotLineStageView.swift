@@ -77,6 +77,7 @@ public struct PartnerFoundationOrPilotLineStageView: View {
                 nextSummary: "양산 계약과 스케일업 자금이 확정됐다면 다음 단계로 진행하세요."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

@@ -76,6 +76,7 @@ public struct StoreSetupStageView: View {
                 nextSummary: "상품·배송·CS·통합관리 셋업 완료 → 온라인 마케팅 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

@@ -64,7 +64,7 @@ import {
   getFranchiseBrandById,
   localizeTaskTitle,
 } from "@foundone/shared";
-import { Star, Store, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Store, ChevronLeft, ChevronRight } from "lucide-react";
 // SecurityChecklist 는 LaunchGtmStage 내부에서 collapsible 로 직접 import.
 // import { SecurityChecklist } from "../knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "../knowledge/InvestmentGlossary";
@@ -270,17 +270,23 @@ export function CurrentStageView() {
     );
   })() : null;
 
-  // 단계 advance 게이트 힌트 — 마지막 페이지 전엔 "다음 단계로" 대신 이걸 노출(죽은 비활성 버튼 회피).
-  const stageLockedHint = pageNav ? (
-    <div style={{
-      display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto",
-      padding: "11px 16px", fontSize: "13px", fontWeight: 600, color: "rgba(25,25,112,0.5)",
-    }}>
-      <Lock size={13} strokeWidth={2.2} aria-hidden />
+  // 단계 advance 게이트 — 마지막 페이지 전엔 "다음 단계로" 대신 *실제 [다음 페이지] 버튼*을 같은
+  //   자리에 노출(2026-06-29 사장님 신고: 종전엔 비액션 잠금 텍스트라 "버튼이 없다"·"다음 페이지만
+  //   뜬다"). 페이지를 끝까지 넘긴 뒤 마지막 페이지에서 "다음 단계로"가 뜬다(읽기 게이트 유지).
+  const stageLockedHint = pageNav && pageNav.page < pageNav.totalPages - 1 ? (
+    <button
+      type="button"
+      onClick={() => {
+        pageNav.onChange(pageNav.page + 1);
+        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+      style={{ ...styles.primaryButton, display: "inline-flex", alignItems: "center", gap: "6px" }}
+    >
       {language === "ko"
-        ? `마지막 페이지에서 다음 단계로 (${pageNav.page + 1}/${pageNav.totalPages})`
-        : `Continue on the last page (${pageNav.page + 1}/${pageNav.totalPages})`}
-    </div>
+        ? `다음 페이지 (${pageNav.page + 1}/${pageNav.totalPages})`
+        : `Next page (${pageNav.page + 1}/${pageNav.totalPages})`}
+      <ChevronRight size={15} strokeWidth={2.4} aria-hidden />
+    </button>
   ) : null;
 
   // ── 로컬 상태 (DashboardContext에 포함되지 않는 것들) ──

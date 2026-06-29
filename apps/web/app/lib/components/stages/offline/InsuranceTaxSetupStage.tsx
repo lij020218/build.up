@@ -257,11 +257,11 @@ export function InsuranceTaxSetupStage() {
           ═════════════════════════════════════════════════════════ */}
       <StartupKeyActionHero
         eyebrow="KEY ACTION"
-        title="첫 직원 채용 시 4가지 의무 — 근로계약서 즉시 + 4대보험 14일 + 원천세 매월"
+        title="첫 직원 채용 시 4가지 의무 — 근로계약서 즉시 + 4대보험 취득신고(건강14일·기타 익월15일) + 원천세 매월"
         subtitle={
           <>
             직원 1명만 채용해도 4가지 의무 자동 발생: <strong style={{ fontWeight: 700 }}>① 근로계약서 (미체결 500만 과태료)</strong> +
-            <strong style={{ fontWeight: 700 }}> ② 4대보험 14일 이내</strong> +
+            <strong style={{ fontWeight: 700 }}> ② 4대보험 취득신고(건강14일·기타 익월15일)</strong> +
             <strong style={{ fontWeight: 700 }}> ③ 원천세 매월 10일</strong> +
             <strong style={{ fontWeight: 700 }}> ④ 급여 시스템</strong>. 5인 미만 예외 X.
             <strong style={{ fontWeight: 700 }}> 두루누리 80% 지원 (270만 미만·10인 미만, 36개월)</strong> 신고 시점에만 신청 가능.
@@ -297,7 +297,7 @@ export function InsuranceTaxSetupStage() {
                 },
                 {
                   accent: MIDNIGHT,
-                  title: "4대보험 14일 이내 신고 — 5인 미만 예외 X",
+                  title: "4대보험 취득 신고(건강 14일·기타 익월 15일) — 5인 미만 예외 X",
                   body:
                     "근로자 1명만 채용해도 4대사회보험 (국민연금·건강보험·고용·산재) 가입 의무. 건강보험 14일 / 국민연금·고용·산재 다음달 15일까지. 미신고 시 가산세 + 소급납부. 국세청은 카드 매출 분석(PCI) 으로 무신고 추적.",
                 },
@@ -830,7 +830,7 @@ export function InsuranceTaxSetupStage() {
         ]}
         verifyItemsKo={[
           "1인 사장님 — 본인 국민연금·건강보험 「지역가입자」로 자동 전환, 사업자 신고 시 분리 가입",
-          "직원 채용 14일 이내 4insure.or.kr 통합 신고 — 누락 시 과태료 + 소급 보험료 부담",
+          "직원 채용 시 4insure.or.kr 4대보험 취득 신고(건강 14일·기타 익월 15일) — 누락 시 과태료 + 소급 보험료 부담",
           "원천세 — 매월 10일 자동이체 셋업, 납부지연 시 미납세액 3% + 일 0.022% 가산세 (홈택스 자동납부 권장)",
           "산재보험 — 사업주 100% 부담 별도 계산, 업종별 요율 적용 (외식 0.8%, 미용 0.7% 수준)",
           "퇴직금 — 1년 근속 + 주 15시간 이상 의무, 매월 12분의 1 적립 권장 (분쟁 1순위)",

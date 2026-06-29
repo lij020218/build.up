@@ -71,6 +71,7 @@ public struct MvpBuildStageView: View {
                 nextSummary: "MVP 출시·첫 사용자·PMF 신호 → 런칭 GTM 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

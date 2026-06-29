@@ -79,6 +79,7 @@ public struct OnlineRegistrationStageView: View {
                 nextSummary: "사업자등록·통신판매 신고 완료 → 공급처·소싱 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

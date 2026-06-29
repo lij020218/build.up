@@ -83,6 +83,7 @@ public struct RegulatorySubmissionStageView: View {
                 nextSummary: "규제 패키지가 제출됐다면 승인 대응 단계로 진행하세요."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

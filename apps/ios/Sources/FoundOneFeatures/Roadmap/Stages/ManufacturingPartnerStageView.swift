@@ -72,6 +72,7 @@ public struct ManufacturingPartnerStageView: View {
                 nextSummary: "양산 파트너와 첫 물량 계획이 확정되면 본격 생산·출하 단계로 넘어갑니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

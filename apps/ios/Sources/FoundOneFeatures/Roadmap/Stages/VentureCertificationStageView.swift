@@ -70,6 +70,7 @@ public struct VentureCertificationStageView: View {
                 nextSummary: "벤처 유형·요건·신청 완료 → 인증 후 혜택 활성화 + 세무 가이드 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

@@ -57,11 +57,11 @@ export const HIRING_SETUP_CONTENT: StageContent = {
   keyAction: {
     eyebrow: "이 단계에서 꼭 할 일",
     title: "첫 직원 채용 60분 — 근로계약서 + 4대보험 + 원천세 3축 점검",
-    subtitle: "공고 → 면접 → 계약서 2부 + 1부 교부 → 14일 이내 4대보험 통합 신고 → 매월 원천세. 빠뜨리면 과태료 + 임금 체불 신고 + 세무조사 리스크.",
+    subtitle: "공고 → 면접 → 계약서 2부 + 1부 교부 → 4대보험 취득 신고(건강 14일·기타 익월 15일) → 매월 원천세. 빠뜨리면 과태료 + 임금 체불 신고 + 세무조사 리스크.",
     pillars: [
       { icon: "users", label: "공고", meta: "알바몬·당근·사람인" },
       { icon: "fileText", label: "계약", meta: "2부 + 1부 교부" },
-      { icon: "shieldCheck", label: "보험·세금", meta: "14일 + 월 10일" },
+      { icon: "shieldCheck", label: "보험·세금", meta: "익월 15일 + 월 10일" },
     ],
   },
   pages: [
@@ -78,8 +78,8 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           outlineEyebrow: "이 단계에서 진행 — 총 5단계",
           workOutline: [
             { title: "공고", detail: "알바몬·당근에 구체 공고 등록 (시급·시간·식사)", time: "30분" },
-            { title: "계약서", detail: "표준 근로계약서 2부 + 1부 교부 (필수 4항목)", time: "20분" },
-            { title: "보험·세금", detail: "14일 이내 4대보험 통합 신고 + 매월 원천세", time: "30분" },
+            { title: "계약서", detail: "표준 근로계약서 2부 + 1부 교부 (필수 5대 항목)", time: "20분" },
+            { title: "보험·세금", detail: "4대보험 취득 신고(건강 14일·기타 익월 15일) + 매월 원천세", time: "30분" },
             { title: "첫 달", detail: "주휴수당·연장수당 정확히 + 급여명세서 교부", time: "월 30분" },
             { title: "마무리", detail: "공식 사이트 바로가기 + 자주 빠뜨리는 항목 점검" },
           ],
@@ -137,11 +137,11 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           axis: "contract",
           stepLabel: "2. 근로계약서",
           time: "20분",
-          headline: "계약서 2부 작성 → 1부 반드시 직원 교부 (필수 4항목)",
+          headline: "계약서 2부 작성 → 1부 반드시 직원 교부 (필수 5대 항목)",
           why: "계약서 미교부는 500만원 이하 과태료 + 임금 체불 신고 사유. 구두 약속은 분쟁 시 100% 사장님 불리. 표준 양식 사용이 가장 안전.",
           tasks: [
             { id: "cont-1", title: "고용노동부 표준 근로계약서 다운 (무료)", detail: "moel.go.kr → 「근로계약서」 검색 → 표준 양식 PDF. 임시·기간제·정규직 양식 분리." },
-            { id: "cont-2", title: "필수 4항목 명시 — 임금·시간·휴게·계약기간", detail: "① 임금 (시급/월급, 지급일, 지급방법) ② 근무 시간·요일 + 휴게 (4h↑ 30분 / 8h↑ 1시간) ③ 업무·근무지 ④ 계약기간 (기간제 vs 무기)." },
+            { id: "cont-2", title: "필수 5대 항목 명시 — 임금·소정근로시간·주휴일·연차·근로조건", detail: "① 임금(구성·계산·지급방법) ② 소정근로시간·휴게(4h↑ 30분/8h↑ 1시간) ③ 주휴일 ④ 연차유급휴가 ⑤ 취업장소·담당업무. 기간제·단시간은 근로계약기간 추가." },
             { id: "cont-3", title: `2026 최저시급 ${WAGE_D}원 기준 수치 검증`, detail: `월 ${MONTH_HOURS}시간(주 40h × 4.345주) × ${WAGE_D}원 = ${MONTH_WAGE_D}원. 주휴수당 별도. minimumwage.go.kr 모의 계산기로 확인.` },
             { id: "cont-4", title: "2부 인쇄 → 양측 서명 → 1부 직원 교부", detail: "교부 영수증 받아두면 분쟁 시 증거. 메일로 PDF 전송도 합법 (수신 확인 보존)." },
           ],
@@ -174,7 +174,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           axis: "insurance",
           stepLabel: "3. 4대보험 + 원천세",
           time: "30분",
-          headline: "채용 14일 이내 4insure.or.kr 통합 신고 + 매월 10일 원천세",
+          headline: "채용 시 4insure.or.kr 4대보험 취득 신고(건강 14일·기타 익월 15일) + 매월 10일 원천세",
           why: "5인 미만 사업장도 4대보험 의무. 1인 고용부터 의무. 미신고는 소급 납부 + 가산세. 원천세 누락은 세무조사 사유. 한 번에 셋업하면 매월 자동.",
           tasks: [
             { id: "ins-1", title: "4insure.or.kr 통합 신고 (D+14 이내)", detail: "국민연금·건강·고용·산재 한 사이트. 사업자등록증·근로계약서·통장사본 PDF 업로드. 평균 30분." },
@@ -193,7 +193,7 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           kind: "linkCards",
           eyebrow: "보험·세금 공식 사이트 — 클릭하면 바로 이동",
           links: [
-            { name: "4대보험 정보연계센터", desc: "국민연금·건강·고용·산재 통합 신고 (필수, 채용 14일 이내)", url: "https://www.4insure.or.kr", badge: "4대" },
+            { name: "4대보험 정보연계센터", desc: "국민연금·건강·고용·산재 통합 신고 (필수 · 건강 14일·기타 익월 15일)", url: "https://www.4insure.or.kr", badge: "4대" },
             { name: "홈택스", desc: "원천세 매월 신고·납부, 사업자등록·연말정산", url: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3", badge: "홈" },
             { name: "국민건강보험공단", desc: "직원 보험료 조회·납부", url: "https://www.nhis.or.kr", badge: "건강" },
             { name: "근로복지공단", desc: "산재·고용보험 가입·신고 (사업주 부담)", url: "https://www.comwel.or.kr", badge: "근로" },
@@ -241,14 +241,14 @@ export const HIRING_SETUP_CONTENT: StageContent = {
     nextStageLabel: "다음 단계(운영·마케팅 준비) 전 반드시 확인",
     doneItems: [
       { label: "1. 채용 공고 등록", detail: "알바몬·알바천국·당근·사람인 — 시급·시간·요일·식사 4항목 구체화" },
-      { label: "2. 근로계약서 작성·교부", detail: "표준 양식 2부 + 1부 직원 교부 + 4항목(임금·시간·휴게·기간) 명시 + 채용 비용 시뮬" },
-      { label: "3. 4대보험 + 원천세 셋업", detail: "4insure.or.kr 통합 신고(D+14) + 홈택스 매월 10일 원천세 + 자동이체" },
+      { label: "2. 근로계약서 작성·교부", detail: "표준 양식 2부 + 1부 직원 교부 + 5대 항목(임금·소정근로시간·주휴일·연차·근로조건) 명시 + 채용 비용 시뮬" },
+      { label: "3. 4대보험 + 원천세 셋업", detail: "4insure.or.kr 통합 신고(건강 D+14·기타 익월 15일) + 홈택스 매월 10일 원천세 + 자동이체" },
       { label: "4. 첫 달 운영 표준 셋업", detail: "주휴수당·연장수당 정확 계산 + 급여명세서 자동 발송 + (선택) CPA·SaaS 자동화" },
     ],
     verifyItems: [
       "근로계약서 1부 직원 교부 영수증·수신 확인 — 미교부 500만원 이하 과태료",
       "주휴수당 「포함된 시급」 X — 시급·주휴수당 별도 표기 (위반 시 차액·가산금)",
-      "4대보험 채용 14일 이내 신고 완료 — 5인 미만도 의무, 1인 고용부터 적용",
+      "4대보험 취득 신고 완료(건강 14일·기타 익월 15일) — 5인 미만도 의무, 1인 고용부터 적용",
       "원천세 매월 10일까지 홈택스 자동 납부 셋업 — 납부지연 시 미납세액 3% + 일 0.022% 가산세",
       "급여명세서 카톡·메일 자동 발송 셋업 — 2021.11~ 미교부 500만원 이하 과태료",
       "산재보험 사업주 100% 부담 별도 계산 — 업종별 요율 0.7~5.6%",

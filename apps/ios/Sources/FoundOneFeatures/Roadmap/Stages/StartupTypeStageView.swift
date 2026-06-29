@@ -152,6 +152,7 @@ public struct StartupTypeStageView: View {
                 nextSummary: "창업 형태 확정 → 운영 모델(고정매장·홀 중심·배달 중심·하이브리드) 선택 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pageLabels.count
         ) {
             VStack(alignment: .leading, spacing: 16) {
