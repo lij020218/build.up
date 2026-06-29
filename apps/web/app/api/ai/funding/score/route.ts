@@ -214,7 +214,7 @@ export async function POST(request: Request) {
   const daily = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "funding-score",
-    limit: 20,
+    limit: 3,
     message: "오늘의 AI 평가 횟수(20회)를 모두 사용하셨습니다. 내일 다시 시도해 주세요.",
   });
   if (!daily.ok) return NextResponse.json({ error: daily.error }, { status: 429 });

@@ -1,4 +1,4 @@
-import { createAiClient } from "../utils/client";
+import { createAiClient, createRealAnthropicClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -9,6 +9,8 @@ import type { ContractAnalysisResult, ContractClause, ContractType } from "./pro
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
+// 계약서 분석은 법률 고위험 기능 — 진짜 Claude 경로(useRealClaude)에서는 법률 벤치 최상위 Opus 4.8 사용.
+const REAL_CLAUDE_MODEL = "claude-opus-4-8";
 const DEFAULT_MAX_TOKENS = 2048;
 
 // 계약서는 분석 내용이 많을 수 있어 다른 기능보다 max_tokens를 높게 설정합니다.
@@ -93,19 +95,25 @@ const MAX_CONTRACT_LENGTH = 10_000;
 
 export async function analyzeContract(
   contractText: string,
-  options: AiCallOptions,
+  options: AiCallOptions & {
+    /** true 면 진짜 Anthropic(Claude) 호출 — 기본 모델 Opus 4.8. false/미설정 = OpenAI 셔임(gpt-5.4-mini). */
+    useRealClaude?: boolean;
+  },
   contractType: ContractType = "commercial_lease"
 ): Promise<ContractAnalysisResult> {
   const truncated = contractText.slice(0, MAX_CONTRACT_LENGTH);
-  const client = createAiClient(options.apiKey);
+  const client = options.useRealClaude
+    ? createRealAnthropicClient(options.apiKey)
+    : createAiClient(options.apiKey);
 
   const userMessage = buildContractUserPrompt(truncated, contractType);
   const systemPrompt = getSystemPromptForType(contractType);
+  const model = options.model ?? (options.useRealClaude ? REAL_CLAUDE_MODEL : DEFAULT_MODEL);
 
   const message = await client.messages.create({
-    model: options.model ?? DEFAULT_MODEL,
+    model,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    // ✦ Prompt Caching — 같은 contract type 반복 분석 시 90% 절감
+    // ✦ Prompt Caching — 같은 contract type 반복 분석 시 절감(셔임은 OpenAI 자동캐싱)
     system: systemWithCache(systemPrompt),
     messages: [{ role: "user", content: userMessage }]
   });

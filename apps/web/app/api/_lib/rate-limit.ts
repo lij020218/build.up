@@ -122,12 +122,79 @@ export async function checkSimpleRateLimit(params: {
   return { ok: true, remaining, limit, resetAt: reset };
 }
 
+/** 다음 KST(UTC+9, DST 없음) 자정의 epoch(ms). 일일 한도 resetAt 표시용. */
+function nextKstMidnightMs(): number {
+  const dayMs = 86_400_000;
+  const kstNow = Date.now() + 9 * 3_600_000;
+  const nextKstMidnight = Math.floor(kstNow / dayMs) * dayMs + dayMs;
+  return nextKstMidnight - 9 * 3_600_000;
+}
+
+/** supabase-admin 동적 로드 — edge 번들에 service_role 클라이언트가 끌려들어가지 않도록. */
+async function getDailyQuotaAdmin() {
+  try {
+    const mod = await import("./supabase-admin");
+    return mod.getSupabaseAdmin();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 아이디(uid)·기능별 일일 한도. 우선순위:
+ *  1) Upstash 설정 시 슬라이딩 24h 윈도우 (가장 정확).
+ *  2) 미설정 시 Supabase 원자적 카운터(consume_ai_daily_quota) — 서버리스 cross-instance 안전, KST 자정 리셋.
+ *  3) 둘 다 불가 시 in-memory(로컬 dev 전용; prod 서버리스에선 2)가 잡음).
+ */
 export async function checkDailyRateLimit(params: {
   userId: string;
   feature: string;
   limit: number;
   message?: string;
 }): Promise<RateLimitResult> {
+  const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (hasUpstash) {
+    return await checkSimpleRateLimit({
+      key: `daily:${params.feature}:${params.userId}`,
+      limit: params.limit,
+      windowMs: 24 * 60 * 60 * 1000,
+      message: params.message,
+    });
+  }
+
+  const sb = await getDailyQuotaAdmin();
+  if (sb) {
+    try {
+      const { data, error } = await sb.rpc("consume_ai_daily_quota", {
+        p_user_id: params.userId,
+        p_feature: params.feature,
+        p_limit: params.limit,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!error && row && typeof row.allowed === "boolean") {
+        const resetAt = nextKstMidnightMs();
+        if (!row.allowed) {
+          return {
+            ok: false,
+            status: 429,
+            error: params.message ?? "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+            remaining: 0,
+            limit: params.limit,
+            resetAt,
+          };
+        }
+        return {
+          ok: true,
+          remaining: Math.max(0, params.limit - Number(row.used ?? 0)),
+          limit: params.limit,
+          resetAt,
+        };
+      }
+    } catch {
+      // fall through to in-memory
+    }
+  }
+
   return await checkSimpleRateLimit({
     key: `daily:${params.feature}:${params.userId}`,
     limit: params.limit,

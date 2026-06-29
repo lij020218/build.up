@@ -10,6 +10,7 @@
  */
 
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const LONG_TIMEOUT_MS = 60_000;
@@ -312,6 +313,16 @@ export function createAiClient(apiKey: string): LlmClient {
 
 export function createLongAiClient(apiKey: string): LlmClient {
   return new LlmClient(apiKey, { timeout: LONG_TIMEOUT_MS });
+}
+
+/**
+ * 진짜 Anthropic(Claude) 클라이언트 — 위 LlmClient(OpenAI 셔임)와 달리 실제 Claude API 호출.
+ *  고위험·고가치 기능(계약서 분석 등)만 선택적으로 진짜 Opus 로 올릴 때 사용.
+ *  apiKey 는 ANTHROPIC_API_KEY(getRealAnthropicApiKey) 여야 함. messages.create 시그니처는
+ *  LlmClient 와 동일(Anthropic shape)이라 호출처 파싱 코드 재사용 가능.
+ */
+export function createRealAnthropicClient(apiKey: string, timeoutMs: number = LONG_TIMEOUT_MS): Anthropic {
+  return new Anthropic({ apiKey, timeout: timeoutMs });
 }
 
 /**

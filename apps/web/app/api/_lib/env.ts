@@ -61,6 +61,16 @@ export function getOpenAiApiKey(): string | undefined {
   return key && key.length >= 10 ? key : undefined;
 }
 
+/**
+ * 진짜 Anthropic(Claude) 키 — getAnthropicApiKey 의 OpenAI 리다이렉트와 달리 ANTHROPIC_API_KEY 직접 반환.
+ *   고위험·고가치 기능(계약서 분석 등)만 선택적으로 진짜 Opus 4.8 로 올릴 때 사용.
+ *   미설정이면 호출처가 OpenAI 셔임으로 graceful fallback.
+ */
+export function getRealAnthropicApiKey(): string | undefined {
+  const key = getEnvVar("ANTHROPIC_API_KEY");
+  return key && key.length >= 10 ? key : undefined;
+}
+
 /** 네이버 DataLab·Search API — Client ID/Secret 쌍 */
 export function getNaverApiCreds(): { clientId: string; clientSecret: string } | undefined {
   const clientId = getEnvVar("NAVER_CLIENT_ID");

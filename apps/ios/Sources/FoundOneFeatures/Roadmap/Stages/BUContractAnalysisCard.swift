@@ -110,6 +110,12 @@ public struct BUContractAnalysisCard: View {
             bulletGroup("누락 확인 항목", r.missingItems)
             bulletGroup("특이 조건", r.unusualTerms)
             bulletGroup("다음 행동", r.nextActions)
+
+            Divider().padding(.top, 4)
+            Text("이 분석은 AI가 입력하신 계약서 텍스트만 보고 1차로 짚어드린 결과라 오류나 빠진 부분이 있을 수 있습니다. 참고용으로만 활용하시고, 서명 여부에 대한 최종 판단과 책임은 본인에게 있습니다. 금액이 크거나 중요한 계약은 변호사·공인노무사·가맹거래사 등 전문가 검토를 함께 받으시길 권장합니다.")
+                .font(BUFont.bodyCaption)
+                .foregroundStyle(BUColor.inkMuted)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

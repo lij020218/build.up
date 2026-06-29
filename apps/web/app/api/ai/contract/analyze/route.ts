@@ -2,7 +2,7 @@ import { analyzeContract, AiParseError } from "@foundone/ai";
 import type { ContractAnalysisResult, ContractType } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
-import { getAnthropicApiKey } from "../../../_lib/env";
+import { getAnthropicApiKey, getRealAnthropicApiKey } from "../../../_lib/env";
 import { getRequestId, logApiError, logApiEvent } from "../../../_lib/observability";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
@@ -57,14 +57,17 @@ export async function POST(request: Request) {
   const dailyLimit = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "contract-analyze",
-    limit: 5,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+    limit: 3,
+    message: "오늘 계약서 분석 사용량(하루 3회)을 초과했습니다. 내일 다시 시도해 주세요.",
   });
   if (!dailyLimit.ok) {
     return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
-  const apiKey = getAnthropicApiKey();
+  // 계약서 분석은 법률 고위험 기능 — 진짜 Claude(Opus 4.8) 우선. 키 없으면 OpenAI 셔임으로 graceful fallback.
+  const realClaudeKey = getRealAnthropicApiKey();
+  const apiKey = realClaudeKey ?? getAnthropicApiKey();
+  const useRealClaude = !!realClaudeKey;
   if (!apiKey) {
     return NextResponse.json(
       { error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." },
@@ -99,7 +102,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await analyzeContract(text, { apiKey }, contractType);
+    const result = await analyzeContract(text, { apiKey, useRealClaude }, contractType);
     return NextResponse.json(result satisfies ContractAnalysisResult, {
       headers: {
         "x-request-id": requestId

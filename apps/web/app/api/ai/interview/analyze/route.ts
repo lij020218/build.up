@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const dailyLimit = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "interview-analyze",
-    limit: 5,
+    limit: 3,
     message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
   });
   if (!dailyLimit.ok) {

@@ -119,6 +119,19 @@ export function ContractAiAnalysisPanel({ ko }: { ko: boolean }) {
           {effectiveContractAnalysis.nextActions.slice(0, 3).map((item) => (
             <div key={item} style={styles.aiHelper}>• {item}</div>
           ))}
+          <div
+            style={{
+              ...styles.aiHelper,
+              marginTop: "12px",
+              paddingTop: "10px",
+              borderTop: "1px solid rgba(0,0,0,0.08)",
+              lineHeight: 1.6,
+            }}
+          >
+            {ko
+              ? "이 분석은 AI가 입력하신 계약서 텍스트만 보고 1차로 짚어드린 결과라 오류나 빠진 부분이 있을 수 있습니다. 참고용으로만 활용하시고, 서명 여부에 대한 최종 판단과 책임은 본인에게 있습니다. 금액이 크거나 중요한 계약은 변호사·공인노무사·가맹거래사 등 전문가 검토를 함께 받으시길 권장합니다."
+              : "This is an AI first-pass based only on the text you pasted, so it may contain errors or gaps. Use it for reference only — the final decision and responsibility for signing rest with you. For high-value or important contracts, we recommend additional review by a lawyer or licensed professional."}
+          </div>
         </div>
       ) : null}
     </div>
