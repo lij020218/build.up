@@ -3,7 +3,6 @@
 import {
   buildRoadmapState,
   getFranchiseBrandById,
-  resolveNextStageIds,
   saveRoadmapState,
   saveStoreData,
   toggleStageTask,
@@ -12,7 +11,13 @@ import {
 } from "@foundone/shared";
 import { useProfileStore, useRoadmapStore, useOnboardingStore } from "../stores";
 import { supabase } from "../../../lib/supabase";
-import { baseRoadmap, buildTransitionNotice, getContractTaskDetail, markViewedStageAdvanced } from "../helpers";
+import {
+  baseRoadmap,
+  buildTransitionNotice,
+  getContractTaskDetail,
+  markViewedStageAdvanced,
+  resolveViewingTargetAfterStageAdvance,
+} from "../helpers";
 import type { DashboardDeps } from "../types";
 import { SURFACE_HREFS } from "../constants";
 import { getKstDate } from "../utils/business-day";
@@ -46,6 +51,16 @@ export function useTaskHandlers(
     setTransitionNotice,
   } = useOnboardingStore();
 
+  const applyTaskOnlyTransition = (stageId: string, result: ReturnType<typeof toggleStageTask>) => {
+    // Task-only changes must not navigate the user forward; explicit continue handles progression.
+    setTaskMap(result.tasks);
+    setRoadmap(result.roadmap);
+
+    if (result.roadmap.currentStageId !== stageId && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(stageId);
+    }
+  };
+
   // ── Contract-specific task toggle (⚠️ 체크리스트 100% 가드) ──
   const handleContractTaskToggle = (taskId: string) => {
     const currentTasks = taskMap["contract-review"] ?? [];
@@ -72,15 +87,7 @@ export function useTaskHandlers(
 
     const result = toggleStageTask(baseRoadmap, decisions, taskMap, "contract-review", taskId);
 
-    // Task toggles update only taskMap. Stage progression is gated by completedAt,
-    // which is created by the explicit continue action.
-    setTaskMap(result.tasks);
-    setRoadmap(result.roadmap);
-
-    // 이미 completedAt 이 있는 legacy/edit 상태에서는 현재 작업 화면을 유지한다.
-    if (result.roadmap.currentStageId !== "contract-review" && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId("contract-review");
-    }
+    applyTaskOnlyTransition("contract-review", result);
   };
 
   // ── Contract continue ──
@@ -109,13 +116,7 @@ export function useTaskHandlers(
     const existing = currentTasks.find((task) => task.taskId === taskId);
     if (!existing) return;
     const result = toggleStageTask(baseRoadmap, decisions, taskMap, stageId, taskId);
-    // Task toggles update only taskMap. Stage progression is gated by completedAt.
-    setTaskMap(result.tasks);
-    setRoadmap(result.roadmap);
-    // 이미 completedAt 이 있는 legacy/edit 상태에서는 현재 작업 화면을 유지한다.
-    if (result.roadmap.currentStageId !== stageId && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(stageId);
-    }
+    applyTaskOnlyTransition(stageId, result);
   };
 
   // ── Generic stage completion (saves decisions to Supabase via saveRoadmapState) ──
@@ -142,51 +143,14 @@ export function useTaskHandlers(
     //   추가 (2026-05-18): biz-registration / pre-launch / online-marketing 의 default
     //   nextStageIds = "financial-review" 인데, decisions zombie 시 condition 매칭 실패 →
     //   default fall through → financial-review 로 점프. 이걸 array index 거리로 sanity check.
-    const completedStageDef = result.roadmap.stages.find((s) => s.stageId === stageId);
-    const explicitNextIds = completedStageDef
-      ? resolveNextStageIds(completedStageDef, result.decisions)
-      : [];
-    const stageById = new Map(result.roadmap.stages.map((s) => [s.stageId, s]));
-    const explicitNext = explicitNextIds
-      .map((id) => stageById.get(id))
-      .find(Boolean);
-
-    // ── Sanity check: array 순서로 stage index 차이가 ≥ 4 면 zombie 점프 의심 ──
-    //  starter-data 의 stages 배열은 *cluster path 순서* 와 완벽 일치하지는 않지만, 정상 진행
-    //  시 다음 stage 는 보통 인덱스 0~3 이내. 4+ 면 비정상 점프 가능성 매우 높음.
-    //  이 경우 *array 순서의 다음 unlocked stage* 를 추정해서 사용 (가장 가까운 path 추정).
-    const completedIdx = result.roadmap.stages.findIndex((s) => s.stageId === stageId);
-    const explicitIdx = explicitNext ? result.roadmap.stages.findIndex((s) => s.stageId === explicitNext.stageId) : -1;
-    // ⚠️ 2026-06-26 fix (사장님 신고: 19단계 소프트오픈 완료→다음→13단계 대출가이드 점프):
-    //   array 순서 ≠ path 순서. pre-launch(offline 섹션, idx 낮음) → financial-review(tail 섹션,
-    //   idx 높음) 는 *정상* 전환인데 array 거리가 4 초과라 false-positive 로 suspicious 판정 →
-    //   fallback 이 array 상 다음 non-locked(=loan-guide, tail 앞쪽 unlocked) 를 잘못 선택했다.
-    //   nextStageConditions 가 *없는* stage 는 다음이 결정적(조건 fallthrough 불가능) → explicitNext
-    //   를 무조건 신뢰해야 한다. zombie 점프(조건 매칭 실패→default fall through)는 조건분기 보유
-    //   stage 에서만 발생하므로 heuristic 도 그 경우에만 적용.
-    const hasNextConditions = (completedStageDef?.nextStageConditions?.length ?? 0) > 0;
-    const isSuspiciousJump =
-      hasNextConditions &&
-      completedIdx >= 0 &&
-      explicitIdx >= 0 &&
-      explicitIdx - completedIdx > 4;
-
-    let viewingTarget: string | null = null;
-    if (isSuspiciousJump) {
+    const viewingResolution = resolveViewingTargetAfterStageAdvance(stageId, result.roadmap, result.decisions);
+    if (viewingResolution.isSuspiciousJump) {
       console.warn(
-        `[handleStageContinue] zombie 점프 감지: ${stageId} (idx ${completedIdx}) → ${explicitNext?.stageId} (idx ${explicitIdx}). decisions 의 industry-selection.inputs.categoryId / startup-type.inputs.startupType 누락 의심. array 순서의 직계 다음 available stage 로 fallback.`,
+        `[handleStageContinue] zombie 점프 감지: ${stageId} (idx ${viewingResolution.completedIdx}) → ${viewingResolution.explicitNextStageId} (idx ${viewingResolution.explicitIdx}). decisions 의 industry-selection.inputs.categoryId / startup-type.inputs.startupType 누락 의심. array 순서의 직계 다음 available stage 로 fallback.`,
         { decisions: result.decisions },
       );
-      // array 순서로 직계 다음 *available* stage (완료·locked 제외 — 완료 단계로 되돌아가지 않게)
-      const fallback = result.roadmap.stages
-        .slice(completedIdx + 1)
-        .find((s) => s.status === "available");
-      viewingTarget = fallback?.stageId ?? null;
-    } else if (explicitNext && explicitNext.stageId !== result.roadmap.currentStageId) {
-      // 정상 path: explicit next 로 viewing
-      viewingTarget = explicitNext.stageId;
     }
-    setViewingStageId(viewingTarget);
+    setViewingStageId(viewingResolution.viewingTarget);
     setTransitionNotice(buildTransitionNotice(result.roadmap, language));
     // ⚠️ URL cleanup: ?editStage= 쿼리가 남아있으면 제거.
     //   useTaskAutoCompletion.ts:72 의 useEffect([activeSurface, searchParams]) 가

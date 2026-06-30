@@ -3,6 +3,7 @@ import {
   formatGuideSectionTitle,
   localizeStage,
   markStageAdvanced,
+  resolveNextStageIds,
   starterRoadmap,
   starterStageFlow,
   starterTaskMap,
@@ -370,6 +371,65 @@ export function markViewedStageAdvanced(
   extraDecisionFields?: StageAdvancePatch,
 ): StageTransitionResult {
   return markStageAdvanced(baseRoadmap, roadmap, decisions, taskMap, stageId, extraDecisionFields);
+}
+
+export type StageAdvanceViewingTarget = {
+  viewingTarget: string | null;
+  isSuspiciousJump: boolean;
+  completedIdx: number;
+  explicitIdx: number;
+  explicitNextStageId?: string;
+};
+
+export function resolveViewingTargetAfterStageAdvance(
+  stageId: string,
+  roadmap: RoadmapState,
+  decisions: WorkflowDecisionMap,
+): StageAdvanceViewingTarget {
+  const completedStageDef = roadmap.stages.find((stage) => stage.stageId === stageId);
+  const explicitNextIds = completedStageDef
+    ? resolveNextStageIds(completedStageDef, decisions)
+    : [];
+  const stageById = new Map(roadmap.stages.map((stage) => [stage.stageId, stage]));
+  const explicitNext = explicitNextIds
+    .map((id) => stageById.get(id))
+    .find(Boolean);
+
+  const completedIdx = roadmap.stages.findIndex((stage) => stage.stageId === stageId);
+  const explicitIdx = explicitNext ? roadmap.stages.findIndex((stage) => stage.stageId === explicitNext.stageId) : -1;
+  // Only conditional stages can fall through to a zombie default. Unconditional
+  // long jumps such as pre-launch -> financial-review are valid path edges even
+  // when their starter-data array indexes are far apart.
+  const hasNextConditions = (completedStageDef?.nextStageConditions?.length ?? 0) > 0;
+  const isSuspiciousJump =
+    hasNextConditions &&
+    completedIdx >= 0 &&
+    explicitIdx >= 0 &&
+    explicitIdx - completedIdx > 4;
+
+  if (isSuspiciousJump) {
+    const fallback = roadmap.stages
+      .slice(completedIdx + 1)
+      .find((stage) => stage.status === "available");
+
+    return {
+      viewingTarget: fallback?.stageId ?? null,
+      isSuspiciousJump,
+      completedIdx,
+      explicitIdx,
+      explicitNextStageId: explicitNext?.stageId,
+    };
+  }
+
+  return {
+    viewingTarget: explicitNext && explicitNext.stageId !== roadmap.currentStageId
+      ? explicitNext.stageId
+      : null,
+    isSuspiciousJump,
+    completedIdx,
+    explicitIdx,
+    explicitNextStageId: explicitNext?.stageId,
+  };
 }
 
 export type ContractTaskDetail = {

@@ -12,6 +12,7 @@ import {
   getFranchiseBrandsForCategory,
   saveStoreData,
   type RecommendationItem,
+  type StageTransitionResult,
   type WorkflowDecisionMap,
 } from "@foundone/shared";
 import {
@@ -145,6 +146,14 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
+  const applySelectionAdvance = (result: StageTransitionResult) => {
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
+    setViewingStageId(null);
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+  };
+
   const handleIndustryContinue = () => {
     if (!selectedIndustryId) return;
     const result = markViewedStageAdvanced("industry-selection", decisions, roadmap, taskMap, {
@@ -157,11 +166,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
         ...(selectedSpecialtyId ? { specialtyId: selectedSpecialtyId } : {}),
       },
     });
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applySelectionAdvance(result);
   };
 
   const handleBusinessModelContinue = () => {
@@ -170,11 +175,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       selectedPrimaryOptionId: selectedBusinessModelId,
       selectedOptionIds: [selectedBusinessModelId],
     });
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applySelectionAdvance(result);
   };
 
   const handleStartupTypeContinue = () => {
@@ -220,11 +221,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
         targetOpenDate: selectedOpenDate,
       },
     });
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applySelectionAdvance(result);
   };
 
   const handleLocationContinue = () => {
@@ -240,11 +237,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
         finalMarketTitle: finalSelectedMarket?.title ?? "",
       },
     });
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applySelectionAdvance(result);
   };
 
   const handleSignOut = async () => {

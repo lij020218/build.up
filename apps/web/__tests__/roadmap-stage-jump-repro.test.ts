@@ -9,20 +9,46 @@
  * 수정: healCompletedAtChain 이 resolveNextStageIds 로 사용자 path 를 따라가며 path 상 furthest 신호
  *   이전 path stage 만 backfill. off-path / path-이후 stage 는 건드리지 않는다.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   buildRoadmapState,
   markStageAdvanced,
   starterRoadmap,
   starterTaskMap,
+  completeStageTasks,
   healCompletedAtChain,
   toggleStageTask,
   traverseUserPath,
 } from "@foundone/shared";
+import { resolveViewingTargetAfterStageAdvance } from "../app/lib/helpers";
 
 const ISO = "2026-01-01T00:00:00.000Z";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyDec = any;
+
+function makeStage(
+  stageId: string,
+  status: "locked" | "available" | "in_progress" | "completed",
+  nextStageIds: string[],
+  nextStageConditions?: AnyDec,
+): AnyDec {
+  return {
+    stageId,
+    code: stageId,
+    title: stageId,
+    type: "task",
+    status,
+    stepNumber: 0,
+    totalSteps: 0,
+    goal: "",
+    whyNow: "",
+    completionRule: { kind: "required_tasks", requiredTaskIds: [] },
+    taskIds: [],
+    riskIds: [],
+    nextStageIds,
+    ...(nextStageConditions ? { nextStageConditions } : {}),
+  };
+}
 
 /** 음식 경로 + 대출 가이드 완료(신호)를 heal 에 통과시킨 결과 decisions. */
 function healWithLoanGuideSignal(): AnyDec {
@@ -157,5 +183,168 @@ describe("heal completedAt — path-aware (단계 점프 회귀 가드)", () => 
     expect(roadmapAfterButton.currentStageId).toBe("pre-launch");
     expect(roadmapAfterButton.completedStageIds).toContain("operations-setup");
     expect(afterButton.decisions["operations-setup"]?.completedAt).toBeTruthy();
+  });
+
+  it("자동 task 완료도 completedAt 을 만들지 않음 — form-driven task completion 안전장치", () => {
+    const baseRoadmap = {
+      roadmapId: starterRoadmap.roadmapId,
+      templateId: starterRoadmap.templateId,
+      stages: starterRoadmap.stages,
+    };
+    const decisions: AnyDec = {
+      "industry-selection": {
+        stageId: "industry-selection",
+        inputs: { categoryId: "food" },
+        completedAt: ISO,
+      },
+    };
+    const taskIds = starterTaskMap["operations-setup"].map((task) => task.taskId);
+    const transition = completeStageTasks(
+      baseRoadmap,
+      decisions,
+      starterTaskMap as AnyDec,
+      "operations-setup",
+      taskIds,
+    );
+
+    expect(transition.changed).toBe(true);
+    expect(transition.completedTaskIds).toEqual(taskIds);
+    expect(
+      transition.tasks["operations-setup"]
+        .filter((task) => taskIds.includes(task.taskId))
+        .every((task) => task.status === "completed"),
+    ).toBe(true);
+    expect(transition.decisions).toBe(decisions);
+    expect(transition.decisions["operations-setup"]?.completedAt).toBeFalsy();
+    expect(transition.roadmap.completedStageIds).not.toContain("operations-setup");
+
+    const secondTransition = completeStageTasks(
+      baseRoadmap,
+      decisions,
+      transition.tasks,
+      "operations-setup",
+      taskIds,
+    );
+    expect(secondTransition.changed).toBe(false);
+    expect(secondTransition.completedTaskIds).toEqual([]);
+    expect(secondTransition.tasks).toBe(transition.tasks);
+  });
+
+  it("명시적 다음 화면 계산: 조건 없는 큰 index 이동은 zombie fallback 으로 보지 않음", () => {
+    const roadmap: AnyDec = {
+      roadmapId: "r",
+      templateId: "t",
+      currentStageId: "loan-guide",
+      progressPercent: 0,
+      completedStageIds: ["pre-launch"],
+      unlockedStageIds: ["financial-review"],
+      stages: [
+        makeStage("pre-launch", "completed", ["financial-review"]),
+        makeStage("loan-guide", "available", []),
+        makeStage("menu-design", "available", []),
+        makeStage("vendor-setup", "available", []),
+        makeStage("operations-setup", "available", []),
+        makeStage("financial-review", "available", []),
+      ],
+    };
+
+    const result = resolveViewingTargetAfterStageAdvance("pre-launch", roadmap, {});
+
+    expect(result.isSuspiciousJump).toBe(false);
+    expect(result.explicitNextStageId).toBe("financial-review");
+    expect(result.viewingTarget).toBe("financial-review");
+  });
+
+  it("실제 음식 경로: pre-launch 완료 후 financial-review 로 이동하고 loan-guide 로 fallback 하지 않음", () => {
+    const baseRoadmap = {
+      roadmapId: starterRoadmap.roadmapId,
+      templateId: starterRoadmap.templateId,
+      stages: starterRoadmap.stages,
+    };
+    const branchDecision = {
+      "industry-selection": {
+        stageId: "industry-selection",
+        inputs: { categoryId: "food" },
+        completedAt: ISO,
+      },
+    };
+    const foodPath = traverseUserPath(starterRoadmap.stages, branchDecision as AnyDec, () => true)
+      .map((stage) => stage.stageId);
+    const preLaunchIndex = foodPath.indexOf("pre-launch");
+    expect(preLaunchIndex).toBeGreaterThan(0);
+
+    const decisions: AnyDec = { ...branchDecision };
+    for (const stageId of foodPath.slice(0, preLaunchIndex)) {
+      decisions[stageId] = {
+        ...(decisions[stageId] ?? { stageId }),
+        stageId,
+        completedAt: ISO,
+      };
+    }
+
+    const taskTransition = completeStageTasks(
+      baseRoadmap,
+      decisions,
+      starterTaskMap as AnyDec,
+      "pre-launch",
+      starterTaskMap["pre-launch"].map((task) => task.taskId),
+    );
+    const roadmapBeforeButton = buildRoadmapState(baseRoadmap, decisions, taskTransition.tasks);
+    const afterButton = markStageAdvanced(
+      baseRoadmap,
+      roadmapBeforeButton,
+      decisions,
+      taskTransition.tasks,
+      "pre-launch",
+    );
+
+    const result = resolveViewingTargetAfterStageAdvance(
+      "pre-launch",
+      afterButton.roadmap,
+      afterButton.decisions,
+    );
+
+    expect(afterButton.roadmap.currentStageId).toBe("financial-review");
+    expect(result.isSuspiciousJump).toBe(false);
+    expect(result.explicitNextStageId).toBe("financial-review");
+    expect(result.viewingTarget).toBeNull();
+    expect(afterButton.roadmap.currentStageId).not.toBe("loan-guide");
+  });
+
+  it("명시적 다음 화면 계산: 조건 stage 의 zombie default 큰 점프만 가까운 available 로 fallback", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      const roadmap: AnyDec = {
+        roadmapId: "r",
+        templateId: "t",
+        currentStageId: "financial-review",
+        progressPercent: 0,
+        completedStageIds: ["branch-stage"],
+        unlockedStageIds: ["near-available", "financial-review"],
+        stages: [
+          makeStage("branch-stage", "completed", ["financial-review"], [
+            {
+              decisionStageId: "industry-selection",
+              decisionKey: "categoryId",
+              matchValue: "food",
+              stageIds: ["food-next"],
+            },
+          ]),
+          makeStage("near-locked", "locked", []),
+          makeStage("near-available", "available", []),
+          makeStage("filler-a", "locked", []),
+          makeStage("filler-b", "locked", []),
+          makeStage("financial-review", "available", []),
+        ],
+      };
+
+      const result = resolveViewingTargetAfterStageAdvance("branch-stage", roadmap, {});
+
+      expect(result.isSuspiciousJump).toBe(true);
+      expect(result.explicitNextStageId).toBe("financial-review");
+      expect(result.viewingTarget).toBe("near-available");
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

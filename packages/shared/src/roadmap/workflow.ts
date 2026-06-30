@@ -6,6 +6,7 @@ import type {
   RoadmapStageState,
   RoadmapState,
   StageAdvancePatch,
+  StageTasksTransitionResult,
   TaskState,
   StageDecisionState,
   StageStatus,
@@ -646,6 +647,53 @@ export function toggleStageTask(
     stageId,
     taskId,
     changed: true
+  };
+}
+
+/**
+ * Marks form-driven tasks as completed without advancing the roadmap.
+ * This deliberately leaves decisions/completedAt untouched; explicit stage
+ * progression must go through markStageAdvanced or advanceCurrentStageIfComplete.
+ * completedTaskIds contains only tasks that changed during this call.
+ * When changed is false, the original task map is preserved and the roadmap is
+ * rebuilt from unchanged inputs.
+ */
+export function completeStageTasks(
+  baseRoadmap: RoadmapBaseState,
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap,
+  stageId: string,
+  taskIds: string[]
+): StageTasksTransitionResult {
+  let nextTasks = tasks;
+  const completedTaskIds: string[] = [];
+
+  for (const taskId of taskIds) {
+    const task = (nextTasks[stageId] ?? []).find((item) => item.taskId === taskId);
+    if (!task || task.status === "completed") continue;
+
+    nextTasks = updateTaskStatus(nextTasks, stageId, taskId, "completed");
+    completedTaskIds.push(taskId);
+  }
+
+  if (completedTaskIds.length === 0) {
+    return {
+      roadmap: buildRoadmapState(baseRoadmap, decisions, tasks),
+      decisions,
+      tasks,
+      stageId,
+      completedTaskIds,
+      changed: false
+    };
+  }
+
+  return {
+    roadmap: buildRoadmapState(baseRoadmap, decisions, nextTasks),
+    decisions,
+    tasks: nextTasks,
+    stageId,
+    completedTaskIds,
+    changed: completedTaskIds.length > 0
   };
 }
 

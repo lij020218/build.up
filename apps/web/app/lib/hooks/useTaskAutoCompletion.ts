@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { useRoadmapStore, useProfileStore } from "../stores";
-import { buildRoadmapState, updateTaskStatus } from "@foundone/shared";
-import type { WorkflowTaskMap } from "@foundone/shared";
+import { completeStageTasks } from "@foundone/shared";
 import { baseRoadmap } from "../helpers";
 import type { DashboardDeps, DashboardSurface } from "../types";
 
@@ -27,7 +26,7 @@ export function useTaskAutoCompletion(
 ) {
   const { searchParams } = deps;
   const {
-    decisions, taskMap, setTaskMap, setRoadmap,
+    decisions, setTaskMap, setRoadmap,
     viewingStageId, setViewingStageId,
     vendorSelections, opsSelections, opsPosChecks,
     softOpenChecks, softOpenPricing, softOpenSkips,
@@ -48,25 +47,26 @@ export function useTaskAutoCompletion(
     const liveDecisions = useRoadmapStore.getState().decisions;
     if (!liveTaskMap[stageId]) return { changed: false };
 
-    let nextTaskMap: WorkflowTaskMap = liveTaskMap;
-    let changed = false;
-    for (const { taskId, shouldComplete } of triggers) {
-      const task = (nextTaskMap[stageId] ?? []).find(t => t.taskId === taskId);
-      if (!task) continue;
-      if (!shouldComplete) continue;
-      if (task.status === "completed") continue;
-      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
-      changed = true;
-    }
-    if (!changed) return { changed: false };
+    const taskIds = triggers
+      .filter((trigger) => trigger.shouldComplete)
+      .map((trigger) => trigger.taskId);
+    if (taskIds.length === 0) return { changed: false };
 
-    const nextRoadmap = buildRoadmapState(baseRoadmap, liveDecisions, nextTaskMap);
-    setTaskMap(nextTaskMap);
-    setRoadmap(nextRoadmap);
+    const result = completeStageTasks(baseRoadmap, liveDecisions, liveTaskMap, stageId, taskIds);
+    if (!result.changed) return { changed: false };
+
+    setTaskMap(result.tasks);
+    setRoadmap(result.roadmap);
     return {
       changed: true,
-      viewingStageHint: nextRoadmap.currentStageId !== stageId ? stageId : undefined,
+      viewingStageHint: result.roadmap.currentStageId !== stageId ? stageId : undefined,
     };
+  };
+
+  const pinViewingStageAfterAutoComplete = (result: { viewingStageHint?: string }) => {
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   };
 
   // editStage URL 파라미터 → viewingStageId 동기화
@@ -103,9 +103,7 @@ export function useTaskAutoCompletion(
       { taskId: "equipment-planned",   shouldComplete: hasStep(2) },
       { taskId: "pos-selected",        shouldComplete: hasStep(3) || hasStep(4) },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorSelections]);
 
@@ -120,9 +118,7 @@ export function useTaskAutoCompletion(
       { taskId: "pos-live",               shouldComplete: allPosChecked },
       { taskId: "sns-setup",              shouldComplete: hasSns },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opsSelections, opsPosChecks]);
 
@@ -158,9 +154,7 @@ export function useTaskAutoCompletion(
       { taskId: "feedback-collected", shouldComplete: allDayChecked },
       { taskId: "final-checklist",    shouldComplete: allFeedbackChecked && allFinalResolved && finalAtLeastOne },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [softOpenChecks, softOpenPricing, softOpenSkips]);
 
@@ -175,9 +169,7 @@ export function useTaskAutoCompletion(
       { taskId: "company-formation-path", shouldComplete: !!(inputs.formationPath && (inputs.formationPath as string).length > 0) },
     ]);
     // ⚠️ 자동완료로 단계가 advance 되어도 화면은 핀 — 사용자가 "다음 단계로" 눌러야 이동(자동 화면 점프 차단).
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -189,9 +181,7 @@ export function useTaskAutoCompletion(
       { taskId: "business-structure-decided", shouldComplete: !!(guideSelections["biz-structure"]) },
       { taskId: "tax-setup-basics", shouldComplete: !!(guideSelections["tax-type"]) },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -204,9 +194,7 @@ export function useTaskAutoCompletion(
       { taskId: "pain-pattern-documented", shouldComplete: !!(guideSelections["analysis-notes"] && (guideSelections["analysis-notes"] as string).length >= 10) },
       { taskId: "narrow-wedge-defined", shouldComplete: !!(guideSelections["analysis-result"]) },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -217,9 +205,7 @@ export function useTaskAutoCompletion(
     const result = applyAutoComplete(stageId, [
       { taskId: "north-star-set", shouldComplete: !!(geInputs?.northStarType && geInputs?.northStarMetricName && (geInputs.northStarMetricName as string).length > 0) },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -230,9 +216,7 @@ export function useTaskAutoCompletion(
     const result = applyAutoComplete(stageId, [
       { taskId: "investor-material-ready", shouldComplete: !!(frInputs?.bpSections) },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -243,13 +227,9 @@ export function useTaskAutoCompletion(
     const result = applyAutoComplete(stageId, [
       { taskId: "venture-cert-type-checked", shouldComplete: !!(guideSelections["venture-cert-type"]) },
     ]);
-    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(result.viewingStageHint);
-    }
+    pinViewingStageAfterAutoComplete(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
-  // suppress unused warnings (taskMap is still in destructure for backwards stability)
-  void taskMap;
   void surface;
 }

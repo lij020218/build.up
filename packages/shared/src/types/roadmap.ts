@@ -167,6 +167,15 @@ export type TaskTransitionResult = {
   changed: boolean;
 };
 
+export type StageTasksTransitionResult = {
+  roadmap: RoadmapState;
+  decisions: WorkflowDecisionMap;
+  tasks: WorkflowTaskMap;
+  stageId: string;
+  completedTaskIds: string[];
+  changed: boolean;
+};
+
 export type UserBusinessProfile = {
   userId: string;
   industryCategoryId?: string;
