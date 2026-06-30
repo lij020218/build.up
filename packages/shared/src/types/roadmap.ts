@@ -143,6 +143,7 @@ export type CompletionCheck = {
 
 export type StageTransitionResult = {
   roadmap: RoadmapState;
+  decisions: WorkflowDecisionMap;
   completion: CompletionCheck;
   nextCurrentStageId: string;
   newlyUnlockedStageIds: string[];

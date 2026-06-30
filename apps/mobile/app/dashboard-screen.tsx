@@ -1818,6 +1818,7 @@ export default function DashboardScreen({
 
   const handleContractContinue = () => {
     const transition = completeCurrentStage(roadmap, decisions, taskMap);
+    setDecisions(transition.decisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
     setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
@@ -1861,6 +1862,7 @@ export default function DashboardScreen({
 
   const handleGenericTaskStageContinue = () => {
     const transition = completeCurrentStage(roadmap, decisions, taskMap);
+    setDecisions(transition.decisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
     setTransitionNotice(buildTransitionNotice(transition.roadmap, language));

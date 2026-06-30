@@ -223,7 +223,7 @@ export const TAX_GUIDE_CONTENT: StageContent = {
   stageId: "tax-guide",
   shell: {
     title: "세무 가이드",
-    stageEyebrow: "단계 11 · 세무 가이드",
+    stageEyebrow: "단계 · 세무 가이드",
     helperText: "부가세·종소세 신고 캘린더 — 1건 누락 = 가산세 20%. 미신고 시 납부지연 일 0.022% 추가.",
   },
   // 페이지별 KEY ACTION 히어로를 쓰므로 단계 상단 히어로(keyAction) 생략.

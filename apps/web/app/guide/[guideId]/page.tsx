@@ -551,7 +551,7 @@ function GuideDetailPage() {
       const transition = completeCurrentStage(workspace.state.roadmap, nextDecisions, workspace.state.tasks);
       await saveRoadmapState(
         supabase,
-        { roadmap: transition.roadmap, decisions: nextDecisions, tasks: workspace.state.tasks },
+        { roadmap: transition.roadmap, decisions: transition.decisions, tasks: workspace.state.tasks },
         workspace.user
       );
       router.push("/current");

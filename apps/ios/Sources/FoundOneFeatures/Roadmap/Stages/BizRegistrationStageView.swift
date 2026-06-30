@@ -74,6 +74,17 @@ public struct BizRegistrationStageView: View {
         return "통장 + 상호명 확정 — 다음 단계로"
     }
 
+    private func stageRef(_ stageId: String, title: String) -> String {
+        guard let index = roadmapStore.pathStageIds.firstIndex(of: stageId) else { return "\(title) 단계" }
+        return "\(index + 1)번 단계 \(title)"
+    }
+
+    private var registrationStageId: String {
+        if roadmapStore.pathStageIds.contains("registration-setup") { return "registration-setup" }
+        if roadmapStore.pathStageIds.contains("online-registration") { return "online-registration" }
+        return "company-setup"
+    }
+
     public var body: some View {
         BUStageShell(
             stageId: stageId,
@@ -132,10 +143,13 @@ public struct BizRegistrationStageView: View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
                 BUEyebrow("이전 단계에서 결정된 사항")
+                let registrationRef = stageRef(registrationStageId, title: "사업자등록")
+                let taxGuideRef = stageRef("tax-guide", title: "세무 가이드")
+                let hiringRef = stageRef("hiring-setup", title: "채용 설정")
                 let decisions: [(String, String, Bool)] = [
-                    ("사업자등록·영업신고", "10번 단계 — 홈택스 또는 세무서", bizRegDone),
-                    ("과세유형 결정 (간이/일반)", taxTypeChoice.isEmpty ? "11번 단계 세무 가이드" : "선택: \(taxTypeChoice == "simplified" ? "간이과세" : "일반과세")", !taxTypeChoice.isEmpty),
-                    ("근로계약서 작성·교부", "16번 단계 — 채용 설정", contractDone),
+                    ("사업자등록·영업신고", "\(registrationRef) — 홈택스 또는 세무서", bizRegDone),
+                    ("과세유형 결정 (간이/일반)", taxTypeChoice.isEmpty ? taxGuideRef : "선택: \(taxTypeChoice == "simplified" ? "간이과세" : "일반과세")", !taxTypeChoice.isEmpty),
+                    ("근로계약서 작성·교부", "\(hiringRef) — 채용 설정", contractDone),
                 ]
                 ForEach(decisions, id: \.0) { label, hint, done in
                     HStack(spacing: BUSpacing.sm) {

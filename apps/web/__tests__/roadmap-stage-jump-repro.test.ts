@@ -10,7 +10,13 @@
  *   이전 path stage 만 backfill. off-path / path-이후 stage 는 건드리지 않는다.
  */
 import { describe, it, expect } from "vitest";
-import { starterRoadmap, healCompletedAtChain } from "@foundone/shared";
+import {
+  buildRoadmapState,
+  starterRoadmap,
+  starterTaskMap,
+  healCompletedAtChain,
+  traverseUserPath,
+} from "@foundone/shared";
 
 const ISO = "2026-01-01T00:00:00.000Z";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,5 +95,60 @@ describe("heal completedAt — path-aware (단계 점프 회귀 가드)", () => 
     expect(healed["menu-design"]?.completedAt, "약신호로 현재 stage 오완료 — 자동 advance 버그").toBeFalsy();
     // 그 다음 단계로도 당연히 번지면 안 됨.
     expect(healed["vendor-setup"]?.completedAt, "현재 stage 너머로 번짐").toBeFalsy();
+  });
+
+  // ── 2026-06-30: 19단계 [운영 및 마케팅 준비] → [소프트 오픈] 자동 이동 재발 가드 ──
+  //   buildRoadmapState 가 required_tasks 완료를 곧바로 completed 로 취급하면, 저장/재로드/자동 task
+  //   completion 경로에서 사용자가 "다음 단계로"를 누르지 않아도 currentStageId 가 pre-launch 로 이동한다.
+  //   진행 이동의 유일한 근거는 completedAt(=명시적 다음 단계 버튼)이어야 한다.
+  it("operations-setup 의 모든 task 가 완료돼도 completedAt 없으면 pre-launch 로 자동 advance 하지 않음", () => {
+    const branchDecision = {
+      "industry-selection": {
+        stageId: "industry-selection",
+        inputs: { categoryId: "food" },
+        completedAt: ISO,
+      },
+    };
+    const foodPath = traverseUserPath(starterRoadmap.stages, branchDecision as AnyDec, () => true)
+      .map((stage) => stage.stageId);
+    const opsIndex = foodPath.indexOf("operations-setup");
+    expect(opsIndex).toBeGreaterThan(0);
+
+    const decisions: AnyDec = { ...branchDecision };
+    for (const stageId of foodPath.slice(0, opsIndex)) {
+      decisions[stageId] = {
+        ...(decisions[stageId] ?? { stageId }),
+        stageId,
+        completedAt: ISO,
+      };
+    }
+
+    const tasks: AnyDec = {
+      ...starterTaskMap,
+      "operations-setup": starterTaskMap["operations-setup"].map((task) => ({
+        ...task,
+        status: "completed",
+        completedAt: ISO,
+      })),
+    };
+
+    const roadmapBeforeButton = buildRoadmapState(
+      { roadmapId: starterRoadmap.roadmapId, templateId: starterRoadmap.templateId, stages: starterRoadmap.stages },
+      decisions,
+      tasks,
+    );
+    expect(roadmapBeforeButton.currentStageId).toBe("operations-setup");
+    expect(roadmapBeforeButton.completedStageIds).not.toContain("operations-setup");
+
+    const roadmapAfterButton = buildRoadmapState(
+      { roadmapId: starterRoadmap.roadmapId, templateId: starterRoadmap.templateId, stages: starterRoadmap.stages },
+      {
+        ...decisions,
+        "operations-setup": { stageId: "operations-setup", completedAt: ISO },
+      },
+      tasks,
+    );
+    expect(roadmapAfterButton.currentStageId).toBe("pre-launch");
+    expect(roadmapAfterButton.completedStageIds).toContain("operations-setup");
   });
 });

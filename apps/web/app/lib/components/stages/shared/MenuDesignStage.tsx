@@ -251,6 +251,206 @@ function clusterCopy(cl: Cluster, ko: boolean): ClusterCopy {
   return C[cl];
 }
 
+type LineupExample = {
+  name: { ko: string; en: string };
+  notes: { ko: string; en: string };
+  categories?: { ko: string[]; en: string[] };
+  costLabel?: { ko: string; en: string };
+};
+
+const LINEUP_EXAMPLES_BY_ID: Record<string, LineupExample> = {
+  // Food
+  "korean-casual": ex("제육 백반 정식", "Jeyuk baekban set", "제육 120g, 국, 반찬 4종", "pork 120g, soup, 4 banchan", ["백반", "찌개", "덮밥", "고기", "사이드"], ["Baekban", "Stew", "Rice bowl", "Grill", "Side"]),
+  "korean-gukbap": ex("돼지국밥 보통", "Pork gukbap regular", "육수 350ml, 수육 90g, 다대기", "broth 350ml, pork 90g, sauce"),
+  "korean-hanjeongsik": ex("점심 한상 코스", "Lunch hanjeongsik course", "전채, 메인, 반찬 8종, 후식", "starter, main, 8 banchan, dessert", ["점심 코스", "저녁 코스", "단품", "주류", "추가"], ["Lunch course", "Dinner course", "A la carte", "Drinks", "Add-on"]),
+  "korean-baekban": ex("오늘의 집밥 백반", "Daily home-style baekban", "메인 1종, 국, 반찬 5종", "one main, soup, 5 banchan"),
+  "korean-bunsik": ex("떡볶이 + 김밥 세트", "Tteokbokki + gimbap set", "떡 180g, 어묵, 김밥 1줄", "rice cake 180g, fish cake, gimbap roll", ["분식", "김밥", "면", "튀김", "세트"], ["Snack", "Gimbap", "Noodle", "Fried", "Set"]),
+  "korean-bibimbap": ex("소고기 비빔밥", "Beef bibimbap", "밥 200g, 나물 5종, 소고기 60g", "rice 200g, 5 vegetables, beef 60g"),
+  "korean-pork-belly": ex("숙성 삼겹살 150g", "Aged pork belly 150g", "삼겹살 150g, 쌈채소, 소스", "pork belly 150g, greens, sauce", ["구이", "식사", "추가", "주류", "세트"], ["Grill", "Meal", "Add-on", "Drinks", "Set"]),
+  "delivery-meals": ex("직장인 한식 도시락", "Office Korean lunch box", "밥, 메인 1종, 반찬 4종, 포장재", "rice, one main, 4 sides, packaging"),
+  "delivery-diet-meal": ex("닭가슴살 밸런스 도시락", "Chicken breast balance box", "닭가슴살 120g, 현미, 채소", "chicken 120g, brown rice, greens"),
+  "delivery-bulk-catering": ex("회의 도시락 30인 세트", "30-person meeting lunch set", "개별 포장, 생수, 수저 포함", "individual pack, water, cutlery"),
+  "salad-healthy": ex("훈제연어 포케볼", "Smoked salmon poke bowl", "연어 80g, 현미, 채소, 소스", "salmon 80g, brown rice, greens, sauce"),
+  "salad-bowl": ex("닭가슴살 시그니처 샐러드", "Signature chicken salad", "닭가슴살 100g, 채소 150g, 드레싱", "chicken 100g, greens 150g, dressing"),
+  "salad-poke-grain": ex("참치 아보카도 포케", "Tuna avocado poke", "참치 90g, 아보카도, 현미", "tuna 90g, avocado, brown rice"),
+  "salad-vegan": ex("비건 템페 그레인볼", "Vegan tempeh grain bowl", "템페, 병아리콩, 구운 채소", "tempeh, chickpeas, roasted vegetables"),
+  "salad-juice-cleanse": ex("1일 클렌즈 주스 3종", "One-day cleanse 3-pack", "그린, 비트, 시트러스 보틀", "green, beet, citrus bottles"),
+  "ramen-noodle": ex("돈코츠 라멘", "Tonkotsu ramen", "육수 400ml, 생면, 차슈 2장", "broth 400ml, fresh noodle, 2 chashu"),
+  "noodle-kalguksu": ex("바지락 칼국수", "Clam kalguksu", "생면 180g, 바지락, 육수", "noodle 180g, clams, broth"),
+  "noodle-pho": ex("양지 쌀국수", "Brisket pho", "쌀국수 180g, 양지 70g, 허브", "rice noodle 180g, brisket 70g, herbs"),
+  "noodle-jjajang": ex("짜장면 + 탕수육 세트", "Jjajangmyeon + tangsuyuk set", "면, 춘장 소스, 탕수육 120g", "noodle, black bean sauce, pork 120g"),
+  "chicken-burger": ex("시그니처 치킨버거", "Signature chicken burger", "치킨 패티, 번, 소스, 포장재", "chicken patty, bun, sauce, packaging"),
+  "fb-chicken": ex("반반 치킨 한 마리", "Half-and-half fried chicken", "닭 1마리, 튀김가루, 소스 2종", "whole chicken, batter, 2 sauces"),
+  "fb-pizza": ex("페퍼로니 라지 피자", "Large pepperoni pizza", "도우, 치즈 180g, 페퍼로니", "dough, cheese 180g, pepperoni"),
+  "fb-burger": ex("더블 치즈버거", "Double cheeseburger", "패티 2장, 치즈, 번, 소스", "2 patties, cheese, bun, sauce"),
+  "western-pasta-brunch": ex("쉬림프 로제 파스타", "Shrimp rose pasta", "생면, 새우 6미, 로제 소스", "fresh pasta, 6 shrimp, rose sauce"),
+  "fb-brunch": ex("아보카도 에그 브런치", "Avocado egg brunch", "사워도우, 아보카도, 계란 2개", "sourdough, avocado, 2 eggs", ["브런치", "샐러드", "커피", "디저트", "세트"], ["Brunch", "Salad", "Coffee", "Dessert", "Set"]),
+
+  // Cafe & dessert
+  "takeout-coffee": ex("아이스 아메리카노", "Iced Americano", "원두 18g, 얼음, 컵·뚜껑", "beans 18g, ice, cup/lid"),
+  "coffee-low-price": ex("대용량 아이스 아메리카노", "Large iced Americano", "원두 18g, 24oz 컵, 얼음", "beans 18g, 24oz cup, ice"),
+  "coffee-roastery": ex("싱글오리진 핸드드립", "Single-origin hand drip", "원두 20g, 필터, 추출 3분", "beans 20g, filter, 3-min brew"),
+  "coffee-coldbrew": ex("콜드브루 보틀 500ml", "Cold brew bottle 500ml", "콜드브루 원액, 보틀, 라벨", "cold brew concentrate, bottle, label"),
+  "coffee-omakase": ex("커피 테이스팅 코스", "Coffee tasting course", "싱글오리진 3종, 디저트 페어링", "3 single origins, dessert pairing", ["코스", "필터", "에스프레소", "원두", "디저트"], ["Course", "Filter", "Espresso", "Beans", "Dessert"]),
+  "dessert-cafe": ex("딸기 생크림 조각케이크", "Strawberry cream cake slice", "시트, 생크림, 딸기, 박스", "sponge, cream, strawberries, box"),
+  "dessert-macaron": ex("솔티카라멜 마카롱", "Salted caramel macaron", "꼬끄 2장, 필링, 개별 포장", "2 shells, filling, wrap"),
+  "dessert-traditional": ex("흑임자 약과 세트", "Black sesame yakgwa set", "약과, 흑임자 크림, 패키지", "yakgwa, sesame cream, package"),
+  "bakery-studio": ex("소금빵", "Salt bread roll", "강력분, 버터 18g, 소금", "bread flour, butter 18g, salt"),
+  "bakery-pastry": ex("버터 크루아상", "Butter croissant", "프랑스 버터, 반죽, 포장지", "French butter, dough, wrapper"),
+  "icecream-bingsu": ex("인절미 빙수", "Injeolmi bingsu", "우유얼음, 인절미, 팥, 콩가루", "milk ice, rice cake, red bean, soybean powder"),
+  "ice-icecream": ex("피스타치오 젤라또", "Pistachio gelato", "젤라또 베이스, 피스타치오 페이스트", "gelato base, pistachio paste"),
+  "self-serve-cafe": ex("무인 아메리카노", "Self-serve Americano", "머신 원두, 컵, 키오스크 메뉴", "machine beans, cup, kiosk item"),
+  "cafe-book-cafe": ex("책방 라떼 세트", "Book cafe latte set", "라떼, 쿠키, 좌석 2시간", "latte, cookie, 2-hour seat"),
+
+  // Services
+  "hair-salon": ex("여성 컷 + 드라이", "Women's cut + blow dry", "소요 45분, 샴푸·드라이 포함", "45 min, shampoo/blow dry included", ["컷", "펌", "염색", "클리닉", "패키지"], ["Cut", "Perm", "Color", "Treatment", "Package"], "시술 재료·소요 원가 (원)", "Material/time cost (₩)"),
+  "hair-color-perm": ex("뿌리염색 + 클리닉", "Root color + treatment", "소요 90분, 염모제·클리닉제", "90 min, dye and treatment"),
+  "nail-studio": ex("시그니처 젤 네일", "Signature gel nail", "소요 70분, 젤 컬러 2종", "70 min, 2 gel colors", ["젤", "아트", "페디", "연장", "케어"], ["Gel", "Art", "Pedi", "Extension", "Care"]),
+  "nail-pedicure": ex("발각질 케어 + 젤 페디", "Callus care + gel pedi", "소요 80분, 풋파일·젤", "80 min, foot file and gel"),
+  "skin-care-room": ex("수분 진정 관리 60분", "Hydration calming facial 60m", "앰플, 모델링팩, 관리 60분", "ampoule, mask, 60 min"),
+  "skin-acne-clinic": ex("트러블 압출 + 진정관리", "Acne extraction + calming care", "소요 70분, 소독·진정 앰플", "70 min, sanitizing and calming ampoule"),
+  "waxing-studio": ex("브라질리언 왁싱", "Brazilian waxing", "소요 40분, 왁스·진정젤", "40 min, wax and soothing gel"),
+  "eyelash-brow": ex("속눈썹 펌", "Lash lift", "소요 50분, 펌제·케라틴", "50 min, perm solution and keratin"),
+  "makeup-bridal": ex("본식 신부 메이크업", "Wedding day bridal makeup", "소요 120분, 속눈썹·수정 포함", "120 min, lashes and touch-up included"),
+  "pilates-studio": ex("1:1 리포머 필라테스", "1:1 reformer pilates", "50분, 리포머·체어 사용", "50 min, reformer/chair", ["1:1", "그룹", "패키지", "체험", "멤버십"], ["1:1", "Group", "Package", "Trial", "Membership"], "회당 세션 원가 (원)", "Session cost (₩)"),
+  "pt-gym": ex("1:1 PT 10회권", "10-pack 1:1 PT", "회당 50분, 체성분 측정 포함", "50 min/session, body scan included"),
+  "yoga-studio": ex("빈야사 그룹 클래스", "Vinyasa group class", "60분, 매트·블록 사용", "60 min, mat and blocks"),
+  "crossfit-box": ex("그룹 WOD 월 멤버십", "Monthly group WOD membership", "주 3회, 코칭·기록 포함", "3x/week, coaching and tracking"),
+  "language-academy": ex("성인 영어회화 8회반", "8-session adult English class", "주 2회, 교재·레벨테스트 포함", "2x/week, materials and level test", ["그룹", "1:1", "시험대비", "패키지", "온라인"], ["Group", "1:1", "Test prep", "Package", "Online"], "회차별 강사·교재 원가 (원)", "Teacher/material cost (₩)"),
+  "coding-class": ex("파이썬 기초 4주반", "4-week Python basics", "주 2회, 실습 과제·코드리뷰", "2x/week, assignments and code review"),
+  "small-study-room": ex("중등 수학 1:1 월반", "Monthly 1:1 middle-school math", "주 2회, 교재·진도관리 포함", "2x/week, materials and progress tracking"),
+  "study-room": ex("4인 회의실 2시간권", "2-hour 4-person room", "화이트보드, 모니터, 냉난방 포함", "whiteboard, monitor, HVAC included"),
+  "study-cafe-space": ex("4주 자유석 이용권", "4-week open seat pass", "QR 출입, 음료존, 사물함 옵션", "QR entry, drink bar, locker option"),
+  "pet-grooming": ex("소형견 전체 미용", "Small dog full grooming", "소요 90분, 샴푸·위생컷 포함", "90 min, shampoo and sanitary trim", ["미용", "스파", "위생", "패키지", "용품"], ["Grooming", "Spa", "Sanitary", "Package", "Goods"], "재료·세션 원가 (원)", "Material/session cost (₩)"),
+  "pet-hotel": ex("소형견 1박 호텔", "Small dog overnight stay", "1박, 산책 2회, 사진 리포트", "overnight, 2 walks, photo report"),
+  "pet-training": ex("퍼피 사회화 4회권", "4-pack puppy socialization", "회당 60분, 보호자 코칭 포함", "60 min/session, owner coaching included"),
+  "pet-walking-care": ex("30분 산책 케어", "30-minute walking care", "산책, 급수, 사진 리포트", "walk, water, photo report"),
+
+  // Retail / online / spaces / startup
+  "convenience-small": ex("삼각김밥 + 컵라면 번들", "Gimbap + cup noodle bundle", "초도 30개, 폐기 리스크 관리", "initial 30 units, waste-risk managed", ["즉석", "음료", "생활", "프로모션", "시즌"], ["Ready-to-eat", "Drinks", "Daily goods", "Promo", "Seasonal"]),
+  "lifestyle-goods": ex("세라믹 머그 3종", "Ceramic mug 3-type set", "초도 24개, 색상 3종", "initial 24 units, 3 colors"),
+  "beauty-retail": ex("비건 립밤 3종", "Vegan lip balm 3-type set", "초도 50개, 컬러 3종", "initial 50 units, 3 colors"),
+  "fashion-accessory": ex("실버 미니 이어링", "Silver mini earrings", "초도 30개, 무니켈 옵션", "initial 30 units, nickel-free option"),
+  "health-food": ex("프로틴 쉐이크 1박스", "Protein shake box", "12입, 맛 2종, 유통기한 확인", "12-pack, 2 flavors, expiry checked"),
+  "unmanned-retail": ex("무인 밀키트 베스트 3종", "Top 3 unmanned meal kits", "초도 각 20개, 냉동 재고", "20 each, frozen stock"),
+  "ec-smart-store": ex("시그니처 홈웨어 세트", "Signature homewear set", "옵션 3종, 택배비 3,000원", "3 options, shipping ₩3,000", ["메인", "옵션", "번들", "리필", "기획전"], ["Main", "Option", "Bundle", "Refill", "Promo"]),
+  "digital-product": ex("노션 템플릿 프로팩", "Notion template pro pack", "다운로드 파일, 업데이트 1년", "download files, 1-year updates"),
+  "creator-commerce": ex("위탁 패션 베스트 SKU", "Dropship fashion bestseller", "공급가, 옵션, 배송 리드타임", "supplier cost, options, lead time"),
+  "newsletter-media": ex("프리미엄 뉴스레터 월 구독", "Premium newsletter monthly", "주 2회 발송, 아카이브 포함", "2x/week, archive included"),
+  "global-buying": ex("일본 직구 뷰티 세트", "Japan buying-agent beauty set", "관부가세·배송 리드타임 체크", "tax and shipping lead time checked"),
+  "space-photo-studio": ex("2시간 자연광 스튜디오", "2-hour natural light studio", "배경지 3종, 조명 2개 포함", "3 backdrops, 2 lights included", ["시간권", "패키지", "장비", "정기", "옵션"], ["Hourly", "Package", "Equipment", "Recurring", "Option"]),
+  "space-party-room": ex("주말 4시간 파티룸", "Weekend 4-hour party room", "최대 8인, 청소비 별도", "up to 8 people, cleaning fee separate"),
+  "space-coworking": ex("1인 지정석 월 멤버십", "Monthly dedicated desk", "우편함, 회의실 2시간 포함", "mailbox, 2h meeting room included"),
+  "su-ai-chatbot": ex("Pro 상담 자동화 플랜", "Pro support automation plan", "월 5,000건, 상담 요약·FAQ 학습", "5k chats/month, summaries, FAQ training", ["Free", "Starter", "Pro", "Enterprise"], ["Free", "Starter", "Pro", "Enterprise"], "월 인프라·API 비용 (원)", "Monthly infra/API cost (₩)"),
+  "su-fintech-payment": ex("Starter 결제 API 플랜", "Starter payment API plan", "월 1만 건, 정산 리포트 포함", "10k tx/month, payout report included"),
+  "su-health-app": ex("Pro 운동 코칭 구독", "Pro fitness coaching subscription", "AI 루틴, 리포트, 웨어러블 연동", "AI routines, reports, wearable sync"),
+  "su-dev-devops": ex("Team CI/CD 플랜", "Team CI/CD plan", "빌드 5,000분, 배포 슬롯 10개", "5k build minutes, 10 deploy slots"),
+  "su-saas-crm": ex("Sales Pro 좌석 플랜", "Sales Pro seat plan", "좌석 10개, 파이프라인 자동화", "10 seats, pipeline automation"),
+};
+
+const LINEUP_EXAMPLE_PREFIXES: Array<[string, LineupExample]> = [
+  ["delivery-", LINEUP_EXAMPLES_BY_ID["delivery-meals"]],
+  ["salad-", LINEUP_EXAMPLES_BY_ID["salad-healthy"]],
+  ["ramen-", LINEUP_EXAMPLES_BY_ID["ramen-noodle"]],
+  ["noodle-", LINEUP_EXAMPLES_BY_ID["ramen-noodle"]],
+  ["fb-", LINEUP_EXAMPLES_BY_ID["chicken-burger"]],
+  ["coffee-", LINEUP_EXAMPLES_BY_ID["specialty-coffee"]],
+  ["dessert-", LINEUP_EXAMPLES_BY_ID["dessert-cafe"]],
+  ["bakery-", LINEUP_EXAMPLES_BY_ID["bakery-studio"]],
+  ["ice-", LINEUP_EXAMPLES_BY_ID["icecream-bingsu"]],
+  ["cafe-", LINEUP_EXAMPLES_BY_ID["self-serve-cafe"]],
+  ["hair-", LINEUP_EXAMPLES_BY_ID["hair-salon"]],
+  ["nail-", LINEUP_EXAMPLES_BY_ID["nail-studio"]],
+  ["skin-", LINEUP_EXAMPLES_BY_ID["skin-care-room"]],
+  ["waxing-", LINEUP_EXAMPLES_BY_ID["waxing-studio"]],
+  ["lash-", LINEUP_EXAMPLES_BY_ID["eyelash-brow"]],
+  ["brow-", LINEUP_EXAMPLES_BY_ID["eyelash-brow"]],
+  ["makeup-", LINEUP_EXAMPLES_BY_ID["makeup-bridal"]],
+  ["pilates-", LINEUP_EXAMPLES_BY_ID["pilates-studio"]],
+  ["pt-", LINEUP_EXAMPLES_BY_ID["pt-gym"]],
+  ["yoga-", LINEUP_EXAMPLES_BY_ID["yoga-studio"]],
+  ["crossfit-", LINEUP_EXAMPLES_BY_ID["crossfit-box"]],
+  ["fitness-", LINEUP_EXAMPLES_BY_ID["crossfit-box"]],
+  ["edu-coding-", LINEUP_EXAMPLES_BY_ID["coding-class"]],
+  ["edu-study-", LINEUP_EXAMPLES_BY_ID["study-cafe-space"]],
+  ["edu-", LINEUP_EXAMPLES_BY_ID["language-academy"]],
+  ["ka-", ex("초등 피아노 주 2회반", "Kids piano twice-weekly", "주 2회, 교재·발표회 준비", "2x/week, materials and recital prep", ["정규", "1:1", "그룹", "체험", "특강"], ["Regular", "1:1", "Group", "Trial", "Workshop"])],
+  ["ac-", ex("원데이 도예 클래스", "One-day pottery class", "재료·소성비 포함, 2시간", "materials and firing included, 2h")],
+  ["pet-grooming-", LINEUP_EXAMPLES_BY_ID["pet-grooming"]],
+  ["pet-training-", LINEUP_EXAMPLES_BY_ID["pet-training"]],
+  ["pet-", LINEUP_EXAMPLES_BY_ID["pet-hotel"]],
+  ["retail-unmanned-", LINEUP_EXAMPLES_BY_ID["unmanned-retail"]],
+  ["retail-cosmetics", LINEUP_EXAMPLES_BY_ID["beauty-retail"]],
+  ["retail-fashion", LINEUP_EXAMPLES_BY_ID["fashion-accessory"]],
+  ["retail-", LINEUP_EXAMPLES_BY_ID["lifestyle-goods"]],
+  ["ls-self-laundry", ex("운동화 세탁 기본", "Sneaker wash basic", "세제, 건조, 포장 포함", "detergent, drying, packaging", ["기본", "프리미엄", "수거", "정기", "옵션"], ["Basic", "Premium", "Pickup", "Recurring", "Option"])],
+  ["ls-laundry", ex("셔츠 세탁 5장 묶음", "5-shirt laundry bundle", "수거·다림질·포장 포함", "pickup, ironing, packaging")],
+  ["ls-home-cleaning", ex("입주 청소 20평형", "Move-in cleaning 20-pyeong", "2인 4시간, 장비·세제 포함", "2 staff 4h, equipment/supplies included")],
+  ["ls-", ex("기본 방문 서비스", "Basic visit service", "소요 60분, 출장비 별도", "60 min, travel fee separate")],
+  ["space-", LINEUP_EXAMPLES_BY_ID["space-photo-studio"]],
+  ["ec-", LINEUP_EXAMPLES_BY_ID["ec-smart-store"]],
+  ["dp-", LINEUP_EXAMPLES_BY_ID["digital-product"]],
+  ["cc-", LINEUP_EXAMPLES_BY_ID["creator-commerce"]],
+  ["nm-", LINEUP_EXAMPLES_BY_ID["newsletter-media"]],
+  ["gb-", LINEUP_EXAMPLES_BY_ID["global-buying"]],
+  ["pc-", ex("강아지 동반 2시간권", "2-hour dog cafe pass", "입장, 음료 1잔, 위생패드", "entry, one drink, pad", ["입장권", "음료", "간식", "패키지", "용품"], ["Entry", "Drink", "Treat", "Package", "Goods"])],
+  ["ps-", ex("수제 닭가슴살 간식", "Handmade chicken treat", "초도 30팩, 원재료·유통기한", "initial 30 packs, ingredients/expiry")],
+  ["gh-", ex("2인 도미토리 1박", "One-night 2-bed dorm", "침구, 조식 옵션, 청소비", "bedding, breakfast option, cleaning")],
+  ["gs-", ex("스크린 골프 60분권", "60-minute screen golf", "룸 1개, 장비 대여 옵션", "one room, equipment rental option")],
+  ["uf-", ex("24시 헬스 월 이용권", "24h gym monthly pass", "QR 출입, 락커 옵션", "QR entry, locker option")],
+  ["su-ai-", LINEUP_EXAMPLES_BY_ID["su-ai-chatbot"]],
+  ["su-fintech-", LINEUP_EXAMPLES_BY_ID["su-fintech-payment"]],
+  ["su-health-", LINEUP_EXAMPLES_BY_ID["su-health-app"]],
+  ["su-dev-", LINEUP_EXAMPLES_BY_ID["su-dev-devops"]],
+  ["su-saas-", LINEUP_EXAMPLES_BY_ID["su-saas-crm"]],
+  ["su-", LINEUP_EXAMPLES_BY_ID["su-ai-chatbot"]],
+];
+
+function ex(
+  koName: string,
+  enName: string,
+  koNotes: string,
+  enNotes: string,
+  koCategories?: string[],
+  enCategories?: string[],
+  koCostLabel?: string,
+  enCostLabel?: string,
+): LineupExample {
+  return {
+    name: { ko: koName, en: enName },
+    notes: { ko: koNotes, en: enNotes },
+    categories: koCategories && enCategories ? { ko: koCategories, en: enCategories } : undefined,
+    costLabel: koCostLabel && enCostLabel ? { ko: koCostLabel, en: enCostLabel } : undefined,
+  };
+}
+
+function specializeLineupCopy(
+  base: ClusterCopy,
+  ko: boolean,
+  specialtyId?: string,
+  subIndustryId?: string,
+): ClusterCopy {
+  const example = resolveLineupExample(specialtyId) ?? resolveLineupExample(subIndustryId);
+  if (!example) return base;
+
+  return {
+    ...base,
+    categories: (ko ? example.categories?.ko : example.categories?.en) ?? base.categories,
+    namePlaceholder: ko
+      ? `${base.noun} 이름 (예: ${example.name.ko})`
+      : `${base.noun} name (e.g., ${example.name.en})`,
+    costPlaceholder: (ko ? example.costLabel?.ko : example.costLabel?.en) ?? base.costPlaceholder,
+    notesPlaceholder: ko
+      ? `메모 (예: ${example.notes.ko}) — 선택`
+      : `Notes (e.g., ${example.notes.en}) — optional`,
+  };
+}
+
+function resolveLineupExample(id: string | undefined): LineupExample | undefined {
+  if (!id) return undefined;
+  return LINEUP_EXAMPLES_BY_ID[id] ?? LINEUP_EXAMPLE_PREFIXES.find(([prefix]) => id.startsWith(prefix))?.[1];
+}
+
 // ── 메인 dispatcher ────────────────────────────────────────────────────
 export function MenuDesignStage() {
   const d = useDashboardCtx();
@@ -259,7 +459,7 @@ export function MenuDesignStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-      <LineupPanel cluster={cluster} ko={ko} />
+      <LineupPanel cluster={cluster} ko={ko} specialtyId={d.selectedSpecialtyId} subIndustryId={d.selectedIndustryId} />
     </div>
   );
 }
@@ -267,7 +467,17 @@ export function MenuDesignStage() {
 // ─────────────────────────────────────────────────────────────────────────
 //  LineupPanel — 전 cluster 공통 구조화 폼 (iOS MenuDesignStageView 패리티)
 // ─────────────────────────────────────────────────────────────────────────
-function LineupPanel({ cluster, ko }: { cluster: Cluster; ko: boolean }) {
+function LineupPanel({
+  cluster,
+  ko,
+  specialtyId,
+  subIndustryId,
+}: {
+  cluster: Cluster;
+  ko: boolean;
+  specialtyId?: string;
+  subIndustryId?: string;
+}) {
   const d = useDashboardCtx();
   const pg = d.guideStepIndex;
   const totalPg = 4;
@@ -277,7 +487,7 @@ function LineupPanel({ cluster, ko }: { cluster: Cluster; ko: boolean }) {
   const inventory = d.inventory;
   const setInventory = d.setInventory;
 
-  const copy = clusterCopy(cluster, ko);
+  const copy = specializeLineupCopy(clusterCopy(cluster, ko), ko, specialtyId, subIndustryId);
 
   // decisions.inputs.menuItemsJson 에서 lineup 복원
   const inputs = (decisions[STAGE_ID]?.inputs as { menuItemsJson?: string } | undefined) ?? {};

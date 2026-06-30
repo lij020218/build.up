@@ -2,7 +2,6 @@
 
 import {
   buildRoadmapState,
-  evaluateStageCompletion,
   getFranchiseBrandById,
   resolveNextStageIds,
   saveRoadmapState,
@@ -123,35 +122,9 @@ export function useTaskHandlers(
       taskId,
       existing.status === "completed" ? "todo" : "completed"
     );
-    // ⚠ rule 이 완료되면 즉시 decisions[stageId].completedAt 를 set —
-    //    이전엔 task 만 토글하고 completedAt 은 "다음 단계로" 버튼 시점에만 set.
-    //    그 결과 사용자가 모든 task 끝낸 뒤 새로고침 → completedAt 없음 → 이후 룰 변경 시
-    //    저장된 task 가 새 requiredTaskIds 를 만족 못 하면 단계가 다시 "available" 로 회귀하는 버그.
-    //    (사용자 보고 2026-05-03 "계속 서버를 새로고침하면 이미 완료한 단계로 돌아옴")
-    //
-    // ⚠️ 예외 — 마지막 단계 `pre-launch-final` (사용자 지침 2026-05-11):
-    //    "체크리스트 마지막 거 클릭하면 자동 완료되는데 그러지 말고 하단 내비게이션바 버튼 눌러야 완료되게."
-    //    이 단계는 "🚀 개업하기" 버튼 (CurrentStageView.tsx) 만이 stage 완료 + 런칭을 트리거.
-    //    체크 단계만 보존하고 completedAt 은 *버튼* 핸들러 (handleStageContinue + handleLaunchBusiness) 에 위임.
-    const stageDef = baseRoadmap.stages.find(s => s.stageId === stageId);
-    let nextDecisions = decisions;
-    const isFinalLaunchStage = stageId === "pre-launch-final";
-    if (stageDef && !isFinalLaunchStage) {
-      const completion = (() => {
-        const stageWithStatus = { ...stageDef, status: "in_progress" as const };
-        // buildRoadmapState 가 사용하는 evaluateStageCompletion 와 동일 로직.
-        return evaluateStageCompletion(stageWithStatus, decisions, nextTaskMap);
-      })();
-      const alreadyCompleted = !!decisions[stageId]?.completedAt;
-      if (completion.isComplete && !alreadyCompleted) {
-        nextDecisions = upsertStageDecision(decisions, stageId, {
-          stageId,
-          completedAt: new Date().toISOString(),
-        });
-        setDecisions(nextDecisions);
-      }
-    }
-    const nextRoadmap = buildRoadmapState(baseRoadmap, nextDecisions, nextTaskMap);
+    // 체크리스트 완료는 단계 완료/진행을 자동 트리거하지 않는다.
+    // completedAt 은 오직 사용자가 "다음 단계로" 버튼을 누르는 continue 핸들러에서만 set 한다.
+    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
     setTaskMap(nextTaskMap);
     setRoadmap(nextRoadmap);
     // 모든 체크리스트 완료 시 currentStageId가 다음 단계로 바뀌어도

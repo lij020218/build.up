@@ -115,11 +115,11 @@ export function evaluateStageCompletion(
 
 function updateStageStatus(
   stage: RoadmapStageState,
-  completion: CompletionCheck,
+  isProgressComplete: boolean,
   currentStageId: string,
   unlockedStageIds: Set<string>
 ): StageStatus {
-  if (completion.isComplete) {
+  if (isProgressComplete) {
     return "completed";
   }
 
@@ -132,6 +132,16 @@ function updateStageStatus(
   }
 
   return "locked";
+}
+
+function isStageProgressComplete(
+  stage: RoadmapStageState,
+  decisions: WorkflowDecisionMap
+): boolean {
+  // Roadmap navigation/progress must only move after an explicit stage advance.
+  // Task/input rules can enable the "next" button, but completedAt is the durable
+  // signal that the user actually pressed it.
+  return Boolean(decisions[stage.stageId]?.completedAt);
 }
 
 function getFirstAvailableStageId(stages: RoadmapStageState[], reachableIds?: Set<string>): string {
@@ -293,9 +303,9 @@ export function buildRoadmapState(
   }
 
   for (const stage of baseRoadmap.stages) {
-    const completion = evaluateStageCompletion(stage, decisions, tasks);
+    const isProgressComplete = isStageProgressComplete(stage, decisions);
 
-    if (completion.isComplete) {
+    if (isProgressComplete) {
       completedStageIds.add(stage.stageId);
       const nextIds = resolveNextStageIds(stage, decisions);
       for (const nextStageId of nextIds) {
@@ -310,10 +320,11 @@ export function buildRoadmapState(
 
   const stageStatuses = baseRoadmap.stages.map((stage) => {
     const completion = evaluateStageCompletion(stage, decisions, tasks);
+    const isProgressComplete = isStageProgressComplete(stage, decisions);
     return {
       stageId: stage.stageId,
       completion,
-      status: completion.isComplete
+      status: isProgressComplete
         ? "completed"
         : unlockedStageIds.has(stage.stageId)
           ? "available"
@@ -352,10 +363,14 @@ export function buildRoadmapState(
   })();
 
   const stages = baseRoadmap.stages.map((stage) => {
-    const completion = evaluateStageCompletion(stage, decisions, tasks);
     return {
       ...stage,
-      status: updateStageStatus(stage, completion, nextCurrentStageId, unlockedStageIds)
+      status: updateStageStatus(
+        stage,
+        isStageProgressComplete(stage, decisions),
+        nextCurrentStageId,
+        unlockedStageIds
+      )
     };
   });
 
@@ -495,6 +510,7 @@ export function completeCurrentStage(
   if (!currentStage) {
     return {
       roadmap,
+      decisions,
       completion: { isComplete: false, missingKeys: ["currentStage"], missingTaskIds: [] },
       nextCurrentStageId: roadmap.currentStageId,
       newlyUnlockedStageIds: []
@@ -506,11 +522,19 @@ export function completeCurrentStage(
   if (!completion.isComplete) {
     return {
       roadmap,
+      decisions,
       completion,
       nextCurrentStageId: roadmap.currentStageId,
       newlyUnlockedStageIds: []
     };
   }
+
+  const nextDecisions = decisions[currentStage.stageId]?.completedAt
+    ? decisions
+    : upsertStageDecision(decisions, currentStage.stageId, {
+        stageId: currentStage.stageId,
+        completedAt: new Date().toISOString()
+      });
 
   const previousUnlocked = new Set(roadmap.unlockedStageIds);
   const nextRoadmap = buildRoadmapState(
@@ -519,7 +543,7 @@ export function completeCurrentStage(
       templateId: roadmap.templateId,
       stages: roadmap.stages
     },
-    decisions,
+    nextDecisions,
     tasks
   );
 
@@ -529,6 +553,7 @@ export function completeCurrentStage(
 
   return {
     roadmap: nextRoadmap,
+    decisions: nextDecisions,
     completion,
     nextCurrentStageId: nextRoadmap.currentStageId,
     newlyUnlockedStageIds

@@ -36,6 +36,7 @@ export function BizRegistrationPanel() {
     industryCategoryId,
     taxChecks,
     decisions,
+    pathStageList,
   } = d;
   const ko = language === "ko";
   const isStartup = industryCategoryId === "startup-tech";
@@ -45,6 +46,19 @@ export function BizRegistrationPanel() {
   const hometaxChecked = !!taxChecks["tc-hometax"];
   const bizCardChecked = !!taxChecks["tc-bizcard"];
   const bizRegConfirmed = !!decisions["registration-setup"];
+
+  const stageRef = (stageId: string, titleKo: string, titleEn: string) => {
+    const index = pathStageList.findIndex((stage) => stage.stageId === stageId);
+    if (index < 0) return ko ? `${titleKo} 단계` : `${titleEn} stage`;
+    return ko ? `${index + 1}번 단계 ${titleKo}` : `Stage ${index + 1} ${titleEn}`;
+  };
+  const registrationStageId = pathStageList.some((stage) => stage.stageId === "registration-setup")
+    ? "registration-setup"
+    : pathStageList.some((stage) => stage.stageId === "online-registration")
+      ? "online-registration"
+      : "company-setup";
+  const registrationRef = stageRef(registrationStageId, "사업자등록", "Business registration");
+  const taxGuideRef = stageRef("tax-guide", "세무 가이드", "Tax Guide");
 
   const sectionLabel: React.CSSProperties = {
     fontSize: "12.5px",
@@ -98,31 +112,31 @@ export function BizRegistrationPanel() {
               label: ko ? "사업자등록·영업신고" : "Business registration",
               status: bizRegConfirmed ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
               done: bizRegConfirmed,
-              hint: ko ? "10번 단계 — 홈택스 또는 세무서" : "Stage 10 — Hometax or tax office",
+              hint: ko ? `${registrationRef} — 홈택스 또는 세무서` : `${registrationRef} — Hometax or tax office`,
             },
             {
               label: ko ? "과세유형 결정 (간이/일반)" : "Tax type (Simplified/Standard)",
               status: taxTypeChecked ? (ko ? "결정됨" : "Decided") : (ko ? "미결정" : "Pending"),
               done: taxTypeChecked,
-              hint: ko ? "11번 단계 세무 가이드 — 1억 400만 미만 시 간이" : "Stage 11 Tax Guide — Simplified if <104M KRW",
+              hint: ko ? `${taxGuideRef} — 1억 400만 미만 시 간이` : `${taxGuideRef} — Simplified if <104M KRW`,
             },
             {
               label: ko ? "홈택스 회원가입" : "Hometax registration",
               status: hometaxChecked ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
               done: hometaxChecked,
-              hint: ko ? "11번 단계 세무 가이드 체크리스트" : "Stage 11 Tax Guide checklist",
+              hint: ko ? `${taxGuideRef} 체크리스트` : `${taxGuideRef} checklist`,
             },
             {
               label: ko ? "사업용 카드 분리" : "Dedicated business card",
               status: bizCardChecked ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
               done: bizCardChecked,
-              hint: ko ? "11번 단계 세무 가이드 — 개인카드 혼용 = 비용 불인정" : "Stage 11 — mixed personal = rejected expenses",
+              hint: ko ? `${taxGuideRef} — 개인카드 혼용 = 비용 불인정` : `${taxGuideRef} — mixed personal = rejected expenses`,
             },
             {
               label: ko ? "세무 처리 방식" : "Tax handling method",
               status: cpaDecision === "cpa" ? (ko ? "세무사 선임" : "CPA hired") : cpaDecision === "self" ? (ko ? "직접 신고" : "Self-file") : (ko ? "미결정" : "Pending"),
               done: !!cpaDecision,
-              hint: ko ? "11번 단계 세무 가이드 Page 4" : "Stage 11 Tax Guide Page 4",
+              hint: ko ? `${taxGuideRef} Page 4` : `${taxGuideRef} Page 4`,
             },
           ]).map((row, i, arr) => (
             <div key={row.label}>

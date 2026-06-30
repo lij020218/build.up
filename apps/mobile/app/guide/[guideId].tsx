@@ -144,7 +144,7 @@ export default function GuideDetailScreen() {
         supabase,
         {
           roadmap: transition.roadmap,
-          decisions: nextDecisions,
+          decisions: transition.decisions,
           tasks: workspace.state.tasks
         },
         workspace.user
