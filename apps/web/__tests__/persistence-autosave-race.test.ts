@@ -116,7 +116,7 @@ describe("safeSaveStoreData serializer", () => {
 /**
  * 사용자 path 외 stage backfill 차단 검증.
  *
- *  helpers.ts:advanceStageWithChainBackfill 의 path-aware chain-backfill 로직 미러.
+ *  helpers.ts:markViewedStageAdvanced / shared markStageAdvanced 의 path-aware backfill 로직 미러.
  *  종전엔 baseRoadmap.stages 배열 순서 (offline→tech→cluster→franchise→online→tail) 로
  *  모든 prior stage 를 completedAt 마킹 → online 셀러가 startup-only stage 도 완료 표시.
  *  이제는 resolveNextStageIds 따라가며 *현재 path 의 prior* 만 backfill.

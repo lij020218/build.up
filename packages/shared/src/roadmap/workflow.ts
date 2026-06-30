@@ -2,12 +2,15 @@ import type {
   CompletionCheck,
   CompletionRule,
   NextStageCondition,
+  RoadmapBaseState,
   RoadmapStageState,
   RoadmapState,
+  StageAdvancePatch,
   TaskState,
   StageDecisionState,
   StageStatus,
   StageTransitionResult,
+  TaskTransitionResult,
   WorkflowDecisionMap,
   WorkflowTaskMap
 } from "../types/roadmap";
@@ -144,25 +147,6 @@ function isStageProgressComplete(
   return Boolean(decisions[stage.stageId]?.completedAt);
 }
 
-function getFirstAvailableStageId(stages: RoadmapStageState[], reachableIds?: Set<string>): string {
-  // 1. 명시적으로 in_progress인 단계
-  const inProgress = stages.find((s) => s.status === "in_progress" && (!reachableIds || reachableIds.has(s.stageId)));
-  if (inProgress) return inProgress.stageId;
-
-  // 2. reachable 셋이 있으면 경로 내 available만
-  if (reachableIds) {
-    const reachableAvailable = stages.find((s) => s.status === "available" && reachableIds.has(s.stageId));
-    if (reachableAvailable) return reachableAvailable.stageId;
-  }
-
-  // 3. fallback — reachable 내에서 미완료 단계, 없으면 전체에서 available
-  if (reachableIds) {
-    const reachableFallback = stages.find((s) => s.status !== "completed" && reachableIds.has(s.stageId));
-    if (reachableFallback) return reachableFallback.stageId;
-  }
-  return stages.find((s) => s.status === "available")?.stageId ?? stages[0].stageId;
-}
-
 function resolveDecisionValue(
   decisions: WorkflowDecisionMap,
   condition: NextStageCondition
@@ -233,6 +217,17 @@ export function resolveNextStageIds(
   return stage.nextStageIds;
 }
 
+function getFirstExistingStage(
+  stageById: Map<string, RoadmapStageState>,
+  stageIds: string[]
+): RoadmapStageState | undefined {
+  for (const id of stageIds) {
+    const candidate = stageById.get(id);
+    if (candidate) return candidate;
+  }
+  return undefined;
+}
+
 /**
  * 2026-05-12 P3: 사용자 path 의 *실제 순서* 를 graph traversal 로 계산.
  *
@@ -273,52 +268,60 @@ export function traverseUserPath(
     // 첫 번째 *path 에 속하는* 다음 stage 를 선택 (hidden stage skip).
     // 예: tax-guide.nextStageConditions 가 offline → hiring-setup 인데
     // user 가 online 이면 default → loan-guide. 어느 쪽이든 isPathStage 통과한 첫 stage.
-    let next: RoadmapStageState | undefined;
-    for (const id of nextIds) {
-      const candidate = stageById.get(id);
-      if (candidate) { next = candidate; break; }
-    }
-    current = next;
+    current = getFirstExistingStage(stageById, nextIds);
   }
 
   return result;
 }
 
-export function buildRoadmapState(
-  baseRoadmap: Omit<RoadmapState, "progressPercent" | "currentStageId" | "completedStageIds" | "unlockedStageIds">,
-  decisions: WorkflowDecisionMap,
-  tasks: WorkflowTaskMap
-): RoadmapState {
+type RoadmapProgressSets = {
+  completedStageIds: Set<string>;
+  unlockedStageIds: Set<string>;
+  reachableIds: Set<string>;
+};
+
+type StageStatusPreview = {
+  stageId: string;
+  completion: CompletionCheck;
+  status: StageStatus;
+};
+
+function deriveProgressSets(
+  stages: RoadmapStageState[],
+  decisions: WorkflowDecisionMap
+): RoadmapProgressSets {
   const unlockedStageIds = new Set<string>();
-
-  if (baseRoadmap.stages.length > 0) {
-    unlockedStageIds.add(baseRoadmap.stages[0].stageId);
-  }
-
   const completedStageIds = new Set<string>();
-  // 첫 번째 단계에서 조건부 분기를 따라 도달 가능한 단계만 추적
   const reachableIds = new Set<string>();
-  if (baseRoadmap.stages.length > 0) {
-    reachableIds.add(baseRoadmap.stages[0].stageId);
+
+  if (stages.length > 0) {
+    unlockedStageIds.add(stages[0].stageId);
+    reachableIds.add(stages[0].stageId);
   }
 
-  for (const stage of baseRoadmap.stages) {
-    const isProgressComplete = isStageProgressComplete(stage, decisions);
+  for (const stage of stages) {
+    if (!isStageProgressComplete(stage, decisions)) continue;
 
-    if (isProgressComplete) {
-      completedStageIds.add(stage.stageId);
-      const nextIds = resolveNextStageIds(stage, decisions);
-      for (const nextStageId of nextIds) {
-        unlockedStageIds.add(nextStageId);
-        // reachable 체인: 이 단계가 reachable이면 다음 단계도 reachable
-        if (reachableIds.has(stage.stageId)) {
-          reachableIds.add(nextStageId);
-        }
+    completedStageIds.add(stage.stageId);
+    const nextIds = resolveNextStageIds(stage, decisions);
+    for (const nextStageId of nextIds) {
+      unlockedStageIds.add(nextStageId);
+      if (reachableIds.has(stage.stageId)) {
+        reachableIds.add(nextStageId);
       }
     }
   }
 
-  const stageStatuses = baseRoadmap.stages.map((stage) => {
+  return { completedStageIds, unlockedStageIds, reachableIds };
+}
+
+function buildStageStatusPreview(
+  stages: RoadmapStageState[],
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap,
+  unlockedStageIds: Set<string>
+): StageStatusPreview[] {
+  return stages.map((stage) => {
     const completion = evaluateStageCompletion(stage, decisions, tasks);
     const isProgressComplete = isStageProgressComplete(stage, decisions);
     return {
@@ -331,48 +334,86 @@ export function buildRoadmapState(
           : "locked"
     };
   });
+}
+
+function findCurrentStageId(
+  stages: RoadmapStageState[],
+  decisions: WorkflowDecisionMap,
+  completedStageIds: Set<string>,
+  stageStatuses: StageStatusPreview[],
+  reachableIds: Set<string>
+): string {
+  if (stages.length === 0) return "";
+
+  const stageById = new Map(stages.map((stage) => [stage.stageId, stage]));
+  const seen = new Set<string>();
+  let cursor: RoadmapStageState | undefined = stages[0];
+  while (cursor && !seen.has(cursor.stageId)) {
+    seen.add(cursor.stageId);
+    if (!completedStageIds.has(cursor.stageId)) return cursor.stageId;
+    const nextIds = resolveNextStageIds(cursor, decisions);
+    if (nextIds.length === 0) break;
+    cursor = getFirstExistingStage(stageById, nextIds);
+  }
+
+  return cursor?.stageId
+    ?? stageStatuses.find((stage) => stage.status === "available" && reachableIds.has(stage.stageId))?.stageId
+    ?? stages[stages.length - 1]?.stageId
+    ?? "";
+}
+
+function applyRuntimeStageStatus(
+  stages: RoadmapStageState[],
+  decisions: WorkflowDecisionMap,
+  currentStageId: string,
+  unlockedStageIds: Set<string>
+): RoadmapStageState[] {
+  return stages.map((stage) => ({
+    ...stage,
+    status: updateStageStatus(
+      stage,
+      isStageProgressComplete(stage, decisions),
+      currentStageId,
+      unlockedStageIds
+    )
+  }));
+}
+
+export function buildRoadmapState(
+  baseRoadmap: RoadmapBaseState,
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap
+): RoadmapState {
+  const { completedStageIds, unlockedStageIds, reachableIds } = deriveProgressSets(
+    baseRoadmap.stages,
+    decisions
+  );
+  const stageStatuses = buildStageStatusPreview(
+    baseRoadmap.stages,
+    decisions,
+    tasks,
+    unlockedStageIds
+  );
 
   // ⚠️ path-aware currentStageId: stages[0] 에서 출발해 nextStageIds 따라가며 *첫 미완료* stage 선택.
   // 종전엔 baseRoadmap.stages.find((s) => s.status === "available") 로 *배열 순서* 의 첫 available 을
   // 잡았는데, 이건 cluster·path 와 무관한 순서라 사용자가 8단계 완료 후 "다음" 을 누르면 배열상
   // 앞쪽의 다른 available (예: 15단계) 로 점프하던 버그. resolveNextStageIds 가 nextStageConditions
   // + decisions 를 따라가므로 user 가 실제로 navigate 할 다음 stage 가 정확히 잡힌다.
-  const completedSet = completedStageIds;
-  const nextCurrentStageId = (() => {
-    if (baseRoadmap.stages.length === 0) return "";
-    const stageById = new Map(baseRoadmap.stages.map((s) => [s.stageId, s]));
-    const seen = new Set<string>();
-    let cursor: RoadmapStageState | undefined = baseRoadmap.stages[0];
-    while (cursor && !seen.has(cursor.stageId)) {
-      seen.add(cursor.stageId);
-      if (!completedSet.has(cursor.stageId)) return cursor.stageId;
-      const nextIds = resolveNextStageIds(cursor, decisions);
-      if (nextIds.length === 0) break;
-      let next: RoadmapStageState | undefined;
-      for (const id of nextIds) {
-        const candidate = stageById.get(id);
-        if (candidate) { next = candidate; break; }
-      }
-      cursor = next;
-    }
-    // 모든 path stage 가 완료된 경우 → 마지막 도달 stage 또는 path-aware fallback
-    return cursor?.stageId
-      ?? stageStatuses.find((s) => s.status === "available" && reachableIds.has(s.stageId))?.stageId
-      ?? baseRoadmap.stages[baseRoadmap.stages.length - 1]?.stageId
-      ?? "";
-  })();
+  const nextCurrentStageId = findCurrentStageId(
+    baseRoadmap.stages,
+    decisions,
+    completedStageIds,
+    stageStatuses,
+    reachableIds
+  );
 
-  const stages = baseRoadmap.stages.map((stage) => {
-    return {
-      ...stage,
-      status: updateStageStatus(
-        stage,
-        isStageProgressComplete(stage, decisions),
-        nextCurrentStageId,
-        unlockedStageIds
-      )
-    };
-  });
+  const stages = applyRuntimeStageStatus(
+    baseRoadmap.stages,
+    decisions,
+    nextCurrentStageId,
+    unlockedStageIds
+  );
 
   // ⚠️ path-aware: progressPercent는 reachable(사용자 path) stage 기준으로 계산
   // 이전엔 stages.length(전체 ~46개) 기준이라 online 셀러가 9/9 완료해도 ~27% 표시되는 버그.
@@ -458,12 +499,7 @@ export function healCompletedAtChain(
       seen.add(cursor.stageId);
       pathOrder.push(cursor.stageId);
       const nextIds = resolveNextStageIds(cursor, result);
-      let next: RoadmapStageState | undefined;
-      for (const id of nextIds) {
-        const candidate = stageById.get(id);
-        if (candidate) { next = candidate; break; }
-      }
-      cursor = next;
+      cursor = getFirstExistingStage(stageById, nextIds);
     }
   }
   const pathIndexOf = new Map(pathOrder.map((sid, i) => [sid, i] as const));
@@ -500,7 +536,120 @@ export function healCompletedAtChain(
   return { decisions: result, healed: healedStageIds.size > 0 };
 }
 
-export function completeCurrentStage(
+function backfillPriorPathStages(
+  baseRoadmap: RoadmapBaseState,
+  decisions: WorkflowDecisionMap,
+  targetStageId: string,
+  completedAt: string
+): WorkflowDecisionMap {
+  const stageById = new Map(baseRoadmap.stages.map((stage) => [stage.stageId, stage]));
+  const pathPrior: string[] = [];
+  const seen = new Set<string>();
+  let cursor = baseRoadmap.stages[0];
+
+  while (cursor && cursor.stageId !== targetStageId && !seen.has(cursor.stageId)) {
+    seen.add(cursor.stageId);
+    pathPrior.push(cursor.stageId);
+    const next = getFirstExistingStage(stageById, resolveNextStageIds(cursor, decisions));
+    if (!next) break;
+    cursor = next;
+  }
+
+  if (cursor?.stageId !== targetStageId || pathPrior.length === 0) {
+    return decisions;
+  }
+
+  let nextDecisions = decisions;
+  for (const [index, stageId] of pathPrior.entries()) {
+    if (nextDecisions[stageId]?.completedAt) continue;
+    const timestamp = new Date(Date.parse(completedAt) - (pathPrior.length - index) * 1000).toISOString();
+    nextDecisions = upsertStageDecision(nextDecisions, stageId, {
+      stageId,
+      completedAt: timestamp
+    });
+  }
+
+  return nextDecisions;
+}
+
+export function markStageAdvanced(
+  baseRoadmap: RoadmapBaseState,
+  roadmap: RoadmapState,
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap,
+  stageId: string,
+  patch?: StageAdvancePatch
+): StageTransitionResult {
+  const targetStage = baseRoadmap.stages.find((stage) => stage.stageId === stageId);
+  if (!targetStage) {
+    return {
+      roadmap,
+      decisions,
+      completion: { isComplete: false, missingKeys: ["stage"], missingTaskIds: [] },
+      nextCurrentStageId: roadmap.currentStageId,
+      newlyUnlockedStageIds: []
+    };
+  }
+
+  const completedAt = new Date().toISOString();
+  const stageDecision = upsertStageDecision(decisions, stageId, {
+    stageId,
+    completedAt,
+    ...(patch ?? {})
+  });
+  const nextDecisions = backfillPriorPathStages(baseRoadmap, stageDecision, stageId, completedAt);
+  const previousUnlocked = new Set(roadmap.unlockedStageIds);
+  const nextRoadmap = buildRoadmapState(baseRoadmap, nextDecisions, tasks);
+  const newlyUnlockedStageIds = nextRoadmap.unlockedStageIds.filter(
+    (unlockedStageId) => !previousUnlocked.has(unlockedStageId)
+  );
+
+  return {
+    roadmap: nextRoadmap,
+    decisions: nextDecisions,
+    completion: evaluateStageCompletion(targetStage, nextDecisions, tasks),
+    nextCurrentStageId: nextRoadmap.currentStageId,
+    newlyUnlockedStageIds
+  };
+}
+
+export function toggleStageTask(
+  baseRoadmap: RoadmapBaseState,
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap,
+  stageId: string,
+  taskId: string
+): TaskTransitionResult {
+  const currentTask = (tasks[stageId] ?? []).find((task) => task.taskId === taskId);
+  if (!currentTask) {
+    return {
+      roadmap: buildRoadmapState(baseRoadmap, decisions, tasks),
+      decisions,
+      tasks,
+      stageId,
+      taskId,
+      changed: false
+    };
+  }
+
+  const nextTasks = updateTaskStatus(
+    tasks,
+    stageId,
+    taskId,
+    currentTask.status === "completed" ? "todo" : "completed"
+  );
+
+  return {
+    roadmap: buildRoadmapState(baseRoadmap, decisions, nextTasks),
+    decisions,
+    tasks: nextTasks,
+    stageId,
+    taskId,
+    changed: true
+  };
+}
+
+export function advanceCurrentStageIfComplete(
   roadmap: RoadmapState,
   decisions: WorkflowDecisionMap,
   tasks: WorkflowTaskMap
@@ -529,35 +678,34 @@ export function completeCurrentStage(
     };
   }
 
-  const nextDecisions = decisions[currentStage.stageId]?.completedAt
-    ? decisions
-    : upsertStageDecision(decisions, currentStage.stageId, {
-        stageId: currentStage.stageId,
-        completedAt: new Date().toISOString()
-      });
-
-  const previousUnlocked = new Set(roadmap.unlockedStageIds);
-  const nextRoadmap = buildRoadmapState(
+  const transition = markStageAdvanced(
     {
       roadmapId: roadmap.roadmapId,
       templateId: roadmap.templateId,
       stages: roadmap.stages
     },
-    nextDecisions,
-    tasks
-  );
-
-  const newlyUnlockedStageIds = nextRoadmap.unlockedStageIds.filter(
-    (stageId) => !previousUnlocked.has(stageId)
+    roadmap,
+    decisions,
+    tasks,
+    currentStage.stageId
   );
 
   return {
-    roadmap: nextRoadmap,
-    decisions: nextDecisions,
+    ...transition,
     completion,
-    nextCurrentStageId: nextRoadmap.currentStageId,
-    newlyUnlockedStageIds
   };
+}
+
+/**
+ * @deprecated Use advanceCurrentStageIfComplete for checked current-stage advances,
+ * or markStageAdvanced when a user action explicitly advances a known stage.
+ */
+export function completeCurrentStage(
+  roadmap: RoadmapState,
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap
+): StageTransitionResult {
+  return advanceCurrentStageIfComplete(roadmap, decisions, tasks);
 }
 
 export function upsertStageDecision(

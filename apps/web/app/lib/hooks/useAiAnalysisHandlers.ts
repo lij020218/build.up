@@ -11,7 +11,6 @@ import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai"
 import { useAiStore, useFinanceStore, useRoadmapStore, useOnboardingStore } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import {
-  advanceStageWithChainBackfill,
   getContractTaskDetail,
   getGuideSections,
   inferFinanceDefaults,
@@ -19,6 +18,7 @@ import {
   hydrateSavedFinanceSnapshot,
   hydrateSavedContractAnalysisSnapshot,
   hydrateSavedGuideQaSnapshot,
+  markViewedStageAdvanced,
   buildTransitionNotice,
 } from "../helpers";
 import type { DashboardDeps } from "../types";
@@ -330,9 +330,8 @@ export function useAiAnalysisHandlers(
   };
 
   // ── Handler: verification continue (permit/tax/loan/financial-review) ──
-  // ⚠️ 2026-05-25 fix: 이전 completeCurrentStage(roadmap, ...) 는 roadmap.currentStageId 기준으로
-  //    advance 하므로, 사용자가 완료된 단계를 재방문하면 현재 진행 중인 단계를 advance 하는 버그 발생.
-  //    advanceStageWithChainBackfill(stageId, ...) 를 사용해 stageId 를 명시적으로 지정.
+  // Viewed-stage advance: guide review can happen while revisiting a non-current stage,
+  // so the stage id must be explicit rather than derived from roadmap.currentStageId.
   const handleVerificationContinue = (
     stageId: "permit-guide" | "tax-guide" | "loan-guide" | "financial-review",
     extraInputs: Record<string, unknown> = {},
@@ -347,9 +346,7 @@ export function useAiAnalysisHandlers(
       completedAt: new Date().toISOString(),
     });
 
-    // path-aware advance: nextDecisions 를 넘기면 advanceStageWithChainBackfill 내부
-    //   upsertStageDecision 이 inputs 를 merge 하므로 reviewed: true 보존.
-    const result = advanceStageWithChainBackfill(stageId, nextDecisions, roadmap, taskMap);
+    const result = markViewedStageAdvanced(stageId, nextDecisions, roadmap, taskMap);
     setDecisions(result.decisions);
     setRoadmap(result.roadmap);
     setLastUnlocked(result.newlyUnlockedStageIds);

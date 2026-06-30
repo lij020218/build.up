@@ -5,8 +5,8 @@ import {
   calculateHealthMetrics,
   calculateMoM,
   calculateMonthlyPnL,
+  advanceCurrentStageIfComplete,
   bootstrapAccountWorkspace,
-  completeCurrentStage,
   evaluateDirectMarket,
   forecastSales,
   formatBudgetPresetLabel,
@@ -54,7 +54,7 @@ import {
   starterStageFlow,
   starterStepCards,
   starterTaskMap,
-  updateTaskStatus,
+  toggleStageTask,
   upsertStageDecision,
   type FinancialRiskLevel,
   type FinancialSimulationResult,
@@ -63,6 +63,7 @@ import {
   type GuideQaAnswer,
   type PersistedBusinessProfile,
   type RecommendationItem,
+  type RoadmapState,
   type UserStoreData,
   type WorkflowTaskMap,
   type WorkflowDecisionMap
@@ -168,8 +169,19 @@ function getMobileStageAssistCopy(stageId: string, language: "ko" | "en") {
   }
 
   return ko
-    ? "필수 항목을 모두 체크하면 다음 로드맵 단계가 열립니다. 선택 항목은 리스크를 줄이는 보조 작업입니다."
-    : "Complete every required item to unlock the next roadmap step. Optional items reduce risk.";
+    ? "필수 항목을 모두 체크한 뒤 다음 단계 버튼으로 진행합니다. 선택 항목은 리스크를 줄이는 보조 작업입니다."
+    : "Complete every required item, then use the next-step button to advance. Optional items reduce risk.";
+}
+
+function getMobileRoadmapBase(roadmap: RoadmapState) {
+  return {
+    roadmapId:
+      roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
+        ? roadmap.roadmapId
+        : starterRoadmap.roadmapId,
+    templateId: starterRoadmap.templateId,
+    stages: starterStageFlow
+  };
 }
 
 function getContractTaskDetail(taskId: string, language: "ko" | "en", categoryId?: string) {
@@ -1095,14 +1107,7 @@ export default function DashboardScreen({
     }
 
     const completedRoadmap = buildRoadmapState(
-      {
-        roadmapId:
-          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
-            ? roadmap.roadmapId
-            : starterRoadmap.roadmapId,
-        templateId: starterRoadmap.templateId,
-        stages: starterStageFlow
-      },
+      getMobileRoadmapBase(roadmap),
       nextDecisions,
       taskMap
     );
@@ -1255,14 +1260,7 @@ export default function DashboardScreen({
     }
 
     const nextRoadmap = buildRoadmapState(
-      {
-        roadmapId:
-          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
-            ? roadmap.roadmapId
-            : starterRoadmap.roadmapId,
-        templateId: starterRoadmap.templateId,
-        stages: starterStageFlow
-      },
+      getMobileRoadmapBase(roadmap),
       nextDecisions,
       taskMap
     );
@@ -1578,7 +1576,7 @@ export default function DashboardScreen({
       completedAt: new Date().toISOString()
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, nextDecisions, taskMap);
     setDecisions(nextDecisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1609,14 +1607,7 @@ export default function DashboardScreen({
             const nextDecisions: WorkflowDecisionMap = {};
             const nextTasks = cloneStarterTaskMap();
             const nextRoadmap = buildRoadmapState(
-              {
-                roadmapId:
-                  roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
-                    ? roadmap.roadmapId
-                    : starterRoadmap.roadmapId,
-                templateId: starterRoadmap.templateId,
-                stages: starterStageFlow
-              },
+              getMobileRoadmapBase(roadmap),
               nextDecisions,
               nextTasks
             );
@@ -1704,7 +1695,7 @@ export default function DashboardScreen({
       completedAt: new Date().toISOString()
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, nextDecisions, taskMap);
     setDecisions(nextDecisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1726,7 +1717,7 @@ export default function DashboardScreen({
       completedAt: new Date().toISOString()
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, nextDecisions, taskMap);
     setDecisions(nextDecisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1747,7 +1738,7 @@ export default function DashboardScreen({
       completedAt: new Date().toISOString()
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, nextDecisions, taskMap);
     setDecisions(nextDecisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1773,7 +1764,7 @@ export default function DashboardScreen({
       completedAt: new Date().toISOString()
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, nextDecisions, taskMap);
     setDecisions(nextDecisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1788,36 +1779,24 @@ export default function DashboardScreen({
       return;
     }
 
-    const nextTaskMap = updateTaskStatus(
+    const transition = toggleStageTask(
+      getMobileRoadmapBase(roadmap),
+      decisions,
       taskMap,
       "contract-review",
-      taskId,
-      existing.status === "completed" ? "todo" : "completed"
+      taskId
     );
 
-    const nextRoadmap = buildRoadmapState(
-      {
-        roadmapId:
-          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
-            ? roadmap.roadmapId
-            : starterRoadmap.roadmapId,
-        templateId: starterRoadmap.templateId,
-        stages: starterStageFlow
-      },
-      decisions,
-      nextTaskMap
-    );
-
-    setTaskMap(nextTaskMap);
+    setTaskMap(transition.tasks);
     setRoadmap(
       roadmap.currentStageId === "contract-review"
-        ? { ...nextRoadmap, currentStageId: "contract-review" }
-        : nextRoadmap
+        ? { ...transition.roadmap, currentStageId: "contract-review" }
+        : transition.roadmap
     );
   };
 
   const handleContractContinue = () => {
-    const transition = completeCurrentStage(roadmap, decisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, decisions, taskMap);
     setDecisions(transition.decisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1832,36 +1811,24 @@ export default function DashboardScreen({
       return;
     }
 
-    const nextTaskMap = updateTaskStatus(
+    const transition = toggleStageTask(
+      getMobileRoadmapBase(roadmap),
+      decisions,
       taskMap,
       stageId,
-      taskId,
-      existing.status === "completed" ? "todo" : "completed"
+      taskId
     );
 
-    const nextRoadmap = buildRoadmapState(
-      {
-        roadmapId:
-          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
-            ? roadmap.roadmapId
-            : starterRoadmap.roadmapId,
-        templateId: starterRoadmap.templateId,
-        stages: starterStageFlow
-      },
-      decisions,
-      nextTaskMap
-    );
-
-    setTaskMap(nextTaskMap);
+    setTaskMap(transition.tasks);
     setRoadmap(
       roadmap.currentStageId === stageId
-        ? { ...nextRoadmap, currentStageId: stageId }
-        : nextRoadmap
+        ? { ...transition.roadmap, currentStageId: stageId }
+        : transition.roadmap
     );
   };
 
   const handleGenericTaskStageContinue = () => {
-    const transition = completeCurrentStage(roadmap, decisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, decisions, taskMap);
     setDecisions(transition.decisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1877,7 +1844,7 @@ export default function DashboardScreen({
       completedAt: new Date().toISOString()
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
+    const transition = advanceCurrentStageIfComplete(roadmap, nextDecisions, taskMap);
     setDecisions(nextDecisions);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);

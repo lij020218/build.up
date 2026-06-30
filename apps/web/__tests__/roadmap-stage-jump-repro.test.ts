@@ -12,9 +12,11 @@
 import { describe, it, expect } from "vitest";
 import {
   buildRoadmapState,
+  markStageAdvanced,
   starterRoadmap,
   starterTaskMap,
   healCompletedAtChain,
+  toggleStageTask,
   traverseUserPath,
 } from "@foundone/shared";
 
@@ -123,32 +125,37 @@ describe("heal completedAt — path-aware (단계 점프 회귀 가드)", () => 
       };
     }
 
-    const tasks: AnyDec = {
-      ...starterTaskMap,
-      "operations-setup": starterTaskMap["operations-setup"].map((task) => ({
-        ...task,
-        status: "completed",
-        completedAt: ISO,
-      })),
+    const baseRoadmap = {
+      roadmapId: starterRoadmap.roadmapId,
+      templateId: starterRoadmap.templateId,
+      stages: starterRoadmap.stages,
     };
+    let tasks: AnyDec = starterTaskMap;
+
+    for (const task of starterTaskMap["operations-setup"]) {
+      const transition = toggleStageTask(baseRoadmap, decisions, tasks, "operations-setup", task.taskId);
+      expect(transition.decisions).toBe(decisions);
+      tasks = transition.tasks;
+    }
 
     const roadmapBeforeButton = buildRoadmapState(
-      { roadmapId: starterRoadmap.roadmapId, templateId: starterRoadmap.templateId, stages: starterRoadmap.stages },
+      baseRoadmap,
       decisions,
       tasks,
     );
     expect(roadmapBeforeButton.currentStageId).toBe("operations-setup");
     expect(roadmapBeforeButton.completedStageIds).not.toContain("operations-setup");
 
-    const roadmapAfterButton = buildRoadmapState(
-      { roadmapId: starterRoadmap.roadmapId, templateId: starterRoadmap.templateId, stages: starterRoadmap.stages },
-      {
-        ...decisions,
-        "operations-setup": { stageId: "operations-setup", completedAt: ISO },
-      },
+    const afterButton = markStageAdvanced(
+      baseRoadmap,
+      roadmapBeforeButton,
+      decisions,
       tasks,
+      "operations-setup",
     );
+    const roadmapAfterButton = afterButton.roadmap;
     expect(roadmapAfterButton.currentStageId).toBe("pre-launch");
     expect(roadmapAfterButton.completedStageIds).toContain("operations-setup");
+    expect(afterButton.decisions["operations-setup"]?.completedAt).toBeTruthy();
   });
 });

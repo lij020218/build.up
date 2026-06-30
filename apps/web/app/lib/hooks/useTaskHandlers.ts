@@ -6,13 +6,13 @@ import {
   resolveNextStageIds,
   saveRoadmapState,
   saveStoreData,
-  updateTaskStatus,
+  toggleStageTask,
   upsertStageDecision,
   type UserStoreData,
 } from "@foundone/shared";
 import { useProfileStore, useRoadmapStore, useOnboardingStore } from "../stores";
 import { supabase } from "../../../lib/supabase";
-import { baseRoadmap, buildTransitionNotice, getContractTaskDetail, advanceStageWithChainBackfill } from "../helpers";
+import { baseRoadmap, buildTransitionNotice, getContractTaskDetail, markViewedStageAdvanced } from "../helpers";
 import type { DashboardDeps } from "../types";
 import { SURFACE_HREFS } from "../constants";
 import { getKstDate } from "../utils/business-day";
@@ -70,30 +70,22 @@ export function useTaskHandlers(
       }
     }
 
-    const nextTaskMap = updateTaskStatus(
-      taskMap,
-      "contract-review",
-      taskId,
-      existing.status === "completed" ? "todo" : "completed"
-    );
+    const result = toggleStageTask(baseRoadmap, decisions, taskMap, "contract-review", taskId);
 
-    // ⚠️ 체크리스트 완료는 단계 완료/진행을 *자동 트리거하지 않는다* (사용자 지침 2026-06-08).
-    //   pre-launch-final 과 동일 원칙 — completedAt 은 오직 "다음 단계로" 버튼(handleContractContinue)
-    //   에서만 set 한다. 모든 항목을 체크해도 사용자가 명시적으로 버튼을 눌러야 다음 단계로 넘어감.
-    //   (체크 상태는 taskMap 에 영속되므로 새로고침해도 보존됨.)
-    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-    setTaskMap(nextTaskMap);
-    setRoadmap(nextRoadmap);
+    // Task toggles update only taskMap. Stage progression is gated by completedAt,
+    // which is created by the explicit continue action.
+    setTaskMap(result.tasks);
+    setRoadmap(result.roadmap);
 
-    // 이전 세션에서 이미 completedAt 이 set 된 경우(buildRoadmapState 가 advance)에 대비한 화면 핀.
-    if (nextRoadmap.currentStageId !== "contract-review" && viewingStageId === null && !searchParams.get("editStage")) {
+    // 이미 completedAt 이 있는 legacy/edit 상태에서는 현재 작업 화면을 유지한다.
+    if (result.roadmap.currentStageId !== "contract-review" && viewingStageId === null && !searchParams.get("editStage")) {
       setViewingStageId("contract-review");
     }
   };
 
   // ── Contract continue ──
   const handleContractContinue = () => {
-    const result = advanceStageWithChainBackfill("contract-review", decisions, roadmap, taskMap);
+    const result = markViewedStageAdvanced("contract-review", decisions, roadmap, taskMap);
     setDecisions(result.decisions);
     setRoadmap(result.roadmap);
     setLastUnlocked(result.newlyUnlockedStageIds);
@@ -116,36 +108,26 @@ export function useTaskHandlers(
     const currentTasks = taskMap[stageId] ?? [];
     const existing = currentTasks.find((task) => task.taskId === taskId);
     if (!existing) return;
-    const nextTaskMap = updateTaskStatus(
-      taskMap,
-      stageId,
-      taskId,
-      existing.status === "completed" ? "todo" : "completed"
-    );
-    // 체크리스트 완료는 단계 완료/진행을 자동 트리거하지 않는다.
-    // completedAt 은 오직 사용자가 "다음 단계로" 버튼을 누르는 continue 핸들러에서만 set 한다.
-    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-    setTaskMap(nextTaskMap);
-    setRoadmap(nextRoadmap);
-    // 모든 체크리스트 완료 시 currentStageId가 다음 단계로 바뀌어도
-    // 사용자가 "다음 단계로" 버튼을 직접 누를 때까지 현재 화면을 유지
-    if (nextRoadmap.currentStageId !== stageId && viewingStageId === null && !searchParams.get("editStage")) {
+    const result = toggleStageTask(baseRoadmap, decisions, taskMap, stageId, taskId);
+    // Task toggles update only taskMap. Stage progression is gated by completedAt.
+    setTaskMap(result.tasks);
+    setRoadmap(result.roadmap);
+    // 이미 completedAt 이 있는 legacy/edit 상태에서는 현재 작업 화면을 유지한다.
+    if (result.roadmap.currentStageId !== stageId && viewingStageId === null && !searchParams.get("editStage")) {
       setViewingStageId(stageId);
     }
   };
 
   // ── Generic stage completion (saves decisions to Supabase via saveRoadmapState) ──
   // ⚠️ 핵심 안전성 (사용자 보고 2026-05-03 "다음 단계로 누르니 뒤 단계로 회귀"):
-  //   이전엔 completeCurrentStage(roadmap, ...) 를 호출했는데 이 함수는 `roadmap.currentStageId`
-  //   기준으로 동작 → 룰 강화로 회귀된 currentStageId 가 viewed stage 보다 앞에 있으면
-  //   completeCurrentStage 가 그 회귀 stage 의 룰만 평가 → no advance + setViewingStageId(null)
+  //   currentStageId 기반 진행은 사용자가 재방문 중인 viewed stage 와 어긋날 수 있다.
+  //   룰 강화로 회귀된 currentStageId 가 viewed stage 보다 앞에 있으면 그 회귀 stage 만 평가되어
+  //   no advance + setViewingStageId(null)
   //   로 사용자를 회귀 stage 로 끌고 감.
   //
-  //   해결: viewed stage 의 completedAt 만 set 하고 buildRoadmapState 로 처음부터 재빌드.
-  //   buildRoadmapState 가 모든 stage 의 completion 을 재평가해서 currentStageId 를 가장 앞
-  //   미완료 stage 로 자동 계산 → completedAt 있는 stage 는 모두 complete → 자연스레 다음 단계로 advance.
+  //   해결: viewed stageId 를 명시해 completedAt 을 set 하고 shared transition 으로 재빌드.
   const handleStageContinue = (stageId: string) => {
-    const result = advanceStageWithChainBackfill(stageId, decisions, roadmap, taskMap);
+    const result = markViewedStageAdvanced(stageId, decisions, roadmap, taskMap);
     setDecisions(result.decisions);
     setRoadmap(result.roadmap);
     setLastUnlocked(result.newlyUnlockedStageIds);

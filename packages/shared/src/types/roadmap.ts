@@ -118,6 +118,11 @@ export type RoadmapState = {
   unlockedStageIds: string[];
 };
 
+export type RoadmapBaseState = Omit<
+  RoadmapState,
+  "progressPercent" | "currentStageId" | "completedStageIds" | "unlockedStageIds"
+>;
+
 export type StageDecisionState = {
   stageId: string;
   selectedOptionIds?: string[];
@@ -147,6 +152,19 @@ export type StageTransitionResult = {
   completion: CompletionCheck;
   nextCurrentStageId: string;
   newlyUnlockedStageIds: string[];
+};
+
+export type StageAdvancePatch = Partial<
+  Pick<StageDecisionState, "selectedPrimaryOptionId" | "selectedOptionIds" | "inputs" | "notes">
+>;
+
+export type TaskTransitionResult = {
+  roadmap: RoadmapState;
+  decisions: WorkflowDecisionMap;
+  tasks: WorkflowTaskMap;
+  stageId: string;
+  taskId: string;
+  changed: boolean;
 };
 
 export type UserBusinessProfile = {

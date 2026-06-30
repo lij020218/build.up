@@ -6,7 +6,6 @@ import {
   buildRecommendedMarkets,
   buildRoadmapState,
   bootstrapAccountWorkspace,
-  completeCurrentStage,
   evaluateDirectMarket,
   formatBudgetPresetLabel,
   formatKRW,

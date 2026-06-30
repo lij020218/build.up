@@ -1,16 +1,16 @@
 import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
 import {
-  buildRoadmapState,
   formatGuideSectionTitle,
   localizeStage,
-  resolveNextStageIds,
+  markStageAdvanced,
   starterRoadmap,
   starterStageFlow,
   starterTaskMap,
-  upsertStageDecision,
   type GuideQaAnswer,
   type RecommendationItem,
   type RoadmapState,
+  type StageAdvancePatch,
+  type StageTransitionResult,
   type WorkflowDecisionMap,
   type WorkflowTaskMap,
 } from "@foundone/shared";
@@ -358,78 +358,18 @@ export const baseRoadmap = {
 };
 
 /**
- * 단계 완료 + chain backfill + roadmap 재빌드. (사용자 보고 2026-05-03 회귀 사고 후 도입)
- *
- *   완료시키려는 stage 의 completedAt 를 set 하면서, 그 앞의 모든 path stage 도 chain 으로 함께
- *   backfill (사용자가 거기까지 도달했다는 사실 자체가 진실). buildRoadmapState 를 직접 호출해서
- *   currentStageId 를 처음부터 재계산 → 룰 강화로 회귀된 stage 가 가운데 끼어 있어도 무시하고
- *   가장 앞 미완료 (= viewedStage 의 다음) 로 자연스럽게 advance.
- *
- *   기존 completeCurrentStage 는 `roadmap.currentStageId` 기준이라 회귀 시 거기에 갇혔음.
- *
- *   추가 patch (extraDecisionFields) 가 있으면 해당 stageId 결정에 함께 머지.
+ * Web compatibility wrapper around the shared roadmap transition.
+ * The shared engine owns completedAt/backfill/progression rules; callers here
+ * keep their existing result shape while web-specific state updates stay local.
  */
-export function advanceStageWithChainBackfill(
+export function markViewedStageAdvanced(
   stageId: string,
   decisions: WorkflowDecisionMap,
   roadmap: RoadmapState,
   taskMap: WorkflowTaskMap,
-  extraDecisionFields?: Partial<{
-    selectedPrimaryOptionId: string;
-    selectedOptionIds: string[];
-    inputs: Record<string, string | number | boolean | string[]>;
-    notes: string;
-  }>,
-): { decisions: WorkflowDecisionMap; roadmap: RoadmapState; newlyUnlockedStageIds: string[] } {
-  const now = new Date().toISOString();
-  let nextDecisions = upsertStageDecision(decisions, stageId, {
-    stageId,
-    completedAt: now,
-    ...(extraDecisionFields ?? {}),
-  });
-
-  // ⚠️ path-aware chain-backfill: 종전엔 baseRoadmap.stages 배열 순서로 prior stage 를 모두 마킹
-  //   했는데, array 는 starter-data 정의 순(offline → tech → cluster → franchise → online → tail)
-  //   이라 online-digital 사용자가 biz-registration 완료 시 startup-only/offline-only stage 까지
-  //   silently completedAt 마킹 → reachableIds 가 다른 path 로 잘못 확장되고 progress 분모 오염.
-  //   nextStageIds 따라가며 *현재 사용자 path 의 prior stage* 만 backfill.
-  const stageById = new Map(baseRoadmap.stages.map((s) => [s.stageId, s]));
-  const pathPrior: string[] = [];
-  const seen = new Set<string>();
-  let cursor = baseRoadmap.stages[0];
-  while (cursor && cursor.stageId !== stageId && !seen.has(cursor.stageId)) {
-    seen.add(cursor.stageId);
-    pathPrior.push(cursor.stageId);
-    const nextIds = resolveNextStageIds(cursor, nextDecisions);
-    if (nextIds.length === 0) break;
-    let next: typeof cursor | undefined;
-    for (const id of nextIds) {
-      const candidate = stageById.get(id);
-      if (candidate) { next = candidate; break; }
-    }
-    if (!next) break;
-    cursor = next;
-  }
-  // 완료한 stage 까지 path 안에서 도달했으면 그 사이 stage 들을 backfill
-  if (cursor?.stageId === stageId && pathPrior.length > 0) {
-    pathPrior.forEach((prevSid, i) => {
-      if (!nextDecisions[prevSid]?.completedAt) {
-        const ts = new Date(Date.parse(now) - (pathPrior.length - i) * 1000).toISOString();
-        nextDecisions = upsertStageDecision(nextDecisions, prevSid, {
-          stageId: prevSid,
-          completedAt: ts,
-        });
-      }
-    });
-  }
-
-  const previousUnlocked = new Set(roadmap.unlockedStageIds);
-  const nextRoadmap = buildRoadmapState(baseRoadmap, nextDecisions, taskMap);
-  const newlyUnlockedStageIds = nextRoadmap.unlockedStageIds.filter(
-    (id) => !previousUnlocked.has(id),
-  );
-
-  return { decisions: nextDecisions, roadmap: nextRoadmap, newlyUnlockedStageIds };
+  extraDecisionFields?: StageAdvancePatch,
+): StageTransitionResult {
+  return markStageAdvanced(baseRoadmap, roadmap, decisions, taskMap, stageId, extraDecisionFields);
 }
 
 export type ContractTaskDetail = {

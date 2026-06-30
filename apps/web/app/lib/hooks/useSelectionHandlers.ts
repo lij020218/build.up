@@ -23,7 +23,7 @@ import {
 } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import type { DashboardDeps } from "../types";
-import { advanceStageWithChainBackfill, buildTransitionNotice, cloneStarterTaskMap, baseRoadmap } from "../helpers";
+import { markViewedStageAdvanced, buildTransitionNotice, cloneStarterTaskMap, baseRoadmap } from "../helpers";
 import {
   clearLocalUserData,
   resetLocalState,
@@ -147,7 +147,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   const handleIndustryContinue = () => {
     if (!selectedIndustryId) return;
-    const result = advanceStageWithChainBackfill("industry-selection", decisions, roadmap, taskMap, {
+    const result = markViewedStageAdvanced("industry-selection", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: selectedIndustryId,
       inputs: {
         subIndustryId: selectedIndustryId,
@@ -166,7 +166,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   const handleBusinessModelContinue = () => {
     if (!selectedBusinessModelId) return;
-    const result = advanceStageWithChainBackfill("business-model", decisions, roadmap, taskMap, {
+    const result = markViewedStageAdvanced("business-model", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: selectedBusinessModelId,
       selectedOptionIds: [selectedBusinessModelId],
     });
@@ -194,7 +194,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       }
     }
 
-    const result = advanceStageWithChainBackfill("startup-type", decisions, roadmap, taskMap, {
+    const result = markViewedStageAdvanced("startup-type", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: startupType,
       selectedOptionIds: [startupType],
       inputs: {
@@ -214,7 +214,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   const handleBudgetContinue = () => {
     if (!selectedBudget || !selectedOpenDate) return;
-    const result = advanceStageWithChainBackfill("budget-setup", decisions, roadmap, taskMap, {
+    const result = markViewedStageAdvanced("budget-setup", decisions, roadmap, taskMap, {
       inputs: {
         capital: selectedBudget,
         targetOpenDate: selectedOpenDate,
@@ -229,7 +229,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   const handleLocationContinue = () => {
     if (!selectedLocationId) return;
-    const result = advanceStageWithChainBackfill("location-candidates", decisions, roadmap, taskMap, {
+    const result = markViewedStageAdvanced("location-candidates", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: selectedLocationId,
       selectedOptionIds: [selectedLocationId],
       inputs: {

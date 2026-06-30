@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import {
+  advanceCurrentStageIfComplete,
   bootstrapAccountWorkspace,
-  completeCurrentStage,
   formatGuideSectionTitle,
   getFreshnessPresentation,
   getUiCopy,
@@ -548,7 +548,7 @@ function GuideDetailPage() {
         inputs: { reviewed: true },
         completedAt: new Date().toISOString()
       });
-      const transition = completeCurrentStage(workspace.state.roadmap, nextDecisions, workspace.state.tasks);
+      const transition = advanceCurrentStageIfComplete(workspace.state.roadmap, nextDecisions, workspace.state.tasks);
       await saveRoadmapState(
         supabase,
         { roadmap: transition.roadmap, decisions: transition.decisions, tasks: workspace.state.tasks },

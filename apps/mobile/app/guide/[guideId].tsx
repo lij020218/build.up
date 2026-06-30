@@ -1,6 +1,6 @@
 import {
+  advanceCurrentStageIfComplete,
   bootstrapAccountWorkspace,
-  completeCurrentStage,
   getFreshnessPresentation,
   getUiCopy,
   loadKnowledgeRecordById,
@@ -134,7 +134,7 @@ export default function GuideDetailScreen() {
         },
         completedAt: new Date().toISOString()
       });
-      const transition = completeCurrentStage(
+      const transition = advanceCurrentStageIfComplete(
         workspace.state.roadmap,
         nextDecisions,
         workspace.state.tasks
