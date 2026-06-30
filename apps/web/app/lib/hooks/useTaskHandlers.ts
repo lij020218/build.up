@@ -7,6 +7,7 @@ import {
   saveStoreData,
   toggleStageTask,
   upsertStageDecision,
+  type StageTransitionResult,
   type UserStoreData,
 } from "@foundone/shared";
 import { useProfileStore, useRoadmapStore, useOnboardingStore } from "../stores";
@@ -61,6 +62,17 @@ export function useTaskHandlers(
     }
   };
 
+  const applyStageAdvanceTransition = (
+    result: StageTransitionResult,
+    viewingTarget: string | null,
+  ) => {
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
+    setViewingStageId(viewingTarget);
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+  };
+
   // ── Contract-specific task toggle (⚠️ 체크리스트 100% 가드) ──
   const handleContractTaskToggle = (taskId: string) => {
     const currentTasks = taskMap["contract-review"] ?? [];
@@ -93,11 +105,7 @@ export function useTaskHandlers(
   // ── Contract continue ──
   const handleContractContinue = () => {
     const result = markViewedStageAdvanced("contract-review", decisions, roadmap, taskMap);
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applyStageAdvanceTransition(result, null);
     if (searchParams.get("editStage")) {
       router.replace(SURFACE_HREFS.current);
     }
@@ -129,9 +137,6 @@ export function useTaskHandlers(
   //   해결: viewed stageId 를 명시해 completedAt 을 set 하고 shared transition 으로 재빌드.
   const handleStageContinue = (stageId: string) => {
     const result = markViewedStageAdvanced(stageId, decisions, roadmap, taskMap);
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
 
     // ⚠️ 2026-05-18 fix (사장님 신고: 8단계 → 다음 → 22단계 점프 / 항상 21단계 financial-review 점프):
     //   buildRoadmapState 의 nextCurrentStageId 는 *path 의 첫 미완료* 를 찾는데,
@@ -150,8 +155,7 @@ export function useTaskHandlers(
         { decisions: result.decisions },
       );
     }
-    setViewingStageId(viewingResolution.viewingTarget);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applyStageAdvanceTransition(result, viewingResolution.viewingTarget);
     // ⚠️ URL cleanup: ?editStage= 쿼리가 남아있으면 제거.
     //   useTaskAutoCompletion.ts:72 의 useEffect([activeSurface, searchParams]) 가
     //   URL 에 editStage 가 있으면 viewingStageId 를 다시 pin → 새로고침 후 항상 같은 단계로 복귀.
