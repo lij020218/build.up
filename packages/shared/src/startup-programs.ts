@@ -425,7 +425,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "사회문제 해결 임팩트 스타트업", en: "Social impact startups" },
     benefit: { ko: "사업화 자금 + 멘토링 + UNDP 글로벌 프로그램 연계 + 투자", en: "Biz funds + mentoring + UNDP global linkage + investment" },
     season: { ko: "연 1회 모집 (상반기)", en: "Annual recruitment (H1)" },
-    url: "https://www.h-ondream.kr",
+    // 2026-06-30: H-온드림→CMK 임팩트프러너 개편으로 옛 도메인(h-ondream.kr) DNS 소멸 → 신규 공식(라이브 검증)
+    url: "https://www.cmk-impactpreneur.kr/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -439,7 +440,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "대학생 소셜 이노베이터 (비즈니스 모델로 사회문제 해결)", en: "University social innovators (solving social problems via biz models)" },
     benefit: { ko: "소셜 비즈니스 모델 개발 + 멘토링 + 네트워크 (2017년~ 1,000명+ 양성)", en: "Social biz model dev + mentoring + network (1,000+ alumni since 2017)" },
     season: { ko: "연 1회 모집", en: "Annual recruitment" },
-    url: "https://www.sklookie.com",
+    // 2026-06-30: sklookie.com 접속 거부(소멸)·전용 LOOKIE 페이지 404 → 운영사 SK행복나눔재단(라이브 검증)
+    url: "https://www.skhappiness.org/",
     forSmallBiz: false,
     forFranchise: false,
     dataYear: "2026",
@@ -634,7 +636,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "폐업 시 인테리어 철거·폐기물 처리비 최대 600만원. 보조금 (상환 X).", en: "Up to 6M KRW for store removal/disposal. Grant (no repayment)." },
     amount: "최대 600만원 (보조금)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://www.sbiz.or.kr/nhrp/main.do",
+    // 2026-06-30: nhrp/main.do 리다이렉트 루프 → semas 원스톱폐업지원 상시 사업소개(점포철거비 600만, 라이브 검증)
+    url: "https://www.semas.or.kr/web/SUP01/SUP0117/SUP011702.kmdc",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -653,7 +656,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "폐업 후 재창업 시 최대 2,000만원. 교육·컨설팅 패키지 포함.", en: "Up to 20M KRW restart fund + training/consulting." },
     amount: "최대 2,000만원 (보조금)",
     season: { ko: "연중 상시", en: "Year-round" },
-    url: "https://www.sbiz.or.kr/nhrp/main.do",
+    // 2026-06-30: nhrp/main.do 리다이렉트 루프 → semas 재기사업화지원 상시 사업소개(재창업, 라이브 검증)
+    url: "https://www.semas.or.kr/web/SUP01/SUP0117/SUP011703.kmdc",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
