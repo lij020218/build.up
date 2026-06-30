@@ -20,6 +20,7 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneComponents
+import FoundOneCore
 
 // MARK: - 데이터 모델
 
@@ -577,15 +578,26 @@ public struct BudgetInsightCard: View {
 
     @AppStorage("roadmap.cluster") private var clusterRaw = "offline-food"
     @AppStorage("roadmap.selectedIndustryId") private var specialtyId = ""
+    // ⚠️ 2026-06-30 사장님 신고: 프랜차이즈 선택 시 selectedIndustryId 가 비어 "같은 업종 평균"이
+    //   세부업종(편의점 7,270) 대신 cluster(소매 17,000)로 떨어지던 버그 → 브랜드에서 세부업종 유도.
+    @AppStorage("stage.franchise.selectedBrandId") private var franchiseBrandId = ""
     // 사용자가 "확인" 을 눌러야 분석이 보임. 같은 sheet 안에서만 유효 (sheet 닫으면 리셋).
     @State private var confirmed = false
+
+    private var effectiveSpecialtyId: String {
+        if !specialtyId.isEmpty { return specialtyId }
+        if !franchiseBrandId.isEmpty, let brand = FranchiseBrandRegistry.brand(by: franchiseBrandId) {
+            return brand.specialtyIds?.first ?? brand.subIndustryIds.first ?? ""
+        }
+        return ""
+    }
 
     public init(userBudgetWon: Int) {
         self.userBudgetWon = userBudgetWon
     }
 
     public var body: some View {
-        if let insight = computeInsight(clusterKey: clusterRaw, specialtyId: specialtyId, userBudgetWon: userBudgetWon) {
+        if let insight = computeInsight(clusterKey: clusterRaw, specialtyId: effectiveSpecialtyId, userBudgetWon: userBudgetWon) {
             if confirmed {
                 BUCard(.card) {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {

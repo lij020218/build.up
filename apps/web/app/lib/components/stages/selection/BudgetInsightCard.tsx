@@ -31,9 +31,21 @@ export function BudgetInsightCard() {
   const d = useDashboardCtx();
   const { language, selectedBudget, selectedIndustryId, industryCategoryId, selectedFranchiseBrandId, startupType } = d;
 
+  // ⚠️ 2026-06-30 사장님 신고: 프랜차이즈 선택 시 selectedIndustryId 가 비어있어(브랜드만 선택)
+  //   "같은 업종 평균"이 세부업종(편의점 7,270) 대신 cluster(소매 17,000)로 떨어지던 버그.
+  //   → 프랜차이즈면 브랜드의 specialtyIds/subIndustryIds 로 세부업종을 유도해 평균 비교에 사용.
+  const effectiveSpecialtyId = useMemo<string | undefined>(() => {
+    if (selectedIndustryId) return selectedIndustryId;
+    if (startupType === "franchise" && selectedFranchiseBrandId) {
+      const b = getFranchiseBrandById(selectedFranchiseBrandId);
+      return b?.specialtyIds?.[0] ?? b?.subIndustryIds?.[0];
+    }
+    return undefined;
+  }, [selectedIndustryId, startupType, selectedFranchiseBrandId]);
+
   const cluster: ClusterId | null = useMemo(
-    () => getClusterForSubIndustry(selectedIndustryId ?? undefined, industryCategoryId),
-    [selectedIndustryId, industryCategoryId],
+    () => getClusterForSubIndustry(effectiveSpecialtyId, industryCategoryId),
+    [effectiveSpecialtyId, industryCategoryId],
   );
 
   // 사용자가 "확인" 을 눌러야 분석이 보임 — deliberate moment 로 만들기
@@ -78,8 +90,8 @@ export function BudgetInsightCard() {
     //   으로 표시되던 버그(2026-06-23 사장님 신고).
     return brand?.startupCostWon != null ? brand.startupCostWon * 10_000 : undefined;
   })();
-  // selectedIndustryId(세부 업종) 전달 → 편의점 등 specialty 평균 우선, 없으면 cluster 평균.
-  const insight = computeBudgetInsight(cluster, userBudgetWon, undefined, franchiseRecommendedWon, selectedIndustryId ?? undefined);
+  // effectiveSpecialtyId(세부 업종, 프랜차이즈면 브랜드에서 유도) 전달 → 편의점 등 specialty 평균 우선.
+  const insight = computeBudgetInsight(cluster, userBudgetWon, undefined, franchiseRecommendedWon, effectiveSpecialtyId);
 
   // 신호등 컬러 금지 — 미드나잇 네이비 한 톤
   const NAVY = "var(--primary, #1d3557)";
