@@ -33,6 +33,12 @@ export function PreLaunchFinalStage() {
   const ko = language === "ko";
   const isStartup = industryCategoryId === "startup-tech";
   const isOnline = industryCategoryId === "online-digital";
+  // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·직원 위생복' 등 음식 전용 점검이 뜸.
+  //   오프라인을 업종군으로 분기 — food(음식·카페) / retail(소매) / service(미용·피트니스·반려·교육·생활).
+  const offlineKind: "food" | "retail" | "service" =
+    industryCategoryId === "food" || industryCategoryId === "cafe-dessert" ? "food"
+    : industryCategoryId === "retail" ? "retail"
+    : "service";
   const pg = guideStepIndex;
   const totalPg = 4;
 
@@ -240,25 +246,63 @@ export function PreLaunchFinalStage() {
           { item: "Courier pickup time/location set", priority: "Recommended", required: false },
           { item: "Mobile detail-page preview + 4-sec first-impression test", priority: "Recommended", required: false },
         ])
-      : (ko ? [
-          { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
-          { item: "Wi-Fi 안정성 + 백업 핫스팟 자동전환 확인", priority: "필수", required: true },
-          { item: "POS 메뉴·가격 등록 + 테스트 주문 5건 처리", priority: "필수", required: true },
-          { item: "초도 재고·식재료 발주 입고 + 유통기한 라벨링", priority: "필수", required: true },
-          { item: "위생 점검: 냉장고 0~10℃ / 냉동 -18℃ + 조리대 살균 + 직원 위생복", priority: "필수", required: true },
-          { item: "전기·가스·수도·환기 시스템 사업자 명의 + 작동 확인", priority: "필수", required: true },
-          { item: "간판·메뉴판·가격표 설치 완료", priority: "권장", required: false },
-          { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
-        ] : [
-          { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
-          { item: "Wi-Fi + auto-failover hotspot confirmed", priority: "Required", required: true },
-          { item: "POS menu/price + 5 test orders processed", priority: "Required", required: true },
-          { item: "Initial inventory + expiry labels", priority: "Required", required: true },
-          { item: "Hygiene: 0-10℃ fridge / -18℃ freezer + sanitized + uniforms", priority: "Required", required: true },
-          { item: "Utilities under business name + working", priority: "Required", required: true },
-          { item: "Signage + menu board + price list", priority: "Recommended", required: false },
-          { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
-        ]);
+      : (ko
+        ? (offlineKind === "food" ? [
+            { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
+            { item: "Wi-Fi 안정성 + 백업 핫스팟 자동전환 확인", priority: "필수", required: true },
+            { item: "POS 메뉴·가격 등록 + 테스트 주문 5건 처리", priority: "필수", required: true },
+            { item: "초도 식자재·소모품 발주 입고 + 유통기한 라벨링", priority: "필수", required: true },
+            { item: "위생 점검: 냉장고 0~10℃ / 냉동 -18℃ + 조리대 살균 + 직원 위생복", priority: "필수", required: true },
+            { item: "전기·가스·수도·환기 시스템 사업자 명의 + 작동 확인", priority: "필수", required: true },
+            { item: "간판·메뉴판·가격표 설치 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ] : offlineKind === "retail" ? [
+            { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
+            { item: "Wi-Fi 안정성 + 백업 핫스팟 + 바코드 스캐너 작동 확인", priority: "필수", required: true },
+            { item: "POS·상품 바코드·가격 등록 + 테스트 결제 5건 처리", priority: "필수", required: true },
+            { item: "초도 상품 입고·검수 + 진열·가격표 부착 완료", priority: "필수", required: true },
+            { item: "매장 청결·진열 상태·도난방지 태그·CCTV 점검", priority: "필수", required: true },
+            { item: "진열대·집기·조명 + 전기·냉난방 사업자 명의·작동 확인", priority: "필수", required: true },
+            { item: "간판·가격표·반품/교환 안내문 설치 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ] : [
+            { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
+            { item: "예약 시스템(네이버 예약·전화) + Wi-Fi·백업 확인", priority: "필수", required: true },
+            { item: "POS·시술/이용권 가격 등록 + 테스트 결제 처리", priority: "필수", required: true },
+            { item: "시술재료·소모품·린넨·1회용품 초도 입고", priority: "필수", required: true },
+            { item: "위생 점검: 기구 소독·살균기 + 1회용품 + 환기·손 세정·매장 청결", priority: "필수", required: true },
+            { item: "시술/운동/케어 기기 시운전 + 전기·수도·냉난방 작동 확인", priority: "필수", required: true },
+            { item: "간판·시술 메뉴/이용권 안내판·가격표 설치 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ])
+        : (offlineKind === "food" ? [
+            { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
+            { item: "Wi-Fi + auto-failover hotspot confirmed", priority: "Required", required: true },
+            { item: "POS menu/price + 5 test orders processed", priority: "Required", required: true },
+            { item: "Initial ingredients/supplies + expiry labels", priority: "Required", required: true },
+            { item: "Hygiene: 0-10℃ fridge / -18℃ freezer + sanitized + uniforms", priority: "Required", required: true },
+            { item: "Utilities under business name + working", priority: "Required", required: true },
+            { item: "Signage + menu board + price list", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ] : offlineKind === "retail" ? [
+            { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
+            { item: "Wi-Fi + failover hotspot + barcode scanner working", priority: "Required", required: true },
+            { item: "POS + product barcodes/prices + 5 test sales", priority: "Required", required: true },
+            { item: "Initial stock received/inspected + displayed + price tags", priority: "Required", required: true },
+            { item: "Store cleanliness + display state + anti-theft tags/CCTV", priority: "Required", required: true },
+            { item: "Shelving/fixtures/lighting + power/HVAC under biz name", priority: "Required", required: true },
+            { item: "Signage + price tags + return/exchange notice", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ] : [
+            { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
+            { item: "Booking system (Naver/phone) + Wi-Fi + backup", priority: "Required", required: true },
+            { item: "POS + service/pass prices + test payment", priority: "Required", required: true },
+            { item: "Service materials/supplies/linens/disposables stocked", priority: "Required", required: true },
+            { item: "Hygiene: tool sterilizer + disposables + ventilation + hand-wash", priority: "Required", required: true },
+            { item: "Treatment/fitness/care equipment trial + power/water/HVAC", priority: "Required", required: true },
+            { item: "Signage + service/pass menu board + price list", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ]));
 
   // ─── Page 2 역할/실행 ───
   type RoleItem = { role: string; task: string; icon: LucideIcon };

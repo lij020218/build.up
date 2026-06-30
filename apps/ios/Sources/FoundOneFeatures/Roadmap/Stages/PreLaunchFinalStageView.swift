@@ -110,6 +110,18 @@ public struct PreLaunchFinalStageView: View {
 
     private var cluster: PreLaunchCluster { PreLaunchCluster.from(industryId: industryId) }
 
+    // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·주방 설비·식자재' 등 음식 전용 점검이 뜸.
+    //   오프라인을 업종군으로 분기 — food(음식·카페) / retail(소매) / service(미용·피트니스·반려·교육·생활).
+    private enum OfflineKind { case food, retail, service }
+    private var offlineKind: OfflineKind {
+        let cid = StarterIndustryData.option(by: industryId)?.categoryId ?? ""
+        switch cid {
+        case "food", "cafe-dessert": return .food
+        case "retail":               return .retail
+        default:                     return .service
+        }
+    }
+
     private var pages: [String] {
         switch cluster {
         case .offline: return ["왜 중요한가", "오픈 전 점검", "당일 운영", "홍보 타임라인"]
@@ -164,16 +176,39 @@ public struct PreLaunchFinalStageView: View {
 
     private var preChecks: [(String, Binding<Bool>)] {
         switch cluster {
-        case .offline: return [
-            ("인허가·영업신고 원본 보관 및 게시", $permitOK),
-            ("주방 설비·기기 시운전 완료", $equipmentOK),
-            ("1주일치 식자재·소모품 선입고", $stockOK),
-            ("직원 최종 역할 배정·교육 완료", $staffOK),
-            ("POS·키오스크·카드 단말기 테스트", $posOK),
-            ("위생 점검 (냉장 온도·식기 소독)", $hygieneOK),
-            ("비상 연락망·응급 절차 공유", $emergencyOK),
-            ("영업배상·화재보험 가입 확인", $insuranceOK),
-        ]
+        case .offline:
+            switch offlineKind {
+            case .food: return [
+                ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+                ("주방 설비·기기 시운전 완료", $equipmentOK),
+                ("1주일치 식자재·소모품 선입고", $stockOK),
+                ("직원 최종 역할 배정·교육 완료", $staffOK),
+                ("POS·키오스크·카드 단말기 테스트", $posOK),
+                ("위생 점검 (냉장 온도·식기 소독)", $hygieneOK),
+                ("비상 연락망·응급 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            case .retail: return [
+                ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+                ("진열대·집기·조명 시운전 완료", $equipmentOK),
+                ("초도 상품 입고·검수 + 진열·가격표 부착", $stockOK),
+                ("직원 최종 역할 배정·교육 완료", $staffOK),
+                ("POS·바코드·카드 단말기 테스트", $posOK),
+                ("매장 청결·도난방지 태그·CCTV 점검", $hygieneOK),
+                ("비상 연락망·응급 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            case .service: return [
+                ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+                ("시술·운동·케어 기기 시운전·세팅 완료", $equipmentOK),
+                ("시술재료·소모품·린넨·1회용품 선입고", $stockOK),
+                ("직원 최종 역할 배정·교육 완료", $staffOK),
+                ("POS·예약 시스템·카드 단말기 테스트", $posOK),
+                ("위생 점검 (기구 소독·환기·손 세정·1회용품)", $hygieneOK),
+                ("비상 연락망·응급 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            }
         case .online: return [
             ("사업자등록증·통신판매업 신고증 게시", $permitOK),
             ("스토어 카테고리·상세페이지·반품정책 최종 검수", $equipmentOK),
@@ -199,12 +234,27 @@ public struct PreLaunchFinalStageView: View {
 
     private var dayChecks: [(String, Binding<Bool>)] {
         switch cluster {
-        case .offline: return [
-            ("오픈 1시간 전 조리·홀 세팅 완료", $dayOpenOK),
-            ("직원 조회 — 역할·동선·메뉴 최종 확인", $dayBriefingOK),
-            ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
-            ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
-        ]
+        case .offline:
+            switch offlineKind {
+            case .food: return [
+                ("오픈 1시간 전 조리·홀 세팅 완료", $dayOpenOK),
+                ("직원 조회 — 역할·동선·메뉴 최종 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+            ]
+            case .retail: return [
+                ("오픈 1시간 전 진열·매장 세팅 완료", $dayOpenOK),
+                ("직원 조회 — 역할·동선·재고 최종 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+            ]
+            case .service: return [
+                ("오픈 1시간 전 시술공간·기구 세팅 완료", $dayOpenOK),
+                ("직원 조회 — 역할·예약·동선 최종 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+            ]
+            }
         case .online: return [
             ("주문 알림 30분 룰 — 첫 주문 즉시 발송 시작", $dayOpenOK),
             ("톡톡·카톡 채널 12시간 SLA — 첫날 문의 100% 답변", $dayBriefingOK),
