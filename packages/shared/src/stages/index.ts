@@ -12,6 +12,8 @@ export { CONTRACT_REVIEW_CONTENT } from "./content/contract-review";
 export { HIRING_SETUP_CONTENT } from "./content/hiring-setup";
 // 소프트 오픈(가오픈) 업종 맞춤 콘텐츠 — 자체 스키마(아키타입), StageContent 레지스트리 미사용.
 export * from "./content/pre-launch";
+// 특수업종(specialty)별 KEY ACTION SSOT + resolve 헬퍼.
+export * from "./stage-key-actions";
 
 import type { StageContent } from "./schema";
 import { REGISTRATION_SETUP_CONTENT } from "./content/registration-setup";

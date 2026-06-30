@@ -169,6 +169,11 @@ public struct PreLaunchFinalStageView: View {
     }
 
     private var pageKeyAction: BUStageKeyAction {
+        // 특수업종 KEY ACTION 우선 (업종 정확) — 없으면 페이지별 기본으로 폴백.
+        let cid = StarterIndustryData.option(by: industryId)?.categoryId
+        if let s = SpecialtyKeyActionRegistry.resolve(stageId: "pre-launch-final", specialtyId: industryId, categoryId: cid) {
+            return BUStageKeyAction(title: s.title, detail: s.detail)
+        }
         let arr = pageKeyActions
         let idx = min(max(page, 0), arr.count - 1)
         return arr[idx]

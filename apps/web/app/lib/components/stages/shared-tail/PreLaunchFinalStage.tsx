@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { StageWrapup } from "../shared/StageWrapup";
+import { resolveSpecialtyKeyAction } from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -29,8 +30,10 @@ const MIDNIGHT = "#191970";
  */
 export function PreLaunchFinalStage() {
   const d = useDashboardCtx();
-  const { language, industryCategoryId, guideStepIndex, setGuideStepIndex } = d;
+  const { language, industryCategoryId, selectedIndustryId, guideStepIndex, setGuideStepIndex } = d;
   const ko = language === "ko";
+  // 특수업종 KEY ACTION (specialty → category) — 있으면 페이지 기본 히어로보다 우선(업종 정확).
+  const specialtyKA = resolveSpecialtyKeyAction("pre-launch-final", selectedIndustryId ?? undefined, industryCategoryId ?? undefined);
   const isStartup = industryCategoryId === "startup-tech";
   const isOnline = industryCategoryId === "online-digital";
   // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·직원 위생복' 등 음식 전용 점검이 뜸.
@@ -718,8 +721,9 @@ export function PreLaunchFinalStage() {
 
   // ─── KEY ACTION 히어로 ───
   const KeyActionCard = () => {
-    const ka = keyActions[pg];
+    const ka = specialtyKA ?? keyActions[pg];
     if (!ka) return null;
+    const bullets = specialtyKA?.bullets;
     return (
       <div style={{
         display: "flex", gap: "14px", alignItems: "flex-start",
@@ -748,6 +752,16 @@ export function PreLaunchFinalStage() {
           <div style={{ fontSize: "13.5px", lineHeight: 1.55, opacity: 0.92 }}>
             {ka.detail}
           </div>
+          {bullets && bullets.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "9px" }}>
+              {bullets.map((b, i) => (
+                <div key={i} style={{ display: "flex", gap: "7px", fontSize: "12.5px", lineHeight: 1.45, opacity: 0.95 }}>
+                  <CheckCircle2 size={14} strokeWidth={2.4} style={{ flexShrink: 0, marginTop: 1, opacity: 0.85 }} />
+                  <span>{b}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
