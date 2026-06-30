@@ -283,7 +283,7 @@
       "ko": "매년 초 공고, 2026 접수 마감",
       "en": "Annual early-year, 2026 closed"
     },
-    "url": "https://www.bizinfo.go.kr",
+    "url": "https://www.sbiz24.kr/",
     "forSmallBiz": true,
     "forFranchise": false,
     "dataYear": "2026",
@@ -654,7 +654,7 @@
       "ko": "연 1~2회 공고 (3월, 9월)",
       "en": "1-2 notices/year (Mar, Sep)"
     },
-    "url": "https://seoulstartuphub.com/",
+    "url": "https://hubgongdeok.startup-plus.kr/",
     "forSmallBiz": true,
     "forFranchise": false,
     "dataYear": "2026",
@@ -1169,7 +1169,7 @@
     },
     "amount": "최대 10억원 (단계별 차등)",
     "season": {
-      "ko": "2026 2차 모집 7월 초 시작 (1만명 확대)",
+      "ko": "2026 2차 모집 7월 초 시작 예정 (1만명·1차 탈락자 우대)",
       "en": "Round 2 opens early Jul 2026 (10,000)"
     },
     "url": "https://www.modoo.or.kr",
@@ -1181,7 +1181,7 @@
       0,
       7
     ],
-    "applicationStatus": "open"
+    "applicationStatus": "upcoming"
   },
   {
     "id": "kaist-deeptech-competition",
@@ -2860,7 +2860,7 @@
       "ko": "매년 3~4월 공고 (2026: 3/12~4/1)",
       "en": "Annual Mar-Apr (2026: 3/12-4/1)"
     },
-    "url": "https://www.bizinfo.go.kr/",
+    "url": "https://www.sbiz24.kr/",
     "forSmallBiz": true,
     "forFranchise": true,
     "dataYear": "2026",
@@ -2922,7 +2922,7 @@
       "ko": "매년 4월 공고 (2026: 4/1~4/24)",
       "en": "Annual Apr (2026: 4/1-4/24)"
     },
-    "url": "https://www.bizinfo.go.kr/",
+    "url": "https://www.semas.or.kr/web/SUP01/SUP0122/SUP012202.kmdc",
     "forSmallBiz": true,
     "forFranchise": false,
     "dataYear": "2026",
@@ -2953,7 +2953,7 @@
       "ko": "매년 초 통합공고 (소상공인24 접수)",
       "en": "Annual early-year (via sbiz24)"
     },
-    "url": "https://www.sbiz.or.kr/",
+    "url": "https://www.semas.or.kr/web/SUP01/SUP0101/SUP010112.kmdc",
     "forSmallBiz": true,
     "forFranchise": false,
     "dataYear": "2026",

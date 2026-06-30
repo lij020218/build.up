@@ -279,7 +279,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "혁신 아이템 보유 소상공인", en: "SMEs with innovative items" },
     benefit: { ko: "브랜딩·시제품·마케팅·리모델링 + 정책자금 연계", en: "Branding, prototyping, marketing, remodeling + policy fund linkage" },
     season: { ko: "매년 초 공고, 2026 접수 마감", en: "Annual early-year, 2026 closed" },
-    url: "https://www.bizinfo.go.kr",
+    // 2026-06-30: 범용 기업마당 → 올바른 소상공인 공식 포털(소상공인24). stable 사업소개 페이지 부재(연도공고는 만료 위험)라 포털로.
+    url: "https://www.sbiz24.kr/",
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
@@ -469,8 +470,9 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "서울 소재 (예비)창업자", en: "Seoul-based (pre-)founders" },
     benefit: { ko: "사무공간 6개월~1년 무상 + 창업 프로그램 + 네트워킹", en: "Free office 6-12mo + programs + networking" },
     season: { ko: "연 1~2회 공고 (3월, 9월)", en: "1-2 notices/year (Mar, Sep)" },
-    // 2026-06-26 검증: 메인 도메인 정상(입주 신청은 startup-plus.kr 플랫폼)
-    url: "https://seoulstartuphub.com/",
+    // 2026-06-30 재검증(웹): 옛 seoulstartuphub.com 접속 불가(타임아웃) → 공식 이전 도메인
+    //   startup-plus.kr(공덕 플래그십, SBA 운영) 로 교체. 입주·액셀러레이팅·사업공고 라이브 확인.
+    url: "https://hubgongdeok.startup-plus.kr/",
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
@@ -732,15 +734,16 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "예비창업자 + 7년 이내 창업기업 (2차 1만명 모집)", en: "Pre-founders + 7-yr companies (10,000 in round 2)" },
     benefit: { ko: "사업화 자금 + 글로벌 진출 + 멘토링 + 투자 연계", en: "Biz funds + global expansion + mentoring + investment" },
     amount: "최대 10억원 (단계별 차등)",
-    // 2026-06-26 검증: 1차(3.26~5.15) 마감, 2차 모집 7월 초 1만명 확대 — 활성 유지(삭제 아님)
-    season: { ko: "2026 2차 모집 7월 초 시작 (1만명 확대)", en: "Round 2 opens early Jul 2026 (10,000)" },
+    // 2026-06-30 재검증(웹): 1차(3.26~5.15) 마감, 2차는 7월 초 시작 예정(1만명 확대·7년이내·1차탈락자 우대).
+    //   현재(6/30) 1차 종료·2차 미개시 → "open" 아닌 "upcoming"(예정) 으로 정정. 삭제 아님.
+    season: { ko: "2026 2차 모집 7월 초 시작 예정 (1만명·1차 탈락자 우대)", en: "Round 2 opens early Jul 2026 (10,000)" },
     url: "https://www.modoo.or.kr",
     forSmallBiz: true,
     forFranchise: false,
     highlight: true,
     dataYear: "2026",
     businessYearRange: [0, 7],
-    applicationStatus: "open",
+    applicationStatus: "upcoming",
   },
   {
     id: "kaist-deeptech-competition",
@@ -1567,7 +1570,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "상세페이지·콘텐츠, 온라인몰 입점, 라이브커머스, SNS마케팅, 물류 등 8개 중 최대 4개", en: "Up to 4 of 8: detail pages, online mall, live commerce, SNS, logistics" },
     amount: "항목별 차등 (다수 항목 패키지)",
     season: { ko: "매년 3~4월 공고 (2026: 3/12~4/1)", en: "Annual Mar-Apr (2026: 3/12-4/1)" },
-    url: "https://www.bizinfo.go.kr/",
+    // 2026-06-30: 범용 기업마당 → 올바른 소상공인 공식 포털(소상공인24). stable 사업소개 페이지 부재(연도공고는 만료 위험)라 포털로.
+    url: "https://www.sbiz24.kr/",
     forSmallBiz: true,
     forFranchise: true,
     dataYear: "2026",
@@ -1599,7 +1603,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "단계별 성장지원금 300만 → 지역오디션 최대 6천만 → 전국오디션 상위 60팀 추가 4천만", en: "Tiered: 3M → regional 60M → national top-60 +40M" },
     amount: "최대 1억원 (단계별 차등)",
     season: { ko: "매년 4월 공고 (2026: 4/1~4/24)", en: "Annual Apr (2026: 4/1-4/24)" },
-    url: "https://www.bizinfo.go.kr/",
+    // 2026-06-30 딥링크: 범용 포털(bizinfo) → 소진공 상시 사업소개(舊 강한소상공인 성장지원, 라이브 검증·연도무관)
+    url: "https://www.semas.or.kr/web/SUP01/SUP0122/SUP012202.kmdc",
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
@@ -1615,7 +1620,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "창업교육 + 점포경영체험 + 사업화 자금", en: "Training + store-operation practice + commercialization funds" },
     amount: "사업화 자금 평균 2,000만 (최대 4,000만)",
     season: { ko: "매년 초 통합공고 (소상공인24 접수)", en: "Annual early-year (via sbiz24)" },
-    url: "https://www.sbiz.or.kr/",
+    // 2026-06-30 딥링크: 소진공 메인(sbiz.or.kr) → 상시 사업소개 페이지(라이브 검증·연도무관)
+    url: "https://www.semas.or.kr/web/SUP01/SUP0101/SUP010112.kmdc",
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
@@ -2403,6 +2409,10 @@ export function getMatchedProgramsV2(
       matchReasons,
     };
   })
+  // 마감 지난(applicationDeadline < 오늘) · closed 프로그램은 매칭에서 제외 —
+  //   수동 status 가 "open" 이어도 마감일이 지났으면 노출 금지(2026-06-30 사장님 신고:
+  //   "모두의 창업 같은 일정 지난 프로그램이 펀딩 페이지에 뜬다"). isProgramExpired = SSOT.
+  .filter((pm) => !isProgramExpired(pm))
   .sort((a, b) => {
     // 자격 보유 우선
     if (a.eligible && !b.eligible) return -1;

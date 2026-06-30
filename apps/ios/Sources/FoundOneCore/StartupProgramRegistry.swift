@@ -350,8 +350,9 @@ public enum StartupProgramRegistry {
             )
         }
 
+        // 마감 지난(applicationDeadline < today) · closed 프로그램 제외 (웹 isProgramExpired 패리티)
         // 정렬: 자격 → 마감 임박 (≤7d) → 상태 → 점수
-        return results.sorted { a, b in
+        return results.filter { !programExpired($0.program, today) }.sorted { a, b in
             if a.eligible != b.eligible { return a.eligible }
             let aUrgent = (a.daysUntilDeadline.map { $0 >= 0 && $0 <= 7 } ?? false)
             let bUrgent = (b.daysUntilDeadline.map { $0 >= 0 && $0 <= 7 } ?? false)
@@ -389,6 +390,14 @@ public enum StartupProgramRegistry {
         f.dateFormat = "yyyy-MM-dd"
         f.timeZone = TimeZone(identifier: "Asia/Seoul")
         return f.date(from: s)
+    }
+
+    /// 웹 isProgramExpired 패리티 — closed 이거나 applicationDeadline 이 지났으면 만료.
+    ///   수동 status 가 "open" 이어도 마감일이 지났으면 매칭에서 제외(지난 일정 노출 방지).
+    private static func programExpired(_ p: StartupProgram, _ now: Date) -> Bool {
+        if p.applicationStatus == "closed" { return true }
+        if let dl = p.applicationDeadline, let d = isoDate(dl), d < now { return true }
+        return false
     }
 
     // MARK: - Bundle loader
