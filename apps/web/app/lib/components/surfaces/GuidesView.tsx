@@ -450,10 +450,16 @@ export function GuidesView() {
     return [q, ...extra];
   }, [searchQuery]);
 
-  const passFilters = (p: StartupProgram) => {
+  const passFilters = (p: StartupProgram & { eligible?: boolean }) => {
     if (searchTerms.length > 0) {
       const hay = `${p.name.ko} ${p.name.en} ${p.organizer.ko} ${p.organizer.en} ${p.target.ko}`.toLowerCase();
       if (!searchTerms.some((t) => hay.includes(t))) return false;
+    } else if (p.eligible === false) {
+      // 2026-06-30 사장님 신고: 미용실인데 AI스타트업·모빌리티/로보틱스·딥테크·스타트업파크가 뜸.
+      //   getMatchedProgramsV2 가 업종·대상 불일치를 eligible=false 로 표시하지만, 기본 브라우즈
+      //   리스트가 그걸 안 걸러 점수 낮게라도 노출되던 누수. 검색이 아닌 일반 브라우즈에서는 제외.
+      //   (검색 시에는 사용자가 명시적으로 찾는 것이라 전부 노출 유지.)
+      return false;
     }
     if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
     if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;

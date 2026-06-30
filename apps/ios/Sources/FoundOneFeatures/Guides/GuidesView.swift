@@ -81,6 +81,12 @@ fileprivate final class FundingPageState {
 
     var filtered: [FundingProgram] {
         var list = programs
+        // 2026-06-30 사장님 신고: 미용실인데 AI스타트업·모빌리티/로보틱스·딥테크가 뜸.
+        //   추천 모드는 이미 recommend(eligible 필터)지만, 기본 브라우즈는 match(전체)라 업종·대상
+        //   불일치(eligible=false)가 흐리게라도 노출되던 누수 → 기본 브라우즈에서 제외(웹 패리티).
+        if !recommendMode {
+            list = list.filter { $0.eligible }
+        }
         if categoryFilter != .all {
             list = list.filter { CategoryFilter.from($0.category) == categoryFilter }
         }
