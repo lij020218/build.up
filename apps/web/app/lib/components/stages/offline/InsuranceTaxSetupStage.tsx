@@ -260,7 +260,7 @@ export function InsuranceTaxSetupStage() {
         title="첫 직원 채용 시 4가지 의무 — 근로계약서 즉시 + 4대보험 취득신고(건강14일·기타 익월15일) + 원천세 매월"
         subtitle={
           <>
-            직원 1명만 채용해도 4가지 의무 자동 발생: <strong style={{ fontWeight: 700 }}>① 근로계약서 (미체결 500만 과태료)</strong> +
+            직원 1명만 채용해도 4가지 의무 자동 발생: <strong style={{ fontWeight: 700 }}>① 근로계약서 (미체결 500만원 이하 벌금·과태료)</strong> +
             <strong style={{ fontWeight: 700 }}> ② 4대보험 취득신고(건강14일·기타 익월15일)</strong> +
             <strong style={{ fontWeight: 700 }}> ③ 원천세 매월 10일</strong> +
             <strong style={{ fontWeight: 700 }}> ④ 급여 시스템</strong>. 5인 미만 예외 X.
@@ -269,7 +269,7 @@ export function InsuranceTaxSetupStage() {
         }
         miniCards={[
           { icon: FileText, label: "근로계약서", detail: "당일 즉시" },
-          { icon: ShieldCheck, label: "4대보험", detail: "14일 이내" },
+          { icon: ShieldCheck, label: "4대보험", detail: "익월 15일·건강 14일" },
           { icon: Receipt, label: "원천세 + 급여", detail: "매월 10일" },
         ]}
       />
@@ -291,9 +291,9 @@ export function InsuranceTaxSetupStage() {
               {[
                 {
                   accent: "#b64c4c",
-                  title: "근로계약서 미체결 = 500만원 과태료 (1차)",
+                  title: "근로계약서 미체결 = 500만원 이하 벌금 또는 과태료",
                   body:
-                    "채용 당일 또는 출근 전 반드시 작성·교부. 임금·근로시간·휴일·휴가 등 핵심 조건 명시 의무. 표준근로계약서는 고용노동부에서 무료 다운로드 — 근로기준법 17조 위반 시 1차 500만원, 2차 1,000만원.",
+                    "채용 당일 또는 출근 전 반드시 작성·교부. 임금·근로시간·휴일·휴가 등 핵심 조건 명시 의무. 표준근로계약서는 고용노동부에서 무료 다운로드 — 근로기준법 17조 위반 시 500만원 이하 벌금(정규직 형사처벌·인당) 또는 과태료(기간제·단시간).",
                 },
                 {
                   accent: MIDNIGHT,
@@ -442,7 +442,7 @@ export function InsuranceTaxSetupStage() {
           </Section>
 
           {/* 신고 절차 */}
-          <Section icon={FileText} title="신고 절차" subtitle="채용일 14일 이내 — 4대사회보험 정보연계센터 일괄 신고">
+          <Section icon={FileText} title="신고 절차" subtitle="다음 달 15일까지(건강보험은 14일 이내) — 4대사회보험 정보연계센터 일괄 신고">
             <StepRow
               number={1}
               title="4대사회보험 정보연계센터 회원가입"
@@ -467,7 +467,7 @@ export function InsuranceTaxSetupStage() {
 
             {/* meta */}
             <div style={{ display: "flex", gap: "8px", padding: "14px 16px", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-              <MetaPair label="기한" value="14일" sublabel="채용 후" />
+              <MetaPair label="기한" value="익월 15일" sublabel="건강보험 14일" />
               <MetaPair label="비용" value="무료" sublabel="신고 자체" />
               <MetaPair label="장소" value="4insure.or.kr" />
             </div>
@@ -553,7 +553,7 @@ export function InsuranceTaxSetupStage() {
             <StepRow
               number={3}
               title="다음 달 10일까지 홈택스 신고·납부"
-              detail="홈택스 → 신고/납부 → 원천세. 납부지연 시 미납세액 3% + 일 0.022% 가산세 (한도 10%)"
+              detail="홈택스 → 세금신고 → 원천세. 납부지연 시 미납세액 3% + 일 0.022% 가산세 (일할분 최대 10% 한도)"
             />
             <StepRow
               number={4}
@@ -747,8 +747,8 @@ export function InsuranceTaxSetupStage() {
               />
               <PathCard
                 condition="알바·시급 직원만 운영"
-                recommendation="일용근로자 신고 — 월 60시간 + 1개월 미만 기준"
-                reason="일용직은 산재만 의무 가입. 월 60시간 이상 + 1개월 이상 근무 시 4대보험 모두 가입 의무. 시급 알바 늘릴 때 사회보험 부담 미리 계산해야 함."
+                recommendation="일용근로자 신고 — 고용·산재는 1일만 일해도 의무"
+                reason="일용직도 고용·산재는 1일만 일해도 의무 가입(근로내용확인신고 익월 15일). 1개월 이상 + 월 8일 또는 60시간 이상이면 국민연금·건강까지 의무. '산재만'은 오해 — 고용보험 누락 시 과태료. 시급 알바 늘릴 때 사회보험 부담 미리 계산."
               />
             </div>
           </Section>
@@ -770,8 +770,8 @@ export function InsuranceTaxSetupStage() {
               </div>
             </div>
             <ol style={{ margin: 0, paddingLeft: "20px", fontSize: "12.5px", lineHeight: 1.75, color: "rgba(15,23,42,0.78)" }}>
-              <li>채용 즉시: 근로계약서 작성 (필수, 미체결 시 500만 과태료)</li>
-              <li>14일 이내: 4대사회보험 정보연계센터 → 사업장 성립 + 근로자 취득 신고</li>
+              <li>채용 즉시: 근로계약서 작성 (필수, 미체결 시 500만원 이하 벌금·과태료)</li>
+              <li>익월 15일까지(건강보험 14일): 4대사회보험 정보연계센터 → 사업장 성립 + 근로자 취득 신고</li>
               <li>두루누리 자동 적용 체크 (해당자만 — 신청 안 하면 자동 적용 안 됨)</li>
               <li>첫 급여일 전: 홈택스 간이세액표로 원천세 계산법 숙지</li>
               <li>첫 급여 지급일 다음 달 10일까지: 홈택스 원천세 신고·납부</li>

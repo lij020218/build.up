@@ -2066,7 +2066,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     nextStageIds: ["loan-guide"]
   },
   // ★ 2026-05-03 순서 수정: 한국 노동법 실무 흐름 반영.
-  //   채용 결정 → 근로계약서 작성·교부 (근기법 17조, 미체결 1차 500만원 과태료) → 근로 개시
+  //   채용 결정 → 근로계약서 작성·교부 (근기법 17조, 미체결 시 500만원 이하 벌금·과태료) → 근로 개시
   //   → 4대보험 사업장 성립·자격취득 신고 (건강 14일·기타 익월 15일) → 원천세 (월 10일) → 급여 시스템.
   //   이전: insurance-tax-setup(12) → hiring-setup(13) — 의무 처리가 채용보다 앞서있어
   //         "근로계약 미작성 직원의 4대보험"이라는 모순. 사용자 피드백으로 수정.
@@ -2794,7 +2794,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     },
     {
       taskId: "music-license-registered",
-      title: "Register for background music license (KOMCA/매장음악서비스) if store >50㎡",
+      title: "Register background music license (KOMCA/store-music service) — only designated businesses (cafe/pub/gym) >50㎡",
       status: "todo",
       required: true,
       estimatedMinutes: 15

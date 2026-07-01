@@ -163,7 +163,7 @@ export function OperationsSetupStage() {
       id: "nice", name: "NICE정보통신", color: "#0F4C81", url: "https://www.nicevan.co.kr",
       tagline: "국내 1위 VAN · 업종 무관 안정적",
       pros: ["국내 시장 점유율 1위 — 모든 카드사·간편결제 자동 연계", "전국 A/S망, 사고·장애 대응 빠름", "사업자등록증·통장사본·신분증만 있으면 신청"],
-      cons: ["VAN 수수료(건당 약 100~150원)는 카드 수수료와 별개", "단말기 임대·구매 옵션별 비용 차이 큼"],
+      cons: ["단말기 임대료·관리비(월정액)는 카드 수수료와 별개 — 업체별 사전 비교 필수", "단말기 임대·구매 옵션별 비용 차이 큼"],
     },
     {
       id: "kis", name: "KIS정보통신", color: "#1E3A8A", url: "https://www.kisvan.co.kr",
@@ -194,9 +194,9 @@ export function OperationsSetupStage() {
   // ─── 매장 배경음악 저작권 ───
   const musicLicenseOptions: OpsDetail[] = [
     {
-      id: "komca-direct", name: "직접 신고 (KOMCA + KOSCAP + KAFOC)", color: "#0F766E", url: "https://www.komca.or.kr",
+      id: "komca-direct", name: "직접 신고 (KOMCA + KOSCAP + RIAK)", color: "#0F766E", url: "https://www.komca.or.kr",
       tagline: "월 4천원~ · 가장 저렴 · 3개 단체 개별 신고",
-      pros: ["50㎡ 커피전문점 기준 월 약 4,000원 — 가장 저렴", "한국음악저작권협회(KOMCA) + 음반산업협회(KOSCAP) + 음반제작자협회(KAFOC) 3곳 신고", "오랜 운영 매장의 정통 방식"],
+      pros: ["50㎡ 커피전문점 기준 월 약 4,000원 — 가장 저렴", "한국음악저작권협회(KOMCA) + 함께하는음악저작인협회(KOSCAP) + 한국음반산업협회(RIAK, 음반제작자) 3곳 신고", "오랜 운영 매장의 정통 방식"],
       cons: ["3개 단체 각각 신고·납부 — 절차 복잡", "음원 직접 보유·재생 필요 (CD/MP3 등)", "유튜브·스포티파이 등 개인용 스트리밍은 사용 불가"],
     },
     {
@@ -268,8 +268,8 @@ export function OperationsSetupStage() {
       ? { title: "사업자등록 직후 VAN사 1곳에 가맹점 등록 신청 — 카드 결제까지 약 1주", detail: "VAN사 1곳에 신청하면 모든 카드사·간편결제(카카오·네이버·애플페이) 자동 연계. 토스플레이스 등 통합 솔루션 사용 시 별도 VAN 신청 불필요." }
       : { title: "Apply to one VAN provider right after business registration — ~1 week to card-ready", detail: "One VAN application covers all card networks + simple-pay. Toss Place includes VAN — no separate application needed." },
     4: ko
-      ? { title: "50㎡(15평) 이상이면 음악 저작권 의무 — 미가입은 형사처벌 리스크", detail: "위반 시 손해배상 + 최대 5년 이하 징역 또는 5천만원 이하 벌금. 작은 매장은 직접 신고(월 4천원~), 큰 매장은 매장음악서비스(월 9천원~) 추천." }
-      : { title: "Stores ≥50㎡ must license background music — non-compliance = criminal risk", detail: "Violations: damages + up to 5y imprisonment or 50M KRW fine. Small stores: direct filing (4K KRW/mo). Larger: store music service (9K KRW/mo)." },
+      ? { title: "카페·주점·헬스장 등 지정 업종 중 50㎡(15평) 이상만 음악 공연권료 의무", detail: "저작권법 시행령 §11 — 커피전문점·생맥주/기타주점·체력단련장·대규모점포 등 지정 업종만 대상. 일반 식당(한식·중식 등)·미용실·편의점은 면적 무관 면제. 대상 매장 미가입 시 손해배상 + 형사처벌 리스크. 직접 신고(월 4천원~) 또는 매장음악서비스(월 9천원~)." }
+      : { title: "Only designated businesses (cafe/pub/gym) ≥50㎡ owe music performance royalties", detail: "Copyright Act Enforcement Decree §11 — only cafes, draft-beer/other pubs, gyms, large retail owe royalties. General restaurants, salons, convenience stores are exempt regardless of size. Covered stores unlicensed: damages + criminal risk. Direct filing (4K KRW/mo) or store music service (9K KRW/mo)." },
     5: ko
       ? { title: "오픈 2주 전, 간판·메뉴판·로고를 한 디자이너에게 일괄 의뢰", detail: "톤 일관성을 위해 한 디자이너에게 묶어서 발주. 납품 시 AI/EPS 벡터 원본 파일 필수 — JPG만 받으면 간판·인쇄에서 품질 문제 발생." }
       : { title: "Order signage, menu, logo from ONE designer 2 weeks before opening", detail: "Consistent tone requires one source. Always require AI/EPS vector files — JPG-only causes print/signage quality issues." },
@@ -307,18 +307,18 @@ export function OperationsSetupStage() {
     3: ko ? [
       { headline: "VAN 가입 없이 카드 결제 = 0건", impact: "사업자등록 후 즉시 신청 안 하면 오픈 후 현금만 받게 됨. 신청 → 활성화 약 7일.", metric: "사업자등록 후 D+0 신청이 골든타임" },
       { headline: "통합 솔루션(토스플레이스 등) 사용 시 별도 신청 불필요", impact: "이미 VAN 포함된 솔루션 쓰는데 또 신청하면 단말기 2대 + 정산 분리 → 회계 복잡도 폭증." },
-      { headline: "VAN 수수료는 카드 수수료와 별개", impact: "건당 100~150원 추가. 객단가 5천원 매장은 매출의 2~3% 추가 부담." },
+      { headline: "가맹점이 내는 결제 수수료는 카드사 가맹점수수료뿐", impact: "건당 VAN 수수료를 사업주에게 별도 청구하는 구조는 없음(카드사↔VAN사 간 비용). 실제 부담은 카드 가맹점수수료(매출 0.5~1.5%) + 단말기 임대료·관리비(월정액, 업체별 상이) — 후자는 사전 비교 필수." },
     ] : [
       { headline: "No VAN = zero card sales", impact: "Apply right after business registration; activation ~7 days." },
       { headline: "Skip VAN if integrated solution covers it", impact: "Double signup = split settlement + duplicate terminals." },
-      { headline: "VAN fee is separate from card fee", impact: "100-150 KRW/tx adds up on low-ticket stores." },
+      { headline: "Merchants only pay the card acquirer fee", impact: "Per-tx VAN fees aren't billed to merchants (that's a card-issuer↔VAN cost). Real costs: card merchant fee (0.5–1.5% of sales) + terminal rental/maintenance — compare the latter across providers." },
     ],
     4: ko ? [
-      { headline: "50㎡ 이상 미가입 시 형사처벌 + 손해배상", impact: "공연권법 위반 — 손해배상 + 최대 5년 이하 징역 또는 5천만원 이하 벌금. 단속 사례 빈번.", metric: "1년 미가입 누적 손해배상 평균 100~300만원" },
+      { headline: "지정 업종(카페·주점·헬스장 등) 50㎡ 이상만 대상", impact: "저작권법 시행령 §11 지정 업종만 공연권료 의무 — 일반 식당·미용실·편의점은 면제. 대상 매장 미가입 시 손해배상 + 형사처벌.", metric: "대상 매장 1년 미가입 누적 손해배상 평균 100~300만원" },
       { headline: "유튜브·스포티파이 매장 사용 = 명백한 위반", impact: "개인 약관은 비상업적 사용만 허용. 매장 사용은 적발 시 변명 불가." },
       { headline: "사업자등록 직후 처리 = 누락 리스크 0", impact: "오픈 후 처리하려다 잊어버리는 케이스가 가장 많음. 등록 직후 일괄 처리가 최선.", metric: "월 4천원~9천원 (선택지에 따라)" },
     ] : [
-      { headline: "Stores ≥50㎡ face criminal penalties if unlicensed", impact: "Damages + up to 5y prison or 50M KRW fine. Enforcement is active." },
+      { headline: "Only designated businesses ≥50㎡ are covered", impact: "Only §11-designated businesses (cafe/pub/gym/large retail) owe royalties; general restaurants, salons, stores are exempt. Covered stores unlicensed: damages + criminal penalty." },
       { headline: "YouTube/Spotify in store = clear violation", impact: "Personal TOS forbid commercial use." },
       { headline: "Handle right after business registration", impact: "Most common miss is post-opening procrastination." },
     ],
@@ -390,7 +390,7 @@ export function OperationsSetupStage() {
       { day: "D-1", title: "1 real transaction + settlement check" },
     ],
     4: ko ? [
-      { day: "D-14", title: "영업장 면적 측정", detail: "건축물대장 또는 임대차 계약서 기준. 50㎡(15.1평) 미만이면 의무 X." },
+      { day: "D-14", title: "업종·면적 확인", detail: "건축물대장·계약서 기준. 지정 업종(카페·주점·헬스장 등)이면서 50㎡(15.1평) 이상만 의무 — 일반 식당·미용실·편의점 등은 면제." },
       { day: "D-10", title: "옵션 비교 (직접 신고 vs 매장음악서비스)", detail: "직접 신고: 월 4천원~ (3개 단체 별도). 샵캐스트·멜론비즈: 월 9천원~ 통합." },
       { day: "D-7", title: "신청·납부 + 영수증 보관", detail: "사업자등록 후 1개월 이내 처리 권장. 단속 시 영수증 제시." },
       { day: "D-Day", title: "라이브 음원 시작", detail: "유튜브·스포티파이 사용 금지. 매장음악서비스 또는 자체 보유 음원만 재생." },
@@ -1644,7 +1644,7 @@ export function OperationsSetupStage() {
           "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
           "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
           "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
-          "원산지 표시 — 농수산물 원산지 표시법 위반 시 1억원 이하 과징금, 전 메뉴 표시 의무",
+          "원산지 표시 — 거짓 표시 시 7년 이하 징역·1억원 이하 벌금 / 미표시 시 1,000만원 이하 과태료. 전 메뉴 표시 의무",
           "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
         ]}
         nextSummaryKo="POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"

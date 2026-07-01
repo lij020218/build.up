@@ -253,7 +253,7 @@ public struct OperationsSetupStageView: View {
                 "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
                 "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
                 "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
-                "원산지 표시 — 농수산물 원산지 표시법 위반 시 1억원 이하 과징금, 전 메뉴 표시 의무",
+                "원산지 표시 — 거짓 표시 시 7년 이하 징역·1억원 이하 벌금 / 미표시 시 1,000만원 이하 과태료. 전 메뉴 표시 의무",
                 "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
                 ],
                 nextStageLabel: "프리오픈·본 오픈 준비",
@@ -296,7 +296,7 @@ public struct OperationsSetupStageView: View {
                     opsImpactRow("POS 첫날 결제 오류", "메뉴 미등록·카드 미연동 시 손님 앞 결제 실패 — 첫날 오류 매장 평균 별점 -0.4점, 신뢰 회복 수개월.")
                     opsImpactRow("네이버 플레이스 미등록", "한국 음식점 검색 80%가 네이버 — 미등록 첫 주 신규 방문 -60%. 노출까지 최대 7일 + 1주차 상호작용 50건 = 상위 노출 진입선.")
                     opsImpactRow("VAN 미신청", "VAN 없이 카드 결제 0건 — 신청→활성화 약 7일. 사업자등록 후 D+0 신청이 골든타임.")
-                    opsImpactRow("매장 음악 저작권 (50㎡↑)", "미가입 = 손해배상 + 최대 5년 이하 징역 또는 5천만원 이하 벌금. 직접 신고 월 4천원~.")
+                    opsImpactRow("매장 음악 저작권 (지정업종 50㎡↑)", "카페·주점·헬스장 등 지정 업종 50㎡↑만 의무(일반 식당·미용실·편의점 면제). 대상 매장 미가입 = 손해배상 + 형사처벌. 직접 신고 월 4천원~.")
                 }
             }
         }
@@ -470,7 +470,7 @@ public struct OperationsSetupStageView: View {
 
             if cluster.category.isOffline {
                 // 매장 음악 저작권 (웹 musicLicenseOptions 미러) — 50㎡↑ 의무.
-                opsDetailCard(title: "매장 음악 저작권 — 4개 옵션 (50㎡↑ 의무)", items: OperationsDetailRegistry.music)
+                opsDetailCard(title: "매장 음악 저작권 — 4개 옵션 (지정업종 50㎡↑ 의무)", items: OperationsDetailRegistry.music)
                 // 브랜드 디자인 (웹 designPlatforms 미러) — 간판·메뉴판·로고.
                 opsDetailCard(title: "브랜드 디자인 — 5개 플랫폼 (간판·메뉴판·로고)", items: OperationsDetailRegistry.design)
             }
@@ -497,10 +497,10 @@ public struct OperationsSetupStageView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 6) {
                                     Text("매장음악 저작권 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                    Text("50㎡+ 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.warn)
+                                    Text("지정업종 50㎡+").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.warn)
                                         .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.warn.opacity(0.1), in: Capsule())
                                 }
-                                Text("한국음악저작권협회(KOMCA) 또는 매장음악 서비스 가입 — 영업장 50㎡ 이상 법적 의무").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                                Text("한국음악저작권협회(KOMCA) 또는 매장음악 서비스 가입 — 카페·주점·헬스장 등 지정 업종 50㎡ 이상만 의무(일반 식당·미용실 면제)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
                             }
                         }.tint(BUColor.midnight)
                         Divider()
