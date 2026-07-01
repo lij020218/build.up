@@ -585,8 +585,8 @@ export function PreLaunchStage() {
       {pageIdx === 5 && (
         <StageWrapup
           ko={ko}
-          nextStageLabelKo="다음 단계(본 오픈) 전 반드시 확인"
-          nextStageLabelEn="Verify before grand open"
+          nextStageLabelKo="본 오픈"
+          nextStageLabelEn="grand open"
           doneItemsKo={[
             { label: soft.page1Label.ko, detail: soft.trialTypes.map((t) => t.label.ko).join("·") + " 균형 유치" },
             { label: "2. 당일 운영 점검 (세부업종 맞춤)", detail: (subDayChecks.length ? subDayChecks.map((c) => c.label.ko).join("·") : "핵심 설비·결제·청결") + "·관찰·정산" },

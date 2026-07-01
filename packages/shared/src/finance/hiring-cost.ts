@@ -77,9 +77,11 @@ export function calculateHiringCost(input: HiringCostInput): HiringCostBreakdown
 
   const rates = INSURANCE_RATES_2026;
 
-  // 주휴수당: 주 15시간 이상 근무 시 유급 휴일 수당
+  // 주휴수당: 주 15시간 이상 근무 시 유급 휴일 수당. 소정근로시간 비례(근기법 §55).
+  //   주휴시간 = 주 소정근로시간 ÷ 5 이므로 월급 대비 항상 1/5(= 8/40, 주 40h 이하).
+  //   monthlySalary 가 이미 실근로시간 기준이라 비례 결과와 동일 — 무조건 8시간분(고정)이 아님.
   const weeklyHolidayPay = includeWeeklyHoliday
-    ? Math.round(monthlySalary * (8 / 40)) // 1일 8시간 기준
+    ? Math.round(monthlySalary * (8 / 40)) // = ×1/5 (주휴 비례). 주 40h 초과는 8h 상한 별도 처리 필요
     : 0;
   const totalGross = monthlySalary + weeklyHolidayPay;
 

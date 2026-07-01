@@ -217,7 +217,7 @@ export const CONTRACT_REVIEW_CONTENT: StageContent = {
   ],
   byCategory,
   wrapup: {
-    nextStageLabel: "다음 단계(인테리어) 전 반드시 확인",
+    nextStageLabel: "인테리어",
     doneItems: [
       { label: "1. 서류 발급", detail: "건축물대장 + 등기부등본 — 위반건축물 표시 + 근저당 ÷ 시세 = 부도 위험률" },
       { label: "2. 현장 방문 + 인접 점주 인터뷰", detail: "휴대폰 영상 + 30초 인터뷰 + 전기 30A·정화조 직접 검증" },

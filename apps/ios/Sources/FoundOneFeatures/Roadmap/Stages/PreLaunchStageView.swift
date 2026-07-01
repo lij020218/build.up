@@ -126,7 +126,7 @@ public struct PreLaunchStageView: View {
                 "피드백 응답 10건 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
                 "소프트 오픈 1페이지 요약 정리 — 본 오픈 운영 자료",
                 ],
-                nextStageLabel: "다음 단계(본 오픈) 전 반드시 확인",
+                nextStageLabel: "본 오픈",
                 nextSummary: "운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
             ),
             currentPage: page,
