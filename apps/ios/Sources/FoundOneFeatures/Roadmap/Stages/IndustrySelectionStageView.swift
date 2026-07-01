@@ -146,7 +146,7 @@ public struct IndustrySelectionStageView: View {
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프 등 9개 대분류 검토"),
+                .init(label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프·공간·온라인·스타트업 11개 대분류 검토"),
                 .init(label: "2. 세부 업종 선택", detail: "관심 카테고리 안에서 한 가지 세부 업종 확정 (예: 케어 살롱, 베이커리 스튜디오)"),
                 .init(label: "3. 추천 데이터 확인", detail: "업종별 평균 창업비·마진·트렌드·진입난이도 검토"),
                 .init(label: "4. 후속 단계 준비", detail: "업종에 맞는 창업 유형(오프라인·온라인·스타트업)으로 진입 준비"),

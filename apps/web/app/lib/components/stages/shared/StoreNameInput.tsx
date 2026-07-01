@@ -85,10 +85,10 @@ export function StoreNameInput({
   const showError = status === "error";
 
   const fieldLabel = label ?? (ko ? "상호명 (사업자등록증에 적힐 이름)" : "Store name (as on registration)");
-  const ph = placeholder ?? (ko ? "예: 홍길동 떡볶이, 카페 온도" : "e.g. Happy Café, Sunrise Bakery");
+  const ph = placeholder ?? (ko ? "예: 온도 카페, 홍길동 상점" : "e.g. Happy Café, Sunrise Studio");
   const helper = helperText ?? (ko
-    ? "사업자등록증·간판·메뉴판·SNS·세금계산서까지 모두 동일한 이름으로 사용됩니다. 입력하면 자동 저장됩니다."
-    : "Used across registration, signage, menu, social, and invoices. Auto-saves as you type.");
+    ? "사업자등록증·간판·안내판·SNS·세금계산서까지 모두 동일한 이름으로 사용됩니다. 입력하면 자동 저장됩니다."
+    : "Used across registration, signage, social, and invoices. Auto-saves as you type.");
 
   return (
     <div style={card}>

@@ -101,8 +101,8 @@ export function BusinessModelSelectionStage() {
             ? "한 가지 운영 모델에 우선 락인 — 분산은 매출 후"
             : "Lock in one operating model first — diversify after revenue",
           detail: ko
-            ? "홀·배달·하이브리드 중 하나로 락인. 한국 외식업은 75%+ 하이브리드지만 첫 3개월은 한 모델로 표준화 — 매출 안정 후 두 번째 채널 추가."
-            : "Lock to dine-in, delivery, or hybrid. Korea's F&B is 75%+ hybrid, but standardize on one for the first 3 months — add a second channel after revenue stabilizes.",
+            ? "먼저 한 가지 운영 모델로 락인하고 첫 3개월은 그 모델로 표준화하세요. 매출이 안정된 뒤 두 번째 채널·모델을 추가하는 게 실패 위험을 줄입니다 — 여러 채널을 동시에 벌이면 초기 운영·마케팅 역량이 분산됩니다."
+            : "Lock in one operating model first and standardize on it for the first 3 months. Add a second channel/model only after revenue stabilizes — running several at once scatters early ops and marketing.",
         }}
       />
       <div style={styles.helper}>
@@ -267,20 +267,20 @@ export function BusinessModelSelectionStage() {
         ko={language === "ko"}
         nextStageLabelKo="자본·일정 설정"
         doneItemsKo={[
-          { label: "1. 운영 모델 선택", detail: "고정매장 / 배달 중심 / 하이브리드 / 무인 등 업종별 운영 모델 결정" },
-          { label: "2. 시그니처 메뉴·서비스 확정", detail: "스페셜티 4-tier(코어·시그니처·확장·실험) 분기로 메뉴 우선순위 정의" },
+          { label: "1. 운영 모델 선택", detail: "매장형 · 배달·온라인 · 하이브리드 · 무인 등 업종에 맞는 운영 모델 결정" },
+          { label: "2. 핵심 상품·서비스 확정", detail: "코어·시그니처·확장·실험 4-tier로 상품·서비스 우선순위 정의" },
           { label: "3. 영업시간·요일 설정", detail: "주중·주말·휴무일 패턴 + 피크타임 시간대 정의" },
           { label: "4. 수익 모델 결정", detail: "단품 판매·구독·멤버십·시간제 등 카테고리별 매출 흐름 모델 확정" },
         ]}
         verifyItemsKo={[
-          "운영 모델별 인허가 차이 확인 — 배달 전문은 「휴게음식점 미허가 시」 영업불가, 무인은 24시간 신고 별도",
-          "시그니처 메뉴 — 식자재 원가율 30% 이내 + 조리 시간 5분 이내 + 폐기율 10% 이하 모두 충족 검증",
+          "운영 모델별 인허가·신고 차이 확인 (예: 무인 매장은 24시간 별도 신고, 온라인은 통신판매업, 배달 전문은 영업신고 형태 상이)",
+          "핵심 상품·서비스 — 원가율·제공 시간(조리·시술·처리)·손실률을 업종 기준으로 점검",
           "영업시간 — 근로기준법 1주 52시간 한도 + 1일 11시간 연속휴식권(근기법 §54)·주휴(§55) 사전 시뮬",
-          "수익 모델 — 객단가 × 회전수 × 영업일수로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
-          "프랜차이즈인 경우 본사 정해진 메뉴·시간 변경 가능 여부 (계약서 「본사 동의 필수」 조항 확인)",
-          "배달 중심 모델 — 배민·쿠팡이츠 차등수수료 2.0~7.8% (2026) + 결제 3% + 광고비·배달비·VAT까지 합산 시 매출의 17~28% 소요 → 마진 20% 이상 확보 가능한지",
+          "수익 모델 — 객단가·이용료 × 이용 빈도(회전·재방문) × 영업일수로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
+          "프랜차이즈인 경우 본사 규정(상품·운영·시간) 변경 가능 여부 (계약서 「본사 동의 필수」 조항 확인)",
+          "플랫폼 의존 모델(배달·오픈마켓 등) — 플랫폼 수수료 + 결제 + 광고비·배송비·VAT 합산 시 매출 비중을 계산해 마진 확보 가능한지 (예: 배달앱 합산 매출의 17~28%)",
         ]}
-        nextSummaryKo="운영 모델·메뉴·시간 확정 → 자본·일정 설정 단계로 진입"
+        nextSummaryKo="운영 모델·상품/서비스·시간 확정 → 자본·일정 설정 단계로 진입"
       />
 
       <div style={styles.stageFooter}>

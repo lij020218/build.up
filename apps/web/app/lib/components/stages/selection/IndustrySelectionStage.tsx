@@ -202,8 +202,8 @@ export function IndustrySelectionStage() {
             ? "한 업종에 깊게 — 다중 선택은 분산만 키웁니다"
             : "Go deep on one industry — multi-select only dilutes focus",
           detail: ko
-            ? "한 업종을 고르면 입지·메뉴·인허가·세무까지 14단계 가이드가 자동 맞춤. 멀티 카테고리 분산보다 한 업종 집중이 첫 12개월 매출에 4배 효과."
-            : "Pick one industry and the 14-stage guide auto-tailors location, menu, permits, and tax. Focusing beats spreading — 4x the month 1–12 revenue impact.",
+            ? "한 업종을 고르면 입지·운영·인허가·세무까지 단계별 가이드가 자동 맞춤. 멀티 카테고리 분산보다 한 업종 집중이 첫 12개월 매출에 4배 효과."
+            : "Pick one industry and the step-by-step guide auto-tailors location, operations, permits, and tax. Focusing beats spreading — 4x the month 1–12 revenue impact.",
         }}
       />
       <div style={styles.helper}>
@@ -371,7 +371,7 @@ export function IndustrySelectionStage() {
         nextStageLabelKo="창업 유형 선택"
         nextStageLabelEn="Startup Type"
         doneItemsKo={[
-          { label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프 등 9개 대분류 검토" },
+          { label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프·공간·온라인·스타트업 11개 대분류 검토" },
           { label: "2. 세부 업종 선택", detail: "관심 카테고리 안에서 한 가지 세부 업종 확정 (예: 케어 살롱, 베이커리 스튜디오)" },
           { label: "3. 추천 데이터 확인", detail: "업종별 평균 창업비·마진·트렌드·진입난이도 검토" },
           { label: "4. 후속 단계 준비", detail: "업종에 맞는 창업 유형(오프라인·온라인·스타트업)으로 진입 준비" },
