@@ -112,12 +112,17 @@ public struct PreLaunchFinalStageView: View {
 
     // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·주방 설비·식자재' 등 음식 전용 점검이 뜸.
     //   오프라인을 업종군으로 분기 — food(음식·카페) / retail(소매) / service(미용·피트니스·반려·교육·생활).
-    private enum OfflineKind { case food, retail, service }
+    private enum OfflineKind { case food, retail, beauty, fitness, pet, space, service }
     private var offlineKind: OfflineKind {
         let cid = StarterIndustryData.option(by: industryId)?.categoryId ?? ""
         switch cid {
         case "food", "cafe-dessert": return .food
         case "retail":               return .retail
+        case "beauty":               return .beauty
+        case "fitness":              return .fitness
+        case "pet":                  return .pet
+        // 무인·셀프 공간(스터디카페·독서실·파티룸·연습실) + 교육(학원·교습소)
+        case "education", "space":   return .space
         default:                     return .service
         }
     }
@@ -203,13 +208,53 @@ public struct PreLaunchFinalStageView: View {
                 ("비상 연락망·응급 절차 공유", $emergencyOK),
                 ("영업배상·화재보험 가입 확인", $insuranceOK),
             ]
-            case .service: return [
+            case .beauty: return [
                 ("인허가·영업신고 원본 보관 및 게시", $permitOK),
-                ("시술·운동·케어 기기 시운전·세팅 완료", $equipmentOK),
+                ("시술 기기 시운전·세팅 완료", $equipmentOK),
                 ("시술재료·소모품·린넨·1회용품 선입고", $stockOK),
                 ("직원 최종 역할 배정·교육 완료", $staffOK),
                 ("POS·예약 시스템·카드 단말기 테스트", $posOK),
                 ("위생 점검 (기구 소독·환기·손 세정·1회용품)", $hygieneOK),
+                ("비상 연락망·응급 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            case .fitness: return [
+                ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+                ("운동기구 시운전 + 볼트·케이블·비상정지 안전 점검", $equipmentOK),
+                ("수건·소독제·매트 등 소모품 선입고", $stockOK),
+                ("직원 최종 역할 배정·교육 완료", $staffOK),
+                ("회원권 정기결제·출입 시스템·카드 단말기 테스트", $posOK),
+                ("샤워·락커·환기 점검 + 응급키트 비치", $hygieneOK),
+                ("비상 연락망·부상 대응 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            case .pet: return [
+                ("인허가·동물위탁관리업 등록 원본 보관 및 게시", $permitOK),
+                ("미용대·케이지·기기 시운전·세팅 완료", $equipmentOK),
+                ("소독제·타월·배변패드 등 소모품 선입고", $stockOK),
+                ("직원 최종 역할 배정·교육 완료", $staffOK),
+                ("POS·예약/차트 시스템·카드 단말기 테스트", $posOK),
+                ("위생·안전 (케이지 소독·CCTV 30일·환기·탈출방지)", $hygieneOK),
+                ("비상 연락망·동물 응급 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            case .space: return [
+                ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+                ("무인 1사이클 (키오스크·좌석발권·출입·연장) 작동 확인", $equipmentOK),
+                ("음료·프린터 용지·청소용품 등 비품 선입고", $stockOK),
+                ("무인 운영 매뉴얼·원격 관리자 지정", $staffOK),
+                ("키오스크·앱 결제·출입 통제 시스템 테스트", $posOK),
+                ("안전 (소방·전열교환기 환기 CO₂·CCTV·비상벨)", $hygieneOK),
+                ("비상 연락망·원격 대응 절차 공유", $emergencyOK),
+                ("영업배상·화재보험 가입 확인", $insuranceOK),
+            ]
+            case .service: return [
+                ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+                ("작업 장비·기기 시운전·세팅 완료", $equipmentOK),
+                ("작업 자재·소모품 선입고", $stockOK),
+                ("직원 최종 역할 배정·교육 완료", $staffOK),
+                ("POS·접수/예약 시스템·카드 단말기 테스트", $posOK),
+                ("작업 공간·장비 위생·안전 점검 + 보호장비", $hygieneOK),
                 ("비상 연락망·응급 절차 공유", $emergencyOK),
                 ("영업배상·화재보험 가입 확인", $insuranceOK),
             ]
@@ -253,9 +298,33 @@ public struct PreLaunchFinalStageView: View {
                 ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
                 ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
             ]
-            case .service: return [
+            case .beauty: return [
                 ("오픈 1시간 전 시술공간·기구 세팅 완료", $dayOpenOK),
                 ("직원 조회 — 역할·예약·동선 최종 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+            ]
+            case .fitness: return [
+                ("오픈 1시간 전 기구·시설 세팅 완료", $dayOpenOK),
+                ("직원 조회 — 역할·안전·동선 최종 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+            ]
+            case .pet: return [
+                ("오픈 1시간 전 미용공간·케이지 세팅 완료", $dayOpenOK),
+                ("직원 조회 — 역할·예약·동물 안전 최종 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+            ]
+            case .space: return [
+                ("오픈 전 무인 결제·출입·좌석발권 1사이클 원격 확인", $dayOpenOK),
+                ("CCTV·비상벨·원격 관리 시스템 작동 확인", $dayBriefingOK),
+                ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+                ("첫날 원격 모니터링 로그·이상 여부 15분 점검", $dayFeedbackOK),
+            ]
+            case .service: return [
+                ("오픈 1시간 전 작업공간·장비 세팅 완료", $dayOpenOK),
+                ("직원 조회 — 역할·접수·동선 최종 확인", $dayBriefingOK),
                 ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
                 ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
             ]
@@ -534,7 +603,7 @@ public struct PreLaunchFinalStageView: View {
                     let postPR: [(String, String)] = [
                         ("D+1", "첫날 매출·손님 반응 인스타 스토리 공유 (생생한 현장감)"),
                         ("D+3", "첫 리뷰어 감사 DM + 네이버 플레이스 사장 댓글 시작"),
-                        ("D+5", "\"이번 주 베스트 메뉴\" 콘텐츠 게시 (사진 퀄리티 집중)"),
+                        ("D+5", "\"이번 주 추천 상품·서비스\" 콘텐츠 게시 (사진 퀄리티 집중)"),
                         ("D+7", "첫 주 결산 — 리뷰 수·방문자·인기 메뉴 정리 후 다음 주 계획"),
                     ]
                     ForEach(postPR, id: \.0) { day, task in
