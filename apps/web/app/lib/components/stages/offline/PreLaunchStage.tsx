@@ -191,8 +191,8 @@ export function PreLaunchStage() {
         ko={ko}
         action={{
           title: ko
-            ? "소프트 오픈 90분 — 본 오픈 첫 달 매출을 결정하는 시간"
-            : "90 min soft open decides month-1 grand-open revenue",
+            ? "소프트 오픈 — 본 오픈 첫 달 매출을 결정하는 리허설"
+            : "Soft open decides month-1 grand-open revenue",
           detail: L(soft.softOpenMeaning),
         }}
         pillars={[
@@ -216,8 +216,8 @@ export function PreLaunchStage() {
         <StageOverview
           ko={ko}
           headline={ko
-            ? "소프트 오픈 90분이 본 오픈의 첫 달 매출 곡선을 결정합니다"
-            : "90 min soft open shapes month-1 grand-open revenue"}
+            ? "소프트 오픈이 본 오픈의 첫 달 매출 곡선을 결정합니다"
+            : "Soft open shapes month-1 grand-open revenue"}
           why={ko
             ? `본 오픈 직전 마지막 검증. ${L(soft.softOpenMeaning)} 직전 1~2개만 보강해도 첫 달 평판·재방문률이 크게 좌우됩니다.`
             : `Final pre-launch validation. ${L(soft.softOpenMeaning)} Fixing 1-2 issues before grand open shifts month-1 reputation and repeats.`}

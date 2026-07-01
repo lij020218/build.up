@@ -5,6 +5,7 @@ import { useRoadmapStore, useProfileStore } from "../stores";
 import { completeStageTasks } from "@foundone/shared";
 import { baseRoadmap } from "../helpers";
 import type { DashboardDeps, DashboardSurface } from "../types";
+import { isStartupProblemDefinedComplete } from "../utils/task-completion-rules";
 
 /**
  * 폼 상태 변경 시 대응 태스크를 자동 완료하는 useEffect 모음.
@@ -164,7 +165,7 @@ export function useTaskAutoCompletion(
     const inputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
     if (!inputs) return;
     const result = applyAutoComplete(stageId, [
-      { taskId: "problem-defined", shouldComplete: !!(inputs.problemConfirmed && (inputs.problemStatement as string)?.trim()?.length >= 10) },
+      { taskId: "problem-defined", shouldComplete: isStartupProblemDefinedComplete(decisions) },
       { taskId: "founder-alignment", shouldComplete: !!(inputs.teamStructure && (inputs.teamStructure as string).length > 0) },
       { taskId: "company-formation-path", shouldComplete: !!(inputs.formationPath && (inputs.formationPath as string).length > 0) },
     ]);

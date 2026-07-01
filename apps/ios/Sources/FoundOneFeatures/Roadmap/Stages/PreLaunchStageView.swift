@@ -160,7 +160,7 @@ public struct PreLaunchStageView: View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: 14) {
                 BUEyebrow("이 단계 개요")
-                Text("소프트 오픈 90분이 본 오픈의 첫 달 매출 곡선을 결정합니다")
+                Text("소프트 오픈이 본 오픈의 첫 달 매출 곡선을 결정합니다")
                     .font(.system(size: 18, weight: .heavy)).tracking(-0.3)
                     .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)

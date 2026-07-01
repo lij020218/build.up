@@ -6,6 +6,8 @@ import {
   runFinancialSimulation,
   saveRoadmapState,
   upsertStageDecision,
+  type StageTransitionResult,
+  type WorkflowDecisionMap,
 } from "@foundone/shared";
 import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
 import { useAiStore, useFinanceStore, useRoadmapStore, useOnboardingStore } from "../stores";
@@ -131,6 +133,71 @@ export function useAiAnalysisHandlers(
   const effectiveGuideAnswer = guideAnswer ?? savedGuideQaSnapshot?.answer ?? null;
   const financeDefaults = inferFinanceDefaults(ctx.finalSelectedMarket, industryCategoryId ?? "food");
 
+  const persistRoadmapDecisions = async (nextDecisions: WorkflowDecisionMap) => {
+    await saveRoadmapState(supabase, {
+      roadmap,
+      decisions: nextDecisions,
+      tasks: taskMap,
+    });
+    setPersistenceReady(true);
+    setPersistenceLabel(copy.home.savedToSupabase);
+  };
+
+  const getRequiredAccessToken = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error(language === "ko" ? "로그인 세션을 다시 확인해 주세요." : "Please refresh your login session.");
+    }
+
+    return session.access_token;
+  };
+
+  const postAuthenticatedJson = async <TPayload,>(
+    url: string,
+    body: Record<string, unknown>,
+  ): Promise<{ response: Response; payload: TPayload }> => {
+    const accessToken = await getRequiredAccessToken();
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const rawPayload = await response.text();
+    let payload = {} as TPayload;
+
+    if (rawPayload) {
+      try {
+        payload = JSON.parse(rawPayload) as TPayload;
+      } catch (error) {
+        if (!response.ok) {
+          throw new Error(
+            language === "ko"
+              ? `서버 응답을 읽지 못했습니다. (${response.status})`
+              : `Could not read the server response. (${response.status})`,
+          );
+        }
+
+        throw error;
+      }
+    }
+
+    return { response, payload };
+  };
+
+  const applyVerificationAdvance = (result: StageTransitionResult) => {
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
+    setViewingStageId(null);
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+  };
+
   // ── Handler: contract analysis ──
   const handleContractAnalysis = async () => {
     const trimmed = contractText.trim();
@@ -144,29 +211,14 @@ export function useAiAnalysisHandlers(
     setContractAnalysis(null);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error(language === "ko" ? "로그인 세션을 다시 확인해 주세요." : "Please refresh your login session.");
-      }
-
-      const response = await fetch("/api/ai/contract/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          contractText: trimmed,
-        }),
+      const { response, payload } = await postAuthenticatedJson<
+        ContractAnalysisResult & {
+          error?: string;
+          detail?: string;
+        }
+      >("/api/ai/contract/analyze", {
+        contractText: trimmed,
       });
-
-      const payload = (await response.json()) as ContractAnalysisResult & {
-        error?: string;
-        detail?: string;
-      };
 
       if (!response.ok || payload.error) {
         throw new Error(
@@ -193,13 +245,7 @@ export function useAiAnalysisHandlers(
       setDecisions(nextDecisions);
       setContractAnalysis(payload);
       setContractAnalysisStatus("idle");
-      await saveRoadmapState(supabase, {
-        roadmap,
-        decisions: nextDecisions,
-        tasks: taskMap,
-      });
-      setPersistenceReady(true);
-      setPersistenceLabel(copy.home.savedToSupabase);
+      await persistRoadmapDecisions(nextDecisions);
     } catch (error) {
       setContractAnalysisStatus("error");
       setContractAnalysisError(
@@ -247,29 +293,14 @@ export function useAiAnalysisHandlers(
 
       setFinanceResult(result);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error(language === "ko" ? "로그인 세션을 다시 확인해 주세요." : "Please refresh your login session.");
-      }
-
-      const response = await fetch("/api/ai/finance/interpret", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          result,
-          categoryLabel: ctx.selectedIndustryLabel,
-        }),
+      const { response, payload } = await postAuthenticatedJson<
+        AiStructuredResponse & {
+          error?: string;
+        }
+      >("/api/ai/finance/interpret", {
+        result,
+        categoryLabel: ctx.selectedIndustryLabel,
       });
-
-      const payload = (await response.json()) as AiStructuredResponse & {
-        error?: string;
-      };
 
       if (!response.ok || payload.error) {
         throw new Error(
@@ -309,13 +340,7 @@ export function useAiAnalysisHandlers(
 
       setDecisions(nextDecisions);
       setFinanceInterpretation(payload);
-      await saveRoadmapState(supabase, {
-        roadmap,
-        decisions: nextDecisions,
-        tasks: taskMap,
-      });
-      setPersistenceReady(true);
-      setPersistenceLabel(copy.home.savedToSupabase);
+      await persistRoadmapDecisions(nextDecisions);
       setFinanceStatus("idle");
     } catch (error) {
       setFinanceStatus("error");
@@ -347,11 +372,7 @@ export function useAiAnalysisHandlers(
     });
 
     const result = markViewedStageAdvanced(stageId, nextDecisions, roadmap, taskMap);
-    setDecisions(result.decisions);
-    setRoadmap(result.roadmap);
-    setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
+    applyVerificationAdvance(result);
   };
 
   // ── Handler: knowledge Q&A (streaming) ──
@@ -433,13 +454,7 @@ export function useAiAnalysisHandlers(
       setDecisions(nextDecisions);
       setGuideAnswer(nextAnswer);
       setGuideQaStatus("idle");
-      await saveRoadmapState(supabase, {
-        roadmap,
-        decisions: nextDecisions,
-        tasks: taskMap,
-      });
-      setPersistenceReady(true);
-      setPersistenceLabel(copy.home.savedToSupabase);
+      await persistRoadmapDecisions(nextDecisions);
     } catch (error) {
       setGuideQaStatus("error");
       setGuideQaError(error instanceof Error ? error.message : "Failed to answer question.");

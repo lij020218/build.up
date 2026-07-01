@@ -38,9 +38,14 @@ export function PreLaunchFinalStage() {
   const isOnline = industryCategoryId === "online-digital";
   // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·직원 위생복' 등 음식 전용 점검이 뜸.
   //   오프라인을 업종군으로 분기 — food(음식·카페) / retail(소매) / service(미용·피트니스·반려·교육·생활).
-  const offlineKind: "food" | "retail" | "service" =
+  const offlineKind: "food" | "retail" | "beauty" | "fitness" | "pet" | "space" | "service" =
     industryCategoryId === "food" || industryCategoryId === "cafe-dessert" ? "food"
     : industryCategoryId === "retail" ? "retail"
+    : industryCategoryId === "beauty" ? "beauty"
+    : industryCategoryId === "fitness" ? "fitness"
+    : industryCategoryId === "pet" ? "pet"
+    // 무인·셀프 공간(스터디카페·독서실·파티룸·연습실·공유오피스) + 교육(학원·교습소)
+    : industryCategoryId === "education" || industryCategoryId === "space" ? "space"
     : "service";
   const pg = guideStepIndex;
   const totalPg = 4;
@@ -169,7 +174,7 @@ export function PreLaunchFinalStage() {
             { label: "Naver Place register-only = invisible", text: "2026 needs visit-likelihood signals. Register + 5 photos + 3 receipt reviews + stable first week to start ranking." },
           ],
           1: ko ? [
-            { label: "냉장고 온도 1번 미점검 = 식약처 적발 + 영업정지", text: "오픈 직전 냉장 0-10℃ / 냉동 -18℃ 이하 확인 + 온도계 부착. 식약처 점검은 첫 달에 가장 자주 옴." },
+            { label: "위생 점검 적발 시 시정명령·과태료 리스크 — 냉장 온도·온도계 필수", text: "오픈 직전 냉장 0-10℃ / 냉동 -18℃ 이하 확인 + 온도계 부착. 위생취급기준 위반은 1차 시정명령·과태료, 반복 적발 시 영업정지로 가중. 위생 점검은 첫 달에 가장 자주 옴." },
             { label: "전기·가스 계약 누락 시 첫날 가게 멈춤", text: "한국전력 + 가스공사 사용량 신고와 별개로 사업자명 변경 누락 흔함. 오픈 1주 전 모든 고지서를 사업자 명의로 확인." },
           ] : [
             { label: "Skipped fridge temp check = MFDS shutdown", text: "Confirm 0-10℃ / -18℃ + thermometer. Inspectors visit most often in month 1." },
@@ -268,7 +273,7 @@ export function PreLaunchFinalStage() {
             { item: "진열대·집기·조명 + 전기·냉난방 사업자 명의·작동 확인", priority: "필수", required: true },
             { item: "간판·가격표·반품/교환 안내문 설치 완료", priority: "권장", required: false },
             { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
-          ] : [
+          ] : offlineKind === "beauty" ? [
             { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
             { item: "예약 시스템(네이버 예약·전화) + Wi-Fi·백업 확인", priority: "필수", required: true },
             { item: "POS·시술/이용권 가격 등록 + 테스트 결제 처리", priority: "필수", required: true },
@@ -276,6 +281,42 @@ export function PreLaunchFinalStage() {
             { item: "위생 점검: 기구 소독·살균기 + 1회용품 + 환기·손 세정·매장 청결", priority: "필수", required: true },
             { item: "시술/운동/케어 기기 시운전 + 전기·수도·냉난방 작동 확인", priority: "필수", required: true },
             { item: "간판·시술 메뉴/이용권 안내판·가격표 설치 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ] : offlineKind === "fitness" ? [
+            { item: "카드 단말기 + 회원권 정기결제(CMS·빌링) 실제 결제·취소 테스트", priority: "필수", required: true },
+            { item: "출입 시스템(회원증·앱·키오스크) + Wi-Fi·백업 확인", priority: "필수", required: true },
+            { item: "회원관리(락커·PT·이용권) 시스템 등록 + 테스트 결제", priority: "필수", required: true },
+            { item: "운동기구·소모품(수건·소독제·매트) 초도 세팅 + 수량 확인", priority: "필수", required: true },
+            { item: "안전 점검: 기구 볼트·케이블·비상정지 + 응급키트 + 환기·CO₂", priority: "필수", required: true },
+            { item: "샤워·락커·냉난방 설비 작동 + 배상책임보험 가입 확인", priority: "필수", required: true },
+            { item: "간판·이용안내·요금표·환불규정 게시 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ] : offlineKind === "pet" ? [
+            { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
+            { item: "예약(네이버·전화)·차트 시스템 + Wi-Fi·백업 확인", priority: "필수", required: true },
+            { item: "POS·미용/호텔/유치원 이용권 등록 + 테스트 결제", priority: "필수", required: true },
+            { item: "미용·위생 소모품(소독제·타월·배변패드) 초도 입고", priority: "필수", required: true },
+            { item: "위생·안전: 케이지·미용대 소독 + CCTV(동물위탁관리 30일 보관) + 환기·냄새", priority: "필수", required: true },
+            { item: "냉난방·급배수 + 동물 탈출방지·격리 공간 작동 확인", priority: "필수", required: true },
+            { item: "간판·서비스 안내·요금표 설치 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ] : offlineKind === "space" ? [
+            { item: "무인 1사이클: 키오스크·앱 결제 → 좌석/룸 발권 → 출입 → 이용권 연장 끊김 점검", priority: "필수", required: true },
+            { item: "출입 통제(도어락·앱·좌석발권) + Wi-Fi·백업 + 원격 제어 확인", priority: "필수", required: true },
+            { item: "좌석/룸 예약·정산 시스템 등록 + 테스트 결제 5건", priority: "필수", required: true },
+            { item: "비품·소모품(음료·프린터 용지·청소용품) 초도 입고", priority: "필수", required: true },
+            { item: "안전: 소방(피난통로·소화기·유도등) + 전열교환기 환기(CO₂) + CCTV·비상벨", priority: "필수", required: true },
+            { item: "냉난방·조명 자동/예약 제어 + 무인 시간대 원격 모니터링", priority: "필수", required: true },
+            { item: "간판·이용안내·요금표·환불규정 게시 완료", priority: "권장", required: false },
+            { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
+          ] : [
+            { item: "카드 단말기 실제 결제·취소·영수증 출력 1사이클 테스트", priority: "필수", required: true },
+            { item: "접수·예약(네이버·전화) 시스템 + Wi-Fi·백업 확인", priority: "필수", required: true },
+            { item: "POS·서비스 항목·요금 등록 + 테스트 결제", priority: "필수", required: true },
+            { item: "작업 자재·소모품 초도 입고 + 장비 점검", priority: "필수", required: true },
+            { item: "안전·위생: 작업 공간·장비 소독 + 환기 + 보호장비", priority: "필수", required: true },
+            { item: "전기·수도·냉난방 사업자 명의 + 작동 확인", priority: "필수", required: true },
+            { item: "간판·서비스 안내·요금표 설치 완료", priority: "권장", required: false },
             { item: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", priority: "권장", required: false },
           ])
         : (offlineKind === "food" ? [
@@ -296,7 +337,7 @@ export function PreLaunchFinalStage() {
             { item: "Shelving/fixtures/lighting + power/HVAC under biz name", priority: "Required", required: true },
             { item: "Signage + price tags + return/exchange notice", priority: "Recommended", required: false },
             { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
-          ] : [
+          ] : offlineKind === "beauty" ? [
             { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
             { item: "Booking system (Naver/phone) + Wi-Fi + backup", priority: "Required", required: true },
             { item: "POS + service/pass prices + test payment", priority: "Required", required: true },
@@ -304,6 +345,42 @@ export function PreLaunchFinalStage() {
             { item: "Hygiene: tool sterilizer + disposables + ventilation + hand-wash", priority: "Required", required: true },
             { item: "Treatment/fitness/care equipment trial + power/water/HVAC", priority: "Required", required: true },
             { item: "Signage + service/pass menu board + price list", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ] : offlineKind === "fitness" ? [
+            { item: "Card terminal + membership recurring billing (CMS) charge/cancel test", priority: "Required", required: true },
+            { item: "Access system (member card/app/kiosk) + Wi-Fi + backup", priority: "Required", required: true },
+            { item: "Membership (locker/PT/pass) system + test payment", priority: "Required", required: true },
+            { item: "Equipment + supplies (towels/sanitizer/mats) staged + counted", priority: "Required", required: true },
+            { item: "Safety: bolts/cables/emergency-stop + first-aid + ventilation/CO₂", priority: "Required", required: true },
+            { item: "Shower/locker/HVAC working + liability insurance confirmed", priority: "Required", required: true },
+            { item: "Signage + usage/price/refund policy posted", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ] : offlineKind === "pet" ? [
+            { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
+            { item: "Booking (Naver/phone) + chart system + Wi-Fi + backup", priority: "Required", required: true },
+            { item: "POS + grooming/hotel/daycare passes + test payment", priority: "Required", required: true },
+            { item: "Grooming/hygiene supplies (sanitizer/towels/pads) stocked", priority: "Required", required: true },
+            { item: "Hygiene/safety: cage/table sanitized + CCTV (30-day retention) + ventilation/odor", priority: "Required", required: true },
+            { item: "HVAC/plumbing + escape-proof/isolation areas working", priority: "Required", required: true },
+            { item: "Signage + service/price list", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ] : offlineKind === "space" ? [
+            { item: "Unmanned cycle: kiosk/app pay → seat/room issue → entry → extend, no breaks", priority: "Required", required: true },
+            { item: "Access control (door lock/app/seat) + Wi-Fi + backup + remote control", priority: "Required", required: true },
+            { item: "Seat/room booking + settlement system + 5 test payments", priority: "Required", required: true },
+            { item: "Supplies (drinks/printer paper/cleaning) stocked", priority: "Required", required: true },
+            { item: "Safety: fire (exit route/extinguisher/exit sign) + HRV ventilation (CO₂) + CCTV/panic button", priority: "Required", required: true },
+            { item: "HVAC/lighting auto/scheduled + remote monitoring for unmanned hours", priority: "Required", required: true },
+            { item: "Signage + usage/price/refund policy posted", priority: "Recommended", required: false },
+            { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
+          ] : [
+            { item: "Card terminal: real charge, cancel, receipt cycle", priority: "Required", required: true },
+            { item: "Intake/booking (Naver/phone) + Wi-Fi + backup", priority: "Required", required: true },
+            { item: "POS + service items/prices + test payment", priority: "Required", required: true },
+            { item: "Work materials/supplies stocked + equipment checked", priority: "Required", required: true },
+            { item: "Safety/hygiene: workspace/equipment sanitized + ventilation + PPE", priority: "Required", required: true },
+            { item: "Power/water/HVAC under business name + working", priority: "Required", required: true },
+            { item: "Signage + service/price list", priority: "Recommended", required: false },
             { item: "Naver Place register + 5+ photos + KakaoMap update", priority: "Recommended", required: false },
           ]));
 
@@ -337,19 +414,92 @@ export function PreLaunchFinalStage() {
           { role: "CS", task: "5 reply templates. <24h first reply avoids mandatory refund", icon: MessageSquare },
           { role: "Inventory", task: "Daily sales log → reorder lows → conservative count update", icon: ClipboardList },
         ])
-      : (ko ? [
+      : (ko ? (offlineKind === "food" ? [
           { role: "입구·안내", task: "고객 맞이, 웨이팅 관리, 자리 안내. 첫인상이 곧 첫 리뷰", icon: Users },
           { role: "주문·카운터", task: "POS 주문 접수, 카드·QR 결제, 포장·테이크아웃 대응", icon: CreditCard },
           { role: "주방·제조", task: "조리/음료 제조, 플레이팅, 품질 관리. 첫 메뉴의 맛이 곧 생존", icon: Sparkles },
           { role: "서빙·후처리", task: "서빙, 테이블 정리, 재고 보충, 쓰레기 처리", icon: ClipboardList },
           { role: "비상 대응", task: "단말기 오류 → 모바일 결제, Wi-Fi 끊김 → 핫스팟, 식자재 소진 → 긴급 발주", icon: AlertTriangle },
+        ] : offlineKind === "retail" ? [
+          { role: "입구·안내", task: "고객 맞이, 매장 동선 안내, 첫인상 관리", icon: Users },
+          { role: "계산·POS", task: "바코드 스캔, 카드·QR 결제, 포장", icon: CreditCard },
+          { role: "진열·재고", task: "상품 보충, 진열 정리, 유통기한·재고 확인", icon: ClipboardList },
+          { role: "고객 응대", task: "상품 문의·추천, 교환·환불 응대", icon: MessageSquare },
+          { role: "비상 대응", task: "단말기 오류 → 모바일 결제, 도난 방지, 재고 소진 → 긴급 발주", icon: AlertTriangle },
+        ] : offlineKind === "beauty" ? [
+          { role: "안내·예약", task: "고객 맞이, 예약 확인, 대기 관리", icon: Users },
+          { role: "카운터·결제", task: "접수, 카드·이용권 결제, 다음 예약 잡기", icon: CreditCard },
+          { role: "시술·케어", task: "시술 진행, 위생·소독, 품질 관리", icon: Sparkles },
+          { role: "준비·마감", task: "린넨·기구 준비·소독, 재료 보충, 청소", icon: ClipboardList },
+          { role: "비상 대응", task: "단말기 오류 → 모바일 결제, 예약 중복 → 조정, 재료 소진 → 긴급 발주", icon: AlertTriangle },
+        ] : offlineKind === "fitness" ? [
+          { role: "안내·등록", task: "회원 맞이, 상담·등록, 이용권·락커 배정", icon: Users },
+          { role: "카운터·결제", task: "회원권·PT 결제, 정기결제 관리", icon: CreditCard },
+          { role: "지도·안전", task: "기구 사용법 안내, 운동 지도, 안전 관리", icon: Sparkles },
+          { role: "시설·위생", task: "기구 소독, 수건·매트 관리, 락커·샤워 점검", icon: ClipboardList },
+          { role: "비상 대응", task: "부상·안전사고 응급 대응, 기구 고장 처리", icon: AlertTriangle },
+        ] : offlineKind === "pet" ? [
+          { role: "안내·접수", task: "보호자 맞이, 예약·차트 확인, 반려동물 상태 체크", icon: Users },
+          { role: "카운터·결제", task: "서비스 접수, 결제, 다음 예약", icon: CreditCard },
+          { role: "미용·케어", task: "미용·목욕·케어 진행, 동물 안전·진정", icon: Sparkles },
+          { role: "위생·안전", task: "케이지·미용대 소독, 배변 처리, 탈출 방지", icon: ClipboardList },
+          { role: "비상 대응", task: "동물 부상·이상 시 대응, 보호자 즉시 연락", icon: AlertTriangle },
+        ] : offlineKind === "space" ? [
+          { role: "원격 모니터링", task: "무인 매장이면 CCTV·좌석 점유·결제 현황 실시간 확인", icon: BellRing },
+          { role: "무인 결제·발권", task: "키오스크·앱 결제 → 좌석/룸 발권 정상 작동 확인", icon: CreditCard },
+          { role: "출입·보안", task: "도어락·출입 로그·비상벨 점검", icon: AlertTriangle },
+          { role: "청결·비품", task: "순회 청소, 음료·용지 보충, 쓰레기 처리", icon: ClipboardList },
+          { role: "원격 대응", task: "결제·출입 오류 원격 조치, 소음·분쟁 CS 응대", icon: MessageSquare },
         ] : [
+          { role: "안내·접수", task: "고객 맞이, 접수·예약 확인", icon: Users },
+          { role: "카운터·결제", task: "서비스 접수, 결제, 다음 예약", icon: CreditCard },
+          { role: "작업·서비스", task: "서비스 진행, 품질 관리", icon: Sparkles },
+          { role: "준비·정리", task: "자재·장비 준비, 작업 공간 정리·위생", icon: ClipboardList },
+          { role: "비상 대응", task: "단말기 오류 → 모바일 결제, 장비 고장, 자재 소진 → 긴급 발주", icon: AlertTriangle },
+        ])
+        : (offlineKind === "food" ? [
           { role: "Door/Floor", task: "Welcome, manage wait, seat. First impression = first review", icon: Users },
           { role: "Counter/POS", task: "Take orders, card/QR pay, takeout", icon: CreditCard },
           { role: "Kitchen/Prep", task: "Cook/brew, plate, quality. Taste = survival", icon: Sparkles },
           { role: "Serve/Clean", task: "Serve, clear, restock, waste", icon: ClipboardList },
           { role: "Emergency", task: "Terminal fail → mobile pay, Wi-Fi → hotspot, stockout → emergency order", icon: AlertTriangle },
-        ]);
+        ] : offlineKind === "retail" ? [
+          { role: "Floor/Greet", task: "Welcome, guide flow, manage first impression", icon: Users },
+          { role: "Checkout/POS", task: "Barcode scan, card/QR pay, bagging", icon: CreditCard },
+          { role: "Stock/Display", task: "Restock, tidy displays, check expiry/counts", icon: ClipboardList },
+          { role: "Customer", task: "Product Q&A/recommend, exchange/refund", icon: MessageSquare },
+          { role: "Emergency", task: "Terminal fail → mobile pay, theft prevention, stockout → reorder", icon: AlertTriangle },
+        ] : offlineKind === "beauty" ? [
+          { role: "Greet/Booking", task: "Welcome, confirm bookings, manage wait", icon: Users },
+          { role: "Counter/Pay", task: "Intake, card/pass pay, rebook", icon: CreditCard },
+          { role: "Service/Care", task: "Perform service, hygiene/sterilize, quality", icon: Sparkles },
+          { role: "Prep/Close", task: "Linen/tool prep+sterilize, restock, clean", icon: ClipboardList },
+          { role: "Emergency", task: "Terminal fail → mobile pay, double-booking → adjust, stockout → reorder", icon: AlertTriangle },
+        ] : offlineKind === "fitness" ? [
+          { role: "Greet/Sign-up", task: "Welcome, consult/enroll, assign pass/locker", icon: Users },
+          { role: "Counter/Pay", task: "Membership/PT pay, recurring billing", icon: CreditCard },
+          { role: "Coach/Safety", task: "Equipment guidance, coaching, safety", icon: Sparkles },
+          { role: "Facility/Hygiene", task: "Sanitize equipment, towels/mats, locker/shower", icon: ClipboardList },
+          { role: "Emergency", task: "Injury/accident first-aid, equipment breakdown", icon: AlertTriangle },
+        ] : offlineKind === "pet" ? [
+          { role: "Greet/Intake", task: "Welcome owner, confirm booking/chart, check pet", icon: Users },
+          { role: "Counter/Pay", task: "Service intake, pay, rebook", icon: CreditCard },
+          { role: "Groom/Care", task: "Grooming/bath/care, animal safety/calming", icon: Sparkles },
+          { role: "Hygiene/Safety", task: "Cage/table sanitize, waste, escape prevention", icon: ClipboardList },
+          { role: "Emergency", task: "Pet injury/abnormality response, contact owner", icon: AlertTriangle },
+        ] : offlineKind === "space" ? [
+          { role: "Remote monitor", task: "Unmanned: watch CCTV/seat occupancy/payments live", icon: BellRing },
+          { role: "Unmanned pay", task: "Kiosk/app pay → seat/room issuing works", icon: CreditCard },
+          { role: "Access/Security", task: "Door lock/access logs/panic button check", icon: AlertTriangle },
+          { role: "Clean/Supply", task: "Rounds cleaning, drink/paper restock, waste", icon: ClipboardList },
+          { role: "Remote CS", task: "Remote fix pay/access errors, noise/dispute CS", icon: MessageSquare },
+        ] : [
+          { role: "Greet/Intake", task: "Welcome, intake/confirm booking", icon: Users },
+          { role: "Counter/Pay", task: "Service intake, pay, rebook", icon: CreditCard },
+          { role: "Service", task: "Perform service, quality control", icon: Sparkles },
+          { role: "Prep/Clean", task: "Prep materials/equipment, tidy/hygiene", icon: ClipboardList },
+          { role: "Emergency", task: "Terminal fail → mobile pay, equipment breakdown, material stockout", icon: AlertTriangle },
+        ]));
 
   // ─── Page 3 타임라인 ───
   type TimelineItem = { when: string; what: string; channel: string };
@@ -399,7 +549,7 @@ export function PreLaunchFinalStage() {
           { when: "D+1", what: "Day 1 orders/revenue/inquiries review + listing edits", channel: "Internal" },
           { when: "D+7", what: "Week 1 data + start Naver Shopping ads (content first)", channel: "Ads" },
         ])
-      : (ko ? [
+      : (ko ? (offlineKind === "food" ? [
           { when: "D-14", what: "매장 공사·세팅 비하인드 사진/영상 누적 (스토리 7개+)", channel: "인스타 릴스" },
           { when: "D-7", what: "메뉴 소개 + 오픈 날짜 공지 + 첫 방문 할인 이벤트", channel: "인스타 · 카카오" },
           { when: "D-3", what: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", channel: "네이버 · 카카오" },
@@ -408,6 +558,15 @@ export function PreLaunchFinalStage() {
           { when: "D+1", what: "첫날 매출·고객 피드백 정리 + 개선점 즉시 기록", channel: "내부" },
           { when: "D+7", what: "첫 주 매출 분석 + 리뷰 3개 확보 후 배달앱 광고 시작", channel: "배민 · 인스타" },
         ] : [
+          { when: "D-14", what: "매장 세팅·준비 과정 비하인드 사진/영상 누적 (스토리 7개+)", channel: "인스타 릴스" },
+          { when: "D-7", what: "핵심 상품·서비스 소개 + 오픈 날짜 공지 + 첫 방문 할인 이벤트", channel: "인스타 · 카카오" },
+          { when: "D-3", what: "네이버 플레이스 등록 + 사진 5장+ + 카카오맵 정보 수정", channel: "네이버 · 카카오" },
+          { when: "D-1", what: "1시간 모의 운영(무인이면 셀프 1사이클) + 비상 연락 체계 + 재고·설비 최종 점검", channel: "내부" },
+          { when: "D-Day", what: "오픈 + 라이브 스토리 + 리뷰 이벤트 + 첫 고객 응대 집중", channel: "전 채널" },
+          { when: "D+1", what: "첫날 매출·고객 피드백 정리 + 개선점 즉시 기록", channel: "내부" },
+          { when: "D+7", what: "첫 주 매출 분석 + 리뷰 3개 확보 후 유료 광고 시작 (네이버·인스타 등 업종 채널)", channel: "네이버 · 인스타" },
+        ])
+        : (offlineKind === "food" ? [
           { when: "D-14", what: "Behind-the-scenes setup photos/reels (7+ stories)", channel: "Instagram Reels" },
           { when: "D-7", what: "Menu reveal + opening date + first-visit discount", channel: "Instagram · Kakao" },
           { when: "D-3", what: "Naver Place registered (5+ photos) + KakaoMap update", channel: "Naver · Kakao" },
@@ -415,7 +574,15 @@ export function PreLaunchFinalStage() {
           { when: "D-Day", what: "Open + live stories + receipt review event + customer focus", channel: "All" },
           { when: "D+1", what: "Day 1 revenue + feedback + improvement notes", channel: "Internal" },
           { when: "D+7", what: "Week 1 analysis + delivery ads after 3 reviews", channel: "Baemin · Instagram" },
-        ]);
+        ] : [
+          { when: "D-14", what: "Behind-the-scenes setup photos/reels (7+ stories)", channel: "Instagram Reels" },
+          { when: "D-7", what: "Key product/service reveal + opening date + first-visit discount", channel: "Instagram · Kakao" },
+          { when: "D-3", what: "Naver Place registered (5+ photos) + KakaoMap update", channel: "Naver · Kakao" },
+          { when: "D-1", what: "1-hour dry run (self cycle if unmanned) + emergency contacts + inventory/equipment check", channel: "Internal" },
+          { when: "D-Day", what: "Open + live stories + review event + customer focus", channel: "All" },
+          { when: "D+1", what: "Day 1 revenue + feedback + improvement notes", channel: "Internal" },
+          { when: "D+7", what: "Week 1 analysis + paid ads after 3 reviews (Naver/Instagram)", channel: "Naver · Instagram" },
+        ]));
 
   // ─── Page 0 추가: 성공/실패 케이스 + 북극성 지표 ───
   type CaseItem = { kind: "win" | "fail"; title: string; body: string };
@@ -1406,7 +1573,7 @@ export function PreLaunchFinalStage() {
       {/* ── 2026-05-12: 오프라인 사장님 — 오픈 후 첫 30일 운영 플레이북 ──
           startup-tech 와 동일 깊이로 보강. offline 사장님 (음식·카페·뷰티·소매 등)
           그랜드 오픈 후 무엇 할지 막막함 해소. */}
-      {!isStartup && !isOnline && (
+      {!isStartup && !isOnline && pg === totalPg - 1 && (
         <div style={{ marginTop: 18, padding: "20px 22px", borderRadius: 18, background: "linear-gradient(180deg, rgba(25,25,112,0.06) 0%, rgba(255,255,255,0.96) 100%)", border: "1px solid rgba(25,25,112,0.22)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#191970", opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
             ⚡ 오픈 후 첫 30일 — 가장 중요한 30일
@@ -1491,6 +1658,7 @@ export function PreLaunchFinalStage() {
         </div>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="첫 달 점검"
@@ -1502,7 +1670,7 @@ export function PreLaunchFinalStage() {
         ]}
         verifyItemsKo={[
           "그랜드오픈 광고 — 「최저가」「업계 1위」 표현 위반 시 표시광고법, 객관 근거 없으면 즉시 수정",
-          "이벤트 경품 — 5만원 이상 경품은 부가세 별도 지급 의무, 누락 시 가산세",
+          "이벤트 경품 — 5만원 초과 경품은 제세공과금(기타소득 22%) 원천징수 의무, 누락 시 가산세",
           "광고 협찬 — 인플루언서 「유료광고」 표시 의무 (#광고 #협찬), 미표시 시 공정위 과징금",
           "리뷰 정책 — 자작·바이럴·가족 리뷰 적발 시 플랫폼 영구정지, 진성 리뷰 유도만",
           "음식점 — 식약처 「위생 등급제」 자율 신청 권장, 광고에 등급 표시 시 신뢰감 + 단속 제외",
@@ -1510,6 +1678,7 @@ export function PreLaunchFinalStage() {
         ]}
         nextSummaryKo="오픈·그랜드오픈·D+7 시뮬 완료 → 첫 달 점검(매출·재고·CS) 단계로 진입"
       />
+      )}
     </div>
   );
 }
