@@ -5,6 +5,10 @@ import { BusinessModelSelectionStage } from "../stages/selection/BusinessModelSe
 import { IndustrySelectionStage } from "../stages/selection/IndustrySelectionStage";
 import { LocationCandidatesStage } from "../stages/selection/LocationCandidatesStage";
 import { StartupTypeSelectionStage } from "../stages/selection/StartupTypeSelectionStage";
+import {
+  type CurrentStageSelectionCode,
+  isCurrentStageSelectionCode,
+} from "./current-stage-selection-routing";
 
 const SELECTION_STAGE_COMPONENTS = {
   industry_selection: IndustrySelectionStage,
@@ -12,13 +16,7 @@ const SELECTION_STAGE_COMPONENTS = {
   business_model: BusinessModelSelectionStage,
   budget_setup: BudgetSetupStage,
   location_candidates: LocationCandidatesStage,
-} as const;
-
-type SelectionStageCode = keyof typeof SELECTION_STAGE_COMPONENTS;
-
-export function isCurrentStageSelectionCode(stageCode: string): stageCode is SelectionStageCode {
-  return Object.prototype.hasOwnProperty.call(SELECTION_STAGE_COMPONENTS, stageCode);
-}
+} satisfies Record<CurrentStageSelectionCode, () => JSX.Element>;
 
 export function CurrentStageSelectionContent({ stageCode }: { stageCode: string }) {
   if (!isCurrentStageSelectionCode(stageCode)) {
