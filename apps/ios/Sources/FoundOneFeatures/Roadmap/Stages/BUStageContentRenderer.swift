@@ -185,6 +185,12 @@ public struct BUStageContentRenderer: View {
 
     /// 현재 페이지의 페이지별 KEY ACTION (있으면 BUStageShell hero 로 override).
     private var currentPageKeyAction: BUStageKeyAction? {
+        // 특수업종 KEY ACTION 우선 (specialty → category) — 있으면 업종 정확 hero, 없으면 페이지별 기본.
+        //   content.stageId 로 조회하므로 permit-check 등 엔트리가 추가되는 모든 콘텐츠 단계 자동 지원.
+        let cid = IndustryCluster.from(industryId: industryId).category.rawValue
+        if let s = SpecialtyKeyActionRegistry.resolve(stageId: content.stageId, specialtyId: industryId, categoryId: cid) {
+            return BUStageKeyAction(title: s.title, detail: s.detail)
+        }
         guard let pid = content.pages[safe: page]?.id,
               let ka = cat?.pageKeyActions?[pid] else { return nil }
         return BUStageKeyAction(title: ka.title, detail: ka.detail)

@@ -39,6 +39,7 @@ import type {
   Section,
   StageContent,
 } from "@foundone/shared";
+import { resolveSpecialtyKeyAction } from "@foundone/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {
   MIDNIGHT,
@@ -882,7 +883,18 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
   const pageLabels = useMemo(() => content.pages.map((p) => p.label), [content]);
 
   const currentPage = content.pages[page] ?? content.pages[0];
-  const keyAction = content.keyAction;
+  // 특수업종 KEY ACTION 우선 (specialty → category) — 있으면 pillars 없는 hero 로 렌더(업종 정확), 없으면 기존 정적 keyAction.
+  //   content.stageId 로 조회하므로 permit-check 뿐 아니라 엔트리가 추가되는 모든 콘텐츠 단계가 자동 지원.
+  const specialtyKA = resolveSpecialtyKeyAction(content.stageId, d.selectedIndustryId ?? undefined, industryCategoryId ?? undefined);
+  const keyAction = specialtyKA
+    ? {
+        eyebrow: content.keyAction?.eyebrow ?? "이 단계에서 꼭 할 일",
+        title: specialtyKA.title,
+        subtitle: specialtyKA.detail,
+        pillars: undefined,
+        miniCards: (specialtyKA.bullets ?? []).map((b) => ({ icon: "checklist" as IconKey, label: "", detail: b })),
+      }
+    : content.keyAction;
 
   const iact: InteractiveBindings = {
     taxChecks,
