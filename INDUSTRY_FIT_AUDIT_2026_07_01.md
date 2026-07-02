@@ -1,5 +1,24 @@
 # 로드맵 업종 정합 전수 감사 (2026-07-01)
 
+---
+## 🚀 다음 세션 여기부터 (START HERE)
+
+**현재 상태**: main = `381218b` (푸시됨), 워킹트리 clean. 이번 세션 완료 = 20·22단계 버킷 / 채용·운영 사실정정 / 1·3단계 업종정합 / 본 감사 리포트 + Tier1 선택단계 범용화(웹+iOS). 남은 = 아래 🔴 HIGH 백로그.
+
+**규율(반드시)**: ① 코드 구조 깨끗하게 — 하드코딩·복붙 금지, **업종 반복은 키 기반 분기**(중첩삼항 4갈래↑면 Record 맵). ② **웹·iOS 양쪽** 동시 수정 + 내용 1:1. ③ 검증 필수 — 웹 `npx tsc --noEmit -p apps/web/tsconfig.json`, iOS `cd apps/ios && xcodebuild build -scheme FoundOneFeatures -destination 'generic/platform=iOS Simulator' -skipPackagePluginValidation`. ④ 커밋은 **파일 명시**로 stage(codex 브랜치 스윕 주의) → `git push origin HEAD:main`.
+
+**재사용 패턴 = 개업최종준비 7버킷** ([[project_prelaunch_final_buckets]]): `PreLaunchFinalStage.tsx:41` offlineKind(`food·retail·beauty·fitness·pet·space·service`, education+space→space) + iOS `PreLaunchFinalStageView.swift` enum/switch. 그대로 복사해 적용.
+
+**작업 순서**:
+1. **OperationsSetupStage (19단계)** — 최대 영향. `offline/OperationsSetupStage.tsx`의 keyActions[0]·whyMatters[0]·howFlow[0]·whatNeeded[0]·renderPos·stepBridges[0]·최종 StageWrapup·법정신고 block(≈1578)을 offlineKind 버킷 분기(food 유지+비음식). iOS `OperationsSetupStageView.swift` + `OperationsDetailRegistry.swift` 미러. (VAN·음악·원산지는 이미 정정 완료 — 건드리지 말 것)
+2. **StageGuideViewer** (`shared/StageGuideViewer.tsx`, live via GenericTaskStageBody) — `step3Food` 기본값 → **step3Generic 신설**하고 food/cafe만 step3Food 라우팅. `stepDataMap[cat] ?? stepDataMap["food"]`(≈377) → 비음식 폴백을 `[]` 또는 업종 엔트리로. step4Supplies(48)·운영팁(1073) 무조건 노출도 게이팅.
+3. **startup GoLive/MvpBuild/LaunchGtm** — Vercel·App Store·PH·HN을 SW 서브타입 게이팅(하드웨어·딥테크 제외).
+4. 🟡 LocationCandidates 면적/덕트 분기 · VendorSetup chrome · online Sourcing/Store 서브타입.
+
+아래 HIGH/MED/LOW 상세(file:line + 수정안) 참고.
+
+---
+
 전 스테이지(웹 69파일)를 4개 병렬 에이전트로 감사. "여러 업종 공통 노출인데 특정 업종(외식/SW 등)으로 하드코딩된 사용자 텍스트"만 수집.
 
 기준: 업종 조건(`industryCategoryId`/`offlineKind`/`cluster`/`selectedIndustryId`) 게이팅 없고 specialty-override(resolveSpecialtyKeyAction)도 없는 사용자 노출 텍스트.
