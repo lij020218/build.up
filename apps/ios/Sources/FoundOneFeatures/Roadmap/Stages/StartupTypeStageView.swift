@@ -39,6 +39,9 @@ public struct StartupTypeStageView: View {
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @AppStorage("roadmap.selectedSpecialtyId") private var selectedSpecialtyId = ""
     @State private var page = 0
+    @State private var franchiseSearch = ""
+    @State private var franchiseVisible = 30
+    private let franchisePageSize = 30
     private let stageId = "startup-type"
 
     /// 프랜차이즈 선택 시 2-page (창업 형태 → 브랜드 선택), 그 외엔 1-page.
@@ -68,10 +71,21 @@ public struct StartupTypeStageView: View {
             ? FranchiseBrandRegistry.brands(forCategory: categoryId)
             : FranchiseBrandRegistry.brands(
                 forSubIndustry: industryId,
-                specialtyId: selectedSpecialtyId.isEmpty ? nil : selectedSpecialtyId
+                specialtyId: selectedSpecialtyId.isEmpty ? nil : selectedSpecialtyId,
+                limit: 0 // 2026-07-02: 세부업종 매칭 전체 로드 → 검색 + 더보기로 전량 노출
             )
         return base.sorted { overallScore($0.scores) > overallScore($1.scores) }
     }
+
+    // 검색 필터 + 더보기 (2026-07-02, 웹 StartupTypeSelectionStage 미러)
+    private var franchiseFiltered: [FranchiseBrand] {
+        let q = franchiseSearch.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return franchiseCandidates }
+        return franchiseCandidates.filter {
+            $0.name.ko.lowercased().contains(q) || $0.name.en.lowercased().contains(q) || $0.id.lowercased().contains(q)
+        }
+    }
+    private var franchiseShown: [FranchiseBrand] { Array(franchiseFiltered.prefix(franchiseVisible)) }
 
     /// 옵션 — startup-tech 는 프랜차이즈 옵션 자체 숨김 (웹 SSOT 패턴).
     /// 독립창업 아이콘은 startup-tech 일 때 ⚡(bolt) 로 전환.
@@ -261,12 +275,44 @@ public struct StartupTypeStageView: View {
                 }
             } else {
                 VStack(spacing: 10) {
-                    ForEach(franchiseCandidates, id: \.id) { info in
-                        FranchiseBrandRow(
-                            info: info,
-                            isSelected: franchiseBrandId == info.id,
-                            action: { franchiseBrandId = (franchiseBrandId == info.id) ? "" : info.id }
-                        )
+                    // 검색창 + 개수 (2026-07-02, 웹 미러)
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass").font(.system(size: 14)).foregroundStyle(BUColor.inkMuted)
+                        TextField("브랜드 검색 (예: 맘스터치, BBQ, 메가커피)", text: $franchiseSearch)
+                            .font(.system(size: 14))
+                            .autocorrectionDisabled()
+                            .onChange(of: franchiseSearch) { _, _ in franchiseVisible = franchisePageSize }
+                        Spacer()
+                        Text(franchiseSearch.trimmingCharacters(in: .whitespaces).isEmpty ? "전체 \(franchiseCandidates.count)개" : "\(franchiseFiltered.count) / \(franchiseCandidates.count)")
+                            .font(.system(size: 12)).foregroundStyle(BUColor.inkMuted).fixedSize()
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 10)
+                    .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                    if franchiseFiltered.isEmpty {
+                        Text("\"\(franchiseSearch.trimmingCharacters(in: .whitespaces))\" 검색 결과가 없습니다.")
+                            .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary)
+                            .frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 16)
+                    } else {
+                        ForEach(franchiseShown, id: \.id) { info in
+                            FranchiseBrandRow(
+                                info: info,
+                                isSelected: franchiseBrandId == info.id,
+                                action: { franchiseBrandId = (franchiseBrandId == info.id) ? "" : info.id }
+                            )
+                        }
+                        if franchiseFiltered.count > franchiseVisible {
+                            Button {
+                                franchiseVisible += franchisePageSize
+                            } label: {
+                                Text("더보기 (남은 \(franchiseFiltered.count - franchiseVisible)개)")
+                                    .font(.system(size: 13.5, weight: .semibold))
+                                    .foregroundStyle(BUColor.ink)
+                                    .frame(maxWidth: .infinity).padding(.vertical, 13)
+                                    .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
             }

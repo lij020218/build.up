@@ -34,6 +34,10 @@ export function StartupTypeSelectionStage() {
 
   const startupTypeRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
+  // 프랜차이즈 피커 — 검색 + 더보기(전체 노출). 상한 60 대신 30개씩 확장. (2026-07-02)
+  const [franchiseSearch, setFranchiseSearch] = useState("");
+  const [franchiseVisible, setFranchiseVisible] = useState(30);
+  const FRANCHISE_PAGE = 30;
 
   const isStartupCategory = industryCategoryId === "startup-tech";
   const startupTypeOptions: Array<"independent" | "franchise"> = isStartupCategory
@@ -178,7 +182,16 @@ export function StartupTypeSelectionStage() {
         /* ── Screen 2: Franchise brand picker ── */
         (() => {
           // ⚠️ 2026-06-27: 세부업종 매칭만 — categoryId 폴백 금지(무관 브랜드 오염 방지). 세부업종 없을 때만 카테고리.
-          const brands = selectedIndustryId ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId) : getFranchiseBrandsForCategory(industryCategoryId);
+          // 2026-07-02: limit 0 = 세부업종 매칭 전체 로드 → 검색 + 더보기로 전량 노출 (기존 상한 60 제거).
+          const allBrands = (selectedIndustryId
+            ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId, 0)
+            : getFranchiseBrandsForCategory(industryCategoryId)
+          ).slice().sort((a, b) => computeOverallScore(b.scores) - computeOverallScore(a.scores));
+          const q = franchiseSearch.trim().toLowerCase();
+          const filtered = q
+            ? allBrands.filter((b) => b.name.ko.toLowerCase().includes(q) || b.name.en.toLowerCase().includes(q) || b.id.toLowerCase().includes(q))
+            : allBrands;
+          const shownBrands = filtered.slice(0, franchiseVisible);
           const ko = language === "ko";
           return (
             <>
@@ -191,14 +204,33 @@ export function StartupTypeSelectionStage() {
                   : "Data based on KFTC disclosure. Scores combine profitability, stability, accessibility, brand power, and HQ support."}
               </div>
 
-              {brands.length === 0 ? (
+              {/* 검색창 + 개수 요약 (2026-07-02) */}
+              {allBrands.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px", flexWrap: "wrap" as const }}>
+                  <input
+                    type="text"
+                    value={franchiseSearch}
+                    onChange={(e) => { setFranchiseSearch(e.target.value); setFranchiseVisible(FRANCHISE_PAGE); }}
+                    placeholder={ko ? "브랜드 검색 (예: 맘스터치, BBQ, 메가커피)" : "Search brands (e.g., BBQ, Mom's Touch)"}
+                    style={{ flex: 1, minWidth: "220px", padding: "11px 14px", borderRadius: "12px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.9)", fontSize: "14px", outline: "none" }}
+                  />
+                  <span style={{ fontSize: "12.5px", color: "var(--muted)", whiteSpace: "nowrap" as const }}>
+                    {ko
+                      ? (q ? `${filtered.length}개 검색 (전체 ${allBrands.length})` : `전체 ${allBrands.length}개`)
+                      : (q ? `${filtered.length} of ${allBrands.length}` : `${allBrands.length} brands`)}
+                  </span>
+                </div>
+              )}
+
+              {filtered.length === 0 ? (
                 <div style={{ padding: "24px", borderRadius: "16px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.6)", color: "var(--muted)", textAlign: "center" }}>
-                  {ko ? "이 업종에는 아직 등록된 프랜차이즈가 없습니다." : "No franchise brands registered for this industry yet."}
+                  {allBrands.length === 0
+                    ? (ko ? "이 업종에는 아직 등록된 프랜차이즈가 없습니다." : "No franchise brands registered for this industry yet.")
+                    : (ko ? `"${franchiseSearch.trim()}" 검색 결과가 없습니다.` : `No results for "${franchiseSearch.trim()}".`)}
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: "12px" }}>
-                  {brands
-                    .sort((a, b) => computeOverallScore(b.scores) - computeOverallScore(a.scores))
+                  {shownBrands
                     .map((fb) => {
                     const overall = computeOverallScore(fb.scores);
                     const sel = selectedFranchiseBrandId === fb.id;
@@ -346,6 +378,19 @@ export function StartupTypeSelectionStage() {
                     );
                   })}
                 </div>
+              )}
+
+              {/* 더보기 — 남은 매칭 브랜드 전량 노출 (2026-07-02) */}
+              {filtered.length > franchiseVisible && (
+                <button
+                  type="button"
+                  onClick={() => setFranchiseVisible((v) => v + FRANCHISE_PAGE)}
+                  style={{ marginTop: "14px", width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.9)", fontSize: "13.5px", fontWeight: 600, color: "var(--text)", cursor: "pointer" }}
+                >
+                  {ko
+                    ? `더보기 (${Math.min(FRANCHISE_PAGE, filtered.length - franchiseVisible)}개 더 · 남은 ${filtered.length - franchiseVisible}개)`
+                    : `Show more (${filtered.length - franchiseVisible} left)`}
+                </button>
               )}
 
               <div style={styles.stageFooter}>
