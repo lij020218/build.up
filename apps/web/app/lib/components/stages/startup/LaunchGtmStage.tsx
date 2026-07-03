@@ -29,7 +29,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
-import { getRecommendedStack } from "@foundone/shared";
+import { getRecommendedStack, getClusterForSubIndustry } from "@foundone/shared";
+import { DeepTechStageNotice, deepTechKindOf } from "./DeepTechStageNotice";
 import { ModePathCard } from "./ModePathCard";
 import { SecurityChecklist } from "../../knowledge/SecurityChecklist";
 import { BuildMethodDialog, BuildMethodTrigger } from "./BuildMethodDialog";
@@ -53,6 +54,10 @@ export function LaunchGtmStage() {
 
   const [securityOpen, setSecurityOpen] = useState(false);
   const { softOpenChecks, setSoftOpenChecks } = d;
+
+  // 업종 정합(2026-07-02): 딥테크·하드웨어 GTM 은 Product Hunt·HN 이 아니라 파일럿·디자인윈·규제.
+  const deepTechKind = deepTechKindOf(getClusterForSubIndustry(d.selectedIndustryId ?? undefined, d.industryCategoryId ?? ""));
+  if (deepTechKind) return <DeepTechStageNotice stage="launch" kind={deepTechKind} ko={ko} />;
 
   return (
     <div className="bento-fade-in" style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>

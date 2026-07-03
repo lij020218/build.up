@@ -50,6 +50,101 @@ function classifyCluster(categoryId: string | undefined): "offline" | "online" |
   return "offline"; // food, cafe-dessert, beauty, fitness, education, pet, retail, living-service, space-stay
 }
 
+// ── offline 업종군 세분 (2026-07-02 업종 정합 수정) ────────────────────────
+//   이전엔 offline 전체가 외식(F&B) 통계·객단가·예시로 하드코딩 → 미용·소매·헬스 등에 오노출.
+//   통계는 가짜 금지: 외식만 한국외식산업연구원(KFRI) 실통계 유지, 나머지는 KOSME 일반 SMB(실존)로.
+type OfflineKind = "food" | "retail" | "beauty" | "fitness" | "pet" | "space" | "service";
+function toOfflineKind(categoryId: string | undefined): OfflineKind {
+  switch (categoryId) {
+    case "food": case "cafe-dessert": return "food";
+    case "retail": return "retail";
+    case "beauty": return "beauty";
+    case "fitness": return "fitness";
+    case "pet": return "pet";
+    case "education": case "space": return "space";
+    default: return "service"; // living-service 등
+  }
+}
+type TCContent = {
+  heroSub: { ko: string; en: string };
+  example: { ko: string; en: string };
+  // SMB 데이터 박스 첫 항목(업종별). 나머지 2개(KOSME·Meta)는 업종 공통이라 공유.
+  smbFact0: { ko: { tag: string; body: string }; en: { tag: string; body: string } };
+  tiers: { ko: [string, string, string, string]; en: [string, string, string, string] };
+  neverBuy: { ko: string; en: string };
+  agePlaceholder: { ko: string; en: string };
+  lifestylePlaceholder: { ko: string; en: string };
+};
+const GENERIC_SMB_FACT0 = {
+  ko: { tag: "폐업 핵심 사유", body: "\"타깃 불명확 + 차별화 실패\" — 업종 불문 소상공인 폐업의 최상위 원인 (KOSME 소상공인 실태조사)" },
+  en: { tag: "Top closure cause", body: "\"Vague target + no differentiation\" — the leading SMB closure cause across industries (KOSME)" },
+};
+const OFFLINE_TC: Record<OfflineKind, TCContent> = {
+  food: {
+    heroSub: { ko: "외식업 폐업 사유 1위(28%)는 '타깃 불명확 + 차별화 실패' — 한국외식산업연구원 2024. 페르소나 정의한 사장님 폐업률은 정의 안 한 사장님의 절반.", en: "F&B closure cause #1 (28%): unclear target + no differentiation — KFRI 2024. Owners who defined a persona have half the closure rate." },
+    example: { ko: "예: 20대 1인 직장인을 타깃하면 → 도심·테이크아웃 위주·1만원 객단가 → 매장 평수 작아도 OK. 4인 가족이면 → 주차장·4인석 다수·2-3만원 객단가 → 평수 큰 매장 필수. 같은 외식업이라도 타깃이 두 선택을 완전히 갈라놓습니다.", en: "E.g., 20s single workers → downtown, takeout, ₩10k ticket, small floor OK. Families of 4 → parking, 4-seaters, ₩20-30k ticket, larger floor. Same F&B, target splits every choice." },
+    smbFact0: { ko: { tag: "외식 폐업 사유", body: "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024" }, en: { tag: "F&B closure", body: "Cause #1: vague target + no differentiation (28%) — KFRI 2024" } },
+    tiers: { ko: ["가성비 5천~1만원", "중간 1만~2만원", "프리미엄 2만~4만원", "럭셔리 4만원↑"], en: ["Value ₩5-10k", "Mid ₩10-20k", "Premium ₩20-40k", "Luxury ₩40k+"] },
+    neverBuy: { ko: "범위 명시 (예: 20대 직장인 → 점심 3만원↑ X)", en: "Specify a ceiling (e.g., 20s worker → lunch over ₩30k = no)" },
+    agePlaceholder: { ko: "예: 28-38세 (월급쟁이 직장인 + 자녀 없는 부부)", en: "e.g., 28-38, salaried, no kids" },
+    lifestylePlaceholder: { ko: "예: 평일 출근 점심 12-13시 (8분 도보권 내) / 주말 브런치 (사진 SNS 업로드)", en: "e.g., Weekday lunch 12-13h (8min walk), weekend brunch (SNS-friendly)" },
+  },
+  retail: {
+    heroSub: { ko: "타깃을 좁히지 않은 매장은 상품 구성·가격·입지가 평균값으로 회귀합니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).", en: "Without a narrow target, assortment, pricing and location regress to the mean. Vague target + no differentiation is the top SMB closure cause — persona-owners see ~half the closure rate (KOSME)." },
+    example: { ko: "예: 실속형 1인 가구를 타깃 → 소용량·가성비 SKU·온라인 최저가 접점. 프리미엄 선물 수요 → 고가 큐레이션·포장·매장 경험. 같은 소매라도 타깃이 상품 구성·입지를 완전히 가릅니다.", en: "E.g., value single-person households → small-pack, budget SKUs, online. Premium gifting → curated high-price, packaging, in-store. Same retail, target splits assortment & location." },
+    smbFact0: GENERIC_SMB_FACT0,
+    tiers: { ko: ["가성비 1만원↓", "실속 1만~3만원", "프리미엄 3만~7만원", "럭셔리 7만원↑"], en: ["Value <₩10k", "Everyday ₩10-30k", "Premium ₩30-70k", "Luxury ₩70k+"] },
+    neverBuy: { ko: "범위 명시 (예: 실속형 고객 → 단일 상품 5만원↑ X)", en: "Specify a ceiling (e.g., value shopper → single item over ₩50k = no)" },
+    agePlaceholder: { ko: "예: 30-45세 (가성비·실속 중시 주부·직장인)", en: "e.g., 30-45, value-focused shoppers" },
+    lifestylePlaceholder: { ko: "예: 퇴근길·주말 오프라인 구경 / 필요 시 온라인 최저가 비교 후 구매", en: "e.g., browses in-store on weekends, compares online before buying" },
+  },
+  beauty: {
+    heroSub: { ko: "타깃이 모호한 미용실은 시술 구성·가격·인테리어가 경쟁점과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).", en: "A salon without a target ends up identical to competitors in services, price and interior. Vague target is the top SMB closure cause — persona-owners see ~half the rate (KOSME)." },
+    example: { ko: "예: 20대 학생 타깃 → 가성비 커트·트렌디 스타일·SNS 예약. 3040 직장인 타깃 → 프리미엄 클리닉·두피케어·재방문 관리. 같은 미용실이라도 타깃이 시술 구성·가격을 완전히 가릅니다.", en: "E.g., 20s students → budget cut, trendy styles, SNS booking. 30-40s pros → premium clinic, scalp care, retention. Same salon, target splits services & price." },
+    smbFact0: GENERIC_SMB_FACT0,
+    tiers: { ko: ["가성비 1만~3만원", "중간 3만~7만원", "프리미엄 7만~15만원", "럭셔리 15만원↑"], en: ["Value ₩10-30k", "Mid ₩30-70k", "Premium ₩70-150k", "Luxury ₩150k+"] },
+    neverBuy: { ko: "범위 명시 (예: 학생 타깃 → 10만원↑ 시술 X)", en: "Specify a ceiling (e.g., student target → service over ₩100k = no)" },
+    agePlaceholder: { ko: "예: 20-35세 (스타일·트렌드 민감, 재방문 주기 4~6주)", en: "e.g., 20-35, style-conscious, 4-6 week revisit" },
+    lifestylePlaceholder: { ko: "예: 4~6주 주기 재방문 / 시술 전후 SNS 후기 확인·업로드", en: "e.g., revisits every 4-6 weeks, checks/posts SNS reviews" },
+  },
+  fitness: {
+    heroSub: { ko: "타깃이 모호한 헬스장은 프로그램·가격·시설이 옆 센터와 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).", en: "A gym without a target matches the one next door on programs, price and facilities. Vague target is the top SMB closure cause — persona-owners see ~half (KOSME)." },
+    example: { ko: "예: 다이어트 입문자 타깃 → 그룹 GX·저가 월 회원권·초보 코칭. 퍼포먼스 지향 타깃 → 1:1 PT·고가 패키지·기능성 장비. 같은 헬스장이라도 타깃이 프로그램·가격을 완전히 가릅니다.", en: "E.g., beginners → group GX, cheap monthly, starter coaching. Performance seekers → 1:1 PT, premium packages, specialized gear. Same gym, target splits programs & price." },
+    smbFact0: GENERIC_SMB_FACT0,
+    tiers: { ko: ["가성비 월 3만~7만원", "중간 월 7만~13만원", "프리미엄 13만~25만원", "럭셔리 25만원↑(PT)"], en: ["Value ₩30-70k/mo", "Mid ₩70-130k/mo", "Premium ₩130-250k", "Luxury ₩250k+ (PT)"] },
+    neverBuy: { ko: "범위 명시 (예: 입문자 → 월 20만원↑ 프로그램 X)", en: "Specify a ceiling (e.g., beginner → program over ₩200k/mo = no)" },
+    agePlaceholder: { ko: "예: 25-40세 (건강·체형 관리 직장인)", en: "e.g., 25-40, health-conscious professionals" },
+    lifestylePlaceholder: { ko: "예: 평일 저녁·주말 오전 운동 / 인바디·기록 앱으로 동기 관리", en: "e.g., evenings & weekend mornings, tracks progress via apps" },
+  },
+  pet: {
+    heroSub: { ko: "타깃이 모호한 펫샵은 서비스 구성·가격이 경쟁점과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).", en: "A pet shop without a target ends up identical to rivals in services and price. Vague target is the top SMB closure cause — persona-owners see ~half (KOSME)." },
+    example: { ko: "예: 소형견 1인 가구 타깃 → 미용·데이케어·소용량 사료. 대형견·다견 가정 타깃 → 호텔·훈련·용품 정기배송. 같은 펫샵이라도 타깃이 서비스 구성을 완전히 가릅니다.", en: "E.g., small-dog singles → grooming, daycare, small packs. Large/multi-dog families → hotel, training, subscriptions. Same shop, target splits services." },
+    smbFact0: GENERIC_SMB_FACT0,
+    tiers: { ko: ["가성비 1만~3만원", "중간 3만~7만원", "프리미엄 7만~15만원", "럭셔리 15만원↑"], en: ["Value ₩10-30k", "Mid ₩30-70k", "Premium ₩70-150k", "Luxury ₩150k+"] },
+    neverBuy: { ko: "범위 명시 (예: 소형견 보호자 → 15만원↑ 스파 패키지 X)", en: "Specify a ceiling (e.g., small-dog owner → spa over ₩150k = no)" },
+    agePlaceholder: { ko: "예: 25-45세 (반려견 1~2마리, 도심 거주)", en: "e.g., 25-45, 1-2 dogs, urban" },
+    lifestylePlaceholder: { ko: "예: 주중 산책·주말 미용/병원 / 반려 커뮤니티·앱으로 정보 탐색", en: "e.g., weekday walks, weekend grooming/vet, active in pet communities" },
+  },
+  space: {
+    heroSub: { ko: "타깃이 모호한 무인·공간업은 좌석·요금제·운영시간이 옆 매장과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).", en: "An unmanned/space business without a target matches neighbors on seating, pricing and hours. Vague target is the top SMB closure cause — persona-owners see ~half (KOSME)." },
+    example: { ko: "예: 시험 준비 학생 타깃 → 장시간 좌석·정기권·조용한 존. 직장인 스터디모임 타깃 → 룸 단위·야간 이용·예약제. 같은 공간업이라도 타깃이 좌석 구성·요금제를 완전히 가릅니다.", en: "E.g., exam students → long-stay seats, passes, quiet zones. Working study groups → private rooms, night use, reservations. Same space, target splits layout & pricing." },
+    smbFact0: GENERIC_SMB_FACT0,
+    tiers: { ko: ["가성비 시간 1천~3천원", "중간 시간 3천~6천원", "프리미엄 일 1만~2만원", "럭셔리 2만원↑"], en: ["Value ₩1-3k/hr", "Mid ₩3-6k/hr", "Premium ₩10-20k/day", "Luxury ₩20k+"] },
+    neverBuy: { ko: "범위 명시 (예: 학생 타깃 → 시간당 5천원↑ X)", en: "Specify a ceiling (e.g., student → over ₩5k/hr = no)" },
+    agePlaceholder: { ko: "예: 10대~20대 (수험생·대학생) 또는 인근 직장인", en: "e.g., teens-20s students, or nearby workers" },
+    lifestylePlaceholder: { ko: "예: 시험기간 장시간 체류 / 정기권·앱 예약 선호", en: "e.g., long stays during exams, prefers passes/app booking" },
+  },
+  service: {
+    heroSub: { ko: "타깃이 모호한 서비스업은 상품 구성·가격이 경쟁점과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).", en: "A service business without a target ends up identical to rivals in offerings and price. Vague target is the top SMB closure cause — persona-owners see ~half (KOSME)." },
+    example: { ko: "예: 1인 가구 타깃 → 소규모·단건 서비스·즉시 예약. 가족 단위 타깃 → 정기·패키지 계약·방문 서비스. 같은 서비스업이라도 타깃이 상품 구성·가격을 완전히 가릅니다.", en: "E.g., single households → small one-off jobs, instant booking. Families → recurring packages, home visits. Same service, target splits offerings & price." },
+    smbFact0: GENERIC_SMB_FACT0,
+    tiers: { ko: ["가성비 1만~3만원", "중간 3만~7만원", "프리미엄 7만~15만원", "럭셔리 15만원↑"], en: ["Value ₩10-30k", "Mid ₩30-70k", "Premium ₩70-150k", "Luxury ₩150k+"] },
+    neverBuy: { ko: "범위 명시 (예: 1인 가구 → 회당 10만원↑ X)", en: "Specify a ceiling (e.g., single household → over ₩100k/job = no)" },
+    agePlaceholder: { ko: "예: 30-50세 (맞벌이·1인 가구)", en: "e.g., 30-50, dual-income or single households" },
+    lifestylePlaceholder: { ko: "예: 필요 발생 시 검색·비교 후 예약 / 후기·평점 중시", en: "e.g., searches when a need arises, values reviews/ratings" },
+  },
+};
+
 export function TargetCustomerStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
@@ -61,6 +156,9 @@ export function TargetCustomerStage() {
   const guideSelections = d.guideSelections;
 
   const clusterGroup = classifyCluster(d.industryCategoryId ?? undefined);
+  // offline 이면 업종군별 콘텐츠(통계·예시·객단가·검증) 선택.
+  const oc = OFFLINE_TC[toOfflineKind(d.industryCategoryId ?? undefined)];
+  const L = ko ? "ko" : "en";
 
   const inputs =
     (decisions[STAGE_ID]?.inputs as
@@ -105,12 +203,12 @@ export function TargetCustomerStage() {
       ? "B2B SaaS 실패 1위 원인은 모호한 ICP. 산업·역할·예산·구매 권한 4축으로 한 명을 명시해야 영업·제품·가격 모든 결정의 기준선이 잡힙니다."
       : clusterGroup === "online"
         ? "광고 ROAS 가 낮은 사장님 80%는 '20-50대 여성' 같은 모호한 타깃으로 캠페인 집행 중. 한 명에게만 팔린다는 의지로 좁혀야 매출이 잡힙니다."
-        : "외식업 폐업 사유 1위(28%)는 '타깃 불명확 + 차별화 실패' — 한국외식산업연구원 2024. 페르소나 정의한 사장님 폐업률은 정의 안 한 사장님의 절반."
+        : oc.heroSub.ko
     : clusterGroup === "tech"
       ? "Vague ICP is the #1 cause of B2B SaaS failure. Pin down one persona on industry/role/budget/buying authority — every product, pricing, and sales decision flows from this."
       : clusterGroup === "online"
         ? "80% of low-ROAS owners run ads to '20-50 women' generic targets. Narrowing to one persona is what makes revenue land."
-        : "F&B closure cause #1 (28%): unclear target + no differentiation — KFRI 2024. Owners who defined a persona have half the closure rate.";
+        : oc.heroSub.en;
 
   // ─────────────────────────────────────────────────────────────────────
   //  Render
@@ -166,9 +264,11 @@ export function TargetCustomerStage() {
                 : "Without a target persona, every downstream decision — location, menu, pricing, ad channel — regresses to the average (= identical to competitors)."}
             </div>
             <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
-              {ko
-                ? "예: 20대 1인 직장인을 타깃하면 → 도심·테이크아웃 위주·1만원 객단가 → 매장 평수 작아도 OK. 4인 가족이면 → 주차장·4인석 다수·2-3만원 객단가 → 평수 큰 매장 필수. 같은 외식업이라도 타깃이 두 선택을 완전히 갈라놓습니다."
-                : "E.g., 20s single workers → downtown, takeout, ₩10k ticket, small floor OK. Families of 4 → parking, 4-seater tables, ₩20-30k ticket, larger floor required. Same F&B, target splits every choice."}
+              {clusterGroup === "offline"
+                ? oc.example[L]
+                : ko
+                  ? "예: SaaS 마케팅 매니저를 타깃하면 → 광고 대시보드·리포트 자동화 중심 → 셀프서비스 온보딩. 대기업 구매 담당이면 → 보안·SLA·PO 결제 → 세일즈 주도 온보딩. 같은 제품이라도 타깃이 온보딩·가격을 완전히 가릅니다."
+                  : "E.g., a SaaS marketing manager → ad dashboards, report automation → self-serve onboarding. Enterprise buyer → security, SLA, PO → sales-led. Same product, target splits onboarding & pricing."}
             </div>
           </div>
 
@@ -179,11 +279,11 @@ export function TargetCustomerStage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {(ko ? [
-                { tag: "외식 폐업 사유", body: "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024" },
+                clusterGroup === "offline" ? oc.smbFact0.ko : { tag: "외식 폐업 사유", body: "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024" },
                 { tag: "페르소나 효과", body: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023 소상공인 실태조사" },
                 { tag: "광고 ROAS", body: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024" },
               ] : [
-                { tag: "F&B closure", body: "Cause #1: vague target + no differentiation (28%) — KFRI 2024" },
+                clusterGroup === "offline" ? oc.smbFact0.en : { tag: "F&B closure", body: "Cause #1: vague target + no differentiation (28%) — KFRI 2024" },
                 { tag: "Persona effect", body: "11% closure with persona vs 22% without — KOSME 2023" },
                 { tag: "Ad ROAS", body: "3.2x ROAS for narrow targeting — Meta Korea 2024" },
               ]).map((f, idx) => (
@@ -222,13 +322,12 @@ export function TargetCustomerStage() {
                 </label>
                 <input
                   type="text"
-                  placeholder={ko
-                    ? clusterGroup === "tech"
-                      ? "예: SaaS B2B / 직원 50-200명 / 연 매출 50억-300억"
+                  placeholder={
+                    clusterGroup === "tech"
+                      ? (ko ? "예: SaaS B2B / 직원 50-200명 / 연 매출 50억-300억" : "e.g., B2B SaaS, 50-200 employees, $5-30M ARR")
                       : clusterGroup === "online"
-                        ? "예: 25-34세 (네이버 검색·인스타 광고 노출 핵심 타깃)"
-                        : "예: 28-38세 (월급쟁이 직장인 + 자녀 없는 부부)"
-                    : clusterGroup === "tech" ? "e.g., B2B SaaS, 50-200 employees, $5-30M ARR" : "e.g., 28-38, salaried, no kids"}
+                        ? (ko ? "예: 25-34세 (네이버 검색·인스타 광고 노출 핵심 타깃)" : "e.g., 25-34, core Naver/IG ad target")
+                        : oc.agePlaceholder[L]}
                   value={inputs.primaryAgeRange ?? ""}
                   onChange={(e) => setInput("primaryAgeRange", e.target.value)}
                   style={inputStyle}
@@ -243,15 +342,12 @@ export function TargetCustomerStage() {
                     : clusterGroup === "tech" ? "2. User role + daily workflow *" : "2. Lifestyle + daily routine *"}
                 </label>
                 <textarea
-                  placeholder={ko
-                    ? clusterGroup === "tech"
-                      ? "예: 마케팅 운영 매니저 / 매일 광고 캠페인 7개 운영 / 보고서 작성에 주 8시간"
+                  placeholder={
+                    clusterGroup === "tech"
+                      ? (ko ? "예: 마케팅 운영 매니저 / 매일 광고 캠페인 7개 운영 / 보고서 작성에 주 8시간" : "e.g., Marketing ops manager, runs 7 campaigns daily, 8h/week on reports")
                       : clusterGroup === "online"
-                        ? "예: 평일 출근 후 22시 인스타 30분 / 주말 카페에서 무드 콘텐츠 소비"
-                        : "예: 평일 출근 점심 12-13시 (8분 도보권 내) / 주말 브런치 (사진 SNS 업로드)"
-                    : clusterGroup === "tech"
-                      ? "e.g., Marketing ops manager, runs 7 campaigns daily, 8h/week on reports"
-                      : "e.g., Weekday lunch 12-13h (8min walking radius), weekend brunch (SNS-friendly)"}
+                        ? (ko ? "예: 평일 출근 후 22시 인스타 30분 / 주말 카페에서 무드 콘텐츠 소비" : "e.g., weekday IG 30min at 22h, weekend mood content")
+                        : oc.lifestylePlaceholder[L]}
                   value={inputs.lifestyleHint ?? ""}
                   onChange={(e) => setInput("lifestyleHint", e.target.value)}
                   rows={3}
@@ -274,12 +370,14 @@ export function TargetCustomerStage() {
                         { v: "annual-contract", l: ko ? "연 30만원↑" : "Annual ≥$300" },
                         { v: "enterprise", l: ko ? "기업 (PO)" : "Enterprise PO" },
                       ]
-                    : [
-                        { v: "value-budget", l: ko ? "가성비 5천~1만원" : "Value ($5-10k)" },
-                        { v: "mid-quality", l: ko ? "중간 1만~2만원" : "Mid ($10-20k)" },
-                        { v: "premium", l: ko ? "프리미엄 2만~4만원" : "Premium ($20-40k)" },
-                        { v: "luxury", l: ko ? "럭셔리 4만원↑" : "Luxury ($40k+)" },
-                      ]
+                    : clusterGroup === "offline"
+                      ? (["value-budget", "mid-quality", "premium", "luxury"] as const).map((v, i) => ({ v, l: oc.tiers[L][i] }))
+                      : [
+                          { v: "value-budget", l: ko ? "가성비 5천~1만원" : "Value ₩5-10k" },
+                          { v: "mid-quality", l: ko ? "중간 1만~2만원" : "Mid ₩10-20k" },
+                          { v: "premium", l: ko ? "프리미엄 2만~4만원" : "Premium ₩20-40k" },
+                          { v: "luxury", l: ko ? "럭셔리 4만원↑" : "Luxury ₩40k+" },
+                        ]
                   ).map((opt) => {
                     const selected = inputs.priceSensitivity === opt.v;
                     return (
@@ -359,12 +457,12 @@ export function TargetCustomerStage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {(ko ? [
-                { q: "이 페르소나가 절대 안 살 가격대는?", hint: "범위 명시 (예: 20대 직장인 → 3만원↑ X)" },
+                { q: "이 페르소나가 절대 안 살 가격대는?", hint: clusterGroup === "offline" ? oc.neverBuy.ko : "범위 명시 (예: 20대 직장인 → 3만원↑ X)" },
                 { q: "이 페르소나가 절대 안 갈 위치는?", hint: "구체 (예: 차량 접근만 가능한 외곽)" },
                 { q: "이 페르소나가 정말 매주 1회+ 올까?", hint: "오면 안 되는 이유 1개라도 떠오르면 재정의" },
                 { q: "경쟁점 중 같은 타깃 가게는?", hint: "이름·차별점 — 안 보이면 시장 없음 신호" },
               ] : [
-                { q: "What price would they NEVER pay?", hint: "Be specific" },
+                { q: "What price would they NEVER pay?", hint: clusterGroup === "offline" ? oc.neverBuy.en : "Be specific" },
                 { q: "Where would they NEVER go?", hint: "E.g., car-only suburbs" },
                 { q: "Will they REALLY come weekly+?", hint: "If you can think of one reason no — redefine" },
                 { q: "Which competitor targets the same?", hint: "If none — market may not exist" },

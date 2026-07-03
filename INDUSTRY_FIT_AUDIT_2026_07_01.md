@@ -3,17 +3,29 @@
 ---
 ## 🚀 다음 세션 여기부터 (START HERE)
 
-**현재 상태**: main = `381218b` (푸시됨), 워킹트리 clean. 이번 세션 완료 = 20·22단계 버킷 / 채용·운영 사실정정 / 1·3단계 업종정합 / 본 감사 리포트 + Tier1 선택단계 범용화(웹+iOS). 남은 = 아래 🔴 HIGH 백로그.
+**현재 상태**: main = `381218b`(푸시됨) + 로컬 미커밋 = **Task 1 OperationsSetupStage 완료**. 이전 세션 완료 = 20·22단계 버킷 / 채용·운영 사실정정 / 1·3단계 업종정합 / 본 감사 리포트 + Tier1 선택단계 범용화(웹+iOS).
+
+**✅ Task 1 완료 (2026-07-02, 미커밋)** — OperationsSetupStage 19단계 웹+iOS 업종 정합:
+- 웹 `offline/OperationsSetupStage.tsx`: `offlineKind` 7버킷 + `channelKind`(delivery/marketplace/reservation) 파생. step 0 의 keyActions·whyMatters·howFlow·whatNeeded·traps·stepBridge 를 channelKind 로 분기. renderPos 배달 bullet channelKind 분기. StageWrapup(doneItems·verifyItems) 는 isFood 게이팅(비음식은 위생·원산지 제거, 뷰티는 공중위생 항목). 법정신고 intro/현금영수증 문구 범용화. → **tsc clean**.
+- iOS `OperationsSetupStageView.swift`: `isFoodKind`·`channelKind` + `ChannelKind` enum 미러. pageKeyAction page 0 channelKind 분기. wrapupDoneItems/wrapupVerifyItems computed 로 분리 + isFoodKind 게이팅. 현금영수증 문구 범용화. → **BUILD SUCCEEDED**.
+
+**✅ Task 2·3·4 완료 (2026-07-02, 미커밋)** — Task 2=StageGuideViewer 죽은코드 판정(수정 불필요, 제거는 task_31334ea6). Task 3=startup 3단계 SW 게이팅(웹+iOS, DeepTechStageNotice). Task 4=LocationCandidates·VendorSetup·online Sourcing/Store(웹+iOS, DigitalFulfillmentNotice).
+
+**🟢 남은 = LOW 등급만** (InitialOrderPlanCard/MyIngredientsPlanCard 식자재 placeholder · StoreNameInput 메뉴판 default · OnlineMarketing/GrowthEngine/CompanySetup 사소 텍스트). HIGH·MED 전량 해소.
 
 **규율(반드시)**: ① 코드 구조 깨끗하게 — 하드코딩·복붙 금지, **업종 반복은 키 기반 분기**(중첩삼항 4갈래↑면 Record 맵). ② **웹·iOS 양쪽** 동시 수정 + 내용 1:1. ③ 검증 필수 — 웹 `npx tsc --noEmit -p apps/web/tsconfig.json`, iOS `cd apps/ios && xcodebuild build -scheme FoundOneFeatures -destination 'generic/platform=iOS Simulator' -skipPackagePluginValidation`. ④ 커밋은 **파일 명시**로 stage(codex 브랜치 스윕 주의) → `git push origin HEAD:main`.
 
 **재사용 패턴 = 개업최종준비 7버킷** ([[project_prelaunch_final_buckets]]): `PreLaunchFinalStage.tsx:41` offlineKind(`food·retail·beauty·fitness·pet·space·service`, education+space→space) + iOS `PreLaunchFinalStageView.swift` enum/switch. 그대로 복사해 적용.
 
 **작업 순서**:
-1. **OperationsSetupStage (19단계)** — 최대 영향. `offline/OperationsSetupStage.tsx`의 keyActions[0]·whyMatters[0]·howFlow[0]·whatNeeded[0]·renderPos·stepBridges[0]·최종 StageWrapup·법정신고 block(≈1578)을 offlineKind 버킷 분기(food 유지+비음식). iOS `OperationsSetupStageView.swift` + `OperationsDetailRegistry.swift` 미러. (VAN·음악·원산지는 이미 정정 완료 — 건드리지 말 것)
-2. **StageGuideViewer** (`shared/StageGuideViewer.tsx`, live via GenericTaskStageBody) — `step3Food` 기본값 → **step3Generic 신설**하고 food/cafe만 step3Food 라우팅. `stepDataMap[cat] ?? stepDataMap["food"]`(≈377) → 비음식 폴백을 `[]` 또는 업종 엔트리로. step4Supplies(48)·운영팁(1073) 무조건 노출도 게이팅.
-3. **startup GoLive/MvpBuild/LaunchGtm** — Vercel·App Store·PH·HN을 SW 서브타입 게이팅(하드웨어·딥테크 제외).
-4. 🟡 LocationCandidates 면적/덕트 분기 · VendorSetup chrome · online Sourcing/Store 서브타입.
+1. ~~**OperationsSetupStage (19단계)**~~ ✅ **완료 2026-07-02** (위 Task 1 완료 항목 참고).
+2. ~~**StageGuideViewer**~~ ✅ **검증 완료 2026-07-02 — 죽은 코드(false positive), 콘텐츠 수정 불필요.** step3Food(1425)·supply food 폴백(377)·step4Supplies(48)·배민/쿠팡 운영팁(936,1074)은 모두 `vendorEl`(가드 `code==="vendor_setup"`)·`operationsEl`(`"operations_setup"`)·`registrationEl`(`"registration_setup"`) 서브엘리먼트 내부에만 존재. 이 3개 stage_code는 전부 `STAGE_GUIDE_VIEWER_EXCLUSION_REASONS`에 등록 → 부모 GenericTaskStageBody가 해당 단계에서 StageGuideViewer를 마운트하지 않음(전용 컴포넌트로 이관됨). 실제 마운트되는 stage_guide_content 시드 = `sourcing-setup`·`store-setup`(online-digital)뿐, 거기선 세 가드 모두 null. **후속(감사 범위 밖) = vendorEl/operationsEl/registrationEl 죽은코드 제거** → 별도 태스크로 분리.
+3. ~~**startup GoLive/MvpBuild/LaunchGtm**~~ ✅ **완료 2026-07-02 (SW 게이팅, 웹+iOS)**. 라이브 버그였음(전 서브타입이 mvp-build·launch-gtm 공유). 해법: 공용 `DeepTechStageNotice`(웹)/`DeepTechStageNoticeView`(iOS) 신설 — 딥테크 3트랙(hardware/lab/extreme) × 3단계(mvp/launch/golive) 콘텐츠. 세 스테이지에서 `deepTechKindOf(getClusterForSubIndustry(...))`(웹)·`DeepTechTrack.kind(forIndustryId:)`(iOS)로 판별해 딥테크면 SW 본문 대신 트랙 안내 early-return(전용단계 hardware-prototype·lab-setup·mpw 등으로 라우팅). SW(tech-software)는 기존 본문 유지. 웹 tsc clean · iOS BUILD SUCCEEDED.
+4. ~~🟡 LocationCandidates 면적/덕트 · VendorSetup chrome · online Sourcing/Store~~ ✅ **완료 2026-07-02 (웹+iOS)**:
+   - **LocationCandidates**: `offlineKind` 7버킷 파생 + `areaDetail`/`infraCheck` Record — 면적 기준·필수설비(덕트→업종별)·용도·마무리(메뉴→상품·서비스) 분기.
+   - **VendorSetup**: `isFood`/`supplyNoun` — 섹션명·팁·마무리 '식자재→업종 명사', HACCP·폐기율·가스KC 는 isFood 게이팅.
+   - **online Sourcing/Store**: 디지털 서브타입(digital-products·creator-service·newsletter-membership·ai-application)이면 중국소싱·택배 본문 대신 공용 `DigitalFulfillmentNotice`(웹)/`DigitalFulfillmentNoticeView`(iOS)로 early-return. online 로드맵이 카테고리 라우팅이라 디지털도 이 단계 받던 라이브 버그.
+   - 웹 tsc clean · iOS BUILD SUCCEEDED.
 
 아래 HIGH/MED/LOW 상세(file:line + 수정안) 참고.
 
@@ -63,7 +75,9 @@
 - `online/OnlineMarketingStage.tsx`, `startup/GrowthEngineStage.tsx:434`, `startup/CompanySetupStage.tsx:673`.
 
 ## ✅ 깨끗(게이팅/오버라이드 확인)
-Construction(11 카테고리 map)·보험세무·RegistrationSetup(SSOT)·MenuDesign·TargetCustomer·BudgetInsight·12개 클러스터 스테이지·StartupFoundation/CustomerDiscovery/Fundraising 등.
+Construction(11 카테고리 map)·보험세무·RegistrationSetup(SSOT)·MenuDesign·~~TargetCustomer~~·BudgetInsight·12개 클러스터 스테이지·StartupFoundation/CustomerDiscovery/Fundraising 등.
+
+⚠️ **감사 오분류 정정(2026-07-02)**: TargetCustomer 는 "깨끗"이 아니었음 — offline/online/tech 3분류는 있었으나 **offline 버킷이 전 오프라인 업종을 외식(28% 통계·5천~4만 객단가·점심 예시)으로 뭉갬**. 사장님 지적으로 offlineKind 7버킷 세분(웹+iOS). **교훈: "cluster 분기 있음"≠"업종 정합" — offline 내부가 외식 하드코딩인지까지 봐야 함.** 예산(BudgetSetup) 손익분기 원가율도 동일 패턴이었음.
 
 ---
 **진행:** Tier1(초기 선택단계 텍스트 범용화)부터 웹+iOS 수정. Operations·StageGuideViewer·online/startup은 대형 구조 분기 — 순차 진행.

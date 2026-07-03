@@ -163,6 +163,32 @@ public struct LaunchGtmStageView: View {
     }
 
     public var body: some View {
+        if let dtk = DeepTechTrack.kind(forIndustryId: industryId) {
+            deepTechShell(dtk)
+        } else {
+            standardBody
+        }
+    }
+
+    // 딥테크·하드웨어: SW GTM 본문(Product Hunt·HN·앱스토어) 게이팅 → 트랙별 안내.
+    private func deepTechShell(_ kind: DeepTechTrack) -> some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "출시 스택 · GTM 전략",
+            stageEyebrow: "단계 10 · GTM 론칭",
+            helperText: "당신의 트랙(하드웨어·딥테크) GTM 은 Product Hunt·HN 이 아니라 파일럿·디자인윈·규제입니다.",
+            canAdvance: true,
+            advanceHint: "트랙별 GTM 흐름 확인 — 다음 단계로",
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: [:]) },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [:]) }
+        ) {
+            DeepTechStageNoticeView(stage: .launch, kind: kind)
+        }
+    }
+
+    private var standardBody: some View {
         BUStageShell(
             stageId: stageId,
             title: "출시 스택 · GTM 전략",

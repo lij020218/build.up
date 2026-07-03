@@ -2,10 +2,13 @@
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
+import { DigitalFulfillmentNotice, isDigitalFulfillment } from "./DigitalFulfillmentNotice";
 
 export function SourcingSetupStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
+  // 업종 정합(2026-07-02): 디지털 상품·창작자 서비스는 재고 소싱(중국직구·KC)이 없음 → 안내로 대체.
+  if (isDigitalFulfillment(d.selectedIndustryId)) return <DigitalFulfillmentNotice stage="sourcing" ko={ko} />;
 
   const sourcingMethods = [
     { name: ko ? "국내 도매" : "Domestic Wholesale", capital: ko ? "50~300만원" : "₩500K~3M", color: "#191970", pros: ko ? "빠른 배송, 소량 가능" : "Fast shipping, small MOQ", cons: ko ? "마진 낮음, 경쟁 심함" : "Low margin, high competition", platforms: "도매꾹, 온채널, 도매매" },

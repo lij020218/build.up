@@ -61,6 +61,64 @@ public struct OperationsSetupStageView: View {
         OperationsChannelRegistry.label(forCategoryKey: cluster.category.rawValue, subIndustryId: cluster.subIndustryId)
     }
 
+    // ── 업종군 분기 (2026-07-02 업종 정합 감사, 웹 OperationsSetupStage 미러) ──
+    //   page 0(첫 판매 채널)·마무리·법정문구가 음식 전용(배민·위생·원산지)이던 문제 → 업종군으로 분기.
+    private var isFoodKind: Bool {
+        cluster.category == .food || cluster.category == .cafeDessert
+    }
+    /// page 0(첫 판매 채널) 의미론 그룹 — 음식=배달 / 소매=마켓플레이스 / 그 외 오프라인=예약·플레이스.
+    private enum ChannelKind { case delivery, marketplace, reservation }
+    private var channelKind: ChannelKind {
+        switch cluster.category {
+        case .food, .cafeDessert: return .delivery
+        case .retail:             return .marketplace
+        default:                  return .reservation
+        }
+    }
+
+    // ── 마무리(StageWrapup) 항목 — 음식 전용(위생교육·원산지·배달수수료)은 isFoodKind 게이팅 (웹 미러) ──
+    private var wrapupDoneItems: [BUStageWrapupItem] {
+        if isFoodKind {
+            return [
+                .init(label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업"),
+                .init(label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·재고·민원 대응 SOP"),
+                .init(label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰"),
+                .init(label: "4. 손익 모니터링 셋업", detail: "일별 매출·재료비·인건비 자동 기록 + 손익분기 추적"),
+            ]
+        }
+        return [
+            .init(label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스 등 POS + \(channelPageLabel) 채널 연동 + 키오스크·예약 셋업"),
+            .init(label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·안전·재고·민원 대응 SOP"),
+            .init(label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰"),
+            .init(label: "4. 손익 모니터링 셋업", detail: "일별 매출·원가·인건비 자동 기록 + 손익분기 추적"),
+        ]
+    }
+    private var wrapupVerifyItems: [String] {
+        if isFoodKind {
+            return [
+                "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
+                "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
+                "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
+                "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
+                "원산지 표시 — 거짓 표시 시 7년 이하 징역·1억원 이하 벌금 / 미표시 시 1,000만원 이하 과태료. 전 메뉴 표시 의무",
+                "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
+            ]
+        }
+        var items: [String] = [
+            "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
+            "\(channelPageLabel) 채널 — 판매·예약 수수료 + 결제 수수료 매출 분리 회계 셋업",
+        ]
+        if cluster.category == .beauty {
+            items.append("위생교육 매년 갱신 — 공중위생영업자(미용·목욕 등) 대상, 미이수 시 과태료")
+            items.append("위생·소독 관리 — 기구 소독·위생기준 준수(공중위생관리법), 점검 대비 기록 보관")
+        } else {
+            items.append("안전·위생 관리 — 업종별 안전기준·시설기준 준수 + 점검 대비 기록 보관")
+        }
+        items.append("민원 대응 — 소비자원·관할 기관 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템")
+        items.append("리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선")
+        return items
+    }
+
     private var pages: [String] {
         cluster.category.isOffline
             ? [channelPageLabel, "POS 선택", "SNS 세팅"]
@@ -75,8 +133,17 @@ public struct OperationsSetupStageView: View {
         guard cluster.category.isOffline else { return nil }
         switch page {
         case 0:
-            return .init(title: "오픈 1주 전, 배민·쿠팡이츠 입점 신청 동시 접수",
-                         detail: "심사에 2~5 영업일 소요 — 늦으면 첫날 배달 채널이 막힙니다. 통신판매업 신고증·영업신고증 미리 PDF로 준비하세요.")
+            switch channelKind {
+            case .delivery:
+                return .init(title: "오픈 1주 전, 배민·쿠팡이츠 입점 신청 동시 접수",
+                             detail: "심사에 2~5 영업일 소요 — 늦으면 첫날 배달 채널이 막힙니다. 통신판매업 신고증·영업신고증 미리 PDF로 준비하세요.")
+            case .marketplace:
+                return .init(title: "오픈 전, 스마트스토어·오픈마켓 + 지역 채널(당근·플레이스) 동시 등록",
+                             detail: "네이버 스마트스토어는 심사 1~3일, 오픈마켓(쿠팡·11번가)은 입점 후 상품 등록. 매장 판매만 할 거라도 네이버 플레이스·당근 비즈프로필은 필수 — 검색·동네 노출의 출발점.")
+            case .reservation:
+                return .init(title: "오픈 전, 네이버 예약·플레이스 등록 — 예약 채널부터 확보",
+                             detail: "미용·헬스·반려·공간업은 '검색→예약'이 첫 유입. 네이버 플레이스 등록 후 예약 연동까지 최대 7일. 예약앱(네이버예약·똑닥 등) 병행 시 노쇼·대기 관리가 쉬워집니다.")
+            }
         case 1:
             return .init(title: "사업자등록 직후 VAN사 1곳에 가맹점 등록 신청 — 카드 결제까지 약 1주",
                          detail: "VAN사 1곳에 신청하면 모든 카드사·간편결제(카카오·네이버·애플페이) 자동 연계. 토스플레이스 등 통합 솔루션 사용 시 별도 VAN 신청 불필요.")
@@ -242,20 +309,8 @@ public struct OperationsSetupStageView: View {
                 roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["pos": posSelected])
             },
             wrapup: BUStageWrapupData(
-                doneItems: [
-                .init(label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업"),
-                .init(label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·재고·민원 대응 SOP"),
-                .init(label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰"),
-                .init(label: "4. 손익 모니터링 셋업", detail: "일별 매출·재료비·인건비 자동 기록 + 손익분기 추적"),
-                ],
-                verifyItems: [
-                "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
-                "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
-                "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
-                "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
-                "원산지 표시 — 거짓 표시 시 7년 이하 징역·1억원 이하 벌금 / 미표시 시 1,000만원 이하 과태료. 전 메뉴 표시 의무",
-                "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
-                ],
+                doneItems: wrapupDoneItems,
+                verifyItems: wrapupVerifyItems,
                 nextStageLabel: "프리오픈·본 오픈 준비",
                 nextSummary: "POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"
             ),
@@ -512,7 +567,7 @@ public struct OperationsSetupStageView: View {
                                     Text("법적 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.danger)
                                         .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.danger.opacity(0.1), in: Capsule())
                                 }
-                                Text("음식점·소매업 등 의무발급 업종 — 10만원 이상 거래 시 현금영수증 의무 발급. 홈택스 신청 또는 사업자등록 시 동시 신청. 미가입 시 미발급 거래액의 20% 가산세.").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                Text("소비자 대상 업종(음식·소매·미용·숙박·학원 등) 의무발급 — 10만원 이상 거래 시 현금영수증 의무 발급. 홈택스 신청 또는 사업자등록 시 동시 신청. 미가입 시 미발급 거래액의 20% 가산세.").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                             }
                         }.tint(BUColor.midnight)
                         Divider()

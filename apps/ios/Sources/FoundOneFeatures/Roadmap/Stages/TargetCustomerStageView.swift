@@ -38,14 +38,22 @@ public struct TargetCustomerStageView: View {
 
     private var helperText: String {
         switch cluster.category {
-        case .food, .cafeDessert:
-            return "외식 폐업 사유 1위 (28%) 는 '타깃 불명확'. 한 명의 구체적 페르소나가 모든 후속 결정의 기준선입니다."
         case .onlineDigital:
             return "온라인 폐업 사유 1위는 'CAC > LTV'. 정확한 페르소나가 광고 ROAS·전환·리텐션 모두를 결정합니다."
         case .startupTech:
             return "스타트업 실패 42% = '시장이 원하지 않는 제품'. ICP(Ideal Customer Profile) 한 명 명시가 PMF 의 출발점."
         default:
-            return "타깃 한 명의 구체적 페르소나 — 입지·서비스·가격·마케팅 모든 후속 결정의 기준선."
+            return oc.heroSub // offline — 업종군별(외식만 KFRI 28%, 나머지 KOSME 일반)
+        }
+    }
+
+    // KEY ACTION 히어로 제목 — cluster-aware (웹 heroTitle 미러). detail 은 helperText 재사용.
+    //   ⚠️ 2026-07-02: 레지스트리 기본값(외식 28%)이 전 업종 노출되던 것을 override 로 대체.
+    private var heroTitle: String {
+        switch clusterGroup {
+        case .tech:    return "ICP 없이 코드 한 줄도 쓰지 마세요"
+        case .online:  return "타깃이 모호하면 광고비만 새어 나갑니다"
+        case .offline: return "타깃이 없는 가게는 평균값으로 회귀합니다"
         }
     }
 
@@ -71,6 +79,98 @@ public struct TargetCustomerStageView: View {
         }
     }
 
+    // ── offline 업종군 세분 (2026-07-02 업종 정합 수정, 웹 TargetCustomerStage 미러) ──
+    //   offline 전체가 외식(통계·객단가·예시)으로 하드코딩되던 문제 → 업종군 분기.
+    //   통계 가짜 금지: 외식만 KFRI 실통계, 나머지는 KOSME 일반 SMB(실존).
+    private struct OfflineTC {
+        let heroSub: String
+        let example: String
+        let smbFact0: (tag: String, text: String)
+        let tiers: [(label: String, value: String)]
+        let neverBuy: String
+        let agePlaceholder: String
+        let lifestylePlaceholder: String
+    }
+    private var offlineKind: String {
+        switch cluster.category {
+        case .food, .cafeDessert: return "food"
+        case .retail:             return "retail"
+        case .beauty:             return "beauty"
+        case .fitness:            return "fitness"
+        case .pet:                return "pet"
+        case .education, .space:  return "space"
+        default:                  return "service"
+        }
+    }
+    private var oc: OfflineTC {
+        let genericFact: (String, String) = ("폐업 핵심 사유", "\"타깃 불명확 + 차별화 실패\" — 업종 불문 소상공인 폐업의 최상위 원인 (KOSME 소상공인 실태조사)")
+        switch offlineKind {
+        case "food":
+            return OfflineTC(
+                heroSub: "외식업 폐업 사유 1위(28%)는 '타깃 불명확 + 차별화 실패' — 한국외식산업연구원 2024. 페르소나 정의한 사장님 폐업률은 정의 안 한 사장님의 절반.",
+                example: "예: 20대 1인 직장인 타깃 → 도심·테이크아웃·1만원 객단가 → 평수 작아도 OK. 4인 가족이면 → 주차장·4인석·2-3만원 → 큰 평수 필수. 같은 외식업이라도 타깃이 모든 선택을 갈라놓습니다.",
+                smbFact0: ("외식 폐업 사유", "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024"),
+                tiers: [("가성비 5천~1만원", "value-budget"), ("중간 1만~2만원", "mid-quality"), ("프리미엄 2만~4만원", "premium"), ("럭셔리 4만원↑", "luxury")],
+                neverBuy: "범위 명시 (예: 20대 직장인 → 점심 3만원↑ X)",
+                agePlaceholder: "예: 28-38세 (월급쟁이 직장인 + 자녀 없는 부부)",
+                lifestylePlaceholder: "예: 평일 출근 점심 12-13시 (8분 도보권 내) / 주말 브런치 (SNS 업로드)")
+        case "retail":
+            return OfflineTC(
+                heroSub: "타깃을 좁히지 않은 매장은 상품 구성·가격·입지가 평균값으로 회귀합니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).",
+                example: "예: 실속형 1인 가구 타깃 → 소용량·가성비 SKU·온라인 최저가 접점. 프리미엄 선물 수요 → 고가 큐레이션·포장·매장 경험. 같은 소매라도 타깃이 상품 구성·입지를 완전히 가릅니다.",
+                smbFact0: genericFact,
+                tiers: [("가성비 1만원↓", "value-budget"), ("실속 1만~3만원", "mid-quality"), ("프리미엄 3만~7만원", "premium"), ("럭셔리 7만원↑", "luxury")],
+                neverBuy: "범위 명시 (예: 실속형 고객 → 단일 상품 5만원↑ X)",
+                agePlaceholder: "예: 30-45세 (가성비·실속 중시 주부·직장인)",
+                lifestylePlaceholder: "예: 퇴근길·주말 오프라인 구경 / 필요 시 온라인 최저가 비교 후 구매")
+        case "beauty":
+            return OfflineTC(
+                heroSub: "타깃이 모호한 미용실은 시술 구성·가격·인테리어가 경쟁점과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).",
+                example: "예: 20대 학생 타깃 → 가성비 커트·트렌디 스타일·SNS 예약. 3040 직장인 타깃 → 프리미엄 클리닉·두피케어·재방문 관리. 같은 미용실이라도 타깃이 시술 구성·가격을 완전히 가릅니다.",
+                smbFact0: genericFact,
+                tiers: [("가성비 1만~3만원", "value-budget"), ("중간 3만~7만원", "mid-quality"), ("프리미엄 7만~15만원", "premium"), ("럭셔리 15만원↑", "luxury")],
+                neverBuy: "범위 명시 (예: 학생 타깃 → 10만원↑ 시술 X)",
+                agePlaceholder: "예: 20-35세 (스타일·트렌드 민감, 재방문 주기 4~6주)",
+                lifestylePlaceholder: "예: 4~6주 주기 재방문 / 시술 전후 SNS 후기 확인·업로드")
+        case "fitness":
+            return OfflineTC(
+                heroSub: "타깃이 모호한 헬스장은 프로그램·가격·시설이 옆 센터와 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).",
+                example: "예: 다이어트 입문자 타깃 → 그룹 GX·저가 월 회원권·초보 코칭. 퍼포먼스 지향 타깃 → 1:1 PT·고가 패키지·기능성 장비. 같은 헬스장이라도 타깃이 프로그램·가격을 완전히 가릅니다.",
+                smbFact0: genericFact,
+                tiers: [("가성비 월 3만~7만원", "value-budget"), ("중간 월 7만~13만원", "mid-quality"), ("프리미엄 13만~25만원", "premium"), ("럭셔리 25만원↑(PT)", "luxury")],
+                neverBuy: "범위 명시 (예: 입문자 → 월 20만원↑ 프로그램 X)",
+                agePlaceholder: "예: 25-40세 (건강·체형 관리 직장인)",
+                lifestylePlaceholder: "예: 평일 저녁·주말 오전 운동 / 인바디·기록 앱으로 동기 관리")
+        case "pet":
+            return OfflineTC(
+                heroSub: "타깃이 모호한 펫샵은 서비스 구성·가격이 경쟁점과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).",
+                example: "예: 소형견 1인 가구 타깃 → 미용·데이케어·소용량 사료. 대형견·다견 가정 타깃 → 호텔·훈련·용품 정기배송. 같은 펫샵이라도 타깃이 서비스 구성을 완전히 가릅니다.",
+                smbFact0: genericFact,
+                tiers: [("가성비 1만~3만원", "value-budget"), ("중간 3만~7만원", "mid-quality"), ("프리미엄 7만~15만원", "premium"), ("럭셔리 15만원↑", "luxury")],
+                neverBuy: "범위 명시 (예: 소형견 보호자 → 15만원↑ 스파 패키지 X)",
+                agePlaceholder: "예: 25-45세 (반려견 1~2마리, 도심 거주)",
+                lifestylePlaceholder: "예: 주중 산책·주말 미용/병원 / 반려 커뮤니티·앱으로 정보 탐색")
+        case "space":
+            return OfflineTC(
+                heroSub: "타깃이 모호한 무인·공간업은 좌석·요금제·운영시간이 옆 매장과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).",
+                example: "예: 시험 준비 학생 타깃 → 장시간 좌석·정기권·조용한 존. 직장인 스터디모임 타깃 → 룸 단위·야간 이용·예약제. 같은 공간업이라도 타깃이 좌석 구성·요금제를 완전히 가릅니다.",
+                smbFact0: genericFact,
+                tiers: [("가성비 시간 1천~3천원", "value-budget"), ("중간 시간 3천~6천원", "mid-quality"), ("프리미엄 일 1만~2만원", "premium"), ("럭셔리 2만원↑", "luxury")],
+                neverBuy: "범위 명시 (예: 학생 타깃 → 시간당 5천원↑ X)",
+                agePlaceholder: "예: 10대~20대 (수험생·대학생) 또는 인근 직장인",
+                lifestylePlaceholder: "예: 시험기간 장시간 체류 / 정기권·앱 예약 선호")
+        default:
+            return OfflineTC(
+                heroSub: "타깃이 모호한 서비스업은 상품 구성·가격이 경쟁점과 똑같아집니다. '타깃 불명확 + 차별화 실패'는 업종 불문 소상공인 폐업의 최상위 원인 — 페르소나를 정의한 사장님의 폐업률이 절반이라는 조사도 있습니다(KOSME).",
+                example: "예: 1인 가구 타깃 → 소규모·단건 서비스·즉시 예약. 가족 단위 타깃 → 정기·패키지 계약·방문 서비스. 같은 서비스업이라도 타깃이 상품 구성·가격을 완전히 가릅니다.",
+                smbFact0: genericFact,
+                tiers: [("가성비 1만~3만원", "value-budget"), ("중간 3만~7만원", "mid-quality"), ("프리미엄 7만~15만원", "premium"), ("럭셔리 15만원↑", "luxury")],
+                neverBuy: "범위 명시 (예: 1인 가구 → 회당 10만원↑ X)",
+                agePlaceholder: "예: 30-50세 (맞벌이·1인 가구)",
+                lifestylePlaceholder: "예: 필요 발생 시 검색·비교 후 예약 / 후기·평점 중시")
+        }
+    }
+
     private var ageRangeLabel: String {
         switch clusterGroup {
         case .tech:    return "1. 타깃 산업·기업 규모 *"
@@ -82,7 +182,7 @@ public struct TargetCustomerStageView: View {
         switch clusterGroup {
         case .tech:    return "예: 50-200인 B2B SaaS / 핀테크 스타트업 (시리즈 A-B)"
         case .online:  return "예: 25-35세 여성 + 인스타·유튜브 유입 + 모바일 80%"
-        case .offline: return "예: 28-38세 (월급쟁이 직장인 + 자녀 없는 부부)"
+        case .offline: return oc.agePlaceholder
         }
     }
 
@@ -97,7 +197,7 @@ public struct TargetCustomerStageView: View {
         switch clusterGroup {
         case .tech:    return "예: 운영팀 PM — Slack/Notion 풀데이 사용, 매주 화요일 회고에서 우리 도구 데이터 확인"
         case .online:  return "예: 인스타 광고 → 상세페이지 → 장바구니 7일 → 가족 추천 후 결제. 모바일 80%, 야간 21-23시 피크."
-        case .offline: return "예: 평일 출근 점심 12-13시 (8분 도보권 내) / 주말 브런치 (SNS 업로드)"
+        case .offline: return oc.lifestylePlaceholder
         }
     }
 
@@ -115,12 +215,13 @@ public struct TargetCustomerStageView: View {
             ("연 30만원↑",         "annual-contract"),
             ("기업 (PO)",          "enterprise"),
         ]
-        case .online, .offline: return [
+        case .online: return [
             ("가성비 5천~1만원",   "value-budget"),
             ("중간 1만~2만원",     "mid-quality"),
             ("프리미엄 2만~4만원", "premium"),
             ("럭셔리 4만원↑",      "luxury"),
         ]
+        case .offline: return oc.tiers
         }
     }
 
@@ -156,7 +257,7 @@ public struct TargetCustomerStageView: View {
             stageId: stageId,
             title: "타깃 고객 정의",
             stageEyebrow: "단계 4 · 타깃 고객",
-            helperText: helperText,
+            helperText: nil, // 히어로(keyActionOverride.detail)로 이동 — 중복 방지
             canAdvance: canContinue,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -185,7 +286,8 @@ public struct TargetCustomerStageView: View {
                 nextSummary: "타깃 페르소나 확정 → 예산·시점 설정 단계로 진입"
             ),
             currentPage: page,
-            totalPages: 3
+            totalPages: 3,
+            keyActionOverride: BUStageKeyAction(title: heroTitle, detail: helperText)
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 pageNav
@@ -250,7 +352,9 @@ private extension TargetCustomerStageView {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 2)
 
-                    Text("예: 20대 1인 직장인 타깃 → 도심·테이크아웃·1만원 객단가 → 평수 작아도 OK. 4인 가족이면 → 주차장·4인석·2-3만원 → 큰 평수 필수. 같은 외식업이라도 타깃이 모든 선택을 갈라놓습니다.")
+                    Text(clusterGroup == .offline
+                         ? oc.example
+                         : "예: SaaS 마케팅 매니저를 타깃하면 → 광고 대시보드·리포트 자동화 중심 → 셀프서비스 온보딩. 대기업 구매 담당이면 → 보안·SLA·PO 결제 → 세일즈 주도 온보딩. 같은 제품이라도 타깃이 온보딩·가격을 완전히 가릅니다.")
                         .font(.system(size: 13))
                         .foregroundStyle(BUColor.inkSecondary)
                         .lineSpacing(4)
@@ -267,7 +371,8 @@ private extension TargetCustomerStageView {
                     .foregroundStyle(BUColor.inkMuted.opacity(0.55))
 
                 VStack(alignment: .leading, spacing: 9) {
-                    DataPointRow(tag: "외식 폐업 사유", text: "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024")
+                    DataPointRow(tag: clusterGroup == .offline ? oc.smbFact0.tag : "외식 폐업 사유",
+                                 text: clusterGroup == .offline ? oc.smbFact0.text : "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024")
                     DataPointRow(tag: "페르소나 효과", text: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023")
                     DataPointRow(tag: "광고 ROAS",    text: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024")
                 }
@@ -403,7 +508,7 @@ private extension TargetCustomerStageView {
                     VerifyCard(
                         number: 1,
                         question: "이 페르소나가 절대 안 살 가격대는?",
-                        hint: "범위 명시 (예: 20대 직장인 → 3만원↑ X)"
+                        hint: clusterGroup == .offline ? oc.neverBuy : "범위 명시 (예: 20대 직장인 → 3만원↑ X)"
                     )
                     VerifyCard(
                         number: 2,

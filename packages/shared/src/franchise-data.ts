@@ -1329,8 +1329,8 @@ export const contractCheckpoints: ContractCheckpoint[] = [
     id: "dispute-resolution",
     title: { ko: "분쟁 해결 방식", en: "Dispute resolution method" },
     description: {
-      ko: "분쟁 발생 시 중재/소송 절차와 비용 부담을 확인하세요. 한국프랜차이즈산업협회 분쟁조정협의회를 활용할 수 있습니다.",
-      en: "Check arbitration/litigation procedures and cost allocation. The Korean Franchise Association mediation committee is available."
+      ko: "분쟁 발생 시 중재/소송 절차와 비용 부담을 확인하세요. 한국공정거래조정원의 가맹사업거래분쟁조정협의회(공정위 산하 법정 기구)를 활용할 수 있습니다.",
+      en: "Check arbitration/litigation procedures and cost allocation. Use the Franchise Dispute Mediation Council at the Korea Fair Trade Mediation Agency (KOFAIR), the official statutory body."
     },
     riskLevel: "info"
   }

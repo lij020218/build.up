@@ -18,6 +18,9 @@ public struct SourcingSetupStageView: View {
     @State private var page = 0
     private let stageId = "sourcing-setup"
 
+    // 업종 정합(2026-07-02): 디지털 상품·창작자 서비스는 재고 소싱(중국직구·KC)이 없음 → 안내로 대체.
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+
     @AppStorage("src.sourcingType")    private var sourcingType    = ""
     @AppStorage("src.supplierLocked")  private var supplierLocked  = false
     @AppStorage("src.photosDone")      private var photosDone      = false
@@ -47,6 +50,32 @@ public struct SourcingSetupStageView: View {
     }
 
     public var body: some View {
+        if isDigitalFulfillment(industryId) {
+            digitalShell
+        } else {
+            standardBody
+        }
+    }
+
+    // 디지털 상품·창작자: 물리 소싱 본문 게이팅 → 디지털 전달 안내.
+    private var digitalShell: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "상품 소싱 및 상세 페이지",
+            stageEyebrow: "단계 11 · 소싱·상품 준비",
+            helperText: "디지털 상품은 재고 소싱이 없습니다. 원본·라이선스·자동 전달 구조를 준비하세요.",
+            canAdvance: true,
+            advanceHint: "디지털 전달 구조 확인 — 다음 단계로",
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: [:]) },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [:]) }
+        ) {
+            DigitalFulfillmentNoticeView(stage: .sourcing)
+        }
+    }
+
+    private var standardBody: some View {
         BUStageShell(
             stageId: stageId,
             title: "상품 소싱 및 상세 페이지",

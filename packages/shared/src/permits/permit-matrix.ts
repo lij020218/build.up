@@ -230,7 +230,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         id: "beauty-license",
         name: { ko: "미용사 면허 확인", en: "Beautician License" },
         priority: "required",
-        agency: { ko: "시·도지사 (시험: 한국산업인력공단)", en: "Provincial Governor (Exam: HRDKorea)" },
+        agency: { ko: "시장·군수·구청장 (시험: 한국산업인력공단)", en: "City/County/District head (Exam: HRDKorea)" },
         costWon: 0,
         costNote: { ko: "면허 소지자만 개업 가능 (미용사 국가자격)", en: "Only licensed beauticians can open (national qualification)" },
         duration: { ko: "면허 소지 전제", en: "License prerequisite" },

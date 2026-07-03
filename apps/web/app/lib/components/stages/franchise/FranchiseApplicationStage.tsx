@@ -145,7 +145,47 @@ export function FranchiseApplicationStage() {
   const isTaskDone = (taskId: string) =>
     tasks.find((t) => t.taskId === taskId)?.status === "completed";
 
-  const processSteps = ko ? PROCESS_STEPS_KO : PROCESS_STEPS_EN;
+  // ─── 업종 분기 (2026-07-02 업종 정합 수정) ────────────────────────────
+  //   프랜차이즈는 9개 업종(food·cafe·beauty·retail·fitness·pet·education·living·space)에 걸침.
+  //   교육 내용(조리법·위생)·필수구매(식자재)가 외식 전용으로 하드코딩돼 비외식 브랜드에 오노출.
+  const fcCategory: string =
+    (d.selectedFranchiseBrandId ? getFranchiseBrandById(d.selectedFranchiseBrandId)?.categoryId : undefined)
+    ?? d.industryCategoryId ?? "food";
+  const isFcFood = fcCategory === "food" || fcCategory === "cafe-dessert";
+  // #1 본사 교육 내용 — 업종별
+  const fcTrainingDetailKo: string =
+    isFcFood ? "조리법·운영 매뉴얼·POS·위생 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+    : fcCategory === "beauty" ? "시술·운영 매뉴얼·POS·위생 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+    : fcCategory === "retail" ? "상품 진열·재고·운영 매뉴얼·POS 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+    : fcCategory === "fitness" ? "프로그램·기구 사용·운영 매뉴얼·POS 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+    : fcCategory === "pet" ? "미용·케어·운영 매뉴얼·POS·위생 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+    : fcCategory === "education" ? "교습 커리큘럼·운영 매뉴얼·POS 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+    : "운영 매뉴얼·POS·서비스 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑.";
+  const fcTrainingDetailEn: string =
+    isFcFood ? "Recipes, operations, POS, hygiene training. Weak HQ manuals = high post-opening risk."
+    : fcCategory === "beauty" ? "Treatments, operations, POS, hygiene training. Weak HQ manuals = high post-opening risk."
+    : fcCategory === "retail" ? "Merchandising, inventory, operations, POS training. Weak HQ manuals = high post-opening risk."
+    : fcCategory === "fitness" ? "Programs, equipment, operations, POS training. Weak HQ manuals = high post-opening risk."
+    : fcCategory === "pet" ? "Grooming/care, operations, POS, hygiene training. Weak HQ manuals = high post-opening risk."
+    : fcCategory === "education" ? "Curriculum, operations, POS training. Weak HQ manuals = high post-opening risk."
+    : "Operations, POS, service training. Weak HQ manuals = high post-opening risk.";
+  // #3 필수 구매 비율 — 원부자재 명칭 업종별
+  const fcRequiredPurchaseKo: string =
+    isFcFood ? "필수 구매 비율 — 70% 이상이면 식자재 단가 협상력 X, 마진 압박 위험"
+    : fcCategory === "retail" ? "필수 구매 비율 — 70% 이상이면 상품 매입가 협상력 X, 마진 압박 위험"
+    : fcCategory === "beauty" ? "필수 구매 비율 — 70% 이상이면 미용 재료·제품 단가 협상력 X, 마진 압박 위험"
+    : fcCategory === "fitness" ? "필수 구매 비율 — 70% 이상이면 기구·용품 단가 협상력 X, 마진 압박 위험"
+    : fcCategory === "pet" ? "필수 구매 비율 — 70% 이상이면 사료·용품 단가 협상력 X, 마진 압박 위험"
+    : fcCategory === "education" ? "필수 구매 비율 — 70% 이상이면 교재·비품 단가 협상력 X, 마진 압박 위험"
+    : "필수 구매 비율 — 70% 이상이면 원부자재 단가 협상력 X, 마진 압박 위험";
+
+  const baseSteps = ko ? PROCESS_STEPS_KO : PROCESS_STEPS_EN;
+  const processSteps = baseSteps.map((s) =>
+    s.taskId === "fc-training" ? { ...s, detail: ko ? fcTrainingDetailKo : fcTrainingDetailEn } : s,
+  );
+  const franchiseVerifyItems = FRANCHISE_WRAPUP.verify.map((v) =>
+    v.includes("필수 구매 비율") ? fcRequiredPurchaseKo : v,
+  );
   const whyFacts = ko ? WHY_FACTS_KO : WHY_FACTS_EN;
 
   const completedCount = processSteps.filter((s) => isTaskDone(s.taskId)).length;
@@ -626,7 +666,7 @@ export function FranchiseApplicationStage() {
             {[
               { label: ko ? "공정거래위원회 정보공개서 조회" : "KFTC Disclosure Lookup", url: "https://franchise.ftc.go.kr" },
               { label: ko ? "가맹사업법 안내 (생활법령)" : "Franchise Act Guide", url: "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=647&ccfNo=1&cciNo=1&cnpClsNo=1" },
-              { label: ko ? "분쟁조정 신청 (한국프랜차이즈산업협회)" : "Dispute Mediation (KFA)", url: "https://www.ikfa.or.kr/" },
+              { label: ko ? "가맹 분쟁조정 신청 (한국공정거래조정원)" : "Franchise Dispute Mediation (KOFAIR)", url: "https://fairnet.kofair.or.kr/" },
               { label: ko ? "표준가맹계약서 양식 (공정위)" : "Standard Contract Form (FTC)", url: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204" },
             ].map((link) => (
               <a
@@ -659,7 +699,7 @@ export function FranchiseApplicationStage() {
         ko={ko}
         nextStageLabelKo="인테리어 시공"
         doneItemsKo={FRANCHISE_WRAPUP.done}
-        verifyItemsKo={FRANCHISE_WRAPUP.verify}
+        verifyItemsKo={franchiseVerifyItems}
         nextSummaryKo={FRANCHISE_WRAPUP.next}
       />
     </div>

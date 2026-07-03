@@ -2,10 +2,13 @@
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
+import { DigitalFulfillmentNotice, isDigitalFulfillment } from "./DigitalFulfillmentNotice";
 
 export function StoreSetupStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
+  // 업종 정합(2026-07-02): 디지털 상품·창작자 서비스는 택배·포장이 없음 → 안내로 대체.
+  if (isDigitalFulfillment(d.selectedIndustryId)) return <DigitalFulfillmentNotice stage="store" ko={ko} />;
   const opsSelections = d.opsSelections;
 
   // 이전 단계에서 선택한 플랫폼 확인

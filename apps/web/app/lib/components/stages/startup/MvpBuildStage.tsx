@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Rocket, Code2, Sparkles } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { getClusterForSubIndustry } from "@foundone/shared";
+import { DeepTechStageNotice, deepTechKindOf } from "./DeepTechStageNotice";
 import { ModePathCard } from "./ModePathCard";
 import { BuildMethodDialog, BuildMethodTrigger } from "./BuildMethodDialog";
 import {
@@ -18,10 +20,15 @@ import { StageWrapup } from "../shared/StageWrapup";
 export function MvpBuildStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
+  // 업종 정합(2026-07-02): 딥테크·하드웨어 MVP 는 Next.js·Vercel 이 아니라 프로토타입·벤치·시제.
+  const deepTechKind = deepTechKindOf(getClusterForSubIndustry(d.selectedIndustryId ?? undefined, d.industryCategoryId ?? ""));
 
   const [mvpPage, setMvpPage] = useState(0);
   const [mvpToolsOpen, setMvpToolsOpen] = useState(false);
   const [methodDialogTaskId, setMethodDialogTaskId] = useState<string | null>(null);
+
+  // 딥테크·하드웨어면 SW 본문 게이팅 → 트랙별 안내 (hook 선언 뒤에서 early-return).
+  if (deepTechKind) return <DeepTechStageNotice stage="mvp" kind={deepTechKind} ko={ko} />;
 
   type MvpTool = { name: string; desc: string; url: string; free: boolean; tag?: string };
   const toolCard = (tool: MvpTool, color: string) => (

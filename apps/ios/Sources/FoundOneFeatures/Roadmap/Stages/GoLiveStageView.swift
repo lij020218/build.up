@@ -15,6 +15,9 @@ public struct GoLiveStageView: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     private let stageId = "go-live"
 
+    // 업종 정합(2026-07-02): 딥테크·하드웨어 출시는 웹 배포·앱스토어가 아니라 초도 양산·현장 배포.
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+
     @State private var page = 0
     @State private var showLaunchGuide = false
 
@@ -45,6 +48,32 @@ public struct GoLiveStageView: View {
     }
 
     public var body: some View {
+        if let dtk = DeepTechTrack.kind(forIndustryId: industryId) {
+            deepTechShell(dtk)
+        } else {
+            standardBody
+        }
+    }
+
+    // 딥테크·하드웨어: SW 출시 본문(웹배포·앱스토어·PH/HN) 게이팅 → 트랙별 안내.
+    private func deepTechShell(_ kind: DeepTechTrack) -> some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "🚀 실제 출시 (Go Live)",
+            stageEyebrow: "단계 11 · Go-Live",
+            helperText: "당신의 트랙(하드웨어·딥테크) 출시는 웹 배포·앱스토어가 아니라 초도 양산·현장 배포입니다.",
+            canAdvance: true,
+            advanceHint: "트랙별 출시 흐름 확인 — 다음 단계로",
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: [:]) },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [:]) }
+        ) {
+            DeepTechStageNoticeView(stage: .golive, kind: kind)
+        }
+    }
+
+    private var standardBody: some View {
         BUStageShell(
             stageId: stageId,
             title: "🚀 실제 출시 (Go Live)",

@@ -322,6 +322,19 @@ export function VendorSetupStage() {
   const d = useDashboardCtx();
   const { selectedIndustryId, industryCategoryId, selectedSpecialtyId, vendorSelections, setVendorSelections, language } = d;
 
+  // ─── 업종군 분기 (2026-07-02 업종 정합 감사) ───────────────────────────
+  //   데이터(getVendorData)는 업종별인데 히어로·섹션명·팁·마무리 chrome 이 '식자재·가스·HACCP·폐기율' 외식 고정이던 문제.
+  const isFood = industryCategoryId === "food" || industryCategoryId === "cafe-dessert";
+  // 공급품 명칭 — 섹션·마무리 chrome 에서 '식자재' 대신 업종별 명사 사용.
+  const supplyNoun =
+    isFood ? "식자재"
+    : industryCategoryId === "retail" ? "상품·재고"
+    : industryCategoryId === "beauty" ? "미용 재료"
+    : industryCategoryId === "fitness" ? "운동 용품"
+    : industryCategoryId === "pet" ? "사료·용품"
+    : (industryCategoryId === "education" || industryCategoryId === "space") ? "비품·소모품"
+    : "자재·비품";
+
   const data = useMemo(
     () => getVendorData(selectedIndustryId ?? undefined, industryCategoryId ?? undefined, selectedSpecialtyId ?? undefined),
     [selectedIndustryId, industryCategoryId, selectedSpecialtyId],
@@ -427,7 +440,7 @@ export function VendorSetupStage() {
               <ShieldCheck size={11} strokeWidth={2.2} />
               <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.04em" }}>인증 확인</span>
             </div>
-            <div style={{ fontSize: "11px", lineHeight: 1.4, opacity: 0.92 }}>가스·전기 KC 인증 필수</div>
+            <div style={{ fontSize: "11px", lineHeight: 1.4, opacity: 0.92 }}>{isFood ? "가스·전기 KC 인증 필수" : "전기·주요장비 KC 인증 확인"}</div>
           </div>
           <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
@@ -444,7 +457,7 @@ export function VendorSetupStage() {
           ═════════════════════════════════════════════════════════ */}
       <VendorSection
         icon={Truck}
-        title="공급처 · 식자재 · 원자재"
+        title={`공급처 · ${supplyNoun}`}
         subtitle={`${data.suppliers.length}개 — 사용할 곳을 탭해 선택 (다중 선택 가능)`}
         items={data.suppliers}
         step={1}
@@ -514,9 +527,9 @@ export function VendorSetupStage() {
             배달앱·SNS·네이버 플레이스 등록은 다음 단계에서
           </div>
           <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
-            배민·쿠팡이츠·요기요·네이버 플레이스·인스타그램 같은 <strong style={{ fontWeight: 700, color: MIDNIGHT }}>판매·노출 채널</strong>은{" "}
+            네이버 플레이스·인스타그램·오픈마켓·예약 같은 <strong style={{ fontWeight: 700, color: MIDNIGHT }}>판매·노출 채널</strong>은{" "}
             <strong style={{ fontWeight: 700, color: MIDNIGHT }}>14단계 "운영·마케팅 세팅"</strong> 에서 진행합니다. 이 단계는
-            <strong style={{ fontWeight: 700 }}> 식자재·장비·POS</strong>를 확정하는 공급망 단계입니다.
+            <strong style={{ fontWeight: 700 }}> {supplyNoun}·장비·POS</strong>를 확정하는 공급망 단계입니다.
           </div>
         </div>
       </div>
@@ -540,7 +553,7 @@ export function VendorSetupStage() {
           <li>필수(파란 점) 표시된 공급처·장비부터 견적 요청</li>
           <li>중고 가능 장비는 황학동온라인·번개장터에서 신품 50–70% 가격으로 비교</li>
           <li>POS는 토스플레이스 무료 단말 가능 — 가맹 신청 후 평균 2–3일 배송</li>
-          <li>식자재 정기 배송은 푸드팡·CJ프레시웨이 견적 비교, 첫 주는 소량 테스트</li>
+          <li>{isFood ? "식자재 정기 배송은 푸드팡·CJ프레시웨이 견적 비교, 첫 주는 소량 테스트" : `${supplyNoun} 정기 매입처 2~3곳 견적 비교, 첫 주는 소량 테스트 발주`}</li>
         </ul>
       </div>
 
@@ -556,19 +569,23 @@ export function VendorSetupStage() {
         ko={language === "ko"}
         nextStageLabelKo="사업자등록·인허가"
         doneItemsKo={[
-          { label: "1. 공급처 결정", detail: "식자재·장비·POS 등 카테고리별 1순위 업체 선정 + 견적서 보관" },
+          { label: "1. 공급처 결정", detail: `${supplyNoun}·장비·POS 등 카테고리별 1순위 업체 선정 + 견적서 보관` },
           { label: "2. 장비 발주 계획", detail: "신품·중고 비교 — 황학동온라인·번개장터 활용 50~70%대 가성비 확보" },
           { label: "3. POS·결제 셋업", detail: "토스플레이스·KIS·페이히어 비교 + 무료 단말 신청" },
-          { label: "4. 첫 주 발주 일정", detail: "오픈 D-7 기준 식자재 소량 테스트 + 장비 시운전 일정 확정" },
-          { label: "5. 월 원가 계획", detail: "공급처 견적 합산 → 월 식자재·매입 원가 추정. 「재무 검토」의 인건비 칸과 동일하게 사장이 직접 입력하는 값." },
+          { label: "4. 첫 주 발주 일정", detail: `오픈 D-7 기준 ${supplyNoun} 소량 테스트 + 장비 시운전 일정 확정` },
+          { label: "5. 월 원가 계획", detail: `공급처 견적 합산 → 월 ${supplyNoun}·매입 원가 추정. 「재무 검토」의 인건비 칸과 동일하게 사장이 직접 입력하는 값.` },
         ]}
         verifyItemsKo={[
           "사업자등록 전 — 거래 가능 여부 확인 (공급처 다수가 사업자번호 없으면 거래 불가, 견적도 비공식)",
           "POS·결제 — 가맹 수수료(평균 1.5~2.5%) + 단말기 임대료 + 부가세 신고 자동화 여부 확인",
-          "식자재 — 위생 인증(HACCP) + 검역증 수령 가능한 업체 선택, 무허가 도매상은 식약처 단속 대상",
+          isFood
+            ? "식자재 — 위생 인증(HACCP) + 검역증 수령 가능한 업체 선택, 무허가 도매상은 식약처 단속 대상"
+            : `${supplyNoun} — 정식 세금계산서 발행 + 품질보증·정품 확인 가능한 업체 선택, 무허가 도매상은 분쟁·환불 리스크`,
           "장비 — 1년 이상 무상 A/S + 설치비·운반비 별도 견적 (계약 시 포함시키기)",
           "중고 장비 — 시운전 영상·구매 영수증·연식 5년 이내 3가지 모두 확보, 분쟁 시 증빙",
-          "재고 회전율 — 식자재는 3일 이내 회전 가능한 양만 첫 주 발주, 폐기율 5% 초과 시 재검토",
+          isFood
+            ? "재고 회전율 — 식자재는 3일 이내 회전 가능한 양만 첫 주 발주, 폐기율 5% 초과 시 재검토"
+            : `재고 회전율 — ${supplyNoun}는 회전 가능한 양만 첫 주 발주, 과잉 재고·유통기한(해당 시) 관리`,
         ]}
         nextSummaryKo="공급처·장비·POS 확정 → 사업자등록·인허가 단계로 진입"
       />

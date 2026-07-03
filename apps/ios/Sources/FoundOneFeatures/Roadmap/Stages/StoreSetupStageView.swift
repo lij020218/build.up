@@ -18,6 +18,9 @@ public struct StoreSetupStageView: View {
     @State private var page = 0
     private let stageId = "store-setup"
 
+    // 업종 정합(2026-07-02): 디지털 상품·창작자 서비스는 택배·포장이 없음 → 안내로 대체.
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+
     @AppStorage("sto.storeFront")     private var storeFront     = false
     @AppStorage("sto.productListed")  private var productListed  = false
     @AppStorage("sto.shippingPolicy") private var shippingPolicy = false
@@ -44,6 +47,32 @@ public struct StoreSetupStageView: View {
     }
 
     public var body: some View {
+        if isDigitalFulfillment(industryId) {
+            digitalShell
+        } else {
+            standardBody
+        }
+    }
+
+    // 디지털 상품·창작자: 물리 스토어·배송 본문 게이팅 → 디지털 전달 안내.
+    private var digitalShell: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "스토어 및 배송 세팅",
+            stageEyebrow: "단계 12 · 스토어 셋업",
+            helperText: "디지털 상품은 택배·포장이 없습니다. 자동 전달·결제·구독·약관을 세팅하세요.",
+            canAdvance: true,
+            advanceHint: "디지털 스토어 세팅 확인 — 다음 단계로",
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: [:]) },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [:]) }
+        ) {
+            DigitalFulfillmentNoticeView(stage: .store)
+        }
+    }
+
+    private var standardBody: some View {
         BUStageShell(
             stageId: stageId,
             title: "스토어 및 배송 세팅",

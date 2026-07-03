@@ -25,6 +25,26 @@ export function OperationsSetupStage() {
   // 채널 섹션 라벨 (세부업종 우선 → 큰 분류: 배달 플랫폼/마켓플레이스/배달·부가 채널/...)
   const channelSectionLabel = getOpsChannelLabel(industryCategoryId, selectedIndustryId);
 
+  // ─── 업종군 분기 (2026-07-02 업종 정합 감사) ───────────────────────────
+  //   이전엔 keyActions[0]·whyMatters[0]·howFlow[0]·whatNeeded[0]·stepBridges[0]·
+  //   StageWrapup·법정신고 intro 가 opsStep 번호로만 키잉 → 미용·헬스·소매에도 '배민·위생교육·원산지'가 노출.
+  //   offlineKind = PreLaunchFinalStage 와 동일 7버킷(SSOT 톤 통일).
+  const offlineKind: "food" | "retail" | "beauty" | "fitness" | "pet" | "space" | "service" =
+    industryCategoryId === "food" || industryCategoryId === "cafe-dessert" ? "food"
+    : industryCategoryId === "retail" ? "retail"
+    : industryCategoryId === "beauty" ? "beauty"
+    : industryCategoryId === "fitness" ? "fitness"
+    : industryCategoryId === "pet" ? "pet"
+    : industryCategoryId === "education" || industryCategoryId === "space" ? "space"
+    : "service";
+  const isFood = offlineKind === "food";
+  // step 0(첫 판매 채널) 의미론적 그룹 — 음식=배달 / 소매=오픈마켓·마켓플레이스 / 그 외=예약·플레이스.
+  //   채널 카탈로그 자체는 getOpsChannels 가 업종별로 이미 반환하므로, 여기선 안내 텍스트만 그룹 매칭.
+  const channelKind: "delivery" | "marketplace" | "reservation" =
+    offlineKind === "food" ? "delivery"
+    : offlineKind === "retail" ? "marketplace"
+    : "reservation";
+
   type OpsDetail = { id: string; name: string; tagline: string; color: string; url: string; pros: string[]; cons: string[]; icon?: React.ReactNode };
   type Trap = { label: string; text: string };
   type KeyAction = { title: string; detail: string };
@@ -254,10 +274,17 @@ export function OperationsSetupStage() {
   ];
 
   // ─── KEY ACTIONS (이 단계에서 꼭 할 일) ───
+  const keyAction0: Record<"delivery" | "marketplace" | "reservation", KeyAction> = ko ? {
+    delivery: { title: "오픈 1주 전, 배민·쿠팡이츠 입점 신청 동시 접수", detail: "심사에 2~5 영업일 소요 — 늦으면 첫날 배달 채널이 막힙니다. 통신판매업 신고증·영업신고증 미리 PDF로 준비하세요." },
+    marketplace: { title: "오픈 전, 스마트스토어·오픈마켓 + 지역 채널(당근·플레이스) 동시 등록", detail: "네이버 스마트스토어는 심사 1~3일, 오픈마켓(쿠팡·11번가)은 입점 후 상품 등록. 매장 판매만 할 거라도 네이버 플레이스·당근 비즈프로필은 필수 — 검색·동네 노출의 출발점." },
+    reservation: { title: "오픈 전, 네이버 예약·플레이스 등록 — 예약 채널부터 확보", detail: "미용·헬스·반려·공간업은 '검색→예약'이 첫 유입. 네이버 플레이스 등록 후 예약 연동까지 최대 7일. 예약앱(네이버예약·똑닥 등) 병행 시 노쇼·대기 관리가 쉬워집니다." },
+  } : {
+    delivery: { title: "Apply to Baemin & CoupangEats 1 week before opening", detail: "Approval takes 2-5 business days. Prepare e-commerce registration & business permit PDFs in advance." },
+    marketplace: { title: "Register Smart Store / open markets + local channels before opening", detail: "Naver Smart Store review 1-3 days; Coupang/11st after onboarding. Even for in-store sales, Naver Place & Karrot business profile are essential." },
+    reservation: { title: "Register Naver Reservation & Place before opening", detail: "For salon/gym/pet/space businesses, 'search→book' is the first funnel. Place listing + booking sync takes up to 7 days." },
+  };
   const keyActions: Record<number, KeyAction> = {
-    0: ko
-      ? { title: "오픈 1주 전, 배민·쿠팡이츠 입점 신청 동시 접수", detail: "심사에 2~5 영업일 소요 — 늦으면 첫날 배달 채널이 막힙니다. 통신판매업 신고증·영업신고증 미리 PDF로 준비하세요." }
-      : { title: "Apply to Baemin & CoupangEats 1 week before opening", detail: "Approval takes 2-5 business days. Prepare e-commerce registration & business permit PDFs in advance." },
+    0: keyAction0[channelKind],
     1: ko
       ? { title: "오픈 전날 카드 1건 실결제 테스트 후 즉시 취소", detail: "실결제로 영수증·정산·세금계산서 데이터 흐름까지 확인. 취소 안 하면 오픈 전 매출로 잡혀 회계가 꼬입니다." }
       : { title: "Run 1 real-card test the day before opening — cancel immediately", detail: "Verify receipt, settlement, and invoice data flow. Skipping cancel = books out of sync." },
@@ -276,16 +303,41 @@ export function OperationsSetupStage() {
   };
 
   // ─── WHY (왜 이 단계가 중요한가 — 안 하면 어떻게 되나) ───
-  const whyMatters: Record<number, WhyItem[]> = {
-    0: ko ? [
+  const whyMatters0: Record<"delivery" | "marketplace" | "reservation", WhyItem[]> = ko ? {
+    delivery: [
       { headline: "첫 달 매출의 30~50%가 배달앱에서 발생", impact: "F&B 신규 매장 평균: 배달 비중 30~50%, 카페·디저트도 점차 상승. 입점 늦으면 그만큼 첫 달 매출이 비어버립니다.", metric: "지연 1주 = 평균 매출 300~800만원 손실" },
       { headline: "심사 2~5 영업일 + 메뉴 등록 1~2일 = 최소 1주", impact: "오픈일 맞춰 신청하면 첫 주는 배달 없이 운영. 워크인만으로는 손익분기 도달 어려움.", metric: "동시 신청 시 D-7 신청이 골든타임" },
       { headline: "광고 없이 신규 노출 ≈ 0", impact: "배민·쿠팡이츠 모두 알고리즘이 신규 매장에 노출 가중치 X. 첫 주 노출 폭발 = 광고비 + 5~10건 초기 리뷰 셋업.", metric: "초기 광고 예산: 매출 5~15% 권장" },
-    ] : [
+    ],
+    marketplace: [
+      { headline: "동네 손님도 '검색 후 방문' — 온라인 채널이 매장 유입의 시작", impact: "네이버 플레이스·당근 비즈프로필 미등록 매장은 지도·동네 검색에서 안 보임. 오픈마켓 병행 시 매출 채널 자체가 늘어납니다.", metric: "지역 소매 신규 방문의 40~60%가 온라인 검색 경유" },
+      { headline: "스마트스토어 심사 1~3일 + 상품 등록 시간 = 최소 1주", impact: "오픈일에 맞춰 신청하면 초기엔 온라인 판매 공백. 상품 사진·상세 준비까지 리드타임 확보 필요.", metric: "D-7 등록이 골든타임" },
+      { headline: "리뷰·찜 없이 신규 노출 ≈ 0", impact: "오픈마켓·플레이스 모두 초기 신뢰 지표(리뷰·구매·저장)가 없으면 상위 노출 X. 첫 주 초기 리뷰 셋업이 핵심." },
+    ],
+    reservation: [
+      { headline: "'검색→예약'이 첫 유입 — 예약 채널 없으면 신규 손님 0", impact: "미용·헬스·반려·공간업은 네이버 플레이스·예약이 사실상 유일한 신규 유입 경로. 미등록 시 지도·검색에서 매장이 안 보입니다.", metric: "네이버 미등록 매장 첫 주 신규 방문 평균 -60%" },
+      { headline: "플레이스 등록 후 검색 노출까지 최대 7일", impact: "오픈 1주 전 등록이 안전선. 당일 등록 시 첫 주 노출 0회 가능.", metric: "D-7 등록 권장" },
+      { headline: "예약앱 연동 = 노쇼·대기 관리 부담 -50%", impact: "전화 예약만 받으면 노쇼·중복 예약·대기 관리가 수기. 예약앱(네이버예약·똑닥 등) 연동 시 자동화." },
+    ],
+  } : {
+    delivery: [
       { headline: "Delivery is 30-50% of revenue in month 1", impact: "Late onboarding = direct loss of week-1 sales.", metric: "1 week delay ≈ 3-8M KRW lost" },
       { headline: "Approval 2-5 BD + menu setup 1-2d = ~1 week", impact: "Apply at D-7 to be live by opening." },
       { headline: "No ads = ~0 organic exposure", impact: "Algorithms don't favor new stores. Reviews + small ad budget required week 1." },
     ],
+    marketplace: [
+      { headline: "Local shoppers 'search then visit' — online channels start the funnel", impact: "Unlisted stores are invisible on maps/local search. Open markets add a whole sales channel.", metric: "40-60% of new local visits come via online search" },
+      { headline: "Smart Store review 1-3d + listing time = ~1 week", impact: "Prepare photos/details ahead. D-7 registration is the golden time." },
+      { headline: "No reviews/saves = ~0 exposure", impact: "Early trust signals drive ranking. Seed first-week reviews." },
+    ],
+    reservation: [
+      { headline: "'Search→book' is the funnel — no booking channel = 0 new customers", impact: "Naver Place/Reservation is effectively the only new-customer path for salon/gym/pet/space.", metric: "Unlisted stores: -60% new visits in week 1" },
+      { headline: "Up to 7 days to appear after registering Place", impact: "Register 1 week before opening." },
+      { headline: "Booking-app sync cuts no-show/waitlist load by ~50%", impact: "Phone-only booking means manual overbooking/no-show handling." },
+    ],
+  };
+  const whyMatters: Record<number, WhyItem[]> = {
+    0: whyMatters0[channelKind],
     1: ko ? [
       { headline: "POS 미세팅 = 오픈 첫날 결제 거절", impact: "메뉴 미등록·카드 미연동 시 손님 앞에서 결제 실패. 신뢰 회복은 수개월 소요.", metric: "온보딩 영상 후기: 첫날 결제 오류 매장 평균 별점 -0.4점" },
       { headline: "정산·세금계산서 데이터가 한 단말에서 시작", impact: "오픈 후 매출 정산·VAT 신고 자동화는 POS 데이터 정확성에 의존. 초기 미스 = 분기말 정정 작업 폭증.", metric: "사장님 평균 월 4시간 정산 정정에 소비" },
@@ -334,20 +386,53 @@ export function OperationsSetupStage() {
   };
 
   // ─── HOW (어떻게 진행하는가 — D-day 기준 단계별 절차) ───
-  const howFlow: Record<number, HowStep[]> = {
-    0: ko ? [
+  const howFlow0: Record<"delivery" | "marketplace" | "reservation", HowStep[]> = ko ? {
+    delivery: [
       { day: "D-14", title: "필요 서류 PDF 준비", detail: "통신판매업 신고증, 영업신고증, 사업자등록증, 통장사본 — 모바일에 PDF로 저장해두면 신청 시 즉시 첨부 가능." },
       { day: "D-10", title: "메뉴 사진 촬영 + 가격표 확정", detail: "정사각 1080×1080 권장. 자연광에서 촬영 후 보정. 메뉴별 옵션·추가 금액·품절 처리 정책 정리." },
       { day: "D-7", title: "배민 + 쿠팡이츠 + 요기요 동시 신청", detail: "한 번에 3사 모두 신청. 심사 2~5 BD 소요라 동시 진행이 가장 빠름. 광고는 D-1까지 보류." },
       { day: "D-3", title: "메뉴·사진·영업시간 등록 + 운영 시뮬", detail: "심사 통과 후 즉시 메뉴 등록. 사장님 앱으로 가짜 주문 1건 받아 흐름 확인." },
       { day: "D-Day", title: "라이브 + 첫 주문 케어", detail: "광고는 매출 5~10% 예산으로 시작. 첫 10건은 손편지·서비스 등으로 리뷰 부탁." },
-    ] : [
+    ],
+    marketplace: [
+      { day: "D-14", title: "필요 서류 PDF 준비", detail: "통신판매업 신고증, 사업자등록증, 통장사본 — 오픈마켓·스마트스토어 입점 심사에 필요." },
+      { day: "D-10", title: "상품 사진 촬영 + 상세페이지 준비", detail: "정사각 1080×1080 권장. 대표 상품 5~10개 먼저. 옵션·재고·배송비 정책 정리." },
+      { day: "D-7", title: "스마트스토어 + 오픈마켓 입점 신청 + 지역 채널 등록", detail: "네이버 스마트스토어(심사 1~3일)·쿠팡·11번가 병행. 매장은 네이버 플레이스·당근 비즈프로필 동시 등록." },
+      { day: "D-3", title: "상품 등록 + 결제·배송 테스트", detail: "본인 계정으로 테스트 주문 1건 → 결제·송장·정산 흐름 확인." },
+      { day: "D-Day", title: "판매 시작 + 초기 리뷰 셋업", detail: "지인 구매·리뷰 5건으로 신뢰 지표 확보. 지역 채널엔 오픈 소식 게시." },
+    ],
+    reservation: [
+      { day: "D-14", title: "필요 서류 PDF 준비", detail: "사업자등록증, 영업신고증, 매장 사진 — 네이버 플레이스·예약 등록에 필요." },
+      { day: "D-10", title: "매장 사진 촬영 + 서비스·가격표 확정", detail: "외관·내부·시술/서비스 5장 이상. 서비스별 소요시간·가격·옵션 정리(예약 슬롯 설계 기준)." },
+      { day: "D-7", title: "네이버 플레이스 등록 + 예약 연동 신청", detail: "플레이스 등록 후 네이버 예약 연동. 업종 예약앱(똑닥 등) 병행 여부 결정." },
+      { day: "D-3", title: "예약 슬롯·영업시간 등록 + 시뮬", detail: "시술/수업 단위로 슬롯 세팅. 본인 계정으로 예약 1건 넣어 흐름 확인." },
+      { day: "D-Day", title: "예약 오픈 + 첫 방문 케어", detail: "지인 5명 예약·방문 후 영수증 리뷰 부탁(별점 4↑). 노쇼 정책 안내 문구 게시." },
+    ],
+  } : {
+    delivery: [
       { day: "D-14", title: "Prepare PDFs", detail: "Telecom sales filing, business license, biz registration, bank passbook." },
       { day: "D-10", title: "Menu photos + price list", detail: "1080x1080, natural light. Define options/sold-out flow." },
       { day: "D-7", title: "Apply Baemin + CoupangEats + Yogiyo same day", detail: "All three in parallel; approval 2-5 BD." },
       { day: "D-3", title: "Register menu/photos + dry-run", detail: "Place a fake order via partner app." },
       { day: "D-Day", title: "Go live + first-order care", detail: "Ads at 5-10% of sales. Hand-write notes for first 10 reviews." },
     ],
+    marketplace: [
+      { day: "D-14", title: "Prepare PDFs", detail: "Telecom sales filing, biz registration, bank passbook." },
+      { day: "D-10", title: "Product photos + detail pages", detail: "1080x1080. Start with 5-10 hero items; define options/stock/shipping." },
+      { day: "D-7", title: "Apply Smart Store + open markets + local channels", detail: "Naver Smart Store (1-3d), Coupang/11st; register Naver Place & Karrot." },
+      { day: "D-3", title: "List products + payment/shipping test", detail: "Place a test order to verify checkout/tracking/settlement." },
+      { day: "D-Day", title: "Go live + seed reviews", detail: "5 acquaintance purchases/reviews for trust signals." },
+    ],
+    reservation: [
+      { day: "D-14", title: "Prepare PDFs", detail: "Biz registration, business permit, store photos." },
+      { day: "D-10", title: "Store photos + service/price list", detail: "5+ shots. Define service duration/price/options for booking slots." },
+      { day: "D-7", title: "Register Naver Place + booking sync", detail: "Decide on industry booking apps too." },
+      { day: "D-3", title: "Set slots/hours + dry-run", detail: "Place a test booking to verify the flow." },
+      { day: "D-Day", title: "Open bookings + first-visit care", detail: "5 friends book/visit and leave 4+ star reviews." },
+    ],
+  };
+  const howFlow: Record<number, HowStep[]> = {
+    0: howFlow0[channelKind],
     1: ko ? [
       { day: "D-14", title: "POS 견적 3사 비교", detail: "토스플레이스(무료) vs KIS·오더플레이스(월정액) — 배달 비중·예산·매장 규모로 결정." },
       { day: "D-10", title: "계약 + 단말기 주문", detail: "토스플레이스는 신청 후 약 2~3일 배송. 약정·해지 위약금 조건 사전 확인." },
@@ -416,8 +501,8 @@ export function OperationsSetupStage() {
   };
 
   // ─── WHAT (사전 준비물 — 무엇을 챙겨야 하는가) ───
-  const whatNeeded: Record<number, WhatItem[]> = {
-    0: ko ? [
+  const whatNeeded0: Record<"delivery" | "marketplace" | "reservation", WhatItem[]> = ko ? {
+    delivery: [
       { label: "통신판매업 신고증 PDF", note: "지자체 발급, 사업자등록 후 1개월 이내 신고" },
       { label: "영업신고증 PDF", note: "F&B 매장은 식품접객업 영업신고" },
       { label: "사업자등록증 PDF" },
@@ -425,7 +510,26 @@ export function OperationsSetupStage() {
       { label: "메뉴 사진 (메뉴별 1080×1080 정사각)", note: "최소 10장. 자연광 추천" },
       { label: "메뉴 가격표·옵션 정책", note: "기본·옵션·추가 금액 + 품절 처리" },
       { label: "영업시간 + 휴무일 + 주문 가능 시간" },
-    ] : [
+    ],
+    marketplace: [
+      { label: "통신판매업 신고증 PDF", note: "지자체 발급, 사업자등록 후 1개월 이내 신고" },
+      { label: "사업자등록증 PDF" },
+      { label: "통장사본 PDF (정산 입금용)" },
+      { label: "상품 사진 (상품별 1080×1080 정사각)", note: "대표 상품 5~10개. 자연광 추천" },
+      { label: "상품 가격·옵션·재고 정책", note: "옵션·추가금액 + 품절/재고 처리" },
+      { label: "배송비·반품 정책", note: "택배사 계약 또는 지역 직접배송" },
+      { label: "영업시간 + 휴무일" },
+    ],
+    reservation: [
+      { label: "사업자등록증 PDF" },
+      { label: "영업신고증 PDF", note: "미용·헬스 등 업종별 신고증" },
+      { label: "매장 사진 5장 이상", note: "외관·내부·시술/서비스 공간" },
+      { label: "서비스·가격표", note: "서비스별 소요시간·가격·옵션(예약 슬롯 설계 기준)" },
+      { label: "예약 슬롯 정책", note: "동시 예약 수·간격·노쇼 정책" },
+      { label: "영업시간 + 휴무일 + 예약 가능 시간" },
+    ],
+  } : {
+    delivery: [
       { label: "E-commerce filing PDF" },
       { label: "Business permit PDF" },
       { label: "Biz registration PDF" },
@@ -434,6 +538,26 @@ export function OperationsSetupStage() {
       { label: "Price list + options policy" },
       { label: "Hours + holidays + order window" },
     ],
+    marketplace: [
+      { label: "E-commerce filing PDF" },
+      { label: "Biz registration PDF" },
+      { label: "Bank passbook PDF" },
+      { label: "Product photos 1080x1080" },
+      { label: "Price/options/stock policy" },
+      { label: "Shipping + returns policy" },
+      { label: "Hours + holidays" },
+    ],
+    reservation: [
+      { label: "Biz registration PDF" },
+      { label: "Business permit PDF" },
+      { label: "5+ store photos" },
+      { label: "Service + price list" },
+      { label: "Booking slot policy" },
+      { label: "Hours + holidays + booking window" },
+    ],
+  };
+  const whatNeeded: Record<number, WhatItem[]> = {
+    0: whatNeeded0[channelKind],
     1: ko ? [
       { label: "사업자등록증" },
       { label: "통장사본 (정산 입금용)" },
@@ -510,14 +634,35 @@ export function OperationsSetupStage() {
   };
 
   // ─── 트랩 (실수 패턴) ───
-  const traps: Record<number, Trap[]> = {
-    0: ko ? [
+  const traps0: Record<"delivery" | "marketplace" | "reservation", Trap[]> = ko ? {
+    delivery: [
       { label: "차등 수수료(2026)에 속지 마세요 — 배달비·결제수수료·VAT 합산이 진짜", text: "표면 수수료 2.0~7.8% 외에 배달비 +200~500원 인상 + 결제수수료 3% + VAT 10% — 총 매출의 25~30% 플랫폼에 지급될 수 있습니다." },
       { label: "광고비 = 한 번 쓰면 멈추기 어려움", text: "울트라콜·우선노출은 매출의 5~15% 추가 비용. 첫 달 매출 검증 전엔 최소 단가로 시작하세요." },
-    ] : [
+    ],
+    marketplace: [
+      { label: "오픈마켓 수수료 + 배송비 역마진에 주의", text: "카테고리별 판매수수료(10~15%) + 결제수수료 + 무료배송 시 택배비(3천원~)까지 합치면 저가 상품은 역마진. 마진 계산 후 가격 책정하세요." },
+      { label: "플레이스·당근만 등록하고 방치하면 노출 0", text: "지역 채널은 등록만으론 부족 — 소식·리뷰·사진 업데이트가 있어야 상위 노출. 첫 주 리뷰 5건부터 깔아두세요." },
+    ],
+    reservation: [
+      { label: "전화 예약만 받으면 노쇼·중복예약으로 매출 샌다", text: "예약앱·네이버 예약 미연동 시 노쇼·더블부킹이 수기 관리. 노쇼 정책(예약금·확인 문자) 없이 열면 피크 시간 빈자리 발생." },
+      { label: "플레이스만 등록하고 방치하면 노출 0", text: "'실질 상호작용'(전화·길찾기·저장·리뷰)이 있어야 상위 노출. 첫 주 지인 리뷰 5건 + 상호작용부터 확보하세요." },
+    ],
+  } : {
+    delivery: [
       { label: "Tiered fees (2026) hide the real cost", text: "On top of 2.0-7.8% fee: +200-500 KRW delivery fee, +3% payment, +10% VAT — total can hit 25-30% of revenue." },
       { label: "Ad spend is hard to stop once started", text: "Ultracall/priority listings cost 5-15% of sales. Start at minimum until first-month numbers prove out." },
     ],
+    marketplace: [
+      { label: "Marketplace fees + shipping can go negative-margin", text: "Sales fee (10-15%) + payment fee + free-shipping courier cost can flip low-price items to a loss. Price after margin math." },
+      { label: "Registering Place/Karrot then neglecting = 0 exposure", text: "Local channels need posts/reviews/photos to rank. Seed 5 reviews in week 1." },
+    ],
+    reservation: [
+      { label: "Phone-only booking leaks revenue via no-shows/double-booking", text: "Without booking-app sync you manage no-shows manually. Set a no-show policy (deposit/confirmation) before opening." },
+      { label: "Registering Place then neglecting = 0 exposure", text: "'Real interactions' (calls, directions, saves, reviews) drive ranking. Seed 5 reviews + interactions in week 1." },
+    ],
+  };
+  const traps: Record<number, Trap[]> = {
+    0: traps0[channelKind],
     1: ko ? [
       { label: "'무료 단말기'에 약정·위약금 숨어있음", text: "토스플레이스도 약정 조건이 있음 (보통 12개월). 해지 시 위약금·반납 의무 사전 확인 필수." },
       { label: "배달앱 연동은 POS 별로 다름", text: "토스플레이스는 배달앱 연동에 추가 솔루션 필요. KIS·오더플레이스는 직접 수신. 배달 비중 높으면 연동 우선 검토." },
@@ -574,6 +719,40 @@ export function OperationsSetupStage() {
   const currentWhat = whatNeeded[opsStep] ?? [];
   const tasks = taskMap["operations-setup"] ?? [];
   const isTaskDone = (id: string) => tasks.find(t => t.taskId === id)?.status === "completed";
+
+  // ─── 마무리(StageWrapup) 항목 — 음식 전용(위생교육·원산지·배달수수료)은 isFood 게이팅 ───
+  const wrapupDoneItems = isFood
+    ? [
+        { label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업" },
+        { label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·재고·민원 대응 SOP" },
+        { label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰" },
+        { label: "4. 손익 모니터링 셋업", detail: "일별 매출·재료비·인건비 자동 기록 + 손익분기 추적" },
+      ]
+    : [
+        { label: "1. POS·결제·주문 시스템 연동", detail: `토스플레이스 등 POS + ${channelSectionLabel} 채널 연동 + 키오스크·예약 셋업` },
+        { label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·안전·재고·민원 대응 SOP" },
+        { label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰" },
+        { label: "4. 손익 모니터링 셋업", detail: "일별 매출·원가·인건비 자동 기록 + 손익분기 추적" },
+      ];
+  const wrapupVerifyItems = isFood
+    ? [
+        "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
+        "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
+        "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
+        "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
+        "원산지 표시 — 거짓 표시 시 7년 이하 징역·1억원 이하 벌금 / 미표시 시 1,000만원 이하 과태료. 전 메뉴 표시 의무",
+        "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
+      ]
+    : [
+        "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
+        `${channelSectionLabel} 채널 — 판매·예약 수수료 + 결제 수수료 매출 분리 회계 셋업`,
+        ...(offlineKind === "beauty"
+          ? ["위생교육 매년 갱신 — 공중위생영업자(미용·목욕 등) 대상, 미이수 시 과태료", "위생·소독 관리 — 기구 소독·위생기준 준수(공중위생관리법), 점검 대비 기록 보관"]
+          : ["안전·위생 관리 — 업종별 안전기준·시설기준 준수 + 점검 대비 기록 보관"]),
+        "민원 대응 — 소비자원·관할 기관 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
+        "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
+      ];
+  const wrapupNextSummary = "POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입";
 
   // ─── 2-Track 분리 (밀도 감소 — 운영 인프라 vs 마케팅·브랜드) ───
   //   운영 트랙: 0(배달앱·실은 인프라 측면) / 1(POS) / 3(VAN) / 4(음악) — 영업 가능 인프라
@@ -1091,7 +1270,11 @@ export function OperationsSetupStage() {
               { Icon: CreditCard,    text: ko ? "결제 처리 — 카드·현금·간편결제를 한 단말에서 처리하고 자동 정산" : "Payment processing" },
               { Icon: ClipboardList, text: ko ? "메뉴·재고 관리 — 상품 등록, 품절 처리, 재고 추적" : "Menu & inventory management" },
               { Icon: BarChart2,     text: ko ? "매출 통계 — 시간대별·메뉴별 매출, 일·월 정산 리포트 자동" : "Sales analytics" },
-              { Icon: Bike,          text: ko ? "배달앱 연동 — 배민·쿠팡이츠 주문 자동 수신 (제품마다 다름)" : "Delivery integration" },
+              channelKind === "delivery"
+                ? { Icon: Bike,          text: ko ? "배달앱 연동 — 배민·쿠팡이츠 주문 자동 수신 (제품마다 다름)" : "Delivery integration" }
+                : channelKind === "marketplace"
+                ? { Icon: Bike,          text: ko ? "주문·재고 연동 — 오픈마켓 주문 자동 수신·재고 동기화 (제품마다 다름)" : "Order/inventory sync" }
+                : { Icon: Calendar,      text: ko ? "예약·고객 관리 — 예약·단골·포인트 적립 통합 (제품마다 다름)" : "Booking & customer management" },
             ] as const).map(({ Icon, text }, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "11px 0", borderTop: "0.5px solid rgba(0,0,0,0.07)" }}>
                 <div style={{ flexShrink: 0, width: "36px", height: "36px", borderRadius: "10px", background: "rgba(25,25,112,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1181,15 +1364,29 @@ export function OperationsSetupStage() {
 
   // ─── Step Bridge: 이 step 이 어디서 데이터 받고 어디로 흐르는지 (서비스 흐름 가시화) ───
   type StepBridge = { from: string; to: string };
+  const stepBridge0: Record<"delivery" | "marketplace" | "reservation", { ko: StepBridge; en: StepBridge }> = {
+    delivery: {
+      ko: { from: "사업자등록증 · 통신판매업 신고증 · 메뉴 사진", to: "오픈 첫날부터 배민·쿠팡이츠 주문 수신 가능" },
+      en: { from: "Biz reg · e-commerce filing · menu photos", to: "Receive orders from day 1" },
+    },
+    marketplace: {
+      ko: { from: "사업자등록증 · 통신판매업 신고증 · 상품 사진", to: "오픈 첫날부터 스마트스토어·플레이스에서 판매·노출" },
+      en: { from: "Biz reg · e-commerce filing · product photos", to: "Sell/appear on Smart Store & Place from day 1" },
+    },
+    reservation: {
+      ko: { from: "사업자등록증 · 영업신고증 · 매장 사진", to: "오픈 첫날부터 네이버 예약·플레이스에서 예약 수신" },
+      en: { from: "Biz reg · business permit · store photos", to: "Receive bookings via Naver Place from day 1" },
+    },
+  };
   const stepBridges: Record<number, StepBridge> = ko ? {
-    0: { from: "사업자등록증 · 통신판매업 신고증 · 메뉴 사진", to: "오픈 첫날부터 배민·쿠팡이츠 주문 수신 가능" },
+    0: stepBridge0[channelKind].ko,
     1: { from: "사업자등록증 · 통장 · 메뉴 가격(공급처 단가 반영)", to: "결제·정산·세금계산서 자동 흐름의 중심" },
     2: { from: "매장 사진 · 브랜드 톤(인테리어 단계)", to: "검색·SNS에서 손님이 매장을 찾는 첫 접점" },
     3: { from: "사업자등록증 · 통장 · POS 결정", to: "카드·간편결제 모두 연결된 결제 단말" },
     4: { from: "매장 면적(인테리어 단계 확정)", to: "법적 리스크 없이 매장 음악 재생" },
     5: { from: "매장 컨셉 · 색상 톤(인테리어 단계)", to: "오픈 D-3 간판·메뉴판·로고 톤 통일 완료" },
   } : {
-    0: { from: "Biz reg · e-commerce filing · menu photos", to: "Receive orders from day 1" },
+    0: stepBridge0[channelKind].en,
     1: { from: "Biz reg · bank · menu prices", to: "Central payment/settlement hub" },
     2: { from: "Store photos · brand tone", to: "First touchpoint for customers" },
     3: { from: "Biz reg · bank · POS choice", to: "All-in-one card terminal" },
@@ -1575,7 +1772,7 @@ export function OperationsSetupStage() {
           lineHeight: 1.55,
         }}>
           {ko
-            ? "음식점·소매업은 사업자등록과 별도로 아래 2건의 법정 신고 의무가 있습니다. 운영 단계에서 사장님이 자주 놓치는 항목 — 미신고/미가입 시 가산세 또는 과태료."
+            ? "소비자를 직접 상대하는 매장(음식·소매·미용·서비스 등)은 사업자등록과 별도로 아래 2건의 법정 신고 의무가 있습니다. 운영 단계에서 사장님이 자주 놓치는 항목 — 미신고/미가입 시 가산세 또는 과태료."
             : "Two more legal filings beyond business registration. Often missed — penalties apply if skipped."}
         </div>
 
@@ -1599,7 +1796,7 @@ export function OperationsSetupStage() {
             </div>
             <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>
               {ko
-                ? "부가가치세법 32조의2 — 음식점·소매업 등 의무발급 업종. 10만원 이상 현금 거래 시 의무 발급. 홈택스에서 신청 또는 사업자등록 시 동시 신청. 미가입 시 미발급 거래액의 20% 가산세."
+                ? "부가가치세법 32조의2 — 소비자 대상 업종(음식·소매·미용·숙박·학원 등) 의무발급. 10만원 이상 현금 거래 시 의무 발급. 홈택스에서 신청 또는 사업자등록 시 동시 신청. 미가입 시 미발급 거래액의 20% 가산세."
                 : "VAT Act §32-2. ₩100K+ cash transactions require receipts. Apply via Hometax. 20% penalty if not registered."}
             </div>
           </div>
@@ -1633,21 +1830,9 @@ export function OperationsSetupStage() {
       <StageWrapup
         ko={ko}
         nextStageLabelKo="프리오픈·본 오픈 준비"
-        doneItemsKo={[
-          { label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업" },
-          { label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·재고·민원 대응 SOP" },
-          { label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰" },
-          { label: "4. 손익 모니터링 셋업", detail: "일별 매출·재료비·인건비 자동 기록 + 손익분기 추적" },
-        ]}
-        verifyItemsKo={[
-          "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
-          "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
-          "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
-          "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
-          "원산지 표시 — 거짓 표시 시 7년 이하 징역·1억원 이하 벌금 / 미표시 시 1,000만원 이하 과태료. 전 메뉴 표시 의무",
-          "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
-        ]}
-        nextSummaryKo="POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"
+        doneItemsKo={wrapupDoneItems}
+        verifyItemsKo={wrapupVerifyItems}
+        nextSummaryKo={wrapupNextSummary}
       />
     </div>
   );

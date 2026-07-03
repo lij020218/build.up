@@ -787,9 +787,9 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // permit-check (인허가 사전 확인) — 9개 → 5개로 통합. 모두 verification 어조.
   "building-registry-checked": { ko: "건축물대장 용도가 내 업종 영업을 허용하는지 확인 — 근린생활시설 등 코드 점검" },
   "permit-type-checked": { ko: "위 패널에서 내 업종에 필요한 인허가·등록 종류를 모두 확인" },
-  "hygiene-health-checked": { ko: "위생교육 6시간·보건증 발급 요건 확인 (음식/카페/뷰티) — 절차·기간·발급처" },
+  "hygiene-health-checked": { ko: "위생교육·건강진단(보건증) 요건 확인 — 업종별 시간·절차·발급처 (식품 6시간+보건증 / 미용 3시간, 위생교육은 대표자)" },
   "license-registration-checked": { ko: "전문 면허·업종별 등록 요건 확인 (미용사 면허, 학원·체육시설·동물관련업 등록 등)" },
-  "fire-safety-checked": { ko: "소방완비증명서·시설 안전 요건 확인 — 영업장 면적·층수별 기준 점검" },
+  "fire-safety-checked": { ko: "소방·시설 안전 요건 확인 — 업종별 기준 (다중이용업〔음식점 100㎡↑·학원 등〕은 소방완비증명, 미용 등 그 외는 소화기·비상구)" },
   // contract-review
   "use-check": { ko: "건물 용도와 업종 적합성 확인" },
   "facility-check": { ko: "설비·환기·전기 상태 검토" },

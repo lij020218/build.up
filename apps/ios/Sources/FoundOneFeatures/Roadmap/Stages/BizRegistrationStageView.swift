@@ -62,6 +62,14 @@ public struct BizRegistrationStageView: View {
 
     public init() {}
 
+    // 2026-07-02: 헤더가 "이전 단계 완료"라고 단정하던 것을 실제 배지 상태와 일치(모순 제거).
+    private var priorAllDone: Bool { bizRegDone && !taxTypeChoice.isEmpty && contractDone }
+    private var bizHelperText: String {
+        priorAllDone
+            ? "사업자등록·과세유형·이전 결정이 모두 완료됐습니다. 이 단계는 마지막 두 가지 — 사업용 통장 + 상호명 — 만 처리합니다."
+            : "아래 「이전 단계에서 결정된 사항」에 미확인 항목이 있습니다. 해당 단계에서 먼저 마무리한 뒤, 이 단계에서 사업용 통장·상호명을 확정하세요."
+    }
+
     /// 게이트: 상호명 최종 확정 + 사업용 통장 개설 완료 (2/2).
     private var canCompleteStage: Bool {
         storeNameFinal && bankDone && !storeName.isEmpty
@@ -90,7 +98,7 @@ public struct BizRegistrationStageView: View {
             stageId: stageId,
             title: "사업자등록 & 금융 세팅",
             stageEyebrow: "단계 10 · 사업자등록 최종 확인",
-            helperText: "사업자등록·과세유형·세무사 결정은 이전 단계 완료. 이 단계는 마지막 두 가지 — 사업용 통장 + 상호명 — 만 처리합니다.",
+            helperText: bizHelperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

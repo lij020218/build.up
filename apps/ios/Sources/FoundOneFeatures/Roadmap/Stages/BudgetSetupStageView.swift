@@ -65,6 +65,27 @@ public struct BudgetSetupStageView: View {
     }
     private var isStartup: Bool { categoryId == "startup-tech" }
 
+    // 업종별 손익분기 원가 구조 (2026-07-02 업종 정합 수정, 웹 BudgetSetupStage 미러).
+    //   외식 원가율(재료비 30%·인건비 25%·임대료 10%)이 필터 없이 마무리에 노출되던 문제 → 업종군 분기.
+    private var breakEvenNote: String {
+        switch categoryId {
+        case "food", "cafe-dessert":
+            return "업종별 손익분기점 매출 추정 — 외식은 통상 재료비 30%, 인건비 25%, 임대료 10%가 한계선"
+        case "retail":
+            return "업종별 손익분기점 매출 추정 — 소매는 매입원가(매출원가) 60~75%가 최대 비중, 인건비·임대료는 낮게 관리"
+        case "beauty", "fitness", "pet", "living-service":
+            return "업종별 손익분기점 매출 추정 — 인적 서비스는 인건비(기술·강사) 30~45%가 최대 비중, 재료비는 낮고 임대료 10~20%"
+        case "education", "space":
+            return "업종별 손익분기점 매출 추정 — 무인·공간업은 임대료·시설상각이 최대 고정비, 인건비는 낮고 좌석·룸 회전율이 손익 관건"
+        case "online-digital":
+            return "업종별 손익분기점 매출 추정 — 온라인은 매입원가·광고비(CAC)가 최대 변수, 임대·인건비는 낮게 시작"
+        case "startup-tech":
+            return "손익분기 추정 — 스타트업은 인건비(개발·인재)가 최대 비중, 초기엔 매출보다 런웨이(현금소진 속도) 관리가 핵심"
+        default:
+            return "업종별 손익분기점 매출 추정 — 업종마다 최대 비용 항목이 다름(외식=재료비, 소매=매입원가, 서비스=인건비). 내 업종 원가 구조부터 확인"
+        }
+    }
+
     // 스타트업 매트릭스: (sub-industry × mode) → 월 운영비 (원)
     private static let startupMatrix: [String: [String: Int]] = [
         "ai-application":       ["indie":   300_000, "bootstrap":   8_000_000, "seed":  30_000_000, "seriesA":  70_000_000],
@@ -251,7 +272,7 @@ public struct BudgetSetupStageView: View {
                 "예비비 10~15% 별도 — 인테리어 추가공사·집기 누락·임대 보증금 추가 요구 빈번",
                 "오픈 일정 — 임대 계약일부터 영업신고·인테리어·집기 입고·시운전까지 최소 60일 필요",
                 "프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생",
-                "업종별 손익분기점 매출 추정 — 통상 매출 대비 인건비 25%, 재료비 30%, 임대료 10% 한계선",
+                breakEvenNote,
                 ],
                 nextStageLabel: "상권 후보 비교",
                 nextSummary: "자본·일정·예비비 확정 → 상권 후보 비교 단계로 진입"

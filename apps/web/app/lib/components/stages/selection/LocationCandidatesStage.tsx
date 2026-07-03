@@ -75,6 +75,38 @@ export function LocationCandidatesStage() {
     editSaveStatus,
     isViewingPastStage,
   } = d;
+
+  // ─── 업종군 분기 (2026-07-02 업종 정합 감사) ───────────────────────────
+  //   매물 체크(면적·필수설비)·마무리가 외식 전용(테이블 수·환기 덕트·메뉴)이던 문제 → offlineKind 로 분기.
+  const offlineKind: "food" | "retail" | "beauty" | "fitness" | "pet" | "space" | "service" =
+    industryCategoryId === "food" || industryCategoryId === "cafe-dessert" ? "food"
+    : industryCategoryId === "retail" ? "retail"
+    : industryCategoryId === "beauty" ? "beauty"
+    : industryCategoryId === "fitness" ? "fitness"
+    : industryCategoryId === "pet" ? "pet"
+    : industryCategoryId === "education" || industryCategoryId === "space" ? "space"
+    : "service";
+  // 면적 — 업종별 최소 기준 (매물 체크 how)
+  const areaDetail: Record<typeof offlineKind, { ko: string; en: string }> = {
+    food: { ko: "15평 이하 = 배달·테이크아웃 전용. 15~25평 = 테이블 6~10개. 25~40평 = 홀 직원 1~2명 필요. 40평+ = 인건비 비중 급증.", en: "<15 pyeong: delivery/take-away only. 15-25: 6-10 tables. 25-40: 1-2 floor staff. 40+: labour cost spikes." },
+    retail: { ko: "매장 면적 = 진열 SKU 수 직결. 10평 이하 = 소품·편의 위주. 10~25평 = 카테고리 2~3개. 입고·창고·하역 동선 별도 확보.", en: "Area drives SKU count. <10: convenience only. 10-25: 2-3 categories. Reserve stockroom/loading path." },
+    beauty: { ko: "미용 1석당 약 3~4평(대기·샴푸 포함). 10평 = 2~3석, 20평 = 5~6석. 네일·속눈썹은 좌석 밀도 높게 가능.", en: "~3-4 pyeong per chair (incl. wait/wash). 10=2-3 chairs, 20=5-6. Nail/lash can pack denser." },
+    fitness: { ko: "종목별 상이 — PT 스튜디오 15평~, 필라테스 기구 1대당 3~4평, 헬스장 30평+ 권장. 층고 2.7m+ 확인.", en: "Varies — PT studio 15+, pilates ~3-4 per reformer, gym 30+. Check ceiling ≥2.7m." },
+    pet: { ko: "미용·호텔·병원 등 동선 분리 필요. 소음·냄새 민감 — 환기·방음 확보. 대형견 취급 시 여유 공간.", en: "Separate grooming/hotel/clinic zones. Ventilation & soundproofing; extra room for large dogs." },
+    space: { ko: "좌석/룸 단위 수익 — 스터디카페 20평 ≈ 30~40석, 파티룸·연습실은 룸 수 기준으로 면적 산정.", en: "Revenue per seat/room — study-café 20 pyeong ≈ 30-40 seats; party/practice rooms sized by room count." },
+    service: { ko: "업종별 상이 — 대면형은 상담·작업 공간, 출장형은 창고·주차 위주. 최소 기준을 업종 인허가로 먼저 확인.", en: "Varies — in-person needs consult/work space; mobile needs storage/parking. Check permit minimums." },
+  };
+  // 매물 필수 설비 (덕트 대체 — 업종별)
+  const infraCheck: Record<typeof offlineKind, { titleKo: string; titleEn: string; detailKo: string; detailEn: string }> = {
+    food: { titleKo: "환기·덕트 설치 가능 여부", titleEn: "Ventilation duct feasible?", detailKo: "음식점·카페는 외부 환기 덕트 필수. 건물 구조상 설치 불가하면 영업 허가 자체가 불가. 임대인에게 반드시 사전 확인.", detailEn: "Food/café require exterior duct. Structurally impossible = no operating permit. Confirm with landlord upfront." },
+    retail: { titleKo: "하역·재고 동선 + 간판 전기", titleEn: "Loading path + signage power", detailKo: "택배·입고 동선과 창고 공간, 간판·조명 전기 용량 확인. 냉장·냉동 취급 시 전용 회로 필요.", detailEn: "Check loading/stock path, signage/lighting power. Refrigerated goods need dedicated circuits." },
+    beauty: { titleKo: "급배수·전기 용량·환기", titleEn: "Plumbing / power / ventilation", detailKo: "샴푸대·기기 급배수 + 드라이어·펌기 동시 사용 전기 용량 확인. 약품 냄새 환기도 점검. 임대인에게 사전 확인.", detailEn: "Shampoo/equipment plumbing + power for dryers/perm machines; chemical-odor ventilation. Confirm upfront." },
+    fitness: { titleKo: "층고·바닥 하중·방음", titleEn: "Ceiling / floor load / soundproof", detailKo: "기구·점프 하중과 층고(2.7m+), 아래층 방음(고무매트·이중바닥) 사전 확인. 샤워실 급배수도 점검.", detailEn: "Equipment/jump load, ceiling ≥2.7m, downstairs soundproofing, shower plumbing." },
+    pet: { titleKo: "급배수·방음·환기", titleEn: "Plumbing / soundproof / ventilation", detailKo: "미용·목욕 급배수, 짖음 방음, 냄새 환기 필수. 위생·소독 설비 공간도 확보. 임대인에게 사전 확인.", detailEn: "Grooming/bath plumbing, bark soundproofing, odor ventilation, sanitation space." },
+    space: { titleKo: "방음·전기 용량·보안", titleEn: "Soundproof / power / security", detailKo: "연습실·파티룸은 방음, 스터디카페·무인은 전기 용량(콘센트 밀도)·CCTV·출입통제 사전 확인.", detailEn: "Practice/party rooms need soundproofing; study-café/unmanned need power density, CCTV, access control." },
+    service: { titleKo: "업종별 필수 설비 확인", titleEn: "Required facilities by trade", detailKo: "업종 인허가 기준의 필수 설비(급배수·전기·환기 등)를 사전 확인. 임대인에게 설치 가능 여부 확인.", detailEn: "Confirm permit-required facilities (plumbing/power/ventilation) and landlord approval upfront." },
+  };
+
   // ⚠️ 2026-05-18: && isViewingPastStage 추가 — 첫 진입 화면에는 노출 안 되고 사용자가 명시적으로
   //   완료된 stage 로 돌아왔을 때만 "수정 저장" 표시 (메모 feedback_edit_save_pattern 패턴).
   const isStageCompleted = !!decisions["location-candidates"]?.completedAt && isViewingPastStage;
@@ -234,7 +266,7 @@ export function LocationCandidatesStage() {
           outcome={ko
             ? "최종 상권 1곳이 Found.One 에 저장됩니다. 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 단계 (계약 전 검토) 가 자동으로 받아서 맞춤 체크리스트를 생성."
             : "Your final market is saved. Next stage (Contract Review) auto-receives rent/traffic/competition/target data for tailored checklists."}
-          nextStage={ko ? "계약 전 검토 (contract-review)" : "Contract review"}
+          nextStage={ko ? "계약 전 검토" : "Contract review"}
         />
       )}
 
@@ -251,7 +283,7 @@ export function LocationCandidatesStage() {
           how={[
             { title: ko ? "희망 지역 입력 (구체적으로)" : "Enter region (specific)", detail: ko ? "지하철역·핫스폿 + 도보 시간 또는 「~동·구 메인」. 카카오 Local 라이브 + 공공데이터 조회." : "Subway + walking distance or 'main street of ~dong'. Pulls Kakao Local + public data." },
             { title: ko ? "AI 라이브 추천 받기" : "AI scout", detail: ko ? "AI 가 그 지역의 평균 임대료·공실률·경쟁 밀도·유동인구·타겟 적합도 즉시 분석. 후보 3~5곳 점수와 함께." : "AI returns 3-5 candidates with rent / vacancy / competition / traffic / target-fit scores." },
-            { title: ko ? "무료 공공 도구로 교차 검증" : "Cross-check with free public tools", detail: ko ? "소상공인마당(sg.sbiz.or.kr) 업종별 상권 리포트 · 카카오맵 반경 500m 동업종 검색 · 네이버 위성·로드뷰로 가시성 · 행정안전부 생활인구(data.mois.go.kr) 시간대별 유동인구. AI 추천을 직접 도구로 재확인하면 신뢰도 ↑." : "소상공인마당 (sg.sbiz.or.kr) industry reports · Kakao Map 500m competitor scan · Naver satellite/roadview · MOIS living-population (data.mois.go.kr). Cross-checking AI picks with these free tools raises confidence." },
+            { title: ko ? "무료 공공 도구로 교차 검증" : "Cross-check with free public tools", detail: ko ? "소상공인365(bigdata.sbiz.or.kr) 업종별 상권 리포트 · 카카오맵 반경 500m 동업종 검색 · 네이버 위성·로드뷰로 가시성 · 행정안전부 생활인구(data.mois.go.kr) 시간대별 유동인구. AI 추천을 직접 도구로 재확인하면 신뢰도 ↑." : "소상공인365 (bigdata.sbiz.or.kr) industry reports · Kakao Map 500m competitor scan · Naver satellite/roadview · MOIS living-population (data.mois.go.kr). Cross-checking AI picks with these free tools raises confidence." },
           ]}
         />
       )}
@@ -321,32 +353,30 @@ export function LocationCandidatesStage() {
             {
               title: ko ? "주차 — 인근 공영주차장 도보 3분" : "Parking — public lot within 3-min walk",
               detail: ko
-                ? "주차 불가 매물은 객단가 1만원+ 고객 방문이 줄어듦. 테이크아웃 전용 모델이라면 무관."
-                : "No parking = fewer high-ticket customers. Not relevant for take-away-only models.",
+                ? "주차 불가 매물은 방문 고객이 줄어듦. 방문 의존이 낮은 모델(배달·예약·출장·온라인 병행)이면 영향이 작습니다."
+                : "No parking = fewer visiting customers. Low impact for visit-light models (delivery/booking/mobile/online).",
             },
             {
               title: ko ? "대중교통 — 도보 5분 이내" : "Transit — within 5-min walk",
               detail: ko
-                ? "지하철·버스 정류장 5분 내. 6분+ 면 신규 유입 30% 감소(공공 데이터 기준). 배달 전용이라면 무관."
-                : "Subway/bus within 5 min. 6+ min = ~30% fewer new walk-ins per public data.",
+                ? "지하철·버스 정류장 5분 내. 6분+ 면 신규 유입 30% 감소(공공 데이터 기준). 방문 의존이 낮은 모델(배달·출장·온라인)이면 영향이 작습니다."
+                : "Subway/bus within 5 min. 6+ min = ~30% fewer new walk-ins. Low impact for visit-light models.",
             },
             {
               title: ko ? "실내 면적 — 업종별 최소 기준" : "Floor area — minimum by category",
-              detail: ko
-                ? "15평 이하 = 배달·테이크아웃 전용. 15~25평 = 테이블 6~10개. 25~40평 = 홀 직원 1~2명 필요. 40평+ = 인건비 비중 급증."
-                : "<15 pyeong: delivery/take-away only. 15-25: 6-10 tables. 25-40: 1-2 floor staff. 40+: labour cost spikes.",
+              detail: ko ? areaDetail[offlineKind].ko : areaDetail[offlineKind].en,
             },
             {
-              title: ko ? "환기·덕트 설치 가능 여부" : "Ventilation duct installation feasible?",
-              detail: ko
-                ? "음식점·카페는 외부 환기 덕트 필수. 건물 구조상 설치 불가하면 영업 허가 자체가 불가. 임대인에게 반드시 사전 확인."
-                : "Food/café require exterior duct. Structurally impossible = no operating permit. Confirm with landlord upfront.",
+              title: ko ? infraCheck[offlineKind].titleKo : infraCheck[offlineKind].titleEn,
+              detail: ko ? infraCheck[offlineKind].detailKo : infraCheck[offlineKind].detailEn,
             },
           ]}
           watchouts={ko ? [
             {
               label: "건축물대장 용도 확인",
-              text: "근린생활시설이어야 음식점·카페 영업 가능. 용도가 다를 경우 용도 변경 허가 비용 + 수개월 추가 소요.",
+              text: offlineKind === "food"
+                ? "근린생활시설이어야 음식점·카페 영업 가능. 용도가 다를 경우 용도 변경 허가 비용 + 수개월 추가 소요."
+                : "업종에 맞는 용도여야 영업 가능(대부분 근린생활시설). 용도가 다르면 용도 변경 허가 비용 + 수개월 추가 소요 — 계약 전 확인.",
             },
             {
               label: "전 업주 폐업 이유 반드시 확인",
@@ -354,7 +384,7 @@ export function LocationCandidatesStage() {
             },
             {
               label: "관리비·원상복구 범위 사전 명문화",
-              text: "월 관리비가 계약 후 30~50만원 추가되면 수지 계산이 무너짐. 원상복구 면제 항목도 계약서에 구체적으로 기재.",
+              text: "월 관리비가 계약 후 30~50만원 추가되면 수지 계산이 무너짐. 임차 종료 시 원상회복 범위는 모호한 '원상복구 면제'가 아니라 '원상회복 의무 제외(시설물 인수·현 상태 인도)'처럼 구체 문구로 계약서에 명시(분쟁 예방).",
             },
           ] : [
             {
@@ -564,8 +594,8 @@ export function LocationCandidatesStage() {
         );
       })()}
 
-      {/* ── 독립 창업자 동종업체 검색 ── */}
-      {startupType !== "franchise" && (() => {
+      {/* ── 동종 경쟁 업체 밀도 검색 (2026-07-02: 프랜차이즈 포함 전 업종 — same-brand 검색과 별개로 경쟁 밀도 확인) ── */}
+      {(() => {
         const ko = language === "ko";
         const categoryKeywords: Record<string, string> = {
           "cafe-dessert": "카페",
@@ -1171,9 +1201,11 @@ export function LocationCandidatesStage() {
         verifyItemsKo={[
           "임대 매물 상태 직접 확인 — 누수·결로·소방·주차·하수도·전기용량 5개 항목 사진 기록",
           "상권 유동인구 — 평일·주말·야간 3시간대 직접 카운트 검증 (행정 데이터는 평균값에 불과)",
-          "동종업종 반경 200m 안 5개 이상이면 → 차별화 메뉴·시간·가격 1개 이상 확보 필수",
+          offlineKind === "food"
+            ? "동종업종 반경 200m 안 5개 이상이면 → 차별화 메뉴·시간·가격 1개 이상 확보 필수"
+            : "동종업종 반경 200m 안 5개 이상이면 → 차별화 상품·서비스·가격 1개 이상 확보 필수",
           "임대인 신원·등기부등본 직접 열람 — 가압류·근저당 있으면 보증금 보호 못 받을 위험",
-          "용도지역(주거·상업·일반·전용) 확인 — 음식점은 일반·근린상업 가능, 주거지역은 면적 제한",
+          "용도지역(주거·상업·일반·전용) 확인 — 대부분 업종은 일반·근린상업 가능, 주거지역은 업종·면적 제한",
           "건물주의 「다음 임차인」 정책 — 5년 이내 강제 갱신·인테리어 잔존가치 분쟁 사전 점검",
         ]}
         nextSummaryKo="입지 1곳 확정 → 임대 계약서 검토 단계로 진입"

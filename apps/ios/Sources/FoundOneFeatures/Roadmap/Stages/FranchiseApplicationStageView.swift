@@ -88,7 +88,7 @@ private let contractCheckpoints: [ContractCheckpoint] = [
           description: "제3자에게 양도 시 본사 승인 절차와 제한 조건을 확인하세요. 양도 시 추가 비용이 발생하는지도 확인하세요.",
           riskLevel: "info"),
     .init(id: "dispute-resolution", title: "분쟁 해결 방식",
-          description: "분쟁 발생 시 중재/소송 절차와 비용 부담을 확인하세요. 한국프랜차이즈산업협회 분쟁조정협의회를 활용할 수 있습니다.",
+          description: "분쟁 발생 시 중재/소송 절차와 비용 부담을 확인하세요. 한국공정거래조정원의 가맹사업거래분쟁조정협의회(공정위 산하 법정 기구)를 활용할 수 있습니다.",
           riskLevel: "info"),
 ]
 
@@ -123,6 +123,35 @@ public struct FranchiseApplicationStageView: View {
     private let pages = ["왜 중요한가", "가맹 절차", "정보공개서 검증"]
 
     public init() {}
+
+    // ── 업종 분기 (2026-07-02 업종 정합 수정, 웹 FranchiseApplicationStage 미러) ──
+    //   프랜차이즈는 9개 업종에 걸침. 교육내용(조리법·위생)·필수구매(식자재)가 외식 전용 하드코딩이던 문제.
+    private var fcCategory: String { FranchiseBrandRegistry.brand(by: franchiseBrandId)?.categoryId ?? "food" }
+    private var isFcFood: Bool { fcCategory == "food" || fcCategory == "cafe-dessert" }
+    // #1 본사 교육 내용 — 업종별
+    private var fcTrainingDetail: String {
+        switch fcCategory {
+        case "food", "cafe-dessert": return "조리법·운영 매뉴얼·POS·위생 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        case "beauty":               return "시술·운영 매뉴얼·POS·위생 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        case "retail":               return "상품 진열·재고·운영 매뉴얼·POS 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        case "fitness":              return "프로그램·기구 사용·운영 매뉴얼·POS 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        case "pet":                  return "미용·케어·운영 매뉴얼·POS·위생 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        case "education":            return "교습 커리큘럼·운영 매뉴얼·POS 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        default:                     return "운영 매뉴얼·POS·서비스 교육. 본사 매뉴얼이 부실하면 오픈 후 운영 사고 위험 ↑."
+        }
+    }
+    // #3 필수 구매 비율 — 원부자재 명칭 업종별
+    private var fcRequiredPurchase: String {
+        switch fcCategory {
+        case "food", "cafe-dessert": return "필수 구매 비율 — 70% 이상이면 식자재 단가 협상력 X, 마진 압박 위험"
+        case "retail":               return "필수 구매 비율 — 70% 이상이면 상품 매입가 협상력 X, 마진 압박 위험"
+        case "beauty":               return "필수 구매 비율 — 70% 이상이면 미용 재료·제품 단가 협상력 X, 마진 압박 위험"
+        case "fitness":              return "필수 구매 비율 — 70% 이상이면 기구·용품 단가 협상력 X, 마진 압박 위험"
+        case "pet":                  return "필수 구매 비율 — 70% 이상이면 사료·용품 단가 협상력 X, 마진 압박 위험"
+        case "education":            return "필수 구매 비율 — 70% 이상이면 교재·비품 단가 협상력 X, 마진 압박 위험"
+        default:                     return "필수 구매 비율 — 70% 이상이면 원부자재 단가 협상력 X, 마진 압박 위험"
+        }
+    }
 
     private var stepsDone: Set<String> {
         get {
@@ -174,7 +203,7 @@ public struct FranchiseApplicationStageView: View {
                     "정보공개서 — 최근 3년 폐점률 30% 이상 브랜드 회피, 가맹점주 평균 운영기간 5년 미만 위험",
                     "가맹계약 14일 숙려기간 — 가맹사업법 의무, 본사가 압박 시 위반 (공정위 신고 가능)",
                     "인테리어 강제 — 본사 지정 업체만 가능 시 시장가 대비 30~50% 부풀림 흔함, 견적 비교 필수",
-                    "필수 구매 비율 — 70% 이상이면 식자재 단가 협상력 X, 마진 압박 위험",
+                    fcRequiredPurchase,
                     "영업지역 보호 — 반경 OO미터 내 추가 가맹점 금지 조항 명문화 (없으면 잠식 리스크)",
                     "본사 광고비 — 분담률·집행 내역 공개 의무, 불투명하면 가맹사업법 위반 신고 가능",
                 ],
@@ -383,7 +412,7 @@ public struct FranchiseApplicationStageView: View {
                             .padding(.vertical, 2)
                             .background(BUColor.midnight.opacity(0.08), in: Capsule())
                     }
-                    Text(step.detail)
+                    Text(step.taskId == "fc-training" ? fcTrainingDetail : step.detail)
                         .font(.system(size: 12))
                         .foregroundStyle(BUColor.inkSecondary)
                         .lineSpacing(3)
@@ -439,7 +468,7 @@ public struct FranchiseApplicationStageView: View {
                     BUEyebrow("참고 링크")
                     linkRow(title: "공정위 정보공개서 조회",     url: "https://franchise.ftc.go.kr")
                     linkRow(title: "표준가맹계약서 양식 (공정위)", url: "https://www.ftc.go.kr/www/selectBbsNttList.do?bordCd=203&key=204")
-                    linkRow(title: "한국프랜차이즈산업협회",       url: "https://www.ikfa.or.kr/")
+                    linkRow(title: "가맹 분쟁조정 신청 (한국공정거래조정원)", url: "https://fairnet.kofair.or.kr/")
                     linkRow(title: "가맹사업법 안내 (생활법령)",   url: "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=647&ccfNo=1&cciNo=1&cnpClsNo=1")
                 }
             }

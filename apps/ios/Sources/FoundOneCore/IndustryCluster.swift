@@ -207,9 +207,9 @@ public struct IndustryCluster: Sendable, Hashable {
             .init(label: "소방완비증명서", agency: "관할 소방서", detail: "100㎡(30평) 이상 + 가스 사용 시 의무", estimatedDays: 14),
         ]
         case .beauty: return [
-            .init(label: "사업자등록",     agency: "관할 세무서·홈택스", detail: "공중위생업 = 일반과세 권장 (간이 제한)", estimatedDays: 3),
+            .init(label: "사업자등록",     agency: "관할 세무서·홈택스", detail: "미용업은 간이과세 가능(배제 아님) — 예상 매출 1억 400만↓면 간이로 시작", estimatedDays: 3),
             .init(label: "공중위생영업 신고", agency: "관할 구청 위생과", detail: "미용·이용·피부·네일·세탁 모두 공중위생업. 위생교육 필요", estimatedDays: 5),
-            .init(label: "위생교육 (3시간)", agency: "대한미용사회·전국미용사회", detail: "온라인 3시간 + 수료증. 사장·직원 모두", estimatedDays: 1),
+            .init(label: "위생교육 (3시간)", agency: "대한미용사회·전국미용사회", detail: "온라인 3시간 + 수료증. 영업신고하는 대표자만 이수(직원은 면허증만 확인)", estimatedDays: 1),
             .init(label: "면허증 확인",    agency: "한국산업인력공단", detail: "미용사·이용사·네일·피부 국가자격증 필요. 무자격 종사자 단속", estimatedDays: 0),
         ]
         case .fitness: return [

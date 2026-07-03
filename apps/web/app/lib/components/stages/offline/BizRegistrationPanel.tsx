@@ -46,6 +46,9 @@ export function BizRegistrationPanel() {
   const hometaxChecked = !!taxChecks["tc-hometax"];
   const bizCardChecked = !!taxChecks["tc-bizcard"];
   const bizRegConfirmed = !!decisions["registration-setup"];
+  // 2026-07-02: 헤더가 "이전 단계 완료"라고 단정하던 것을 실제 배지 상태와 일치시킴.
+  //   미결정 항목이 하나라도 있으면 헤더에서 "먼저 확인" 안내로 전환(모순 제거).
+  const priorAllDone = bizRegConfirmed && taxTypeChecked && hometaxChecked && bizCardChecked && !!cpaDecision;
 
   const stageRef = (stageId: string, titleKo: string, titleEn: string) => {
     const index = pathStageList.findIndex((stage) => stage.stageId === stageId);
@@ -93,12 +96,18 @@ export function BizRegistrationPanel() {
             {ko ? "이 단계에서 꼭 할 일" : "Do this in this stage"}
           </div>
           <div style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: "5px" }}>
-            {ko ? "사업용 통장 개설 + 상호명 최종 확정" : "Open business account + finalize store name"}
+            {priorAllDone
+              ? (ko ? "사업용 통장 개설 + 상호명 최종 확정" : "Open business account + finalize store name")
+              : (ko ? "이전 결정 마무리 + 사업용 통장·상호명 확정" : "Finish prior decisions + open account & finalize name")}
           </div>
           <div style={{ fontSize: "13.5px", lineHeight: 1.55, opacity: 0.92 }}>
-            {ko
-              ? "사업자등록·과세유형·세무사 결정은 이전 단계에서 완료. 이 단계는 마지막 두 가지 — 사업용 통장과 상호명 — 만 처리합니다."
-              : "Registration, tax type, and CPA decision are done. Just finalize the bank account and store name."}
+            {priorAllDone
+              ? (ko
+                  ? "사업자등록·과세유형·세무 설정이 모두 완료됐습니다. 이 단계는 마지막 두 가지 — 사업용 통장과 상호명 — 만 처리합니다."
+                  : "Registration, tax type, and tax setup are all done. Just finalize the bank account and store name.")
+              : (ko
+                  ? "아래 「이전 단계에서 결정된 사항」에 미결정·미확인 항목이 있습니다. 해당 단계에서 먼저 마무리한 뒤, 이 단계에서 사업용 통장·상호명을 확정하세요."
+                  : "Some items below are still pending. Finish them in their stages first, then open the business account and finalize the store name here.")}
           </div>
         </div>
       </div>

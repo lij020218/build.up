@@ -15,6 +15,9 @@ public struct MvpBuildStageView: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     private let stageId = "mvp-build"
 
+    // 업종 정합(2026-07-02): 딥테크·하드웨어 MVP 는 Next.js·Vercel 이 아니라 프로토타입·벤치·시제.
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+
     @State private var page = 0
 
     @AppStorage("mvp.coreFlow")  private var coreFlow  = ""
@@ -39,6 +42,32 @@ public struct MvpBuildStageView: View {
     }
 
     public var body: some View {
+        if let dtk = DeepTechTrack.kind(forIndustryId: industryId) {
+            deepTechShell(dtk)
+        } else {
+            standardBody
+        }
+    }
+
+    // 딥테크·하드웨어: SW MVP 본문 게이팅 → 트랙별 안내 단일 페이지.
+    private func deepTechShell(_ kind: DeepTechTrack) -> some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "MVP 구축 · IP 보호",
+            stageEyebrow: "단계 9 · MVP 개발",
+            helperText: "당신의 트랙(하드웨어·딥테크)은 SW MVP 와 절차가 다릅니다. 아래 흐름 + 전용 단계로 진행하세요.",
+            canAdvance: true,
+            advanceHint: "트랙별 MVP 흐름 확인 — 다음 단계로",
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: [:]) },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [:]) }
+        ) {
+            DeepTechStageNoticeView(stage: .mvp, kind: kind)
+        }
+    }
+
+    private var standardBody: some View {
         BUStageShell(
             stageId: stageId,
             title: "MVP 구축 · IP 보호",

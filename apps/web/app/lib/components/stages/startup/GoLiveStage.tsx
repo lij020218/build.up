@@ -19,7 +19,8 @@ import {
   Globe, Smartphone, BookOpen, AlertTriangle, Check, ExternalLink, XCircle, Clock,
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
-import { MOBILE_LAUNCH_APPLE, MOBILE_LAUNCH_GOOGLE, MOBILE_LAUNCH_KOREA, MOBILE_LAUNCH_CROSSCUTTING } from "@foundone/shared";
+import { MOBILE_LAUNCH_APPLE, MOBILE_LAUNCH_GOOGLE, MOBILE_LAUNCH_KOREA, MOBILE_LAUNCH_CROSSCUTTING, getClusterForSubIndustry } from "@foundone/shared";
+import { DeepTechStageNotice, deepTechKindOf } from "./DeepTechStageNotice";
 import { ModePathCard } from "./ModePathCard";
 import { BuildMethodDialog, BuildMethodTrigger } from "./BuildMethodDialog";
 import {
@@ -35,6 +36,9 @@ import { StageWrapup } from "../shared/StageWrapup";
 export function GoLiveStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
+  // 업종 정합(2026-07-02): 하드웨어·딥테크는 웹 배포·앱스토어·PH/HN 이 아니라 초도 양산·현장 배포.
+  //   SW 전용 본문을 게이팅하고 트랙별 안내 + 전용 단계로 라우팅.
+  const deepTechKind = deepTechKindOf(getClusterForSubIndustry(d.selectedIndustryId ?? undefined, d.industryCategoryId ?? ""));
   // guideStepIndex 가 다른 단계에서 carry-over 된 경우 (예: launch-gtm 의 page 5)
   // GoLiveStage 의 0-4 범위 밖이면 0 으로 강제. 빈 화면 방지.
   const rawPg = d.guideStepIndex;
@@ -45,6 +49,9 @@ export function GoLiveStage() {
     : ["Pick Channels", "Web", "App Store", "Google Play", "PH·HN"];
 
   const [methodDialogTaskId, setMethodDialogTaskId] = useState<string | null>(null);
+
+  // 딥테크·하드웨어면 SW 본문 게이팅 → 트랙별 안내 (hook 선언 뒤에서 early-return).
+  if (deepTechKind) return <DeepTechStageNotice stage="golive" kind={deepTechKind} ko={ko} />;
 
   return (
     <div className="bento-fade-in" style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
