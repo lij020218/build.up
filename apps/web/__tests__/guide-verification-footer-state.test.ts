@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateChecklistGateSummary,
-  calculateLegacyLoanGateSummary,
-  getLegacyLoanReviewLabel,
-  getLegacyLoanReviewTitle,
   getLoanFinalReviewLabel,
   getLoanFinalReviewTitle,
   getTaxReviewLabel,
@@ -45,29 +42,5 @@ describe("guide verification footer state", () => {
     expect(getLoanFinalReviewLabel("ko", false, "대출 검토를 마치고 계속")).toBe("↑ 검토 완료 박스 먼저 체크");
     expect(getLoanFinalReviewTitle("ko", true)).toBeUndefined();
     expect(getLoanFinalReviewLabel("en", true, "Finish loan review")).toBe("Finish loan review");
-  });
-
-  it("summarizes legacy loan eligibility and document gates", () => {
-    const partial = calculateLegacyLoanGateSummary({
-      eligDone: 5,
-      eligTotal: 6,
-      docDone: 7,
-      docTotal: 7,
-    });
-
-    expect(partial.allDone).toBe(false);
-    expect(getLegacyLoanReviewTitle("ko", partial)).toBe("자격 5/6 + 서류 7/7 모두 체크 필요");
-    expect(getLegacyLoanReviewLabel("en", partial, "Finish loan review")).toBe("↑ Check 12/13");
-
-    const complete = calculateLegacyLoanGateSummary({
-      eligDone: 6,
-      eligTotal: 6,
-      docDone: 7,
-      docTotal: 7,
-    });
-
-    expect(complete.allDone).toBe(true);
-    expect(getLegacyLoanReviewTitle("en", complete)).toBeUndefined();
-    expect(getLegacyLoanReviewLabel("ko", complete, "대출 검토를 마치고 계속")).toBe("대출 검토를 마치고 계속");
   });
 });

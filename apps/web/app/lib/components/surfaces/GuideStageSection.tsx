@@ -2,56 +2,43 @@
 
 import { TAX_GUIDE_CONTENT } from "@foundone/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { usePageNavStore } from "../../stores/page-nav-store";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { StageContentRenderer } from "../stages/shared/StageContentRenderer";
-import { CurrentStageLockedHint, CurrentStagePageNav } from "./CurrentStagePageNav";
 import {
-  calculateChecklistGateSummary,
   getLoanFinalReviewLabel,
   getLoanFinalReviewTitle,
   getTaxReviewLabel,
   getTaxReviewTitle,
-  isLoanFinalReviewChecked,
 } from "./guide-verification-footer-state";
 import { GuideVerificationFooter } from "./GuideVerificationFooter";
-import { LegacyLoanGuideFallback } from "./LegacyLoanGuideFallback";
+import {
+  getGuideStageKind,
+  getLoanGuideReviewState,
+  getTaxGuideGateState,
+} from "./guide-stage-state";
+import { useCurrentStageNavigation } from "./use-current-stage-navigation";
 
 export function GuideStageSection() {
   const d = useDashboardCtx();
   const {
     copy,
     currentStage,
-    guideQuestion,
-    handleKnowledgeQuestion,
     handleVerificationContinue,
     industryCategoryId,
-    knowledgeQaError,
-    knowledgeQaStatus,
-    knowledgeQaText,
-    language,
     loanChecks,
-    prevTraversedStage,
-    savedGuideQaSnapshot,
-    setGuideQuestion,
-    setLoanChecks,
-    setViewingStageId,
     taxChecks,
   } = d;
-  const pageNav = usePageNavStore((s) => s.nav);
-  const hasMoreReadingPages = !!pageNav && pageNav.page < pageNav.totalPages - 1;
-  const pageNavBlock = <CurrentStagePageNav language={language} pageNav={pageNav} />;
-  const stageLockedHint = <CurrentStageLockedHint language={language} pageNav={pageNav} />;
-  const navigateBackFromStage = () => {
-    if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
-    else setViewingStageId(null);
-  };
+  const {
+    hasMoreReadingPages,
+    language,
+    navigateBack,
+    pageNavBlock,
+    stageLockedHint,
+  } = useCurrentStageNavigation();
+  const guideStageKind = getGuideStageKind(currentStage.code);
 
-  if (currentStage.code === "tax_guide") {
-    const taxItems =
-      (TAX_GUIDE_CONTENT.byCategory[industryCategoryId ?? "food"] ?? TAX_GUIDE_CONTENT.byCategory.food)
-        .taxChecklist ?? [];
-    const taxGate = calculateChecklistGateSummary(taxItems, taxChecks);
+  if (guideStageKind === "tax_guide") {
+    const taxGate = getTaxGuideGateState({ industryCategoryId, taxChecks });
 
     return (
       <>
@@ -64,15 +51,15 @@ export function GuideStageSection() {
           ready={taxGate.allDone}
           title={getTaxReviewTitle(language, taxGate)}
           label={getTaxReviewLabel(language, taxGate, copy.home.markTaxReviewed)}
-          onBack={navigateBackFromStage}
+          onBack={navigateBack}
           onConfirm={() => handleVerificationContinue("tax-guide")}
         />
       </>
     );
   }
 
-  if (currentStage.code === "loan_guide") {
-    const loanReviewed = isLoanFinalReviewChecked(loanChecks);
+  if (guideStageKind === "loan_guide") {
+    const loanReviewed = getLoanGuideReviewState(loanChecks);
 
     return (
       <>
@@ -85,28 +72,12 @@ export function GuideStageSection() {
           ready={loanReviewed}
           title={getLoanFinalReviewTitle(language, loanReviewed)}
           label={getLoanFinalReviewLabel(language, loanReviewed, copy.home.markLoanReviewed)}
-          onBack={navigateBackFromStage}
+          onBack={navigateBack}
           onConfirm={() => handleVerificationContinue("loan-guide")}
         />
       </>
     );
   }
 
-  return (
-    <LegacyLoanGuideFallback
-      guideQuestion={guideQuestion}
-      handleKnowledgeQuestion={handleKnowledgeQuestion}
-      knowledgeQaError={knowledgeQaError}
-      knowledgeQaStatus={knowledgeQaStatus}
-      knowledgeQaText={knowledgeQaText}
-      language={language}
-      loanChecks={loanChecks}
-      markLoanReviewedLabel={copy.home.markLoanReviewed}
-      onBack={navigateBackFromStage}
-      onConfirm={() => handleVerificationContinue("loan-guide")}
-      savedGuideQaSnapshot={savedGuideQaSnapshot}
-      setGuideQuestion={setGuideQuestion}
-      setLoanChecks={setLoanChecks}
-    />
-  );
+  return null;
 }
