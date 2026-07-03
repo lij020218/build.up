@@ -1,46 +1,59 @@
 "use client";
 
 import { createElement, type ReactNode } from "react";
-import { useDashboardCtx } from "../../contexts/DashboardContext";
+import type { Language } from "@foundone/shared";
 import { styles } from "../../styles";
 import {
-  getContractReviewContinueLabel,
-  getContractReviewEditLabel,
+  runContractReviewContinueAction,
+  runContractReviewEditAction,
+} from "./contract-review-footer-actions";
+import {
+  getContractReviewFooterViewState,
   type ContractReviewGateState,
 } from "./contract-review-footer-state";
 import { CurrentStageResettableFooterFrame } from "./CurrentStageResettableFooterFrame";
 
 type ContractReviewStageFooterProps = {
+  editStatus: "saving" | "saved" | "error" | null;
   gateState: ContractReviewGateState;
   hasMoreReadingPages: boolean;
+  isStageCompleted: boolean;
+  language: Language;
   onBack: () => void;
+  onContinue: () => void;
+  onEdit: () => void | Promise<void>;
+  onReset: () => void;
+  resetLabel: string;
   stageLockedContent: ReactNode;
 };
 
 export function ContractReviewStageFooter({
+  editStatus,
   gateState,
   hasMoreReadingPages,
+  isStageCompleted,
+  language,
   onBack,
+  onContinue,
+  onEdit,
+  onReset,
+  resetLabel,
   stageLockedContent,
 }: ContractReviewStageFooterProps) {
-  const {
-    decisions,
-    handleContractContinue,
-    handleStageEdit,
-    editSaveStatus,
-    isViewingPastStage,
+  const viewState = getContractReviewFooterViewState({
+    editStatus,
+    gateState,
     language,
-  } = useDashboardCtx();
-  const isStageCompleted = !!decisions["contract-review"]?.completedAt && isViewingPastStage;
-  const editStatus = editSaveStatus?.stageId === "contract-review"
-    ? editSaveStatus.status
-    : null;
-  const editLabel = getContractReviewEditLabel(language, editStatus);
-  const continueLabel = getContractReviewContinueLabel(language, gateState);
+  });
 
   return createElement(
     CurrentStageResettableFooterFrame,
-    { onBack },
+    {
+      language,
+      onBack,
+      onReset,
+      resetLabel,
+    },
     isStageCompleted
       ? createElement(
         "button",
@@ -48,17 +61,19 @@ export function ContractReviewStageFooter({
           type: "button",
           style: {
             ...styles.primaryButton,
-            opacity: gateState.canContinue && editStatus !== "saving" ? 1 : 0.5,
+            opacity: viewState.canEdit ? 1 : 0.5,
             background: editStatus === "error" ? "#b64c4c" : "#1d3557",
-            cursor: editStatus === "saving" ? "wait" : "pointer",
+            cursor: viewState.isSaving ? "wait" : viewState.canEdit ? "pointer" : "not-allowed",
           },
-          disabled: editStatus === "saving",
+          disabled: !viewState.canEdit,
           onClick: () => {
-            if (!gateState.canContinue) return;
-            void handleStageEdit("contract-review");
+            runContractReviewEditAction({
+              onEdit,
+              viewState,
+            });
           },
         },
-        editLabel,
+        viewState.editLabel,
       )
       : null,
     hasMoreReadingPages
@@ -69,16 +84,18 @@ export function ContractReviewStageFooter({
           type: "button",
           style: {
             ...styles.primaryButton,
-            opacity: gateState.canContinue ? 1 : 0.45,
-            cursor: gateState.canContinue ? "pointer" : "not-allowed",
+            opacity: viewState.canContinue ? 1 : 0.45,
+            cursor: viewState.canContinue ? "pointer" : "not-allowed",
           },
-          disabled: !gateState.canContinue,
+          disabled: !viewState.canContinue,
           onClick: () => {
-            if (!gateState.canContinue) return;
-            handleContractContinue();
+            runContractReviewContinueAction({
+              onContinue,
+              viewState,
+            });
           },
         },
-        continueLabel,
+        viewState.continueLabel,
       ),
   );
 }

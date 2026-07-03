@@ -9,6 +9,14 @@ export type ContractReviewGateState = {
   canContinue: boolean;
 };
 
+export type ContractReviewFooterViewState = {
+  canContinue: boolean;
+  canEdit: boolean;
+  continueLabel: string;
+  editLabel: string;
+  isSaving: boolean;
+};
+
 export function getContractReviewGateState(
   content: StageContent,
   checks: Record<string, boolean>,
@@ -65,4 +73,24 @@ export function getContractReviewEditLabel(
   }
 
   return language === "ko" ? "✓ 수정 저장" : "✓ Save edits";
+}
+
+export function getContractReviewFooterViewState({
+  editStatus,
+  gateState,
+  language,
+}: {
+  editStatus: "saving" | "saved" | "error" | null;
+  gateState: ContractReviewGateState;
+  language: Language;
+}): ContractReviewFooterViewState {
+  const isSaving = editStatus === "saving";
+
+  return {
+    canContinue: gateState.canContinue,
+    canEdit: gateState.canContinue && !isSaving,
+    continueLabel: getContractReviewContinueLabel(language, gateState),
+    editLabel: getContractReviewEditLabel(language, editStatus),
+    isSaving,
+  };
 }

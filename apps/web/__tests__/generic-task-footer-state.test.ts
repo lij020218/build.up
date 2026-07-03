@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   getCompletedStageSaveLabel,
   getGenericTaskContinueLabel,
+  getGenericTaskContinueViewState,
   getGenericTaskEditBackground,
   getGenericTaskEditLabel,
   getGenericTaskFooterMode,
+  getGenericTaskLaunchViewState,
+  getGenericTaskSaveViewState,
   getLaunchButtonLabel,
   getScopedEditSaveStatus,
   shouldShowGenericTaskEditButton,
@@ -71,5 +74,67 @@ describe("generic task footer state", () => {
     expect(getScopedEditSaveStatus({ stageId: "a", status: "saving" }, "b")).toBeNull();
     expect(getGenericTaskEditBackground("error")).toBe("#b64c4c");
     expect(getGenericTaskEditBackground("saved")).toBe("#1d3557");
+  });
+
+  it("builds save button view state from save status", () => {
+    expect(getGenericTaskSaveViewState({
+      language: "ko",
+      saveStatus: "saving",
+    })).toEqual({
+      isSaving: true,
+      label: "저장 중…",
+    });
+    expect(getGenericTaskSaveViewState({
+      language: "en",
+      saveStatus: "idle",
+    })).toEqual({
+      isSaving: false,
+      label: "Save changes",
+    });
+  });
+
+  it("builds launch button view state from completion and industry", () => {
+    expect(getGenericTaskLaunchViewState({
+      allDone: false,
+      industryCategoryId: "startup-tech",
+      language: "en",
+    })).toEqual({
+      canLaunch: false,
+      label: "🚀 Launch",
+    });
+    expect(getGenericTaskLaunchViewState({
+      allDone: true,
+      industryCategoryId: "food",
+      language: "ko",
+    })).toEqual({
+      canLaunch: true,
+      label: "🚀 개업하기",
+    });
+  });
+
+  it("builds continue and edit view state without allowing saving edits", () => {
+    expect(getGenericTaskContinueViewState({
+      allDone: true,
+      editStatus: "saving",
+      language: "en",
+    })).toEqual({
+      canContinue: true,
+      canEdit: false,
+      continueLabel: "Continue",
+      editBackground: "#1d3557",
+      editLabel: "Saving...",
+      isSavingEdit: true,
+    });
+    expect(getGenericTaskContinueViewState({
+      allDone: false,
+      editStatus: null,
+      language: "ko",
+    })).toMatchObject({
+      canContinue: false,
+      canEdit: false,
+      continueLabel: "다음 단계로",
+      editLabel: "✓ 수정 저장",
+      isSavingEdit: false,
+    });
   });
 });

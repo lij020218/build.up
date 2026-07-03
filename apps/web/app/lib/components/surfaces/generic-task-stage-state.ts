@@ -1,5 +1,4 @@
 import type { TaskState, WorkflowTaskMap } from "@foundone/shared";
-import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { shouldUseStrictFranchiseConstructionCopy } from "./construction-task-copy";
 import {
   calculatePreLaunchDoneMap,
@@ -11,6 +10,7 @@ import {
   type GenericTaskFooterMode,
 } from "./generic-task-footer-state";
 import { getGenericTaskStageId } from "./generic-task-stage-routing";
+import type { FranchiseFlexibility } from "./franchise-flexibility-adapter";
 
 export type GenericTaskStageState = {
   allDone: boolean;
@@ -25,6 +25,7 @@ export type GenericTaskStageState = {
 export function getGenericTaskStageState({
   businessLaunched,
   correctedProgressPercent,
+  franchiseFlexibility,
   hasMoreReadingPages,
   preLaunchVisibleIds,
   selectedFranchiseBrandId,
@@ -37,6 +38,7 @@ export function getGenericTaskStageState({
 }: {
   businessLaunched: boolean;
   correctedProgressPercent: number;
+  franchiseFlexibility?: FranchiseFlexibility;
   hasMoreReadingPages: boolean;
   preLaunchVisibleIds: PreLaunchVisibleIds;
   selectedFranchiseBrandId: string | null | undefined;
@@ -58,15 +60,11 @@ export function getGenericTaskStageState({
         preLaunchVisibleIds,
       })
     : {};
-  const constructionFranchiseData =
-    stageCode === "construction_setup" && startupType === "franchise" && selectedFranchiseBrandId
-      ? FRANCHISE_INTERIOR_DATA[selectedFranchiseBrandId]
-      : undefined;
   const isStrictConstructionFranchise = shouldUseStrictFranchiseConstructionCopy({
     stageCode,
     startupType: startupType ?? undefined,
     selectedFranchiseBrandId,
-    franchiseFlexibility: constructionFranchiseData?.flexibility,
+    franchiseFlexibility,
   });
   const { allDone } = calculateTaskGateSummary(stageId, stageTasks, preLaunchDoneMap);
   const footerMode = getGenericTaskFooterMode({

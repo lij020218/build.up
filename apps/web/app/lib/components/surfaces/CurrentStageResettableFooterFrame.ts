@@ -1,20 +1,24 @@
 "use client";
 
 import { createElement, type ReactNode } from "react";
-import { useDashboardCtx } from "../../contexts/DashboardContext";
+import type { Language } from "@foundone/shared";
 import { styles } from "../../styles";
 
 type CurrentStageResettableFooterFrameProps = {
   children?: ReactNode;
+  language: Language;
   onBack: () => void;
+  onReset: () => void;
+  resetLabel: string;
 };
 
 export function CurrentStageResettableFooterFrame({
   children,
+  language,
   onBack,
+  onReset,
+  resetLabel,
 }: CurrentStageResettableFooterFrameProps) {
-  const { copy, language, resetDemo } = useDashboardCtx();
-
   return createElement(
     "div",
     { style: styles.stageFooter },
@@ -26,8 +30,8 @@ export function CurrentStageResettableFooterFrame({
     children,
     createElement(
       "button",
-      { type: "button", style: styles.button, onClick: resetDemo },
-      copy.common.resetDemo,
+      { type: "button", style: styles.button, onClick: onReset },
+      resetLabel,
     ),
   );
 }

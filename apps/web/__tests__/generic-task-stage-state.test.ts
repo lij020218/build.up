@@ -19,6 +19,7 @@ function baseInput(overrides: Partial<Parameters<typeof getGenericTaskStageState
   return {
     businessLaunched: false,
     correctedProgressPercent: 0,
+    franchiseFlexibility: undefined,
     hasMoreReadingPages: false,
     preLaunchVisibleIds: null,
     selectedFranchiseBrandId: null,
@@ -79,6 +80,7 @@ describe("generic task stage state", () => {
 
   it("detects strict franchise construction copy only for strict franchise data", () => {
     const strictState = getGenericTaskStageState(baseInput({
+      franchiseFlexibility: "strict",
       selectedFranchiseBrandId: "compose-coffee",
       stageCode: "construction_setup",
       startupType: "franchise",
@@ -90,6 +92,7 @@ describe("generic task stage state", () => {
     expect(strictState.isStrictConstructionFranchise).toBe(true);
 
     const independentState = getGenericTaskStageState(baseInput({
+      franchiseFlexibility: "strict",
       selectedFranchiseBrandId: "compose-coffee",
       stageCode: "construction_setup",
       startupType: "independent",
@@ -99,5 +102,17 @@ describe("generic task stage state", () => {
     }));
 
     expect(independentState.isStrictConstructionFranchise).toBe(false);
+
+    const flexibleState = getGenericTaskStageState(baseInput({
+      franchiseFlexibility: "moderate",
+      selectedFranchiseBrandId: "compose-coffee",
+      stageCode: "construction_setup",
+      startupType: "franchise",
+      taskMap: {
+        "construction-setup": [task("contractor-selected")],
+      },
+    }));
+
+    expect(flexibleState.isStrictConstructionFranchise).toBe(false);
   });
 });

@@ -1,20 +1,15 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { TAX_GUIDE_CONTENT } from "@foundone/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { StageContentRenderer } from "../stages/shared/StageContentRenderer";
-import {
-  getLoanFinalReviewLabel,
-  getLoanFinalReviewTitle,
-  getTaxReviewLabel,
-  getTaxReviewTitle,
-} from "./guide-verification-footer-state";
+import { CurrentStageNavigationFrame } from "./CurrentStageNavigationFrame";
 import { GuideVerificationFooter } from "./GuideVerificationFooter";
 import {
+  getGuideVerificationFooterState,
   getGuideStageKind,
-  getLoanGuideReviewState,
-  getTaxGuideGateState,
 } from "./guide-stage-state";
 import { useCurrentStageNavigation } from "./use-current-stage-navigation";
 
@@ -32,48 +27,62 @@ export function GuideStageSection() {
     hasMoreReadingPages,
     language,
     navigateBack,
-    pageNavBlock,
-    stageLockedHint,
+    pageNav,
   } = useCurrentStageNavigation();
   const guideStageKind = getGuideStageKind(currentStage.code);
 
-  if (guideStageKind === "tax_guide") {
-    const taxGate = getTaxGuideGateState({ industryCategoryId, taxChecks });
+  if (guideStageKind === "unsupported") {
+    return null;
+  }
 
+  const footerState = getGuideVerificationFooterState({
+    guideStageKind,
+    industryCategoryId,
+    language,
+    loanChecks,
+    reviewedLabels: {
+      loan: copy.home.markLoanReviewed,
+      tax: copy.home.markTaxReviewed,
+    },
+    taxChecks,
+  });
+
+  function renderFooter(stageLockedContent: ReactNode) {
+    return (
+      <GuideVerificationFooter
+        language={language}
+        hasMoreReadingPages={hasMoreReadingPages}
+        lockedContent={stageLockedContent}
+        ready={footerState.ready}
+        title={footerState.title}
+        label={footerState.label}
+        onBack={navigateBack}
+        onConfirm={() => handleVerificationContinue(footerState.stageId)}
+      />
+    );
+  }
+
+  if (guideStageKind === "tax_guide") {
     return (
       <>
         <StageContentRenderer content={TAX_GUIDE_CONTENT} />
-        {pageNavBlock}
-        <GuideVerificationFooter
+        <CurrentStageNavigationFrame
           language={language}
-          hasMoreReadingPages={hasMoreReadingPages}
-          lockedContent={stageLockedHint}
-          ready={taxGate.allDone}
-          title={getTaxReviewTitle(language, taxGate)}
-          label={getTaxReviewLabel(language, taxGate, copy.home.markTaxReviewed)}
-          onBack={navigateBack}
-          onConfirm={() => handleVerificationContinue("tax-guide")}
+          pageNav={pageNav}
+          renderFooter={renderFooter}
         />
       </>
     );
   }
 
   if (guideStageKind === "loan_guide") {
-    const loanReviewed = getLoanGuideReviewState(loanChecks);
-
     return (
       <>
         <LoanGuideStage />
-        {pageNavBlock}
-        <GuideVerificationFooter
+        <CurrentStageNavigationFrame
           language={language}
-          hasMoreReadingPages={hasMoreReadingPages}
-          lockedContent={stageLockedHint}
-          ready={loanReviewed}
-          title={getLoanFinalReviewTitle(language, loanReviewed)}
-          label={getLoanFinalReviewLabel(language, loanReviewed, copy.home.markLoanReviewed)}
-          onBack={navigateBack}
-          onConfirm={() => handleVerificationContinue("loan-guide")}
+          pageNav={pageNav}
+          renderFooter={renderFooter}
         />
       </>
     );

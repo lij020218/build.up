@@ -1,126 +1,170 @@
 "use client";
 
 import { createElement, Fragment, type ReactNode } from "react";
-import { useDashboardCtx } from "../../contexts/DashboardContext";
+import type { Language } from "@foundone/shared";
 import { styles } from "../../styles";
 import { CurrentStageResettableFooterFrame } from "./CurrentStageResettableFooterFrame";
 import {
-  getCompletedStageSaveLabel,
-  getGenericTaskContinueLabel,
-  getGenericTaskEditBackground,
-  getGenericTaskEditLabel,
-  getLaunchButtonLabel,
-  getScopedEditSaveStatus,
-  shouldShowGenericTaskEditButton,
+  runGenericTaskContinueAction,
+  runGenericTaskEditAction,
+  runGenericTaskLaunchAction,
+  runGenericTaskSaveAction,
+} from "./generic-task-footer-actions";
+import {
+  getGenericTaskContinueViewState,
+  getGenericTaskLaunchViewState,
+  getGenericTaskSaveViewState,
+  type EditSaveStatus,
   type GenericTaskFooterMode,
+  type SaveStatus,
 } from "./generic-task-footer-state";
 
 type GenericTaskStageFooterProps = {
   allDone: boolean;
+  editStatus: EditSaveStatus;
   footerMode: GenericTaskFooterMode;
-  isViewingPastStage: boolean;
+  industryCategoryId?: string;
+  isStageCompleted: boolean;
+  language: Language;
   onBack: () => void;
+  onContinueStage: (stageId: string) => void;
+  onEditStage: (stageId: string) => void | Promise<void>;
+  onLaunchBusiness: () => void;
+  onPersistCurrentState: () => Promise<void>;
+  onReset: () => void;
+  onSetSaveStatus: (status: SaveStatus) => void;
+  resetLabel: string;
+  saveStatus: SaveStatus;
   stageId: string;
   stageLockedContent: ReactNode;
 };
 
 export function GenericTaskStageFooter({
   allDone,
+  editStatus,
   footerMode,
-  isViewingPastStage,
+  industryCategoryId,
+  isStageCompleted,
+  language,
   onBack,
+  onContinueStage,
+  onEditStage,
+  onLaunchBusiness,
+  onPersistCurrentState,
+  onReset,
+  onSetSaveStatus,
+  resetLabel,
+  saveStatus,
   stageId,
   stageLockedContent,
 }: GenericTaskStageFooterProps) {
-  const {
-    handleLaunchBusiness,
-    handleStageContinue,
-    industryCategoryId,
-    language,
-    persistCurrentState,
-    saveStatus,
-    setSaveStatus,
-  } = useDashboardCtx();
+  function renderFooterContent() {
+    if (footerMode === "page_locked") {
+      return stageLockedContent;
+    }
 
-  const footerContent = footerMode === "page_locked"
-    ? stageLockedContent
-    : footerMode === "save_completed"
-      ? createElement(
+    if (footerMode === "save_completed") {
+      const saveViewState = getGenericTaskSaveViewState({ language, saveStatus });
+
+      return createElement(
         "button",
         {
           type: "button",
-          disabled: saveStatus === "saving",
+          disabled: saveViewState.isSaving,
           style: {
             ...styles.primaryButton,
-            opacity: saveStatus === "saving" ? 0.6 : 1,
+            opacity: saveViewState.isSaving ? 0.6 : 1,
             background:
               saveStatus === "saved" ? "#1d3557" : saveStatus === "error" ? "#b64c4c" : undefined,
             transition: "background 0.2s, opacity 0.2s",
           },
           onClick: async () => {
-            setSaveStatus("saving");
-            try {
-              await persistCurrentState();
-              setSaveStatus("saved");
-              setTimeout(() => setSaveStatus("idle"), 2000);
-            } catch {
-              setSaveStatus("error");
-              setTimeout(() => setSaveStatus("idle"), 2500);
-            }
+            await runGenericTaskSaveAction({
+              onPersistCurrentState,
+              onSetSaveStatus,
+              viewState: saveViewState,
+            });
           },
         },
-        getCompletedStageSaveLabel(language, saveStatus),
-      )
-      : footerMode === "launch"
-        ? createElement(
-          "button",
-          {
-            type: "button",
-            style: {
-              ...styles.primaryButton,
-              opacity: allDone ? 1 : 0.45,
-              background: allDone ? "linear-gradient(135deg, #1d3557, #30a84e)" : undefined,
-            },
-            onClick: () => {
-              handleStageContinue(stageId);
-              handleLaunchBusiness();
-            },
-            disabled: !allDone,
-          },
-          getLaunchButtonLabel(language, industryCategoryId),
-        )
-        : createElement(GenericTaskContinueActions, {
-          allDone,
-          isViewingPastStage,
-          stageId,
-        });
+        saveViewState.label,
+      );
+    }
 
-  return createElement(CurrentStageResettableFooterFrame, { onBack }, footerContent);
+    if (footerMode === "launch") {
+      const launchViewState = getGenericTaskLaunchViewState({
+        allDone,
+        industryCategoryId,
+        language,
+      });
+
+      return createElement(
+        "button",
+        {
+          type: "button",
+          style: {
+            ...styles.primaryButton,
+            opacity: launchViewState.canLaunch ? 1 : 0.45,
+            background: launchViewState.canLaunch ? "linear-gradient(135deg, #1d3557, #30a84e)" : undefined,
+          },
+          onClick: () => {
+            void runGenericTaskLaunchAction({
+              onContinueStage,
+              onLaunchBusiness,
+              stageId,
+              viewState: launchViewState,
+            });
+          },
+          disabled: !launchViewState.canLaunch,
+        },
+        launchViewState.label,
+      );
+    }
+
+    return createElement(GenericTaskContinueActions, {
+      allDone,
+      editStatus,
+      isStageCompleted,
+      language,
+      onContinueStage,
+      onEditStage,
+      stageId,
+    });
+  }
+
+  return createElement(
+    CurrentStageResettableFooterFrame,
+    {
+      language,
+      onBack,
+      onReset,
+      resetLabel,
+    },
+    renderFooterContent(),
+  );
 }
 
 function GenericTaskContinueActions({
   allDone,
-  isViewingPastStage,
+  editStatus,
+  isStageCompleted,
+  language,
+  onContinueStage,
+  onEditStage,
   stageId,
 }: {
   allDone: boolean;
-  isViewingPastStage: boolean;
+  editStatus: EditSaveStatus;
+  isStageCompleted: boolean;
+  language: Language;
+  onContinueStage: (stageId: string) => void;
+  onEditStage: (stageId: string) => void | Promise<void>;
   stageId: string;
 }) {
-  const {
-    decisions,
-    editSaveStatus,
-    handleStageContinue,
-    handleStageEdit,
+  const viewState = getGenericTaskContinueViewState({
+    allDone,
+    editStatus,
     language,
-  } = useDashboardCtx();
-  const isStageCompleted = shouldShowGenericTaskEditButton(
-    decisions[stageId]?.completedAt,
-    isViewingPastStage,
-  );
-  const editStatus = getScopedEditSaveStatus(editSaveStatus, stageId);
-  const editLabel = getGenericTaskEditLabel(language, editStatus);
-  const editBg = getGenericTaskEditBackground(editStatus);
+  });
 
   return createElement(
     Fragment,
@@ -132,16 +176,20 @@ function GenericTaskContinueActions({
           type: "button",
           style: {
             ...styles.primaryButton,
-            opacity: allDone && editStatus !== "saving" ? 1 : 0.5,
-            background: editBg,
-            cursor: editStatus === "saving" ? "wait" : "pointer",
+            opacity: viewState.canEdit ? 1 : 0.5,
+            background: viewState.editBackground,
+            cursor: viewState.isSavingEdit ? "wait" : viewState.canEdit ? "pointer" : "not-allowed",
           },
           onClick: () => {
-            void handleStageEdit(stageId);
+            runGenericTaskEditAction({
+              onEditStage,
+              stageId,
+              viewState,
+            });
           },
-          disabled: !allDone || editStatus === "saving",
+          disabled: !viewState.canEdit,
         },
-        editLabel,
+        viewState.editLabel,
       )
       : null,
     createElement(
@@ -150,12 +198,18 @@ function GenericTaskContinueActions({
         type: "button",
         style: {
           ...styles.primaryButton,
-          opacity: allDone ? 1 : 0.45,
+          opacity: viewState.canContinue ? 1 : 0.45,
         },
-        onClick: () => handleStageContinue(stageId),
-        disabled: !allDone,
+        onClick: () => {
+          runGenericTaskContinueAction({
+            onContinueStage,
+            stageId,
+            viewState,
+          });
+        },
+        disabled: !viewState.canContinue,
       },
-      getGenericTaskContinueLabel(language),
+      viewState.continueLabel,
     ),
   );
 }

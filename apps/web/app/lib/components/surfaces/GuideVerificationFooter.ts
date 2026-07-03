@@ -3,6 +3,7 @@
 import { createElement, type ReactNode } from "react";
 import type { Language } from "@foundone/shared";
 import { styles } from "../../styles";
+import { runGuideVerificationConfirmAction } from "./guide-verification-footer-actions";
 
 type GuideVerificationFooterProps = {
   language: Language;
@@ -46,8 +47,10 @@ export function GuideVerificationFooter({
           },
           title,
           onClick: () => {
-            if (!ready) return;
-            onConfirm();
+            runGuideVerificationConfirmAction({
+              onConfirm,
+              ready,
+            });
           },
           disabled: !ready,
         },

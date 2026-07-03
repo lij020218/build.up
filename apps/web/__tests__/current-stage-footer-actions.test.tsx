@@ -5,14 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ContractReviewStageFooter } from "../app/lib/components/surfaces/ContractReviewStageFooter";
 import { GenericTaskStageFooter } from "../app/lib/components/surfaces/GenericTaskStageFooter";
 
-const dashboardMock = vi.hoisted(() => ({
-  value: {} as Record<string, unknown>,
-}));
-
-vi.mock("../app/lib/contexts/DashboardContext", () => ({
-  useDashboardCtx: () => dashboardMock.value,
-}));
-
 describe("current stage footer actions", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -21,7 +13,6 @@ describe("current stage footer actions", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
-    dashboardMock.value = createDashboardContext();
   });
 
   afterEach(() => {
@@ -31,87 +22,97 @@ describe("current stage footer actions", () => {
     container.remove();
   });
 
-  function createDashboardContext(overrides: Record<string, unknown> = {}) {
+  function createGenericFooterProps(
+    overrides: Partial<React.ComponentProps<typeof GenericTaskStageFooter>> = {},
+  ): React.ComponentProps<typeof GenericTaskStageFooter> {
     return {
-      copy: { common: { resetDemo: "초기화" } },
-      decisions: {},
-      editSaveStatus: null,
-      handleContractContinue: vi.fn(),
-      handleLaunchBusiness: vi.fn(),
-      handleStageContinue: vi.fn(),
-      handleStageEdit: vi.fn(),
+      allDone: true,
+      editStatus: null,
+      footerMode: "task_continue",
       industryCategoryId: "food",
+      isStageCompleted: false,
       language: "ko",
-      persistCurrentState: vi.fn().mockResolvedValue(undefined),
-      resetDemo: vi.fn(),
+      onBack: vi.fn(),
+      onContinueStage: vi.fn(),
+      onEditStage: vi.fn(),
+      onLaunchBusiness: vi.fn(),
+      onPersistCurrentState: vi.fn().mockResolvedValue(undefined),
+      onReset: vi.fn(),
+      onSetSaveStatus: vi.fn(),
+      resetLabel: "초기화",
       saveStatus: "idle",
-      setSaveStatus: vi.fn(),
+      stageId: "operations-setup",
+      stageLockedContent: React.createElement("button", { type: "button" }, "다음 페이지"),
       ...overrides,
     };
   }
 
-  function renderGenericFooter({
-    allDone = true,
-    footerMode = "task_continue",
-    isViewingPastStage = false,
-    stageLockedContent = React.createElement("button", { type: "button" }, "다음 페이지"),
-  }: Partial<React.ComponentProps<typeof GenericTaskStageFooter>> = {}) {
-    const onBack = vi.fn();
+  function renderGenericFooter(
+    overrides: Partial<React.ComponentProps<typeof GenericTaskStageFooter>> = {},
+  ) {
+    const props = createGenericFooterProps(overrides);
 
     act(() => {
       root.render(
-        React.createElement(GenericTaskStageFooter, {
-          allDone,
-          footerMode,
-          isViewingPastStage,
-          onBack,
-          stageId: "operations-setup",
-          stageLockedContent,
-        }),
+        React.createElement(GenericTaskStageFooter, props),
       );
     });
 
-    return { onBack };
+    return props;
   }
 
-  function renderContractFooter({
+  function createContractFooterProps({
     canContinue = true,
     hasMoreReadingPages = false,
   }: {
     canContinue?: boolean;
     hasMoreReadingPages?: boolean;
+  } = {}): React.ComponentProps<typeof ContractReviewStageFooter> {
+    return {
+      editStatus: null,
+      gateState: {
+        allClausesDone: canContinue,
+        canContinue,
+        clauseIds: [
+          "rent",
+          "deposit",
+          "term",
+          "renewal",
+          "repair",
+          "restoration",
+          "transfer",
+          "penalty",
+          "special",
+        ],
+        doneCount: canContinue ? 9 : 0,
+        signed: canContinue,
+        totalCount: 9,
+      },
+      hasMoreReadingPages,
+      isStageCompleted: false,
+      language: "ko",
+      onBack: vi.fn(),
+      onContinue: vi.fn(),
+      onEdit: vi.fn(),
+      onReset: vi.fn(),
+      resetLabel: "초기화",
+      stageLockedContent: React.createElement("button", { type: "button" }, "다음 페이지"),
+    };
+  }
+
+  function renderContractFooter(options: {
+    canContinue?: boolean;
+    hasMoreReadingPages?: boolean;
   } = {}) {
-    const onBack = vi.fn();
+    const props = createContractFooterProps(options);
 
     act(() => {
       root.render(
-        React.createElement(ContractReviewStageFooter, {
-          gateState: {
-            allClausesDone: canContinue,
-            canContinue,
-            clauseIds: [
-              "rent",
-              "deposit",
-              "term",
-              "renewal",
-              "repair",
-              "restoration",
-              "transfer",
-              "penalty",
-              "special",
-            ],
-            doneCount: canContinue ? 9 : 0,
-            signed: canContinue,
-            totalCount: 9,
-          },
-          hasMoreReadingPages,
-          onBack,
-          stageLockedContent: React.createElement("button", { type: "button" }, "다음 페이지"),
-        }),
+        React.createElement(ContractReviewStageFooter, props),
       );
     });
 
-    return { onBack };
+    return props;
   }
 
   function findButton(label: string): HTMLButtonElement {
@@ -123,20 +124,20 @@ describe("current stage footer actions", () => {
   }
 
   it("calls the generic stage continue action only from the enabled continue button", () => {
-    renderGenericFooter();
+    const props = renderGenericFooter();
 
-    expect(dashboardMock.value.handleStageContinue).not.toHaveBeenCalled();
+    expect(props.onContinueStage).not.toHaveBeenCalled();
 
     act(() => {
       findButton("다음 단계로").click();
     });
 
-    expect(dashboardMock.value.handleStageContinue).toHaveBeenCalledTimes(1);
-    expect(dashboardMock.value.handleStageContinue).toHaveBeenCalledWith("operations-setup");
+    expect(props.onContinueStage).toHaveBeenCalledTimes(1);
+    expect(props.onContinueStage).toHaveBeenCalledWith("operations-setup");
   });
 
   it("does not call generic stage continue while the task gate is incomplete", () => {
-    renderGenericFooter({ allDone: false });
+    const props = renderGenericFooter({ allDone: false });
     const continueButton = findButton("다음 단계로");
 
     expect(continueButton.disabled).toBe(true);
@@ -145,38 +146,73 @@ describe("current stage footer actions", () => {
       continueButton.click();
     });
 
-    expect(dashboardMock.value.handleStageContinue).not.toHaveBeenCalled();
+    expect(props.onContinueStage).not.toHaveBeenCalled();
   });
 
   it("keeps generic stage actions locked while reading pages remain", () => {
-    renderGenericFooter({ footerMode: "page_locked" });
+    const props = renderGenericFooter({ footerMode: "page_locked" });
 
     expect(container.textContent).toContain("다음 페이지");
     expect(container.textContent).not.toContain("다음 단계로");
-    expect(dashboardMock.value.handleStageContinue).not.toHaveBeenCalled();
+    expect(props.onContinueStage).not.toHaveBeenCalled();
 
     act(() => {
       findButton("다음 페이지").click();
     });
 
-    expect(dashboardMock.value.handleStageContinue).not.toHaveBeenCalled();
-    expect(dashboardMock.value.handleLaunchBusiness).not.toHaveBeenCalled();
+    expect(props.onContinueStage).not.toHaveBeenCalled();
+    expect(props.onLaunchBusiness).not.toHaveBeenCalled();
+  });
+
+  it("does not call generic launch actions while final tasks are incomplete", () => {
+    const props = renderGenericFooter({
+      allDone: false,
+      footerMode: "launch",
+      stageId: "pre-launch-final",
+    });
+    const launchButton = findButton("🚀 개업하기");
+
+    expect(launchButton.disabled).toBe(true);
+
+    act(() => {
+      launchButton.click();
+    });
+
+    expect(props.onContinueStage).not.toHaveBeenCalled();
+    expect(props.onLaunchBusiness).not.toHaveBeenCalled();
+  });
+
+  it("does not persist completed-stage edits while a save is already running", () => {
+    const props = renderGenericFooter({
+      footerMode: "save_completed",
+      saveStatus: "saving",
+    });
+    const saveButton = findButton("저장 중…");
+
+    expect(saveButton.disabled).toBe(true);
+
+    act(() => {
+      saveButton.click();
+    });
+
+    expect(props.onPersistCurrentState).not.toHaveBeenCalled();
+    expect(props.onSetSaveStatus).not.toHaveBeenCalled();
   });
 
   it("calls contract continue only from the enabled contract button", () => {
-    renderContractFooter();
+    const props = renderContractFooter();
 
-    expect(dashboardMock.value.handleContractContinue).not.toHaveBeenCalled();
+    expect(props.onContinue).not.toHaveBeenCalled();
 
     act(() => {
       findButton("계약 검토 완료 — 다음 단계로").click();
     });
 
-    expect(dashboardMock.value.handleContractContinue).toHaveBeenCalledTimes(1);
+    expect(props.onContinue).toHaveBeenCalledTimes(1);
   });
 
   it("does not call contract continue while the contract gate is incomplete", () => {
-    renderContractFooter({ canContinue: false });
+    const props = renderContractFooter({ canContinue: false });
     const disabledButton = findButton("↑ 9대 핵심 조항 0/9");
 
     expect(disabledButton.disabled).toBe(true);
@@ -185,11 +221,34 @@ describe("current stage footer actions", () => {
       disabledButton.click();
     });
 
-    expect(dashboardMock.value.handleContractContinue).not.toHaveBeenCalled();
+    expect(props.onContinue).not.toHaveBeenCalled();
+  });
+
+  it("disables completed contract edit while the contract gate is incomplete", () => {
+    const props = renderContractFooter({ canContinue: false });
+
+    act(() => {
+      root.render(
+        React.createElement(ContractReviewStageFooter, {
+          ...props,
+          isStageCompleted: true,
+        }),
+      );
+    });
+
+    const editButton = findButton("✓ 수정 저장");
+
+    expect(editButton.disabled).toBe(true);
+
+    act(() => {
+      editButton.click();
+    });
+
+    expect(props.onEdit).not.toHaveBeenCalled();
   });
 
   it("does not call contract continue while reading pages remain", () => {
-    renderContractFooter({ hasMoreReadingPages: true });
+    const props = renderContractFooter({ hasMoreReadingPages: true });
 
     expect(container.textContent).toContain("다음 페이지");
     expect(container.textContent).not.toContain("계약 검토 완료 — 다음 단계로");
@@ -198,6 +257,6 @@ describe("current stage footer actions", () => {
       findButton("다음 페이지").click();
     });
 
-    expect(dashboardMock.value.handleContractContinue).not.toHaveBeenCalled();
+    expect(props.onContinue).not.toHaveBeenCalled();
   });
 });

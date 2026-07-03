@@ -9,6 +9,25 @@ export type GenericTaskFooterMode =
   | "launch"
   | "task_continue";
 
+export type GenericTaskSaveViewState = {
+  isSaving: boolean;
+  label: string;
+};
+
+export type GenericTaskLaunchViewState = {
+  canLaunch: boolean;
+  label: string;
+};
+
+export type GenericTaskContinueViewState = {
+  canContinue: boolean;
+  canEdit: boolean;
+  continueLabel: string;
+  editBackground: string;
+  editLabel: string;
+  isSavingEdit: boolean;
+};
+
 export type GenericTaskFooterModeInput = {
   hasMoreReadingPages: boolean;
   correctedProgressPercent: number;
@@ -102,4 +121,53 @@ export function getGenericTaskEditBackground(editStatus: EditSaveStatus) {
 
 export function getGenericTaskContinueLabel(language: Language) {
   return language === "ko" ? "다음 단계로" : "Continue";
+}
+
+export function getGenericTaskSaveViewState({
+  language,
+  saveStatus,
+}: {
+  language: Language;
+  saveStatus: SaveStatus;
+}): GenericTaskSaveViewState {
+  return {
+    isSaving: saveStatus === "saving",
+    label: getCompletedStageSaveLabel(language, saveStatus),
+  };
+}
+
+export function getGenericTaskLaunchViewState({
+  allDone,
+  industryCategoryId,
+  language,
+}: {
+  allDone: boolean;
+  industryCategoryId?: string;
+  language: Language;
+}): GenericTaskLaunchViewState {
+  return {
+    canLaunch: allDone,
+    label: getLaunchButtonLabel(language, industryCategoryId),
+  };
+}
+
+export function getGenericTaskContinueViewState({
+  allDone,
+  editStatus,
+  language,
+}: {
+  allDone: boolean;
+  editStatus: EditSaveStatus;
+  language: Language;
+}): GenericTaskContinueViewState {
+  const isSavingEdit = editStatus === "saving";
+
+  return {
+    canContinue: allDone,
+    canEdit: allDone && !isSavingEdit,
+    continueLabel: getGenericTaskContinueLabel(language),
+    editBackground: getGenericTaskEditBackground(editStatus),
+    editLabel: getGenericTaskEditLabel(language, editStatus),
+    isSavingEdit,
+  };
 }

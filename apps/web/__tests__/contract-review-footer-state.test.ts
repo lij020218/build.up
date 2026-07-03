@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getContractReviewContinueLabel,
   getContractReviewEditLabel,
+  getContractReviewFooterViewState,
   getContractReviewGateState,
 } from "../app/lib/components/surfaces/contract-review-footer-state";
 
@@ -42,5 +43,38 @@ describe("contract review footer state", () => {
     expect(getContractReviewEditLabel("en", "saving")).toBe("Saving...");
     expect(getContractReviewEditLabel("ko", "saved")).toBe("✓ 수정 완료");
     expect(getContractReviewEditLabel("en", "error")).toBe("⚠ Retry");
+  });
+
+  it("builds footer view state for continue and edit buttons", () => {
+    const empty = getContractReviewGateState(CONTRACT_REVIEW_CONTENT, {});
+
+    expect(getContractReviewFooterViewState({
+      editStatus: null,
+      gateState: empty,
+      language: "ko",
+    })).toMatchObject({
+      canContinue: false,
+      canEdit: false,
+      continueLabel: "↑ 9대 핵심 조항 0/9",
+      editLabel: "✓ 수정 저장",
+      isSaving: false,
+    });
+
+    const complete = getContractReviewGateState(CONTRACT_REVIEW_CONTENT, {
+      ...Object.fromEntries(empty.clauseIds.map((id) => [`__final:${id}`, true])),
+      "__final:signed": true,
+    });
+
+    expect(getContractReviewFooterViewState({
+      editStatus: "saving",
+      gateState: complete,
+      language: "en",
+    })).toMatchObject({
+      canContinue: true,
+      canEdit: false,
+      continueLabel: "Contract reviewed — continue",
+      editLabel: "Saving...",
+      isSaving: true,
+    });
   });
 });
