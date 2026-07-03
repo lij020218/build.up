@@ -5,7 +5,7 @@
 //             scripts/gen-interior-2026-swift.mts 로 파싱·생성 (수동 편집 금지).
 //             모든 트렌드/브랜드/업체는 출처(sourceKo) 명시·실재 확인. "참고용·검증 권장"(caveatKo).
 //
-//  생성 레코드: 54개 세부업종 (온라인 업종 _digital-home-office-note 제외).
+//  생성 레코드: 53개 세부업종 (온라인 업종 _digital-home-office-note 제외).
 //
 
 import Foundation
@@ -737,25 +737,6 @@ public enum ConstructionSubIndustryInterior2026Registry {
                 .init(nameKo: "큐플레이스(Qplace)", typeKo: "상업공간 인테리어 비교견적 플랫폼", noteKo: "애견 훈련소·도그스쿨 시공사 매칭.", sourceKo: "qplace.kr"),
             ],
             caveatKo: "참고용 — 위탁훈련은 동물위탁관리업 시설 기준·방음 규정이 별도이며 정보는 변동되니 직접 검증 권장."
-        ),
-        "pet-walking-visit": .init(
-            colorTrend: .init(nameKo: "클라우드 댄서 화이트 + 웜 우드 (소규모 거점/홈오피스)", descKo: "매장 없는 방문·산책 서비스라 인테리어 비중은 낮음. 소규모 거점·홈오피스 기준 — Pantone 2026 'Cloud Dancer' 화이트 + 웜 우드로 상담·교육 공간만 깔끔하게. 보호자 첫 미팅 신뢰감만 확보하면 충분.", sourceKo: "Pantone Color of the Year 2026"),
-            trends: [
-                .init(titleKo: "거점 최소화·플랫폼 중심 운영", descKo: "방문 서비스 특성상 매장 투자 대신 매칭 앱·GPS 트래킹 등 운영 인프라에 집중하는 흐름.", sourceKo: "한국아파트신문/비욘드아파트먼트(펫케어 서비스) ※일반 서술"),
-                .init(titleKo: "펫 프렌들리·돌봄 수요 확대", descKo: "펫팸족 증가로 산책·방문 돌봄 수요 확대 — 소규모 거점+커뮤니티 모델 등장.", sourceKo: "하이마트 홈스매거진(펫팸족)"),
-            ],
-            furniture: [
-                .init(itemKo: "상담·교육용 멀티 데스크", descKo: "소규모 거점/홈오피스 — 신규 견주 상담·펫시터 교육 겸용."),
-                .init(itemKo: "장비 보관 락커(리쉬·하네스)", descKo: "펫시터 개인 락커 + 공용 장비창고로 위생·분실 관리."),
-                .init(itemKo: "반려동물 동반 상담석", descKo: "항균 매트·간식 비치한 소형 동반 상담 공간."),
-            ],
-            brands: [
-                .init(nameKo: "딩동펫(DingdongPet)", noteKo: "리쉬·하네스·캐리어 등 산책·방문 장비 소싱에 활용.", sourceKo: "dingdongpet.net"),
-            ],
-            firms: [
-                .init(nameKo: "큐플레이스(Qplace)", typeKo: "상업공간 인테리어 비교견적 플랫폼", noteKo: "소규모 사무실·거점 시공이 필요할 때 시공사 매칭에 활용(인테리어 비중 낮음).", sourceKo: "qplace.kr"),
-            ],
-            caveatKo: "참고용 — 매장 없는 방문 서비스라 인테리어 비중이 낮으므로 거점 투자 최소화·운영 인프라 우선. 정보는 변동되니 직접 검증 권장."
         ),
         "pilates-studio": .init(
             colorTrend: .init(nameKo: "Cloud Dancer 화이트 + 세이지/라이트오크 웰니스", descKo: "Pantone 2026 'Cloud Dancer' 화이트에 세이지 그린·라이트오크 어시톤. 바이오필릭 부티크 스튜디오 무드.", sourceKo: "Pantone Color of the Year 2026 / Indigo Fitness·biofit 2026 gym design"),

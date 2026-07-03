@@ -418,11 +418,6 @@ private let specialtyBenchmarks: [String: ClusterBudgetBenchmark] = [
         source: "다모이·이삭애견훈련소 + 숨고 시세",
         yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 400,
         noteKo: "교외 저가 부지+훈련장·켄넬. 입지·규모 편차 커 추정."),
-    "pet-walking-visit": ClusterBudgetBenchmark(
-        avgWan: 300, medianWan: 200, p25Wan: 100, p75Wan: 500,
-        source: "와요·서울시50플러스 펫시터 (무점포)",
-        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 50,
-        noteKo: "무점포—보증금/인테리어 0. 자격교육·보험·마케팅·이동비만. 추정."),
     "laundry-service": ClusterBudgetBenchmark(
         avgWan: 4500, medianWan: 4000, p25Wan: 2500, p75Wan: 6000,
         source: "easylaw 세탁소 + 크린토피아 비용분석",

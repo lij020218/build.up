@@ -1329,37 +1329,6 @@ export const SUB_INDUSTRY_INTERIOR_DATA: Record<string, SubIndustryInteriorData>
     ],
     contractorKeyword: "애견 훈련소 도그스쿨 인테리어",
   },
-  "pet-walking-visit": {
-    materials: [
-      { iconName: "Frame", nameKo: "사무실 + 펫시터 대기·교육 공간",
-        descriptionKo: "동물위탁관리업·펫시터 사무실 — 30~50평. 교육·미팅·서류 공간, 보증금+권리금 5천~1억 (1층 비필수)." },
-      { iconName: "Box", nameKo: "장비 보관 락커 (리쉬·하네스·미용도구)",
-        descriptionKo: "펫시터별 개인 락커 + 공용 장비창고. 락커 1조 30~60만원, 위생·분실 관리 필수." },
-      { iconName: "Smile", nameKo: "고객 상담실 + 반려동물 동반석",
-        descriptionKo: "신규 견주 상담 시 반려동물 동반 — 항균 매트·간식 비치. 분리 상담실 5평 인테리어 400~700만원." },
-      { iconName: "Cpu", nameKo: "펫시터 매칭 시스템 + GPS 트래킹",
-        descriptionKo: "와요·펫팸 펫시터 표준 — 앱 매칭·산책 GPS·실시간 사진. 자체 시스템 개발 1500~5000만원 또는 SaaS." },
-      { iconName: "Camera", nameKo: "사무실 CCTV + 차량 블랙박스",
-        descriptionKo: "분쟁·도난 대비 — 사무실 4채널 200만원. 펫시터 차량 블랙박스 별도 30만원, 신뢰 운영." },
-      { iconName: "Bike", nameKo: "전기자전거·차량 + 운반 캐리어",
-        descriptionKo: "방문·산책 이동 — 전기자전거 100~150만원/대 또는 차량 1대. 펫 캐리어·하네스 풀세트." },
-    ],
-    concepts: [
-      { id: "warm-office", iconName: "Heart", nameKo: "웜 오피스 (펫시터 본사형)",
-        descriptionKo: "원목·민트·일러스트 — 와요·펫팸 스타일. 견주 상담·펫시터 교육 멀티 공간, 도심 입지.",
-        tags: ["펫시터", "교육 허브", "도심"] },
-      { id: "tech-platform", iconName: "Cpu", nameKo: "테크 플랫폼 (앱·매칭 중심)",
-        descriptionKo: "화이트·블랙·미니멀 — 사무실 + 데이터·운영 중심. 매칭 SaaS 강조, 직장인 견주 타깃.",
-        tags: ["플랫폼", "앱", "직장인"] },
-      { id: "boutique-concierge", iconName: "Crown", nameKo: "부티크 컨시어지 (프리미엄)",
-        descriptionKo: "다크 톤·골드·가죽 — 청담·강남 프리미엄 산책·방문. 1:1 전담 펫시터, 객단가 5만원/회+.",
-        tags: ["프리미엄", "강남·청담", "1:1 전담"] },
-      { id: "community-hub", iconName: "Users", nameKo: "커뮤니티 허브 (반려동물 모임)",
-        descriptionKo: "오픈 라운지·이벤트 공간 — 견주 모임·산책 클래스. 펫시터 + 커뮤니티 결합 차별화.",
-        tags: ["커뮤니티", "이벤트", "차별화"] },
-    ],
-    contractorKeyword: "펫시터 사무실 인테리어",
-  },
 
   // ═══════════════════════════════════════════════════════════
   // LIVING-SERVICE (6)

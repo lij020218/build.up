@@ -341,14 +341,6 @@ public enum ConstructionSubIndustryInteriorRegistry {
             .init(icon: "speaker.slash.fill", name: "외부 차음·방음 벽체", desc: "짖음·훈련 호각 소리 인접 민원 — 차음 STC45+ 평당 18만원. 주거지 인근 운영 시 필수."),
             .init(icon: "viewfinder", name: "훈련 기록 태블릿 + 견주 앱 연동", desc: "행동 데이터·진척도 기록 — 견주 앱 공유. 훈련사 태블릿 + 클라우드 시스템 200~400만원."),
         ],
-        "pet-walking-visit": [
-            .init(icon: "square.grid.2x2.fill", name: "사무실 + 펫시터 대기·교육 공간", desc: "동물위탁관리업·펫시터 사무실 — 30~50평. 교육·미팅·서류 공간, 보증금+권리금 5천~1억 (1층 비필수)."),
-            .init(icon: "shippingbox.fill", name: "장비 보관 락커 (리쉬·하네스·미용도구)", desc: "펫시터별 개인 락커 + 공용 장비창고. 락커 1조 30~60만원, 위생·분실 관리 필수."),
-            .init(icon: "square.grid.2x2.fill", name: "고객 상담실 + 반려동물 동반석", desc: "신규 견주 상담 시 반려동물 동반 — 항균 매트·간식 비치. 분리 상담실 5평 인테리어 400~700만원."),
-            .init(icon: "cpu.fill", name: "펫시터 매칭 시스템 + GPS 트래킹", desc: "와요·펫팸 펫시터 표준 — 앱 매칭·산책 GPS·실시간 사진. 자체 시스템 개발 1500~5000만원 또는 SaaS."),
-            .init(icon: "camera.fill", name: "사무실 CCTV + 차량 블랙박스", desc: "분쟁·도난 대비 — 사무실 4채널 200만원. 펫시터 차량 블랙박스 별도 30만원, 신뢰 운영."),
-            .init(icon: "square.grid.2x2.fill", name: "전기자전거·차량 + 운반 캐리어", desc: "방문·산책 이동 — 전기자전거 100~150만원/대 또는 차량 1대. 펫 캐리어·하네스 풀세트."),
-        ],
         "laundry-service": [
             .init(icon: "drop.fill", name: "드라이클리닝기 + 친환경 웻클리닝 머신", desc: "퍼크 드라이크리너 1500~3000만원 / 친환경 웻클리닝 1500만원. 환경부 유기용제 규제 강화 — 웻클리닝 전환 추세."),
             .init(icon: "flame.fill", name: "스팀 다림질대 + 입체 마네킹 다림이", desc: "와이셔츠 마네킹 다림이 800~1500만원, 스팀 프레스 500~800만원. 와이셔츠 회전·품질·생산성 핵심."),
@@ -790,12 +782,6 @@ public enum ConstructionSubIndustryInteriorRegistry {
             .init(icon: "dumbbell.fill", name: "어질리티 아레나 (스포츠 전문)", desc: "넓은 잔디·풀세트 어질리티 — PNS·어질리티몰 스타일. 외곽·교외 적합, 대회 준비반.", tags: ["어질리티", "외곽", "스포츠"]),
             .init(icon: "leaf.fill", name: "캄 리햅 (행동치료 특화)", desc: "차분한 베이지·우드·소프트 조명 — 분리불안·트라우마 행동치료. 1:1 세션, 고가 객단가.", tags: ["행동치료", "1:1", "분리불안"]),
         ],
-        "pet-walking-visit": [
-            .init(icon: "heart.fill", name: "웜 오피스 (펫시터 본사형)", desc: "원목·민트·일러스트 — 와요·펫팸 스타일. 견주 상담·펫시터 교육 멀티 공간, 도심 입지.", tags: ["펫시터", "교육 허브", "도심"]),
-            .init(icon: "cpu.fill", name: "테크 플랫폼 (앱·매칭 중심)", desc: "화이트·블랙·미니멀 — 사무실 + 데이터·운영 중심. 매칭 SaaS 강조, 직장인 견주 타깃.", tags: ["플랫폼", "앱", "직장인"]),
-            .init(icon: "crown.fill", name: "부티크 컨시어지 (프리미엄)", desc: "다크 톤·골드·가죽 — 청담·강남 프리미엄 산책·방문. 1:1 전담 펫시터, 객단가 5만원/회+.", tags: ["프리미엄", "강남·청담", "1:1 전담"]),
-            .init(icon: "person.2.fill", name: "커뮤니티 허브 (반려동물 모임)", desc: "오픈 라운지·이벤트 공간 — 견주 모임·산책 클래스. 펫시터 + 커뮤니티 결합 차별화.", tags: ["커뮤니티", "이벤트", "차별화"]),
-        ],
         "laundry-service": [
             .init(icon: "crown.fill", name: "프리미엄 클리너 (명품·드레스)", desc: "화이트·블랙·골드 — 명품·드레스·가죽 전문. 객단가 3~10만원, 강남·청담·청라 적합.", tags: ["명품·가죽", "고가", "강남"]),
             .init(icon: "leaf.fill", name: "에코 친환경 (웻클리닝 특화)", desc: "그린·우드 — 유기용제 미사용 강조. 임산부·아토피·환경 의식 고객, 신도시 펫팸·키즈 타깃.", tags: ["친환경", "신도시", "키즈"]),
@@ -984,7 +970,6 @@ public enum ConstructionSubIndustryInteriorRegistry {
         "pet-hotel": "펫호텔 펫유치원 인테리어",
         "pet-cafe": "펫카페 강아지 고양이 카페 인테리어",
         "pet-training-school": "애견 훈련소 도그스쿨 인테리어",
-        "pet-walking-visit": "펫시터 사무실 인테리어",
         "laundry-service": "세탁소 인테리어 시공",
         "cleaning-service": "청소업체 사무실 인테리어",
         "repair-service": "시계방 수리점 인테리어",

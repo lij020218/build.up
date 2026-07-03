@@ -123,7 +123,6 @@ public enum StarterIndustryData {
         StarterIndustryOption(id: "pet-hotel",             titleKo: "펫호텔/데이케어",        categoryId: "pet", iconSF: "bed.double.fill",                      iconLucide: "bed",                  colorHex: "#0891b2"),
         StarterIndustryOption(id: "pet-cafe",              titleKo: "펫카페",                 categoryId: "pet", iconSF: "pawprint.fill",                        iconLucide: "paw-print",            colorHex: "#92400e"),
         StarterIndustryOption(id: "pet-training-school",   titleKo: "펫 트레이닝/유치원",     categoryId: "pet", iconSF: "rosette",                              iconLucide: "award",                colorHex: "#d97706"),
-        StarterIndustryOption(id: "pet-walking-visit",     titleKo: "산책/방문 돌봄",         categoryId: "pet", iconSF: "mappin.circle.fill",                   iconLucide: "map-pin",              colorHex: "#059669"),
 
         // ── 생활 서비스 (living-service) ──  웹: WashingMachine/Brush/Wrench/Coins/Printer/Smartphone
         StarterIndustryOption(id: "laundry-service",       titleKo: "세탁 서비스",            categoryId: "living-service", iconSF: "washer.fill",               iconLucide: "washing-machine",      colorHex: "#0d9488"),

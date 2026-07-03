@@ -245,7 +245,6 @@ export const SPECIALTY_BUDGET_BENCHMARKS: Record<string, ClusterBudgetBenchmark>
   "pet-hotel": { avgWan: 7000, medianWan: 6500, p25Wan: 5000, p75Wan: 9000, monthlyOpsEstimateWan: 450, source: "마이프차 르하임애견호텔 + 유치원·호텔 가이드 (20~30평)", yearReported: 2024, isEstimate: true, noteKo: "동물위탁관리업 시설기준 인테리어·케이지가 비용 핵심. 추정." },
   "pet-cafe": { avgWan: 15000, medianWan: 13000, p25Wan: 10000, p75Wan: 20000, monthlyOpsEstimateWan: 700, source: "굿직·오피스꿀팁 애견카페 (1.5~2.5억)", yearReported: 2024, noteKo: "식음+놀이공간으로 넓은 평수·보증금 커 펫 업종 최고가." },
   "pet-training-school": { avgWan: 6000, medianWan: 5500, p25Wan: 3000, p75Wan: 9000, monthlyOpsEstimateWan: 400, source: "다모이·이삭애견훈련소 + 숨고 시세", yearReported: 2024, isEstimate: true, noteKo: "교외 저가 부지+훈련장·켄넬. 입지·규모 편차 커 추정." },
-  "pet-walking-visit": { avgWan: 300, medianWan: 200, p25Wan: 100, p75Wan: 500, monthlyOpsEstimateWan: 50, source: "와요·서울시50플러스 펫시터 (무점포)", yearReported: 2024, isEstimate: true, noteKo: "무점포—보증금/인테리어 0. 자격교육·보험·마케팅·이동비만. 추정." },
   // ── LIVING ──
   "laundry-service": { avgWan: 4500, medianWan: 4000, p25Wan: 2500, p75Wan: 6000, monthlyOpsEstimateWan: 350, source: "easylaw 세탁소 + 크린토피아 비용분석", yearReported: 2024, isEstimate: true, noteKo: "유인 일반세탁(취급소형)은 무인보다 설비 적음. 추정." },
   "cleaning-service": { avgWan: 800, medianWan: 700, p25Wan: 500, p75Wan: 1200, monthlyOpsEstimateWan: 200, source: "비즈바이킹·청소의광장 청소업체 (장비 500~1,000, 무점포)", yearReported: 2024, noteKo: "무점포 자택사업자—장비·세제·차량·교육비 중심, 보증금 거의 0." },

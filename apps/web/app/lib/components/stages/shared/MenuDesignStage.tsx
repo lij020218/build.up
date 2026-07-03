@@ -274,7 +274,6 @@ const LINEUP_EXAMPLES_BY_ID: Record<string, LineupExample> = {
   "salad-bowl": ex("닭가슴살 시그니처 샐러드", "Signature chicken salad", "닭가슴살 100g, 채소 150g, 드레싱", "chicken 100g, greens 150g, dressing"),
   "salad-poke-grain": ex("참치 아보카도 포케", "Tuna avocado poke", "참치 90g, 아보카도, 현미", "tuna 90g, avocado, brown rice"),
   "salad-vegan": ex("비건 템페 그레인볼", "Vegan tempeh grain bowl", "템페, 병아리콩, 구운 채소", "tempeh, chickpeas, roasted vegetables"),
-  "salad-juice-cleanse": ex("1일 클렌즈 주스 3종", "One-day cleanse 3-pack", "그린, 비트, 시트러스 보틀", "green, beet, citrus bottles"),
   "ramen-noodle": ex("돈코츠 라멘", "Tonkotsu ramen", "육수 400ml, 생면, 차슈 2장", "broth 400ml, fresh noodle, 2 chashu"),
   "noodle-kalguksu": ex("바지락 칼국수", "Clam kalguksu", "생면 180g, 바지락, 육수", "noodle 180g, clams, broth"),
   "noodle-pho": ex("양지 쌀국수", "Brisket pho", "쌀국수 180g, 양지 70g, 허브", "rice noodle 180g, brisket 70g, herbs"),
@@ -291,7 +290,6 @@ const LINEUP_EXAMPLES_BY_ID: Record<string, LineupExample> = {
   "coffee-low-price": ex("대용량 아이스 아메리카노", "Large iced Americano", "원두 18g, 24oz 컵, 얼음", "beans 18g, 24oz cup, ice"),
   "coffee-roastery": ex("싱글오리진 핸드드립", "Single-origin hand drip", "원두 20g, 필터, 추출 3분", "beans 20g, filter, 3-min brew"),
   "coffee-coldbrew": ex("콜드브루 보틀 500ml", "Cold brew bottle 500ml", "콜드브루 원액, 보틀, 라벨", "cold brew concentrate, bottle, label"),
-  "coffee-omakase": ex("커피 테이스팅 코스", "Coffee tasting course", "싱글오리진 3종, 디저트 페어링", "3 single origins, dessert pairing", ["코스", "필터", "에스프레소", "원두", "디저트"], ["Course", "Filter", "Espresso", "Beans", "Dessert"]),
   "dessert-cafe": ex("딸기 생크림 조각케이크", "Strawberry cream cake slice", "시트, 생크림, 딸기, 박스", "sponge, cream, strawberries, box"),
   "dessert-macaron": ex("솔티카라멜 마카롱", "Salted caramel macaron", "꼬끄 2장, 필링, 개별 포장", "2 shells, filling, wrap"),
   "dessert-traditional": ex("흑임자 약과 세트", "Black sesame yakgwa set", "약과, 흑임자 크림, 패키지", "yakgwa, sesame cream, package"),
@@ -304,11 +302,8 @@ const LINEUP_EXAMPLES_BY_ID: Record<string, LineupExample> = {
 
   // Services
   "hair-salon": ex("여성 컷 + 드라이", "Women's cut + blow dry", "소요 45분, 샴푸·드라이 포함", "45 min, shampoo/blow dry included", ["컷", "펌", "염색", "클리닉", "패키지"], ["Cut", "Perm", "Color", "Treatment", "Package"], "시술 재료·소요 원가 (원)", "Material/time cost (₩)"),
-  "hair-color-perm": ex("뿌리염색 + 클리닉", "Root color + treatment", "소요 90분, 염모제·클리닉제", "90 min, dye and treatment"),
   "nail-studio": ex("시그니처 젤 네일", "Signature gel nail", "소요 70분, 젤 컬러 2종", "70 min, 2 gel colors", ["젤", "아트", "페디", "연장", "케어"], ["Gel", "Art", "Pedi", "Extension", "Care"]),
-  "nail-pedicure": ex("발각질 케어 + 젤 페디", "Callus care + gel pedi", "소요 80분, 풋파일·젤", "80 min, foot file and gel"),
   "skin-care-room": ex("수분 진정 관리 60분", "Hydration calming facial 60m", "앰플, 모델링팩, 관리 60분", "ampoule, mask, 60 min"),
-  "skin-acne-clinic": ex("트러블 압출 + 진정관리", "Acne extraction + calming care", "소요 70분, 소독·진정 앰플", "70 min, sanitizing and calming ampoule"),
   "waxing-studio": ex("브라질리언 왁싱", "Brazilian waxing", "소요 40분, 왁스·진정젤", "40 min, wax and soothing gel"),
   "eyelash-brow": ex("속눈썹 펌", "Lash lift", "소요 50분, 펌제·케라틴", "50 min, perm solution and keratin"),
   "makeup-bridal": ex("본식 신부 메이크업", "Wedding day bridal makeup", "소요 120분, 속눈썹·수정 포함", "120 min, lashes and touch-up included"),

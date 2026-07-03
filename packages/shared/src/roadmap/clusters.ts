@@ -87,7 +87,6 @@ export const CLUSTER_BY_SUB_INDUSTRY: Record<string, ClusterId> = {
   "pet-hotel": "offline-pet",
   "pet-cafe": "offline-pet",
   "pet-training-school": "offline-pet",
-  "pet-walking-visit": "offline-pet",
 
   // ── living-service (6) ──
   "laundry-service": "offline-living",

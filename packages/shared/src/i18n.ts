@@ -433,7 +433,6 @@ const recCopy: Record<
   "pet-hotel": { ko: { title: "펫호텔/데이케어", summary: "주말과 휴가철 수요가 강한 프리미엄 돌봄형 반려동물 서비스입니다.", reasons: ["반복 돌봄 관계 형성 가능", "프리미엄 서비스 포지셔닝 가능"], warnings: ["안전, 인력, 청결 관리가 핵심"], categoryLabel: "반려동물" } },
   "pet-cafe": { ko: { title: "펫카페", summary: "경험형 매력이 강하지만 위생과 규정이 더 중요한 복합 업종입니다.", reasons: ["경험형 콘셉트 매력", "목적형 방문 유도 가능"], warnings: ["규정과 위생 난도가 높음"], categoryLabel: "반려동물" } },
   "pet-training-school": { ko: { title: "펫 트레이닝/유치원", summary: "행동 교정과 돌봄 수요를 함께 담는 신뢰 중심 반려동물 서비스 카드입니다.", reasons: ["반복 돌봄 관계 형성 가능", "프리미엄 포지셔닝 가능"], warnings: ["인력 품질과 안전 기준이 중요"], categoryLabel: "반려동물" } },
-  "pet-walking-visit": { ko: { title: "산책/방문 돌봄", summary: "점포 부담 없이 시작할 수 있지만 일정과 신뢰가 핵심인 방문형 서비스입니다.", reasons: ["대형 점포 없이 시작 가능", "고정비를 낮게 가져갈 수 있음"], warnings: ["스케줄 관리와 신뢰가 가장 중요"], categoryLabel: "반려동물" } },
   "laundry-service": { ko: { title: "세탁 서비스", summary: "생활 편의 수요가 안정적인 동네형 업종입니다.", reasons: ["지역 수요가 분명함", "서비스 설명이 쉬움"], warnings: ["기기 고장이 신뢰에 직접 영향"], categoryLabel: "생활 서비스" } },
   "cleaning-service": { ko: { title: "청소 서비스", summary: "수요는 충분하지만 인력 품질과 일정 관리가 핵심입니다.", reasons: ["점포 부담 없이 시작 가능", "가정용/B2B 수요 모두 가능"], warnings: ["채용 품질과 스케줄 운영이 핵심 리스크"], categoryLabel: "생활 서비스" } },
   "repair-service": { ko: { title: "수리/생활 해결 서비스", summary: "틈새형이지만 편의성과 신뢰를 만들면 강점이 있습니다.", reasons: ["문제 해결 가치가 분명함", "동네 충성도 형성 가능"], warnings: ["카테고리별 수요 예측이 어려울 수 있음"], categoryLabel: "생활 서비스" } },

@@ -70,7 +70,6 @@ export const PRE_LAUNCH_SUB_INDUSTRY_DAY_IDS: Record<string, string[]> = {
   "pet-grooming": ["day-blade-clean", "day-bath-temp", "day-dryer", "day-pet-info", "day-stylist"],
   "pet-hotel": ["day-animal-checkin", "day-room-clean", "day-feeding", "day-walk-schedule", "day-emergency-vet"],
   "pet-training-school": ["day-trainer", "day-equipment", "day-floor-safe", "day-class-roster", "day-emergency-vet"],
-  "pet-walking-visit": ["day-route", "day-key-access", "day-pet-info", "day-photo-report", "day-emergency"],
   "convenience-small": ["day-stock-replenish", "day-expiry", "day-cigarette", "day-cctv-record", "day-pos-speed"],
   "lifestyle-goods": ["day-display-curate", "day-photo-spot", "day-stock-rotation", "day-package", "day-music-light"],
   "beauty-supplies": ["day-tester", "day-product-expiry", "day-staff-knowledge", "day-stock-bestseller", "day-display"],

@@ -1170,29 +1170,6 @@ export const SUB_INDUSTRY_INTERIOR_2026: Record<string, SubIndustryInterior2026>
   caveatKo: "참고용 — 위탁훈련은 동물위탁관리업 시설 기준·방음 규정이 별도이며 정보는 변동되니 직접 검증 권장.",
 },
 
-"pet-walking-visit": {
-  colorTrend2026: {
-    nameKo: "클라우드 댄서 화이트 + 웜 우드 (소규모 거점/홈오피스)",
-    descKo: "매장 없는 방문·산책 서비스라 인테리어 비중은 낮음. 소규모 거점·홈오피스 기준 — Pantone 2026 'Cloud Dancer' 화이트 + 웜 우드로 상담·교육 공간만 깔끔하게. 보호자 첫 미팅 신뢰감만 확보하면 충분.",
-    sourceKo: "Pantone Color of the Year 2026",
-  },
-  trends2026: [
-    { titleKo: "거점 최소화·플랫폼 중심 운영", descKo: "방문 서비스 특성상 매장 투자 대신 매칭 앱·GPS 트래킹 등 운영 인프라에 집중하는 흐름.", sourceKo: "한국아파트신문/비욘드아파트먼트(펫케어 서비스) ※일반 서술" },
-    { titleKo: "펫 프렌들리·돌봄 수요 확대", descKo: "펫팸족 증가로 산책·방문 돌봄 수요 확대 — 소규모 거점+커뮤니티 모델 등장.", sourceKo: "하이마트 홈스매거진(펫팸족)" },
-  ],
-  furniture: [
-    { itemKo: "상담·교육용 멀티 데스크", descKo: "소규모 거점/홈오피스 — 신규 견주 상담·펫시터 교육 겸용." },
-    { itemKo: "장비 보관 락커(리쉬·하네스)", descKo: "펫시터 개인 락커 + 공용 장비창고로 위생·분실 관리." },
-    { itemKo: "반려동물 동반 상담석", descKo: "항균 매트·간식 비치한 소형 동반 상담 공간." },
-  ],
-  furnitureBrands: [
-    { nameKo: "딩동펫(DingdongPet)", noteKo: "리쉬·하네스·캐리어 등 산책·방문 장비 소싱에 활용.", sourceKo: "dingdongpet.net" },
-  ],
-  specialistFirms: [
-    { nameKo: "큐플레이스(Qplace)", typeKo: "상업공간 인테리어 비교견적 플랫폼", noteKo: "소규모 사무실·거점 시공이 필요할 때 시공사 매칭에 활용(인테리어 비중 낮음).", sourceKo: "qplace.kr" },
-  ],
-  caveatKo: "참고용 — 매장 없는 방문 서비스라 인테리어 비중이 낮으므로 거점 투자 최소화·운영 인프라 우선. 정보는 변동되니 직접 검증 권장.",
-},
 
   // ─────────────────────────────────────────────────────────
   // 교육(EDUCATION) 6 + 생활서비스(LIVING-SERVICE) 6

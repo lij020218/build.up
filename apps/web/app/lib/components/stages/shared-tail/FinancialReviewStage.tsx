@@ -126,7 +126,6 @@ const SUB_INDUSTRY_BENCHMARKS: Record<string, CostBenchmark> = {
   "pet-hotel":         { ingredients: [8, 12],  labor: [35, 45], rent: [15, 22], utilities: [4, 7], sga: [3, 5],   marketing: [4, 7], other: [5, 8], margin: [15, 25], notes: "공휴일·휴가철 매출 집중 — 평일 가동률 관리" },
   "pet-cafe":          { ingredients: [25, 32], labor: [25, 32], rent: [15, 22], utilities: [4, 7], sga: [3, 5],   marketing: [4, 7], other: [6, 10], margin: [10, 18], notes: "거주 동물 사료·의료비 고정 — 입장료 + 음료 결합" },
   "pet-training-school": { ingredients: [3, 6], labor: [50, 60], rent: [15, 22], utilities: [3, 5], sga: [2, 4],   marketing: [5, 8], other: [4, 6], margin: [12, 20], notes: "트레이너 인건비 + 공간 임대료 — 회당 단가 모델" },
-  "pet-walking-visit": { ingredients: [2, 5],   labor: [55, 65], rent: [0, 5],   utilities: [1, 3], sga: [3, 5],   marketing: [5, 8], other: [10, 15], margin: [15, 25], notes: "방문형 — 임대료 거의 X, 인건비·이동비가 거의 전부" },
 
   // ── 교육 ──
   "kids-academy":      { ingredients: [3, 8],   labor: [45, 55], rent: [15, 22], utilities: [3, 5], sga: [2, 4],   marketing: [5, 8], other: [4, 6], margin: [12, 22], notes: "강사 인건비 + 교재비 — 학부모 모집·재등록률이 핵심" },

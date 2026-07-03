@@ -95,7 +95,6 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   "pet-hotel": Bed,                        // 펫 호텔
   "pet-cafe": PawPrint,                    // 펫 카페 (발자국 — Coffee 중복 해소)
   "pet-training-school": Award,            // 훈련소 (성취 메타포)
-  "pet-walking-visit": MapPin,             // 산책/방문
   // ── 생활 서비스 ──
   "laundry-service": WashingMachine,       // 세탁
   "cleaning-service": Brush,               // 청소 빗자루
@@ -154,7 +153,7 @@ const INDUSTRY_COLORS: Record<string, string> = {
   "language-academy": "#0891b2", "coding-class": "#4f46e5", "small-study-room": "#1d4ed8",
   // pet — warm friendly
   "pet-grooming": "#191970", "pet-supplies": "#1d3557", "pet-hotel": "#0891b2",
-  "pet-cafe": "#92400e", "pet-training-school": "#191970", "pet-walking-visit": "#1d3557",
+  "pet-cafe": "#92400e", "pet-training-school": "#191970",
   // living — functional
   "laundry-service": "#0d9488", "cleaning-service": "#2563eb", "repair-service": "#191970",
   "self-laundry": "#0891b2", "print-copy": "#64748b", "device-repair": "#4f46e5",

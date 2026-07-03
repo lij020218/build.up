@@ -57,22 +57,10 @@
       "labelEn": "Bulk catering"
     },
     {
-      "id": "delivery-premium",
-      "label": "프리미엄 가정식",
-      "desc": "마켓컬리·쿠팡 정기 배송 또는 자체몰",
-      "labelEn": "Premium home meals"
-    },
-    {
       "id": "delivery-school-meal",
       "label": "학교·기숙사 단체급식",
       "desc": "학교·기숙사 단체 — B2B 정기 납품",
       "labelEn": "School/dorm meal"
-    },
-    {
-      "id": "delivery-protein-meal",
-      "label": "단백질·운동 도시락",
-      "desc": "닭가슴살·고단백 — 헬스인 정기구독",
-      "labelEn": "Protein meal"
     }
   ],
   "salad-healthy": [
@@ -93,18 +81,6 @@
       "label": "비건·플랜트베이스",
       "desc": "100% 식물성 — 차별화 strong, 단가 ↑",
       "labelEn": "Vegan / plant-based"
-    },
-    {
-      "id": "salad-juice-cleanse",
-      "label": "주스·클렌즈 전문",
-      "desc": "콜드프레스 주스·1일 클렌즈 패키지",
-      "labelEn": "Juice / cleanse"
-    },
-    {
-      "id": "salad-meal-prep",
-      "label": "밀프렙·도시락 패키지",
-      "desc": "3·5·7일 식단 정기 — 운동인·다이어터",
-      "labelEn": "Meal prep box"
     },
     {
       "id": "salad-smoothie-bowl",
@@ -181,12 +157,6 @@
       "label": "닭강정·치킨 핑거 푸드",
       "desc": "포장·테이크아웃 + 분식 hybrid",
       "labelEn": "Korean fried chicken"
-    },
-    {
-      "id": "fb-chimaek-bar",
-      "label": "치맥·치킨바",
-      "desc": "치킨 + 생맥주 — 야간 술집 hybrid",
-      "labelEn": "Chicken bar (chimaek)"
     }
   ],
   "western-pasta-brunch": [
@@ -235,12 +205,6 @@
       "labelEn": "Low-price coffee"
     },
     {
-      "id": "coffee-franchise",
-      "label": "프랜차이즈 커피",
-      "desc": "스타벅스·이디야·투썸 — 가맹비·로열티",
-      "labelEn": "Franchise coffee"
-    },
-    {
       "id": "coffee-local-mid",
       "label": "동네 카페 (중가)",
       "desc": "독립 운영 + 시그니처 — 단골 모델",
@@ -283,24 +247,6 @@
       "label": "콜드브루·보틀커피",
       "desc": "온라인몰 병행 — 정기 구독 가능",
       "labelEn": "Cold brew bottled"
-    },
-    {
-      "id": "coffee-tea-hybrid",
-      "label": "스페셜티 + 차 hybrid",
-      "desc": "커피 + 우롱·말차·홍차 — 시그니처",
-      "labelEn": "Coffee + tea hybrid"
-    },
-    {
-      "id": "coffee-cafe-roastery",
-      "label": "카페 + 로스터리 hybrid",
-      "desc": "매장 + 원두 도매·온라인 부가매출",
-      "labelEn": "Cafe + roastery"
-    },
-    {
-      "id": "coffee-omakase",
-      "label": "커피 오마카세·코스",
-      "desc": "바리스타 코스 — 객단가 3만~5만",
-      "labelEn": "Coffee omakase"
     }
   ],
   "dessert-cafe": [
@@ -361,22 +307,10 @@
       "labelEn": "Natural yeast"
     },
     {
-      "id": "bakery-cake-bread",
-      "label": "케이크 + 베이커리 hybrid",
-      "desc": "식빵·케이크·디저트 종합",
-      "labelEn": "Cake + bread hybrid"
-    },
-    {
       "id": "bakery-vegan",
       "label": "비건·글루텐프리 베이커리",
       "desc": "식물성 + 알러지 프리 — 차별화 strong",
       "labelEn": "Vegan bakery"
-    },
-    {
-      "id": "bakery-french",
-      "label": "프랑스 정통 빵집",
-      "desc": "바게트·크로와상·뺑오쇼콜라",
-      "labelEn": "French bakery"
     }
   ],
   "icecream-bingsu": [
@@ -397,24 +331,6 @@
       "label": "무인 아이스크림 24시",
       "desc": "무인 매장 + CCTV — 인건비 0",
       "labelEn": "Unmanned ice cream"
-    },
-    {
-      "id": "ice-rolled",
-      "label": "롤 아이스크림",
-      "desc": "태국식 롤 — 인스타 비주얼",
-      "labelEn": "Rolled ice cream"
-    },
-    {
-      "id": "ice-frozen-yogurt",
-      "label": "프로즌 요거트",
-      "desc": "셀프 토핑 — 무게 단위 결제",
-      "labelEn": "Frozen yogurt"
-    },
-    {
-      "id": "ice-mochi-japanese",
-      "label": "일본 모찌·아이스",
-      "desc": "모찌·다이후쿠 + 아이스",
-      "labelEn": "Mochi ice"
     }
   ],
   "self-serve-cafe": [
@@ -441,18 +357,6 @@
       "label": "펫 동반 카페",
       "desc": "강아지·고양이 동반 OK — 주말 강세",
       "labelEn": "Pet-friendly cafe"
-    },
-    {
-      "id": "cafe-coworking",
-      "label": "코워킹 카페",
-      "desc": "콘센트·와이파이 + 음료 — 노마드",
-      "labelEn": "Coworking cafe"
-    },
-    {
-      "id": "cafe-rooftop-view",
-      "label": "루프탑·전망 카페",
-      "desc": "야경·뷰 — 데이트 시장 + 인스타",
-      "labelEn": "Rooftop / view cafe"
     }
   ],
   "hair-salon": [
@@ -467,18 +371,6 @@
       "label": "컷 전문점",
       "desc": "1만원 컷 — 회전율·블루클럽 모델",
       "labelEn": "Cut-only shop"
-    },
-    {
-      "id": "hair-color-perm",
-      "label": "펌·염색 전문",
-      "desc": "고가 펌·하이라이트 — 디자이너 1:1",
-      "labelEn": "Perm / color specialist"
-    },
-    {
-      "id": "hair-bridal",
-      "label": "웨딩 헤어 전문",
-      "desc": "본식·리허설 — 패키지 30~80만원",
-      "labelEn": "Bridal hair"
     },
     {
       "id": "hair-mens-only",
@@ -501,30 +393,6 @@
       "labelEn": "Nail art"
     },
     {
-      "id": "nail-quick",
-      "label": "퀵 젤·홈케어",
-      "desc": "30분 젤 — 회전율 모델",
-      "labelEn": "Quick gel"
-    },
-    {
-      "id": "nail-pedicure",
-      "label": "페디큐어·발관리",
-      "desc": "발관리 hybrid — 여름 강세",
-      "labelEn": "Pedicure"
-    },
-    {
-      "id": "nail-russian",
-      "label": "러시안 매니큐어 전문",
-      "desc": "E-file 큐티클 케어 — 고가 단가",
-      "labelEn": "Russian manicure"
-    },
-    {
-      "id": "nail-extension-special",
-      "label": "인조 손톱·연장 전문",
-      "desc": "폼·팁 연장 — 길이 변화",
-      "labelEn": "Nail extension"
-    },
-    {
       "id": "nail-mobile",
       "label": "방문·출장 네일",
       "desc": "홈케어·예약 방문 — 직장인 시장",
@@ -543,44 +411,14 @@
       "label": "전신 마사지·바디",
       "desc": "스웨디시·아로마 — 1회 60~90분",
       "labelEn": "Body massage"
-    },
-    {
-      "id": "skin-acne-clinic",
-      "label": "여드름·트러블 전문",
-      "desc": "성인 여드름·등 트러블 — 회원제",
-      "labelEn": "Acne clinic"
-    },
-    {
-      "id": "skin-anti-aging",
-      "label": "안티에이징 전문",
-      "desc": "리프팅·주름 — 중장년 시장",
-      "labelEn": "Anti-aging clinic"
-    },
-    {
-      "id": "skin-back-body",
-      "label": "등·바디 트러블 전문",
-      "desc": "등 여드름·각질 — 여름 강세",
-      "labelEn": "Back / body trouble"
-    },
-    {
-      "id": "skin-pre-wedding",
-      "label": "웨딩 피부관리 패키지",
-      "desc": "3·6개월 패키지 — 객단가 100만~",
-      "labelEn": "Pre-wedding skin"
     }
   ],
   "waxing-studio": [
     {
       "id": "waxing-brazilian",
-      "label": "브라질리언 왁싱",
-      "desc": "비키니 라인 — 프라이빗 룸 필수",
-      "labelEn": "Brazilian wax"
-    },
-    {
-      "id": "waxing-partial",
-      "label": "부분 왁싱 (다리·팔)",
-      "desc": "여름 시즌 강세 — 30분 단위",
-      "labelEn": "Partial wax"
+      "label": "왁싱 전문샵 (브라질리언·전신)",
+      "desc": "브라질리언·전신 등 부위별 제모 — 왁싱 전문",
+      "labelEn": "Waxing studio"
     },
     {
       "id": "waxing-mens",
@@ -589,22 +427,10 @@
       "labelEn": "Men's waxing"
     },
     {
-      "id": "waxing-fullbody",
-      "label": "전신 왁싱 패키지",
-      "desc": "풀바디 — 시간 90분~",
-      "labelEn": "Full body wax"
-    },
-    {
       "id": "waxing-sugaring",
       "label": "슈가링·천연 왁싱",
       "desc": "100% 천연 페이스트 — 민감성",
       "labelEn": "Sugaring (natural)"
-    },
-    {
-      "id": "waxing-eyebrow",
-      "label": "눈썹·얼굴 왁싱",
-      "desc": "눈썹·인중 — 짧은 시간 모델",
-      "labelEn": "Brow / face wax"
     }
   ],
   "eyelash-brow": [
@@ -619,30 +445,6 @@
       "label": "눈썹 반영구·문신",
       "desc": "반영구 메이크업 — 단가 25~50만원",
       "labelEn": "Brow tattoo"
-    },
-    {
-      "id": "lash-perm",
-      "label": "속눈썹 펌·리프트",
-      "desc": "본 속눈썹 컬링 — 4~6주 유지",
-      "labelEn": "Lash perm"
-    },
-    {
-      "id": "lash-tinting",
-      "label": "속눈썹·눈썹 틴트",
-      "desc": "염색 — 자연스러운 강조",
-      "labelEn": "Lash/brow tint"
-    },
-    {
-      "id": "brow-shape",
-      "label": "눈썹 디자인·정리",
-      "desc": "왁싱·페이스 디자인 1회 30분",
-      "labelEn": "Brow design"
-    },
-    {
-      "id": "brow-microblading",
-      "label": "마이크로블레이딩",
-      "desc": "한올심기 반영구 — 단가 30~50만",
-      "labelEn": "Microblading"
     }
   ],
   "makeup-bridal": [
@@ -665,18 +467,6 @@
       "labelEn": "Makeup class"
     },
     {
-      "id": "makeup-pageant",
-      "label": "방송·미인대회 메이크업",
-      "desc": "카메라 메이크업 — 단가 ↑",
-      "labelEn": "TV/pageant makeup"
-    },
-    {
-      "id": "makeup-sfx",
-      "label": "SFX·캐릭터 메이크업",
-      "desc": "코스프레·연극·이벤트",
-      "labelEn": "SFX / character"
-    },
-    {
       "id": "makeup-mobile",
       "label": "출장 메이크업",
       "desc": "행사·결혼식 출장 — 시간 단위",
@@ -685,115 +475,61 @@
   ],
   "pilates-studio": [
     {
-      "id": "pilates-group",
-      "label": "그룹 필라테스",
-      "desc": "8~12명 그룹 수업 — 회원제",
-      "labelEn": "Group pilates"
-    },
-    {
-      "id": "pilates-private",
-      "label": "1:1 필라테스 PT",
-      "desc": "1:1 리포머 — 단가 8~15만원/회",
-      "labelEn": "1:1 reformer pilates"
-    },
-    {
       "id": "pilates-reformer",
-      "label": "리포머 전문 스튜디오",
-      "desc": "리포머·체어·바렐 — 풀 장비",
-      "labelEn": "Reformer studio"
-    },
-    {
-      "id": "pilates-rehab",
-      "label": "재활·기능성 필라테스",
-      "desc": "통증·자세 교정 — 1:1",
-      "labelEn": "Rehab pilates"
+      "label": "리포머(기구) 필라테스",
+      "desc": "리포머·체어·바렐 등 기구 중심 — 시설 투자 큼 (그룹·1:1 모두 제공)",
+      "labelEn": "Reformer pilates"
     },
     {
       "id": "pilates-mat-only",
-      "label": "매트 필라테스 전용",
-      "desc": "기구 X — 그룹 매트 수업",
-      "labelEn": "Mat pilates only"
-    },
-    {
-      "id": "pilates-pre-natal",
-      "label": "임산부·산후 필라테스",
-      "desc": "임신·출산 후 회복 — 1:1·소그룹",
-      "labelEn": "Pre/post-natal pilates"
+      "label": "매트 필라테스",
+      "desc": "기구 없이 매트 수업 — 소자본·좁은 공간",
+      "labelEn": "Mat pilates"
     }
   ],
   "pt-gym": [
     {
-      "id": "pt-personal",
-      "label": "1:1 퍼스널 트레이닝",
-      "desc": "회당 5~10만원 — 트레이너 1~3명",
-      "labelEn": "1:1 PT"
+      "id": "pt-gym-pt-hybrid",
+      "label": "종합 헬스장 (+PT)",
+      "desc": "머신·월회비 + PT 병행 — 넓은 공간, 가장 일반적",
+      "labelEn": "Full gym (+PT)"
     },
     {
-      "id": "pt-gym-pt-hybrid",
-      "label": "헬스장 + PT hybrid",
-      "desc": "월 회비 + PT 추가 — 가장 일반적",
-      "labelEn": "Gym + PT"
+      "id": "pt-personal",
+      "label": "1:1 PT 스튜디오",
+      "desc": "트레이너 중심·회당 결제 — 소형·시설비↓",
+      "labelEn": "1:1 PT studio"
     },
     {
       "id": "pt-unmanned-24",
       "label": "무인 24시 헬스장",
-      "desc": "키카드 출입 + CCTV — 인건비 ↓",
+      "desc": "키카드 출입 + CCTV — 인건비↓",
       "labelEn": "Unmanned 24h gym"
     },
     {
-      "id": "pt-women-only",
-      "label": "여성 전용 PT",
-      "desc": "여성 트레이너 + 여성만 — 안전감",
-      "labelEn": "Women-only PT"
-    },
-    {
       "id": "pt-rehab",
-      "label": "재활·기능성 PT",
-      "desc": "수술·통증 회복 — 의료 연계",
-      "labelEn": "Rehab PT"
-    },
-    {
-      "id": "pt-functional",
-      "label": "기능성·코어 트레이닝",
-      "desc": "케틀벨·서스펜션 — 작은 박스 모델",
-      "labelEn": "Functional training"
+      "label": "재활 운동센터 (메디컬 피트니스)",
+      "desc": "재활 수요·목적형 입지·의료 연계",
+      "labelEn": "Rehab / medical fitness"
     }
   ],
   "yoga-studio": [
     {
       "id": "yoga-general",
       "label": "일반 요가",
-      "desc": "하타·빈야사·아쉬탕가 — 그룹 수업",
+      "desc": "하타·빈야사·아쉬탕가 등 — 그룹 수업 (명상·복원 등 프로그램 포함)",
       "labelEn": "General yoga"
     },
     {
       "id": "yoga-hot",
-      "label": "핫요가·바이크람",
-      "desc": "고온 스튜디오 — 시설비 ↑, 차별화",
+      "label": "핫요가",
+      "desc": "고온 스튜디오 — 냉난방 시설 투자 큼",
       "labelEn": "Hot yoga"
     },
     {
-      "id": "yoga-meditation",
-      "label": "명상·요가 hybrid",
-      "desc": "MZ 세대 트렌드 — 명상 클래스 부가",
-      "labelEn": "Meditation+yoga"
-    },
-    {
-      "id": "yoga-pre-natal",
-      "label": "임산부·산후 요가",
-      "desc": "임신·출산 후 회복 — 소그룹",
-      "labelEn": "Pre/post-natal yoga"
-    },
-    {
-      "id": "yoga-restorative",
-      "label": "인·복원 요가",
-      "desc": "심신 회복 — 명상 강세",
-      "labelEn": "Restorative / yin yoga"
-    },
-    {
       "id": "yoga-aerial",
-      "label": "에어리얼·플라잉 요가",
-      "desc": "해먹·플라잉 — 객단가↑",
+      "label": "에어리얼(플라잉) 요가",
+      "desc": "해먹·구조물 설비 — 별도 시설",
       "labelEn": "Aerial yoga"
     }
   ],
@@ -801,32 +537,26 @@
     {
       "id": "crossfit-box",
       "label": "크로스핏 박스",
-      "desc": "공식 affiliate — 박스 단위",
+      "desc": "공식 affiliate — 박스 단위 그룹 WOD",
       "labelEn": "CrossFit box"
     },
     {
       "id": "fitness-hiit",
-      "label": "HIIT·고강도 인터벌",
-      "desc": "20~40분 그룹 — 회원제",
-      "labelEn": "HIIT"
-    },
-    {
-      "id": "fitness-functional",
-      "label": "기능성 트레이닝 (코어)",
-      "desc": "케틀벨·플라이오 — HIIT 변형",
-      "labelEn": "Functional fitness"
+      "label": "그룹 기능성·HIIT 짐",
+      "desc": "케틀벨·서스펜션·고강도 인터벌 — 소형 박스형",
+      "labelEn": "Functional / HIIT gym"
     },
     {
       "id": "fitness-boxing",
-      "label": "복싱·킥복싱 피트니스",
+      "label": "복싱·킥복싱장",
       "desc": "체력증진 + 스트레스 해소",
-      "labelEn": "Boxing fitness"
+      "labelEn": "Boxing gym"
     },
     {
       "id": "fitness-spinning",
       "label": "스피닝·인도어 사이클",
       "desc": "음악 + 그룹 — 칼로리 소모",
-      "labelEn": "Spinning"
+      "labelEn": "Spinning studio"
     },
     {
       "id": "fitness-zumba",
@@ -855,22 +585,10 @@
       "labelEn": "Kids English"
     },
     {
-      "id": "edu-spanish-french",
-      "label": "스페인·프랑스·독일어",
-      "desc": "제2 외국어 — 입시·취미",
-      "labelEn": "Spanish/French/German"
-    },
-    {
       "id": "edu-test-prep",
       "label": "공인시험 대비 (TOEIC·IELTS)",
       "desc": "단기 점수 보장 — 직장인 시장",
       "labelEn": "Test prep academy"
-    },
-    {
-      "id": "edu-business-language",
-      "label": "비즈니스 영어·실무",
-      "desc": "이메일·미팅·프레젠테이션",
-      "labelEn": "Business English"
     }
   ],
   "coding-class": [
@@ -885,30 +603,6 @@
       "label": "성인 코딩·부트캠프",
       "desc": "프론트·백엔드·AI — 취업 연계",
       "labelEn": "Adult coding bootcamp"
-    },
-    {
-      "id": "edu-coding-data",
-      "label": "데이터 분석·SQL",
-      "desc": "파이썬·SQL — 직장인 재교육",
-      "labelEn": "Data / SQL bootcamp"
-    },
-    {
-      "id": "edu-coding-game",
-      "label": "게임 개발·유니티",
-      "desc": "유니티·언리얼 — 학생·취미",
-      "labelEn": "Game dev (Unity)"
-    },
-    {
-      "id": "edu-coding-mobile",
-      "label": "모바일 앱 개발",
-      "desc": "안드로이드·iOS — 취업 연계",
-      "labelEn": "Mobile app dev"
-    },
-    {
-      "id": "edu-coding-ai-llm",
-      "label": "AI·LLM 활용 클래스",
-      "desc": "GPT·프롬프트 엔지니어링",
-      "labelEn": "AI / LLM class"
     }
   ],
   "small-study-room": [
@@ -935,18 +629,6 @@
       "label": "특수교육·발달 지원",
       "desc": "언어·인지·놀이치료",
       "labelEn": "Special needs tutoring"
-    },
-    {
-      "id": "edu-essay-writing",
-      "label": "논술·자소서 1:1",
-      "desc": "입시 논술·취업 자소서",
-      "labelEn": "Essay tutoring"
-    },
-    {
-      "id": "edu-test-prep-private",
-      "label": "입시 1:1 (수학·과학)",
-      "desc": "수능·내신 1:1 — 단가 ↑",
-      "labelEn": "1:1 test prep"
     }
   ],
   "study-room": [
@@ -957,34 +639,10 @@
       "labelEn": "Study/meeting room"
     },
     {
-      "id": "edu-study-private",
-      "label": "1인 독립실",
-      "desc": "개인 부스 — 시험기간 강세",
-      "labelEn": "Private booth"
-    },
-    {
-      "id": "edu-group-meeting",
-      "label": "그룹 회의실 (4~10명)",
-      "desc": "세미나·과외·미팅 — 시간 단위",
-      "labelEn": "Group meeting room"
-    },
-    {
-      "id": "edu-corp-meeting",
-      "label": "기업 회의실·교육실",
-      "desc": "법인·기업 워크샵 — B2B",
-      "labelEn": "Corporate meeting room"
-    },
-    {
       "id": "edu-large-conference",
       "label": "컨퍼런스홀 (30명+)",
       "desc": "세미나·강연·이벤트",
       "labelEn": "Conference hall"
-    },
-    {
-      "id": "edu-bookcafe-style",
-      "label": "북카페형 스터디룸",
-      "desc": "책 + 공부 hybrid",
-      "labelEn": "Book-cafe study"
     }
   ],
   "study-cafe-space": [
@@ -999,30 +657,6 @@
       "label": "무인 24시 스터디 카페",
       "desc": "QR 출입 + CCTV — 인건비 0",
       "labelEn": "Unmanned 24h study"
-    },
-    {
-      "id": "edu-cafe-mid",
-      "label": "중가 스터디카페",
-      "desc": "음료 + 자리 — 가장 보편",
-      "labelEn": "Mid-tier study cafe"
-    },
-    {
-      "id": "edu-cafe-premium",
-      "label": "프리미엄 스터디카페",
-      "desc": "독서실급 시설 + 카페 hybrid",
-      "labelEn": "Premium study cafe"
-    },
-    {
-      "id": "edu-cafe-nap",
-      "label": "낮잠·캡슐 hybrid 스터디",
-      "desc": "공부 + 캡슐 휴식 — 직장인",
-      "labelEn": "Study + nap pod"
-    },
-    {
-      "id": "edu-cafe-quiet-zone",
-      "label": "침묵존 전용 스터디",
-      "desc": "100% 무음 — 시험·고시생",
-      "labelEn": "Silent-zone study"
     }
   ],
   "pet-grooming": [
@@ -1031,18 +665,6 @@
       "label": "강아지·고양이 미용",
       "desc": "전체 미용·부분 — 자격증 필수",
       "labelEn": "Pet grooming"
-    },
-    {
-      "id": "pet-grooming-spa",
-      "label": "프리미엄 스파·아로마",
-      "desc": "마사지·에센스 — 객단가 ↑",
-      "labelEn": "Pet spa"
-    },
-    {
-      "id": "pet-grooming-special-breed",
-      "label": "특수 견종 미용 (푸들·시츄)",
-      "desc": "품종 전문 미용 — 객단가↑",
-      "labelEn": "Breed-specialist grooming"
     },
     {
       "id": "pet-grooming-cat-only",
@@ -1055,12 +677,6 @@
       "label": "방문·출장 미용",
       "desc": "가정 방문 — 노령견·이동 곤란",
       "labelEn": "Mobile pet grooming"
-    },
-    {
-      "id": "pet-grooming-cuts-only",
-      "label": "위생컷 전문 (저가)",
-      "desc": "발바닥·항문 위생컷 — 회전율",
-      "labelEn": "Sanitary trim only"
     }
   ],
   "pet-hotel": [
@@ -1075,30 +691,6 @@
       "label": "펫호텔 (1박+)",
       "desc": "여행·출장 — 1박 5~15만원",
       "labelEn": "Pet hotel"
-    },
-    {
-      "id": "pet-villa",
-      "label": "단독 빌라형 펫호텔",
-      "desc": "독립 룸 — 다견 분리",
-      "labelEn": "Villa-style pet hotel"
-    },
-    {
-      "id": "pet-pickup-drop",
-      "label": "픽업·드롭 서비스",
-      "desc": "차량 픽업 + 호텔 — 직장인",
-      "labelEn": "Pickup pet hotel"
-    },
-    {
-      "id": "pet-camera-monitor",
-      "label": "24h 라이브 카메라형",
-      "desc": "보호자 실시간 확인 — 안심형",
-      "labelEn": "24h cam pet hotel"
-    },
-    {
-      "id": "pet-vet-stay",
-      "label": "수의사 상주 펫호텔",
-      "desc": "병원 hybrid — 노령·기저질환",
-      "labelEn": "Vet-on-site pet hotel"
     }
   ],
   "pet-training-school": [
@@ -1107,24 +699,6 @@
       "label": "강아지 행동 교정",
       "desc": "기본 훈련·문제행동 교정",
       "labelEn": "Pet training"
-    },
-    {
-      "id": "pet-training-puppy",
-      "label": "퍼피 클래스 (사회화)",
-      "desc": "어린 강아지 사회화·기본 훈련",
-      "labelEn": "Puppy class"
-    },
-    {
-      "id": "pet-training-aggressive",
-      "label": "공격성·문제행동 전문",
-      "desc": "입질·짖음 교정 — 1:1",
-      "labelEn": "Aggression training"
-    },
-    {
-      "id": "pet-training-cat",
-      "label": "고양이 행동 교육",
-      "desc": "화장실·스크래칭 — 보호자 교육",
-      "labelEn": "Cat behavior training"
     },
     {
       "id": "pet-training-agility",
@@ -1137,44 +711,6 @@
       "label": "수영·재활 트레이닝",
       "desc": "관절·수술 후 재활",
       "labelEn": "Pet swim / rehab"
-    }
-  ],
-  "pet-walking-visit": [
-    {
-      "id": "pet-walking",
-      "label": "산책·방문 케어",
-      "desc": "방문형 — 직장인 보호자 시장",
-      "labelEn": "Pet walk/visit"
-    },
-    {
-      "id": "pet-feed-visit",
-      "label": "사료 급여·방문",
-      "desc": "단기 출장 시 1일 1회 방문",
-      "labelEn": "Feed visit"
-    },
-    {
-      "id": "pet-medication-visit",
-      "label": "약 투여·치료 방문",
-      "desc": "노령·당뇨견 인슐린 등",
-      "labelEn": "Medication visit"
-    },
-    {
-      "id": "pet-photo-walking",
-      "label": "산책 + 사진 패키지",
-      "desc": "산책 + 인스타용 사진",
-      "labelEn": "Walk + photo"
-    },
-    {
-      "id": "pet-night-care",
-      "label": "야간 돌봄 (1박)",
-      "desc": "보호자 외박 시 1박 케어",
-      "labelEn": "Overnight pet care"
-    },
-    {
-      "id": "pet-ride-share",
-      "label": "펫 동승 차량 서비스",
-      "desc": "동물병원·여행 동승 — 시간 단위",
-      "labelEn": "Pet ride-share"
     }
   ],
   "convenience-small": [
@@ -1191,22 +727,10 @@
       "labelEn": "Local mini-market"
     },
     {
-      "id": "retail-late-mart",
-      "label": "24시 미니마트",
-      "desc": "24h 운영 — 야간 매출 모델",
-      "labelEn": "24h mini-mart"
-    },
-    {
       "id": "retail-organic-mart",
       "label": "친환경·유기농 마트",
       "desc": "우리농산물·친환경 — 단골",
       "labelEn": "Organic mart"
-    },
-    {
-      "id": "retail-frozen-food-mart",
-      "label": "냉동식품 전문점",
-      "desc": "밀키트·즉석조리 — 1인가구",
-      "labelEn": "Frozen food mart"
     },
     {
       "id": "retail-import-mart",
@@ -1239,18 +763,6 @@
       "label": "제로웨이스트·리필샵",
       "desc": "포장 X 리필 — 환경 트렌드",
       "labelEn": "Zero-waste / refill"
-    },
-    {
-      "id": "retail-pottery",
-      "label": "도자기·핸드메이드 그릇",
-      "desc": "수공예 도자 — 객단가↑",
-      "labelEn": "Pottery / handmade"
-    },
-    {
-      "id": "retail-stationery-import",
-      "label": "수입 문구·일본 문구",
-      "desc": "일본·유럽 문구 — 마니아 시장",
-      "labelEn": "Import stationery"
     }
   ],
   "beauty-supplies": [
@@ -1261,34 +773,10 @@
       "labelEn": "Cosmetics shop"
     },
     {
-      "id": "retail-haircare",
-      "label": "헤어케어·살롱 제품",
-      "desc": "프로 제품 + 미용실 도매",
-      "labelEn": "Haircare retail"
-    },
-    {
-      "id": "retail-perfume-oil",
-      "label": "향수·바디오일 전문",
-      "desc": "니치 향수·디퓨저",
-      "labelEn": "Niche perfume"
-    },
-    {
       "id": "retail-cosmetics-pro",
       "label": "프로용·사업장 화장품",
       "desc": "미용실·에스테틱 도매",
       "labelEn": "Pro-grade cosmetics"
-    },
-    {
-      "id": "retail-natural-cosmetics",
-      "label": "천연·유기농 화장품",
-      "desc": "비건·동물실험 X",
-      "labelEn": "Natural cosmetics"
-    },
-    {
-      "id": "retail-male-grooming",
-      "label": "남성 그루밍 전문",
-      "desc": "면도·헤어왁스·스킨케어",
-      "labelEn": "Male grooming"
     }
   ],
   "fashion-accessories": [
@@ -1311,18 +799,6 @@
       "labelEn": "Accessories"
     },
     {
-      "id": "retail-fashion-kids",
-      "label": "아동복·키즈",
-      "desc": "0~12세 — 출산·돌·입학",
-      "labelEn": "Kids fashion"
-    },
-    {
-      "id": "retail-fashion-plus",
-      "label": "빅사이즈·플러스 사이즈",
-      "desc": "66~110 사이즈 전문",
-      "labelEn": "Plus-size fashion"
-    },
-    {
       "id": "retail-modern-hanbok",
       "label": "신한복·생활한복",
       "desc": "일상 한복 — 관광지·결혼식",
@@ -1341,30 +817,6 @@
       "label": "비건·유기농 마켓",
       "desc": "유기농 식품 + 비건 카테고리",
       "labelEn": "Organic / vegan market"
-    },
-    {
-      "id": "retail-protein-shop",
-      "label": "프로틴·운동 영양제",
-      "desc": "WPI·BCAA — 헬스인 시장",
-      "labelEn": "Protein / sports nutrition"
-    },
-    {
-      "id": "retail-tea-special",
-      "label": "차·허브티 전문",
-      "desc": "홍차·우롱·약초차 — 큐레이션",
-      "labelEn": "Tea / herbal tea"
-    },
-    {
-      "id": "retail-vegetarian-protein",
-      "label": "식물성 단백질·비건",
-      "desc": "콩고기·식물성 — 트렌드",
-      "labelEn": "Plant protein"
-    },
-    {
-      "id": "retail-fermented-food",
-      "label": "발효식품 전문",
-      "desc": "김치·된장·요거트 — 장 건강",
-      "labelEn": "Fermented food"
     }
   ],
   "unmanned-retail": [
@@ -1387,22 +839,10 @@
       "labelEn": "Unmanned stationery"
     },
     {
-      "id": "retail-unmanned-toys",
-      "label": "무인 장난감 자판기",
-      "desc": "인형뽑기·토이 자판기",
-      "labelEn": "Unmanned toys"
-    },
-    {
       "id": "retail-unmanned-flower",
       "label": "무인 꽃 자판기",
       "desc": "24h 꽃·기념일 — 도심",
       "labelEn": "Unmanned flower"
-    },
-    {
-      "id": "retail-unmanned-cosmetics",
-      "label": "무인 화장품·뷰티",
-      "desc": "마스크팩·립밤 — 무인 결제",
-      "labelEn": "Unmanned cosmetics"
     }
   ],
   "self-laundry": [
@@ -1417,30 +857,6 @@
       "label": "프리미엄 셀프 + 카페 hybrid",
       "desc": "기다림 시간 + 카페 — 객단가↑",
       "labelEn": "Premium self + cafe"
-    },
-    {
-      "id": "ls-self-laundry-pet",
-      "label": "반려동물 셀프 빨래방",
-      "desc": "펫 전용 세탁기 — 차별화",
-      "labelEn": "Pet self-laundry"
-    },
-    {
-      "id": "ls-self-laundry-shoe",
-      "label": "신발 셀프 세탁",
-      "desc": "전용 슈즈워시 — 운동화 시장",
-      "labelEn": "Shoe self-wash"
-    },
-    {
-      "id": "ls-self-laundry-bedding",
-      "label": "이불·대형 세탁 전문",
-      "desc": "대형 세탁기 — 계절 강세",
-      "labelEn": "Bedding self-wash"
-    },
-    {
-      "id": "ls-self-laundry-staffed",
-      "label": "점주 상주 셀프 빨래방",
-      "desc": "손님 케어 — 신규 고객 친화",
-      "labelEn": "Staffed self-laundry"
     }
   ],
   "laundry-service": [
@@ -1457,24 +873,6 @@
       "labelEn": "Dry cleaning"
     },
     {
-      "id": "ls-shoe-cleaning",
-      "label": "신발·운동화 세탁",
-      "desc": "흰 운동화 복원 — 단가 1.5만~",
-      "labelEn": "Shoe cleaning"
-    },
-    {
-      "id": "ls-bag-cleaning",
-      "label": "가방·핸드백 세탁",
-      "desc": "명품 가방 케어 — 단가↑",
-      "labelEn": "Bag cleaning"
-    },
-    {
-      "id": "ls-curtain-bedding",
-      "label": "커튼·이불 전문 세탁",
-      "desc": "대형 세탁 — 시즌 강세",
-      "labelEn": "Curtain / bedding"
-    },
-    {
       "id": "ls-luxury-cleaning",
       "label": "명품·고가 의류 세탁",
       "desc": "명품 케어 — 단가 5만~",
@@ -1489,12 +887,6 @@
       "labelEn": "Home cleaning"
     },
     {
-      "id": "ls-office-cleaning",
-      "label": "사무실·매장 청소",
-      "desc": "B2B 정기 계약 — 야간 작업",
-      "labelEn": "Office cleaning"
-    },
-    {
       "id": "ls-move-cleaning",
       "label": "이사·입주 청소",
       "desc": "1회성 고가 — 이사 시즌 강세",
@@ -1505,18 +897,6 @@
       "label": "방역·해충 방제",
       "desc": "바퀴벌레·개미 — 정기 계약",
       "labelEn": "Pest control"
-    },
-    {
-      "id": "ls-carpet-sofa",
-      "label": "카펫·소파 청소",
-      "desc": "스팀·생활먼지 — 단가↑",
-      "labelEn": "Carpet / sofa cleaning"
-    },
-    {
-      "id": "ls-window-glass",
-      "label": "유리·창호 청소 전문",
-      "desc": "고층 유리 + 새시",
-      "labelEn": "Window cleaning"
     }
   ],
   "repair-service": [
@@ -1539,12 +919,6 @@
       "labelEn": "Shoe repair"
     },
     {
-      "id": "ls-bag-repair",
-      "label": "가방·지갑 수선",
-      "desc": "지퍼·내피·핸들 교체",
-      "labelEn": "Bag repair"
-    },
-    {
       "id": "ls-furniture-repair",
       "label": "가구 수리·리폼",
       "desc": "의자·테이블 리폼 — 비스포크",
@@ -1565,22 +939,10 @@
       "labelEn": "Print / copy shop"
     },
     {
-      "id": "ls-print-package",
-      "label": "인쇄 + 택배 hybrid",
-      "desc": "프린트 + 편의점 택배 결합",
-      "labelEn": "Print + delivery"
-    },
-    {
       "id": "ls-photo-print",
       "label": "사진 인화·앨범 전문",
       "desc": "인생사진 + 앨범 제작",
       "labelEn": "Photo print / album"
-    },
-    {
-      "id": "ls-name-card",
-      "label": "명함·봉투·스티커",
-      "desc": "법인·소상공인 명함 — 단가 ↓",
-      "labelEn": "Business cards"
     },
     {
       "id": "ls-banner-large",
@@ -1607,12 +969,6 @@
       "label": "PC·노트북 수리",
       "desc": "학생·직장인 — 데이터 복구 부가",
       "labelEn": "PC repair"
-    },
-    {
-      "id": "ls-tablet-repair",
-      "label": "태블릿·아이패드 수리",
-      "desc": "액정·배터리 — 학생 시장",
-      "labelEn": "Tablet repair"
     },
     {
       "id": "ls-game-console-repair",
@@ -1645,30 +1001,6 @@
       "label": "셀프 사진관 (인생네컷+)",
       "desc": "무인 + 즉석 인쇄 — Z세대",
       "labelEn": "Self photo booth"
-    },
-    {
-      "id": "space-rental-cafe-style",
-      "label": "카페 컨셉 스튜디오",
-      "desc": "북유럽·빈티지 카페 세트",
-      "labelEn": "Cafe-style studio"
-    },
-    {
-      "id": "space-rental-vintage",
-      "label": "빈티지·골동 세트",
-      "desc": "1970~90년대 — 화보·뮤비",
-      "labelEn": "Vintage set studio"
-    },
-    {
-      "id": "space-rental-white-cube",
-      "label": "화이트 큐브 스튜디오",
-      "desc": "미니멀 화이트 — 제품·인물",
-      "labelEn": "White cube studio"
-    },
-    {
-      "id": "space-rental-vlog",
-      "label": "브이로그·1인 미디어",
-      "desc": "조명·카메라 풀세팅 + 시간 단위",
-      "labelEn": "Vlog studio"
     }
   ],
   "party-room": [
@@ -1683,30 +1015,6 @@
       "label": "루프탑·테라스 공간",
       "desc": "야경·바베큐 — 여름 강세",
       "labelEn": "Rooftop space"
-    },
-    {
-      "id": "space-pajama-party",
-      "label": "파자마 파티룸",
-      "desc": "대학생·친구 모임 — 1박",
-      "labelEn": "Pajama party room"
-    },
-    {
-      "id": "space-game-board",
-      "label": "게임·보드게임 파티룸",
-      "desc": "콘솔·보드게임 풀구비",
-      "labelEn": "Game / board party"
-    },
-    {
-      "id": "space-baby-celebration",
-      "label": "돌잔치·베이비 파티",
-      "desc": "아이 행사 — 부모 시장",
-      "labelEn": "Baby celebration"
-    },
-    {
-      "id": "space-corporate-party",
-      "label": "기업 회식·송년회",
-      "desc": "30~80인 — B2B 객단가↑",
-      "labelEn": "Corporate party"
     }
   ],
   "shared-office": [
@@ -1721,24 +1029,6 @@
       "label": "사업자등록 가능 가상 오피스",
       "desc": "주소만 — 법적 등록 가능",
       "labelEn": "Virtual office"
-    },
-    {
-      "id": "space-private-office",
-      "label": "1인 독립 오피스",
-      "desc": "잠금형 1인실 — 프리랜서",
-      "labelEn": "Private 1-person office"
-    },
-    {
-      "id": "space-startup-office",
-      "label": "스타트업 전용 오피스",
-      "desc": "멘토링 + 보육 — VC 연계",
-      "labelEn": "Startup-only office"
-    },
-    {
-      "id": "space-creator-studio",
-      "label": "크리에이터 스튜디오",
-      "desc": "오피스 + 촬영 hybrid",
-      "labelEn": "Creator office+studio"
     },
     {
       "id": "space-event-hall",
@@ -1767,22 +1057,10 @@
       "labelEn": "Dance practice"
     },
     {
-      "id": "space-acting-studio",
-      "label": "연기·발성 연습실",
-      "desc": "방음 + 무대 — 배우 지망생",
-      "labelEn": "Acting studio"
-    },
-    {
       "id": "space-podcast-studio",
       "label": "팟캐스트·녹음 부스",
       "desc": "마이크·믹서 풀구비",
       "labelEn": "Podcast studio"
-    },
-    {
-      "id": "space-event-rehearsal",
-      "label": "이벤트·리허설 룸",
-      "desc": "행사 사전 리허설",
-      "labelEn": "Event rehearsal"
     }
   ],
   "ai-application": [
@@ -1800,7 +1078,7 @@
     },
     {
       "id": "su-ai-vertical",
-      "label": "버티컬 AI (특정 산업)",
+      "label": "버티컬 AI (특정 산업 특화)",
       "desc": "법률·의료·교육 등 산업 특화",
       "labelEn": "Vertical AI"
     },
@@ -1915,7 +1193,7 @@
     {
       "id": "su-creator-shorts",
       "label": "쇼츠·릴스 자동화",
-      "desc": "AI 영상 편집·자막",
+      "desc": "쇼츠·릴스 배포·자동화 (제작 툴과 구분)",
       "labelEn": "Shorts / Reels automation"
     },
     {
@@ -2079,7 +1357,7 @@
     {
       "id": "su-dev-security-test",
       "label": "보안·취약점 스캐닝",
-      "desc": "SCA·SAST·DAST",
+      "desc": "개발자 워크플로우 내장 시프트레프트 보안 스캔",
       "labelEn": "Security scanning"
     },
     {
@@ -2110,7 +1388,7 @@
     },
     {
       "id": "su-saas-vertical",
-      "label": "버티컬 SaaS (산업 특화)",
+      "label": "버티컬 SaaS (산업특화 워크플로우)",
       "desc": "병원·식당·미용·법률 등 도메인",
       "labelEn": "Vertical SaaS"
     },
@@ -2299,12 +1577,6 @@
       "labelEn": "Online course"
     },
     {
-      "id": "dp-saas-light",
-      "label": "라이트 SaaS·툴",
-      "desc": "1인 SaaS·생산성 도구",
-      "labelEn": "Lite SaaS / tool"
-    },
-    {
       "id": "dp-music-asset",
       "label": "음악·사운드 에셋",
       "desc": "BGM·효과음 라이선스",
@@ -2319,40 +1591,16 @@
   ],
   "consignment-commerce": [
     {
-      "id": "cc-dropship-fashion",
-      "label": "패션·잡화 위탁",
-      "desc": "도매처 사진 + 자체 마진",
-      "labelEn": "Fashion dropshipping"
-    },
-    {
-      "id": "cc-dropship-home",
-      "label": "홈·생활용품 위탁",
-      "desc": "오피스·홈 카테고리",
-      "labelEn": "Home dropshipping"
+      "id": "cc-dropship-general",
+      "label": "무재고 위탁판매 (국내 도매 소싱)",
+      "desc": "도매매·온채널 등 공급사 상품을 무재고로 판매 — 마진 수수료 모델",
+      "labelEn": "Domestic dropshipping"
     },
     {
       "id": "cc-dropship-food",
-      "label": "식품·간식 위탁",
-      "desc": "산지 직송·가공식품",
+      "label": "식품 위탁판매",
+      "desc": "무재고여도 식품판매업·유통전문판매업 신고 필요",
       "labelEn": "Food dropshipping"
-    },
-    {
-      "id": "cc-dropship-pet",
-      "label": "펫용품 위탁",
-      "desc": "사료·간식·용품 도매처",
-      "labelEn": "Pet dropshipping"
-    },
-    {
-      "id": "cc-dropship-beauty",
-      "label": "뷰티·화장품 위탁",
-      "desc": "K-뷰티 위탁 — 해외 직배",
-      "labelEn": "Beauty dropshipping"
-    },
-    {
-      "id": "cc-dropship-stationery",
-      "label": "문구·잡화 위탁",
-      "desc": "디자인 문구 도매",
-      "labelEn": "Stationery dropshipping"
     }
   ],
   "newsletter-membership": [
@@ -2363,28 +1611,10 @@
       "labelEn": "Knowledge newsletter"
     },
     {
-      "id": "nm-hobby",
-      "label": "취미·라이프스타일",
-      "desc": "와인·커피·여행 등 큐레이션",
-      "labelEn": "Hobby / lifestyle"
-    },
-    {
       "id": "nm-b2b-industry",
       "label": "산업·업계 뉴스 (B2B)",
       "desc": "특정 산업 인사이더 — 기업 구독",
       "labelEn": "B2B industry news"
-    },
-    {
-      "id": "nm-fitness-health",
-      "label": "운동·헬스 큐레이션",
-      "desc": "운동법·식단 — 매월 구독",
-      "labelEn": "Fitness newsletter"
-    },
-    {
-      "id": "nm-parenting",
-      "label": "육아·교육 큐레이션",
-      "desc": "부모 교육·놀이 큐레이션",
-      "labelEn": "Parenting newsletter"
     },
     {
       "id": "nm-finance-money",
@@ -2461,12 +1691,6 @@
       "label": "어린이 댄스·발레",
       "desc": "방송댄스·발레 — 여아 시장",
       "labelEn": "Kids dance / ballet"
-    },
-    {
-      "id": "ka-foreign-culture",
-      "label": "한자·중국어 어린이",
-      "desc": "한자 급수·HSK",
-      "labelEn": "Kids Chinese / hanja"
     }
   ],
   "adult-class": [
@@ -2489,18 +1713,6 @@
       "labelEn": "Drawing / paint"
     },
     {
-      "id": "ac-finance",
-      "label": "재테크·투자 클래스",
-      "desc": "주식·부동산·세무 — 직장인 시장",
-      "labelEn": "Finance class"
-    },
-    {
-      "id": "ac-language-adult",
-      "label": "성인 어학 동호회·취미",
-      "desc": "영어·일본어 회화 모임",
-      "labelEn": "Adult language club"
-    },
-    {
       "id": "ac-photography",
       "label": "사진·영상 클래스",
       "desc": "DSLR·미러리스·편집",
@@ -2521,27 +1733,15 @@
       "labelEn": "Cat cafe"
     },
     {
-      "id": "pc-mixed",
-      "label": "복합 펫카페 (강아지·고양이)",
-      "desc": "강아지·고양이 + 분리 공간",
-      "labelEn": "Mixed pet cafe"
-    },
-    {
-      "id": "pc-rabbit",
-      "label": "토끼·소동물 카페",
-      "desc": "토끼·햄스터 — 소형 동물",
-      "labelEn": "Rabbit / small pet cafe"
-    },
-    {
       "id": "pc-bird",
-      "label": "새·앵무새 카페",
-      "desc": "앵무새·잉꼬 — 마니아 시장",
+      "label": "새·앵무새 카페 (사육종)",
+      "desc": "사육 허용 조류 한정 — 야생종 영업 금지(2022 야생생물법)",
       "labelEn": "Bird cafe"
     },
     {
       "id": "pc-reptile",
-      "label": "파충류·이색 동물 카페",
-      "desc": "파충류·곤충 — 차별화 strong",
+      "label": "파충류 카페 (사육종)",
+      "desc": "합법 사육 파충류 한정 — 야생동물 지정종 제외",
       "labelEn": "Reptile / exotic cafe"
     }
   ],
@@ -2553,22 +1753,10 @@
       "labelEn": "Pet food / treats"
     },
     {
-      "id": "ps-fashion",
-      "label": "펫 의류·액세서리",
-      "desc": "옷·하네스·캐리어 — 인스타 강세",
-      "labelEn": "Pet fashion"
-    },
-    {
       "id": "ps-toys",
-      "label": "펫 장난감·용품 종합",
-      "desc": "장난감·간식·생활용품 종합",
+      "label": "펫용품 종합샵",
+      "desc": "장난감·의류·용품 종합 취급",
       "labelEn": "Pet toys / supplies"
-    },
-    {
-      "id": "ps-handmade-fashion",
-      "label": "핸드메이드 펫 의류",
-      "desc": "수공예 옷·하네스",
-      "labelEn": "Handmade pet clothes"
     },
     {
       "id": "ps-medical",
@@ -2603,86 +1791,38 @@
       "labelEn": "Rural pension"
     },
     {
-      "id": "gh-design-boutique",
-      "label": "디자인·부띠끄 호텔",
-      "desc": "감성 디자인 — 인스타 시장",
-      "labelEn": "Design boutique hotel"
-    },
-    {
       "id": "gh-resort-pension",
       "label": "리조트형 펜션 (수영장)",
       "desc": "수영장·BBQ — 가족·커플",
       "labelEn": "Resort-style pension"
-    },
-    {
-      "id": "gh-themed",
-      "label": "테마 (한복·만화) 게스트하우스",
-      "desc": "한복·만화·캐릭터 컨셉",
-      "labelEn": "Themed guesthouse"
     }
   ],
   "golf-studio": [
     {
       "id": "gs-screen",
       "label": "스크린 골프",
-      "desc": "골프존·카카오 — 가장 보편",
+      "desc": "골프존·카카오 등 스크린 — 가장 보편",
       "labelEn": "Screen golf"
     },
     {
       "id": "gs-lesson-indoor",
-      "label": "실내 골프 레슨",
-      "desc": "1:1 레슨 + 스윙 분석",
-      "labelEn": "Indoor golf lesson"
-    },
-    {
-      "id": "gs-academy",
-      "label": "주니어·입시 골프 아카데미",
-      "desc": "체대·골프 입시 전문",
-      "labelEn": "Junior golf academy"
-    },
-    {
-      "id": "gs-mat-only",
-      "label": "실내 매트 연습장",
-      "desc": "타석 + 매트 — 시간 단위",
-      "labelEn": "Indoor mat range"
+      "label": "실내 골프연습·레슨",
+      "desc": "타석 + 1:1 레슨·스윙 분석 — 시간 단위",
+      "labelEn": "Indoor golf lesson/range"
     },
     {
       "id": "gs-outdoor-range",
       "label": "야외 골프연습장",
-      "desc": "드라이빙 레인지 — 도심",
+      "desc": "드라이빙 레인지 — 넓은 부지",
       "labelEn": "Outdoor driving range"
-    },
-    {
-      "id": "gs-women-only",
-      "label": "여성 전용 골프",
-      "desc": "여성 강사·여성만 — 안전감",
-      "labelEn": "Women-only golf"
     }
   ],
   "unmanned-fitness": [
     {
       "id": "uf-24h-gym",
       "label": "무인 24시 헬스장",
-      "desc": "키카드 출입 + CCTV — 인건비 ↓",
+      "desc": "키카드 출입 + CCTV — 인건비↓ (반무인·셀프 키오스크 포함)",
       "labelEn": "Unmanned 24h gym"
-    },
-    {
-      "id": "uf-kiosk-pt",
-      "label": "키오스크 셀프 PT",
-      "desc": "AI 코칭 + 셀프 운동",
-      "labelEn": "Kiosk self-PT"
-    },
-    {
-      "id": "uf-stretch-zone",
-      "label": "무인 스트레칭존",
-      "desc": "폼롤러·스트레칭 머신",
-      "labelEn": "Unmanned stretch zone"
-    },
-    {
-      "id": "uf-massage-chair",
-      "label": "무인 마사지 의자",
-      "desc": "바디프랜드·세라젬형",
-      "labelEn": "Unmanned massage chair"
     },
     {
       "id": "uf-yoga-room",
@@ -2692,7 +1832,7 @@
     },
     {
       "id": "uf-pilates-machine",
-      "label": "무인 필라테스 머신",
+      "label": "무인 필라테스",
       "desc": "리포머 셀프 — 예약제",
       "labelEn": "Unmanned pilates"
     }

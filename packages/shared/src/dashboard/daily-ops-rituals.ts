@@ -278,10 +278,6 @@ export const SUB_INDUSTRY_RITUALS: Record<string, DailyRitualItem[]> = {
     { id: "trainer-prep",   iconKey: "clipboard-check", labelKo: "트레이너 출근·교육 자료 준비",      labelEn: "Trainer arrival + materials",     detailKo: "행동 교정 = 일관성 핵심",                   detailEn: "Consistency is key" },
     { id: "session-log",    iconKey: "clipboard-check", labelKo: "어제 세션 로그·진도 기록 확인",     labelEn: "Yesterday's session log check",   detailKo: "보호자 보고서 = 재등록 결정 요인",          detailEn: "Owner report drives renewal" },
   ],
-  "pet-walking-visit": [
-    { id: "route-confirm",  iconKey: "clipboard-check", labelKo: "당일 방문 루트·시간 확정",          labelEn: "Today's route/time confirm",      detailKo: "방문형 = 시간 약속 = 신뢰",                 detailEn: "Visit-type = punctual = trust" },
-    { id: "key-emergency",  iconKey: "clipboard-check", labelKo: "고객 키·비상연락처 보유 확인",      labelEn: "Customer keys + emergency contacts", detailKo: "키 분실 = 무한 책임",                    detailEn: "Lost key = unlimited liability" },
-  ],
 
   // ════════════════════════════════════════════════════════════
   //   LIVING-SERVICE (6)

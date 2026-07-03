@@ -1729,15 +1729,6 @@ export const SUBINDUSTRY_MODIFIERS: Record<string, SubIndustryModifier> = {
     ],
     footprintMode: "tenancy",
   },
-  "pet-walking-visit": {
-    hint: "펫 산책·방문 (출장)",
-    recommendedPermits: [],
-    recommendedInsurance: [
-      { name: "동물 사고/분실 배상책임", type: "general-liability" },
-      { name: "자동차보험 (이동)", type: "auto" },
-    ],
-    footprintMode: "mobile",
-  },
 
   // ── living-service ──
   "laundry-service": {

@@ -100,7 +100,6 @@ export const SUB_INDUSTRY_TO_GROUP: Record<string, TrendGroupKey> = {
   "pet-grooming": "pet-care",
   "pet-hotel": "pet-care",
   "pet-training-school": "pet-care",
-  "pet-walking-visit": "pet-care",
   "pet-supplies": "pet-supplies",
   "pet-cafe": "pet-cafe",
 

@@ -52,7 +52,6 @@ export const SUB_INDUSTRY_ARCHETYPE: Record<string, SoftOpenArchetype> = {
   "pet-cafe": "pet-svc",
   "pet-hotel": "pet-svc",
   "pet-training-school": "pet-svc",
-  "pet-walking-visit": "pet-svc",
   "convenience-small": "retail-store",
   "lifestyle-goods": "retail-store",
   "beauty-supplies": "retail-store",
@@ -639,13 +638,6 @@ export const SOFT_OPEN_DAY_CHECKS: Record<string, SoftOpenDayCheck[]> = {
     { id: "day-floor-safe", label: { ko: "바닥·울타리 안전 점검", en: "Check floor and fence safety" }, detail: { ko: "미끄럼·탈출·부상 위험을 점검해 훈련 중 사고를 예방한다.", en: "Check slip, escape, and injury risks to prevent incidents during training." } },
     { id: "day-class-roster", label: { ko: "수강 명단·견 상태 확인", en: "Confirm roster and pet condition" }, detail: { ko: "수강 견의 접종·성향·문제행동을 사전 확인하고 그룹 구성을 안전하게 짠다.", en: "Pre-confirm enrolled dogs' vaccination, temperament, and issues and arrange safe groupings." } },
     { id: "day-emergency-vet", label: { ko: "응급 대응·동물병원 연계", en: "Emergency response and vet link" }, detail: { ko: "훈련 중 부상·발작 등 응급 상황 대응 절차와 동물병원 연락처를 비치한다.", en: "Post the emergency procedure and vet contact for injuries or seizures during training." } },
-  ],
-  "pet-walking-visit": [
-    { id: "day-route", label: { ko: "방문·산책 동선 점검", en: "Check visit and walk route" }, detail: { ko: "방문지 간 이동 동선과 산책 코스를 미리 점검해 시간 지연과 안전 위험을 줄인다.", en: "Pre-check the route between visits and the walk course to reduce delays and safety risks." } },
-    { id: "day-key-access", label: { ko: "출입 방법·열쇠 인수", en: "Receive key and access method" }, detail: { ko: "보호자로부터 출입 방법·도어락·열쇠를 안전하게 인수하고 분실 책임을 명확히 한다.", en: "Securely receive access method, door lock, or key from the owner and clarify loss accountability." } },
-    { id: "day-pet-info", label: { ko: "반려동물 정보·급식 지침", en: "Pet info and feeding instructions" }, detail: { ko: "사료량·급약·산책 습관·금기 사항을 미리 받아 지침대로 정확히 돌본다.", en: "Get food amount, medication, walk habits, and don'ts upfront to care exactly per instructions." } },
-    { id: "day-photo-report", label: { ko: "사진·돌봄 일지 전송", en: "Send photos and care log" }, detail: { ko: "방문·산책 중 사진과 일지를 보호자에게 실시간 전송해 신뢰를 쌓는다.", en: "Send photos and a care log during visits and walks in real time to build trust." } },
-    { id: "day-emergency", label: { ko: "응급 연락·동물병원 확인", en: "Emergency contact and vet check" }, detail: { ko: "이상 징후 시 보호자·동물병원 연락 절차를 정해 빠르게 대응한다.", en: "Define the contact procedure for owner and vet when signs appear, for fast response." } },
   ],
   "convenience-small": [
     { id: "day-stock-replenish", label: { ko: "결품·보충 발주 점검", en: "Stock-out & replenishment order check" }, detail: { ko: "빠르게 빠지는 품목의 결품 여부를 확인하고, 본사 자동발주에만 의존하지 말고 매장 수요에 맞춰 추가 발주합니다.", en: "Check for stock-outs on fast-moving items and place extra orders to match store demand rather than relying only on HQ auto-ordering." } },

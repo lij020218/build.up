@@ -917,18 +917,6 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
       { name: "다이얼독·똑독 (유치원 관리)", desc: "AI 알림장·예약·출결·회원관리", priceRange: "월 구독", priority: "primary", url: "https://www.dialodog.com/" },
     ],
   },
-  "pet-walking-visit": {
-    suppliers: [
-      { name: "펫도매·수진펫 (케어용품)", desc: "산책줄·하네스·배변봉투 소량 사입", priceRange: "사업자가", priority: "recommended", url: "https://petdome.co.kr/" },
-    ],
-    equipment: [
-      { name: "바램펫 라일리 (이동형 펫캠)", desc: "방문 케어 시 보호자 공유용 펫캠 10-20만", priceRange: "10~20만", priority: "optional", url: "https://www.varram.co.kr/" },
-    ],
-    pos: [
-      { name: "도그메이트 (펫시터 매칭 1위)", desc: "방문돌봄·산책 매칭·예약·정산", priceRange: "건당 수수료", priority: "primary", url: "https://www.dogmate.co.kr" },
-      { name: "펫트너·와요 (예약 슈퍼앱)", desc: "펫시터·방문미용 통합 예약", priceRange: "건당", priority: "recommended", url: "https://www.petner.kr/" },
-    ],
-  },
 
   // ─── LIVING-SERVICE (6) — 2026-06 웹 검증 ──────────────────
   "laundry-service": {
@@ -1174,7 +1162,7 @@ export const SUB_TO_CATEGORY: Record<string, string> = {
   "language-academy": "education", "coding-class": "education", "small-study-room": "education",
   // pet (6)
   "pet-grooming": "pet", "pet-supplies": "pet", "pet-hotel": "pet",
-  "pet-cafe": "pet", "pet-training-school": "pet", "pet-walking-visit": "pet",
+  "pet-cafe": "pet", "pet-training-school": "pet",
   // living-service (6)
   "laundry-service": "living-service", "cleaning-service": "living-service",
   "repair-service": "living-service", "self-laundry": "living-service",
@@ -1299,15 +1287,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "대형 스팀솥 (100L+)", desc: "200인분 국·찌개. 380-750만", priceRange: "380~750만", priority: "primary" },
     ],
   },
-  "delivery-premium": {
-    suppliers: [
-      { name: "마켓컬리·쿠팡 새벽배송 입점", desc: "프리미엄 가정식 정기 배송 채널", priceRange: "수수료 협의", priority: "primary" },
-      { name: "프리미엄 식자재 (한우·자연산 수산)", desc: "고급 가정식용 차별화 식자재", priceRange: "프리미엄가", priority: "primary" },
-    ],
-    equipment: [
-      { name: "급속 냉동·진공 포장 라인", desc: "신선도 유지 핵심. 진공 + 급냉 850-1500만", priceRange: "850~1500만", priority: "primary" },
-    ],
-  },
 
   // ═══════════════════════════════════════════════════════════════
   // 외식 — 샐러드·헬시 (salad-healthy)
@@ -1339,16 +1318,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     ],
     equipment: [
       { name: "비건 전용 작업대·세척 라인", desc: "동물성 교차 오염 방지 (HACCP)", priceRange: "200~400만", priority: "primary" },
-    ],
-  },
-  "salad-juice-cleanse": {
-    suppliers: [
-      { name: "친환경 과일·채소 (한살림)", desc: "콜드프레스용 유기농 과일 — 케일·셀러리 박스 단위", priceRange: "박스 단위", priority: "primary" },
-      { name: "콜드프레스 병 도매 (350ml 유리)", desc: "프리미엄 유리병 + 라벨", priceRange: "병당 0.5-1.2천", priority: "primary" },
-    ],
-    equipment: [
-      { name: "콜드프레스 주서기 (Goodnature·Angel)", desc: "상업용 콜드프레스 — 시간당 30-50병. 850-1800만", priceRange: "850~1800만", priority: "primary" },
-      { name: "HPP (초고압 살균) 외주 또는 자체", desc: "유통기한 연장 — 초기 외주 권장", priceRange: "외주 병당 0.3-0.5천", priority: "recommended" },
     ],
   },
 
@@ -1535,14 +1504,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "전자동 머신 (eversys·Schaerer)", desc: "버튼 한 번 추출. 인건비 절감 핵심. 1100-2700만", priceRange: "1,100~2,700만", priority: "primary" },
     ],
   },
-  "coffee-franchise": {
-    suppliers: [
-      { name: "본사 지정 원두 (스타벅스·이디야)", desc: "프랜차이즈 본사 직배 — 가맹 의무", priceRange: "본사가", priority: "primary" },
-    ],
-    equipment: [
-      { name: "본사 지정 머신 (가맹 표준)", desc: "프랜차이즈 표준 장비 — 가맹비에 포함", priceRange: "가맹비 포함", priority: "primary" },
-    ],
-  },
   "coffee-local-mid": {
     suppliers: [
       { name: "테라로사·커피리브레 (스페셜티 원두)", desc: "동네 카페 시그니처 — 차별화 핵심", priceRange: "kg당 2.5-4.5만", priority: "primary", url: "https://www.terarosa.com/" },
@@ -1712,15 +1673,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "고속 회전율 의자 (3-5대)", desc: "1만원 컷 회전율 모델", priceRange: "1대 50-100만", priority: "primary" },
     ],
   },
-  "hair-color-perm": {
-    suppliers: [
-      { name: "이탈리아·일본 프리미엄 펌·염모제", desc: "디자이너 1:1 — 고가 펌·하이라이트", priceRange: "전문가가", priority: "primary" },
-    ],
-    equipment: [
-      { name: "디지털 펌 머신·스팀러", desc: "디지털 펌·세팅 핵심. 280-580만", priceRange: "280~580만", priority: "primary" },
-      { name: "하이라이트 호일·블리치 장비", desc: "하이라이트 전문 도구 풀세트", priceRange: "80~180만", priority: "primary" },
-    ],
-  },
   "nail-art": {
     suppliers: [
       { name: "OPI 코리아 (사업자 전용 도매)", desc: "국내 네일 점유율 1위 (1996~). 젤·매니큐어·전문가용 풀라인", priceRange: "전문가가", priority: "primary", url: "https://opidome.com/" },
@@ -1730,19 +1682,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     equipment: [
       { name: "네일 데스크 + LED 램프 (3-5세트)", desc: "네일아트 핵심 — 데스크 1대 80-150만 / LED 램프 5-15만", priceRange: "1세트 100~180만", priority: "primary" },
       { name: "에어브러시·드릴 머신", desc: "디자인 단가 ↑ — 에어브러시 + 핸드드릴", priceRange: "50~120만", priority: "primary" },
-    ],
-  },
-  "nail-quick": {
-    equipment: [
-      { name: "고속 LED 램프·간이 데스크", desc: "30분 젤 회전율용 — 빠른 큐어링 LED. 5-12만", priceRange: "5~12만/대", priority: "primary" },
-    ],
-  },
-  "nail-pedicure": {
-    suppliers: [
-      { name: "OPI·CND (페디용 라인)", desc: "페디큐어 전용 큐티클·각질 케어", priceRange: "전문가가", priority: "primary" },
-    ],
-    equipment: [
-      { name: "페디 의자·풋스파", desc: "페디큐어 핵심 — 1대 280-580만", priceRange: "280~580만/대", priority: "primary" },
     ],
   },
   "skin-esthetic": {
@@ -1763,14 +1702,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "온열 매트·핫스톤 워머", desc: "온열 케어 — 차별화 요소", priceRange: "30~80만", priority: "recommended" },
     ],
   },
-  "skin-acne-clinic": {
-    suppliers: [
-      { name: "여드름 전문 화장품 (메디큐브·이지듀)", desc: "여드름·트러블 케어 라인", priceRange: "전문가가", priority: "primary" },
-    ],
-    equipment: [
-      { name: "여드름 압출·LED 라이트 테라피", desc: "트러블 전문 장비 — LED 적·청 라이트", priceRange: "180~380만", priority: "primary" },
-    ],
-  },
   "waxing-brazilian": {
     suppliers: [
       { name: "왁싱 왁스 도매 (Lycon·Cirepil)", desc: "프리미엄 브라질리언 왁스 — 호주·프랑스 수입", priceRange: "kg당 8-15만", priority: "primary" },
@@ -1778,11 +1709,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     equipment: [
       { name: "왁스 워머·스파출라 도구", desc: "왁싱 핵심 — 왁스 워머 50-120만", priceRange: "50~120만", priority: "primary" },
       { name: "프라이빗 룸 베드 + 일회용품", desc: "비키니 라인 프라이버시 핵심", priceRange: "150~280만", priority: "primary" },
-    ],
-  },
-  "waxing-partial": {
-    equipment: [
-      { name: "왁스 워머 + 베드 (간이)", desc: "다리·팔 30분 단위. 100-220만", priceRange: "100~220만", priority: "primary" },
     ],
   },
   "lash-extension": {
@@ -2004,14 +1930,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "클리퍼·가위 풀세트 (Andis·Wahl)", desc: "전문가 클리퍼 + 가위 다구. 50-180만", priceRange: "50~180만", priority: "primary" },
     ],
   },
-  "pet-grooming-spa": {
-    suppliers: [
-      { name: "프리미엄 스파 제품 (TropiClean·Earthbath)", desc: "아로마·마사지 — 미국·유럽 수입", priceRange: "전문가가", priority: "primary" },
-    ],
-    equipment: [
-      { name: "스파 욕조·마사지 테이블", desc: "프리미엄 스파 — 자쿠지 욕조. 580-1200만", priceRange: "580~1,200만", priority: "primary" },
-    ],
-  },
   "pet-daycare": {
     equipment: [
       { name: "분리 케이지 + 놀이공간 인테리어", desc: "데이케어 — 사이즈별 분리 + 놀이존. 380-850만", priceRange: "380~850만", priority: "primary" },
@@ -2028,17 +1946,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     equipment: [
       { name: "훈련 도구 풀세트 (리드·클리커·간식)", desc: "기본 훈련 + 행동 교정 도구", priceRange: "30~80만", priority: "primary" },
       { name: "훈련장 (방음·매트·울타리)", desc: "교정 핵심 공간. 280-650만", priceRange: "280~650만", priority: "primary" },
-    ],
-  },
-  "pet-training-puppy": {
-    equipment: [
-      { name: "퍼피 사회화 놀이존", desc: "어린 강아지 — 안전 사회화 공간 + 매트", priceRange: "180~380만", priority: "primary" },
-    ],
-  },
-  "pet-walking": {
-    equipment: [
-      { name: "방문용 차량·이동 케이지", desc: "방문 케어 — 차량 + 휴대용 케이지", priceRange: "차량 별도 + 50-120만", priority: "primary" },
-      { name: "GPS·산책 기록 앱 (펫프렌즈·도그메이트)", desc: "보호자 실시간 공유", priceRange: "월 5-10만", priority: "primary" },
     ],
   },
 
@@ -2088,11 +1995,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     ],
     equipment: [
       { name: "테스터 진열대 + 거울 라이트", desc: "화장품 핵심 — 테스터 진열 + 라이트 거울", priceRange: "280~650만", priority: "primary" },
-    ],
-  },
-  "retail-haircare": {
-    suppliers: [
-      { name: "프로 헤어케어 도매 (헤어앤미·미용실 도매)", desc: "살롱 제품 + 미용실 도매 입점", priceRange: "전문가가", priority: "primary", url: "https://hairnmi.co.kr/" },
     ],
   },
   "retail-fashion": {
@@ -2174,11 +2076,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "예약·매니저 매칭 앱 (청소연구소·미소)", desc: "B2B 플랫폼 입점 또는 자체 앱", priceRange: "수수료 협의", priority: "recommended" },
     ],
   },
-  "ls-office-cleaning": {
-    equipment: [
-      { name: "산업용 청소 장비 (Karcher·Numatic)", desc: "사무실·매장 — 산업용 진공·스팀 청소기", priceRange: "380~850만", priority: "primary" },
-    ],
-  },
   "ls-move-cleaning": {
     equipment: [
       { name: "고압 세척기·스팀기 풀세트", desc: "이사 청소 핵심 — 고압 세척", priceRange: "280~580만", priority: "primary" },
@@ -2200,11 +2097,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     equipment: [
       { name: "디지털 프린터 (Xerox·Konica Minolta)", desc: "프린트 핵심 — 컬러 디지털 프린터. 850-2500만", priceRange: "850~2,500만", priority: "primary" },
       { name: "제본·재단·코팅 장비", desc: "제본·코팅 마감 풀세트", priceRange: "380~850만", priority: "primary" },
-    ],
-  },
-  "ls-print-package": {
-    equipment: [
-      { name: "프린터 + 택배 시스템 (편의점급)", desc: "프린트 + CU·GS 택배 결합", priceRange: "850~1,500만", priority: "primary" },
     ],
   },
   "ls-phone-repair": {
@@ -2574,15 +2466,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
   // ════════════════════════════════════════════════════════════════════
 
   // ── 외식: 신규 specialty ──
-  "fb-chimaek-bar": {
-    suppliers: [
-      { name: "OB맥주·하이트진로 (생맥주 케그)", desc: "20L 케그 정기납품. 매장당 월 8-20케그", priceRange: "케그당 5-8만", priority: "primary" },
-      { name: "안주 도매 (어묵·튀김 식자재)", desc: "치킨 외 술안주 — 어묵·감자튀김", priceRange: "도매가", priority: "recommended" },
-    ],
-    equipment: [
-      { name: "생맥주 디스펜서 + 냉각기", desc: "2-4탭 디스펜서 + CO2 냉각기 일체", priceRange: "150~350만", priority: "primary" },
-    ],
-  },
   "fb-wine-bistro": {
     suppliers: [
       { name: "나라셀라·신세계L&B (와인 수입)", desc: "이탈리아·프랑스 와인 도매. 사업자 직거래", priceRange: "병당 1.5-8만", priority: "primary", url: "https://www.naracellar.com/" },
@@ -2593,12 +2476,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "리델·자페로니 와인잔", desc: "전용 와인잔 50-100개 + 보관함", priceRange: "잔당 1-3만", priority: "recommended" },
     ],
   },
-  "delivery-protein-meal": {
-    suppliers: [
-      { name: "하림·체리부로 (닭가슴살 가공)", desc: "삶은 닭가슴살 진공팩 — 100g 단위", priceRange: "g당 13-18원", priority: "primary" },
-      { name: "맥스프로틴·비비고 (건강식 PB)", desc: "고단백 도시락 PB 위탁생산 가능", priceRange: "협의", priority: "recommended" },
-    ],
-  },
   "noodle-naengmyeon": {
     suppliers: [
       { name: "한국제분 (메밀가루·전분)", desc: "냉면 면 자가제조용 메밀·녹말가루", priceRange: "kg당 4-8천", priority: "primary" },
@@ -2606,14 +2483,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
     ],
     equipment: [
       { name: "냉면 압출기 (자동 면 뽑기)", desc: "분당 면발 50인분 — 평양식 가능", priceRange: "350~700만", priority: "primary" },
-    ],
-  },
-  "salad-meal-prep": {
-    suppliers: [
-      { name: "다회용 밀프렙 용기 도매", desc: "BPA-free PP 1L·1.5L 정기 발주 — 1,000개 단위 단가↓", priceRange: "개당 600-1,200원", priority: "primary" },
-    ],
-    channels: [
-      { name: "마켓컬리·쿠팡 새벽배송 입점", desc: "정기 구독 모델 안착 핵심 채널", priceRange: "입점 협의", priority: "primary" },
     ],
   },
 
@@ -2638,20 +2507,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "정기 청소·필터 교체 계약", desc: "월 1회 필수 — B2B 신뢰 핵심", priceRange: "월 5-15만", priority: "recommended" },
     ],
   },
-  "coffee-tea-hybrid": {
-    suppliers: [
-      { name: "오설록·티젠 (한국 차 도매)", desc: "녹차·홍차·우롱 한국 1순위. 사업자 직거래", priceRange: "kg당 2-8만", priority: "primary", url: "https://www.osulloc.com/" },
-      { name: "Marriage Frères·TWG (수입 티)", desc: "프리미엄 수입 티 — 객단가↑", priceRange: "캔당 3-8만", priority: "recommended" },
-    ],
-  },
-  "coffee-cafe-roastery": {
-    suppliers: [
-      { name: "생두 직수입 (직트레이드)", desc: "에티오피아·콜롬비아 생두 50kg 단위", priceRange: "kg당 8-25천", priority: "primary" },
-    ],
-    equipment: [
-      { name: "소형 로스터 (Probat·Diedrich 1-5kg)", desc: "Probat 1kg 800만 / 5kg 1,500만 — 매장+도매 hybrid", priceRange: "800~2,500만", priority: "primary" },
-    ],
-  },
   "dessert-donut": {
     equipment: [
       { name: "도넛 튀김기 (자동 회전)", desc: "노티드·올드페리형 자동 회전 튀김기", priceRange: "350~800만", priority: "primary" },
@@ -2664,23 +2519,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "유기농 밀가루 (한국제분 유기농)", desc: "유기농 인증 + 비건 인증 밀가루", priceRange: "kg당 3-5천", priority: "primary" },
     ],
   },
-  "bakery-french": {
-    equipment: [
-      { name: "프렌치 데크 오븐 (Bongard·Polin)", desc: "수증기 분사 + 데크 오븐 — 바게트·브리오슈", priceRange: "1,500~4,000만", priority: "primary" },
-      { name: "분할기·롤러기 (바게트 성형)", desc: "프랑스 정통 빵 성형 자동화", priceRange: "300~700만", priority: "recommended" },
-    ],
-  },
-  "ice-rolled": {
-    equipment: [
-      { name: "롤 아이스크림 머신 (-25℃ 콜드플레이트)", desc: "태국식 롤 아이스 — 1대당 30-50인분/시", priceRange: "150~350만", priority: "primary" },
-    ],
-  },
-  "ice-frozen-yogurt": {
-    equipment: [
-      { name: "프로즌 요거트 머신 (Taylor·Stoelting)", desc: "셀프 토핑 — 무게 단위 결제 모델", priceRange: "800~1,800만", priority: "primary" },
-      { name: "토핑 바·디스플레이", desc: "30+ 토핑 셀프 진열대", priceRange: "200~500만", priority: "primary" },
-    ],
-  },
   "cafe-book-cafe": {
     suppliers: [
       { name: "교보문고 도서 도매", desc: "신간·중고 도서 정기 입고. 회전율 30%", priceRange: "도매가", priority: "primary", url: "https://www.kyobobook.co.kr/" },
@@ -2689,19 +2527,8 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "도서 책장·열람대", desc: "1,000+ 권 수용 + 좌석 배치", priceRange: "300~700만", priority: "primary" },
     ],
   },
-  "cafe-coworking": {
-    equipment: [
-      { name: "콘센트·와이파이 인프라", desc: "좌석당 콘센트 2개 + 1Gbps 와이파이", priceRange: "1실 200-400만", priority: "primary" },
-      { name: "방음·집중 부스 (Phone booth)", desc: "1인 부스 — 화상회의·통화 시간 단위", priceRange: "부스당 250-500만", priority: "recommended" },
-    ],
-  },
 
   // ── 뷰티: 신규 specialty ──
-  "hair-bridal": {
-    suppliers: [
-      { name: "웨딩 헤어 액세서리 도매", desc: "티아라·머리꽃·핀 일괄 — 행사용 출장 키트", priceRange: "키트 50-150만", priority: "primary" },
-    ],
-  },
   "hair-mens-only": {
     suppliers: [
       { name: "바버 가위·면도기 도매 (J오타키·Wahl)", desc: "전통 바버 도구 풀세트", priceRange: "세트 80-200만", priority: "primary" },
@@ -2710,30 +2537,9 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "바버 체어 (이탈리아·Belmont)", desc: "전통 가죽 의자 — 정통 바버샵 핵심", priceRange: "대당 250-600만", priority: "primary" },
     ],
   },
-  "nail-russian": {
-    equipment: [
-      { name: "E-file·고급 비트 세트", desc: "러시안 매니큐어 핵심 도구 — 전동 큐티클 케어", priceRange: "150~350만", priority: "primary" },
-    ],
-  },
-  "skin-anti-aging": {
-    equipment: [
-      { name: "리프팅 기기 (인모드·울쎄라급)", desc: "고주파·HIFU 리프팅 — 객단가↑", priceRange: "1,500~5,000만", priority: "primary" },
-      { name: "프리미엄 앰풀·세럼 도매", desc: "닥터드레서·이오메디·필러러 — 의료용 화장품", priceRange: "병당 5-30만", priority: "primary" },
-    ],
-  },
   "waxing-mens": {
     suppliers: [
       { name: "남성용 하드왁스·스트립 도매", desc: "남성 강모용 — 일반 왁스보다 강력", priceRange: "kg당 3-6만", priority: "primary" },
-    ],
-  },
-  "lash-perm": {
-    suppliers: [
-      { name: "속눈썹 펌 키트 (러시아·일본)", desc: "1회용 펌제·실리콘 패드", priceRange: "회당 2-5천원 원가", priority: "primary" },
-    ],
-  },
-  "brow-microblading": {
-    suppliers: [
-      { name: "한올심기 블레이드·색소", desc: "FDA 인증 색소 + 일회용 블레이드", priceRange: "회당 8-15천원 원가", priority: "primary" },
     ],
   },
 
@@ -2792,36 +2598,8 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "차량 개조 (이동 그루밍 트럭)", desc: "1톤 차량 + 욕조·드라이기 — 영업신고", priceRange: "차량+개조 2,500~4,000만", priority: "primary" },
     ],
   },
-  "pet-camera-monitor": {
-    equipment: [
-      { name: "Furbo·페티즌 24h 라이브 카메라", desc: "방마다 1대 — 보호자 앱 알림 + 음성 양방향", priceRange: "대당 30-60만", priority: "primary", url: "https://www.furbo.com/" },
-    ],
-  },
-  "pet-vet-stay": {
-    channels: [
-      { name: "지역 동물병원 협력", desc: "수의사 상주 — 노령·기저질환 펫 referral", priceRange: "수수료 협의", priority: "primary" },
-    ],
-  },
 
   // ── 생활서비스: 신규 specialty ──
-  "ls-self-laundry-pet": {
-    equipment: [
-      { name: "펫 전용 세탁기 (대형 드럼 + 항균)", desc: "펫 털·진드기 전용 — 일반 세탁기와 구분 필수", priceRange: "대당 500-900만", priority: "primary" },
-    ],
-  },
-  "ls-self-laundry-shoe": {
-    equipment: [
-      { name: "운동화 셀프 세탁기 (전용 슈즈워시)", desc: "운동화 1켤레 30분 — Sneakers Era·LG 슈케어", priceRange: "대당 400-700만", priority: "primary" },
-    ],
-  },
-  "ls-shoe-cleaning": {
-    suppliers: [
-      { name: "운동화 복원 케미컬 (Jason Markk·Crep)", desc: "전문 클리너 + 발수 스프레이", priceRange: "병당 1.5-3만", priority: "primary" },
-    ],
-    equipment: [
-      { name: "초음파 세정기 + UV 살균기", desc: "운동화 세밀 세정 + 살균 — 1.5만원 단가 정당화", priceRange: "200~500만", priority: "primary" },
-    ],
-  },
   "ls-3d-print": {
     equipment: [
       { name: "산업용 3D 프린터 (Bambu Lab·Ultimaker)", desc: "FDM 80-300만 / SLA 200-600만 / SLS 1,500만+", priceRange: "80~1,500만", priority: "primary" },
@@ -2852,23 +2630,8 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
       { name: "댄스 바닥재 (스프링 플로어)", desc: "충격 흡수 — 평당 12-20만", priceRange: "평당 12-20만", priority: "primary" },
     ],
   },
-  "space-rental-vlog": {
-    equipment: [
-      { name: "촬영 장비 풀세트 (조명·카메라·렌즈)", desc: "Aperture LED + Sony A7 + 렌즈 — 1인 미디어용", priceRange: "초기 1,500~3,000만", priority: "primary" },
-    ],
-  },
 
   // ── 교육: 신규 specialty ──
-  "edu-coding-ai-llm": {
-    suppliers: [
-      { name: "OpenAI·Anthropic API 크레딧", desc: "수강생 GPT 실습 — 월 사용료 분배", priceRange: "월 10-50만", priority: "primary" },
-    ],
-  },
-  "edu-coding-data": {
-    suppliers: [
-      { name: "Tableau·Power BI 라이센스 (교육용)", desc: "교육용 무료/할인 라이센스 신청", priceRange: "무료~월 10만", priority: "primary" },
-    ],
-  },
   "edu-test-prep": {
     suppliers: [
       { name: "토익·토플·아이엘츠 공식 교재 도매", desc: "ETS·British Council 공식 교재 직거래 30%↓", priceRange: "도매가", priority: "primary" },
@@ -2876,11 +2639,6 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
   },
 
   // ── 소매: 신규 specialty ──
-  "retail-protein-shop": {
-    suppliers: [
-      { name: "프로틴 공급사 (마이프로틴·옵티멈)", desc: "WPI·BCAA 직수입. 사업자 도매가", priceRange: "kg당 4-8만", priority: "primary" },
-    ],
-  },
   "retail-zerowaste": {
     suppliers: [
       { name: "리필 전용 도매 (벌크 액체·고체)", desc: "샴푸·세제·곡물 벌크 — 30L 단위 정기 납품", priceRange: "L당 30-60% 절감", priority: "primary" },

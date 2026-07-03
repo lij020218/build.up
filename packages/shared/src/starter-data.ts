@@ -518,15 +518,6 @@ export const starterIndustryOptions: RecommendationItem[] = [
     meta: { categoryId: "pet", categoryLabel: "Pet" }
   },
   {
-    id: "pet-walking-visit",
-    title: "Pet Walking / Visit Care",
-    score: 68,
-    summary: "Low-footprint service model that relies on scheduling and trust more than storefront traffic.",
-    reasons: ["No large storefront required", "Can start with leaner fixed cost"],
-    warnings: ["Scheduling reliability and trust matter most"],
-    meta: { categoryId: "pet", categoryLabel: "Pet" }
-  },
-  {
     id: "laundry-service",
     title: "Laundry Service",
     score: 75,

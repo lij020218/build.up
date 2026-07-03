@@ -230,7 +230,6 @@ const SPECIALTY_KPI_PROFILE: Record<string, { label: string; guidance: string }>
   "rental-studio": { label: "대여 스튜디오", guidance: "핵심 지표 = 예약률·시간대·장비 활용·리뷰. 시간제 공간 — 예약률 핵심." },
   // PET
   "pet-cafe": { label: "펫 카페", guidance: "비즈니스 모델 = 카페+놀이 복합. 핵심 지표 = 체류시간·F&B 부가매출·재방문·동물 위생/안전. 넓은 평수 — 좌석 회전+F&B 객단가 둘 다." },
-  "pet-walking-visit": { label: "펫 방문돌봄", guidance: "비즈니스 모델 = 무점포 방문. 핵심 지표 = 재이용율·일정(스케줄) 효율·이동 동선·보험/신뢰. 점포·재고 개념 없음 — 재이용·신뢰가 핵심." },
   // LIVING
   "self-laundry": { label: "무인 빨래방", guidance: "비즈니스 모델 = 무인·기기. 핵심 지표 = 기기 가동률·시간대 이용·운영비(전기·세제)·고장 대응. 인건비 0 — 가동률이 매출 직결." },
   "cleaning-service": { label: "청소 대행", guidance: "비즈니스 모델 = 무점포 출장. 핵심 지표 = 재이용율·건당 단가·기사 가동률·일정 효율. 점포·재고 없음 — 재이용·기사 효율 핵심." },
