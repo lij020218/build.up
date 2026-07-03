@@ -81,6 +81,7 @@ export const SPECIALTY_BY_INDUSTRY: Record<string, SpecialtyOption[]> = {
     { id: "dessert-macaron", label: "마카롱·뺑오쇼콜라", desc: "프랑스 디저트 — 인스타 비주얼 강세", labelEn: "Macaron / pastry" },
     { id: "dessert-tart", label: "타르트·파이 전문", desc: "과일 타르트·치즈 타르트 — 시즌 메뉴", labelEn: "Tart / pie" },
     { id: "dessert-traditional", label: "한과·약과·전통 디저트", desc: "흑임자·약과·인절미 — Z세대 트렌드", labelEn: "Korean traditional" },
+    { id: "dessert-mochi", label: "모찌·찹쌀떡 디저트", desc: "생과일 찹쌀떡·과일모찌 전문 — 선물·포장 수요", labelEn: "Mochi / rice-cake dessert" },
     { id: "dessert-donut", label: "도넛 전문점", desc: "노티드·올드페리 등 — Z세대 트렌드", labelEn: "Donut shop" },
     { id: "dessert-cookie", label: "쿠키·브라우니 전문", desc: "수제 쿠키·브라우니·휘낭시에", labelEn: "Cookie / brownie" },
   ],

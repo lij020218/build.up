@@ -275,6 +275,12 @@
       "labelEn": "Korean traditional"
     },
     {
+      "id": "dessert-mochi",
+      "label": "모찌·찹쌀떡 디저트",
+      "desc": "생과일 찹쌀떡·과일모찌 전문 — 선물·포장 수요",
+      "labelEn": "Mochi / rice-cake dessert"
+    },
+    {
       "id": "dessert-donut",
       "label": "도넛 전문점",
       "desc": "노티드·올드페리 등 — Z세대 트렌드",
