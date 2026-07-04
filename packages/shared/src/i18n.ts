@@ -628,6 +628,11 @@ function getStageCopyForCategory(
   // ── online-digital overrides ──
   if (categoryId === "online-digital") {
     const onlineOverrides: Record<string, { title: string; goal: string; whyNow: string }> = {
+      business_model: {
+        title: "판매 방식 선택",
+        goal: "마켓플레이스(스마트스토어·쿠팡)·자사몰·콘텐츠형 중 판매 채널과 수익 모델을 정합니다.",
+        whyNow: "예산·후속 단계 추천이 선택한 판매 방식에 따라 달라집니다."
+      },
       location_candidates: {
         title: "운영 거점 비교",
         goal: "작업, 보관, 포장, 택배 운영에 맞는 거점 후보를 비교합니다.",

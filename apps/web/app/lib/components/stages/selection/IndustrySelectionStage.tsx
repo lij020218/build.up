@@ -171,6 +171,36 @@ const INDUSTRY_COLORS: Record<string, string> = {
   "semiconductor": "#1e293b", "biotech-medtech": "#1d3557", "climate-energy": "#65a30d",
 };
 
+// 2026-07-03 정합: 업종 카테고리군(cluster)별 확인 항목 — 오프라인/온라인/스타트업은 상권·자본·인허가 로직이 달라 분기.
+//   오프라인 문구는 기존 유지, online(스마트스토어·위탁·구매대행 등)·tech(스타트업)만 전용 항목.
+type SelectionCluster = "offline" | "online" | "tech";
+const SELECTION_VERIFY_ITEMS_KO: Record<SelectionCluster, string[]> = {
+  offline: [
+    "선택 업종이 본인 자본·시간·체력 한계에 맞는지 — 평균 창업비 vs 보유 자본 비교 (창업자금 70% 이하 권장)",
+    "업종 시장 포화도 확인 — 동네 반경 500m 동일 업종 5개 이상이면 차별화 포인트 필수",
+    "업종별 「영업신고 vs 영업허가」 차이 확인 — 식품·미용·의료기기 등은 별도 허가 필수",
+    "필수 자격증·교육 미리 확인 — 식품접객업 위생교육, 미용업 면허, 헬스 트레이너 자격 등",
+    "업종 트렌드 1~2년 지속성 검토 — 단기 유행이면 손익분기 도달 전 침체 리스크",
+    "유사 업종 대비 차별점 1줄로 정리 — 차별점 없으면 가격 경쟁에 휘말림",
+  ],
+  online: [
+    "초기 자본이 소싱·광고비에 맞는지 — 무자본 위탁~소자본 사입, 인테리어·권리금 없이 상품 매입비 + 마케팅(광고) 예산 중심으로 계획",
+    "카테고리 경쟁 강도 확인 — 네이버쇼핑 상품 수 대비 검색량(키워드 경쟁률)이 낮은 틈새인지 키워드 분석으로 점검",
+    "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 필수 + 취급 품목별 추가(식품=식품판매업, 건강기능식품=건강기능식품판매업, 화장품=화장품책임판매업)",
+    "마진 구조 검증 — 판매가에서 매입·플랫폼 수수료·광고비·배송비를 빼고 남는지 (위탁판매는 마진 수수료 방식이라 특히 얇음)",
+    "아이템 트렌드 지속성 검토 — 단기 유행 상품은 재고·광고비 회수 전 검색량이 꺾일 리스크",
+    "동일 카테고리 상위 스토어 대비 차별점 1줄 정리 — 상세페이지·가격·배송 중 하나는 이겨야 노출·전환",
+  ],
+  tech: [
+    "선택 분야가 자금 여력에 맞는지 — 매출 0을 가정하고 개발·인건·인프라 비용으로 최소 1년 이상 버틸 시드(런웨이) 계획",
+    "시장 크기·경쟁 검증 — 목표 시장 규모와 경쟁 스타트업·대체재를 조사, '고객이 실제로 돈을 내는 문제'인지 확인",
+    "규제 트랙 여부 확인 — 대부분 사업자등록만이나, 핀테크=전자금융업, 헬스·의료기기=식약처 인증 등 별도 인허가가 필요한 분야인지",
+    "MVP로 검증할 핵심 가설 1개 정의 — 풀개발 전에 수요·전환을 실측 (가설 검증 없는 선(先)개발 지양)",
+    "기술·시장 트렌드 지속성 검토 — 단기 붐에 의존하면 자금 소진 전 피벗할 여력이 필요",
+    "경쟁 대비 방어 가능한 차별점(모트) 1줄 — 기술·데이터·네트워크 효과 중 지킬 수 있는 축",
+  ],
+};
+
 export function IndustrySelectionStage() {
   const d = useDashboardCtx();
   const {
@@ -191,6 +221,10 @@ export function IndustrySelectionStage() {
   const specialtyOptions = getSpecialtyOptions(selectedIndustryId);
   const requiresSpecialty = specialtyOptions.length > 0;
   const canContinue = !!selectedIndustryId && (!requiresSpecialty || !!selectedSpecialtyId);
+  const selectionCluster: SelectionCluster =
+    selectedIndustryCategoryId === "startup-tech" ? "tech"
+    : selectedIndustryCategoryId === "online-digital" ? "online"
+    : "offline";
 
   return (
     <>
@@ -375,14 +409,7 @@ export function IndustrySelectionStage() {
           { label: "3. 추천 데이터 확인", detail: "업종별 평균 창업비·마진·트렌드·진입난이도 검토" },
           { label: "4. 후속 단계 준비", detail: "업종에 맞는 창업 유형(오프라인·온라인·스타트업)으로 진입 준비" },
         ]}
-        verifyItemsKo={[
-          "선택 업종이 본인 자본·시간·체력 한계에 맞는지 — 평균 창업비 vs 보유 자본 비교 (창업자금 70% 이하 권장)",
-          "업종 시장 포화도 확인 — 동네 반경 500m 동일 업종 5개 이상이면 차별화 포인트 필수",
-          "업종별 「영업신고 vs 영업허가」 차이 확인 — 식품·미용·의료기기 등은 별도 허가 필수",
-          "필수 자격증·교육 미리 확인 — 식품접객업 위생교육, 미용업 면허, 헬스 트레이너 자격 등",
-          "업종 트렌드 1~2년 지속성 검토 — 단기 유행이면 손익분기 도달 전 침체 리스크",
-          "유사 업종 대비 차별점 1줄로 정리 — 차별점 없으면 가격 경쟁에 휘말림",
-        ]}
+        verifyItemsKo={SELECTION_VERIFY_ITEMS_KO[selectionCluster]}
         nextSummaryKo="업종 확정 → 창업 유형(오프라인·온라인·스타트업) 선택 단계로 진입"
         nextSummaryEn="Industry locked → enter startup type selection"
       />

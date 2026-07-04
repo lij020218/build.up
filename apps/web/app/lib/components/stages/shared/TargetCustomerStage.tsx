@@ -159,6 +159,9 @@ export function TargetCustomerStage() {
   // offline 이면 업종군별 콘텐츠(통계·예시·객단가·검증) 선택.
   const oc = OFFLINE_TC[toOfflineKind(d.industryCategoryId ?? undefined)];
   const L = ko ? "ko" : "en";
+  // 2026-07-03 정합: offline/online/tech 별 문구 선택 (입지·메뉴·방문 등 오프라인 표현이 online·tech에 새던 것 교정).
+  const pick = <T,>(off: T, on: T, tech: T): T =>
+    clusterGroup === "offline" ? off : clusterGroup === "online" ? on : tech;
 
   const inputs =
     (decisions[STAGE_ID]?.inputs as
@@ -260,8 +263,8 @@ export function TargetCustomerStage() {
             </div>
             <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
               {ko
-                ? "타깃 페르소나가 없으면 모든 후속 결정 — 입지·메뉴·가격대·광고 채널 — 이 평균값(=경쟁점과 동일)으로 회귀합니다."
-                : "Without a target persona, every downstream decision — location, menu, pricing, ad channel — regresses to the average (= identical to competitors)."}
+                ? `타깃 페르소나가 없으면 모든 후속 결정 — ${pick("입지·메뉴·가격대·광고 채널", "소싱 상품·상세페이지·가격·광고 채널", "제품·가격·온보딩·채널")} — 이 평균값(=경쟁점과 동일)으로 회귀합니다.`
+                : `Without a target persona, every downstream decision — ${pick("location, menu, pricing, ad channel", "sourced products, detail pages, pricing, ads", "product, pricing, onboarding, channel")} — regresses to the average (= identical to competitors).`}
             </div>
             <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
               {clusterGroup === "offline"
@@ -278,12 +281,14 @@ export function TargetCustomerStage() {
               {ko ? "한국 SMB 데이터" : "Korea SMB data"}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {/* 외식만 KFRI 실통계 노출. online·tech는 신뢰할 단일 출처 통계가 없어 지어내지 않고 생략 —
+                  아래 KOSME·메타는 업종 불문 실통계라 그대로 유지. (2026-07-03) */}
               {(ko ? [
-                clusterGroup === "offline" ? oc.smbFact0.ko : { tag: "외식 폐업 사유", body: "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024" },
+                ...(clusterGroup === "offline" ? [oc.smbFact0.ko] : []),
                 { tag: "페르소나 효과", body: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023 소상공인 실태조사" },
                 { tag: "광고 ROAS", body: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024" },
               ] : [
-                clusterGroup === "offline" ? oc.smbFact0.en : { tag: "F&B closure", body: "Cause #1: vague target + no differentiation (28%) — KFRI 2024" },
+                ...(clusterGroup === "offline" ? [oc.smbFact0.en] : []),
                 { tag: "Persona effect", body: "11% closure with persona vs 22% without — KOSME 2023" },
                 { tag: "Ad ROAS", body: "3.2x ROAS for narrow targeting — Meta Korea 2024" },
               ]).map((f, idx) => (
@@ -458,14 +463,14 @@ export function TargetCustomerStage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {(ko ? [
                 { q: "이 페르소나가 절대 안 살 가격대는?", hint: clusterGroup === "offline" ? oc.neverBuy.ko : "범위 명시 (예: 20대 직장인 → 3만원↑ X)" },
-                { q: "이 페르소나가 절대 안 갈 위치는?", hint: "구체 (예: 차량 접근만 가능한 외곽)" },
-                { q: "이 페르소나가 정말 매주 1회+ 올까?", hint: "오면 안 되는 이유 1개라도 떠오르면 재정의" },
-                { q: "경쟁점 중 같은 타깃 가게는?", hint: "이름·차별점 — 안 보이면 시장 없음 신호" },
+                { q: pick("이 페르소나가 절대 안 갈 위치는?", "이 페르소나가 절대 구매 안 할 채널·환경은?", "이 페르소나가 절대 도입 안 할 조건은?"), hint: pick("구체 (예: 차량 접근만 가능한 외곽)", "예: UI 복잡한 해외 직구몰, 배송 3일+ 사이트", "예: 지불 의사 없는 세그먼트, 규제·인증이 막는 시장") },
+                { q: pick("이 페르소나가 정말 매주 1회+ 올까?", "이 페르소나가 정말 월·분기 1회+ 재구매할까?", "이 페르소나가 정말 유료 전환·지속 사용할까?"), hint: pick("오면 안 되는 이유 1개라도 떠오르면 재정의", "재구매 이유 1개도 안 떠오르면 재정의", "계속 쓸 이유 1개도 안 떠오르면 재정의") },
+                { q: pick("경쟁점 중 같은 타깃 가게는?", "경쟁 스토어 중 같은 타깃 브랜드는?", "같은 타깃의 경쟁 제품은?"), hint: pick("이름·차별점 — 안 보이면 시장 없음 신호", "스토어명·차별점 — 없으면 시장 없음 신호", "제품명·차별점 — 없으면 시장 없음 신호") },
               ] : [
                 { q: "What price would they NEVER pay?", hint: clusterGroup === "offline" ? oc.neverBuy.en : "Be specific" },
-                { q: "Where would they NEVER go?", hint: "E.g., car-only suburbs" },
-                { q: "Will they REALLY come weekly+?", hint: "If you can think of one reason no — redefine" },
-                { q: "Which competitor targets the same?", hint: "If none — market may not exist" },
+                { q: pick("Where would they NEVER go?", "Which channel/UX would they NEVER buy on?", "What condition would they NEVER adopt under?"), hint: pick("E.g., car-only suburbs", "E.g., cluttered cross-border malls, 3-day+ shipping", "E.g., no willingness to pay, regulation-blocked market") },
+                { q: pick("Will they REALLY come weekly+?", "Will they REALLY repurchase monthly/quarterly+?", "Will they REALLY convert and keep using?"), hint: pick("If you can think of one reason no — redefine", "If no repurchase reason comes to mind — redefine", "If no reason to keep using — redefine") },
+                { q: pick("Which competitor targets the same?", "Which competing store targets the same?", "Which competing product targets the same?"), hint: pick("If none — market may not exist", "Store name & edge — if none, no market", "Product name & edge — if none, no market") },
               ]).map((item, i) => (
                 <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", border: `1px solid ${MIDNIGHT_BORDER}`, background: `${MIDNIGHT}03` }}>
                   <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "3px" }}>{i + 1}. {item.q}</div>
@@ -488,9 +493,9 @@ export function TargetCustomerStage() {
         ]}
         verifyItemsKo={[
           "'20-50대 여성' 같은 모호한 정의 X — 한 명의 구체 페르소나로 좁혔는가",
-          "이 페르소나가 절대 안 갈 위치·안 살 가격대 명시했는가",
-          "경쟁점 중 같은 페르소나 타깃 가게 1곳 이상 있는가 (없으면 시장 위험)",
-          "후속 결정 (입지·메뉴·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가",
+          pick("이 페르소나가 절대 안 갈 위치·안 살 가격대 명시했는가", "이 페르소나가 절대 이탈할 채널·안 살 가격대 명시했는가", "이 페르소나가 절대 도입 안 할 조건·안 낼 가격대 명시했는가"),
+          pick("경쟁점 중 같은 페르소나 타깃 가게 1곳 이상 있는가 (없으면 시장 위험)", "경쟁 스토어 중 같은 페르소나 타깃 브랜드 1곳 이상 있는가 (없으면 시장 위험)", "같은 페르소나 타깃 경쟁 제품 1곳 이상 있는가 (없으면 시장 위험)"),
+          pick("후속 결정 (입지·메뉴·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가", "후속 결정 (소싱 상품·상세페이지·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가", "후속 결정 (제품·가격·온보딩·채널) 의 기준선이 될 수 있을 만큼 구체적인가"),
           "주변 지인 의견이 아닌 실제 잠재 고객 5명+ 대화로 검증했는가",
         ]}
         nextSummaryKo={ko ? "타깃 페르소나 확정 → 예산·시점 설정 단계로 진입" : "Target persona locked → enter Budget setup"}

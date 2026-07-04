@@ -26,7 +26,7 @@ export function OnlineRegistrationStage() {
             </div>
           </div>
           <div style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.65 }}>
-            {ko ? "사업자등록증은 모든 상거래의 출발점입니다. 스마트스토어·쿠팡 등 판매 플랫폼 입점, 세금계산서 발행, 사업용 통장 개설에 반드시 필요합니다." : "Business registration is the starting point for all commerce — required for platform onboarding, invoicing, and business banking."}
+            {ko ? "사업자등록증은 모든 상거래의 출발점입니다. 스마트스토어·쿠팡 등 판매 플랫폼 입점, 세금계산서 발급, 사업용 통장 개설에 반드시 필요합니다." : "Business registration is the starting point for all commerce — required for platform onboarding, invoicing, and business banking."}
           </div>
         </div>
 
@@ -110,14 +110,14 @@ export function OnlineRegistrationStage() {
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.1)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#1d3557", marginBottom: "6px" }}>{ko ? "간이과세자" : "Simplified"}</div>
               <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
-                {ko ? "연매출 1억 400만원 이하 시 선택 가능. 부가세 면제(4,800만 미만) 또는 감면(1.5~4%). 세금계산서 발행 불가 (4,800만원 이하)." : "Available under ₩104M annual. VAT exempt (<₩48M) or reduced (1.5-4%). Cannot issue tax invoices under ₩48M."}
+                {ko ? "연매출 1억 400만원 미만 시 선택 가능. 부가세 납부 면제(4,800만원 미만) 또는 감면(업종별 1.5~4%). 세금계산서 발급 불가(4,800만원 미만)." : "Available under ₩104M annual. VAT payment exempt (<₩48M) or reduced (1.5-4%). Cannot issue tax invoices under ₩48M."}
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#1d3557", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
             </div>
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.08)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#191970", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
               <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
-                {ko ? "연매출 1억 400만원 초과 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발행 가능. 매입세액 공제 가능." : "Over ₩104M annual or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
+                {ko ? "연매출 1억 400만원 이상 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발급 가능. 매입세액 공제 가능." : "₩104M annual or more, or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#191970", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", display: "inline-block" }}>{ko ? "B2B · 고매출 시" : "For B2B / high revenue"}</div>
             </div>
@@ -311,11 +311,11 @@ export function OnlineRegistrationStage() {
         doneItemsKo={[
           { label: "1. 사업자등록 신청", detail: "홈택스 온라인 신청 — 업태·종목 「전자상거래 소매업」 + 임대차 없는 경우 자택 주소 가능" },
           { label: "2. 통신판매업 신고", detail: "관할 구청 또는 정부24 — 사업자등록증·구매안전서비스 이용 확인증 필요, 1~3일 발급" },
-          { label: "3. 결제 PG·구매안전 가입", detail: "이니시스·KG이니시스·NICE 등 PG + 에스크로 또는 안심거래 의무" },
-          { label: "4. 도메인·기본 셋업", detail: "스토어명 중복 검색 + 도메인 + 사업자 통장 + 카드 단말 셋업" },
+          { label: "3. 구매안전서비스(에스크로) 확보", detail: "마켓플레이스(스마트스토어·쿠팡)는 플랫폼 구매안전서비스 이용확인증 / 자사몰은 PG사(토스페이먼츠·KG이니시스 등) 계약" },
+          { label: "4. 스토어 기본 셋업", detail: "스토어명 중복 검색 + 사업자 판매자 등록·통장 연동 + 자사몰 시 도메인·로고 등록" },
         ]}
         verifyItemsKo={[
-          "사업자등록 — 주소지 자택 가능하지만 임대차계약서 없으면 「확정일자」 못 받음, 보증금 보호 X",
+          "사업자등록 — 자택 주소 가능(임대차계약서 없으면 전입세대열람원으로 대체). 전월세 거주지는 임대인 동의·전대 가능 여부 사전 확인",
           "통신판매업 신고 — 미신고 영업 시 1년 이하 징역 또는 1천만원 이하 벌금 (전자상거래법)",
           "구매안전서비스 — 결제 5만원 이상 거래는 에스크로 또는 보증서 의무, 위반 시 시정 명령",
           "표시·광고 — 「최저가」「1위」 등 비교 광고는 객관적 근거 필수, 위반 시 표시광고법 과징금",

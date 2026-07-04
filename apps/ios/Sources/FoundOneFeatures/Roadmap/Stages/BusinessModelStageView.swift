@@ -49,6 +49,73 @@ public struct BusinessModelStageView: View {
         !cluster.isStartupTech && !cluster.isOnline
     }
 
+    // 2026-07-03 정합: 마무리(확인 항목·다음 안내)를 카테고리군별 분기 (웹 BIZ_MODEL_* 미러). 오프라인은 기존 유지.
+    private var bizWrapupDoneItems: [BUStageWrapupItem] {
+        if cluster.isStartupTech {
+            return [
+                .init(label: "1. 수익 모델 선택", detail: "구독·API 과금·프리미엄·마켓플레이스 수수료 등 수익 모델 결정"),
+                .init(label: "2. 핵심 가치·기능 확정", detail: "코어·확장·실험 우선순위로 MVP 범위 정의"),
+                .init(label: "3. 가격·과금 설계", detail: "요금제 티어·무료 체험·과금 단위(사용량·좌석) 정의"),
+                .init(label: "4. 시장 진입 방식 결정", detail: "PLG(제품 주도)·세일즈·파트너 등 시장 진입(GTM) 방식 확정"),
+            ]
+        }
+        if cluster.isOnline {
+            return [
+                .init(label: "1. 판매 채널·모델 선택", detail: "마켓플레이스(스마트스토어·쿠팡)·자사몰·콘텐츠형 등 판매 채널·모델 결정"),
+                .init(label: "2. 핵심 상품·카테고리 확정", detail: "코어·시그니처·확장·실험 4-tier로 취급 상품 우선순위 정의"),
+                .init(label: "3. CS·배송 운영 설정", detail: "문의 응대(CS) 가능 시간 + 주문 마감·당일 발송 시간대 정의"),
+                .init(label: "4. 수익 모델 결정", detail: "단품 판매·구독·멤버십 등 카테고리별 매출 흐름 모델 확정"),
+            ]
+        }
+        return [
+            .init(label: "1. 운영 모델 선택", detail: "매장형 · 배달·온라인 · 하이브리드 · 무인 등 업종에 맞는 운영 모델 결정"),
+            .init(label: "2. 핵심 상품·서비스 확정", detail: "코어·시그니처·확장·실험 4-tier로 상품·서비스 우선순위 정의"),
+            .init(label: "3. 영업시간·요일 설정", detail: "주중·주말·휴무일 패턴 + 피크타임 시간대 정의"),
+            .init(label: "4. 수익 모델 결정", detail: "단품 판매·구독·멤버십·시간제 등 카테고리별 매출 흐름 모델 확정"),
+        ]
+    }
+    private var bizWrapupVerifyItems: [String] {
+        if cluster.isStartupTech {
+            return [
+                "수익 모델별 규제 트랙 확인 — 핀테크=전자금융업, 헬스·의료기기=식약처 인증 등 인허가 필요 여부",
+                "핵심 기능 — 개발 공수·인프라 비용·유지보수 부담을 기능 단위로 점검",
+                "가격·과금 설계 — 요금제·과금 단위를 고객 획득 비용(CAC) 대비 회수 가능하게 (무료 남용·과금 이탈 방지)",
+                "수익 모델 — 유료 고객 수 × ARPU로 MRR 추정, 번레이트 대비 런웨이(생존 개월)·유지율(리텐션) 함께 점검",
+                "복합 모델이면 주 수익원 1개로 표준화 — 초기 분산은 지표를 흐림",
+                "유닛 이코노믹스 — 고객 생애가치(LTV)가 획득 비용(CAC)을 웃도는 회수 구조인지 초기 가설 설정",
+            ]
+        }
+        if cluster.isOnline {
+            return [
+                "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 + 취급 품목별(식품·건강기능식품·화장품) 인허가 선행",
+                "핵심 상품 — 매입 원가율·재고 회전·반품/불량률을 카테고리 기준으로 점검",
+                "배송 운영 — 당일 발송 마감 시간 + 택배사 계약 단가(건당 요율)·CS 응대 체계 사전 점검",
+                "수익 모델 — 유입(트래픽) × 구매전환율(CVR) × 객단가(AOV)로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
+                "위탁 vs 사입 — 위탁=무재고·저마진, 사입=재고 부담·고마진, 초기 현금흐름에 맞게 선택",
+                "플랫폼 의존 리스크 — 마켓플레이스 수수료 + 결제 + 광고비·배송비·VAT 합산 시 실마진이 남는지, 자사몰 병행 검토",
+            ]
+        }
+        return [
+            "운영 모델별 인허가·신고 차이 확인 (예: 무인 매장은 24시간 별도 신고, 온라인은 통신판매업, 배달 전문은 영업신고 형태 상이)",
+            "핵심 상품·서비스 — 원가율·제공 시간(조리·시술·처리)·손실률을 업종 기준으로 점검",
+            "영업시간 — 근로기준법 1주 52시간 한도 + 휴게시간(§54: 근로 4시간→30분·8시간→1시간)·주휴수당(§55) 사전 시뮬",
+            "수익 모델 — 객단가·이용료 × 이용 빈도(회전·재방문) × 영업일수로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
+            "프랜차이즈인 경우 본사 규정(상품·운영·시간) 변경 가능 여부 (계약서 「본사 동의 필수」 조항 확인)",
+            "플랫폼 의존 모델(배달·오픈마켓 등) — 플랫폼 수수료 + 결제 + 광고비·배송비·VAT 합산 부담을 반영해도 마진이 남는지 계산",
+        ]
+    }
+    private var bizWrapupNextSummary: String {
+        if cluster.isStartupTech { return "수익 모델·핵심 기능·가격 확정 → 자본·일정 설정 단계로 진입" }
+        if cluster.isOnline { return "판매 채널·상품·CS/배송 운영 확정 → 자본·일정 설정 단계로 진입" }
+        return "운영 모델·메뉴·시간 확정 → 자본·일정 설정 단계로 진입"
+    }
+    // 화면 서브타이틀(helperText)도 카테고리군별 분기 — 온라인엔 POS·인건비가 무의미.
+    private var bizHelperText: String {
+        if cluster.isStartupTech { return "수익 모델에 따라 가격·과금·시장 진입(GTM) 구성이 달라집니다." }
+        if cluster.isOnline { return "판매 방식에 따라 인허가·플랫폼 수수료·물류(배송) 구성이 달라집니다." }
+        return "운영 방식에 따라 인허가·인건비·POS 구성이 달라집니다."
+    }
+
     /// 수익 모델 옵션 (웹 REVENUE_OPTIONS, applicableTo 필터링).
     private struct RevenueOption: Identifiable {
         let id: String
@@ -66,7 +133,7 @@ public struct BusinessModelStageView: View {
                   titleKo: "API 사용량 (호출·토큰 단위)", subKo: "쓴 만큼 청구", exampleKo: "예: OpenAI · Stripe · Twilio",
                   applicableTo: ["startup-tech"]),
             .init(id: "one-time",
-                  titleKo: "일회 구매", subKo: "한 번 결제, 그 후 사용", exampleKo: "예: 음식점 · 옷가게 · 디지털 상품 단건",
+                  titleKo: "일회 구매", subKo: "한 번 결제, 그 후 사용", exampleKo: "예: 의류·잡화·식품·디지털 상품 단건",
                   applicableTo: []),
             .init(id: "freemium",
                   titleKo: "무료 + 프리미엄", subKo: "무료 체험 후 유료 전환", exampleKo: "예: 디스코드 · 줌 · 노션 무료 플랜",
@@ -223,7 +290,7 @@ public struct BusinessModelStageView: View {
             stageId: stageId,
             title: "운영 방식 선택",
             stageEyebrow: "단계 3 · 운영 모델",
-            helperText: "운영 방식에 따라 인허가·인건비·POS 구성이 달라집니다.",
+            helperText: bizHelperText,
             canAdvance: canContinue,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -237,22 +304,10 @@ public struct BusinessModelStageView: View {
                 roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs)
             },
             wrapup: BUStageWrapupData(
-                doneItems: [
-                .init(label: "1. 운영 모델 선택", detail: "매장형 · 배달·온라인 · 하이브리드 · 무인 등 업종에 맞는 운영 모델 결정"),
-                .init(label: "2. 핵심 상품·서비스 확정", detail: "코어·시그니처·확장·실험 4-tier로 상품·서비스 우선순위 정의"),
-                .init(label: "3. 영업시간·요일 설정", detail: "주중·주말·휴무일 패턴 + 피크타임 시간대 정의"),
-                .init(label: "4. 수익 모델 결정", detail: "단품 판매·구독·멤버십·시간제 등 카테고리별 매출 흐름 모델 확정"),
-                ],
-                verifyItems: [
-                "운영 모델별 인허가·신고 차이 확인 (예: 무인 매장은 24시간 별도 신고, 온라인은 통신판매업, 배달 전문은 영업신고 형태 상이)",
-                "핵심 상품·서비스 — 원가율·제공 시간(조리·시술·처리)·손실률을 업종 기준으로 점검",
-                "영업시간 — 근로기준법 1주 52시간 한도 + 휴게시간(§54: 근로 4시간→30분·8시간→1시간)·주휴수당(§55) 사전 시뮬",
-                "수익 모델 — 객단가·이용료 × 이용 빈도(회전·재방문) × 영업일수로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
-                "프랜차이즈인 경우 본사 규정(상품·운영·시간) 변경 가능 여부 (계약서 「본사 동의 필수」 조항 확인)",
-                "플랫폼 의존 모델(배달·오픈마켓 등) — 플랫폼 수수료·광고비·결제·VAT 합산 매출 비중 반영 후에도 마진 확보 가능한지 (예: 배달앱 17~28%)",
-                ],
+                doneItems: bizWrapupDoneItems,
+                verifyItems: bizWrapupVerifyItems,
                 nextStageLabel: "자본·일정 설정",
-                nextSummary: "운영 모델·메뉴·시간 확정 → 자본·일정 설정 단계로 진입"
+                nextSummary: bizWrapupNextSummary
             )
         ) {
             VStack(alignment: .leading, spacing: 16) {

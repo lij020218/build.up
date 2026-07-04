@@ -254,7 +254,7 @@ public struct BizRegistrationStageView: View {
                         ("기업은행 IBK", "소상공인 특화 상품 多 · 정책자금 연계 유리 · 전국 지점", "정책자금 연계"),
                         ("카카오뱅크 사업자", "비대면 즉시 개설 · 수수료 0원 · 앱 거래 관리 간편", "비대면"),
                         ("우리은행 위비기업", "지역 네트워크 강점 · 세무사·노무사 무료 상담 포함", "상담 포함"),
-                        ("신한은행 SOL Biz", "디지털 전환 강점 · 신한카드 결제 단말 연계", "디지털"),
+                        ("신한은행 SOL Biz", "여러 은행·카드사 계좌·매입매출 통합관리 · 세무·쇼핑몰 제휴(SOHO)", "통합관리"),
                     ]
                     ForEach(banks, id: \.0) { name, desc, badge in
                         HStack(spacing: BUSpacing.sm) {

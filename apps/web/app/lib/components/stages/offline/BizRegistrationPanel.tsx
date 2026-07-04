@@ -249,12 +249,12 @@ export function BizRegistrationPanel() {
             { bank: "기업은행 IBK", desc: "소상공인 특화 상품 多 · 정책자금 연계 유리 · 전국 지점", badge: "정책자금 연계", href: "https://www.ibk.co.kr" },
             { bank: "카카오뱅크 사업자", desc: "비대면 즉시 개설 · 수수료 0원 · 앱 거래 관리 간편", badge: "비대면", href: "https://www.kakaobank.com" },
             { bank: "우리은행 위비기업", desc: "지역 네트워크 강점 · 세무사·노무사 무료 상담 포함", badge: "상담 포함", href: "https://spot.wooribank.com" },
-            { bank: "신한은행 SOL Biz", desc: "디지털 전환 강점 · 신한카드 결제 단말 연계", badge: "디지털", href: "https://www.shinhan.com" },
+            { bank: "신한은행 SOL Biz", desc: "여러 은행·카드사 계좌·매입매출 통합관리 · 세무·쇼핑몰 제휴(SOHO)", badge: "통합관리", href: "https://www.shinhan.com" },
           ] : [
             { bank: "IBK Industrial Bank", desc: "Best for policy fund connections · many SME products", badge: "Policy", href: "https://www.ibk.co.kr" },
             { bank: "KakaoBank Business", desc: "Instant non-face-to-face opening · zero fees", badge: "Digital", href: "https://www.kakaobank.com" },
             { bank: "Woori Bank", desc: "Free tax/labor consultation · regional network", badge: "Consulting", href: "https://spot.wooribank.com" },
-            { bank: "Shinhan SOL Biz", desc: "Strong digital · Shinhan card terminal integration", badge: "Digital", href: "https://www.shinhan.com" },
+            { bank: "Shinhan SOL Biz", desc: "Unified multi-bank/card & sales management · tax/shop partners (SOHO)", badge: "Unified", href: "https://www.shinhan.com" },
           ]).map((b, i) => (
             <a key={b.bank} href={b.href} target="_blank" rel="noopener noreferrer" style={{
               display: "flex", alignItems: "center", gap: "14px",

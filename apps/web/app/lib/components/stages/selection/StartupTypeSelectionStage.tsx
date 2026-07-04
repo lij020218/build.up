@@ -16,6 +16,41 @@ import {
   getScoreLabel,
 } from "@foundone/shared";
 
+// 2026-07-03 정합: 창업 형태 확인 항목·다음 안내를 카테고리군(cluster)별로 분기.
+//   오프라인은 기존(프랜차이즈+독립) 유지, online(무재고·플랫폼)·tech(런웨이·지분)만 전용.
+type StartupTypeCluster = "offline" | "online" | "tech";
+const STARTUP_TYPE_VERIFY_ITEMS_KO: Record<StartupTypeCluster, string[]> = {
+  offline: [
+    "프랜차이즈 — 공정위 정보공개서(franchise.ftc.go.kr)에서 가맹사업자 신고 여부·매출액·폐점률 직접 확인",
+    "프랜차이즈 — 가맹금 vs 인테리어비 vs 로열티 3개 항목별 별도 견적 (계약서 1식 표기 시 위반)",
+    "독립창업 — 상품·인테리어·시스템 모두 본인 부담 인식, 6개월~1년 안정화 기간 자본 별도 확보",
+    "프랜차이즈 — 가맹점 폐점률 20% 이상 브랜드 회피, 점주 평균 운영기간 5년 미만이면 위험",
+    "프랜차이즈 — 본사 변경 약관(인테리어 강제 교체·공급 단가) 5년 차에 인상되는 경우 다수",
+    "독립창업 — 검증된 레퍼런스(타 매장 분석·상품/서비스 시연·POS 시뮬) 1개 이상 확보 후 진입",
+  ],
+  online: [
+    "독립창업 — 상품 매입비·마케팅 툴·솔루션 비용을 본인 부담으로 인식, 초기 시드머니 + 광고비 버퍼 별도 확보 (인테리어·권리금 없음)",
+    "독립창업 — 검증된 레퍼런스(경쟁 스토어 분석·아이템 소싱처 확보·판매 데이터 분석) 1개 이상 확보 후 진입",
+    "위탁 vs 사입 결정 — 위탁=무재고·저마진, 사입=재고 부담·고마진. 초기 현금흐름에 맞게 선택",
+    "플랫폼 의존 리스크 — 스마트스토어·쿠팡 등 수수료·노출 정책 변경에 매출이 흔들림, 자사몰·다채널 병행 검토",
+    "통신판매업 신고 + 취급 품목별 인허가(식품·건강기능식품·화장품 등) 선행 확인",
+    "(프랜차이즈·총판 계약 시) 공급 단가·독점권·최소주문량(MOQ)을 계약서로 확인 — 구두 합의 지양",
+  ],
+  tech: [
+    "독립창업 — 개발·인건·인프라 비용을 본인 부담으로 인식, 매출 0 가정 최소 1년 이상 버틸 시드(런웨이) 별도 확보",
+    "독립창업 — 검증된 레퍼런스(경쟁 스타트업·대체재 분석·유저 인터뷰·데이터) 1개 이상 확보 후 진입",
+    "공동창업 시 역할·지분·베스팅(vesting)을 초기에 서면 합의 — 창업자 분쟁의 최다 원인",
+    "시장 검증 — MVP로 '돈 내는 문제'인지 실측한 뒤 본개발 진행",
+    "규제 산업 여부 — 핀테크=전자금융업, 헬스·의료기기=식약처 인증 등 사전 확인",
+    "투자·정부지원 필요 시 — 예비창업패키지·TIPS 등 요건과 마일스톤을 역산해 준비",
+  ],
+};
+const STARTUP_TYPE_NEXT_SUMMARY_KO: Record<StartupTypeCluster, string> = {
+  offline: "창업 형태 확정 → 운영 모델(매장형·배달·하이브리드·무인 등) 선택 진입",
+  online: "창업 형태 확정 → 운영 모델(위탁판매·국내몰 사입·해외 구매대행·자체 제조 등) 선택 진입",
+  tech: "창업 형태 확정 → 사업·수익 모델(제품·수익 구조·시장 진입) 설계 진입",
+};
+
 export function StartupTypeSelectionStage() {
   const d = useDashboardCtx();
   const {
@@ -40,6 +75,10 @@ export function StartupTypeSelectionStage() {
   const FRANCHISE_PAGE = 30;
 
   const isStartupCategory = industryCategoryId === "startup-tech";
+  const startupTypeCluster: StartupTypeCluster =
+    isStartupCategory ? "tech"
+    : industryCategoryId === "online-digital" ? "online"
+    : "offline";
   const startupTypeOptions: Array<"independent" | "franchise"> = isStartupCategory
     ? ["independent"]
     : ["independent", "franchise"];
@@ -137,15 +176,8 @@ export function StartupTypeSelectionStage() {
               { label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단" },
               { label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 5개 비교 후 1개 확정" },
             ]}
-            verifyItemsKo={[
-              "프랜차이즈 — 공정위 정보공개서(franchise.ftc.go.kr)에서 가맹사업자 신고 여부·매출액·폐점률 직접 확인",
-              "프랜차이즈 — 가맹금 vs 인테리어비 vs 로열티 3개 항목별 별도 견적 (계약서 1식 표기 시 위반)",
-              "독립창업 — 상품·인테리어·시스템 모두 본인 부담 인식, 6개월~1년 안정화 기간 자본 별도 확보",
-              "프랜차이즈 — 가맹점 폐점률 20% 이상 브랜드 회피, 점주 평균 운영기간 5년 미만이면 위험",
-              "프랜차이즈 — 본사 변경 약관(인테리어 강제 교체·공급 단가) 5년 차에 인상되는 경우 다수",
-              "독립창업 — 검증된 레퍼런스(타 매장 분석·상품/서비스 시연·POS 시뮬) 1개 이상 확보 후 진입",
-            ]}
-            nextSummaryKo="창업 형태 확정 → 운영 모델(매장형·배달·온라인·하이브리드·무인 등) 선택 진입"
+            verifyItemsKo={STARTUP_TYPE_VERIFY_ITEMS_KO[startupTypeCluster]}
+            nextSummaryKo={STARTUP_TYPE_NEXT_SUMMARY_KO[startupTypeCluster]}
           />
 
           <div style={styles.stageFooter}>

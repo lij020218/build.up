@@ -78,6 +78,14 @@ public struct TargetCustomerStageView: View {
         default:             return .offline
         }
     }
+    // 2026-07-03 정합: offline/online/tech 별 문구 선택 (입지·메뉴·방문 등 오프라인 표현이 online·tech에 새던 것 교정, 웹 pick 미러).
+    private func pick<T>(_ off: T, _ on: T, _ tech: T) -> T {
+        switch clusterGroup {
+        case .offline: return off
+        case .online:  return on
+        case .tech:    return tech
+        }
+    }
 
     // ── offline 업종군 세분 (2026-07-02 업종 정합 수정, 웹 TargetCustomerStage 미러) ──
     //   offline 전체가 외식(통계·객단가·예시)으로 하드코딩되던 문제 → 업종군 분기.
@@ -277,9 +285,9 @@ public struct TargetCustomerStageView: View {
                 ],
                 verifyItems: [
                     "'20-50대 여성' 같은 모호한 정의 X — 한 명의 구체 페르소나로 좁혔는가",
-                    "이 페르소나가 절대 안 갈 위치·안 살 가격대 명시했는가",
-                    "경쟁점 중 같은 페르소나 타깃 가게 1곳 이상 있는가 (없으면 시장 위험)",
-                    "후속 결정 (입지·메뉴·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가",
+                    pick("이 페르소나가 절대 안 갈 위치·안 살 가격대 명시했는가", "이 페르소나가 절대 이탈할 채널·안 살 가격대 명시했는가", "이 페르소나가 절대 도입 안 할 조건·안 낼 가격대 명시했는가"),
+                    pick("경쟁점 중 같은 페르소나 타깃 가게 1곳 이상 있는가 (없으면 시장 위험)", "경쟁 스토어 중 같은 페르소나 타깃 브랜드 1곳 이상 있는가 (없으면 시장 위험)", "같은 페르소나 타깃 경쟁 제품 1곳 이상 있는가 (없으면 시장 위험)"),
+                    pick("후속 결정 (입지·메뉴·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가", "후속 결정 (소싱 상품·상세페이지·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가", "후속 결정 (제품·가격·온보딩·채널) 의 기준선이 될 수 있을 만큼 구체적인가"),
                     "주변 지인 의견이 아닌 실제 잠재 고객 5명+ 대화로 검증했는가",
                 ],
                 nextStageLabel: "예산·시점 설정",
@@ -345,7 +353,7 @@ private extension TargetCustomerStageView {
                             .foregroundStyle(BUColor.midnight)
                     }
 
-                    Text("타깃 페르소나가 없으면 모든 후속 결정 — 입지·메뉴·가격대·광고 채널 — 이 평균값(=경쟁점과 동일)으로 회귀합니다.")
+                    Text("타깃 페르소나가 없으면 모든 후속 결정 — \(pick("입지·메뉴·가격대·광고 채널", "소싱 상품·상세페이지·가격·광고 채널", "제품·가격·온보딩·채널")) — 이 평균값(=경쟁점과 동일)으로 회귀합니다.")
                         .font(.system(size: 15, weight: .heavy))
                         .foregroundStyle(BUColor.ink)
                         .lineSpacing(4)
@@ -371,8 +379,11 @@ private extension TargetCustomerStageView {
                     .foregroundStyle(BUColor.inkMuted.opacity(0.55))
 
                 VStack(alignment: .leading, spacing: 9) {
-                    DataPointRow(tag: clusterGroup == .offline ? oc.smbFact0.tag : "외식 폐업 사유",
-                                 text: clusterGroup == .offline ? oc.smbFact0.text : "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024")
+                    // 외식만 KFRI 실통계 노출. online·tech는 신뢰할 단일 출처 통계가 없어 지어내지 않고 생략.
+                    // 아래 KOSME·메타는 업종 불문 실통계라 그대로 유지. (2026-07-03)
+                    if clusterGroup == .offline {
+                        DataPointRow(tag: oc.smbFact0.tag, text: oc.smbFact0.text)
+                    }
                     DataPointRow(tag: "페르소나 효과", text: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023")
                     DataPointRow(tag: "광고 ROAS",    text: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024")
                 }
@@ -512,18 +523,18 @@ private extension TargetCustomerStageView {
                     )
                     VerifyCard(
                         number: 2,
-                        question: "이 페르소나가 절대 안 갈 위치는?",
-                        hint: "구체 (예: 차량 접근만 가능한 외곽)"
+                        question: pick("이 페르소나가 절대 안 갈 위치는?", "이 페르소나가 절대 구매 안 할 채널·환경은?", "이 페르소나가 절대 도입 안 할 조건은?"),
+                        hint: pick("구체 (예: 차량 접근만 가능한 외곽)", "예: UI 복잡한 해외 직구몰, 배송 3일+ 사이트", "예: 지불 의사 없는 세그먼트, 규제·인증이 막는 시장")
                     )
                     VerifyCard(
                         number: 3,
-                        question: "이 페르소나가 정말 매주 1회+ 올까?",
-                        hint: "오면 안 되는 이유 1개라도 떠오르면 재정의"
+                        question: pick("이 페르소나가 정말 매주 1회+ 올까?", "이 페르소나가 정말 월·분기 1회+ 재구매할까?", "이 페르소나가 정말 유료 전환·지속 사용할까?"),
+                        hint: pick("오면 안 되는 이유 1개라도 떠오르면 재정의", "재구매 이유 1개도 안 떠오르면 재정의", "계속 쓸 이유 1개도 안 떠오르면 재정의")
                     )
                     VerifyCard(
                         number: 4,
-                        question: "경쟁점 중 같은 타깃 가게는?",
-                        hint: "이름·차별점 — 안 보이면 시장 없음 신호"
+                        question: pick("경쟁점 중 같은 타깃 가게는?", "경쟁 스토어 중 같은 타깃 브랜드는?", "같은 타깃의 경쟁 제품은?"),
+                        hint: pick("이름·차별점 — 안 보이면 시장 없음 신호", "스토어명·차별점 — 없으면 시장 없음 신호", "제품명·차별점 — 없으면 시장 없음 신호")
                     )
                 }
             }

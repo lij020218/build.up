@@ -175,7 +175,7 @@ public enum RoadmapSampleData {
         // 공통 준비
         "industry-selection":          .init(title: "업종 선택",          desc: "사업 분야를 결정합니다. (외식·카페·SaaS·하드웨어 등)", days: 1),
         "startup-type":                .init(title: "창업 형태 선택",      desc: "개인사업자 / 법인 / 프랜차이즈 / 무점포 등 형태를 정합니다.", days: 2),
-        "business-model":              .init(title: "운영 방식 선택",      desc: "홀·배달·하이브리드 / 구독·라이선스·API 등 비즈니스 모델 결정.", days: 2),
+        "business-model":              .init(title: "운영 방식 선택",      desc: "홀·배달·무인 / 마켓플레이스·자사몰 / 구독·API 등 업종에 맞는 운영·수익 모델 결정.", days: 2),
         "target-customer-definition":  .init(title: "타깃 고객 정의",      desc: "주 연령대·라이프스타일·가격 민감도로 페르소나 한 명을 명시.", days: 1),
         "budget-setup":                .init(title: "예산 설정",      desc: "총 창업 자본, 운영자금, 오픈 시점을 정합니다.", days: 3),
 
