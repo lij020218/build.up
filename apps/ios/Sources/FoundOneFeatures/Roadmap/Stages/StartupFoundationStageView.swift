@@ -20,6 +20,12 @@ public struct StartupFoundationStageView: View {
     @AppStorage("sf.targetUser") private var targetUser = ""
     @AppStorage("sf.corpType")  private var corpType  = ""
     @AppStorage("sf.done")      private var done      = false
+    // 웹 SSOT 미러: 운영 모드별 팀 구성 콘텐츠 (예산 단계에서 설정한 모드 공유)
+    @AppStorage("stage.budget.startupOperatingMode") private var startupMode = "bootstrap"
+
+    private var modeLabel: String {
+        ["indie": "1인 인디", "bootstrap": "부트스트랩", "seed": "시드", "seriesA": "시리즈A+"][startupMode] ?? "부트스트랩"
+    }
 
     private let pages = ["왜 중요한가", "문제 정의", "창업팀 정렬", "마무리"]
 
@@ -64,13 +70,13 @@ public struct StartupFoundationStageView: View {
                 doneItems: [
                 .init(label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting 4년 + 2년 cliff(한국 상법 기본, 벤처 인증 후 1년 cliff 가능) 명문화"),
                 .init(label: "2. 시장·문제 정의", detail: "타깃 고객 ICP + 핵심 문제 3개 + 가설 1줄 정리"),
-                .init(label: "3. 비전·미션·OKR", detail: "북극성 지표 + 분기 OKR 3~5개 + 측정 시스템 셋업"),
-                .init(label: "4. 팀·자문·스폰서", detail: "초기 팀·자문·외부 스폰서 1명 이상 확보"),
+                .init(label: "3. 법인 형태 결정", detail: "개인사업자 vs 법인 의사결정 (실제 등록은 다음 '법인 설립·등록' 단계)"),
+                .init(label: "4. 검증 사례·전략 학습", detail: "본인 모드(인디/부트스트랩/시드/시리즈A) 5개 검증 사례 검토 + 교훈 3개 메모"),
                 ],
                 verifyItems: [
                 "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위. 한국 상법 기본 2년 cliff + 4년 vesting, 1년 cliff는 벤처기업 인증 후에만 가능",
                 "지분 합의 — 시간·자본·아이디어 기여도 별도 명문화, 모호한 합의는 분쟁 후 해결 불가",
-                "근로계약 — 공동창업자도 근로계약·임원 등기 분리, 4대보험·세무 별도 처리",
+                "노무·출자 구조 — 법인 설립 전이므로 공동창업자는 근로계약이 아닌 동업 관계. 초기 자본·용역 출자 비율 명시 + 법인 설립 후 임원 등기·근로/등기임원 계약 전환 조건 사전 합의",
                 "지분 매수권 — 퇴사 시 회사가 매수권 보유 명문화, 미명시 시 외부에 팔릴 위험",
                 "IP 양도 — 공동창업자·초기 직원 모두 IP 회사 양도 계약, 미체결 시 IP 분쟁",
                 "비밀유지 — NDA·경업금지 사전 체결, 핵심 정보 유출 방지 (5년 이내 한계)",
@@ -183,6 +189,8 @@ public struct StartupFoundationStageView: View {
 
     private var teamPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            modeTeamSection
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("법인 형태 선택")
@@ -222,31 +230,163 @@ public struct StartupFoundationStageView: View {
                 }
             }
 
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.warn).font(.system(size: 13))
-                        Text("공동창업자가 있다면 — 첫 주에 결정할 것들")
-                            .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
-                    }
-                    let warnings = [
-                        "역할 분담 (CEO·CTO·COO) — 모호하면 1년 내 분쟁",
-                        "지분 비율 — Vesting 4년 + 2년 cliff (한국 상법 기본, 벤처 인증 후 1년 cliff 가능)",
-                        "풀타임 전환 시점 — 언제 회사에 전념할 것인가",
-                    ]
-                    ForEach(warnings, id: \.self) { item in
-                        HStack(alignment: .top, spacing: 6) {
-                            Circle().fill(BUColor.warn).frame(width: 4, height: 4).padding(.top, 5)
-                            Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                        }
-                    }
-                }
-            }
+            corpFormSection
 
             BUCard(.card) {
                 Toggle(isOn: $done) {
                     Text("스타트업 기초 정렬 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                 }.tint(BUColor.midnight)
+            }
+        }
+    }
+
+    // MARK: - 운영 모드별 팀 구성 (웹 SSOT 미러: StartupFoundationStage.tsx § 2)
+
+    private var modeTeamSection: some View {
+        let c = StartupFoundationModeContent.content(for: startupMode)
+        return VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    HStack(spacing: 6) {
+                        ZStack {
+                            Circle().fill(BUColor.midnight).frame(width: 22, height: 22)
+                            Text("2").font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                        }
+                        Text(c.headline).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    }
+                    Text("운영 모드를 선택하면 팀·법인 가이드가 모드에 맞게 바뀝니다 (예산 단계와 공유)")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach([("indie", "1인 인디"), ("bootstrap", "부트스트랩"), ("seed", "시드"), ("seriesA", "시리즈A+")], id: \.0) { key, label in
+                                let sel = startupMode == key
+                                Button { startupMode = key } label: {
+                                    Text(label)
+                                        .font(.system(size: 11, weight: sel ? .bold : .medium))
+                                        .foregroundStyle(sel ? .white : BUColor.inkSecondary)
+                                        .padding(.horizontal, 10).padding(.vertical, 5)
+                                        .background(sel ? BUColor.midnight : BUColor.midnight.opacity(0.06), in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    ForEach(c.why, id: \.self) { w in
+                        HStack(alignment: .top, spacing: 6) {
+                            Circle().fill(BUColor.midnight).frame(width: 4, height: 4).padding(.top, 5)
+                            Text(w).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("실행 단계")
+                    ForEach(c.actions) { a in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(a.label).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text(a.detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("이 모드에서 꼭 결정할 것")
+                    ForEach(c.decisions) { d in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(d.item).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text(d.recommendation).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("도구·리소스")
+                    ForEach(c.resources) { r in
+                        HStack(alignment: .top, spacing: 6) {
+                            Circle().fill(BUColor.midnight).frame(width: 4, height: 4).padding(.top, 5)
+                            (Text(r.name).font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.ink)
+                             + Text(" — \(r.desc)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary))
+                                .lineSpacing(2)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - 법인 형태 권장·상세 (웹 SSOT 미러: § 3 — Block 2 decisionGuide + Block 3 상세)
+
+    private var corpFormSection: some View {
+        let g = StartupFoundationModeContent.decisionGuide(for: startupMode)
+        let d = StartupFoundationModeContent.corpDetail(for: startupMode)
+        return VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    HStack(spacing: 6) {
+                        ZStack {
+                            Circle().fill(BUColor.midnight).frame(width: 22, height: 22)
+                            Text("3").font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                        }
+                        Text("법인 vs 개인사업자 — 의사결정만").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    }
+                    Text("이 단계에서는 어느 형태로 시작할지만 결정합니다. 실제 등록·과세유형·약관 절차는 다음 '법인 설립·등록' 단계에서 처리합니다.")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                    HStack(spacing: 6) {
+                        Text("\(modeLabel) 권장").font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(BUColor.midnight, in: Capsule())
+                        Text(g.recommend == "sole" ? "개인사업자" : "법인").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.midnightDeep)
+                    }
+                    Text(g.headline).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    Text(g.reason).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    Text(d.headline).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    ForEach(d.why, id: \.self) { w in
+                        HStack(alignment: .top, spacing: 6) {
+                            Circle().fill(BUColor.midnight).frame(width: 4, height: 4).padding(.top, 5)
+                            Text(w).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("실행 단계")
+                    ForEach(d.actions) { a in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(a.label).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text(a.detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("장점")
+                    ForEach(d.advantages, id: \.self) { a in
+                        Text(a).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    }
+                }
+            }
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("도구·리소스")
+                    ForEach(d.tools) { t in
+                        HStack(alignment: .top, spacing: 6) {
+                            Circle().fill(BUColor.midnight).frame(width: 4, height: 4).padding(.top, 5)
+                            (Text(t.name).font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.ink)
+                             + Text(" — \(t.desc)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                             + Text(t.price.isEmpty ? "" : " · \(t.price)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted))
+                                .lineSpacing(2)
+                        }
+                    }
+                }
             }
         }
     }

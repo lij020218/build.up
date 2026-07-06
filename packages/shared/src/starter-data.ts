@@ -1403,7 +1403,7 @@ export const starterStageFlow: RoadmapStageState[] = [
       kind: "required_tasks",
       requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "terms-privacy-published"]
     },
-    taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics", "terms-privacy-published", "pg-payment-ready"],
+    taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics", "terms-privacy-published"],
     riskIds: [],
     nextStageIds: ["mvp-build"]
   },
@@ -1421,7 +1421,7 @@ export const starterStageFlow: RoadmapStageState[] = [
       kind: "required_tasks",
       requiredTaskIds: ["core-workflow-defined", "mvp-shipped", "ip-protection-filed"]
     },
-    taskIds: ["core-workflow-defined", "mvp-shipped", "ip-protection-filed"],
+    taskIds: ["core-workflow-defined", "mvp-shipped", "ip-protection-filed", "pg-payment-ready"],
     riskIds: [],
     // ── 클러스터별 분기: MVP 직후 흐름이 갈림 ──
     //   • Hardware/IoT → NPI 4단계 (prototype/BOM/cert/manufacturing)
@@ -2399,7 +2399,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "founder-alignment", title: "Decide team structure (solo or co-founder) and document roles, equity vesting, and exit clauses", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "company-formation-path", title: "Decide: sole proprietor vs corporation (actual registration happens in next 'Company Setup' stage)", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "case-study-review", title: "Review 5 verified founder cases for your mode (indie/bootstrap/seed/seriesA) and document 3 takeaways", status: "todo", required: false, estimatedMinutes: 30 },
-    { taskId: "build-in-public-setup", title: "Set up build-in-public channel (X/Twitter or blog) — Marc Lou & Pieter Levels pattern", status: "todo", required: false, estimatedMinutes: 30 },
+    { taskId: "build-in-public-setup", title: "Pre-plan marketing channel — plan a build-in-public channel (X/Twitter or blog) to share your maker story before launch (Marc Lou & Pieter Levels pattern)", status: "todo", required: false, estimatedMinutes: 30 },
   ],
   "customer-discovery": [
     { taskId: "customer-interviews-done", title: "Run at least 10 customer interviews in one target segment", status: "todo", required: true, estimatedMinutes: 180 },
@@ -2409,7 +2409,8 @@ export const starterTaskMap: WorkflowTaskMap = {
   "mvp-build": [
     { taskId: "core-workflow-defined", title: "Define one core user workflow and success outcome", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "mvp-shipped", title: "Ship the smallest MVP that proves this workflow can be solved", status: "todo", required: true, estimatedMinutes: 240 },
-    { taskId: "ip-protection-filed", title: "File trademark and provisional patent before public launch", status: "todo", required: true, estimatedMinutes: 90, waitDays: 14, followupQuestion: "특허/상표 출원 접수 확인서를 받으셨나요?" }
+    { taskId: "ip-protection-filed", title: "File trademark and provisional patent before public launch", status: "todo", required: true, estimatedMinutes: 90, waitDays: 14, followupQuestion: "특허/상표 출원 접수 확인서를 받으셨나요?" },
+    { taskId: "pg-payment-ready", title: "Apply for PG (payment gateway) — Toss Payments / KCP / Inicis. Prerequisites: e-commerce business filing (통신판매업 신고) + finished site. Review 1-2 weeks (apply when you start charging)", status: "todo", required: false, estimatedMinutes: 30, waitDays: 14, followupQuestion: "PG 심사가 완료되었나요?" },
   ],
   "launch-gtm": [
     // ── Page 1: 출시 스택 (4가지 도구) ──
@@ -2423,7 +2424,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "marketing-content-cadence", title: "Pick 1-2 marketing channels + start weekly content cadence (Build in Public, SEO, etc)", status: "todo", required: true, estimatedMinutes: 240 },
     // ── 선택 ──
     { taskId: "security-checklist-reviewed", title: "Review 47-item security checklist before launch (AI prompts, SOC2, privacy, DDoS)", status: "todo", required: false, estimatedMinutes: 120 },
-    // ⚠️ terms-privacy-published 와 pg-payment-ready 는 company-setup 단계로 이관.
+    // ⚠️ terms-privacy-published 는 company-setup 으로, pg-payment-ready 는 mvp-build 로 이관 (PG 심사는 사이트 완성 후 신청 가능).
     // ⚠️ app-store 제출은 go-live 단계로 분리.
   ],
   "go-live": [
@@ -2443,11 +2444,10 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "startup-biz-registered", title: "Complete business registration via HomeTax (홈택스) or tax office — takes 3 business days", status: "todo", required: true, estimatedMinutes: 60, waitDays: 3, followupQuestion: "사업자등록증을 발급받으셨나요?" },
     { taskId: "ip-protection-planned", title: "File patent application at KIPRIS/특허로 BEFORE any public disclosure (demo, beta, press)", status: "todo", required: true, estimatedMinutes: 90 },
     { taskId: "trademark-filed", title: "File trademark application for your brand name and logo at 특허로 (patent.go.kr) — protects brand before competitor registers same name", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "tax-setup-basics", title: "Choose tax type (간이과세 vs 일반과세) and set up basic bookkeeping", status: "todo", required: false, estimatedMinutes: 45 },
+    { taskId: "tax-setup-basics", title: "Choose tax type — simplified (sole proprietor only, revenue < ₩104M) vs general (corporations are always general regardless of revenue) — and set up basic bookkeeping", status: "todo", required: false, estimatedMinutes: 45 },
     { taskId: "security-basics", title: "Set up customer data protection plan + security baseline (TLS, RLS, env vars)", status: "todo", required: false, estimatedMinutes: 45 },
-    // ── launch-gtm 에서 이관 — 사업자등록 후 즉시 처리 ──
+    // ── launch-gtm 에서 이관 — 약관·개인정보는 유저 가입 전 필요 → 사업자등록 후 즉시 처리 ──
     { taskId: "terms-privacy-published", title: "Publish Terms of Service and Privacy Policy before any user can sign up (legally required, generate via 개인정보보호 포털)", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "pg-payment-ready", title: "Apply for PG (payment gateway) — Toss Payments / KCP / Inicis. Review takes 1-2 weeks, start as soon as site is ready", status: "todo", required: false, estimatedMinutes: 30, waitDays: 14, followupQuestion: "PG 심사가 완료되었나요?" },
   ],
   "fundraising-readiness": [
     // ── Page 0: 왜·런웨이 진단 ──

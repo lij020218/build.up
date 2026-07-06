@@ -114,9 +114,9 @@ const BIZ_MODEL_VERIFY_ITEMS_KO: Record<BizModelCluster, string[]> = {
   ],
 };
 const BIZ_MODEL_NEXT_SUMMARY_KO: Record<BizModelCluster, string> = {
-  offline: "운영 모델·상품/서비스·시간 확정 → 자본·일정 설정 단계로 진입",
-  online: "판매 채널·상품·CS/배송 운영 확정 → 자본·일정 설정 단계로 진입",
-  tech: "수익 모델·핵심 기능·가격 확정 → 자본·일정 설정 단계로 진입",
+  offline: "운영 모델·상품/서비스·시간 확정 → 타깃 고객 정의 단계로 진입",
+  online: "판매 채널·상품·CS/배송 운영 확정 → 타깃 고객 정의 단계로 진입",
+  tech: "수익 모델·핵심 기능·가격 확정 → 타깃 고객 정의 단계로 진입",
 };
 
 export function BusinessModelSelectionStage() {
@@ -324,7 +324,7 @@ export function BusinessModelSelectionStage() {
 
       <StageWrapup
         ko={language === "ko"}
-        nextStageLabelKo="자본·일정 설정"
+        nextStageLabelKo="타깃 고객 정의"
         doneItemsKo={BIZ_MODEL_DONE_ITEMS_KO[bizModelCluster]}
         verifyItemsKo={BIZ_MODEL_VERIFY_ITEMS_KO[bizModelCluster]}
         nextSummaryKo={BIZ_MODEL_NEXT_SUMMARY_KO[bizModelCluster]}

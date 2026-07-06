@@ -809,6 +809,7 @@ export function FirstMonthCheckStage() {
         </>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="대출·정부지원금 검토"
@@ -828,6 +829,7 @@ export function FirstMonthCheckStage() {
         ]}
         nextSummaryKo="첫 달 손익·KPI 점검 완료 → 대출·정부지원금 검토 단계로 진입 (필요 시)"
       />
+      )}
 
       {/* 2026-05-13 — 로드맵 → 운영 대시보드 자연 전환 funnel.
           46 단계 풀 사이클 로드맵 마지막에서 운영 대시보드 *매일 사용* 으로

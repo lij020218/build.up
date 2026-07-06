@@ -507,6 +507,7 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://youth.seoul.go.kr/content.do?key=2310100028",
     forSmallBiz: true,
     forFranchise: false,
+    industries: ["food"], // 2026-07-05: 외식 전용(공유주방·외식창업 인큐베이팅) — 온라인·타업종 매칭 누수 차단
     highlight: true,
     dataYear: "2026",
     applicationStatus: "open",
@@ -1784,6 +1785,7 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://touraz.kr/",
     forSmallBiz: true,
     forFranchise: false,
+    industries: ["space"], // 2026-07-06: 관광(숙박·체험) 전용 — 게스트하우스(space)에만. 온라인커머스·외식 등 누수 차단
     dataYear: "2026",
     businessYearRange: [0, 7],
     applicationStatus: "closed",
@@ -1923,7 +1925,8 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "국내 중소·중견 제조기업", en: "SME/mid manufacturers" },
     benefit: { ko: "구축비 30%(상생형)~50%(AI트랙) 정부지원, 공정 최적화", en: "30-50% build subsidy, AI track" },
     amount: "구축비 정부지원 30~50%", season: { ko: "2026 통합공고", en: "2026 integrated" },
-    url: "https://www.smart-factory.kr/", forSmallBiz: true, forFranchise: false, dataYear: "2026",
+    url: "https://www.smart-factory.kr/", forSmallBiz: true, forFranchise: false, industries: ["startup-tech"], // 2026-07-06: 제조 딥테크 전용 — build.up 택소노미에 제조 카테고리 없어 제조 창업자가 속하는 startup-tech에 한정, 외식·소매 등 누수 차단
+    dataYear: "2026",
     applicationStatus: "open", fundingType: "grant",
   },
   {

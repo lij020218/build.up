@@ -93,7 +93,7 @@ export const FUNDING_PROGRAMS: FundingProgram[] = [
     category: "facility-support",
     modes: ["indie", "bootstrap"],
     amount: "사무공간·컨설팅 3년 무료",
-    eligibility: "1인 창조기업 (1인 창업자 또는 2명 이내 공동창업)",
+    eligibility: "1인 창조기업 (1인 또는 5인 미만 공동사업자, 상시근로자 없이 — 1인창조기업법 §2)",
     summary: "1인 창조기업 인프라 — 사무공간·컨설팅·판로개척 3년 무료 지원",
     description: "현금 지원 X. 대신 사무공간 + 전문가 컨설팅 + 경영지원 + 판로개척까지 최대 3년 무료. 인건비·임대료 절감 큼. 전국 지역 센터 운영.",
     url: "https://www.kised.or.kr/menu.es?mid=a10203050000",

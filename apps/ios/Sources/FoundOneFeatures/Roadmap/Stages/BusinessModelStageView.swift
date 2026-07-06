@@ -105,9 +105,9 @@ public struct BusinessModelStageView: View {
         ]
     }
     private var bizWrapupNextSummary: String {
-        if cluster.isStartupTech { return "수익 모델·핵심 기능·가격 확정 → 자본·일정 설정 단계로 진입" }
-        if cluster.isOnline { return "판매 채널·상품·CS/배송 운영 확정 → 자본·일정 설정 단계로 진입" }
-        return "운영 모델·메뉴·시간 확정 → 자본·일정 설정 단계로 진입"
+        if cluster.isStartupTech { return "수익 모델·핵심 기능·가격 확정 → 타깃 고객 정의 단계로 진입" }
+        if cluster.isOnline { return "판매 채널·상품·CS/배송 운영 확정 → 타깃 고객 정의 단계로 진입" }
+        return "운영 모델·메뉴·시간 확정 → 타깃 고객 정의 단계로 진입"
     }
     // 화면 서브타이틀(helperText)도 카테고리군별 분기 — 온라인엔 POS·인건비가 무의미.
     private var bizHelperText: String {
@@ -306,7 +306,7 @@ public struct BusinessModelStageView: View {
             wrapup: BUStageWrapupData(
                 doneItems: bizWrapupDoneItems,
                 verifyItems: bizWrapupVerifyItems,
-                nextStageLabel: "자본·일정 설정",
+                nextStageLabel: "타깃 고객 정의",
                 nextSummary: bizWrapupNextSummary
             )
         ) {

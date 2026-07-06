@@ -84,16 +84,16 @@ public struct MvpBuildStageView: View {
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. MVP 범위 정의", detail: "「북극성 가설 1개 검증」에 필요한 최소 기능만 — Wide vs Deep 트레이드오프"),
-                .init(label: "2. 빌드 방법 결정", detail: "노코드(Bubble·Webflow)·로코드(Retool)·풀스택 비교 후 선택"),
+                .init(label: "2. 빌드 방법 결정", detail: "AI 앱 빌더(Lovable·v0)·AI 코딩 어시스턴트(Cursor·Claude Code) 기반 프론트·백엔드 스택 확정"),
                 .init(label: "3. 1차 MVP 출시", detail: "내부 알파 → 클로즈드 베타 → 오픈 베타 3단계 + 분석 셋업"),
                 .init(label: "4. 첫 사용자 10명", detail: "리드 고객 10명 onboard + 1:1 사용자 인터뷰 + 핵심 지표 측정"),
                 ],
                 verifyItems: [
                 "PMF 시그널 — 「제거하면 절망적」 답변 40%+ 가 PMF 신호 (Sean Ellis Test), 미달 시 GTM 전 재정의",
                 "보안 — 출시 전 OWASP Top 10 점검 + SQL injection·XSS·CSRF 사전 방어",
-                "개인정보 — 수집·이용·제공·파기 4항목 명문화, 위반 시 매출 3% 이내 과징금",
+                "개인정보 — 수집·이용·제공·파기 4항목 명문화. 절차 위반은 과태료, 유출·불법 제공 등 중대 위반은 매출 3% 이내 과징금",
                 "이용약관·환불 — 7일 이내 청약철회·환불 조항 명시, 디지털콘텐츠 예외 조건 명문화",
-                "지재권 — 핵심 알고리즘·UI·로고 특허·상표·저작권 사전 출원, 외부 노출 후 출원 X",
+                "지재권 — 브랜드명·로고 상표권 사전 출원(선점 필수). 소스코드·콘텐츠 저작권은 창작 즉시 자동 발생(무방식주의 — 등록 불요, 증빙만 관리). 특허(핵심 알고리즘 — 신규성·진보성)·디자인권(화면 UI — 신규성·창작성)은 요건 충족 시에만 공개 전 출원 (노출 시 신규성 상실, 한국은 12개월 공지예외)",
                 "데이터 백업 — DB·파일 다중 백업·복구 시뮬, 출시 후 데이터 손실 시 신뢰 회복 불가",
                 ],
                 nextStageLabel: "런칭 GTM",

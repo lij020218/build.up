@@ -730,7 +730,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "founder-alignment": { ko: "팀 구성 결정 (솔로/공동) 및 역할·지분 베스팅·이탈 조항 문서화" },
   "company-formation-path": { ko: "법인 vs 개인사업자 결정 (실제 등록은 다음 '법인 설립·등록' 단계에서)" },
   "case-study-review": { ko: "본인 모드(인디/부트스트랩/시드/시리즈A)의 5개 검증 사례 검토 + 교훈 3개 메모" },
-  "build-in-public-setup": { ko: "빌드 인 퍼블릭 채널 셋업 (X/트위터 또는 블로그) — Marc Lou·Pieter Levels 패턴" },
+  "build-in-public-setup": { ko: "마케팅 채널 사전 검토 — 출시 전 메이커 스토리를 공유할 빌드 인 퍼블릭(X/트위터·블로그) 채널 운영 계획 수립 (Marc Lou·Pieter Levels 패턴)" },
   "brand-identity-draft": { ko: "브랜드 아이덴티티 초안 — 이름·로고 방향·톤앤매너 (공개 전 정리)" },
   "nda-ip-agreement": { ko: "NDA · IP 양도계약서 준비 — 공동창업자·외주·프리랜서 대상 (아이디어 보호 필수)" },
   "brand-identity-offline": { ko: "브랜드 자산 준비 — 간판 디자인·메뉴판·인테리어 브랜딩 요소" },
@@ -762,7 +762,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "google-play-submitted": { ko: "Google Play 제출 (Android만) — 12명 테스터 × 14일 폐쇄 테스트 의무 (개인 계정)" },
   "launch-day-monitored": { ko: "론칭 데이 24시간 모니터링 — 모든 댓글 답변 + Twitter·HN·PH 동시 공유" },
   "terms-privacy-published": { ko: "이용약관 · 개인정보처리방침 게시 — 유저 가입 전 법적 필수. 개인정보보호 포털에서 자동 생성 가능" },
-  "pg-payment-ready": { ko: "PG(전자결제) 가입 심사 신청 — 토스페이먼츠/KCP/이니시스 중 선택, 심사 1~2주 소요. 사이트 완성 후 즉시 신청" },
+  "pg-payment-ready": { ko: "PG(전자결제) 가입 — 토스페이먼츠/KCP/이니시스. 사전 준비: 통신판매업 신고 + 사이트 완성. 심사 1~2주 (유료 결제 시작 시점에 맞춰 신청)" },
   // growth-engine
   "north-star-set": { ko: "북극성 지표 하나 선택 — 회사 전체가 추적할 핵심 숫자" },
   "weekly-review-running": { ko: "매주 월요일 30분 성장 리뷰 — 지표 확인 + 실험 1개" },
@@ -772,7 +772,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "startup-biz-registered": { ko: "사업자등록 완료 — 홈택스 온라인 신청 (3영업일 소요)" },
   "ip-protection-planned": { ko: "특허 출원 — 공개(데모·베타·보도자료) 전에 특허로에서 출원 필수" },
   "trademark-filed": { ko: "상표 출원 — 브랜드명·로고를 특허로(patent.go.kr)에서 출원" },
-  "tax-setup-basics": { ko: "과세 유형 결정 — 간이과세(매출 1억 400만원 미만) vs 일반과세" },
+  "tax-setup-basics": { ko: "과세 유형 결정 — 간이과세(개인사업자 한정·매출 1억 400만원 미만) vs 일반과세 (법인은 매출 무관 일반과세)" },
   "security-basics": { ko: "개인정보보호 정책 · 이용약관 · 고객 데이터 보안 계획 수립" },
   // fundraising-readiness
   "runway-model-ready": { ko: "런웨이 모델링 — Best/Base/Worst 시나리오 + 18개월 목표 + Net Burn 비율 점검" },
@@ -844,7 +844,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // store-setup
   "store-configured": { ko: "스토어 카테고리·배너·반품 정책 구성" },
   "shipping-setup": { ko: "택배사 연동 및 배송 옵션 설정" },
-  "pg-connected": { ko: "결제 게이트웨이 연동 (자체몰 필수)" },
+  "pg-connected": { ko: "결제·정산 확인 — 마켓플레이스는 정산 대금 입금 계좌 등록 / 자체몰은 PG(토스·이니시스 등) 연동" },
   // online-marketing
   "store-seo-done": { ko: "네이버 쇼핑 검색 최적화 (상품명·태그)" },
   "first-ad-set": { ko: "스마트스토어 또는 쿠팡 첫 광고 캠페인 설정" },

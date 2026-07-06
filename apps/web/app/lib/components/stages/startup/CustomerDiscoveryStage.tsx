@@ -22,6 +22,8 @@ export function CustomerDiscoveryStage() {
   const guideSelections = d.guideSelections;
   const decisions = d.decisions;
   const setGuideStepIndex = d.setGuideStepIndex;
+  // 2026-07-06: 문제정의 폴백(6단계 startup-foundation)을 버튼 활성/전송에도 반영 — 입력창엔 값이 보이는데 버튼이 비활성이던 버그 수정
+  const interviewProblem = guideSelections["interview-problem"] ?? (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "";
 
   const pgLabels = ko
     ? ["왜 중요한가", "1. 인터뷰 준비", "2. 인터뷰 실행", "3. AI 분석"]
@@ -159,7 +161,7 @@ export function CustomerDiscoveryStage() {
             <input
               type="text"
               placeholder={ko ? "해결하려는 문제 (예: 소상공인의 경영 데이터 분석 시간 부족)" : "Problem to solve"}
-              value={(guideSelections["interview-problem"] ?? (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "")}
+              value={interviewProblem}
               onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-problem": e.target.value }))}
               style={{
                 padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.12)",
@@ -183,7 +185,7 @@ export function CustomerDiscoveryStage() {
           </div>
           <button
             type="button"
-            disabled={!guideSelections["interview-problem"]?.trim() || !guideSelections["interview-target"]?.trim() || guideSelections["interview-loading"] === "true"}
+            disabled={!interviewProblem.trim() || !guideSelections["interview-target"]?.trim() || guideSelections["interview-loading"] === "true"}
             onClick={async () => {
               d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-loading": "true", "interview-error": "" }));
               try {
@@ -194,7 +196,7 @@ export function CustomerDiscoveryStage() {
                   headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
                   body: JSON.stringify({
                     industryCategoryId: d.industryCategoryId,
-                    problemStatement: guideSelections["interview-problem"],
+                    problemStatement: interviewProblem,
                     targetCustomer: guideSelections["interview-target"],
                     language: d.language,
                   }),
@@ -208,7 +210,7 @@ export function CustomerDiscoveryStage() {
             }}
             style={{
               width: "100%", padding: "10px", borderRadius: "10px", border: "none",
-              background: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim() && guideSelections["interview-loading"] !== "true") ? MIDNIGHT : "rgba(25,25,112,0.1)",
+              background: (interviewProblem.trim() && guideSelections["interview-target"]?.trim() && guideSelections["interview-loading"] !== "true") ? MIDNIGHT : "rgba(25,25,112,0.1)",
               color: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "#fff" : "rgba(25,25,112,0.3)",
               fontSize: "13px", fontWeight: 700, cursor: "pointer",
               boxShadow: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "0 2px 8px rgba(25,25,112,0.2)" : "none",
@@ -526,6 +528,7 @@ export function CustomerDiscoveryStage() {
       </>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="법인 설립"
@@ -545,6 +548,7 @@ export function CustomerDiscoveryStage() {
         ]}
         nextSummaryKo="ICP·문제·솔루션 가설 검증 완료 → 법인 설립 단계로 진입"
       />
+      )}
     </div>
   );
 }

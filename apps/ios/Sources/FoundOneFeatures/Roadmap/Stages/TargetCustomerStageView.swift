@@ -278,9 +278,9 @@ public struct TargetCustomerStageView: View {
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                    .init(label: "1. 주 연령대·산업 명시", detail: "한 명에게 팔린다는 의지로 좁혔는지 확인"),
-                    .init(label: "2. 라이프스타일·일상 동선", detail: "언제·어디서·왜 쓰는지 구체화"),
-                    .init(label: "3. 객단가·예산 한도", detail: "안 살 가격대까지 명확"),
+                    .init(label: pick("1. 주 연령대·산업 명시", "1. 주 연령대·산업 명시", "1. 타깃 산업·기업 규모"), detail: "한 명에게 팔린다는 의지로 좁혔는지 확인"),
+                    .init(label: pick("2. 라이프스타일·일상 동선", "2. 라이프스타일·구매 동기", "2. 핵심 역할·업무 워크플로우"), detail: pick("언제·어디서·왜 쓰는지 구체화", "언제·왜 구매하는지 구체화", "어떤 업무에서·왜 도입하는지 구체화")),
+                    .init(label: pick("3. 객단가·예산 한도", "3. 객단가·예산 한도", "3. 도입 예산·지불 의사"), detail: pick("안 살 가격대까지 명확", "안 살 가격대까지 명확", "안 낼 가격대까지 명확")),
                     .init(label: "4. 반례 검증", detail: "이 페르소나가 절대 안 할 행동 4개"),
                 ],
                 verifyItems: [
@@ -346,7 +346,7 @@ private extension TargetCustomerStageView {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(BUColor.midnight)
-                        Text("왜 이게 BUDGET · LOCATION 전인가")
+                        Text("왜 이게 예산·시점 설정 전인가")
                             .font(.system(size: 11, weight: .heavy))
                             .tracking(0.6)
                             .textCase(.uppercase)
@@ -372,7 +372,7 @@ private extension TargetCustomerStageView {
 
             // 한국 SMB 데이터 박스
             VStack(alignment: .leading, spacing: 10) {
-                Text("한국 SMB 데이터")
+                Text(clusterGroup == .tech ? "스타트업 실패 데이터" : "한국 SMB 데이터")
                     .font(.system(size: 10, weight: .heavy))
                     .tracking(0.6)
                     .textCase(.uppercase)
@@ -384,7 +384,11 @@ private extension TargetCustomerStageView {
                     if clusterGroup == .offline {
                         DataPointRow(tag: oc.smbFact0.tag, text: oc.smbFact0.text)
                     }
-                    DataPointRow(tag: "페르소나 효과", text: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023")
+                    if clusterGroup == .tech {
+                        DataPointRow(tag: "PMF 실패", text: "시장이 원하지 않는 제품(타깃·수요 불명확)이 스타트업 실패 1위 요인 — 42% (CB Insights)")
+                    } else {
+                        DataPointRow(tag: "페르소나 효과", text: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023")
+                    }
                     DataPointRow(tag: "광고 ROAS",    text: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024")
                 }
             }
@@ -553,9 +557,9 @@ private extension TargetCustomerStageView {
 
             BUCard(.outer) {
                 VStack(alignment: .leading, spacing: 10) {
-                    wrapupRow("1. 주 연령대·산업 명시",    detail: "한 명에게 팔린다는 의지로 좁혔는지 확인")
-                    wrapupRow("2. 라이프스타일·일상 동선", detail: "언제·어디서·왜 쓰는지 구체화")
-                    wrapupRow("3. 객단가·예산 한도",       detail: "안 살 가격대까지 명확")
+                    wrapupRow(pick("1. 주 연령대·산업 명시", "1. 주 연령대·산업 명시", "1. 타깃 산업·기업 규모"),    detail: "한 명에게 팔린다는 의지로 좁혔는지 확인")
+                    wrapupRow(pick("2. 라이프스타일·일상 동선", "2. 라이프스타일·구매 동기", "2. 핵심 역할·업무 워크플로우"), detail: pick("언제·어디서·왜 쓰는지 구체화", "언제·왜 구매하는지 구체화", "어떤 업무에서·왜 도입하는지 구체화"))
+                    wrapupRow(pick("3. 객단가·예산 한도", "3. 객단가·예산 한도", "3. 도입 예산·지불 의사"),       detail: pick("안 살 가격대까지 명확", "안 살 가격대까지 명확", "안 낼 가격대까지 명확"))
                     wrapupRow("4. 반례 검증",             detail: "이 페르소나가 절대 안 할 행동 4개")
                 }
             }

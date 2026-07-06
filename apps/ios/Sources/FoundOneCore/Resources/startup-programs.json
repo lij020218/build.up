@@ -719,6 +719,9 @@
     "url": "https://youth.seoul.go.kr/content.do?key=2310100028",
     "forSmallBiz": true,
     "forFranchise": false,
+    "industries": [
+      "food"
+    ],
     "highlight": true,
     "dataYear": "2026",
     "applicationStatus": "open"
@@ -3265,6 +3268,9 @@
     "url": "https://touraz.kr/",
     "forSmallBiz": true,
     "forFranchise": false,
+    "industries": [
+      "space"
+    ],
     "dataYear": "2026",
     "businessYearRange": [
       0,
@@ -3745,6 +3751,9 @@
     "url": "https://www.smart-factory.kr/",
     "forSmallBiz": true,
     "forFranchise": false,
+    "industries": [
+      "startup-tech"
+    ],
     "dataYear": "2026",
     "applicationStatus": "open",
     "fundingType": "grant"

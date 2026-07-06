@@ -160,7 +160,7 @@ const SUB_INDUSTRY_BENCHMARKS: Record<string, CostBenchmark> = {
   "guesthouse":        { ingredients: [8, 15],  labor: [15, 30], rent: [25, 40], utilities: [8, 15], sga: [5, 10], marketing: [15, 22], other: [3, 7], margin: [10, 25], typicalMonthlyKrw: [5_000_000, 25_000_000], notes: "OTA 14~16% + 청소·세탁·임대료가 고정비 핵심" },
 
   // ── 온라인·디지털 ── (basis="revenue", 매출 발생 후)
-  "smart-store":       { ingredients: [40, 55], labor: [10, 20], rent: [3, 8],   utilities: [2, 5], sga: [8, 12],  marketing: [15, 25], other: [2, 5], margin: [15, 30], typicalMonthlyKrw: [3_000_000, 50_000_000], notes: "결제 3.74% + 매출연동 2% + CPC 광고 누적 부담" },
+  "smart-store":       { ingredients: [40, 55], labor: [10, 20], rent: [3, 8],   utilities: [2, 5], sga: [8, 12],  marketing: [15, 25], other: [2, 5], margin: [15, 30], typicalMonthlyKrw: [3_000_000, 50_000_000], notes: "결제 3.63% + 판매수수료 2.73% + CPC 광고 누적 부담" },
   "digital-products":  { ingredients: [3, 8],   labor: [30, 50], rent: [0, 5],   utilities: [3, 7], sga: [10, 15], marketing: [20, 35], other: [2, 5], margin: [70, 90], typicalMonthlyKrw: [1_000_000, 15_000_000], notes: "크몽·인프런 15~20%·노션 마켓 5%, 광고 ROI 핵심" },
   "creator-service":   { ingredients: [10, 20], labor: [25, 45], rent: [3, 10],  utilities: [5, 10], sga: [5, 10], marketing: [10, 20], other: [3, 8], margin: [40, 65], typicalMonthlyKrw: [2_000_000, 20_000_000], notes: "편집 외주·장비 감가·썸네일이 가변비 핵심" },
   "consignment-commerce": { ingredients: [55, 70], labor: [10, 20], rent: [2, 6], utilities: [2, 5], sga: [8, 12], marketing: [10, 18], other: [2, 5], margin: [10, 20], typicalMonthlyKrw: [2_000_000, 30_000_000], notes: "마진 얇음 — 반품·CS·환율 리스크가 손익 좌우" },
@@ -338,7 +338,7 @@ const SUB_INDUSTRY_FIELDS: Record<string, SubIndustryFieldsConfig> = {
   "smart-store": {
     labels: {
       ingredients: { ko: "매입 원가",          en: "Cost of goods",     hint: { ko: "상품 사입·도매 매입가",                en: "Wholesale buy-in" } },
-      sga:         { ko: "결제·플랫폼 수수료", en: "Payment / Platform",hint: { ko: "네이버 3.63%+매출연동 2%·쿠팡 4~10.8%", en: "Naver 3.63%/Coupang 4-10.8%" } },
+      sga:         { ko: "결제·플랫폼 수수료", en: "Payment / Platform",hint: { ko: "네이버 결제 3.63%+판매수수료 2.73%·쿠팡 4~10.9%", en: "Naver 3.63%+2.73%/Coupang 4-10.9%" } },
       utilities:   { ko: "포장·배송 자재",     en: "Packaging / Ship",  hint: { ko: "박스·완충재·송장·택배비",              en: "Box/cushion/shipping" } },
       rent:        { ko: "창고·풀필먼트",      en: "Warehouse / FBA",   hint: { ko: "재택 운영 시 0 — 풀필먼트는 입출고비",  en: "0 if home/FBA per pick" } },
       other:       { ko: "반품·CS·기타",       en: "Returns / CS",      hint: { ko: "반품 회수·CS 인건·소모품",             en: "Returns/CS/supplies" } },
@@ -417,6 +417,7 @@ const SUB_INDUSTRY_FIELDS: Record<string, SubIndustryFieldsConfig> = {
 export function FinancialReviewStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
+  const isOnlineFin = d.industryCategoryId === "online-digital"; // 2026-07-06: 무점포 커머스 — 고정비·재료비·5인매장 문구를 매입원가·솔루션·1인 기준으로
 
   // ── 1. StageInputs 구성: 이전 단계 결정값을 읽어서 모음 ──────────
   const stageInputs = useMemo<StageInputs>(() => {
@@ -879,15 +880,12 @@ export function FinancialReviewStage() {
           { key: "sga",         label: { ko: "결제·회계·법무",    en: "Payments/Legal" }, range: benchmark.sga },
           { key: "marketing",   label: { ko: "마케팅·광고",        en: "Marketing" },  range: benchmark.marketing },
           { key: "other",       label: { ko: "기타 (IP·인증)",     en: "Other (IP/cert)" }, range: benchmark.other },
-        ] : [
-          { key: "ingredients", label: { ko: "원재료·식자재",   en: "Materials" }, range: benchmark.ingredients },
-          { key: "labor",       label: { ko: "인건비",          en: "Labor" },     range: benchmark.labor },
-          { key: "rent",        label: { ko: "임대료",          en: "Rent" },      range: benchmark.rent },
-          { key: "utilities",   label: { ko: "공과금",          en: "Utilities" }, range: benchmark.utilities },
-          { key: "sga",         label: { ko: "운영 수수료",     en: "Ops fees" },  range: benchmark.sga },
-          { key: "marketing",   label: { ko: "마케팅",          en: "Marketing" }, range: benchmark.marketing },
-          { key: "other",       label: { ko: "기타",            en: "Other" },     range: benchmark.other },
-        ];
+        ] : // 2026-07-06 정합: revenue-basis 는 sub-industry 라벨 override(fieldLabels) 사용 — 스마트스토어=매입원가·포장배송, 디지털상품=콘텐츠제작비·호스팅, 오프라인=임대료·식자재 각각 정확. (카테고리-flat 하드코딩은 디지털상품에 물류 라벨이 붙는 오류라 폐기)
+        (["ingredients", "labor", "rent", "utilities", "sga", "marketing", "other"] as BenchKey[]).map((key) => ({
+          key,
+          label: { ko: fieldLabels[key].ko, en: fieldLabels[key].en },
+          range: benchmark[key] as [number, number],
+        }));
         const totalLow  = rows.reduce((a, r) => a + r.range[0], 0);
         const totalHigh = rows.reduce((a, r) => a + r.range[1], 0);
 
@@ -1178,15 +1176,19 @@ export function FinancialReviewStage() {
         ko={ko}
         nextStageLabelKo="개업·론칭"
         doneItemsKo={[
-          { label: "1. 고정비 점검", detail: "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교" },
+          { label: "1. 고정비 점검", detail: isOnlineFin ? "솔루션·마케팅·고정 관리비 3축 — 매출 대비 비율로 업종 평균 비교 (무점포라 임대료·공과금 비중 낮음)" : "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교" },
           { label: "2. 변동비 점검", detail: "재료비·일반관리비 2축 — 매출 30% 이내 유지 룰 점검" },
           { label: "3. 기타비 점검", detail: "마케팅·이자·기타 3축 — 광고 ROAS·대출 이자 한계점 검토" },
           { label: "4. 손익분기·런웨이", detail: "흑자 목표 매출(운영비 기준) + 보유 자본 잔여 개월 자동 계산" },
         ]}
         verifyItemsKo={[
           "고정비 합계 — 매출 70% 미만 유지, 초과 시 변동비 압박으로 흑자 도달 어려움",
-          "재료비 — 매출 30% 한계, 35% 초과 시 메뉴·공급처 즉시 재검토 (1순위 적자 원인)",
-          "인건비 — 25% 한계, 5인 이상 사업장은 연장수당·연차수당 별도 누적, 누락 시 차액·가산금",
+          isOnlineFin
+            ? "원가율 — 상품 매입(또는 콘텐츠 제작) 원가가 목표 원가율 초과 시 사입처·제작 방식 즉시 재검토 (1순위 적자 원인)"
+            : "재료비 — 매출 30% 한계, 35% 초과 시 메뉴·공급처 즉시 재검토 (1순위 적자 원인)",
+          isOnlineFin
+            ? "인건비 — 초기 1인·가족 운영 시 대표 생계비·고정 버퍼 책정, 물량·구독 늘면 외주(3PL 물류·편집 등)와 손익 비교"
+            : "인건비 — 25% 한계, 5인 이상 사업장은 연장수당·연차수당 별도 누적, 누락 시 차액·가산금",
           "운영자본 6개월 — 매출 0원 가정해도 견딜 자본 별도 유지 (흑자부도 1순위 원인)",
           "이자 부담 — 정책자금·일반대출 이자 합산 매출 5% 이내, 초과 시 신규 대출 자제",
           "마케팅 ROAS — 200% 미만이면 즉시 중단·재구성, 「쓸수록 손해」 패턴 인식",

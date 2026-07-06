@@ -272,11 +272,11 @@ export function GrowthEngineStage() {
           {(ko ? [
             { period: "D1", good: "40%+", desc: "첫날 재방문" },
             { period: "D7", good: "20%+", desc: "첫주 유지" },
-            { period: "D30", good: "10%+", desc: "첫달 유지" },
+            { period: "D30", good: "15%+", desc: "첫달 (B2C·B2B 40%+)" },
           ] : [
             { period: "D1", good: "40%+", desc: "Day 1 return" },
             { period: "D7", good: "20%+", desc: "Week 1" },
-            { period: "D30", good: "10%+", desc: "Month 1" },
+            { period: "D30", good: "15%+", desc: "M1 (B2C·B2B 40%+)" },
           ]).map(r => (
             <div key={r.period} style={{ padding: "12px", borderRadius: "12px", background: MIDNIGHT_SOFT, textAlign: "center" as const }}>
               <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const }}>{r.period}</div>
@@ -461,6 +461,7 @@ export function GrowthEngineStage() {
         </div>
       </div>
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="펀드레이징 준비"
@@ -480,6 +481,7 @@ export function GrowthEngineStage() {
         ]}
         nextSummaryKo="북극성·주간 리뷰·리텐션·성장 가설 셋업 완료 → 펀드레이징 준비 단계로 진입"
       />
+      )}
     </div>
   );
 }

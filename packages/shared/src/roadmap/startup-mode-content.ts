@@ -168,10 +168,10 @@ export const STARTUP_STAGE_MODE_CONTENT: Record<string, Record<OperatingMode, Mo
     bootstrap: {
       why: "팀이 있으면 처음부터 법인 (주식회사) 권장. 공동창업자 지분 = 주식. 법인이 없으면 지분 합의 자체가 법적 효력 약함. 매출 발생 시 4대보험·세무가 복잡해짐.",
       actions: [
-        { title: "주식회사 설립 (자본금 100만원~) + 공동창업자 주식 발행", detail: "법무사 위임 30-50만원. 자본금 1억 미만은 신용출자 가능. 공동창업자 vesting agreement 동시 작성." },
+        { title: "사업 형태 확정 (개인사업자 vs 주식회사) — 팀 있으면 법인 권장", detail: "법인 선택 시: 법무사 위임 30-50만원, 자본금 100만원~(1억 미만 신용출자 가능), 공동창업자 주식 발행 + vesting 동시. 개인사업자는 홈택스 5분·무료(간이과세 가능)." },
         { title: "트레이드마크 + 도메인 + 핵심 IP 출원", detail: "Pre-seed 라운드 전에 IP 정리 — 투자자 due diligence 첫 항목." },
-        { title: "Shareholder Agreement 작성", detail: "Drag-along·Tag-along·Right of First Refusal·Vesting·Non-compete. 변호사 위임 200-500만원." },
-        { title: "기본 옵션 풀 (5-10%) 사전 확보", detail: "직원 채용 시 즉시 인센티브 가능. 시드 후 추가 발행 부담 줄임." },
+        { title: "공동창업 계약서(동업계약서) — 법인 설립 시 주주간계약서(SHA)로 정식화", detail: "Drag-along·Tag-along·Right of First Refusal·Vesting·Non-compete. 변호사 위임 200-500만원 또는 ZUZU 템플릿. 설립 전이면 동업계약서, 설립 후 SHA로 승계." },
+        { title: "지분 구조·인센티브 계획 사전 확보", detail: "법인 설립 시 옵션 풀 5-10% 사전 확보 → 직원 채용 시 즉시 인센티브, 시드 후 추가 발행 부담 감소." },
       ],
       pace: "법인 설립 2-4주. SHA 1개월. 옵션 풀 동시.",
       pitfall: "공동창업자와 '나중에 정리' → 6개월 후 갈등 시 거의 회복 불가. 법인 설립 즉시 SHA 작성.",
@@ -274,7 +274,7 @@ export const STARTUP_STAGE_MODE_CONTENT: Record<string, Record<OperatingMode, Mo
       actions: [
         { title: "1차 채널 1개 결정 + 6개월 집중", detail: "B2B SaaS = LinkedIn + 콘텐츠 / 인디 SaaS = X·HN·PH / 한국 = 네이버·인스타·카카오. 채널별 실험 후 정착." },
         { title: "콘텐츠 마케팅 시스템 (blog + SEO + social)", detail: "37signals 모델: 'sell the byproduct'. 블로그·책·팟캐스트로 brand awareness. 6-12개월 후 매출 30-50%." },
-        { title: "유료 광고 시작 (소규모, $1-5K/월) — PMF 후", detail: "PMF 신호 명확하면 Google·Meta·LinkedIn 소액 시작. ROAS 1.5+ 안 나오면 즉시 중단." },
+        { title: "유료 광고는 PMF 후 · 런웨이 되면만 (아니면 오가닉 우선)", detail: "광고 알고리즘 학습단계 이탈엔 채널당 주 ~50전환이 필요 → 사실상 월 130만원(~$1K)·일 $10~30+ 부터라야 데이터가 쌓임(Meta·Google 기준). 그 이하 소액은 학습 못 벗어나 돈만 낭비. 자비 런웨이가 이를 감당 못 하면 유료광고는 미루고 콘텐츠·커뮤니티(오가닉) 집중. 하면 한 채널만, ROAS 1.5+ 안 나오면 즉시 중단." },
         { title: "파트너십 / referral / affiliate 프로그램", detail: "Stair Step 전략 — 기존 ecosystem 활용 (Shopify·WordPress·Slack 마켓플레이스). MicroConf 표준." },
       ],
       pace: "출시 → 첫 매출 1-3개월. ARR $100K 12-18개월.",

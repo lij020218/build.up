@@ -257,10 +257,10 @@ export function StartupFoundationStage() {
             ],
             decisions: ko ? [
               { item: "공동창업자 들이지 않는 결정", recommendation: "지분 100% 유지 + 의사결정 빠름. 단, 1년 후에도 솔로면 멘토·외주 시스템이 작동해야 함." },
-              { item: "외주 vs 풀타임 첫 채용", recommendation: "매출 월 5천만+ 안정적 발생 시 contractor → 6개월 후 full-time 전환. 그 전에는 contractor 만." },
+              { item: "외주 vs 풀타임 첫 채용", recommendation: "제품이 유료 매출·트랙션을 내고 내 시간가치 > 외주비가 될 때 contractor → 6개월 검증 후 full-time. 그 전에는 본인 + 외주만." },
             ] : [
               { item: "Choosing solo (no co-founder)", recommendation: "Keep 100% equity + fast decisions. But mentor/outsource system must work after 1 year." },
-              { item: "Contractor vs full-time first hire", recommendation: "Stable 50M/mo revenue → contractor → 6mo later → FT. Before that, contractor only." },
+              { item: "Contractor vs full-time first hire", recommendation: "Once the product has paying traction and your time-value > cost → contractor → 6mo → FT. Before that, you + contractors only." },
             ],
             resources: [
               { name: "Indie Hackers", desc: ko ? "글로벌 인디 해커 커뮤니티" : "Global indie hacker community", url: "https://www.indiehackers.com" },
@@ -271,7 +271,7 @@ export function StartupFoundationStage() {
             ],
           },
           bootstrap: {
-            headline: ko ? "부트스트랩 — 1-3명 공동창업 + SHA 즉시" : "Bootstrap — 1-3 co-founders + SHA immediately",
+            headline: ko ? "부트스트랩 — 1-3명 공동창업 + 동업계약 즉시" : "Bootstrap — 1-3 co-founders + founders' agreement immediately",
             why: ko ? [
               "공동창업자 있으면 분담으로 속도 2-3배. 단 함의·합의·문서화 안 하면 6-12개월 후 갈등 폭발 (스타트업 폐업 사유 1순위 — 'co-founder dispute').",
               "지분 비율은 결정 즉시 — 입찰 처럼. 미루면 매출·외부 투자 후 협상력 0. YC 권장: 동등 또는 근접 배분 (예: 50/50 또는 55/45).",
@@ -283,27 +283,28 @@ export function StartupFoundationStage() {
             ],
             actions: ko ? [
               { label: "1단계: 공동창업자 역할·책임 명시 (서면)", detail: "CEO·CTO·CPO 역할 분담 명문화. '의견 불일치 시 누가 최종 결정?' 캐스팅 보트 필수 (50/50 데드락 방지). Notion·Google Doc 으로 기록 + 모두 서명." },
-              { label: "2단계: 지분 비율 즉시 결정 (Co-Founder Equity Calculator 활용)", detail: "YC: 50/50 또는 55/45. 차이 작을수록 좋음. 시간 ≠ 가치 (먼저 시작했어도 동등). Mike Moyer's Slicing Pie 도구로 객관적 계산." },
-              { label: "3단계: SHA (주주간 계약서) 즉시 작성 — 변호사 위임 200-500만 또는 ZUZU 무료 템플릿", detail: "필수 조항: 베스팅 + 이탈 시 지분 회수 + 매각 제한 (Drag-Along, Tag-Along, ROFR) + 비경쟁 의무 + 기밀 유지." },
-              { label: "4단계: 첫 채용 = 본인이 못 하는 영역 (매출 후)", detail: "tech founder = 디자이너/마케터 / non-tech founder = 엔지니어. 첫 1명은 contractor (월 200-300만) → 6개월 검증 → full-time. 옵션 grant 0.5-2%." },
+              { label: "2단계: 지분 비율 즉시 결정 (Co-Founder Equity Calculator 활용)", detail: "YC: 50/50 또는 55/45. 차이 작을수록 좋음. 시간 ≠ 가치 (먼저 시작했어도 동등). 기여가 계속 바뀔 팀은 Slicing Pie(고정 분배 대신 기여 비례 동적 분배)를 대안으로 검토." },
+              { label: "3단계: 공동창업 계약서(동업계약서) 즉시 작성 — 변호사 위임 200-500만 또는 ZUZU 무료 템플릿", detail: "필수 조항: 베스팅 + 이탈 시 지분 회수 + 매각 제한 (Drag-Along, Tag-Along, ROFR) + 비경쟁 의무 + 기밀 유지. (법인 설립 후 주주간계약서(SHA)로 정식화)" },
+              { label: "4단계: 첫 채용 = 본인이 못 하는 영역 (MVP·runway 확보 후)", detail: "tech founder = 디자이너/마케터 / non-tech founder = 엔지니어. 첫 1명은 contractor (월 200-300만) → 6개월 검증 → full-time. 옵션 grant 0.5-2%." },
             ] : [
               { label: "Step 1: Document roles & responsibilities (in writing)", detail: "CEO/CTO/CPO formal split. Casting vote required (avoid 50/50 deadlock). Notion/Google Doc + signed." },
-              { label: "Step 2: Decide equity immediately (Co-Founder Equity Calculator)", detail: "YC: 50/50 or 55/45. Smaller gap = better. Time ≠ value. Use Slicing Pie." },
-              { label: "Step 3: SHA immediately — lawyer 2-5M or ZUZU free template", detail: "Must-have: vesting + departure recovery + sale restrictions + non-compete + confidentiality." },
-              { label: "Step 4: First hire = your weak area (post-revenue)", detail: "Tech founder = designer/marketer. Non-tech = engineer. Contractor (2-3M/mo) → 6mo → FT. Option 0.5-2%." },
+              { label: "Step 2: Decide equity immediately (Co-Founder Equity Calculator)", detail: "YC: 50/50 or 55/45. Smaller gap = better. Time ≠ value. If contributions keep shifting, consider Slicing Pie (dynamic split, not fixed)." },
+              { label: "Step 3: Founders' agreement immediately — lawyer 2-5M or ZUZU free template", detail: "Must-have: vesting + departure recovery + sale restrictions + non-compete + confidentiality. (Formalized as the SHA once incorporated.)" },
+              { label: "Step 4: First hire = your weak area (post-MVP/runway)", detail: "Tech founder = designer/marketer. Non-tech = engineer. Contractor (2-3M/mo) → 6mo → FT. Option 0.5-2%." },
             ],
             decisions: ko ? [
               { item: "공동창업자 수 (1명 vs 2명)", recommendation: "2명 = 스피드 + 보완 / 3명 = 의사결정 느려짐 (한국 정서 합의 문화). 2명이 표준." },
               { item: "지분 분배", recommendation: "근접 배분 + 베스팅. 동등 (50/50) 시 캐스팅 보트 (CEO 권한 강화) 별도 명시." },
-              { item: "첫 채용 시점", recommendation: "월 매출 5천 안정 후. 그 전에는 본인+공동창업자만." },
+              { item: "첫 채용 시점", recommendation: "MVP 출시 + 채용 인건비를 감당할 runway(매출·자본) 확보 후. 그 전에는 본인+공동창업자(+외주)만." },
             ] : [
               { item: "How many co-founders (1 vs 2)", recommendation: "2 = speed+complement. 3 = slower decisions. 2 is standard." },
               { item: "Equity split", recommendation: "Near-equal + vesting. 50/50 needs casting vote spelled out." },
-              { item: "First hire timing", recommendation: "After 50M/mo stable revenue. Before: just founders." },
+              { item: "First hire timing", recommendation: "After MVP + runway to cover the hire (revenue or capital). Before: founders (+contractors)." },
             ],
             resources: [
-              { name: "ZUZU (캡테이블·SHA 템플릿)", desc: ko ? "주주간 계약서 무료 템플릿 + 캡테이블 관리" : "Free SHA templates + cap table", url: "https://zuzu.network" },
-              { name: "Slicing Pie / Co-Founder Equity Calculator", desc: ko ? "객관적 지분 비율 계산 도구" : "Objective equity split calculator", url: "https://slicingpie.com" },
+              { name: "ZUZU (캡테이블·계약서 템플릿)", desc: ko ? "동업·주주간 계약서 무료 템플릿 + 캡테이블 관리" : "Free founders'/shareholders' agreement templates + cap table", url: "https://zuzu.network" },
+              { name: "Foundrs (Co-Founder Equity Calculator)", desc: ko ? "고정 분배 계산기 — 기여 요인별 가중으로 지분 산출" : "Fixed-split calculator — weights contribution factors", url: "https://foundrs.com" },
+              { name: "Slicing Pie (Mike Moyer)", desc: ko ? "동적 분배 모델 — 기여 변동에 맞춰 자동 조정 (고정 분배의 대안)" : "Dynamic equity model — self-adjusts to contributions (alternative to fixed splits)", url: "https://slicingpie.com" },
               { name: "Notion (공동창업자 합의서)", desc: ko ? "역할·지분·의사결정 문서 템플릿" : "Role/equity/decision templates", url: "https://www.notion.so" },
               { name: "Wishket / 크몽", desc: ko ? "한국 외주 마켓플레이스 (디자인·개발)" : "Korea contractor marketplace", url: "https://www.wishket.com" },
               { name: "MicroConf Connect", desc: ko ? "부트스트랩 SaaS 커뮤니티 (37signals 모델)" : "Bootstrap SaaS community", url: "https://microconf.com" },
@@ -1029,15 +1030,15 @@ export function StartupFoundationStage() {
         ko={ko}
         nextStageLabelKo="고객 발견"
         doneItemsKo={[
-          { label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting(보통 4년 1년 cliff) 명문화" },
+          { label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting 4년 + 2년 cliff(한국 상법 기본, 벤처 인증 후 1년 cliff 가능) 명문화" },
           { label: "2. 시장·문제 정의", detail: "타깃 고객 ICP + 핵심 문제 3개 + 가설 1줄 정리" },
-          { label: "3. 비전·미션·OKR", detail: "북극성 지표 + 분기 OKR 3~5개 + 측정 시스템 셋업" },
-          { label: "4. 팀·자문·스폰서", detail: "초기 팀·자문·외부 스폰서 1명 이상 확보" },
+          { label: "3. 법인 형태 결정", detail: "개인사업자 vs 법인 의사결정 (실제 등록은 다음 '법인 설립·등록' 단계)" },
+          { label: "4. 검증 사례·전략 학습", detail: "본인 모드(인디/부트스트랩/시드/시리즈A) 5개 검증 사례 검토 + 교훈 3개 메모" },
         ]}
         verifyItemsKo={[
-          "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위, 1년 cliff + 4년 vesting 표준",
+          "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위. 한국 상법 기본 2년 cliff + 4년 vesting, 1년 cliff는 벤처기업 인증 후에만 가능",
           "지분 합의 — 시간·자본·아이디어 기여도 별도 명문화, 모호한 합의는 분쟁 후 해결 불가",
-          "근로계약 — 공동창업자도 근로계약·임원 등기 분리, 4대보험·세무 별도 처리",
+          "노무·출자 구조 — 법인 설립 전이므로 공동창업자는 근로계약이 아닌 동업 관계. 초기 자본·용역 출자 비율 명시 + 법인 설립 후 임원 등기·근로/등기임원 계약 전환 조건 사전 합의",
           "지분 매수권 — 퇴사 시 회사가 매수권 보유 명문화, 미명시 시 외부에 팔릴 위험",
           "IP 양도 — 공동창업자·초기 직원 모두 IP 회사 양도 계약, 미체결 시 IP 분쟁",
           "비밀유지 — NDA·경업금지 사전 체결, 핵심 정보 유출 방지 (5년 이내 한계)",

@@ -695,6 +695,7 @@ export function FranchiseApplicationStage() {
         </>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="인테리어 시공"
@@ -702,6 +703,7 @@ export function FranchiseApplicationStage() {
         verifyItemsKo={franchiseVerifyItems}
         nextSummaryKo={FRANCHISE_WRAPUP.next}
       />
+      )}
     </div>
   );
 }

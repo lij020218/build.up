@@ -528,6 +528,7 @@ export function GoLiveStage() {
         </div>
       </div>
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="성장 엔진"
@@ -547,6 +548,7 @@ export function GoLiveStage() {
         ]}
         nextSummaryKo="실제 출시 + 도메인·앱·PH·모니터링 셋업 완료 → 성장 엔진 단계로 진입"
       />
+      )}
     </div>
   );
 }

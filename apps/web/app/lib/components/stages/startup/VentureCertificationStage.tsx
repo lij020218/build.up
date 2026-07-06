@@ -298,6 +298,7 @@ export function VentureCertificationStage() {
       </div>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="세무 가이드"
@@ -317,6 +318,7 @@ export function VentureCertificationStage() {
         ]}
         nextSummaryKo="벤처 유형·요건·신청 완료 → 세무 가이드 단계로 진입 (또는 다음 정부지원 신청)"
       />
+      )}
     </div>
   );
 }

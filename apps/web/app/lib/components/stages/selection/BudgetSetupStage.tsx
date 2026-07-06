@@ -52,10 +52,14 @@ export function BudgetSetupStage() {
     : industryCategoryId === "education" || industryCategoryId === "space"
       ? "업종별 손익분기점 매출 추정 — 무인·공간업은 임대료·시설상각이 최대 고정비, 인건비는 낮고 좌석·룸 회전율이 손익 관건"
     : industryCategoryId === "online-digital"
-      ? "업종별 손익분기점 매출 추정 — 온라인은 매입원가·광고비(CAC)가 최대 변수, 임대·인건비는 낮게 시작"
+      ? "업종별 손익분기점 매출 추정 — 온라인은 광고비(CAC)와 원가(실물=매입원가, 디지털=제작·호스팅)가 최대 변수, 임대·인건비는 낮게 시작"
     : industryCategoryId === "startup-tech"
       ? "손익분기 추정 — 스타트업은 인건비(개발·인재)가 최대 비중, 초기엔 매출보다 런웨이(현금소진 속도) 관리가 핵심"
       : "업종별 손익분기점 매출 추정 — 업종마다 최대 비용 항목이 다름(외식=재료비, 소매=매입원가, 서비스=인건비). 내 업종 원가 구조부터 확인";
+
+  // 2026-07-06 정합: 예산 문구·다음단계가 flat 오프라인(보증금·인테리어·집기·상권)이라 online·tech 에 새던 것 분기.
+  const isStartup = industryCategoryId === "startup-tech";
+  const isOnline = industryCategoryId === "online-digital";
 
   const budgetRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
@@ -74,8 +78,16 @@ export function BudgetSetupStage() {
             ? "창업 자금은 두 통으로 나눕니다 — 한 번 쓰는 돈, 매달 나가는 돈"
             : "Split startup money into two buckets — one-time setup, monthly runway",
           detail: language === "ko"
-            ? "① 시설·창업 비용(보증금·인테리어·집기·인허가)은 오픈 전에 한 번 지출. ② 운영 예비자금은 매출이 자리 잡기 전까지 버틸 운영비. 운영비를 따로 떼어두지 않은 가게의 1년 폐업률이 3배."
-            : "① Setup cost (deposit, interior, equipment, permits) is spent once before opening. ② Operating reserve is the monthly burn you survive on until revenue lands. Stores without it close at 3x the 1-year rate.",
+            ? (isStartup
+                ? "① 초기 구축 비용(법인설립·초기 서버·개발도구·외주 개발비)은 런칭 전에 한 번 지출. ② 운영 예비자금(런웨이)은 매출 자리 잡기 전까지 버틸 월 소진액 — 시리즈A 표준 18~24개월치 확보, 자체 매출 생존(Default Alive)이 목표. 런웨이를 안 떼어둔 팀이 조기 소진으로 무너집니다."
+                : isOnline
+                  ? "① 초기 구축 비용(실물은 사입·촬영, 디지털은 콘텐츠·개발 + 공통 스토어 구축·인증)은 오픈 전에 한 번 지출. ② 운영 예비자금은 매출 자리 잡기 전까지 버틸 광고비 + 재고(실물)·호스팅/유지(디지털) 운영비. 운영비를 따로 떼어두지 않은 셀러의 이탈률이 높습니다."
+                  : "① 시설·창업 비용(보증금·인테리어·집기·인허가)은 오픈 전에 한 번 지출. ② 운영 예비자금은 매출이 자리 잡기 전까지 버틸 운영비. 운영비를 따로 떼어두지 않은 가게의 1년 폐업률이 3배.")
+            : (isStartup
+                ? "① Setup cost (incorporation, initial servers, dev tools, outsourced dev) is spent once before launch. ② Operating reserve (runway) is your monthly burn until revenue lands — secure the standard 18–24 months (Series A), aiming for Default Alive (surviving on your own revenue). Teams without runway fail by running out of cash early."
+                : isOnline
+                  ? "① Setup cost (physical: sourcing & photography; digital: content & dev; plus storefront build & certification) is spent once before opening. ② Operating reserve is ad spend + inventory (physical) or hosting/upkeep (digital) until revenue lands. Sellers without it churn faster."
+                  : "① Setup cost (deposit, interior, equipment, permits) is spent once before opening. ② Operating reserve is the monthly burn you survive on until revenue lands. Stores without it close at 3x the 1-year rate."),
         }}
       />
       <div style={styles.helper}>
@@ -230,14 +242,22 @@ export function BudgetSetupStage() {
               {language === "ko" ? "① 한 번 쓰는 돈" : "① One-time"}
             </span>
             <div style={styles.budgetLabel}>
-              {language === "ko" ? "시설·창업 비용" : "Setup cost"}
+              {language === "ko" ? ((isStartup || isOnline) ? "초기 구축 비용" : "시설·창업 비용") : "Setup cost"}
             </div>
           </div>
           <div style={styles.budgetValue}>{activeBudgetLabel}</div>
           <div style={styles.helper}>
             {language === "ko"
-              ? "보증금·인테리어·집기·인허가 — 오픈 전에 한 번 지출하는 돈입니다. 슬라이더로 감을 잡고 아래 빠른 선택으로 조정하세요."
-              : "Deposit, interior, equipment, permits — spent once before opening. Set a rough figure, then fine-tune below."}
+              ? (isStartup
+                  ? "법인설립비·초기 서버 인프라·개발도구·외주 개발비 — 런칭 전에 한 번 지출하는 돈입니다. 슬라이더로 감을 잡고 아래 빠른 선택으로 조정하세요."
+                  : isOnline
+                    ? "실물은 사입·촬영 / 디지털은 콘텐츠·개발 + 공통 스토어 구축·인증 — 오픈 전에 한 번 지출하는 돈입니다. 슬라이더로 감을 잡고 아래 빠른 선택으로 조정하세요."
+                    : "보증금·인테리어·집기·인허가 — 오픈 전에 한 번 지출하는 돈입니다. 슬라이더로 감을 잡고 아래 빠른 선택으로 조정하세요.")
+              : (isStartup
+                  ? "Incorporation, initial servers, dev tools, outsourced dev — spent once before launch. Set a rough figure, then fine-tune below."
+                  : isOnline
+                    ? "Physical: sourcing & photography / digital: content & dev + storefront & certification — spent once before opening. Set a rough figure, then fine-tune below."
+                    : "Deposit, interior, equipment, permits — spent once before opening. Set a rough figure, then fine-tune below.")}
           </div>
         </div>
         <input
@@ -695,14 +715,36 @@ export function BudgetSetupStage() {
 
       <StageWrapup
         ko={language === "ko"}
-        nextStageLabelKo="상권 후보 비교"
-        doneItemsKo={[
+        nextStageLabelKo={isStartup ? "창업팀·법인 기본 구조" : isOnline ? "판매 플랫폼 선택" : "인허가 사전 확인"}
+        doneItemsKo={isStartup ? [
+          { label: "1. 자본 규모 설정", detail: "보유 자본 + 조달 가용액 + 운영 런웨이 6개월 분리 — 3구간 프리셋 비교" },
+          { label: "2. 런칭 일정 설정", detail: "출시 희망일에서 역산해 개발 마일스톤·스토어 심사 기간 자동 배치" },
+          { label: "3. 초기 구축 vs 운영 비중 결정", detail: "총 자본 중 인프라·외주비 vs 런웨이 운영비 비중 조정 (초기 구축 최소화 권장)" },
+          { label: "4. 자본 vs 런웨이 시뮬레이션", detail: "월 소진액(번레이트) 추정 + 런웨이 소진 시점 시뮬" },
+        ] : isOnline ? [
+          { label: "1. 자본 규모 설정", detail: "보유 자본 + 대출 가용액 + 운영자본 6개월 분리 — 3구간 프리셋 비교" },
+          { label: "2. 오픈 일정 설정", detail: "오픈 희망일에서 역산해 사입·촬영(실물)/콘텐츠 제작(디지털) + 스토어 오픈 마일스톤 자동 배치" },
+          { label: "3. 초기 구축 vs 운영 비중 결정", detail: "총 자본 중 초기 구축비(사입·촬영 또는 콘텐츠·개발) vs 광고·운영비 비중 조정" },
+          { label: "4. 자본 vs 매출 시뮬레이션", detail: "월 광고·운영비 추정 + 손익분기 도달 시점 시뮬" },
+        ] : [
           { label: "1. 자본 규모 설정", detail: "보유 자본 + 대출 가용액 + 운영자본 6개월 분리 — 3구간 프리셋 비교" },
           { label: "2. 오픈 일정 설정", detail: "오픈 희망일 시점에서 역산해 핵심 마일스톤 자동 배치" },
           { label: "3. 인테리어·집기 비중 결정", detail: "총 자본 중 시설투자 vs 운영자본 60:40 권장 — 업종 맞춤 조정" },
           { label: "4. 자본 vs 매출 시뮬레이션", detail: "월 운영비 추정 + 손익분기 도달 시점 시뮬" },
         ]}
-        verifyItemsKo={[
+        verifyItemsKo={isStartup ? [
+          "운영 런웨이 6개월치 별도 확보 — 매출 0원 가정해도 서버비·인건비·마케팅비 견딜 수 있어야 (조기 현금 소진 1순위 위험)",
+          "정책자금·창업지원금 가능 여부 — 신청부터 입금까지 평균 4~8주, 일정에 반영 (예비창업패키지·TIPS 등)",
+          "예비비 10~15% 별도 — API·인프라 사용량 급증, 개발 딜레이에 따른 추가 인건비 지출 빈번",
+          "출시 일정 — 개발 마일스톤 + 앱스토어·구글플레이 심사(수일~2주) 감안, 최소 30~60일 필요",
+          breakEvenNote,
+        ] : isOnline ? [
+          "운영자본 6개월치 별도 확보 — 매출 0원 가정해도 광고비 + 재고 매입(실물)·호스팅/유지(디지털) + 플랫폼 수수료 견딜 수 있어야 (정산 지연 대비)",
+          "정부지원금·소상공인 대출 가능 여부 — 신청 시점부터 입금까지 평균 4~8주, 일정에 반영",
+          "예비비 10~15% 별도 — 반품·불량 재고·성수기 사입(실물) 또는 콘텐츠 개편·CS 급증(디지털) + 광고 CAC 급등 빈번",
+          "오픈 일정 — 통신판매업 신고 + 사입·촬영(실물)/콘텐츠·검수(디지털)까지 최소 30일 필요",
+          breakEvenNote,
+        ] : [
           "운영자본 6개월치 별도 확보 — 매출 0원 가정해도 월세·인건비·재료비 견딜 수 있어야 (흑자부도 1순위 원인)",
           "정부지원금·소상공인 대출 가능 여부 — 신청 시점부터 입금까지 평균 4~8주, 일정에 반영",
           "예비비 10~15% 별도 — 인테리어 추가공사·집기 누락·임대 보증금 추가 요구 빈번",
@@ -710,7 +752,7 @@ export function BudgetSetupStage() {
           "프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생",
           breakEvenNote,
         ]}
-        nextSummaryKo="자본·일정·예비비 확정 → 상권 후보 비교 단계로 진입"
+        nextSummaryKo={isStartup ? "자본·일정·예비비 확정 → 창업팀·법인 기본 구조 단계로 진입" : isOnline ? "자본·일정·예비비 확정 → 판매 플랫폼 선택 단계로 진입" : "자본·일정·예비비 확정 → 인허가 사전 확인 단계로 진입"}
       />
 
       <div style={styles.stageFooter}>

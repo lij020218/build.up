@@ -152,15 +152,19 @@ public struct FinancialReviewStageView: View {
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 고정비 점검", detail: "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교"),
+                .init(label: "1. 고정비 점검", detail: cluster.isOnline ? "솔루션·마케팅·고정 관리비 3축 — 매출 대비 비율로 업종 평균 비교 (무점포라 임대료·공과금 낮음)" : "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교"),
                 .init(label: "2. 변동비 점검", detail: "재료비·일반관리비 2축 — 매출 30% 이내 유지 룰 점검"),
                 .init(label: "3. 기타비 점검", detail: "마케팅·이자·기타 3축 — 광고 ROAS·대출 이자 한계점 검토"),
                 .init(label: "4. 손익분기·런웨이", detail: "흑자 목표 매출(운영비 기준) + 보유 자본 잔여 개월 자동 계산"),
                 ],
                 verifyItems: [
                 "고정비 합계 — 매출 70% 미만 유지, 초과 시 변동비 압박으로 흑자 도달 어려움",
-                "재료비 — 매출 30% 한계, 35% 초과 시 메뉴·공급처 즉시 재검토 (1순위 적자 원인)",
-                "인건비 — 25% 한계, 5인 이상 사업장은 연장수당·연차수당 별도 누적, 누락 시 차액·가산금",
+                cluster.isOnline
+                    ? "원가율 — 상품 매입(또는 콘텐츠 제작) 원가가 목표 원가율 초과 시 사입처·제작 방식 즉시 재검토 (1순위 적자 원인)"
+                    : "재료비 — 매출 30% 한계, 35% 초과 시 메뉴·공급처 즉시 재검토 (1순위 적자 원인)",
+                cluster.isOnline
+                    ? "인건비 — 초기 1인·가족 운영 시 대표 생계비·고정 버퍼 책정, 물량·구독 늘면 외주(3PL 물류·편집 등)와 손익 비교"
+                    : "인건비 — 25% 한계, 5인 이상 사업장은 연장수당·연차수당 별도 누적, 누락 시 차액·가산금",
                 "운영자본 6개월 — 매출 0원 가정해도 견딜 자본 별도 유지 (흑자부도 1순위 원인)",
                 "이자 부담 — 정책자금·일반대출 이자 합산 매출 5% 이내, 초과 시 신규 대출 자제",
                 "마케팅 ROAS — 200% 미만이면 즉시 중단·재구성, 「쓸수록 손해」 패턴 인식",
@@ -368,14 +372,15 @@ public struct FinancialReviewStageView: View {
     private var benchmarkCard: some View {
         let b = benchmark
         let isBurn = b.isBurnBasis
+        // 2026-07-06 정합: revenue-basis 는 sub-industry 라벨(fLabel = SubIndustryFieldRegistry) 사용 — 스마트스토어=매입원가·포장배송, 디지털상품=콘텐츠제작비·호스팅, 오프라인=임대료·식자재 각각 정확 (isOnline 카테고리-flat 라벨은 디지털상품에 물류 라벨 붙는 오류라 폐기)
         let rows: [(String, ClosedRange<Int>)] = [
-            (isBurn ? "인프라·SaaS·API" : "원재료·식자재", b.materialsPctRange),
-            ("인건비", b.laborPctRange),
-            (isBurn ? "사무실·코워킹" : "임대료", b.rentPctRange),
-            (isBurn ? "통신·기기·SaaS" : "공과금", b.utilitiesPctRange),
-            (isBurn ? "결제·회계·법무" : "운영 수수료", b.sgaPctRange),
-            ("마케팅", b.marketingPctRange),
-            (isBurn ? "기타 (IP·인증)" : "기타", b.otherPctRange),
+            (isBurn ? "인프라·SaaS·API" : fLabel("ingredients", "원재료·식자재"), b.materialsPctRange),
+            (isBurn ? "인건비" : fLabel("labor", "인건비"), b.laborPctRange),
+            (isBurn ? "사무실·코워킹" : fLabel("rent", "임대료"), b.rentPctRange),
+            (isBurn ? "통신·기기·SaaS" : fLabel("utilities", "공과금"), b.utilitiesPctRange),
+            (isBurn ? "결제·회계·법무" : fLabel("sga", "운영 수수료"), b.sgaPctRange),
+            (isBurn ? "마케팅" : fLabel("marketing", "마케팅"), b.marketingPctRange),
+            (isBurn ? "기타 (IP·인증)" : fLabel("other", "기타"), b.otherPctRange),
         ]
         return BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {

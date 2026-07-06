@@ -258,7 +258,7 @@ export function TargetCustomerStage() {
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <AlertTriangle size={14} strokeWidth={2.2} color={MIDNIGHT} />
               <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                {ko ? "왜 이게 budget·location 전인가" : "Why this comes before budget/location"}
+                {ko ? "왜 이게 예산·시점 설정 전인가" : "Why this comes before budget setup"}
               </span>
             </div>
             <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
@@ -278,18 +278,24 @@ export function TargetCustomerStage() {
           {/* 데이터 근거 박스 */}
           <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.06)" }}>
             <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,0,0,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
-              {ko ? "한국 SMB 데이터" : "Korea SMB data"}
+              {ko
+                ? (clusterGroup === "tech" ? "스타트업 실패 데이터" : "한국 SMB 데이터")
+                : (clusterGroup === "tech" ? "Startup failure data" : "Korea SMB data")}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {/* 외식만 KFRI 실통계 노출. online·tech는 신뢰할 단일 출처 통계가 없어 지어내지 않고 생략 —
                   아래 KOSME·메타는 업종 불문 실통계라 그대로 유지. (2026-07-03) */}
               {(ko ? [
                 ...(clusterGroup === "offline" ? [oc.smbFact0.ko] : []),
-                { tag: "페르소나 효과", body: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023 소상공인 실태조사" },
+                clusterGroup === "tech"
+                  ? { tag: "PMF 실패", body: "시장이 원하지 않는 제품(타깃·수요 불명확)이 스타트업 실패 1위 요인 — 42% (CB Insights)" }
+                  : { tag: "페르소나 효과", body: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023 소상공인 실태조사" },
                 { tag: "광고 ROAS", body: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024" },
               ] : [
                 ...(clusterGroup === "offline" ? [oc.smbFact0.en] : []),
-                { tag: "Persona effect", body: "11% closure with persona vs 22% without — KOSME 2023" },
+                clusterGroup === "tech"
+                  ? { tag: "PMF failure", body: "No market need = #1 startup failure reason — 42% (CB Insights)" }
+                  : { tag: "Persona effect", body: "11% closure with persona vs 22% without — KOSME 2023" },
                 { tag: "Ad ROAS", body: "3.2x ROAS for narrow targeting — Meta Korea 2024" },
               ]).map((f, idx) => (
                 <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
@@ -486,9 +492,9 @@ export function TargetCustomerStage() {
         ko={ko}
         nextStageLabelKo={ko ? "예산·시점 설정" : "Budget setup"}
         doneItemsKo={[
-          { label: "1. 주 연령대·산업 명시", detail: ko ? "한 명에게 팔린다는 의지로 좁혔는지 확인" : "Narrowed to one target?" },
-          { label: "2. 라이프스타일·일상 동선", detail: ko ? "언제·어디서·왜 쓰는지 구체화" : "When/where/why specified?" },
-          { label: "3. 객단가·예산 한도", detail: ko ? "안 살 가격대까지 명확" : "Includes what they WON'T pay?" },
+          { label: pick("1. 주 연령대·산업 명시", "1. 주 연령대·산업 명시", "1. 타깃 산업·기업 규모"), detail: ko ? "한 명에게 팔린다는 의지로 좁혔는지 확인" : "Narrowed to one target?" },
+          { label: pick("2. 라이프스타일·일상 동선", "2. 라이프스타일·구매 동기", "2. 핵심 역할·업무 워크플로우"), detail: ko ? pick("언제·어디서·왜 쓰는지 구체화", "언제·왜 구매하는지 구체화", "어떤 업무에서·왜 도입하는지 구체화") : pick("When/where/why used?", "When/why they buy?", "Which workflow, why adopt?") },
+          { label: pick("3. 객단가·예산 한도", "3. 객단가·예산 한도", "3. 도입 예산·지불 의사"), detail: ko ? pick("안 살 가격대까지 명확", "안 살 가격대까지 명확", "안 낼 가격대까지 명확") : "Includes what they WON'T pay?" },
           { label: "4. 반례 검증", detail: ko ? "이 페르소나가 절대 안 할 행동 4개" : "4 things this persona never does" },
         ]}
         verifyItemsKo={[

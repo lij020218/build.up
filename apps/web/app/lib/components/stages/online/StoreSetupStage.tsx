@@ -69,14 +69,14 @@ export function StoreSetupStage() {
               steps: ko ? [
                 "WING 판매자 센터 가입 → 사업자 인증",
                 "상품 등록: 카테고리 선택 → 필수 옵션 입력 (사이즈, 색상 등)",
-                "로켓그로스 입점 검토 (월 55,000원 + 수수료 4~10.8%)",
+                "로켓그로스 입점 검토 — 판매수수료 4~10.9% + 입출고·배송·보관 요금 별도 (월 55,000원 서버이용료는 로켓그로스가 아니라 일반 마켓플레이스 기준)",
                 "배송 설정: 일반 배송 vs 로켓그로스 (쿠팡 물류센터 입고)",
                 "로켓그로스 입고 시: 바코드 부착 → 쿠팡 물류센터 택배 발송",
                 "정산 주기 확인: 구매확정 후 영업일 기준 정산 (보통 7~14일)",
               ] : [
                 "Register on WING Seller Center",
                 "Product listing: category → required options (size, color)",
-                "Rocket Growth enrollment (₩55K/mo + 4~10.8% commission)",
+                "Rocket Growth enrollment (₩55K/mo + 4~10.9% commission)",
                 "Shipping: standard vs Rocket Growth (Coupang warehouse)",
                 "Rocket Growth: barcode labeling → ship to Coupang warehouse",
                 "Settlement cycle: ~7-14 business days after purchase confirmation",
@@ -195,7 +195,7 @@ export function StoreSetupStage() {
       <div style={{ borderRadius: "16px", padding: "16px 18px", background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.06)" }}>
         <div style={{ fontSize: "13px", fontWeight: 660, color: "#7c3aed", marginBottom: "6px" }}>{ko ? "멀티 플랫폼 운영 팁" : "Multi-platform Tip"}</div>
         <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-          {ko ? "2개 이상 플랫폼 동시 운영 시 재고·주문 통합 관리 솔루션을 사용하세요. 샵링커(shoplinker.co.kr), 올라(allra.co.kr), 셀러허브(sellerhub.co.kr) 등이 주문 수집 + 재고 연동 + 송장 일괄 처리를 지원합니다. 월 3~5만원으로 실수를 줄이고 시간을 절약할 수 있습니다." : "For 2+ platforms, use an order management solution like Shoplinker, Allra, or SellerHub. They sync inventory, collect orders, and batch process invoices. ₩30-50K/month saves time and reduces errors."}
+          {ko ? "2개 이상 플랫폼 동시 운영 시 재고·주문 통합 관리 솔루션을 사용하세요. 샵링커(shoplinker.co.kr), 셀러허브(sellerhub.co.kr) 등이 주문 수집 + 재고 연동 + 송장 일괄 처리를 지원합니다(월 6만원대, 매출 50만원 미만 무료). 규모가 커지면 사방넷(sabangnet.co.kr, 월 25만원~) 등 종합 솔루션도 검토하세요. (※올라 등 선정산 서비스는 통합관리와 다른 자금 서비스)" : "For 2+ platforms, use an order management solution like Shoplinker or SellerHub (₩60K/mo, free under ₩500K sales). As you scale, consider comprehensive tools like Sabangnet. They sync inventory, collect orders, and batch process invoices."}
         </div>
       </div>
 
@@ -206,7 +206,7 @@ export function StoreSetupStage() {
           { label: "1. 상품 페이지 작성", detail: "메인 이미지 + 상세 페이지 + 옵션·재고·가격 설정 — 검색 키워드 최적화" },
           { label: "2. 배송·반품 정책", detail: "기본 배송비 + 무료배송 조건 + 반품·교환 정책 명시" },
           { label: "3. CS·상담 채널", detail: "카톡 채널·이메일·전화 1개 이상 + 운영 시간·응답 기준 명시" },
-          { label: "4. 통합 관리 솔루션", detail: "샵링커·올라·셀러허브 등 멀티 채널 통합 도입 검토" },
+          { label: "4. 통합 관리 솔루션", detail: "샵링커·셀러허브(매출 50만↓ 무료) 등 멀티 채널 통합 도입 검토, 규모 커지면 사방넷" },
         ]}
         verifyItemsKo={[
           "상품 등록 — 상세페이지 효능·효과 표현 시 「의약품·의료기기 광고」 위반 위험, 표시광고법 사전 점검",

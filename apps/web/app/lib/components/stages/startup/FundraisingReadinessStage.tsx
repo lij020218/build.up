@@ -638,6 +638,7 @@ export function FundraisingReadinessStage() {
         </>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="벤처 인증"
@@ -657,6 +658,7 @@ export function FundraisingReadinessStage() {
         ]}
         nextSummaryKo="캡테이블·런웨이·데크·투자자 매칭 완료 → 벤처 인증 단계로 진입"
       />
+      )}
     </div>
   );
 }

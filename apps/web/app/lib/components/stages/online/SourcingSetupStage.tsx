@@ -14,7 +14,7 @@ export function SourcingSetupStage() {
     { name: ko ? "국내 도매" : "Domestic Wholesale", capital: ko ? "50~300만원" : "₩500K~3M", color: "#191970", pros: ko ? "빠른 배송, 소량 가능" : "Fast shipping, small MOQ", cons: ko ? "마진 낮음, 경쟁 심함" : "Low margin, high competition", platforms: "도매꾹, 온채널, 도매매" },
     { name: ko ? "해외 직구 (중국)" : "China Import", capital: ko ? "100~500만원" : "₩1M~5M", color: "#191970", pros: ko ? "원가 최저, 다양한 상품" : "Lowest cost, wide selection", cons: ko ? "배송 2-4주, 품질 관리 어려움" : "2-4 week shipping, QC hard", platforms: "1688.com, 알리바바" },
     { name: ko ? "OEM/ODM 제작" : "OEM/ODM", capital: ko ? "500~3,000만원" : "₩5M~30M", color: "#7c3aed", pros: ko ? "브랜드 구축 가능, 차별화" : "Brand building, differentiation", cons: ko ? "초기 투자 큼, MOQ 높음" : "High initial cost, high MOQ", platforms: "캐파(CAPA), 바로발주" },
-    { name: ko ? "위탁판매" : "Consignment", capital: ko ? "0~50만원" : "₩0~500K", color: "#1d3557", pros: ko ? "재고 부담 없음, 초기 비용 최소" : "No inventory risk, minimal cost", cons: ko ? "마진 10-20%, 품질 통제 불가" : "10-20% margin, no QC", platforms: "도매리스트, 셀러나우" },
+    { name: ko ? "위탁판매" : "Consignment", capital: ko ? "0~50만원" : "₩0~500K", color: "#1d3557", pros: ko ? "재고 부담 없음, 초기 비용 최소" : "No inventory risk, minimal cost", cons: ko ? "마진 10-20%, 품질 통제 불가" : "10-20% margin, no QC", platforms: "오너클랜, 도매토피아" },
   ];
 
   return (
@@ -121,7 +121,7 @@ export function SourcingSetupStage() {
           { label: "4. 재고·물류 모델", detail: "직접 배송 vs 풀필먼트(쿠팡 로켓그로스·품고·셀러허브) 비교" },
         ]}
         verifyItemsKo={[
-          "중국 직구 — 200달러 초과 시 통관 부담, KC 인증 의무 카테고리(전자제품·유아용품 등) 사전 확인",
+          "중국 직구 — 150달러 초과 시 관·부가세 발생(미국발은 200달러) + 초과 시 전체 금액 과세, KC 인증 의무 카테고리(전자제품·유아용품 등) 사전 확인",
           "위탁판매·드롭배송 — 공급처 결품 시 본인 책임, CS 분쟁 시 자체 환불 의무 발생",
           "OEM 제작 — MOQ(최소주문량) 보통 500~3000개, 자본·재고 회전 부담 인식",
           "원산지 표시 — 「Made in China」 누락 시 표시광고법 위반, 모든 상품 의무 표시",

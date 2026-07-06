@@ -37,7 +37,7 @@ const SMB_KEY_ACTIONS: Record<string, { title: string; detail: string }> = {
   },
   cpa: {
     title: `직원 채용·매출 ${TH}+ 시 세무사 선임 결정`,
-    detail: "월 10~30만원 수임료 < 가산세·놓친 공제. 직접 신고는 1인 매장+SaaS(캐시노트·삼쩜삼) 조합만 권장.",
+    detail: "월 10~30만원 수임료 < 가산세·놓친 공제. 직접 신고는 1인 사업자+SaaS(캐시노트·삼쩜삼) 조합만 권장.",
   },
 };
 
@@ -214,8 +214,33 @@ const byCategory: Record<string, CategoryContent> = {
     taxChecklist: STARTUP_CHECKLIST,
   },
 };
+// 2026-07-04 정합: online-digital 은 무점포 — 카드단말기·VAN·인테리어 감가상각은 오프라인 매장 기준이라
+//   PG·플랫폼 자동연동·디지털 자산으로 교체. 나머지 SMB_BASE(현금영수증·과세유형 등)는 공통.
+const TRAP_SETUP_ONLINE: TrapItem[] = [
+  TRAP_SETUP_SMB[0], // 현금영수증 — 통신판매업도 의무발행업종이라 동일 적용
+  { label: "온라인 매출은 플랫폼·PG가 국세청에 자동 연동 (단말기·VAN 등록 불요)", text: "스마트스토어 매출은 네이버가 국세청에 통보하고 PG 결제도 정산 시 자동 집계된다. 오프라인 카드단말기·VAN 가맹점 등록 절차는 온라인 판매에 해당 없음. 다만 건당 10만원 이상 현금(무통장입금·계좌이체) 거래는 통신판매업 현금영수증 의무발행 대상." },
+];
+const ONLINE_CHECKLIST = SMB_CHECKLIST.map((item) =>
+  item.id === "tc-pos"
+    ? { id: "tc-online-pay", label: "온라인 결제(PG)·정산 연동 확인", detail: "판매 플랫폼·PG 정산이 국세청에 자동 연동 — 오프라인 카드단말기·VAN 가맹점 등록 불요. 정산 계좌·수수료율만 확인" }
+    : item
+);
+const ONLINE_CPA = SMB_CPA.map((item) =>
+  item.condition === "인테리어·설비 투자 3,000만원+"
+    ? { condition: "PC·장비·초기 재고 등 자산 3,000만원+", reason: "PC·카메라·조명 등 업무용 자산은 내용연수 감가상각, 사입 재고는 재고 평가로 비용 처리 방식이 갈려 복잡 (감가상각 대상 자산은 100만원 초과부터). 무재고 위탁·디지털은 장비 위주로 판단", recommend: true }
+    : item
+);
 for (const cat of ["food", "cafe-dessert", "beauty", "fitness", "education", "pet", "retail", "living-service", "space", "online-digital"]) {
-  byCategory[cat] = { label: LABELS[cat], ...SMB_BASE, taxTips: TAX_TIPS[cat] ?? SMB_DEFAULT_TIPS };
+  if (cat === "online-digital") {
+    byCategory[cat] = {
+      label: LABELS[cat], ...SMB_BASE, taxTips: TAX_TIPS[cat],
+      trapsByPage: { ...SMB_BASE.trapsByPage, setup: TRAP_SETUP_ONLINE },
+      taxChecklist: ONLINE_CHECKLIST,
+      cpaNeeded: ONLINE_CPA,
+    };
+  } else {
+    byCategory[cat] = { label: LABELS[cat], ...SMB_BASE, taxTips: TAX_TIPS[cat] ?? SMB_DEFAULT_TIPS };
+  }
 }
 
 /* ── 단계 콘텐츠 ── */
@@ -304,7 +329,7 @@ export const TAX_GUIDE_CONTENT: StageContent = {
   byCategory,
   wrapupMode: "always",
   wrapup: {
-    nextStageLabel: "채용·운영 세팅",
+    nextStageLabel: "자금 조달 (대출·정책자금)",
     doneItems: [
       { label: "1. 부가세 신고 일정", detail: "1·7월(개인 일반)·1·4·7·10월(법인) 분기별 신고일 + 자동이체 셋업" },
       { label: "2. 종합소득세 시뮬", detail: "추정 매출·비용 기반 5월 종소세 신고 사전 시뮬, 누진세율 구간 점검" },
@@ -315,10 +340,10 @@ export const TAX_GUIDE_CONTENT: StageContent = {
       "부가세 — 매입세액 공제는 세금계산서뿐 아니라 사업용 신용카드매출전표·현금영수증(지출증빙)도 가능. 간이영수증·미등록 영수증만 공제 불가",
       "종소세 — 5월 신고 누락 시 무신고 가산세 20% + 일별 지연이자, 폐업해도 신고 의무 잔존",
       "창업 세액감면 — 청년창업은 수도권에서도 가능: 5년간 수도권과밀 50% / 수도권 비과밀 75% / 비수도권·수도권인구감소 100% (일반창업도 과밀 외 50%). 신청 필수, 자동 X",
-      "현금영수증 — 의무발행업종(전문직·병원·학원·숙박·골프장·네일 등)은 건당 10만원 이상 현금거래 시 소비자 요청 없어도 의무 발급, 미발급 시 거래액 20% 가산세. 일반 음식점·헤어미용실은 의무발행 아님(요청 시 발급)",
+      "현금영수증 — 의무발행업종(전문직·병원·학원·숙박·골프장·네일·전자상거래 소매업(통신판매) 등)은 건당 10만원 이상 현금(계좌이체·무통장입금 포함)거래 시 소비자 요청 없어도 의무 발급, 미발급 시 거래액 20% 가산세. 일반 음식점·헤어미용실은 의무발행 아님(요청 시 발급)",
       "사업용 카드 — 홈택스 등록 시 매입세액 공제·경비 자동 분류, 미등록 시 매번 수동 입력 부담",
       "전자세금계산서 — 일정 매출 이상 의무, 종이 세금계산서 발급 시 가산세 + 매입자 공제 거부 위험",
     ],
-    nextSummary: "세무 신고 일정·비용처리·절세 포인트 셋업 완료 → 채용·운영 세팅 단계로 진입",
+    nextSummary: "세무 신고 일정·비용처리·절세 포인트 셋업 완료 → 자금 조달(대출·정책자금) 단계로 진입",
   },
 };

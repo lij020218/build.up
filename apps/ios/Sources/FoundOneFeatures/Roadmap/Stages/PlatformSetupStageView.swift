@@ -32,8 +32,8 @@ public struct PlatformSetupStageView: View {
 
     /// 2025 한국 주요 이커머스 플랫폼 — 네이버 2025 수수료 개편 반영 (주문 + 판매 분리).
     private let platforms: [PlatformOption] = [
-        PlatformOption(id: "smartstore", name: "네이버 스마트스토어", desc: "네이버페이 결제 1.98~3.63% (등급별, 2025.10 인하) + 유입 수수료 2% (고정). 국내 1위 트래픽 · 네이버 검색 직접 연결."),
-        PlatformOption(id: "coupang",    name: "쿠팡 마켓플레이스",   desc: "카테고리별 4~10.8% + 월매출 100만원↑ 시 월 정액 55,000원 (VAT 포함). 와우 1,300만+ 노출 · 로켓배송 별도 심사."),
+        PlatformOption(id: "smartstore", name: "네이버 스마트스토어", desc: "네이버페이 결제 1.98~3.63% (등급별, 2025.10 인하) + 판매수수료 2.73% (2025 개편·유입수수료 폐지). 국내 1위 트래픽 · 네이버 검색 직접 연결."),
+        PlatformOption(id: "coupang",    name: "쿠팡 마켓플레이스",   desc: "카테고리별 4~10.9% + 월매출 100만원↑ 시 월 정액 55,000원 (VAT 포함). 와우 1,300만+ 노출 · 로켓배송 별도 심사."),
         PlatformOption(id: "kakao",      name: "카카오톡 스토어",     desc: "수수료 약 6% + 결제 수수료. 카카오 메시지·선물하기 연계. 객단가 높은 카테고리 강세."),
         PlatformOption(id: "elevenst",   name: "11번가 / G마켓 (이베이)", desc: "이베이코리아 통합 · 카테고리별 약 8~12%. 멤버십 매출 안정."),
         PlatformOption(id: "own",        name: "자체 쇼핑몰",         desc: "카페24·아임웹·Shopify · 월 0~7만원 + PG 3%. 마진 최대 + CRM 자유. 트래픽 직접 확보."),
@@ -138,8 +138,8 @@ public struct PlatformSetupStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("플랫폼별 수수료 비교")
-                    feeRow(platform: "네이버 스마트스토어", fee: "결제 수수료 1.98~3.63% (등급별) + 유입 수수료 2% (2025.10 인하 반영)")
-                    feeRow(platform: "쿠팡 마켓플레이스", fee: "카테고리별 4~10.8% + 월매출 100만원↑ 시 정액 55,000원 (VAT 포함)")
+                    feeRow(platform: "네이버 스마트스토어", fee: "결제 수수료 1.98~3.63% (등급별) + 판매수수료 2.73% (2025 개편·유입수수료 폐지)")
+                    feeRow(platform: "쿠팡 마켓플레이스", fee: "카테고리별 4~10.9% + 월매출 100만원↑ 시 정액 55,000원 (VAT 포함)")
                     feeRow(platform: "카카오톡 스토어", fee: "수수료 약 6% + 결제 수수료 별도")
                     feeRow(platform: "자체 쇼핑몰 (카페24·아임웹)", fee: "월 사용료 0~7만원 + PG 수수료 약 3%")
                 }

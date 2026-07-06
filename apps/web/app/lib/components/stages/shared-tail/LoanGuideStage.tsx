@@ -79,6 +79,7 @@ export function LoanGuideStage() {
 
   const ko = language === "ko";
   const isStartup = industryCategoryId === "startup-tech";
+  const isOnline = industryCategoryId === "online-digital"; // 2026-07-05: 무점포 — POS·키오스크·운영자본잠식 대신 온라인판로·정산주기
 
   // ─── 예산 buckets (값은 KRW 원 단위) ───
   // 5천만원 (5,000만원) = 50,000,000원
@@ -187,11 +188,15 @@ export function LoanGuideStage() {
     // 사장님 — 예산별 차등 추천 (각 bucket 첫 번째가 추천 1순위)
     budgetBucket === "small" ? (ko ? [
       { icon: Banknote, title: "소상공인 정책자금 (소진공)", bucket: "5천만원 이하 추천 1순위", rate: "연 2.96%~ (비수도권 -0.2%p)", limit: "최대 7천만원", why: "신규 창업자 + 무담보 가능 + 1~2년 거치. 시중 대비 2~3%p 저렴. 연초(1~2월) 신청이 신규 예산 가장 많음", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do", primary: true },
-      { icon: Sparkles, title: "소상공인 스마트화 / 디지털 바우처", bucket: "장비·POS·키오스크 도입 시", rate: "무상 (갚지 않음)", limit: "POS·키오스크 비용 70% 지원", why: "선정률 10~30%. 견적서 + 도입 계획만 필요. 신청 진입 장벽 낮음", href: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc" },
+      (isOnline
+        ? { icon: Sparkles, title: "소상공인 온라인 판로 지원사업", bucket: "상세페이지·쇼핑몰 입점·라이브커머스", rate: "무상 (갚지 않음)", limit: "상품성 개선·홍보 콘텐츠·채널 진출 지원", why: "온라인 진출 준비~실전~도약 단계별 지원. 상세페이지·홍보영상·SNS 패키지", href: "https://www.semas.or.kr" }
+        : { icon: Sparkles, title: "소상공인 스마트화 / 디지털 바우처", bucket: "장비·POS·키오스크 도입 시", rate: "무상 (갚지 않음)", limit: "POS·키오스크 비용 70% 지원", why: "선정률 10~30%. 견적서 + 도입 계획만 필요. 신청 진입 장벽 낮음", href: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc" }),
       { icon: ShieldCheck, title: "지자체 정책자금 + 신보 보증", bucket: "지역별 추가 지원", rate: "1~2%대", limit: "지자체별 최대 5천만원", why: "서울신보·경기신보 등 지자체 보증재단. 본 정책자금과 중복 수혜 가능", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307" },
     ] : [
       { icon: Banknote, title: "SEMAS Policy Fund", bucket: "Top pick ≤50M", rate: "From 2.96% (-0.2%p non-metro)", limit: "Up to 70M", why: "New owners + unsecured + 1-2yr grace. 2-3%p below market. Mar-Apr fullest budget", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do", primary: true },
-      { icon: Sparkles, title: "Smart SME / Digital Voucher", bucket: "POS/kiosk adoption", rate: "Grant", limit: "70% of POS/kiosk cost", why: "10-30% selection. Quote + plan only", href: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc" },
+      (isOnline
+        ? { icon: Sparkles, title: "Online Sales Channel Support", bucket: "Detail pages · marketplace · live commerce", rate: "Grant", limit: "Content, channel entry & promo support", why: "Stage-based online expansion: detail pages, promo video, SNS package", href: "https://www.semas.or.kr" }
+        : { icon: Sparkles, title: "Smart SME / Digital Voucher", bucket: "POS/kiosk adoption", rate: "Grant", limit: "70% of POS/kiosk cost", why: "10-30% selection. Quote + plan only", href: "https://www.semas.or.kr/web/SUP01/SUP015001.kmdc" }),
       { icon: ShieldCheck, title: "Local Gov + KODIT Guarantee", bucket: "Regional add-on", rate: "1-2%", limit: "Up to 50M (varies)", why: "Seoul/Gyeonggi guarantee foundations. Stackable with main policy fund", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307" },
     ])
     : budgetBucket === "medium" ? (ko ? [
@@ -817,6 +822,7 @@ export function LoanGuideStage() {
         askAi={() => d.handleKnowledgeQuestion("loan")}
       />
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="사업자등록·인허가"
@@ -828,7 +834,9 @@ export function LoanGuideStage() {
         ]}
         verifyItemsKo={[
           "정책자금 — 1순위는 「보증부 대출」 (지역신보·신보·기보 보증서 80~90% 보증)",
-          "이자 부담 — 매출 0원 가정 6개월 운영자본 대비 월 이자 한계점 시뮬, 「운영자본 잠식」 1순위 부도 원인",
+          isOnline
+            ? "자금 회전 — 채널별 정산 주기 차이(네이버 ~3일 · 쿠팡 최대 ~60일) 감안, 정산 느린 채널 비중 크면 사입 대금·광고비 선지출과 유입 시차로 자금 압박(「돈맥경화」)"
+            : "이자 부담 — 매출 0원 가정 6개월 운영자본 대비 월 이자 한계점 시뮬, 「운영자본 잠식」 1순위 부도 원인",
           "보증 한도 — 지역신보·신보·기보 통합 한도 인지 (개인/업종별 한도 상이), 다중 신청 시 보증 거절 위험",
           "사업계획서 — 「자금 사용 계획」 + 「상환 계획」 명확해야 심사 통과율 상승, 두루뭉술하면 거절",
           "정부지원금 — 「선정 후 입금」까지 평균 4~12주, 일정 역산 필수 (오픈 직전 신청 X)",
@@ -836,6 +844,7 @@ export function LoanGuideStage() {
         ]}
         nextSummaryKo="자금 구조·대출 후보 확정 → 사업자등록·인허가 단계로 진입"
       />
+      )}
 
       {/* ── 단계 푸터는 부모(CurrentStageView)에서 자동 렌더링됨 ── */}
 

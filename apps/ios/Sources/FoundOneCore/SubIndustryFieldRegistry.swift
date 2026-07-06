@@ -108,7 +108,7 @@ public enum SubIndustryFieldRegistry {
             "ingredients": .init(label: "매입 원가", hint: "상품 사입·도매 매입가"),
             "rent": .init(label: "창고·풀필먼트", hint: "재택 운영 시 0 — 풀필먼트는 입출고비"),
             "utilities": .init(label: "포장·배송 자재", hint: "박스·완충재·송장·택배비"),
-            "sga": .init(label: "결제·플랫폼 수수료", hint: "네이버 3.63%+매출연동 2%·쿠팡 4~10.8%"),
+            "sga": .init(label: "결제·플랫폼 수수료", hint: "네이버 결제 3.63%+판매수수료 2.73%·쿠팡 4~10.9%"),
             "marketing": .init(label: "광고 (CPC·CPM)", hint: "네이버 검색광고·쿠팡 광고"),
             "other": .init(label: "반품·CS·기타", hint: "반품 회수·CS 인건·소모품"),
         ],

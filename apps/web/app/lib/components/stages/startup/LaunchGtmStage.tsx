@@ -792,18 +792,19 @@ End: "Ask me anything ↓"`,
         </>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="런타임 운영"
         doneItemsKo={[
-          { label: "1. 출시 스택 4종 셋업", detail: "분석(Mixpanel·Amplitude)·결제(Stripe)·에러(Sentry)·피드백(Canny)" },
+          { label: "1. 출시 스택 4종 셋업", detail: "분석(PostHog·Mixpanel)·결제(토스페이먼츠·Stripe)·에러(Sentry)·피드백(Discord·Intercom)" },
           { label: "2. 첫 100명 확보 전략", detail: "Airbnb·Stripe·Marc Lou 패턴 — Do things that don't scale" },
           { label: "3. 런칭 채널 결정", detail: "웹·PH·HN·디스콰이엇·SEO 5축 비교 후 1~2개 집중" },
           { label: "4. 콘텐츠·Build in Public", detail: "트위터·블로그·뉴스레터 — 매출 70%+ 콘텐츠 기여 패턴" },
         ]}
         verifyItemsKo={[
           "보안 — Product Hunt·HN 출시 시 트래픽 폭증, OWASP Top 10·DDoS·Rate limit 사전 대비",
-          "법적 — GDPR·개인정보보호법 사전 준수, 글로벌 출시 시 EU·미국 사용자 데이터 처리",
+          "법적 — 개인정보보호법 준수 필수(수집·이용 동의, 인터뷰 녹음 사전동의 등). GDPR(EU)은 EU 사용자를 실제 겨냥해 서비스·마케팅할 때만 적용(단순 접속 가능만으로는 X) — 유럽 타깃 확장 시 처리방침·동의·EU 대리인 검토",
           "약관·환불 — 7일 이내 청약철회·환불 명시, SaaS 정기 결제도 cancel 룰 명확",
           "지재권 — 도메인·상표 사전 확보, 출시 후 squat 위험",
           "Product Hunt — 「런칭 1회」 룰, 두 번 시도 시 어카운트 정지 위험",
@@ -811,6 +812,7 @@ End: "Ask me anything ↓"`,
         ]}
         nextSummaryKo="출시 스택·첫 100명·콘텐츠 셋업 완료 → 런타임 운영 단계로 진입"
       />
+      )}
     </div>
   );
 }

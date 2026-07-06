@@ -35,6 +35,7 @@ public struct LoanGuideStageView: View {
     @AppStorage("roadmap.selectedIndustryId") private var industryId  = ""
 
     private var isStartup: Bool { IndustryCluster.from(industryId: industryId).isStartupTech }
+    private var isOnline: Bool { IndustryCluster.from(industryId: industryId).isOnline } // 2026-07-05: 무점포 — 운영자본잠식 대신 정산주기
 
     // ── 페이지별 KEY ACTION (웹 LoanGuideStage keyActions 미러). 깔끔히 매칭되는
     //   페이지만 웹 카피, 주의사항·FAQ 는 nil → 레지스트리 단일값 폴백. ──
@@ -102,7 +103,9 @@ public struct LoanGuideStageView: View {
                 ],
                 verifyItems: [
                 "정책자금 — 1순위는 「보증부 대출」 (지역신보·신보·기보 보증서 80~90% 보증)",
-                "이자 부담 — 매출 0원 가정 6개월 운영자본 대비 월 이자 한계점 시뮬, 「운영자본 잠식」 1순위 부도 원인",
+                isOnline
+                    ? "자금 회전 — 채널별 정산 주기 차이(네이버 ~3일 · 쿠팡 최대 ~60일) 감안, 정산 느린 채널 비중 크면 사입 대금·광고비 선지출과 유입 시차로 자금 압박(「돈맥경화」)"
+                    : "이자 부담 — 매출 0원 가정 6개월 운영자본 대비 월 이자 한계점 시뮬, 「운영자본 잠식」 1순위 부도 원인",
                 "보증 한도 — 지역신보·신보·기보 통합 한도 인지 (개인/업종별 한도 상이), 다중 신청 시 보증 거절 위험",
                 "사업계획서 — 「자금 사용 계획」 + 「상환 계획」 명확해야 심사 통과율 상승, 두루뭉술하면 거절",
                 "정부지원금 — 「선정 후 입금」까지 평균 4~12주, 일정 역산 필수 (오픈 직전 신청 X)",

@@ -108,7 +108,7 @@ export function CompanySetupStage() {
                 {bizType !== "corp" && <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: "rgba(25,25,112,0.08)", color: MIDNIGHT }}>{ko ? "추천" : "Recommended"}</span>}
               </div>
               <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
-                {ko ? "• 등록비 0원 · 홈택스에서 즉시 신청\n• 간이과세 가능 (매출 1억 400만원 미만)\n• 회계 간편 · 간편장부 인정\n• 법인 전환은 투자 유치 시 해도 충분" : "• Free registration via HomeTax\n• Simplified tax available\n• Simple bookkeeping OK\n• Convert to corp when raising investment"}
+                {ko ? "• 등록비 0원 · 홈택스에서 즉시 신청\n• 간이과세 가능 (개인사업자만 · 매출 1억 400만원 미만)\n• 회계 간편 · 간편장부 인정\n• 법인 전환은 투자 유치 시 해도 충분" : "• Free registration via HomeTax\n• Simplified tax (sole proprietor only)\n• Simple bookkeeping OK\n• Convert to corp when raising investment"}
               </div>
             </button>
 
@@ -401,13 +401,13 @@ export function CompanySetupStage() {
             { step: "1", title: "선행 기술 조사 (KIPRIS·Google Patents 무료)", detail: "유사 발명 검색. 진보성·신규성 사전 확인. 특허 80% 거절은 이 단계 부실에서 발생." },
             { step: "2", title: "특허고객번호 발급 (특허로, 무료)", detail: "patent.go.kr → 공동인증서 등록" },
             { step: "3", title: "명세서 작성 + 청구항 (변리사 권장 100~250만원)", detail: "청구항 작성이 핵심 — 셀프 작성 시 거절·축소 위험. 변리사 위임이 ROI 높음." },
-            { step: "4", title: "심사 청구 + 대기 (12~18개월) ⏳", detail: "스타트업 (사업자 3년 이내) 등록료 70% 감면 (~2026.2.28). 우선심사 신청 시 3~6개월." },
+            { step: "4", title: "심사 청구 + 대기 (12~18개월) ⏳", detail: "개인·중소기업 출원료·심사청구료·최초 3년 등록료 70% 감면(상시), 4년차~ 50%. 우선심사 신청 시 3~6개월." },
             { step: "5", title: "등록 결정 + 등록료 납부", detail: "1~3년차 등록료 일시 납부. 4년차부터 매년 갱신료 납부 (총 20년)." },
           ] : [
             { step: "1", title: "Prior art search (KIPRIS / Google Patents)", detail: "Check novelty + inventiveness." },
             { step: "2", title: "Get patent customer number (free)", detail: "patent.go.kr with digital cert." },
             { step: "3", title: "Spec + claims (₩1-2.5M via attorney)", detail: "Claims drafting is critical — DIY = high rejection risk." },
-            { step: "4", title: "Request exam + wait (12-18mo) ⏳", detail: "Startups (≤3yr) get 70% fee reduction. Priority exam 3-6mo." },
+            { step: "4", title: "Request exam + wait (12-18mo) ⏳", detail: "SMEs/individuals: 70% off filing, exam-request & first-3yr registration fees (permanent); 50% from year 4. Priority exam 3-6mo." },
             { step: "5", title: "Grant + pay registration", detail: "Years 1-3 lump. Annual renewals from year 4." },
           ]).map(s => (
             <div key={s.step} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "8px 0", borderBottom: s.step !== "5" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
@@ -422,12 +422,12 @@ export function CompanySetupStage() {
           {/* 특허 우선심사 + 스타트업 감면 */}
           <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "12px", background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.2)" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, color: "#1d3557", marginBottom: "6px" }}>
-              {ko ? "💰 스타트업 특혜 — 등록료 70% 감면 (~2026.2.28)" : "💰 Startup perk — 70% fee reduction"}
+              {ko ? "💰 개인·중소기업 특혜 — 수수료 70% 감면 (상시)" : "💰 SME/individual perk — 70% fee reduction (permanent)"}
             </div>
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>
               {ko
-                ? "사업자등록 3년 이내 중소기업 → 4~9년차 등록료 70% 감면. 우선심사료도 일부 감면 가능. 신청 기한 2026년 2월 28일."
-                : "SMEs ≤3yr get 70% off years 4-9 reg fees. Some priority exam discounts. Deadline Feb 28, 2026."}
+                ? "개인·중소기업은 출원료·심사청구료·최초 3년 등록료 70% 감면(상시, 기한 없음), 4년차~ 50%. 스타트업(사업개시 3년 이내)은 우선심사신청료 70% 감면. 직무발명·IP경영인증 기업 한시 추가감면은 2029.2.28까지 연장."
+                : "Individuals/SMEs: 70% off filing, exam-request & first-3yr registration fees (permanent, no deadline); 50% from year 4. Startups (≤3yr) get 70% off priority-exam request fee. Time-limited extra reductions (in-service invention / IP-mgmt certified) extended to Feb 28, 2029."}
             </div>
           </div>
 
@@ -691,6 +691,7 @@ export function CompanySetupStage() {
       </div>
       )}
 
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="MVP 빌드"
@@ -706,10 +707,11 @@ export function CompanySetupStage() {
           "특허·상표 — 외부 발표·전시 후 1년 grace period 한국만 적용, 해외는 출원 즉시 공개 시 특허성 상실",
           "투자자 친화 정관 — 우선주·전환사채·전환우선주 등 사전 정의, 미정의 시 투자 단계에서 재작성 비용",
           "스톡옵션 — 임직원 스톡옵션 풀 사전 확보 (보통 10~20%), vesting·exercise 조건 명문화",
-          "개인정보 처리방침 — 개인정보보호법 의무 게시, 위반 시 매출 3% 이내 과징금",
+          "개인정보 처리방침 — 개인정보보호법 §30 의무 게시, 미수립·미공개 시 1천만원 이하 과태료 (§75③). 유출·안전조치 위반 등 중대 위반은 별도로 매출 3% 이내 과징금",
         ]}
         nextSummaryKo="법인·특허·상표·약관 사전 셋업 완료 → MVP 빌드 단계로 진입"
       />
+      )}
 
       {/* ── 2026-05-12: 규제 업종 사장님 별도 등록 안내 (fintech / healthtech / security) ── */}
       <div style={{ marginTop: 18, padding: "18px 20px", borderRadius: 16, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.12)" }}>

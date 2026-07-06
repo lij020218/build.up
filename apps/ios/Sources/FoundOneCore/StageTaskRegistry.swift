@@ -73,7 +73,7 @@ public enum BUStageTaskRegistry {
             .init(id: "founder-alignment",       title: "팀 구성 결정 (솔로/공동) 및 역할·지분 베스팅·이탈 조항 문서화", estimatedMinutes: 60),
             .init(id: "company-formation-path",  title: "법인 vs 개인사업자 결정 (실제 등록은 다음 '법인 설립·등록' 단계에서)", estimatedMinutes: 30),
             .init(id: "case-study-review",       title: "본인 모드(인디/부트스트랩/시드/시리즈A)의 5개 검증 사례 검토 + 교훈 3개 메모", estimatedMinutes: 30, required: false),
-            .init(id: "build-in-public-setup",   title: "빌드 인 퍼블릭 채널 셋업 (X/트위터 또는 블로그) — Marc Lou·Pieter Levels 패턴", estimatedMinutes: 30, required: false),
+            .init(id: "build-in-public-setup",   title: "마케팅 채널 사전 검토 — 출시 전 메이커 스토리를 공유할 빌드 인 퍼블릭(X/트위터·블로그) 채널 운영 계획 수립 (Marc Lou·Pieter Levels 패턴)", estimatedMinutes: 30, required: false),
         ],
         "customer-discovery": [
             .init(id: "customer-interviews-done", title: "초기 타겟 고객 인터뷰 10건 이상 완료", estimatedMinutes: 180),
@@ -84,6 +84,7 @@ public enum BUStageTaskRegistry {
             .init(id: "core-workflow-defined", title: "핵심 사용자 워크플로와 성공 기준 정의", estimatedMinutes: 60),
             .init(id: "mvp-shipped",           title: "가장 작은 MVP 출시", estimatedMinutes: 240),
             .init(id: "ip-protection-filed",   title: "공개 전 상표 등록 및 특허 출원 (가출원 포함)", estimatedMinutes: 90),
+            .init(id: "pg-payment-ready",      title: "PG(전자결제) 가입 — 토스페이먼츠/KCP/이니시스. 사전 준비: 통신판매업 신고 + 사이트 완성. 심사 1~2주 (유료 결제 시작 시점에 신청)", estimatedMinutes: 30, required: false),
         ],
         "launch-gtm": [
             .init(id: "analytics-live",             title: "분석 도구 연결 (PostHog·Mixpanel) — 핵심 이벤트 5개 + 퍼널 + 주간 대시보드", estimatedMinutes: 60),
@@ -111,10 +112,9 @@ public enum BUStageTaskRegistry {
             .init(id: "startup-biz-registered",     title: "사업자등록 완료 — 홈택스 온라인 신청 (3영업일 소요)", estimatedMinutes: 60),
             .init(id: "ip-protection-planned",      title: "특허 출원 — 공개(데모·베타·보도자료) 전에 특허로에서 출원 필수", estimatedMinutes: 90),
             .init(id: "trademark-filed",            title: "상표 출원 — 브랜드명·로고를 특허로(patent.go.kr)에서 출원", estimatedMinutes: 60),
-            .init(id: "tax-setup-basics",           title: "과세 유형 결정 — 간이과세(매출 1억 400만원 미만) vs 일반과세", estimatedMinutes: 45, required: false),
+            .init(id: "tax-setup-basics",           title: "과세 유형 결정 — 간이과세(개인사업자 한정·매출 1억 400만원 미만) vs 일반과세 (법인은 매출 무관 일반과세)", estimatedMinutes: 45, required: false),
             .init(id: "security-basics",            title: "개인정보보호 정책 · 이용약관 · 고객 데이터 보안 계획 수립", estimatedMinutes: 45, required: false),
             .init(id: "terms-privacy-published",    title: "이용약관 · 개인정보처리방침 게시 — 유저 가입 전 법적 필수", estimatedMinutes: 60),
-            .init(id: "pg-payment-ready",           title: "PG(전자결제) 가입 심사 신청 — 토스페이먼츠/KCP/이니시스, 심사 1~2주", estimatedMinutes: 30, required: false),
         ],
         "fundraising-readiness": [
             .init(id: "runway-model-ready",        title: "런웨이 모델링 — Best/Base/Worst 시나리오 + 18개월 목표 + Net Burn 비율 점검", estimatedMinutes: 60),
@@ -268,7 +268,7 @@ public enum BUStageTaskRegistry {
         "store-setup": [
             .init(id: "store-configured",        title: "스토어 카테고리·배너·반품 정책 구성", estimatedMinutes: 60),
             .init(id: "shipping-setup",          title: "택배사 연동 및 배송 옵션 설정", estimatedMinutes: 30),
-            .init(id: "pg-connected",            title: "결제 게이트웨이 연동 (자체몰 필수)", estimatedMinutes: 30, required: false),
+            .init(id: "pg-connected",            title: "결제·정산 확인 — 마켓플레이스는 정산 대금 입금 계좌 등록 / 자체몰은 PG(토스·이니시스 등) 연동", estimatedMinutes: 30, required: false),
             .init(id: "brand-identity-online",   title: "브랜드 자산 준비 — 스토어 로고·배너·패키지 디자인", estimatedMinutes: 60, required: false),
             .init(id: "cs-channel-ready",        title: "고객 상담 채널 세팅 — 카카오톡 채널 또는 네이버 톡톡 개설 + 반품/교환 정책 작성", estimatedMinutes: 30),
             .init(id: "packaging-supplies-ready", title: "포장재 확보 — 택배 박스·완충재·테이프·송장 프린터. 실제 포장 → 발송 워크플로 테스트 필수", estimatedMinutes: 45),

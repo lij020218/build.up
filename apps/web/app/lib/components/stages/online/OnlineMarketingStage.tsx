@@ -34,7 +34,7 @@ export function OnlineMarketingStage() {
             { title: "상품명 = 핵심 키워드 + 속성", detail: "\"여성 린넨 원피스 여름 A라인 프리사이즈\" — 검색어를 순서대로 넣으세요. 브랜드명은 앞에" },
             { title: "카테고리 정확히 매칭", detail: "네이버 쇼핑 카테고리와 상품이 불일치하면 노출 자체가 안 됩니다" },
             { title: "상세페이지 텍스트 최적화", detail: "이미지만 넣지 마세요. 검색 크롤러는 텍스트를 읽습니다. 핵심 키워드를 본문에 포함" },
-            { title: "태그 20개 모두 채우기", detail: "스마트스토어 태그는 검색 노출에 직접 영향. 관련 키워드를 빠짐없이 등록" },
+            { title: "태그 10개 모두 채우기", detail: "스마트스토어 태그는 최대 10개만 등록됨(초과 입력해도 10개까지) — 검색 노출에 직접 영향, 관련 키워드로 10개 꽉 채우기" },
             { title: "최신성 점수 — 신상품 등록 주기", detail: "네이버는 신상품을 우대합니다. 주 2-3회 신규 상품 등록이 이상적" },
           ] : [
             { title: "Product name = keywords + attributes", detail: "Put search terms in order. Brand name first" },
@@ -85,7 +85,7 @@ export function OnlineMarketingStage() {
         <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
         <div style={{ display: "grid", gap: "6px" }}>
           {(ko ? [
-            { method: "체험단 모집 (소규모)", detail: "블로그 체험단 3~5명. 비용: 제품 원가 + 배송비. 네이버 블로그 리뷰 = 검색 노출 직결", tip: "무료" },
+            { method: "체험단 모집 (소규모)", detail: "쇼핑·블로그 체험단 3~5명 병행. 스마트스토어 실구매 포토·동영상 리뷰가 쇼핑 상위노출·전환에 더 직접적 (블로그 리뷰도 동시 확보). 비용: 제품 원가 + 배송비", tip: "무료" },
             { method: "포토리뷰 이벤트", detail: "구매 고객에게 포토리뷰 작성 시 500~1,000원 적립금. 전환율 대비 가장 효율적", tip: "₩500/건" },
             { method: "지인·친구 초기 구매", detail: "솔직하게 부탁하세요. 조작 리뷰는 네이버 패널티 대상. 실제 구매+배송 필수", tip: "실비" },
           ] : [
