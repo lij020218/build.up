@@ -20,6 +20,10 @@ public struct VentureCertificationStageView: View {
     @AppStorage("vc.certType") private var certType = ""
     @AppStorage("vc.applied")  private var applied  = false
     @AppStorage("vc.done")     private var done     = false
+    @AppStorage("stage.budget.startupOperatingMode") private var startupMode = "bootstrap"
+
+    /// 부트스트랩·인디 트랙: VC 유치(벤처투자유형)는 '미래 전환' — 지금 경로는 연구개발·혁신성장유형.
+    private var isBootstrapTrack: Bool { startupMode == "bootstrap" || startupMode == "indie" }
 
     private let pages = ["인증 종류", "신청 방법"]
 
@@ -98,6 +102,16 @@ public struct VentureCertificationStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("벤처 인증 3가지 유형 (2021 개편 후)")
+                    if isBootstrapTrack {
+                        Text("부트스트랩 트랙 — 지금 가장 현실적인 건 혁신성장유형(평가만 통과, 연구소·투자 불필요)입니다. 연구개발유형도 가능하지만 기업부설연구소 + 연 5천만원 R&D가 필요해요. 벤처투자유형은 PMF 후 VC로부터 5천만원 이상 유치 시 열리는 미래 경로입니다.")
+                            .font(BUFont.bodyCaption)
+                            .foregroundStyle(BUColor.inkSecondary)
+                            .lineSpacing(2)
+                            .padding(BUSpacing.sm)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1))
+                    }
                     let options: [(String, String, String)] = [
                         ("vc",         "벤처투자유형",    "벤처투자조합·VC로부터 5천만원 이상 + 자본금 10% 이상 투자 유치. 가장 빠른 취득 경로."),
                         ("research",   "연구개발유형",    "매출 대비 R&D 비율 5% 이상 + 연구개발전담부서 보유. 딥테크·기술기반 스타트업."),
@@ -105,14 +119,25 @@ public struct VentureCertificationStageView: View {
                     ]
                     ForEach(options, id: \.0) { id, title, desc in
                         let isSelected = certType == id
+                        let isVcFuture = isBootstrapTrack && id == "vc"
                         Button {
                             certType = isSelected ? "" : id
                         } label: {
                             HStack(alignment: .top, spacing: BUSpacing.sm) {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(title)
-                                        .font(BUFont.bodySmall.weight(.semibold))
-                                        .foregroundStyle(isSelected ? BUColor.midnightDeep : BUColor.ink)
+                                    HStack(spacing: 6) {
+                                        Text(title)
+                                            .font(BUFont.bodySmall.weight(.semibold))
+                                            .foregroundStyle(isSelected ? BUColor.midnightDeep : BUColor.ink)
+                                        if isVcFuture {
+                                            Text("VC 유치 후")
+                                                .font(BUFont.bodyCaption.weight(.semibold))
+                                                .foregroundStyle(BUColor.midnight)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(BUColor.midnight.opacity(0.1), in: Capsule())
+                                        }
+                                    }
                                     Text(desc)
                                         .font(BUFont.bodyCaption)
                                         .foregroundStyle(BUColor.inkSecondary)
@@ -136,6 +161,7 @@ public struct VentureCertificationStageView: View {
                                 RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
                                     .strokeBorder(isSelected ? BUColor.midnight.opacity(0.4) : Color.clear, lineWidth: 1.5)
                             )
+                            .opacity(isVcFuture && !isSelected ? 0.8 : 1)
                         }
                         .buttonStyle(.plain)
                     }

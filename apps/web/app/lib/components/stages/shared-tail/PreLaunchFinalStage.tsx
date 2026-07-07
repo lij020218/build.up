@@ -204,7 +204,7 @@ export function PreLaunchFinalStage() {
         { item: "Sentry 에러 모니터링 + Slack 알림 실제 트리거 테스트", priority: "필수", required: true, how: "코드에 throw new Error('test-' + Date.now()) 1줄 → Slack 채널에 메시지 도착 확인 → 즉시 제거" },
         { item: "결제 플로우 라이브 키로 100원 1건 결제 + 환불 완주", priority: "필수", required: true, how: "Toss/Stripe 라이브 키로 본인 카드 100원 결제 → 웹훅 수신 → 자동 환불 → 영수증 메일 도착" },
         { item: "랜딩 페이지: 헤드라인·CTA·OG 이미지 모바일 미리보기", priority: "필수", required: true, how: "metatags.io에서 OG 이미지 검증 + 카카오톡·X·LinkedIn 미리보기 1번씩 확인" },
-        { item: "이용약관 + 개인정보처리방침 + 사업자 정보 풋터 표시", priority: "법적 필수", required: true, how: "PIPA 2025: 데이터 이동권 export API + 동의 분리 (마케팅·필수) + 외국 사업자면 국내대리인 지정" },
+        { item: "이용약관 + 개인정보처리방침 + 사업자 정보 풋터 표시", priority: "법적 필수", required: true, how: "동의 분리(마케팅·필수) + AI 기능 있으면 고지·산출물 표시(AI 기본법) + 자동결정 시 거부·설명 창구 + 외국 법인이면 국내대리인" },
         { item: "404·500 페이지 + 로딩 상태 + 에러 fallback UI", priority: "필수", required: true, how: "next.config 에 not-found.tsx + error.tsx + loading.tsx 3종 작성. 댓글에 깨진 화면 캡처 = 치명적." },
         { item: "robots.txt + sitemap.xml + Google Search Console 등록", priority: "필수", required: true, how: "next-sitemap 패키지 → 빌드 시 자동 생성 → GSC에 sitemap 제출 → 색인 요청" },
         { item: "Status 페이지 (Better Stack / Instatus) + RSS 피드", priority: "필수", required: true, how: "Better Stack 무료 → 6개 모니터 등록 (web/api/db/auth/payment/cdn) → status.{domain} 서브도메인 연결" },
@@ -221,7 +221,7 @@ export function PreLaunchFinalStage() {
         { item: "Sentry + Slack alarm triggered with real error", priority: "Required", required: true, how: "throw new Error('test-' + Date.now()) → confirm Slack message → remove" },
         { item: "Live payment: 100 KRW charge + refund completed", priority: "Required", required: true, how: "Live key → real card → webhook → auto-refund → email receipt" },
         { item: "Landing: headline, CTA, OG image mobile-preview", priority: "Required", required: true, how: "metatags.io + Kakao/X/LinkedIn previews" },
-        { item: "Legal: Terms, Privacy, biz info footer (PIPA 2025)", priority: "Legal", required: true, how: "Data portability export API + granular consent + KR rep if non-KR" },
+        { item: "Legal: Terms, Privacy, biz info footer (PIPA 2025 + AI Basic Act)", priority: "Legal", required: true, how: "Granular consent + AI disclosure/output labeling if AI feature + automated-decision opt-out channel + KR rep if offshore entity" },
         { item: "404/500 + loading + error fallback UI", priority: "Required", required: true, how: "not-found.tsx + error.tsx + loading.tsx" },
         { item: "robots.txt + sitemap.xml + GSC registered", priority: "Required", required: true, how: "next-sitemap → submit to GSC" },
         { item: "Status page (Better Stack/Instatus) + RSS", priority: "Required", required: true, how: "6 monitors: web/api/db/auth/payment/cdn" },
@@ -728,16 +728,18 @@ export function PreLaunchFinalStage() {
   type LegalItem = { title: string; deadline: string; detail: string };
   const legalRequirements: LegalItem[] = isStartup
     ? (ko ? [
-        { title: "데이터 이동권 (data portability)",  deadline: "2025.3.13 시행",   detail: "사용자가 자기 데이터를 머신리더블 형식으로 export 할 수 있어야 함 — API 또는 다운로드 버튼 제공" },
-        { title: "외국 사업자 국내대리인 지정",       deadline: "2025.10.2 시행",   detail: "한국 사용자 대상 외국 법인은 국내 대리인 지정·등록 의무. 미지정 시 과태료." },
-        { title: "동의 분리 의무",                    deadline: "2024.9~ 진행 중",  detail: "필수 수집·마케팅·제3자 제공 동의를 절대 묶음 처리 X. 항목별 별도 체크박스" },
-        { title: "AI 자동의사결정 투명성",            deadline: "2025~ 진행 중",    detail: "AI 프로파일링 사용 시 로직 공개 + cross-border 데이터 이전 명시 + 거부권 안내" },
+        { title: "생성형 AI 고지·표시 (AI 기본법)", deadline: "2026.1.22 시행 · 계도 1년+", detail: "AI 챗봇·생성 기능이 있으면 '이 서비스는 AI가 제공/생성' 사전 고지 + 생성물 표시. 지금은 계도기간(과태료는 빨라도 2027) — 오픈 전 안내 문구·라벨을 미리 반영. ※보건의료·에너지·교통·채용 등 고영향 AI면 위험관리·영향평가 등 추가 의무" },
+        { title: "AI 자동결정 거부·설명권",          deadline: "2024.3.15 시행",   detail: "완전자동화(AI 포함) 결정이 이용자 권리에 중대한 영향을 주면 거부·설명 요구에 대응할 창구 + 처리방침에 판단 기준·로직 공개" },
+        { title: "동의 분리 의무",                    deadline: "상시 적용",        detail: "필수 수집·마케팅·제3자 제공 동의를 절대 묶음 처리 X. 항목별 별도 체크박스" },
+        { title: "개인정보 전송요구권 (마이데이터)",   deadline: "분야별 단계 2025~2027", detail: "2025 의료·통신 → 2026 에너지·교육·고용·여가 → 2027 복지·교통 등. 지정된 대규모 기관부터라 초기 스타트업 대부분은 즉시 의무 X. 해당 분야면 대비 + GDPR·신뢰 위해 데이터 export 권장" },
+        { title: "외국 사업자 국내대리인 지정",       deadline: "2025.10.2 시행",   detail: "한국 이용자 대상, 국내 주소·영업소 없는 외국 법인은 국내대리인 지정·게시 의무 (해외 법인 구조면 확인). 미지정 시 과태료" },
         { title: "이용약관 + 개인정보처리방침 + 풋터", deadline: "오픈 즉시 필수",   detail: "사업자 정보 (상호·대표·주소·사업자번호·통신판매업) + 환불 정책 + 문의처 표시" },
       ] : [
-        { title: "Data portability",            deadline: "Mar 13, 2025", detail: "Users must export their data in machine-readable format — API or download" },
-        { title: "Domestic representative",     deadline: "Oct 2, 2025",  detail: "Foreign businesses serving KR users must appoint and register a KR representative" },
-        { title: "Granular consent",            deadline: "Sept 2024+",   detail: "Never bundle required·marketing·3rd-party consent — separate checkboxes per item" },
-        { title: "AI decision transparency",    deadline: "2025+",        detail: "Disclose profiling logic + cross-border transfer + opt-out path for AI decisions" },
+        { title: "Generative AI disclosure (AI Basic Act)", deadline: "In force Jan 22 2026 · 1yr+ grace", detail: "If you ship an AI chatbot/generation feature, disclose 'AI-powered/AI-generated' up front + label outputs. Grace period now (fines 2027+) — bake copy/labels in before launch. Note: high-impact AI (healthcare·energy·transport·hiring) carries extra duties (risk mgmt, impact assessment)" },
+        { title: "Automated-decision opt-out & explanation", deadline: "In force Mar 15 2024", detail: "If a fully automated (incl. AI) decision materially affects user rights, offer an opt-out/explanation channel + disclose the logic in your privacy policy" },
+        { title: "Granular consent",            deadline: "Always",       detail: "Never bundle required·marketing·3rd-party consent — separate checkbox per item" },
+        { title: "Data portability (MyData)",   deadline: "Phased 2025-2027", detail: "2025 health·telecom → 2026 energy·education·employment → 2027+. Applies to designated large holders first, so most early startups aren't yet obligated. Prepare if in-scope; offer export for GDPR·trust" },
+        { title: "Foreign-business domestic rep", deadline: "In force Oct 2 2025", detail: "Foreign entities without a KR establishment serving KR users must appoint & publish a domestic representative (check if offshore-incorporated)" },
         { title: "Terms + Privacy + Footer",    deadline: "Day 1",        detail: "Business info (name·CEO·address·biz number·e-commerce permit) + refund policy + contact" },
       ])
     : [];
@@ -1295,7 +1297,7 @@ export function PreLaunchFinalStage() {
           {/* PIPA 2025 법적 필수 */}
           {legalRequirements.length > 0 && (
             <div style={{ marginTop: "16px" }}>
-              <div style={sectionLabel}>{ko ? "법적 필수 — PIPA 2025 + 표시 의무" : "Legal Required — PIPA 2025 + Disclosure"}</div>
+              <div style={sectionLabel}>{ko ? "법적 필수 — PIPA 2025 + AI 기본법" : "Legal Required — PIPA 2025 + AI Basic Act"}</div>
               <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
                 {legalRequirements.map((l, i) => (
                   <div key={l.title}>

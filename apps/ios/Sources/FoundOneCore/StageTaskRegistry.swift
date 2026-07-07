@@ -298,7 +298,7 @@ public enum BUStageTaskRegistry {
 
     private static let titleOverrides: [String: String] = [
         // biz-registration — startup-tech
-        "biz-reg-confirmed__startup-tech":   "법인 등기 + 사업자등록 완료 확인",
+        "biz-reg-confirmed__startup-tech":   "사업자등록 완료 확인 (법인은 등기 완료 포함)",
         "biz-account-opened__startup-tech":  "법인 통장 개설 (개인 계좌 완전 분리)",
 
         // pre-launch-final — startup-tech

@@ -45,6 +45,10 @@ public struct FundraisingReadinessStageView: View {
     @AppStorage("fr.tipsApplied")     private var tipsApplied     = false
     @AppStorage("fr.govSupport")      private var govSupport      = false
     @AppStorage("fr.done")            private var done            = false
+    @AppStorage("stage.budget.startupOperatingMode") private var startupMode = "bootstrap"
+
+    /// 부트스트랩·인디 트랙: IR·투자유치는 '지금'이 아니라 PMF 이후 전환 대비 가이드.
+    private var isBootstrapTrack: Bool { startupMode == "bootstrap" || startupMode == "indie" }
 
     private var currentInputs: [String: String] {
         ["monthlyBurnText": monthlyBurnText, "cashText": cashText, "mrrText": mrrText,
@@ -186,6 +190,45 @@ public struct FundraisingReadinessStageView: View {
                     }
                 }
             }
+
+            // 웹 SSOT: FundraisingReadinessStage.tsx pg2 "본인 모드에 맞는 한 줄 권장"
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("본인 모드에 맞는 한 줄 권장")
+                    let modeLines: [(String, String, String)] = [
+                        ("indie",    "1인 인디",     "투자 X. 정부 보조금(예비창업패키지 1억) + 매출이 답. 부트스트랩으로 $1M ARR 가능."),
+                        ("bootstrap","부트스트랩",   "정부지원(TIPS·R&D) 우선 + 매출. 투자는 PMF 입증 후 시리즈A만 검토."),
+                        ("seed",     "시드 단계",    "1~2억 시드 라운드 + TIPS 총 8억(R&D 5억 + 사업화 3억). 18~24개월 안에 시리즈A 마일스톤."),
+                        ("seriesA",  "시리즈A 이상", "30~100억 시리즈A. ARR $1M+ + 18개월+ 런웨이 + Net Burn < 2x ARR 표준."),
+                    ]
+                    ForEach(modeLines, id: \.0) { key, title, line in
+                        let isMine = startupMode == key
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text(title)
+                                    .font(BUFont.bodySmall.weight(.semibold))
+                                    .foregroundStyle(isMine ? BUColor.midnightDeep : BUColor.ink)
+                                if isMine {
+                                    Text("내 모드")
+                                        .font(BUFont.bodyCaption.weight(.semibold))
+                                        .foregroundStyle(BUColor.midnight)
+                                        .padding(.horizontal, 6).padding(.vertical, 2)
+                                        .background(BUColor.midnight.opacity(0.1), in: Capsule())
+                                }
+                            }
+                            Text(line)
+                                .font(BUFont.bodyCaption)
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .lineSpacing(2)
+                        }
+                        .padding(BUSpacing.sm)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(isMine ? BUColor.midnight.opacity(0.06) : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
+                        .opacity(isMine ? 1 : 0.6)
+                    }
+                }
+            }
         }
     }
 
@@ -215,6 +258,15 @@ public struct FundraisingReadinessStageView: View {
 
     private var irPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            if isBootstrapTrack {
+                BUCard(.card) {
+                    Text("부트스트랩 트랙 — IR·투자유치는 '지금 당장'이 아니에요. 지분을 지키며 정부지원(TIPS·R&D)·매출로 버티다가, 제품 검증(PMF) 이후 성장 가속에 외부 자본이 필요해질 때를 대비하는 준비 가이드입니다. TIPS 운영사 투자는 정부 R&D와 묶여 부트스트랩과도 잘 맞습니다.")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineSpacing(2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("IR 덱 필수 슬라이드 10개")

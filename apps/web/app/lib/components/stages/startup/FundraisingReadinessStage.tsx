@@ -70,6 +70,7 @@ export function FundraisingReadinessStage() {
     isDeeptech: isDeeptechSub,
     limit: RECOMMENDED_PROGRAM_COUNT_BY_MODE[startupOperatingMode],
   });
+  const isBootstrapTrack = startupOperatingMode === "bootstrap" || startupOperatingMode === "indie";
 
   const modeLabels: Record<OperatingMode, { ko: string; en: string }> = {
     indie: { ko: "1인 인디", en: "Solo indie" },
@@ -518,6 +519,13 @@ export function FundraisingReadinessStage() {
         <>
           <Section icon={Target} title={ko ? "투자자를 만나는 5가지 현실 방법" : "5 realistic ways to meet investors"}>
             <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+              {isBootstrapTrack && (
+                <div style={{ padding: "11px 13px", marginBottom: "4px", borderRadius: "10px", background: "rgba(30,41,59,0.05)", border: "1px solid rgba(30,41,59,0.12)", fontSize: "12px", lineHeight: 1.6, color: "rgba(15,23,42,0.72)" }}>
+                  {ko
+                    ? "지금은 지분을 지키며 정부지원·매출로 버티는 단계예요. 아래는 '지금 당장'이 아니라 — 제품 검증(PMF)이 끝나고 성장 가속에 외부 자본이 필요해질 미래를 위한 준비 가이드입니다. TIPS 운영사 투자는 정부 R&D와 묶여 부트스트랩과도 잘 맞으니 1번부터 눈여겨보세요."
+                    : "You're conserving equity, running on grants + revenue for now. The below is a guide for a future moment — after PMF, when growth needs outside capital — not for right now. TIPS operator investment pairs with government R&D, so it fits bootstrapping well; start with #1."}
+                </div>
+              )}
               <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.6, marginBottom: "8px" }}>
                 {ko ? "콜드 이메일 답변율 < 2%. 아래 방법이 10배 효과적." : "Cold email <2% response. These work 10x better."}
               </div>

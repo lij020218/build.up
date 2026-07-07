@@ -20,6 +20,8 @@ export function VentureCertificationStage() {
   const { guideStepIndex, setGuideStepIndex, guideSelections, setGuideSelections } = d;
   const pg = guideStepIndex;
   const selectedVentureType = (guideSelections["venture-cert-type"] as string | undefined) ?? null;
+  // 부트스트랩/인디 트랙: 투자유치형(VC 5천만+ 필요)은 지금 불가 → "네 길(연구개발·혁신성장)" 강조 + VC는 미래 표시 (2026-07)
+  const isBootstrapTrack = d.startupOperatingMode === "bootstrap" || d.startupOperatingMode === "indie";
   const selectVentureType = (type: string) => {
     setGuideSelections((prev: Record<string, string>) => ({ ...prev, "venture-cert-type": type }));
   };
@@ -128,8 +130,14 @@ export function VentureCertificationStage() {
         <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "2px" }}>
           {ko ? "우리 회사에 맞는 인증 유형을 선택하세요. 선택 결과는 자동 저장됩니다." : "Choose the certification type that fits your company. Selection is auto-saved."}
         </div>
+        {isBootstrapTrack && (
+          <div style={{ fontSize: "12px", color: MIDNIGHT, background: `${MIDNIGHT}08`, border: `1px solid ${MIDNIGHT}1A`, borderRadius: "10px", padding: "8px 12px", lineHeight: 1.5, marginBottom: "2px" }}>
+            {ko ? "부트스트랩 트랙 — 지금 가장 현실적인 건 혁신성장유형(평가만 통과, 연구소·투자 불필요)입니다. 연구개발유형도 가능하지만 기업부설연구소 + 연 5천만원 R&D가 필요해요. 벤처투자유형은 PMF 후 VC로부터 5천만원 이상 유치 시 열리는 미래 경로입니다." : "Bootstrap track — the most realistic path now is Innovation-Growth type (assessment only, no lab or investment). R&D type also works but needs a corporate R&D lab + ₩50M/yr R&D spend. Investment type unlocks later, after raising ₩50M+ from a VC (post-PMF)."}
+          </div>
+        )}
         {types.map(t => {
           const selected = selectedVentureType === t.id;
+          const isVcFuture = isBootstrapTrack && t.id === "investment";
           return (
           <button key={t.id} type="button" onClick={() => selectVentureType(t.id)} style={{
             borderRadius: "16px",
@@ -137,6 +145,7 @@ export function VentureCertificationStage() {
             background: selected ? `${t.color}08` : `${t.color}02`,
             overflow: "hidden", cursor: "pointer", textAlign: "left" as const,
             transition: "all 0.2s ease",
+            opacity: isVcFuture && !selected ? 0.8 : 1,
           }}>
             <div style={{ padding: "16px 18px 10px", display: "flex", alignItems: "center", gap: "10px" }}>
               <div style={{
@@ -145,7 +154,15 @@ export function VentureCertificationStage() {
                 transition: "all 0.2s ease",
               }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: selected ? t.color : "#0f172a", marginBottom: "4px" }}>{t.type}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: selected ? t.color : "#0f172a" }}>{t.type}</span>
+                  {isVcFuture && (
+                    <span title={ko ? "현재 부트스트랩 모드 — VC로부터 5,000만원 이상 유치한 경우에만 진행 가능. 지금은 연구개발·혁신성장유형을 권장합니다." : "Bootstrap mode — available only after raising ₩50M+ from a VC. R&D / Innovation-Growth type recommended for now."}
+                      style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "rgba(0,0,0,0.06)", color: "var(--muted)", cursor: "help", whiteSpace: "nowrap" }}>
+                      {ko ? "VC 유치 후" : "After VC"}
+                    </span>
+                  )}
+                </div>
                 <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>{t.who}</div>
               </div>
             </div>

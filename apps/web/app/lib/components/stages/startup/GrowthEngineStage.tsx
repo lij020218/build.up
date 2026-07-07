@@ -265,18 +265,18 @@ export function GrowthEngineStage() {
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "리텐션이 먼저입니다" : "Retention comes first"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "4px" }}>
-            {ko ? "리텐션 없이 광고비를 쓰면 돈만 태웁니다. 먼저 사용자가 돌아오는지 확인하세요." : "Spending on ads without retention burns money. First prove users come back."}
+            {ko ? "리텐션 없이 광고비를 쓰면 돈만 태웁니다. 먼저 사용자가 돌아오는지 확인하세요. (아래 D1/D7/D30은 소비자 앱 참고 곡선 — B2B SaaS는 구독형이라 D30 40%+로 훨씬 높음)" : "Spending on ads without retention burns money. First prove users come back. (D1/D7/D30 below = consumer-app reference curve; B2B SaaS is much higher, ~D30 40%+)"}
           </div>
         </div>
         <div style={{ padding: "0 22px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
           {(ko ? [
             { period: "D1", good: "40%+", desc: "첫날 재방문" },
             { period: "D7", good: "20%+", desc: "첫주 유지" },
-            { period: "D30", good: "15%+", desc: "첫달 (B2C·B2B 40%+)" },
+            { period: "D30", good: "10%+", desc: "첫달 유지" },
           ] : [
             { period: "D1", good: "40%+", desc: "Day 1 return" },
             { period: "D7", good: "20%+", desc: "Week 1" },
-            { period: "D30", good: "15%+", desc: "M1 (B2C·B2B 40%+)" },
+            { period: "D30", good: "10%+", desc: "Month 1" },
           ]).map(r => (
             <div key={r.period} style={{ padding: "12px", borderRadius: "12px", background: MIDNIGHT_SOFT, textAlign: "center" as const }}>
               <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const }}>{r.period}</div>

@@ -611,9 +611,9 @@ function getStageCopyForCategory(
         whyNow: "정부 지원사업은 마감이 있습니다. 초기 밸류에이션이 낮을 때 지분을 내어주는 대신 비지분 자금으로 마일스톤을 달성하세요."
       },
       biz_registration: {
-        title: "법인 등기 & 금융 세팅",
-        goal: "법인 등기 완료를 확인하고 법인 통장 개설과 세무사 선임 여부를 결정합니다.",
-        whyNow: "투자 유치와 정부 지원사업 신청에 법인 등기가 필수입니다."
+        title: "사업자등록 & 금융 세팅",
+        goal: "사업자등록(법인은 등기 후) 완료를 확인하고 통장 개설과 세무사 선임 여부를 결정합니다.",
+        whyNow: "계약·세금계산서·정부지원의 전제 조건입니다. 투자 유치·지분 발행에는 법인 등기가 필요하며, 개인사업자는 사업자등록만으로 진행합니다."
       },
       pre_launch_final: {
         title: "론칭 최종 준비",
@@ -854,7 +854,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "biz-account-opened": { ko: "사업 전용 통장 개설 (개인 계좌와 분리)" },
   "cpa-decision-made": { ko: "세무대리인(세무사) 선임 여부 결정" },
   // biz-registration — startup overrides
-  "biz-reg-confirmed__startup-tech": { ko: "법인 등기 + 사업자등록 완료 확인" },
+  "biz-reg-confirmed__startup-tech": { ko: "사업자등록 완료 확인 (법인은 등기 완료 포함)" },
   "biz-account-opened__startup-tech": { ko: "법인 통장 개설 (개인 계좌 완전 분리)" },
   "cpa-decision-made__startup-tech": { ko: "세무사 선임 여부 결정 (법인세·R&D 공제 대비)" },
   // pre-launch-final — base (offline / 외식·매장 기본)

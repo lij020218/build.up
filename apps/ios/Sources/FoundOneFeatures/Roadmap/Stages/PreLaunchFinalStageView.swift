@@ -275,7 +275,7 @@ public struct PreLaunchFinalStageView: View {
             ("결제 (Stripe/Toss) 100원 실거래 + 환불 1사이클", $stockOK),
             ("베타 사용자 10명 명단 + 24시간 환영 메일", $staffOK),
             ("분석 (PostHog·Mixpanel) 5개 핵심 이벤트 발화 확인", $posOK),
-            ("이용약관·개인정보처리방침·PIPA 2025 (이동권·동의 분리·국내대리인) 게시", $hygieneOK),
+            ("이용약관·개인정보처리방침 게시 + 동의 분리 + AI 기능 있으면 고지·산출물 표시(AI 기본법 2026.1.22, 계도중) + 자동결정 거부·설명 창구 + 외국 법인이면 국내대리인", $hygieneOK),
             ("D-28~D+14 13개 캘린더 알림 + Product Hunt D-7 예약", $emergencyOK),
             ("응급 대응 매뉴얼 5종 — 결제 장애·DB 다운·바이럴 트래픽", $insuranceOK),
         ]

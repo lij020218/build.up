@@ -481,7 +481,8 @@ export function FinancialReviewStage() {
       loan: loanDecision?.inputs?.loanAmountKrw
         ? { amountKrw: loanDecision.inputs.loanAmountKrw, annualRatePercent: loanDecision.inputs.annualRatePercent ?? 3.5 }
         : undefined,
-      franchise: franchise?.monthlyRoyalty ? { monthlyRoyaltyKrw: franchise.monthlyRoyalty * 10_000 } : undefined,
+      // 프랜차이즈 로열티는 오프라인 프랜차이즈 창업자에게만 — stale 프랜차이즈 선택(selectedFranchiseBrandId·startupType 모두 잔존 가능)이 스타트업/온라인 재무리뷰에 새지 않도록 현재 클러스터로 게이트 (2026-07-06)
+      franchise: (d.industryCategoryId !== "startup-tech" && d.industryCategoryId !== "online-digital" && franchise?.monthlyRoyalty) ? { monthlyRoyaltyKrw: franchise.monthlyRoyalty * 10_000 } : undefined,
     };
   }, [d.industryCategoryId, d.decisions, d.selectedFranchiseBrandId]);
 
