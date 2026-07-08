@@ -644,7 +644,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     setAuthLabel, setUserName, setPersistenceLabel,
     setRequiresAuth, setAuthResolved,
     setShowOnboardingChoice, setShowMonthlyCostPrompt,
-    setUserRole,
+    setUserRole, setShowRoleSelection, setRoleResolved,
   } = useOnboardingStore();
 
   const {
@@ -781,6 +781,17 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
             setRequiresAuth(false);
             setAuthResolved(true);
             fastGateDoneRef.current = true;
+            // ⚡ 역할(사장/직원)도 여기서 빠르게 확정 — 느린 bootstrap(로드맵 5초 로드) 전에 결정해,
+            //   홈이 사장 화면을 ~5초 띄우다 역할 선택 화면으로 바뀌는 깜빡임을 막는다. (홈은 roleResolved
+            //   전까지 스켈레톤; 정적 화면은 fast-gate 그대로.) 미선택(NULL=신규 가입)이면 선택 화면.
+            try {
+              const { data: fastProf } = await supabase
+                .from("business_profiles").select("user_role").eq("user_id", fastSession.user.id).maybeSingle();
+              const fr = (fastProf as { user_role?: string } | null)?.user_role;
+              if (fr === "staff" || fr === "manager" || fr === "owner") setUserRole(fr);
+              else setShowRoleSelection(true);
+              setRoleResolved(true); // 성공 시에만 — 실패 시 false 유지해 홈 스켈레톤, 정식 역할블록(963)이 확정
+            } catch { /* 실패 시 roleResolved=false 유지 → 홈은 스켈레톤, 아래 정식 역할블록이 재확정 */ }
           }
         } catch { /* 무시 — 아래 정식 흐름이 처리 */ }
       }
@@ -939,25 +950,18 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         if (profileRole === "staff" || profileRole === "manager" || profileRole === "owner") {
           resolvedRole = profileRole;
         } else {
-          resolvedRole = "owner";
-          // ⚠️ 2026-05-18: 종전엔 void fire-and-forget → RLS 거부/row 없음 시 silent fail.
-          //   await + error 로깅으로 변경. 실패해도 resolvedRole 은 유지 (로컬 fallback).
-          try {
-            const { error: updErr } = await supabase
-              .from("business_profiles")
-              .update({ user_role: "owner" } as never)
-              .eq("user_id", result.user.id);
-            if (updErr) {
-              console.warn("[connectAndLoad] business_profiles.user_role update failed:", updErr.message);
-            }
-          } catch (e) {
-            console.warn("[connectAndLoad] business_profiles.user_role update threw:", e);
-          }
+          // 역할 미선택(신규 가입 등) → 가입 직후 "사장/직원" 선택 화면을 띄운다.
+          //   owner 로 자동 확정·기록하지 않는다(사용자가 직접 고름). 선택 시
+          //   RoleSelectionScreen.onSelect 가 business_profiles 에 role 을 upsert.
+          //   (기존 온보딩 사용자는 user_role='owner' 라 이 분기에 안 들어옴 → 화면 안 뜸.)
+          useOnboardingStore.getState().setShowRoleSelection(true);
+          resolvedRole = "owner"; // fallback — 역할 선택 화면이 대시보드를 가려 표시엔 영향 없음
         }
       } catch {
         resolvedRole = "owner";
       }
       setUserRole(resolvedRole);
+      setRoleResolved(true); // 정식 역할블록 완료 — fast-gate 를 스킵한 reconnect 경로의 backstop
 
       const loadedTasks = result.state.tasks;
 

@@ -6,6 +6,8 @@ type OnboardingState = {
   showAIRoadmapWizard: boolean;
   showRoleSelection: boolean;
   userRole: "owner" | "staff" | "manager";
+  /** 역할(사장/직원) 확정 여부 — 확정 전엔 홈이 사장 화면을 잠깐 띄우는 깜빡임 방지용 스켈레톤 게이트 */
+  roleResolved: boolean;
   isResetting: boolean;
   resetProgress: number;
   authLabel: string;
@@ -33,6 +35,7 @@ type OnboardingActions = {
   setShowAIRoadmapWizard: (v: boolean) => void;
   setShowRoleSelection: (v: boolean) => void;
   setUserRole: (v: "owner" | "staff" | "manager") => void;
+  setRoleResolved: (v: boolean) => void;
   setIsResetting: (v: boolean) => void;
   setResetProgress: (v: number) => void;
   setAuthLabel: (v: string) => void;
@@ -58,6 +61,7 @@ const initialState: OnboardingState = {
   showAIRoadmapWizard: false,
   showRoleSelection: false,
   userRole: "owner",
+  roleResolved: false,
   isResetting: false,
   resetProgress: 0,
   authLabel: "",
@@ -83,6 +87,7 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
   setShowAIRoadmapWizard: (v) => set({ showAIRoadmapWizard: v }),
   setShowRoleSelection: (v) => set({ showRoleSelection: v }),
   setUserRole: (v) => set({ userRole: v }),
+  setRoleResolved: (v) => set({ roleResolved: v }),
   setIsResetting: (v) => set({ isResetting: v }),
   setResetProgress: (v) => set({ resetProgress: v }),
   setAuthLabel: (v) => set({ authLabel: v }),

@@ -66,7 +66,11 @@ export function getGenericTaskStageState({
     selectedFranchiseBrandId,
     franchiseFlexibility,
   });
-  const { allDone } = calculateTaskGateSummary(stageId, stageTasks, preLaunchDoneMap);
+  const { allDone: gateAllDone } = calculateTaskGateSummary(stageId, stageTasks, preLaunchDoneMap);
+  // financial-review(월 운영비)는 taskMap 게이트 태스크가 없어 자체 "확인" UI로 완료하는 스테이지.
+  //   calculateTaskGateSummary 는 gateTasks.length===0 이면 allDone=false 를 주므로, 하단 공통
+  //   "다음 단계로" 푸터가 영구 비활성화됐음(중간 "저장하고 다음"만 동작). 자체 완료 스테이지라 continue 허용.
+  const allDone = stageId === "financial-review" ? true : gateAllDone;
   const footerMode = getGenericTaskFooterMode({
     hasMoreReadingPages,
     correctedProgressPercent,

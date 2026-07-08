@@ -126,12 +126,12 @@ export default function RoleSelectionScreen({ language, onSelect }: Props) {
         {showInviteInput && selected === "staff" && (
           <div style={inviteSection}>
             <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>
-              {ko ? "초대 코드를 입력하세요" : "Enter your invite code"}
+              {ko ? "초대 코드 (선택)" : "Invite code (optional)"}
             </div>
             <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "12px", lineHeight: 1.5 }}>
               {ko
-                ? "사장님에게 받은 초대 코드를 입력하면 해당 가게에 연결됩니다."
-                : "Enter the invite code from your manager to connect to their store."}
+                ? "사장님에게 받은 초대 코드가 있으면 입력하세요. 없어도 시작할 수 있고, 나중에 초대 링크로 가게에 연결할 수 있어요."
+                : "Enter an invite code if you have one. You can also start without it and connect to a store later via an invite link."}
             </div>
             <input
               type="text"
@@ -151,11 +151,11 @@ export default function RoleSelectionScreen({ language, onSelect }: Props) {
             if (!selected) return;
             onSelect(selected, selected === "staff" ? inviteCode : undefined);
           }}
-          disabled={!selected || (selected === "staff" && !inviteCode.trim())}
+          disabled={!selected}
           style={{
             ...continueBtn,
-            opacity: !selected || (selected === "staff" && !inviteCode.trim()) ? 0.35 : 1,
-            cursor: !selected || (selected === "staff" && !inviteCode.trim()) ? "default" : "pointer",
+            opacity: !selected ? 0.35 : 1,
+            cursor: !selected ? "default" : "pointer",
           }}
         >
           {ko ? "시작하기" : "Continue"}

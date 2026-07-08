@@ -437,6 +437,7 @@ export default function StarterStageDemo({
     showAIRoadmapWizard, setShowAIRoadmapWizard,
     showRoleSelection, setShowRoleSelection,
     userRole, setUserRole,
+    roleResolved,
     handleExistingBusinessComplete,
     handleAIRoadmapComplete,
     handleSignOut,
@@ -489,41 +490,27 @@ export default function StarterStageDemo({
         language={language}
         onSelect={async (role, inviteCode) => {
           try {
-            if (role === "staff" && inviteCode) {
-              // 직원: 초대 코드로 가게 연결
-              try {
-                const { data: invite } = await supabase
-                  .from("store_invites" as never)
-                  .select("*")
-                  .eq("invite_code", inviteCode)
-                  .is("used_by", null)
-                  .gt("expires_at", new Date().toISOString())
-                  .maybeSingle() as { data: { id: string; owner_user_id: string; role: string } | null };
-
-                if (invite) {
-                  const { data: { user } } = await supabase.auth.getUser();
-                  if (user) {
-                    await supabase.from("store_members" as never).upsert({
-                      owner_user_id: invite.owner_user_id,
-                      member_user_id: user.id,
-                      role: invite.role || "staff",
-                    } as never, { onConflict: "owner_user_id,member_user_id" });
-                    await supabase.from("store_invites" as never).update({ used_by: user.id, used_at: new Date().toISOString() } as never).eq("id", invite.id);
-                  }
-                }
-              } catch { /* tables may not exist yet */ }
-            }
-
-            // 역할 저장 (business_profiles에)
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-              await supabase.from("business_profiles").update({ user_role: role } as never).eq("user_id", user.id);
+              // 역할 저장 — 신규 가입자는 business_profiles 행이 없어 upsert (update 는 0행 no-op).
+              const { error: roleErr } = await supabase
+                .from("business_profiles")
+                .upsert({ user_id: user.id, user_role: role } as never, { onConflict: "user_id" } as never);
+              if (roleErr) console.error("[role] save failed:", roleErr);
+
+              // 직원 + 초대코드 → 가게 연결(SECURITY DEFINER RPC). 코드 없으면 역할만 저장하고
+              //   나중에 초대 링크(/invite/<code>)로 연결. (직원 전용 콘텐츠는 초대 없이도 이용)
+              if (role === "staff" && inviteCode?.trim()) {
+                const { error: invErr } = await supabase.rpc("accept_store_invite" as never, { p_code: inviteCode.trim() } as never);
+                if (invErr) console.error("[role] invite accept failed:", invErr);
+              }
             }
 
             setUserRole(role);
             setShowRoleSelection(false);
             if (role === "owner") setShowOnboardingChoice(true);
-          } catch {
+          } catch (err) {
+            console.error("[role] onSelect failed:", err);
             setUserRole(role);
             setShowRoleSelection(false);
             if (role === "owner") setShowOnboardingChoice(true);
@@ -694,6 +681,11 @@ export default function StarterStageDemo({
 
   if (shouldShowAuth) {
     return null; // useEffect에서 /auth로 리다이렉트
+  }
+  // 역할(사장/직원) 확정 전 홈이 사장 화면을 잠깐 띄우는 깜빡임 방지 — 확정까지 스켈레톤 유지.
+  //   fast-gate 가 역할을 빠르게 확정하므로 짧다. 정적 surface(프랜차이즈 등)는 게이트 안 함(fast-gate 유지).
+  if (activeSurface === "home" && !roleResolved && !isResetting) {
+    return <DashboardSkeleton />;
   }
   if (roleSelectionNode) {
     return roleSelectionNode;
