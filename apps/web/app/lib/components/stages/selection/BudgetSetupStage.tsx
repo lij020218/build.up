@@ -715,7 +715,7 @@ export function BudgetSetupStage() {
 
       <StageWrapup
         ko={language === "ko"}
-        nextStageLabelKo={isStartup ? "창업팀·법인 기본 구조" : isOnline ? "판매 플랫폼 선택" : "인허가 사전 확인"}
+        nextStageLabelKo={startupType === "franchise" ? "프랜차이즈 가맹 절차" : isStartup ? "창업팀·법인 기본 구조" : isOnline ? "판매 플랫폼 선택" : "인허가 사전 확인"}
         doneItemsKo={isStartup ? [
           { label: "1. 자본 규모 설정", detail: "보유 자본 + 조달 가용액 + 운영 런웨이 6개월 분리 — 3구간 프리셋 비교" },
           { label: "2. 런칭 일정 설정", detail: "출시 희망일에서 역산해 개발 마일스톤·스토어 심사 기간 자동 배치" },
@@ -749,10 +749,12 @@ export function BudgetSetupStage() {
           "정부지원금·소상공인 대출 가능 여부 — 신청 시점부터 입금까지 평균 4~8주, 일정에 반영",
           "예비비 10~15% 별도 — 인테리어 추가공사·집기 누락·임대 보증금 추가 요구 빈번",
           "오픈 일정 — 임대 계약일부터 영업신고·인테리어·집기 입고·시운전까지 최소 60일 필요",
-          "프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생",
+          ...(startupType === "franchise"
+            ? ["프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생"]
+            : []),
           breakEvenNote,
         ]}
-        nextSummaryKo={isStartup ? "자본·일정·예비비 확정 → 창업팀·법인 기본 구조 단계로 진입" : isOnline ? "자본·일정·예비비 확정 → 판매 플랫폼 선택 단계로 진입" : "자본·일정·예비비 확정 → 인허가 사전 확인 단계로 진입"}
+        nextSummaryKo={startupType === "franchise" ? "자본·일정·예비비 확정 → 프랜차이즈 가맹 절차 단계로 진입" : isStartup ? "자본·일정·예비비 확정 → 창업팀·법인 기본 구조 단계로 진입" : isOnline ? "자본·일정·예비비 확정 → 판매 플랫폼 선택 단계로 진입" : "자본·일정·예비비 확정 → 인허가 사전 확인 단계로 진입"}
       />
 
       <div style={styles.stageFooter}>
@@ -778,11 +780,13 @@ export function BudgetSetupStage() {
           }}
         >
           {canCompleteBudgetStep
-            ? (industryCategoryId === "startup-tech"
-                ? (language === "ko" ? "예산 저장하고 스타트업 로드맵 시작" : "Save budget and start startup roadmap")
-                : language === "ko"
-                  ? "예산 저장하고 상권 보기"
-                  : "Save budget and open markets")
+            ? (startupType === "franchise"
+                ? (language === "ko" ? "예산 저장하고 가맹 절차 진행" : "Save budget and start franchise application")
+                : isStartup
+                  ? (language === "ko" ? "예산 저장하고 스타트업 로드맵 시작" : "Save budget and start startup roadmap")
+                  : isOnline
+                    ? (language === "ko" ? "예산 저장하고 판매 플랫폼 선택" : "Save budget and pick sales platform")
+                    : (language === "ko" ? "예산 저장하고 인허가 사전 확인" : "Save budget and check permits"))
             : (language === "ko" ? "↑ 예산을 설정하세요" : "↑ Set your budget")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>

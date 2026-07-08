@@ -200,11 +200,11 @@ export function LoanGuideStage() {
       { icon: ShieldCheck, title: "Local Gov + KODIT Guarantee", bucket: "Regional add-on", rate: "1-2%", limit: "Up to 50M (varies)", why: "Seoul/Gyeonggi guarantee foundations. Stackable with main policy fund", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307" },
     ])
     : budgetBucket === "medium" ? (ko ? [
-      { icon: ShieldCheck, title: "신보·기보 보증 + 시중은행", bucket: "5천만~2억 추천 1순위", rate: "보증료 0.5~1.5% + 은행 4~5%", limit: "최대 2억 무담보", why: "보증서 발급 후 국민·신한·하나 등 시중은행 저금리 대출. 기보가 한도·금리 우위(기술기업)", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307", primary: true },
+      { icon: ShieldCheck, title: "지역신보 보증 + 시중은행", bucket: "5천만~2억 추천 1순위", rate: "보증료 0.5~1.5% + 은행 4~5%", limit: "최대 2억 무담보", why: "소상공인은 지역신용보증재단(지역신보)이 1순위 — 지자체별 소상공인 특화 보증. 보증서 발급 후 국민·신한·하나 등 시중은행 저금리 대출. (기술·중소기업은 신보·기보 병행 검토)", href: "https://www.koreg.or.kr/", primary: true },
       { icon: Banknote, title: "소상공인 일반경영안정자금", bucket: "운영자금 부족 시", rate: "연 2.96%~", limit: "최대 7천만원", why: "정책자금 + 보증서 결합으로 1억+ 가능. 거치 1년·상환 4년", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
       { icon: FileText, title: "대환대출 (기존 고금리 부채 시)", bucket: "기존 6~10% 대출 보유", rate: "고정 4.5%", limit: "기존 부채 한도", why: "시중은행 6~10% → 정책자금 4.5%. 연 수백만원 이자 절감", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
     ] : [
-      { icon: ShieldCheck, title: "KODIT/KIBO Guarantee + Bank", bucket: "Top pick 50M-200M", rate: "Fee 0.5-1.5% + 4-5% bank", limit: "Up to 200M unsecured", why: "Get letter → KB/Shinhan/Hana low-rate. KIBO better for tech", href: "https://www.kodit.or.kr/kodit/cm/cntnts/cntntsView.do?mi=2970&cntntsId=11307", primary: true },
+      { icon: ShieldCheck, title: "Local Credit Guarantee + Bank", bucket: "Top pick 50M-200M", rate: "Fee 0.5-1.5% + 4-5% bank", limit: "Up to 200M unsecured", why: "For small business, regional credit guarantee foundations are the top pick. Get letter → KB/Shinhan/Hana low-rate. (KODIT/KIBO for tech/SME)", href: "https://www.koreg.or.kr/", primary: true },
       { icon: Banknote, title: "SEMAS General Stabilization Fund", bucket: "OpEx shortfall", rate: "From 2.96%", limit: "Up to 70M", why: "Combine with guarantee = 100M+. 1yr grace + 4yr term", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
       { icon: FileText, title: "Refinance Loan (high-rate debt)", bucket: "Existing 6-10% debt", rate: "Fixed 4.5%", limit: "Existing debt amount", why: "Save millions yearly converting bank → policy", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
     ])
@@ -825,10 +825,10 @@ export function LoanGuideStage() {
       {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
-        nextStageLabelKo="사업자등록·인허가"
+        nextStageLabelKo={isStartup ? "사업자등록·금융 세팅" : isOnline ? "상품 소싱 및 상세 페이지" : "메뉴·서비스 라인업 확정"}
         doneItemsKo={[
           { label: "1. 자금 수요·구조 진단", detail: "초기 시설자금 vs 운영자금 분리 + 대출 vs 정부지원금 우선순위 결정" },
-          { label: "2. 정책자금 후보군 매칭", detail: "소상공인시장진흥공단·신보·기보·중기부 매칭 — 업종·기간·자본 자동 필터" },
+          { label: "2. 정책자금 후보군 매칭", detail: "소상공인시장진흥공단·지역신보·신보·기보 매칭 — 업종·기간·자본 자동 필터 (소상공인은 지역신보 1순위)" },
           { label: "3. 신용·재무 점검", detail: "개인신용 점수·기존 부채·연체 기록 사전 정리, 사업자 신용평가 사전 시뮬" },
           { label: "4. 신청 일정·서류 준비", detail: "사업계획서·매출 시뮬·자금 사용 계획 3종 + 추천 기관 면담 일정 확보" },
         ]}
@@ -842,7 +842,7 @@ export function LoanGuideStage() {
           "정부지원금 — 「선정 후 입금」까지 평균 4~12주, 일정 역산 필수 (오픈 직전 신청 X)",
           "사기 주의 — 「대출 100% 보장」 「선수수료」 요구하는 브로커는 모두 사기, 직접 신청 원칙",
         ]}
-        nextSummaryKo="자금 구조·대출 후보 확정 → 사업자등록·인허가 단계로 진입"
+        nextSummaryKo={`자금 구조·대출 후보 확정 → ${isStartup ? "사업자등록·금융 세팅" : isOnline ? "상품 소싱" : "메뉴·서비스 라인업 확정"} 단계로 진입`}
       />
       )}
 

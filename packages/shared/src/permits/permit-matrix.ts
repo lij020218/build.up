@@ -47,9 +47,10 @@ const bizRegistration: PermitItem = {
   duration: { ko: "즉일~3일", en: "Same day to 3 days" },
   applyUrl: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3",
   documents: [
+    { ko: "사업자등록 신청서", en: "Business registration form" },
     { ko: "임대차계약서 사본", en: "Lease contract copy" },
     { ko: "신분증", en: "ID card" },
-    { ko: "사업자등록 신청서", en: "Business registration form" },
+    { ko: "영업신고증 사본 (인허가 업종 필수 — 음식점 등)", en: "Business report cert copy (required for licensed types)" },
   ],
   steps: [
     { ko: "홈택스 또는 관할 세무서 방문", en: "Visit HomeTax online or local tax office" },
@@ -111,8 +112,8 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         name: { ko: "식품위생교육 이수", en: "Food Hygiene Training" },
         priority: "required",
         agency: { ko: "한국외식업중앙회", en: "Korea Foodservice Industry Association" },
-        costWon: 26000,
-        costNote: { ko: "신규영업자 26,000원 / 기존영업자 8,000원", en: "New business 26K / Existing 8K won" },
+        costWon: 30000,
+        costNote: { ko: "신규영업자 30,000원 / 기존영업자 12,000원", en: "New business 30K / Existing 12K won" },
         duration: { ko: "온라인 3~6시간", en: "Online 3-6 hours" },
         applyUrl: "https://www.ifoodedu.or.kr",
         documents: [
@@ -137,7 +138,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         agency: { ko: "관할 구청 위생과", en: "District Office Hygiene Dept" },
         costWon: 28000,
         costNote: { ko: "수수료 약 28,000원", en: "Fee ~28,000 won" },
-        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        duration: { ko: "즉시(당일) 수리 — 시설조사는 발급 후 1개월 이내 사후", en: "Same-day acceptance — facility inspection within 1 month after issuance" },
         applyUrl: "https://www.gov.kr/mw/AA020InfoCappView.do?HighCtgCD=A09006&CappBizCD=14600000021",
         documents: [
           { ko: "영업신고서", en: "Business report form" },
@@ -145,14 +146,14 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
           { ko: "건강진단결과서 (보건증)", en: "Health certificate" },
           { ko: "영업장 평면도 (주방·객석 구분)", en: "Floor plan (kitchen/dining separated)" },
           { ko: "임대차계약서 사본", en: "Lease contract copy" },
-          { ko: "수도시설 사용 증명 (상수도 지역)", en: "Water supply proof" },
+          { ko: "수질검사성적서 (지하수 사용 시에만 해당 — 상수도는 불요)", en: "Water quality test (only if using groundwater)" },
         ],
         steps: [
           { ko: "위생교육 이수 + 보건증 발급 완료", en: "Complete hygiene training + health cert" },
           { ko: "정부24 또는 관할 구청 위생과 방문", en: "Visit Gov24 or district hygiene office" },
           { ko: "영업신고서 + 첨부서류 제출", en: "Submit report + attachments" },
-          { ko: "현장 점검 (시설 기준 확인)", en: "On-site inspection (facility check)" },
-          { ko: "영업신고증 발급", en: "Business report certificate issued" },
+          { ko: "영업신고증 즉시(당일) 발급", en: "Business report certificate issued same day" },
+          { ko: "시설조사는 발급 후 1개월 이내 사후 진행", en: "Facility inspection within 1 month after issuance" },
         ],
         warnings: [
           { ko: "주방과 객석이 벽·칸막이로 구분되어야 함", en: "Kitchen and dining must be separated by wall/partition" },
@@ -175,8 +176,8 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         name: { ko: "식품위생교육 이수 (휴게음식점)", en: "Food Hygiene Training (Snack Bar)" },
         priority: "required",
         agency: { ko: "한국휴게음식업중앙회", en: "Korea Snack Bar Association" },
-        costWon: 26000,
-        costNote: { ko: "신규영업자 26,000원 (외식업중앙회와 별개 기관)", en: "New business 26K (separate from restaurant association)" },
+        costWon: 30000,
+        costNote: { ko: "신규영업자 30,000원 / 기존영업자 20,000원 (한국휴게음식업중앙회 — 일반음식점과 별개 기관·기존 요금 다름)", en: "New 30K / Existing 20K won (Korea Snack-Bar Assoc. — separate body, existing fee differs)" },
         duration: { ko: "온라인 3~6시간", en: "Online 3-6 hours" },
         applyUrl: "https://kcraedu.or.kr",
         documents: [{ ko: "신분증", en: "ID card" }],
@@ -187,7 +188,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         ],
         warnings: [
           { ko: "음식점과 교육 기관이 다름 — '휴게음식업중앙회'에서 이수", en: "Different institution from restaurants — take at snack bar association" },
-          { ko: "빵·케이크 제조 판매 시 '제과점' 별도 신고 필요할 수 있음", en: "Bakery/cake production may need separate 'bakery' report" },
+          { ko: "직접 제빵 시 '제과점영업' — 위생교육은 대한제과협회 소관(신규 3만·기존은 협회 문의)", en: "In-house baking = 'bakery business' — hygiene training via Korea Bakery Assoc. (new 30K, existing: ask assoc.)" },
         ],
       },
       healthCertificate,
@@ -197,7 +198,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         priority: "required",
         agency: { ko: "관할 구청 위생과", en: "District Office Hygiene Dept" },
         costWon: 28000,
-        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        duration: { ko: "즉시 (당일 · 정부24 처리기간 3시간) — 시설조사는 사후", en: "Same day (Gov24: 3 hours) — inspection is post-issuance" },
         applyUrl: "https://www.gov.kr",
         documents: [
           { ko: "영업신고서", en: "Business report form" },
@@ -284,7 +285,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         priority: "required",
         agency: { ko: "관할 구청 체육과", en: "District Office Sports Dept" },
         costWon: 0,
-        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        duration: { ko: "신고 7일 (변경신고 5일 · 정부24)", en: "Report 7 days (change 5 days · Gov24)" },
         applyUrl: "https://www.gov.kr",
         documents: [
           { ko: "체육시설업 등록/신고서", en: "Sports facility registration form" },
@@ -392,7 +393,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         priority: "required",
         agency: { ko: "관할 시·군·구청 (축산과 또는 동물보호과)", en: "District Office (Livestock or Animal Protection)" },
         costWon: 0,
-        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        duration: { ko: "등록 15일 (정부24 · 동물미용업 기준). 동물판매·생산업은 2023년부터 허가", en: "Registration 15 days (Gov24). Sales/breeding require permit since 2023" },
         applyUrl: "https://www.gov.kr",
         documents: [
           { ko: "동물관련영업 등록신청서", en: "Animal business registration form" },
@@ -427,7 +428,7 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         priority: "conditional",
         agency: { ko: "관할 구청 관광과", en: "District Office Tourism Dept" },
         costWon: 0,
-        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        duration: { ko: "즉시 (당일 · 공중위생영업신고 3시간). 농어촌민박·외국인관광민박은 지정 별도", en: "Same day (public hygiene report: 3 hours). Rural/foreign-guest B&B differs" },
         applyUrl: "https://www.gov.kr",
         documents: [
           { ko: "숙박업 신고서", en: "Accommodation report form" },
@@ -617,9 +618,9 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
         name: { ko: "소프트웨어 등록 (프로그램 등록)", en: "Software Registration" },
         priority: "recommended",
         agency: { ko: "한국저작권위원회", en: "Korea Copyright Commission" },
-        costWon: 0,
-        costNote: { ko: "온라인 신청 무료", en: "Free online application" },
-        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        costWon: 50000,
+        costNote: { ko: "온라인 5만원 (방문 6만원) + 등록면허세 3,600원 (정부24)", en: "Online 50K (visit 60K) + registration tax 3,600 won (Gov24)" },
+        duration: { ko: "7일 (정부24)", en: "7 days (Gov24)" },
         applyUrl: "https://www.cros.or.kr",
         documents: [
           { ko: "프로그램 설명서", en: "Program description" },

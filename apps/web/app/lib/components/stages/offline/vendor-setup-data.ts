@@ -107,7 +107,7 @@ export type SubIndustryVendorData = {
   pos: VendorItem[];
   /**
    * 추가 채널 (배달앱·예약·쇼핑몰 등) — ⚠️ vendor_setup 단계에서는 렌더링 안 함.
-   * 이 필드는 14단계 operations_setup ("운영·마케팅 세팅") 에서 재활용 예정.
+   * 이 필드는 이후 operations_setup ("운영·마케팅 세팅") 단계에서 재활용 예정.
    * vendor_setup 은 공급망(식자재·장비·POS) 단계라 판매 채널과 책임 분리.
    */
   channels?: VendorItem[];
@@ -1243,7 +1243,7 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
   },
   "korean-pork-belly": {
     suppliers: [
-      { name: "한돈자조금 (한돈 인증 정육)", desc: "한국 한돈 공식. 삼겹살·갈비 인증 도매. 100% 국내산 보증", priceRange: "kg당 2.5-4만", priority: "primary", url: "https://www.koreanpork.or.kr/" },
+      { name: "한돈몰 (한돈자조금 공식 정육)", desc: "한돈자조금관리위원회 공식몰. 삼겹살·갈비·목살 등 100% 국내산 한돈 구매", priceRange: "kg당 2.5-4만", priority: "primary", url: "https://mall.han-don.com/" },
       { name: "마장축산물시장 (구이용 정육)", desc: "삼겹살·갈비·곱창 도매 1번지. 새벽 직매입 최저가", priceRange: "도매가", priority: "primary", url: "http://www.mjmm.co.kr/" },
       { name: "쌈채소·반찬 도매 (가락몰)", desc: "상추·깻잎·쌈장 — 구이집 사이드 핵심", priceRange: "도매가", priority: "primary", url: "https://www.garak.co.kr/" },
     ],

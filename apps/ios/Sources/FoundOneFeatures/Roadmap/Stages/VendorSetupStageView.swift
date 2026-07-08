@@ -465,8 +465,8 @@ public struct VendorSetupStageView: View {
                     ? "재고 회전율 — 식자재는 3일 이내 회전 가능한 양만 첫 주 발주, 폐기율 5% 초과 시 재검토"
                     : "재고 회전율 — \(supplyNoun)는 회전 가능한 양만 첫 주 발주, 과잉 재고·유통기한(해당 시) 관리",
                 ],
-                nextStageLabel: "사업자등록·인허가",
-                nextSummary: "공급처·장비·POS 확정 → 사업자등록·인허가 단계로 진입"
+                nextStageLabel: "직원 채용 및 근로계약",
+                nextSummary: "공급처·장비·POS 확정 → 직원 채용 및 근로계약 단계로 진입"
             )
         ) {
             LazyVStack(alignment: .leading, spacing: BUSpacing.lg) {

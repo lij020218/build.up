@@ -45,7 +45,7 @@ const FRANCHISE_WRAPUP = {
   verify: [
     "정보공개서 — 최근 3년 폐점률 30% 이상 브랜드 회피, 가맹점주 평균 운영기간 5년 미만 위험",
     "가맹계약 14일 숙려기간 — 가맹사업법 의무, 본사가 압박 시 위반 (공정위 신고 가능)",
-    "인테리어 강제 — 본사 지정 업체만 가능 시 시장가 대비 30~50% 부풀림 흔함, 견적 비교 필수",
+    "인테리어 강제 — 본사 지정 시 시장가 대비 30~50% 부풀림 흔함. 단 본사는 정당한 사유 없이 점포환경개선 강요 불가 + 비용 20~40% 분담 의무(가맹사업법 §12의2·시행령 §13의2) → 견적·법정 분담 근거 요구",
     "필수 구매 비율 — 70% 이상이면 식자재 단가 협상력 X, 마진 압박 위험",
     "영업지역 보호 — 반경 OO미터 내 추가 가맹점 금지 조항 명문화 (없으면 잠식 리스크)",
     "본사 광고비 — 분담률·집행 내역 공개 의무, 불투명하면 가맹사업법 위반 신고 가능",
@@ -118,14 +118,14 @@ const PROCESS_STEPS_EN: ReadonlyArray<{
 
 // Why 페이지 데이터 — 한국 가맹사업 통계 (공정위·KFA 자료 기반)
 const WHY_FACTS_KO = [
-  { tag: "가맹 분쟁 1위", body: "공정위 2024 가맹분야 분쟁조정 — '계약 해지 시 위약금·인테리어 강제' 32%" },
+  { tag: "대표 분쟁 유형", body: "인테리어 강제·해지 위약금은 대표적 가맹 불공정거래 유형 — 지정업체 강요는 '거래상대방 구속'으로 공정위 시정조치 대상" },
   { tag: "3년 폐업률", body: "가맹점 3년 폐업률 평균 30% — 정보공개서 미검토 사장님 폐업률 47% (KFA 2024)" },
   { tag: "정보공개서 효과", body: "14일 숙려기간 활용한 사장님 분쟁률 11% vs 미활용 26% — 공정위 모니터링 보고서" },
   { tag: "인테리어 강제", body: "본사 지정 인테리어 평균 시장가 대비 30~50% 부풀림 — 공정위 시정명령 사례 다수" },
 ];
 
 const WHY_FACTS_EN = [
-  { tag: "Top dispute", body: "KFTC 2024: 'Termination penalty + forced interior' = 32% of franchise disputes" },
+  { tag: "Common dispute", body: "Forced interior & termination penalties are core franchise unfair-practice types — vendor coercion is 'restraint of trade,' subject to KFTC corrective orders" },
   { tag: "3yr closure", body: "30% avg 3yr closure — 47% for franchisees who skipped disclosure review (KFA 2024)" },
   { tag: "Disclosure effect", body: "11% dispute rate with 14-day review vs 26% without — KFTC monitoring" },
   { tag: "Forced interior", body: "HQ-mandated interior runs 30-50% above market — multiple KFTC corrective orders" },

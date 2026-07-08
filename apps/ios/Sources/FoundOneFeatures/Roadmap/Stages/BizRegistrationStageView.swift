@@ -67,7 +67,7 @@ public struct BizRegistrationStageView: View {
     private var bizHelperText: String {
         priorAllDone
             ? "사업자등록·과세유형·이전 결정이 모두 완료됐습니다. 이 단계는 마지막 두 가지 — 사업용 통장 + 상호명 — 만 처리합니다."
-            : "아래 「이전 단계에서 결정된 사항」에 미확인 항목이 있습니다. 해당 단계에서 먼저 마무리한 뒤, 이 단계에서 사업용 통장·상호명을 확정하세요."
+            : "아래 「사업 초기 세팅 현황」에 미확인 항목이 있습니다. 각 항목은 해당 단계에서 마무리하고, 이 단계에서는 사업용 통장·상호명을 확정하세요."
     }
 
     /// 게이트: 상호명 최종 확정 + 사업용 통장 개설 완료 (2/2).
@@ -113,12 +113,12 @@ public struct BizRegistrationStageView: View {
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 상호명 최종 확정", detail: "사업자등록증·간판·SNS·세금계산서까지 같은 이름 사용"),
-                    .init(label: "2. 사업용 통장 개설", detail: "개인 통장과 분리 — 세무 비용 입증의 최소 조건"),
+                    .init(label: "2. 사업용 통장 개설", detail: "개인 통장과 분리 권장 — 지출 매칭·복식부기 사업용계좌 대비"),
                 ],
                 verifyItems: [
                     "상호명은 등록 후 변경 시 등록증 재발급 필요 — 간판·메뉴판·온라인까지 일관되게 확정했는지 확인",
-                    "개인 통장과 사업 통장 분리 — 혼용 시 세무조사에서 사업 비용 입증 불가",
-                    "통장 개설 준비물: 사업자등록증 원본 · 대표자 신분증 (도장 선택)",
+                    "개인 통장과 사업 통장 분리 권장 — 혼용해도 적격증빙 있으면 비용 인정, 복식부기의무자는 사업용계좌 미신고 가산세(0.2%)",
+                    "통장 개설 준비물: 사업자등록증 원본 · 대표자 신분증 · 임대차계약서 원본(사업 실재성 증빙, 사실상 필수) · 도장(선택) — 미비 시 한도제한계좌",
                 ],
                 nextStageLabel: "세무·자금 가이드",
                 nextSummary: "상호명·통장 확정 → 과세 신고·정책자금 단계로"
@@ -150,7 +150,7 @@ public struct BizRegistrationStageView: View {
     private var previousDecisions: some View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                BUEyebrow("이전 단계에서 결정된 사항")
+                BUEyebrow("사업 초기 세팅 현황 (등록·세무·금융)")
                 let registrationRef = stageRef(registrationStageId, title: "사업자등록")
                 let taxGuideRef = stageRef("tax-guide", title: "세무 가이드")
                 let hiringRef = stageRef("hiring-setup", title: "채용 설정")
@@ -237,12 +237,12 @@ public struct BizRegistrationStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.danger).font(.system(size: 13))
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.midnight).font(.system(size: 13))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("개인 통장과 사업 통장은 반드시 분리")
-                            .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.danger)
-                        Text("혼용 시 세무조사에서 사업 비용 입증 불가 → 전부 과세 대상. 사업자등록증 발급 직후 즉시 개설하세요.")
-                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                        Text("개인 통장과 사업 통장은 분리 권장")
+                            .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                        Text("혼용해도 적격증빙(세금계산서·카드·현금영수증)이 있으면 사업 비용은 인정됩니다. 다만 지출 매칭이 복잡해지고, 복식부기의무자는 사업용계좌 미신고·미사용 시 가산세(거래금액의 0.2%). 등록 직후 분리 개설을 권장합니다.")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                     }
                 }
             }
@@ -277,7 +277,7 @@ public struct BizRegistrationStageView: View {
                             Image(systemName: "chevron.right").font(.system(size: 11)).foregroundStyle(BUColor.inkSubtle)
                         }
                     }
-                    Text("준비물: 사업자등록증 원본 · 대표자 신분증 · 도장 (선택)")
+                    Text("준비물: 사업자등록증 원본 · 대표자 신분증 · 임대차계약서 원본(사업장 실재성 증빙 — 대포통장 방지로 사실상 필수) · 도장(선택). 목적 증빙 미비 시 한도제한계좌로만 발급될 수 있음")
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).padding(.top, 4)
                 }
             }

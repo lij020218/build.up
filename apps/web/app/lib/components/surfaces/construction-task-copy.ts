@@ -40,8 +40,8 @@ const STRICT_FRANCHISE_TASK_TITLES = {
     en: "HQ-mandated contractor finishes + HQ inspection / BI audit passes",
   },
   "fire-health-parallel": {
-    ko: "공사 중 소방필증·보건증 병행 신청 (본사 매뉴얼 따름)",
-    en: "File fire safety / health certificates during construction (per HQ manual)",
+    ko: "보건증은 공사 중 발급 + 다중이용업(100㎡↑)이면 소방 '안전시설 설치신고'는 착공 전·완비증명(소방필증)은 완공검사 후 (본사 매뉴얼 확인)",
+    en: "Health cert during construction + if a multi-use business (100㎡+), file the fire installation report before construction; the completion certificate issues after final inspection (check HQ manual)",
   },
 } satisfies Record<ConstructionTaskId, LocalizedCopy>;
 

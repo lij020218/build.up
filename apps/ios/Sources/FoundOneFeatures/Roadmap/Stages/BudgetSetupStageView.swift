@@ -293,16 +293,17 @@ public struct BudgetSetupStageView: View {
                 "예비비 10~15% 별도 — 반품·불량 재고·성수기 사입(실물) 또는 콘텐츠 개편·CS 급증(디지털) + 광고 CAC 급등 빈번",
                 "오픈 일정 — 통신판매업 신고 + 사입·촬영(실물)/콘텐츠·검수(디지털)까지 최소 30일 필요",
                 breakEvenNote,
-                ] : [
+                ] : ([
                 "운영자본 6개월치 별도 확보 — 매출 0원 가정해도 월세·인건비·재료비 견딜 수 있어야 (흑자부도 1순위 원인)",
                 "정부지원금·소상공인 대출 가능 여부 — 신청 시점부터 입금까지 평균 4~8주, 일정에 반영",
                 "예비비 10~15% 별도 — 인테리어 추가공사·집기 누락·임대 보증금 추가 요구 빈번",
                 "오픈 일정 — 임대 계약일부터 영업신고·인테리어·집기 입고·시운전까지 최소 60일 필요",
-                "프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생",
-                breakEvenNote,
-                ],
-                nextStageLabel: isStartup ? "창업팀·법인 기본 구조" : (categoryId == "online-digital" ? "판매 플랫폼 선택" : "인허가 사전 확인"),
-                nextSummary: isStartup ? "자본·일정·예비비 확정 → 창업팀·법인 기본 구조 단계로 진입" : (categoryId == "online-digital" ? "자본·일정·예비비 확정 → 판매 플랫폼 선택 단계로 진입" : "자본·일정·예비비 확정 → 인허가 사전 확인 단계로 진입")
+                ]
+                // 독립 창업엔 프랜차이즈 비용 항목 비노출 (사장님 신고: 독립인데 가맹비 안내 노출)
+                + (startupType == "franchise" ? ["프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생"] : [])
+                + [breakEvenNote]),
+                nextStageLabel: startupType == "franchise" ? "프랜차이즈 가맹 절차" : (isStartup ? "창업팀·법인 기본 구조" : (categoryId == "online-digital" ? "판매 플랫폼 선택" : "인허가 사전 확인")),
+                nextSummary: startupType == "franchise" ? "자본·일정·예비비 확정 → 프랜차이즈 가맹 절차 단계로 진입" : (isStartup ? "자본·일정·예비비 확정 → 창업팀·법인 기본 구조 단계로 진입" : (categoryId == "online-digital" ? "자본·일정·예비비 확정 → 판매 플랫폼 선택 단계로 진입" : "자본·일정·예비비 확정 → 인허가 사전 확인 단계로 진입"))
             )
         ) {
             VStack(alignment: .leading, spacing: 16) {

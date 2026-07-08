@@ -181,11 +181,11 @@ export function ProductSalesEntry({
                 {/* 드롭다운 목록 */}
                 {pickerOpen && (
                   <div style={{
-                    position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 20,
+                    marginTop: "4px",
                     maxHeight: "220px", overflowY: "auto",
                     borderRadius: "14px", background: "#fff",
                     border: "1px solid rgba(15,23,42,0.08)",
-                    boxShadow: "0 12px 32px rgba(15,23,42,0.1)",
+                    boxShadow: "0 4px 16px rgba(15,23,42,0.06)",
                   }}>
                     {products.map((p) => {
                       const alreadyAdded = (soldCounts[p.id] ?? 0) > 0;

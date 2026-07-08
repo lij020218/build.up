@@ -21,6 +21,17 @@ export function SurfaceIcon(props: { surface: DashboardSurface }) {
     );
   }
 
+  if (props.surface === "team") {
+    return (
+      <svg {...common}>
+        <circle cx="6" cy="6" r="2" />
+        <path d="M2.5 12.6c0-2 1.6-3.3 3.5-3.3s3.5 1.3 3.5 3.3" />
+        <circle cx="11.6" cy="6.6" r="1.5" />
+        <path d="M10.6 9.5c1.7 0 2.9 1.1 2.9 3" />
+      </svg>
+    );
+  }
+
   if (props.surface === "current") {
     return (
       <svg {...common}>

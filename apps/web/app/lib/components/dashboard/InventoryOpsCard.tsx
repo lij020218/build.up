@@ -414,6 +414,21 @@ export function InventoryOpsCard({
   const isEditing = Boolean(invForm.editId);
   const [showAllInventory, setShowAllInventory] = useState(false);
   const [inventorySnapshot, setInventorySnapshot] = useState<InventoryEntry[]>([]);
+  // 전체 재고 팝업 정렬 — 긴급도(기본)/가나다/분류. 카드 상위4는 항상 긴급도.
+  const [invSortMode, setInvSortMode] = useState<"urgency" | "name" | "category">("urgency");
+  const sortInventory = (arr: InventoryEntry[]): InventoryEntry[] => {
+    const urgencyRank = (it: InventoryEntry) => {
+      const th = it.minThreshold ?? 0;
+      if (th > 0 && it.quantity <= 0) return 0;   // critical
+      if (th > 0 && it.quantity <= th) return 1;  // warning
+      return 2;                                    // normal
+    };
+    const byName = (a: InventoryEntry, b: InventoryEntry) => (a.name ?? "").localeCompare(b.name ?? "", "ko");
+    const copy = [...arr];
+    if (invSortMode === "name") return copy.sort(byName);
+    if (invSortMode === "category") return copy.sort((a, b) => (a.category ?? "").localeCompare(b.category ?? "", "ko") || byName(a, b));
+    return copy.sort((a, b) => urgencyRank(a) - urgencyRank(b) || byName(a, b));
+  };
 
   // VendorSetupStage(공급처·장비 단계)에서 사장님이 선택한 공급처를
   //  재고 추가 폼의 supplierName 입력 시 datalist 로 자동 제안.
@@ -653,7 +668,7 @@ export function InventoryOpsCard({
                 <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#191970" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
                   {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
                 </span>
-                <div style={listMeta}>{item.category || (ko ? "일반" : "General")}</div>
+                <div style={listMeta}>{(categoryLabels[item.category as keyof typeof categoryLabels] ?? item.category ?? (ko ? "일반" : "General"))}</div>
                 {urgency !== "ok" && (
                   <span style={{ fontSize: "10px", fontWeight: 700, color: urgencyColor, background: `${urgencyColor}10`, borderRadius: "4px", padding: "1px 5px" }}>
                     {urgency === "critical" ? (ko ? "즉시 발주" : "Order now") : (ko ? "발주 필요" : "Low")}
@@ -675,7 +690,7 @@ export function InventoryOpsCard({
               <button type="button" onClick={() => d.openInvEdit(item as never)} style={tinyAction}>
                 {ko ? "수정" : "Edit"}
               </button>
-              <button type="button" onClick={() => d.handleInvDelete(item.id)} style={tinyDangerAction}>
+              <button type="button" onClick={() => { if (window.confirm(ko ? `'${item.name}' 재고를 삭제하시겠습니까? 되돌릴 수 없습니다.` : `Delete '${item.name}'? This can't be undone.`)) d.handleInvDelete(item.id); }} style={tinyDangerAction}>
                 {ko ? "삭제" : "Delete"}
               </button>
             </div>
@@ -727,18 +742,29 @@ export function InventoryOpsCard({
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>✕</button>
             </div>
-            {/* list — 발주 필요(critical → warning) 품목 상단 정렬 */}
+            {/* 정렬 토글 — 긴급도(기본)/가나다/분류 */}
+            <div style={{ display: "flex", gap: "6px", padding: "12px 24px 0" }}>
+              {([
+                { id: "urgency", label: ko ? "긴급도" : "Urgency" },
+                { id: "name", label: ko ? "가나다" : "A–Z" },
+                { id: "category", label: ko ? "분류" : "Category" },
+              ] as const).map((opt) => {
+                const active = invSortMode === opt.id;
+                return (
+                  <button key={opt.id} type="button" onClick={() => setInvSortMode(opt.id)} style={{
+                    fontSize: "12px", fontWeight: 700, padding: "6px 12px", borderRadius: "999px", cursor: "pointer",
+                    border: active ? "1px solid rgba(25,25,112,0.25)" : "1px solid rgba(15,23,42,0.08)",
+                    background: active ? "rgba(25,25,112,0.08)" : "transparent",
+                    color: active ? "#191970" : "rgba(15,23,42,0.5)",
+                  }}>
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {/* list — 정렬 토글에 따라 정렬 (기본 긴급도) */}
             <div style={{ overflowY: "auto", padding: "12px 24px 24px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-              {[...inventorySnapshot]
-                .sort((a, b) => {
-                  const rank = (it: InventoryEntry) => {
-                    const th = it.minThreshold ?? 0;
-                    if (th > 0 && it.quantity <= 0) return 0;       // critical
-                    if (th > 0 && it.quantity <= th) return 1;      // warning (low)
-                    return 2;                                        // normal
-                  };
-                  return rank(a) - rank(b);
-                })
+              {sortInventory(inventorySnapshot)
                 .map((item) => {
                 const isLow = (item.minThreshold ?? 0) > 0 && item.quantity <= (item.minThreshold ?? 0);
                 const urgency = (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
@@ -756,7 +782,7 @@ export function InventoryOpsCard({
                         <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#191970" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
                           {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
                         </span>
-                        <span style={{ fontSize: "10px", color: "var(--muted)" }}>{item.category || (ko ? "일반" : "General")}</span>
+                        <span style={{ fontSize: "10px", color: "var(--muted)" }}>{(categoryLabels[item.category as keyof typeof categoryLabels] ?? item.category ?? (ko ? "일반" : "General"))}</span>
                         {urgency !== "ok" && (
                           <span style={{ fontSize: "10px", fontWeight: 700, color: urgencyColor, background: `${urgencyColor}10`, borderRadius: "4px", padding: "1px 5px" }}>
                             {urgency === "critical" ? (ko ? "즉시 발주" : "Order now") : (ko ? "발주 필요" : "Low")}
@@ -776,7 +802,7 @@ export function InventoryOpsCard({
                       <button type="button" onClick={() => { d.openInvEdit(item as never); setShowAllInventory(false); }} style={tinyAction}>
                         {ko ? "수정" : "Edit"}
                       </button>
-                      <button type="button" onClick={() => { d.handleInvDelete(item.id); setInventorySnapshot(prev => prev.filter(i => i.id !== item.id)); }} style={tinyDangerAction}>
+                      <button type="button" onClick={() => { if (window.confirm(ko ? `'${item.name}' 재고를 삭제하시겠습니까? 되돌릴 수 없습니다.` : `Delete '${item.name}'? This can't be undone.`)) { d.handleInvDelete(item.id); setInventorySnapshot(prev => prev.filter(i => i.id !== item.id)); } }} style={tinyDangerAction}>
                         {ko ? "삭제" : "Delete"}
                       </button>
                     </div>

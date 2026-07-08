@@ -318,14 +318,17 @@ function InviteLinkSection({ ko }: { ko: boolean }) {
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [code, setCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [errHint, setErrHint] = useState<string | null>(null);
 
   const inviteUrl = code && typeof window !== "undefined" ? `${window.location.origin}/invite/${code}` : "";
 
   const generate = async () => {
     setStatus("loading");
+    setErrHint(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setErrHint("login");
         setStatus("error");
         return;
       }
@@ -337,6 +340,9 @@ function InviteLinkSection({ ko }: { ko: boolean }) {
       } as never);
       if (error) {
         console.error("[invite] insert failed:", error);
+        // 42P01=테이블 없음, 42501=권한 없음 → DB 미프로비저닝(마이그레이션 미적용) 신호
+        const code = (error as { code?: string }).code;
+        setErrHint(code === "42P01" || code === "42501" ? "setup" : "unknown");
         setStatus("error");
         return;
       }
@@ -344,6 +350,7 @@ function InviteLinkSection({ ko }: { ko: boolean }) {
       setStatus("ready");
     } catch (err) {
       console.error("[invite] generate failed:", err);
+      setErrHint("unknown");
       setStatus("error");
     }
   };
@@ -406,8 +413,14 @@ function InviteLinkSection({ ko }: { ko: boolean }) {
       )}
 
       {status === "error" && (
-        <div style={{ marginTop: 8, fontSize: 12, color: "#b64c4c" }}>
-          {ko ? "초대 링크 생성에 실패했습니다. 로그인 상태와 네트워크를 확인해 주세요." : "Failed to create invite. Check sign-in / network."}
+        <div style={{ marginTop: 8, fontSize: 12, color: "#b64c4c", lineHeight: 1.5 }}>
+          {errHint === "login"
+            ? (ko ? "로그인이 필요합니다. 다시 로그인 후 시도해 주세요." : "Sign-in required. Please sign in and retry.")
+            : errHint === "setup"
+              ? (ko
+                  ? "초대 기능이 아직 서버에 설정되지 않았습니다(초대 테이블 미생성). 관리자에게 문의해 주세요."
+                  : "Invite feature isn't set up on the server yet (missing table). Please contact the admin.")
+              : (ko ? "초대 링크 생성에 실패했습니다. 잠시 후 다시 시도해 주세요." : "Failed to create invite. Please try again.")}
         </div>
       )}
 

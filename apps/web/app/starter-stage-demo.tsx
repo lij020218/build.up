@@ -101,6 +101,7 @@ import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
 import { ReportsSurface } from "./lib/components/surfaces/ReportsSurface";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
+import { TeamSurface } from "./lib/components/surfaces/TeamSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
 import { ProfileView } from "./lib/components/surfaces/ProfileView";
 import { GuidesView } from "./lib/components/surfaces/GuidesView";
@@ -1143,6 +1144,12 @@ export default function StarterStageDemo({
 
         {activeSurface === "roadmap" ? (
           <RoadmapSurface />
+        ) : null}
+
+        {activeSurface === "team" ? (
+          <CardErrorBoundary cardLabel="직원">
+            <TeamSurface ko={d.language === "ko"} />
+          </CardErrorBoundary>
         ) : null}
       </div>
 

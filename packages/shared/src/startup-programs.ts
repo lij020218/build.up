@@ -1999,16 +1999,9 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.at.or.kr/", forSmallBiz: true, forFranchise: false, dataYear: "2026",
     industries: ["food"], businessYearRange: [0, 3], applicationStatus: "upcoming", fundingType: "grant",
   },
-  {
-    id: "food-smart-factory-2026", category: "government",
-    name: { ko: "식품기업 스마트공장 구축", en: "Food Smart Factory" },
-    organizer: { ko: "농림축산식품부 · aT", en: "MAFRA · aT" },
-    target: { ko: "중소·중견 식품 제조기업", en: "Food manufacturers" },
-    benefit: { ko: "식품 제조 스마트공장화 구축비 지원", en: "Food smart-factory build subsidy" },
-    amount: "구축비 지원", season: { ko: "2026 모집공고", en: "2026 notice" },
-    url: "https://www.foodbiz.or.kr/", forSmallBiz: true, forFranchise: false, dataYear: "2026",
-    industries: ["food"], applicationStatus: "open", fundingType: "grant",
-  },
+  // 2026-07-07 '식품기업 스마트공장 구축'(food-smart-factory-2026) 제거:
+  //   대상=중소·중견 식품 '제조'기업(산업분류 10·11)으로 이 제품의 페르소나(외식 소상공인·스타트업)에 해당 없음.
+  //   외식 소상공인 자금은 소상공인 정책자금·혁신 소상공인 창업지원 등으로 매칭.
   // ── AI/딥테크 ──
   {
     id: "nipa-ai-voucher-2026", category: "government",

@@ -38,7 +38,7 @@ export type SavedGuideQaSnapshot = {
   savedAt?: string;
 };
 
-export type DashboardSurface = "home" | "current" | "roadmap" | "guides" | "franchise" | "profile" | "analytics" | "marketing" | "reports";
+export type DashboardSurface = "home" | "current" | "roadmap" | "guides" | "franchise" | "profile" | "analytics" | "marketing" | "reports" | "team";
 
 /** 서브훅에 전달되는 공통 의존성 */
 export type DashboardDeps = {

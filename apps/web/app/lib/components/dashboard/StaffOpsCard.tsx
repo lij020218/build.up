@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { DashboardHook } from "../../useDashboard";
 import { supabase } from "../../../../lib/supabase";
 import { checkSeveranceObligation, type SeveranceCheck } from "@foundone/shared";
@@ -97,6 +98,38 @@ export function StaffOpsCard({
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteStatus, setInviteStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+
+  // 초대된 직원(store_members) 근무표·연차 요약 — 수동 입력 employees 와 별개 모집단.
+  //   상세 배정·승인은 「직원」 surface(/team)에서. 여기선 오늘 근무 인원·승인 대기만 요약.
+  const router = useRouter();
+  const [teamSummary, setTeamSummary] = useState<{ members: number; workingToday: number; pending: number } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const weekday = new Date().getDay();
+      const [mRes, rRes, exRes, lRes] = await Promise.all([
+        supabase.rpc("get_store_members" as never),
+        supabase.from("staff_schedule_rules" as never).select("member_user_id").eq("owner_user_id", user.id).eq("weekday", weekday).eq("active", true),
+        supabase.from("staff_schedules" as never).select("member_user_id, is_off, start_time").eq("owner_user_id", user.id).eq("work_date", todayStr),
+        supabase.from("leave_requests" as never).select("id").eq("owner_user_id", user.id).eq("status", "pending"),
+      ]);
+      if (!alive) return;
+      const members = (((mRes as { data: unknown }).data ?? []) as Array<{ member_user_id: string }>);
+      const ruleIds = new Set((((rRes.data ?? []) as Array<{ member_user_id: string }>).map((r) => r.member_user_id)));
+      const ex = ((exRes.data ?? []) as Array<{ member_user_id: string; is_off: boolean; start_time: string | null }>);
+      const workingToday = members.filter((m) => {
+        const e = ex.find((x) => x.member_user_id === m.member_user_id);
+        if (e) { if (e.is_off) return false; if (e.start_time) return true; }
+        return ruleIds.has(m.member_user_id);
+      }).length;
+      setTeamSummary({ members: members.length, workingToday, pending: ((lRes.data ?? []) as unknown[]).length });
+    })();
+    return () => { alive = false; };
+  }, []);
+
   const inputStyle: React.CSSProperties = {
     border: "1px solid rgba(15,23,42,0.10)",
     borderRadius: "12px",
@@ -172,6 +205,33 @@ export function StaffOpsCard({
           </div>
         </div>
       </div>
+
+      {teamSummary && teamSummary.members > 0 && (
+        <button
+          type="button"
+          onClick={() => router.push("/team")}
+          style={{
+            display: "flex", alignItems: "center", gap: 14, width: "100%",
+            padding: "12px 14px", marginBottom: "12px", borderRadius: "14px",
+            border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.04)",
+            cursor: "pointer", textAlign: "left",
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "rgba(25,25,112,0.5)" }}>{ko ? "오늘 근무" : "Today"}</span>
+            <span style={{ fontSize: "17px", fontWeight: 800, color: "#191970", letterSpacing: "-0.01em" }}>{teamSummary.workingToday}{ko ? "명" : ""}</span>
+          </div>
+          <div style={{ width: 1, height: 26, background: "rgba(25,25,112,0.12)" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "rgba(25,25,112,0.5)" }}>{ko ? "승인 대기" : "Pending"}</span>
+            <span style={{ fontSize: "17px", fontWeight: 800, color: teamSummary.pending > 0 ? "#191970" : "rgba(15,23,42,0.35)", letterSpacing: "-0.01em" }}>{teamSummary.pending}{ko ? "건" : ""}</span>
+          </div>
+          {teamSummary.pending > 0 && (
+            <span style={{ fontSize: "11px", fontWeight: 800, color: "#fff", background: "#8b7fd4", minWidth: 18, height: 18, borderRadius: 999, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{teamSummary.pending}</span>
+          )}
+          <span style={{ marginLeft: "auto", fontSize: "13px", fontWeight: 700, color: "#191970", whiteSpace: "nowrap" }}>{ko ? "근무표·연차 관리" : "Manage"} →</span>
+        </button>
+      )}
 
       <div style={listStack}>
         {employees.slice(0, 4).map((employee) => {

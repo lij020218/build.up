@@ -11,7 +11,8 @@ export const SURFACE_HREFS: Record<DashboardSurface, string> = {
   profile: "/profile",
   analytics: "/analytics",
   marketing: "/marketing",
-  reports: "/reports"
+  reports: "/reports",
+  team: "/team"
 };
 export const VENDOR_URL_MAP: Record<string, string> = {
   "홈택스(Hometax)": "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3",

@@ -198,8 +198,8 @@ public enum BUStageTaskRegistry {
         "permit-check": [
             .init(id: "building-registry-checked",   title: "건축물대장 용도가 내 업종 영업을 허용하는지 확인 — 근린생활시설 등 코드 점검", estimatedMinutes: 15),
             .init(id: "permit-type-checked",         title: "위 패널에서 내 업종에 필요한 인허가·등록 종류를 모두 확인", estimatedMinutes: 20),
-            .init(id: "hygiene-health-checked",      title: "위생교육·건강진단(보건증) 요건 확인 — 업종별 시간·절차·발급처 (식품 6시간+보건증 / 미용 3시간, 위생교육은 대표자)", estimatedMinutes: 15),
-            .init(id: "license-registration-checked", title: "전문 면허·업종별 등록 요건 확인 (미용사 면허, 학원·체육시설·동물관련업 등록 등)", estimatedMinutes: 15),
+            .init(id: "hygiene-health-checked",      title: "위생교육·건강진단(보건증) 요건 확인 — 내 업종 기준 교육시간·발급처 (위생교육은 영업신고하는 대표자만 이수, 직원은 보건증)", estimatedMinutes: 15),
+            .init(id: "license-registration-checked", title: "전문 면허·업종별 등록 요건 확인 — 내 업종에 해당하는 면허·등록만 (해당 없으면 스킵)", estimatedMinutes: 15),
             .init(id: "fire-safety-checked",         title: "소방·시설 안전 요건 확인 — 업종별 기준 (다중이용업〔음식점 100㎡↑·학원 등〕은 소방완비증명, 미용 등 그 외는 소화기·비상구)", estimatedMinutes: 15),
         ],
         "contract-review": [
@@ -210,11 +210,11 @@ public enum BUStageTaskRegistry {
             .init(id: "certified-date-obtained", title: "임대차 계약서 확정일자 받기 (보증금 보호)", estimatedMinutes: 20),
         ],
         "construction-setup": [
-            .init(id: "interior-concept-selected", title: "디자인 컨셉 방향 선택 (인더스트리얼 / 내추럴 / 파리지앵 등)", estimatedMinutes: 10),
+            .init(id: "interior-concept-selected", title: "디자인 컨셉 방향 선택 — 아래 업종별 컨셉 후보 중 1안 결정", estimatedMinutes: 10),
             .init(id: "contractor-selected",       title: "인테리어 업체 선정 및 견적 2곳 이상 수령", estimatedMinutes: 60),
             .init(id: "design-approved",           title: "최종 레이아웃 설계 및 공사 계획 확정", estimatedMinutes: 45),
             .init(id: "construction-complete",     title: "공사 완료 및 최종 현장 점검", estimatedMinutes: 30),
-            .init(id: "fire-health-parallel",      title: "공사 중 소방필증·보건증 병행 신청 (인테리어 완료 전 미리 진행)", estimatedMinutes: 30),
+            .init(id: "fire-health-parallel",      title: "보건증은 공사 중 사전 발급 + 다중이용업(100㎡↑)이면 소방 '안전시설 설치신고'는 착공 전·완비증명(소방필증)은 완공검사 후 (그 외 업종은 소화기·비상구)", estimatedMinutes: 30),
         ],
         "vendor-setup": [
             .init(id: "supplier-identified", title: "주요 원자재·상품·소모품 공급처 확정", estimatedMinutes: 60),

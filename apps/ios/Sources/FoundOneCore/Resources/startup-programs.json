@@ -4002,40 +4002,6 @@
     "fundingType": "grant"
   },
   {
-    "id": "food-smart-factory-2026",
-    "category": "government",
-    "name": {
-      "ko": "식품기업 스마트공장 구축",
-      "en": "Food Smart Factory"
-    },
-    "organizer": {
-      "ko": "농림축산식품부 · aT",
-      "en": "MAFRA · aT"
-    },
-    "target": {
-      "ko": "중소·중견 식품 제조기업",
-      "en": "Food manufacturers"
-    },
-    "benefit": {
-      "ko": "식품 제조 스마트공장화 구축비 지원",
-      "en": "Food smart-factory build subsidy"
-    },
-    "amount": "구축비 지원",
-    "season": {
-      "ko": "2026 모집공고",
-      "en": "2026 notice"
-    },
-    "url": "https://www.foodbiz.or.kr/",
-    "forSmallBiz": true,
-    "forFranchise": false,
-    "dataYear": "2026",
-    "industries": [
-      "food"
-    ],
-    "applicationStatus": "open",
-    "fundingType": "grant"
-  },
-  {
     "id": "nipa-ai-voucher-2026",
     "category": "government",
     "name": {

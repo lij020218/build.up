@@ -80,7 +80,7 @@ public struct ConstructionSetupStageView: View {
         if !contractorSelected { return "시공업체 선정 및 견적 비교 완료를 체크하세요" }
         if !designApproved { return "최종 설계·시공 계획 승인을 체크하세요" }
         if !constructionDone { return "인테리어 공사 완료를 체크하세요" }
-        if !fireHealthApplied { return "소방필증·보건증 신청 완료를 체크하세요 (14일 대기)" }
+        if !fireHealthApplied { return "안전시설 설치신고·보건증 신청 완료를 체크하세요 (완비증명은 완공검사 후)" }
         return "컨셉·업체 확정·공사 완료 — 다음 단계로"
     }
 
@@ -102,7 +102,7 @@ public struct ConstructionSetupStageView: View {
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["concept": selectedConcept]) },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 인테리어 컨셉 확정", detail: "업종·프랜차이즈 데이터 기반 자재·컨셉 후보 비교 후 1안 결정"),
+                .init(label: "1. 인테리어 컨셉 확정", detail: "업종 데이터 기반 자재·컨셉 후보 비교 후 1안 결정"),
                 isFranchise
                     ? .init(label: "2. 본사 표준·지정 시공 확인", detail: "본사 표준 사양·지정 시공업체 확인 + 비용 분담·일정은 본사 가맹담당자와 협의 (외부 견적 가능 여부는 본사 자율도에 따라)")
                     : .init(label: "2. 시공업체 견적 요청", detail: "지역·키워드 매칭 시공업체 2~3곳에 동시 견적 요청"),
@@ -261,11 +261,11 @@ public struct ConstructionSetupStageView: View {
                     Toggle(isOn: $fireHealthApplied) {
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
-                                Text("소방필증·보건증 신청 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text("14일 대기").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.danger)
+                                Text("안전시설 설치신고·보건증 신청 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text("완비증명은 완공 후").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.danger)
                                     .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.danger.opacity(0.1), in: Capsule())
                             }
-                            Text("공사 중 병행 신청 필수 — 소방완비증명서(다중이용시설)·보건증 없이는 영업신고 불가").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                            Text("소방완비증명서(다중이용시설)·보건증 없이는 영업신고 불가 — 보건증은 공사 중, 완비증명은 완공검사 후 발급(설치신고는 착공 전)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
                         }
                     }.tint(BUColor.midnight)
                 }

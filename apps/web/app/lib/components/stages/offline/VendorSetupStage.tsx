@@ -493,7 +493,7 @@ export function VendorSetupStage() {
 
       {/* ═══════════════════════════════════════════════════════════
           ⚠️ 다른 단계 안내 — 배달앱·SNS·네이버 플레이스 등록은
-          이 단계가 아니라 14단계 "운영·마케팅 세팅" 에서 진행
+          이 단계가 아니라 이후 "운영·마케팅 세팅" 단계에서 진행
           ═════════════════════════════════════════════════════════ */}
       <div
         style={{
@@ -524,11 +524,11 @@ export function VendorSetupStage() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px", letterSpacing: "-0.005em" }}>
-            배달앱·SNS·네이버 플레이스 등록은 다음 단계에서
+            배달앱·SNS·네이버 플레이스 등록은 이후 단계에서
           </div>
           <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
             네이버 플레이스·인스타그램·오픈마켓·예약 같은 <strong style={{ fontWeight: 700, color: MIDNIGHT }}>판매·노출 채널</strong>은{" "}
-            <strong style={{ fontWeight: 700, color: MIDNIGHT }}>14단계 "운영·마케팅 세팅"</strong> 에서 진행합니다. 이 단계는
+            이후의 <strong style={{ fontWeight: 700, color: MIDNIGHT }}>"운영·마케팅 세팅"</strong> 단계에서 진행합니다. 이 단계는
             <strong style={{ fontWeight: 700 }}> {supplyNoun}·장비·POS</strong>를 확정하는 공급망 단계입니다.
           </div>
         </div>
@@ -567,7 +567,7 @@ export function VendorSetupStage() {
 
       <StageWrapup
         ko={language === "ko"}
-        nextStageLabelKo="사업자등록·인허가"
+        nextStageLabelKo="직원 채용 및 근로계약"
         doneItemsKo={[
           { label: "1. 공급처 결정", detail: `${supplyNoun}·장비·POS 등 카테고리별 1순위 업체 선정 + 견적서 보관` },
           { label: "2. 장비 발주 계획", detail: "신품·중고 비교 — 황학동온라인·번개장터 활용 50~70%대 가성비 확보" },
@@ -587,7 +587,7 @@ export function VendorSetupStage() {
             ? "재고 회전율 — 식자재는 3일 이내 회전 가능한 양만 첫 주 발주, 폐기율 5% 초과 시 재검토"
             : `재고 회전율 — ${supplyNoun}는 회전 가능한 양만 첫 주 발주, 과잉 재고·유통기한(해당 시) 관리`,
         ]}
-        nextSummaryKo="공급처·장비·POS 확정 → 사업자등록·인허가 단계로 진입"
+        nextSummaryKo="공급처·장비·POS 확정 → 직원 채용 및 근로계약 단계로 진입"
       />
     </div>
   );

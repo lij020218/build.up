@@ -322,11 +322,11 @@ export function ConstructionSetupStage() {
                         ko={language === "ko"}
                         action={{
                           title: language === "ko"
-                            ? "공사 중에 소방필증·보건증 병행 신청 — 시공 후엔 영업까지 14일 더 걸린다"
-                            : "Apply for fire & health certs during construction — doing it after adds 14 days to opening",
+                            ? "보건증은 공사 중 발급 + 다중이용업(100㎡↑)이면 착공 전 소방 '안전시설 설치신고' — 완비증명(소방필증)은 완공검사 후라 늦으면 오픈 지연"
+                            : "Get the health cert during construction + if a multi-use business (100㎡+), file the fire 'installation report' before construction — the completion certificate issues only after final inspection, so late filing delays opening",
                           detail: language === "ko"
-                            ? "인테리어 컨셉 → 견적 2곳 비교 → 설계 확정 → 시공 → 최종 점검. 소방·보건은 공사 시작 시점에 동시 신청해야 오픈 일정이 안 밀린다."
-                            : "Concept → compare 2 quotes → finalize design → build → final check. File fire and health applications at construction start so the opening date doesn't slip.",
+                            ? "인테리어 컨셉 → 견적 2곳 비교 → 설계 확정 → 시공 → 완공검사. 다중이용업(바닥 100㎡↑·지하 66㎡↑)이면 소방 '안전시설등 설치신고'는 착공 전(처리 3일), '완비증명(소방필증)'은 완공신고·현장확인 후 발급(3일) — 그 외 업종은 소화기·비상구. 보건증은 공사 중 미리 발급. 설치신고를 공사 끝나고 하면 그만큼 오픈이 밀린다."
+                            : "Concept → compare 2 quotes → finalize design → build → completion inspection. If a multi-use business (floor 100㎡+ / basement 66㎡+), the fire 'installation report' is filed before construction (3-day processing) and the 'completion certificate' (소방필증) issues after the completion report + on-site check (3 days) — other types just need extinguishers/exits. Get the health cert during construction. Filing the installation report late pushes your opening back.",
                         }}
                       />
                       {/* ── 프랜차이즈 본사 공급 패키지 (선택 시 우선 노출) ── */}
@@ -1125,7 +1125,7 @@ export function ConstructionSetupStage() {
                         ko={language === "ko"}
                         nextStageLabelKo="공급처·장비 발주"
                         doneItemsKo={[
-                          { label: "1. 인테리어 컨셉 확정", detail: "업종·프랜차이즈 데이터 기반 자재·컨셉 후보 비교 후 1안 결정" },
+                          { label: "1. 인테리어 컨셉 확정", detail: "업종 데이터 기반 자재·컨셉 후보 비교 후 1안 결정" },
                           isHQMandatedFranchise
                             ? { label: "2. 본사 지정 시공 확인", detail: "본사 지정 시공업체·표준 사양 확인 + 비용 분담·일정은 본사 가맹담당자와 협의 (외부 견적·시공 불가)" }
                             : { label: "2. 시공업체 견적 요청", detail: "지역·키워드 매칭 시공업체 2~3곳에 동시 견적 요청" },

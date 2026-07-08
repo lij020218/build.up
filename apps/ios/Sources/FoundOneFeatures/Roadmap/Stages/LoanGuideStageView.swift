@@ -97,7 +97,7 @@ public struct LoanGuideStageView: View {
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 자금 수요·구조 진단", detail: "초기 시설자금 vs 운영자금 분리 + 대출 vs 정부지원금 우선순위 결정"),
-                .init(label: "2. 정책자금 후보군 매칭", detail: "소상공인시장진흥공단·신보·기보·중기부 매칭 — 업종·기간·자본 자동 필터"),
+                .init(label: "2. 정책자금 후보군 매칭", detail: "소상공인시장진흥공단·지역신보·신보·기보 매칭 — 업종·기간·자본 자동 필터 (소상공인은 지역신보 1순위)"),
                 .init(label: "3. 신용·재무 점검", detail: "개인신용 점수·기존 부채·연체 기록 사전 정리, 사업자 신용평가 사전 시뮬"),
                 .init(label: "4. 신청 일정·서류 준비", detail: "사업계획서·매출 시뮬·자금 사용 계획 3종 + 추천 기관 면담 일정 확보"),
                 ],
@@ -111,8 +111,8 @@ public struct LoanGuideStageView: View {
                 "정부지원금 — 「선정 후 입금」까지 평균 4~12주, 일정 역산 필수 (오픈 직전 신청 X)",
                 "사기 주의 — 「대출 100% 보장」 「선수수료」 요구하는 브로커는 모두 사기, 직접 신청 원칙",
                 ],
-                nextStageLabel: "사업자등록·인허가",
-                nextSummary: "자금 구조·대출 후보 확정 → 사업자등록·인허가 단계로 진입"
+                nextStageLabel: isStartup ? "사업자등록·금융 세팅" : isOnline ? "상품 소싱 및 상세 페이지" : "메뉴·서비스 라인업 확정",
+                nextSummary: "자금 구조·대출 후보 확정 → \(isStartup ? "사업자등록·금융 세팅" : isOnline ? "상품 소싱" : "메뉴·서비스 라인업 확정") 단계로 진입"
             ),
             currentPage: page,
             onNextPage: { withAnimation { page += 1 } },
@@ -227,7 +227,7 @@ public struct LoanGuideStageView: View {
                     BUEyebrow("예산별 추천 자금 경로")
                     let paths: [(String, String, String, String, Bool)] = [
                         ("5천만원 이하", "소진공 직접 대출", "금리 2.96% (비수도권 -0.2%p). ols.semas.or.kr 온라인 신청. 현장 실사 1~2주 후 집행.", "small", budgetBucket == "small"),
-                        ("5천만~2억원", "보증서 결합 대출", "신용보증기금(KODIT) or 기술보증기금(KIBO) 보증서 → 시중은행 대출. 정책금리 적용 가능.", "medium", budgetBucket == "medium"),
+                        ("5천만~2억원", "보증서 결합 대출", "소상공인 1순위는 지역신용보증재단(지역신보) 보증서 → 시중은행 대출(정책금리). 신보·기보는 기술·중소기업 대상.", "medium", budgetBucket == "medium"),
                         ("2억원 이상", "중진공 직접 대출", "중소벤처기업진흥공단 직접 대출 or IBK기업은행 소상공인 특화. 사업계획서 필수.", "large", budgetBucket == "large"),
                     ]
                     ForEach(paths, id: \.0) { range, name, detail, id, isMatch in

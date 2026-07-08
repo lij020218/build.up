@@ -15,6 +15,18 @@ import FoundOneDesignSystem
 import FoundOneComponents
 import FoundOneData
 
+/// 재고 카테고리 코드 → 한글 라벨 (표시·정렬 그룹용). 폼 categoryLabels 와 일치.
+func inventoryCategoryLabel(_ code: String) -> String {
+    switch code {
+    case "fresh": return "신선식품"
+    case "dry": return "건식품"
+    case "frozen": return "냉동"
+    case "beverage": return "음료"
+    case "supply": return "소모품"
+    default: return "기타"
+    }
+}
+
 public struct InventoryManagementSheet: View {
 
     @Environment(\.dismiss) private var dismiss
@@ -23,6 +35,19 @@ public struct InventoryManagementSheet: View {
 
     @State private var showForm = false
     @State private var editingItem: BUInventoryItem?
+    @State private var pendingDeleteItem: BUInventoryItem?
+    @State private var sortMode: InvSortMode = .urgency
+    private enum InvSortMode: String, CaseIterable, Identifiable {
+        case urgency, name, category
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .urgency: return "긴급도"
+            case .name: return "가나다"
+            case .category: return "분류"
+            }
+        }
+    }
 
     // CSV import states
     @State private var showFilePicker = false
@@ -134,6 +159,21 @@ public struct InventoryManagementSheet: View {
                     onCancel: { showImportPreview = false }
                 )
             }
+            .confirmationDialog(
+                "재고를 삭제하시겠습니까?",
+                isPresented: Binding(get: { pendingDeleteItem != nil }, set: { if !$0 { pendingDeleteItem = nil } }),
+                presenting: pendingDeleteItem
+            ) { item in
+                Button("삭제", role: .destructive) {
+                    storeInfoStore.commit { state in
+                        state.inventory.removeAll { $0.id == item.id }
+                    }
+                    pendingDeleteItem = nil
+                }
+                Button("취소", role: .cancel) { pendingDeleteItem = nil }
+            } message: { item in
+                Text("'\(item.name)' 재고를 삭제하면 되돌릴 수 없습니다.")
+            }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
@@ -177,6 +217,13 @@ public struct InventoryManagementSheet: View {
 
     private var itemList: some View {
         VStack(spacing: 8) {
+            Picker("정렬", selection: $sortMode) {
+                ForEach(InvSortMode.allCases) { mode in
+                    Text(mode.label).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.bottom, 4)
             ForEach(sortedItems) { item in
                 itemRow(item)
             }
@@ -184,10 +231,20 @@ public struct InventoryManagementSheet: View {
     }
 
     private var sortedItems: [BUInventoryItem] {
-        let alert  = items.filter { $0.isLowStock }
-        let watch  = items.filter { !$0.isLowStock && $0.daysUntilStockout <= 7 }
-        let normal = items.filter { !$0.isLowStock && $0.daysUntilStockout > 7 }
-        return alert + watch + normal
+        switch sortMode {
+        case .name:
+            return items.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+        case .category:
+            return items.sorted {
+                if $0.category != $1.category { return $0.category < $1.category }
+                return $0.name.localizedCompare($1.name) == .orderedAscending
+            }
+        case .urgency:
+            let alert  = items.filter { $0.isLowStock }
+            let watch  = items.filter { !$0.isLowStock && $0.daysUntilStockout <= 7 }
+            let normal = items.filter { !$0.isLowStock && $0.daysUntilStockout > 7 }
+            return alert + watch + normal
+        }
     }
 
     private func itemRow(_ item: BUInventoryItem) -> some View {
@@ -213,6 +270,14 @@ public struct InventoryManagementSheet: View {
                                 .padding(.vertical, 2)
                                 .background(BUColor.midnight08, in: Capsule())
                         }
+                        if !item.category.isEmpty && item.category != "other" {
+                            Text(inventoryCategoryLabel(item.category))
+                                .font(.system(size: 9.5, weight: .semibold))
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                        }
                         Spacer(minLength: 0)
                     }
                     HStack(spacing: 12) {
@@ -229,9 +294,7 @@ public struct InventoryManagementSheet: View {
                         showForm = true
                     }
                     Button("삭제", role: .destructive) {
-                        storeInfoStore.commit { state in
-                            state.inventory.removeAll { $0.id == item.id }
-                        }
+                        pendingDeleteItem = item
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -393,7 +456,7 @@ private struct InventoryImportPreviewSheet: View {
                             importChip(label: "단가", value: formatKRWCompact(item.unitCost) + "원")
                         }
                         if !item.category.isEmpty && item.category != "other" {
-                            importChip(label: "분류", value: item.category)
+                            importChip(label: "분류", value: inventoryCategoryLabel(item.category))
                         }
                     }
                 }

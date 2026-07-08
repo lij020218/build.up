@@ -178,7 +178,7 @@ const SELECTION_VERIFY_ITEMS_KO: Record<SelectionCluster, string[]> = {
   offline: [
     "선택 업종이 본인 자본·시간·체력 한계에 맞는지 — 평균 창업비 vs 보유 자본 비교 (창업자금 70% 이하 권장)",
     "업종 시장 포화도 확인 — 동네 반경 500m 동일 업종 5개 이상이면 차별화 포인트 필수",
-    "업종별 「영업신고 vs 영업허가」 차이 확인 — 식품·미용·의료기기 등은 별도 허가 필수",
+    "업종별 인허가 유형(신고·등록·허가) 확인 — 음식점·미용업은 영업신고, 유흥주점은 허가, 식품제조·가공은 등록 (대부분 외식·미용은 신고 대상)",
     "필수 자격증·교육 미리 확인 — 식품접객업 위생교육, 미용업 면허, 헬스 트레이너 자격 등",
     "업종 트렌드 1~2년 지속성 검토 — 단기 유행이면 손익분기 도달 전 침체 리스크",
     "유사 업종 대비 차별점 1줄로 정리 — 차별점 없으면 가격 경쟁에 휘말림",
@@ -401,15 +401,15 @@ export function IndustrySelectionStage() {
 
       <StageWrapup
         ko={language === "ko"}
-        nextStageLabelKo="창업 유형 선택"
+        nextStageLabelKo="창업 형태 선택"
         nextStageLabelEn="Startup Type"
         doneItemsKo={[
           { label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프·공간·온라인·스타트업 11개 대분류 검토" },
           { label: "2. 세부 업종 선택", detail: "관심 카테고리 안에서 한 가지 세부 업종 확정 (예: 케어 살롱, 베이커리 스튜디오)" },
-          { label: "3. 후속 단계 준비", detail: "업종에 맞는 창업 유형(오프라인·온라인·스타트업)으로 진입 준비" },
+          { label: "3. 후속 단계 준비", detail: "업종 확정 후 창업 형태(독립창업·프랜차이즈)를 정하는 단계로 진입 준비" },
         ]}
         verifyItemsKo={SELECTION_VERIFY_ITEMS_KO[selectionCluster]}
-        nextSummaryKo="업종 확정 → 창업 유형(오프라인·온라인·스타트업) 선택 단계로 진입"
+        nextSummaryKo="업종 확정 → 창업 형태(독립창업·프랜차이즈) 선택 단계로 진입"
         nextSummaryEn="Industry locked → enter startup type selection"
       />
 

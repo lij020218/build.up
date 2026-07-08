@@ -106,7 +106,7 @@ export function BizRegistrationPanel() {
                   ? "사업자등록·과세유형·세무 설정이 모두 완료됐습니다. 이 단계는 마지막 두 가지 — 사업용 통장과 상호명 — 만 처리합니다."
                   : "Registration, tax type, and tax setup are all done. Just finalize the bank account and store name.")
               : (ko
-                  ? "아래 「이전 단계에서 결정된 사항」에 미결정·미확인 항목이 있습니다. 해당 단계에서 먼저 마무리한 뒤, 이 단계에서 사업용 통장·상호명을 확정하세요."
+                  ? "아래 「사업 초기 세팅 현황」에 미확인 항목이 있습니다. 각 항목은 해당 단계에서 마무리하고, 이 단계에서는 사업용 통장·상호명을 확정하세요."
                   : "Some items below are still pending. Finish them in their stages first, then open the business account and finalize the store name here.")}
           </div>
         </div>
@@ -114,7 +114,7 @@ export function BizRegistrationPanel() {
 
       {/* ── 이전 결정 요약 (read-only) ── */}
       <div>
-        <div style={sectionLabel}>{ko ? "이전 단계에서 결정된 사항" : "Decisions from prior stages"}</div>
+        <div style={sectionLabel}>{ko ? "사업 초기 세팅 현황 (등록·세무·금융)" : "Setup progress (registration · tax · banking)"}</div>
         <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
           {([
             {
@@ -139,7 +139,7 @@ export function BizRegistrationPanel() {
               label: ko ? "사업용 카드 분리" : "Dedicated business card",
               status: bizCardChecked ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
               done: bizCardChecked,
-              hint: ko ? `${taxGuideRef} — 개인카드 혼용 = 비용 불인정` : `${taxGuideRef} — mixed personal = rejected expenses`,
+              hint: ko ? `${taxGuideRef} — 전용 카드 등록 시 비용 자동수집 (개인카드도 증빙 있으면 인정)` : `${taxGuideRef} — register a business card for auto-tracking (personal card still deductible with receipts)`,
             },
             {
               label: ko ? "세무 처리 방식" : "Tax handling method",
@@ -228,19 +228,19 @@ export function BizRegistrationPanel() {
         <div style={{
           padding: "12px 14px", marginBottom: "10px",
           borderRadius: "12px",
-          background: "rgba(182,76,76,0.04)",
-          border: "1px solid rgba(182,76,76,0.14)",
+          background: "rgba(25,25,112,0.04)",
+          border: "1px solid rgba(25,25,112,0.14)",
           display: "flex", gap: "10px", alignItems: "flex-start",
         }}>
-          <AlertTriangle size={16} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
+          <AlertTriangle size={16} strokeWidth={2} style={{ color: "#191970", flexShrink: 0, marginTop: "1px" }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>
-              {ko ? "개인 통장과 사업 통장은 반드시 분리" : "Personal and business accounts MUST be separated"}
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#191970", marginBottom: "3px", letterSpacing: "-0.01em" }}>
+              {ko ? "개인 통장과 사업 통장은 분리 권장" : "Separate personal and business accounts (recommended)"}
             </div>
-            <div style={{ fontSize: "12.5px", color: "rgba(180,28,28,0.85)", lineHeight: 1.55 }}>
+            <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
               {ko
-                ? "혼용 시 세무조사에서 사업 비용 입증 불가 → 전부 과세 대상. 사업자등록증 발급 직후 즉시 개설하세요."
-                : "Mixed accounts can't prove business expenses during audit — all gets taxed. Open right after receiving registration cert."}
+                ? "혼용해도 적격증빙(세금계산서·카드·현금영수증)이 있으면 사업 비용은 인정됩니다. 다만 지출 매칭이 복잡해지고, 복식부기의무자는 사업용계좌 미신고·미사용 시 가산세(거래금액의 0.2%). 등록 직후 분리 개설을 권장합니다."
+                : "Mixing still allows expense recognition with proper receipts (tax invoices, cards, cash receipts). But it complicates matching, and double-entry filers face a 0.2% penalty for not registering/using a business account. Separating early is recommended."}
             </div>
           </div>
         </div>
@@ -286,7 +286,7 @@ export function BizRegistrationPanel() {
           ))}
         </div>
         <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.4)", marginTop: "8px", padding: "0 4px" }}>
-          {ko ? "준비물: 사업자등록증 원본 · 대표자 신분증 · 도장(선택)" : "Bring: business registration cert, ID, seal (optional)"}
+          {ko ? "준비물: 사업자등록증 원본 · 대표자 신분증 · 임대차계약서 원본(사업장 실재성 증빙 — 대포통장 방지로 사실상 필수) · 도장(선택). 목적 증빙 미비 시 한도제한계좌로만 발급될 수 있음" : "Bring: business registration cert, ID, lease contract original (proof of real business — effectively required to avoid a limited-transaction account), seal (optional)"}
         </div>
       </div>
 
