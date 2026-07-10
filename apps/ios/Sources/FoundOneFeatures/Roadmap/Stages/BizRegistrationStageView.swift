@@ -117,7 +117,7 @@ public struct BizRegistrationStageView: View {
                 ],
                 verifyItems: [
                     "상호명은 등록 후 변경 시 등록증 재발급 필요 — 간판·메뉴판·온라인까지 일관되게 확정했는지 확인",
-                    "개인 통장과 사업 통장 분리 권장 — 혼용해도 적격증빙 있으면 비용 인정, 복식부기의무자는 사업용계좌 미신고 가산세(0.2%)",
+                    "개인 통장과 사업 통장 분리 권장 — 혼용해도 적격증빙 있으면 비용 인정, 복식부기의무자는 사업용계좌 미신고 가산세 = 수입금액 0.2%와 사용대상 거래금액 0.2% 중 큰 금액",
                     "통장 개설 준비물: 사업자등록증 원본 · 대표자 신분증 · 임대차계약서 원본(사업 실재성 증빙, 사실상 필수) · 도장(선택) — 미비 시 한도제한계좌",
                 ],
                 nextStageLabel: "세무·자금 가이드",
@@ -241,7 +241,7 @@ public struct BizRegistrationStageView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("개인 통장과 사업 통장은 분리 권장")
                             .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
-                        Text("혼용해도 적격증빙(세금계산서·카드·현금영수증)이 있으면 사업 비용은 인정됩니다. 다만 지출 매칭이 복잡해지고, 복식부기의무자는 사업용계좌 미신고·미사용 시 가산세(거래금액의 0.2%). 등록 직후 분리 개설을 권장합니다.")
+                        Text("혼용해도 적격증빙(세금계산서·카드·현금영수증)이 있으면 사업 비용은 인정됩니다. 다만 지출 매칭이 복잡해지고, 복식부기의무자는 사업용계좌 미신고 시 가산세 = 수입금액의 0.2%와 사용대상 거래금액(거래대금·인건비·임차료 등)의 0.2% 중 큰 금액. 등록 직후 분리 개설을 권장합니다.")
                             .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                     }
                 }

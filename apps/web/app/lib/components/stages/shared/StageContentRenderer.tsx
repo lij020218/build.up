@@ -940,8 +940,9 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
         renderSection(section, i, { content, cat, catId, categoryLabel, pageId: currentPage.id, ko, iact }),
       )}
 
-      {/* wrapupMode="always" — 모든 페이지 하단에 마무리 표시(tax-guide 등). */}
-      {content.wrapupMode === "always" && (
+      {/* wrapupMode="always" — 마무리는 단계 끝이므로 페이지형은 *마지막 페이지*에만 표시
+          (앞 페이지 누출 방지 — 2026-07 사장님 신고: 마무리가 처음부터 뜸). */}
+      {content.wrapupMode === "always" && page === content.pages.length - 1 && (
         <StageWrapup
           ko={ko}
           nextStageLabelKo={content.wrapup.nextStageLabel}

@@ -260,8 +260,8 @@ export const startupPrograms: StartupProgram[] = [
     organizer: { ko: "소상공인시장진흥공단", en: "SEMAS" },
     target: { ko: "소상공인 요건 충족 사업자", en: "Registered small business owners" },
     benefit: { ko: "저금리 융자 (운전·시설자금)", en: "Low-interest loan (working capital & facilities)" },
-    // 2026 정정: 일반 직접대출은 업체당 한도 ~1억(운전 1억/시설 5억). 운전 5억은 소공인특화·혁신성장 등 특화 트랙 시설한도와 혼동된 과대값이었음.
-    amount: "운전 최대 1억, 시설 최대 5억 (특화자금은 시설 최대 10억)",
+    // 2026 정정: 일반경영안정 운전자금 한도는 ~7천만원(1억 아님 — 소진공 확인, 연매출 1.04억·업력 7년 직접대출), 시설 5억. 특화·성장기반 트랙은 확대. 종전 운전 1억/5억은 특화 트랙 한도와 혼동한 과대값이었음.
+    amount: "운전 일반 최대 7천만원 (특화·성장기반 시 확대), 시설 최대 5억 (특화자금 시설 최대 10억)",
     season: { ko: "상시 신청 (연 초 공고)", en: "Year-round (annual notice)" },
     url: "https://www.semas.or.kr/web/SUP01/SUP0103/SUP010301.kmdc",
     forSmallBiz: true,
@@ -720,7 +720,7 @@ export const startupPrograms: StartupProgram[] = [
     amount: "최대 5억원 (총 상금 11억+)",
     season: { ko: "예선 3-6월, 본선 9-10월, 왕중왕전 11월", en: "Prelim Mar-Jun, Final Sep-Nov" },
     url: "https://www.challengek.org/",
-    forSmallBiz: true,
+    forSmallBiz: false,
     forFranchise: false,
     highlight: true,
     dataYear: "2026",

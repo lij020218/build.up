@@ -42,7 +42,7 @@ export const KOREA_POLICY_FUNDS: readonly KoreaPolicyFundEntry[] = [
     // ⚠️ 운전자금 한도는 업체당 1억원. 5억은 소공인특화·시설자금 한도와 혼동된 과대값(2026-05-11 정정).
     name: "소상공인 정책자금 (일반경영안정자금)",
     maxAmount: 100_000_000,
-    maxAmountLabel: "운전 최대 1억원 / 시설 최대 5억원",
+    maxAmountLabel: "운전 일반 최대 7천만원(특화 시 확대) / 시설 최대 5억원",
     eligibility: "소상공인 (상시근로자 5인 미만, 제조·건설·운수·광업은 10인 미만)",
     source: "https://www.semas.or.kr",
     lastVerified: "2026-05",

@@ -91,7 +91,7 @@ const PROCESS_STEPS_KO: ReadonlyArray<{
     taskId: "fc-contract",
     title: "가맹계약 체결 및 가맹비 납부",
     time: "1일",
-    detail: "가맹비·교육비·인테리어비·로열티 조건 최종 확인. 중도 해지 위약금이 총 투자비 50% 초과면 재협상.",
+    detail: "가맹비·교육비·인테리어비·로열티 조건 최종 확인. 중도 해지 위약금이 가맹본부 실손해·잔여 계약기간 대비 과다한지 가맹사업법(§12 부당 손해배상 금지) 기준으로 점검.",
   },
   {
     taskId: "fc-training",

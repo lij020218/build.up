@@ -1257,7 +1257,7 @@ export const contractCheckpoints: ContractCheckpoint[] = [
     id: "fee-refund",
     title: { ko: "가맹비 반환 조건", en: "Franchise fee refund policy" },
     description: {
-      ko: "계약 해지 시 가맹비 반환 여부와 조건을 확인하세요. 정보공개서 미제공 또는 허위정보 제공 시 전액 반환 가능합니다.",
+      ko: "계약 해지 시 가맹비 반환 여부와 조건을 확인하세요. 정보공개서 미제공·허위정보 제공 시 가맹금 반환을 청구할 수 있으나, 반드시 계약 체결일로부터 4개월 이내에 서면으로 요구해야 효력이 있습니다 (가맹사업법 §10 · 무조건 전액은 아님).",
       en: "Check refund conditions upon termination. Full refund is possible if disclosure was not provided or contained false information."
     },
     riskLevel: "critical"

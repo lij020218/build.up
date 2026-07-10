@@ -105,8 +105,8 @@ export function LoanGuideStage() {
       }
     : {
         0: ko
-          ? { title: "내 예산·업종·신용 상황을 입력하면 자금 경로가 자동 매칭됨", detail: "5천만원 이하면 소진공 정책자금(2.96%) → 5천~2억 보증서 결합 → 2억+ 중진공 직접대출. 비수도권은 0.2%p 우대." }
-          : { title: "Enter budget/industry/credit → auto-matched funding path", detail: "≤50M = SEMAS direct (2.96%), 50M-200M = guarantee+bank, 200M+ = KOSMES direct. -0.2%p for non-metro." },
+          ? { title: "내 예산·업종·신용 상황을 입력하면 자금 경로가 자동 매칭됨", detail: "소상공인(외식 등)은 5천만원 이하 소진공 직접대출(2.96%) → 5천~2억 지역신보 보증서 대출 → 그 이상은 소상공인 기준 초과 기업형 매장만 중진공(중소기업 대상), 일반 매장은 시중은행 시설자금. 비수도권 0.2%p 우대." }
+          : { title: "Enter budget/industry/credit → auto-matched funding path", detail: "Small biz: ≤50M SEMAS direct (2.96%), 50M-200M local-guarantee+bank, above that KOSMES only for larger firms exceeding small-biz limits / bank for typical shops. -0.2%p non-metro." },
         1: ko
           ? { title: "연초(1~2월) 신청 — 통합공고 직후 신규 예산이 가장 많을 때. 상반기 중 인기자금 소진 가능", detail: "소상공인정책자금 누리집(ols.semas.or.kr) 방문 → 자격 확인 → 온라인 신청 → 현장 실사 1~2주 → 자금 집행." }
           : { title: "Apply Jan-Feb — fullest new budget right after the annual notice. Popular funds deplete by mid-year", detail: "ols.semas.or.kr → eligibility check → online apply → 1-2wk site visit → disbursement." },
@@ -155,7 +155,7 @@ export function LoanGuideStage() {
     ],
     2: ko ? [
       { label: "AI 생성 후 그대로 제출하지 말 것 — 본인 검토 필수", text: "AI 초안은 70% 완성도. 매장 특성·지역 상권·실제 인건비 등 본인 데이터로 다듬어야 합격률 ↑." },
-      { label: "여러 프로그램 동시 신청 — 한 곳 거절돼도 백업", text: "정책자금 + 보증서 대출 + 무상 바우처는 중복 수혜 가능. 단일 의존 X." },
+      { label: "여러 프로그램 동시 신청 — 한 곳 거절돼도 백업", text: "무상 바우처는 대출과 병행 가능. 단, 정책자금(직접대출)과 보증서 대출은 같은 자금 용도면 기관별 기대출·보증 잔액이 한도에서 차감돼 전액 중복은 어려움 — 연동 여부 사전 확인. 단일 의존 X." },
     ] : [
       { label: "Don't submit AI draft as-is", text: "AI = 70% draft. Polish with your store specifics for higher acceptance." },
       { label: "Apply to multiple in parallel", text: "Policy fund + guarantee loan + free voucher are stackable." },
@@ -209,7 +209,7 @@ export function LoanGuideStage() {
       { icon: FileText, title: "Refinance Loan (high-rate debt)", bucket: "Existing 6-10% debt", rate: "Fixed 4.5%", limit: "Existing debt amount", why: "Save millions yearly converting bank → policy", href: "https://ols.semas.or.kr/ols/man/SMAN018M/page.do" },
     ])
     : (ko ? [
-      { icon: Banknote, title: "중진공 직접대출", bucket: "2억+ 추천 1순위", rate: "연 2.0~4.5%", limit: "최대 1억 (운영자금) / 시설 5억", why: "성장기반자금·혁신성장촉진자금. 상환능력 + 사업계획서 정밀 평가", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do", primary: true },
+      { icon: Banknote, title: "중진공 직접대출", bucket: "기업형(중소기업) 2억+", rate: "연 2.0~4.5%", limit: "최대 1억 (운영자금) / 시설 5억", why: "성장기반·혁신성장촉진자금 — 중소기업(제조·기술 등) 대상. 소상공인(외식 5인 미만)은 원칙 제외, 소상공인 기준 초과·법인 전환 등 기업형만 해당. 사업계획서 정밀 평가", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do" },
       { icon: ShieldCheck, title: "기보 + 시중은행 (대규모)", bucket: "시설·확장자금", rate: "보증료 + 은행 3~5%", limit: "최대 5억 무담보", why: "기보 보증으로 시중은행 5억까지. 인테리어·장비·확장 시 활용", href: "https://www.kibo.or.kr/main/work/work010301.do" },
       { icon: FileText, title: "정책자금 + 보증 + 바우처 패키지", bucket: "복합 수혜 전략", rate: "혼합", limit: "10억+", why: "여러 자금을 결합 — 정책자금 7천 + 보증 2억 + 시설 3억 + 무상 바우처. 세무사·금융자문 동반 권장", href: "https://www.kosmes.or.kr/nsh/SH/SBI/SHSBI004M0.do" },
     ] : [
@@ -746,7 +746,7 @@ export function LoanGuideStage() {
                 "사업계획서 '자금 사용 계획'은 항목별 구체 금액을 적으세요 — '운전자금' 한 줄은 거절 1순위",
                 "재무 시뮬레이션을 먼저 돌리세요 — 손익분기 매출과 런웨이가 사업계획서의 근거",
                 "정책자금은 연초(1~2월)에 신청하세요 — 통합공고 직후 신규 예산이 가장 많고, 인기자금은 상반기 중 소진 가능",
-                "여러 프로그램에 동시 지원하세요 — 정책자금 + 바우처 + 지자체 중복 수혜 가능",
+                "여러 프로그램에 동시 지원하세요 — 바우처는 병행 가능, 정책자금·보증서 대출은 한도 차감 등 중복 제한 있어 연동 확인 필요",
               ] : [
                 "Itemize 'fund usage plan' — vague 'working capital' is the #1 rejection reason",
                 "Run finance simulation first — BEP and runway are your evidence",

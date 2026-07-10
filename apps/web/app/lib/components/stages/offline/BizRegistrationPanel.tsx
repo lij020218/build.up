@@ -239,7 +239,7 @@ export function BizRegistrationPanel() {
             </div>
             <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
               {ko
-                ? "혼용해도 적격증빙(세금계산서·카드·현금영수증)이 있으면 사업 비용은 인정됩니다. 다만 지출 매칭이 복잡해지고, 복식부기의무자는 사업용계좌 미신고·미사용 시 가산세(거래금액의 0.2%). 등록 직후 분리 개설을 권장합니다."
+                ? "혼용해도 적격증빙(세금계산서·카드·현금영수증)이 있으면 사업 비용은 인정됩니다. 다만 지출 매칭이 복잡해지고, 복식부기의무자는 사업용계좌 미신고 시 가산세 = 수입금액의 0.2%와 사용대상 거래금액(거래대금·인건비·임차료 등)의 0.2% 중 큰 금액. 등록 직후 분리 개설을 권장합니다."
                 : "Mixing still allows expense recognition with proper receipts (tax invoices, cards, cash receipts). But it complicates matching, and double-entry filers face a 0.2% penalty for not registering/using a business account. Separating early is recommended."}
             </div>
           </div>
