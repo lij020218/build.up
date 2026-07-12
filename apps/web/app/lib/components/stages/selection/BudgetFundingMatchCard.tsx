@@ -33,6 +33,7 @@ export function BudgetFundingMatchCard() {
   const {
     language,
     industryCategoryId,
+    selectedIndustryId,
     startupType,
     selectedBudget,
   } = d;
@@ -56,6 +57,7 @@ export function BudgetFundingMatchCard() {
     const criteria: MatchCriteria = {
       startupType: startupType || undefined,
       industryCategoryId: industryCategoryId || "food",
+      subIndustryId: selectedIndustryId || undefined,
       capital: selectedBudget,
       businessStage,
       age: ageFromBirthYear(ownerBirthYear),
@@ -72,7 +74,7 @@ export function BudgetFundingMatchCard() {
         return b.personalFitScore - a.personalFitScore;
       })
       .slice(0, 20);
-  }, [industryCategoryId, startupType, selectedBudget, businessStage, ownerBirthYear, ownerNcbScore, ownerConsideringClosure, ownerIsDisabledOwner]);
+  }, [industryCategoryId, selectedIndustryId, startupType, selectedBudget, businessStage, ownerBirthYear, ownerNcbScore, ownerConsideringClosure, ownerIsDisabledOwner]);
 
   if (matched.length === 0) {
     return null;

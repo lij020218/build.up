@@ -20,6 +20,7 @@ export type GenericTaskChecklistItemState = {
 export function getGenericTaskChecklistItemState({
   decisions,
   industryCategoryId,
+  subIndustryId,
   isPreLaunch,
   isStrictConstructionFranchise,
   language,
@@ -29,6 +30,8 @@ export function getGenericTaskChecklistItemState({
 }: {
   decisions: WorkflowDecisionMap;
   industryCategoryId: string | null | undefined;
+  /** 세부 업종 — 디지털 콘텐츠(무배송) 서브타입의 "{taskId}__digital" 라벨 오버라이드용. */
+  subIndustryId?: string | null;
   isPreLaunch: boolean;
   isStrictConstructionFranchise: boolean;
   language: Language;
@@ -65,7 +68,7 @@ export function getGenericTaskChecklistItemState({
     preLaunchHint,
     title:
       constructionTitleOverride ??
-      localizeTaskTitle(task.taskId, language, industryCategoryId ?? undefined) ??
+      localizeTaskTitle(task.taskId, language, industryCategoryId ?? undefined, subIndustryId ?? undefined) ??
       task.title,
   };
 }

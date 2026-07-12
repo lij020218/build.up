@@ -6,7 +6,7 @@
 
 ```
 dashboard/
-├── OperationalDashboard.tsx       # Orchestrator ~302줄 (모든 tier 호출 + 모달만)
+├── OperationalDashboard.tsx       # Orchestrator ~270줄 (모든 tier 호출 + 모달만)
 ├── sections/
 │   ├── DASHBOARD_MAP.md           # 이 문서
 │   ├── Tier0Header.tsx            # 상호명 + 리추얼 배너
@@ -25,13 +25,13 @@ hooks/
 └── useDashboardComputed.tsx       # 모든 계산값 단일 소스 (totalSales, runwayMonths 등)
 ```
 
-✅ 모든 tier 분리 완료. OperationalDashboard.tsx 는 thin orchestrator (302줄).
+✅ 모든 tier 분리 완료. OperationalDashboard.tsx 는 thin orchestrator (~270줄).
 
 ## Tier 0 — 헤더·인트로
 
 | 위치 | 카드 / 영역 | 파일 |
 |---|---|---|
-| 헤더 | 상호명 + 운영 상태 + 부팅 인트로 | `Tier0Header.tsx` |
+| 헤더 | 상호명 + 운영 상태 | `Tier0Header.tsx` |
 | 0단계 | 경영 리추얼 배너 (주간/월간) | `Tier0Header.tsx` |
 
 ## Tier 1 — Hero (즉시 노출)
@@ -131,7 +131,7 @@ hooks/
 
 | 위치 | 영역 | 파일 |
 |---|---|---|
-| 하단 | 세부 관리 (DetailTabs — 비용·재고·직원·배달·메뉴·회원·세금) | `DashboardAdminTabs.tsx` |
+| 하단 | 세부 관리 (DetailTabs — 비용·재고·직원·배달·메뉴·회원·세금) | `DetailTabs.tsx` |
 | 모달 | Milestone Toast | `OperationalDashboard.tsx` (orchestrator) |
 | 모달 | Calendar Modal | `OperationalDashboard.tsx` (orchestrator) |
 

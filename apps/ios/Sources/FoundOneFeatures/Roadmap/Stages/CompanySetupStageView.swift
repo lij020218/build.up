@@ -227,6 +227,12 @@ public struct CompanySetupStageView: View {
                             Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                         }
                     }
+                    // B2B tech 경고 (2026-07-10, 웹 미러) — SW는 간이과세 배제 다수 + B2B 세금계산서·매입세액 환급 필요.
+                    Text("⚠️ B2B SaaS·소프트웨어 개발/공급업은 간이과세 배제인 경우가 많고, 기업 고객 세금계산서 발급 + 초기 서버·인프라 매입세액 환급을 위해 일반과세가 유리·필요합니다 (법인은 자동 일반과세).")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.danger)
+                        .lineSpacing(2)
+                        .padding(.top, 2)
                 }
             }
 

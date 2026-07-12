@@ -66,7 +66,25 @@ public struct StartupTypeStageView: View {
         if categoryId == "online-digital" { return "online" }
         return "offline"
     }
+    /// online 안에서도 디지털 콘텐츠(무배송) 서브타입 — 위탁·사입·MOQ·총판 비성립. (웹 isDigitalFulfillment 미러)
+    private var isDigitalContent: Bool {
+        startupTypeCluster == "online" && isDigitalFulfillment(industryId)
+    }
+    /// 프랜차이즈가 개념적으로 성립하지 않는 카테고리에서만 옵션 비노출 (웹 SSOT franchiseAvailable 미러).
+    ///   startup-tech(독립전용) + online-digital(등록 프랜차이즈 없음·성격상 무관).
+    ///   ⚠️ 오프라인 세부업종 브랜드 DB 공백(요가·펫호텔 등)은 데이터 문제 → 숨기지 않음(빈 피커 종전 유지).
+    private var franchiseAvailable: Bool { categoryId != "startup-tech" && categoryId != "online-digital" }
     private var startupTypeVerifyItems: [String] {
+        if isDigitalContent {
+            return [
+                "독립창업 — 콘텐츠 제작·툴 구독·마케팅 비용을 본인 부담으로 인식, 초기 시드머니 + 광고비 버퍼 별도 확보 (재고·인테리어·권리금 없음)",
+                "독립창업 — 검증된 레퍼런스(경쟁 콘텐츠 분석·제작 역량·판매 데이터) 1개 이상 확보 후 진입",
+                "자체 제작 vs 외부 라이선스 — 직접 제작(고마진) 또는 외부 소스 재가공(라이선스 비용 발생) 중 선택",
+                "플랫폼 의존 리스크 — 크몽·클래스101·스티비 등 수수료·노출 정책 변경에 매출이 흔들림, 자사몰(자동 전달) 병행 검토",
+                "통신판매업 신고 선행 + 저작권·라이선스(폰트·이미지·음원 2차 사용권) 확보, 유료 강의·교육은 학원·평생교육시설 등록 대상 여부 확인",
+                "디지털 환불 정책 명문화 — 콘텐츠 청약철회 예외 요건·이용약관을 판매 전에 고지 (분쟁·차지백 예방)",
+            ]
+        }
         switch startupTypeCluster {
         case "online":
             return [
@@ -98,6 +116,7 @@ public struct StartupTypeStageView: View {
         }
     }
     private var startupTypeNextSummary: String {
+        if isDigitalContent { return "창업 형태 확정 → 판매 방식(플랫폼 입점·자사몰·구독형 등) 선택 진입" }
         switch startupTypeCluster {
         case "online": return "창업 형태 확정 → 운영 모델(위탁판매·국내몰 사입·해외 구매대행·자체 제조 등) 선택 진입"
         case "tech": return "창업 형태 확정 → 사업·수익 모델(제품·수익 구조·시장 진입) 설계 진입"
@@ -148,7 +167,7 @@ public struct StartupTypeStageView: View {
             color: Color(red: 0.486, green: 0.227, blue: 0.929),
             titleKo: "프랜차이즈", subtitleKo: "검증된 브랜드로 빠르게 시작"
         )
-        return isStartupTech ? [independent] : [independent, franchise]
+        return franchiseAvailable ? [independent, franchise] : [independent]
     }
 
     public init() {}
@@ -182,7 +201,9 @@ public struct StartupTypeStageView: View {
             stageId: stageId,
             title: "창업 형태 선택",
             stageEyebrow: "단계 2 · 창업 형태",
-            helperText: "선택에 따라 이후 단계 (인테리어·메뉴·계약서 검토 등) 가 달라집니다.",
+            helperText: (!franchiseAvailable && !isStartupTech)
+                ? "이 업종은 등록된 프랜차이즈 브랜드가 없어 독립 창업으로 진행합니다."
+                : "선택에 따라 이후 단계 (인테리어·메뉴·계약서 검토 등) 가 달라집니다.",
             canAdvance: canContinue,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -192,11 +213,18 @@ public struct StartupTypeStageView: View {
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
-                doneItems: [
-                .init(label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈 2옵션 비교 (스타트업은 독립창업만 노출)"),
+                doneItems: franchiseAvailable ? [
+                .init(label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈 2옵션 비교"),
                 .init(label: "2. 형태별 장단점 인식", detail: "독립=자유도/리스크, 프랜차이즈=즉시런칭/로열티"),
                 .init(label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단"),
-                .init(label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 5개 비교 후 1개 확정"),
+                .init(label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 비교 후 1개 확정"),
+                ] : [
+                .init(label: "1. 창업 형태 확인", detail: isStartupTech
+                    ? "기술 스타트업은 독립창업으로 진행"
+                    : "이 업종은 등록된 프랜차이즈가 없어 독립창업으로 진행"),
+                .init(label: "2. 독립창업 장단점 인식", detail: "자유도가 높은 대신 상품·시스템·마케팅을 직접 구축"),
+                .init(label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단"),
+                .init(label: "4. 형태 확정", detail: "독립창업으로 확정 후 다음 단계 진입"),
                 ],
                 verifyItems: startupTypeVerifyItems,
                 nextStageLabel: "운영 모델",
@@ -230,6 +258,12 @@ public struct StartupTypeStageView: View {
                     if newValue != "franchise" && page > 0 { page = 0 }
                 }
                 .onAppear {
+                    // stale 방어: online-digital/tech 로 바뀌었는데 franchise 가 남아있으면 리셋
+                    //   (예산 단계가 franchise-application 으로 오라우팅되는 것 차단, 웹 useEffect 미러).
+                    if !franchiseAvailable && selected == "franchise" {
+                        selected = ""
+                        franchiseBrandId = ""
+                    }
                     // 이미 프랜차이즈 선택된 상태로 재진입한 경우 (편집 모드) — 브랜드 페이지로 자동 이동.
                     if selected == "franchise" && !franchiseCandidates.isEmpty && page == 0 {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {

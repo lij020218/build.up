@@ -7,7 +7,7 @@
  *   - SubscriptionEnableNudge   — 스타트업 구독제 활성화 안내 (스타트업 + 미사용)
  *   - SaaSKeyMetricsCard         — MRR/신규/전환율/이탈률 (usesSubscriptions)
  *   - SubscriptionPlanManager + Webhook — 구독 플랜 관리 (usesSubscriptions)
- *   - CustomerSummaryCard        — 고객 요약 (showCustomerCard, !subs)
+ *   - CustomerSummaryCard        — 고객 요약 (showCustomerCard, !subs, 재고 업종만 — 재고 없는 업종은 Tier 1.5 담당)
  *   - 인기 상품 + 최근 활동       — inventoryMode != minimal && !(startup + subs)
  *
  *  ⚠️ 이동 (2026-05-07): InventoryOpsCard·TeamCard 는 사장님 요청으로 Tier 1.5 상단 이동.
@@ -20,6 +20,8 @@
 
 import { BarChart3, TrendingUp, Lightbulb } from "lucide-react";
 import { BP } from "../../../breakpoints";
+import { useProfileStore } from "../../../stores/profile-store";
+import { shouldShowCardByIndustry } from "../../../industry-card-matrix";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DeepDiveSection } from "../DeepDiveSection";
@@ -38,6 +40,26 @@ type Props = {
 };
 
 export function Tier3Operations({ d, c, ko, fmt, nextStaggerStyle }: Props) {
+  // 2026-07-12 — 고객 카드 이중 렌더·숨김 무시 수정 + 빈 섹션 껍데기 방지.
+  //   재고 카드 없는 업종(fitness/education/space 등)은 Tier 1.5 가 고객 카드를 이미 표시
+  //   (Tier1_5Coaching: `showCustomer && !showInventory`). 종전 Tier 3 조건은 이 배타를
+  //   안 봐서 같은 카드가 두 번 렌더됐고, 마이페이지 숨김 토글(customer-summary)도 무시했다.
+  //   → Tier 3 는 "재고 카드가 Tier 1.5 에 뜨는 업종"에서만 고객 카드 담당 + hide 존중.
+  //   그 결과 이 섹션이 통째로 빌 수 있으므로(예: fitness), 내용 없으면 헤더도 렌더하지 않는다.
+  const hiddenCards = useProfileStore((s) => s.hiddenCards);
+  const hide = (id: string) => hiddenCards.includes(id);
+  const inventoryShownInCoaching =
+    !c.usesSubscriptions &&
+    d.businessCtx.showInventoryCard &&
+    !hide("inventory-ops") &&
+    shouldShowCardByIndustry("inventory-ops", d.industryCategoryId as import("../../../industry-card-matrix").IndustryId | undefined);
+  const showCustomerHere =
+    !c.usesSubscriptions && d.businessCtx.showCustomerCard && !hide("customer-summary") && inventoryShownInCoaching;
+  const showSaasMetrics = c.usesSubscriptions && !c.isStartupCompany;
+  const showPopular =
+    (d.businessCtx.inventoryMode as string) !== "minimal" && !(c.isStartupCompany && c.usesSubscriptions);
+  if (!showSaasMetrics && !c.usesSubscriptions && !showCustomerHere && !showPopular) return null;
+
   return (
     <DeepDiveSection
       id="ops-mgmt"
@@ -54,16 +76,15 @@ export function Tier3Operations({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           Tier 3 는 비-스타트업 구독 사용자(예: 뷰티 멤버십)에게만 의미 */}
 
       {/* SaaS 핵심 지표 — 2026-05 startup-tech 는 Tier 1.5 에서, 그 외만 여기 */}
-      {c.usesSubscriptions && !c.isStartupCompany && <SaaSKeyMetricsCard d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />}
+      {showSaasMetrics && <SaaSKeyMetricsCard d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />}
 
-      {/* 동적 카드 그리드 (구독·재고·고객·팀) */}
-      <DynamicOpsCardGrid d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />
+      {/* 동적 카드 그리드 (구독·고객) — 고객 카드 게이팅은 위에서 계산해 prop 으로 전달 */}
+      <DynamicOpsCardGrid d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} showCustomer={showCustomerHere} />
 
       {/* 인기 상품 + 최근 활동 */}
-      {(d.businessCtx.inventoryMode as string) !== "minimal" &&
-        !(c.isStartupCompany && c.usesSubscriptions) && (
-          <PopularProductsAndActivity d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />
-        )}
+      {showPopular && (
+        <PopularProductsAndActivity d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />
+      )}
     </DeepDiveSection>
   );
 }
@@ -383,12 +404,15 @@ function DynamicOpsCardGrid({
   ko,
   fmt,
   nextStaggerStyle,
+  showCustomer,
 }: {
   d: DashboardHook;
   c: DashboardComputed;
   ko: boolean;
   fmt: (n: number) => string;
   nextStaggerStyle: () => React.CSSProperties;
+  /** 고객 카드 표시 여부 — 게이팅(이중 렌더 배타·hide)은 Tier3Operations 래퍼에서 단일 계산. */
+  showCustomer: boolean;
 }) {
   const cards: React.ReactNode[] = [];
   if (c.usesSubscriptions) {
@@ -399,7 +423,7 @@ function DynamicOpsCardGrid({
     );
     cards.push(<SubscriptionWebhookConnectCard key="webhook-connect" ko={ko} />);
   }
-  if (!c.usesSubscriptions && d.businessCtx.showCustomerCard) {
+  if (showCustomer) {
     cards.push(<CustomerSummaryCard key="cust" d={d} ko={ko} fmt={fmt} />);
   }
 

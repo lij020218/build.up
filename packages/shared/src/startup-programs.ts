@@ -35,8 +35,14 @@ export type StartupProgram = {
   maxAge?: number;
   /** 사업 연차 범위 [min, max] (null = 무제한) */
   businessYearRange?: [number, number];
-  /** 해당 업종 (null = 전 업종) */
+  /** 해당 업종 (null = 전 업종). ⚠️ 카테고리 레벨 ID(startup-tech 등) — 세부업종 아님. */
   industries?: string[];
+  /**
+   * 세부업종 화이트리스트 (null/미설정 = 세부업종 무관). 설정되면 그 세부업종에만 노출.
+   *  industries(카테고리)로는 못 거르는 도메인 특화 프로그램용 — 예: 스마트공장(제조)은
+   *  hardware-iot·robotics·semiconductor 등 제조형 세부업종에만. (2026-07-10)
+   */
+  subIndustries?: string[];
   /** 지역 제한 (null = 전국) */
   regions?: string[];
   /** 모집 상태 */
@@ -96,6 +102,8 @@ export type StartupProgram = {
 export type MatchCriteria = {
   startupType?: string;
   industryCategoryId?: string;
+  /** 세부업종 ID (예: b2b-saas·hardware-iot). subIndustries 화이트리스트 프로그램 필터용. */
+  subIndustryId?: string;
   age?: number;
   businessYears?: number;
   region?: string;
@@ -1141,7 +1149,7 @@ export const startupPrograms: StartupProgram[] = [
     category: "government",
     name: { ko: "TIPS (Tech Incubator Program)", en: "TIPS Program" },
     organizer: { ko: "중소벤처기업부", en: "MSS" },
-    target: { ko: "민간 운영사 매칭 + R&D 정부 매칭 — 시리즈A 직전 기술기업", en: "Tech companies pre-Series A (private + R&D matching)" },
+    target: { ko: "민간 운영사 매칭 + R&D 정부 매칭 — 시리즈A 직전 기술기업 (지분투자 구조상 개인사업자 불가·주식회사 필수)", en: "Tech companies pre-Series A (private + R&D matching; corporation required, sole-proprietor ineligible)" },
     // 2026 TIPS 개편: 일반트랙 R&D 5억→8억, 운영사 선투자 1억→2억(비수도권 1억). 졸업 후속 R&D 3년 15억.
     benefit: { ko: "운영사 선투자 2억(비수도권 1억) + 정부 R&D 최대 8억 + 멘토링. 졸업 시 후속 R&D 3년 15억", en: "Operator 200M (100M non-metro) + gov R&D up to 800M + mentoring; follow-up R&D 1.5B/3yr" },
     amount: "일반트랙 총 10억원 (스케일업 최대 30억·글로벌TIPS 4년 최대 60억)",
@@ -1925,7 +1933,10 @@ export const startupPrograms: StartupProgram[] = [
     target: { ko: "국내 중소·중견 제조기업", en: "SME/mid manufacturers" },
     benefit: { ko: "구축비 30%(상생형)~50%(AI트랙) 정부지원, 공정 최적화", en: "30-50% build subsidy, AI track" },
     amount: "구축비 정부지원 30~50%", season: { ko: "2026 통합공고", en: "2026 integrated" },
-    url: "https://www.smart-factory.kr/", forSmallBiz: true, forFranchise: false, industries: ["startup-tech"], // 2026-07-06: 제조 딥테크 전용 — build.up 택소노미에 제조 카테고리 없어 제조 창업자가 속하는 startup-tech에 한정, 외식·소매 등 누수 차단
+    url: "https://www.smart-factory.kr/", forSmallBiz: true, forFranchise: false, industries: ["startup-tech"],
+    // 2026-07-06: 제조 딥테크 전용 — build.up 택소노미에 제조 카테고리 없어 startup-tech에 한정(외식·소매 누수 차단).
+    // 2026-07-10: 그래도 SW 세부업종(b2b-saas 등)에 새던 것을 제조형 세부업종으로 격리.
+    subIndustries: ["hardware-iot", "robotics-physical-ai", "semiconductor", "biotech-medtech", "climate-energy"],
     dataYear: "2026",
     applicationStatus: "open", fundingType: "grant",
   },
@@ -1987,6 +1998,8 @@ export const startupPrograms: StartupProgram[] = [
     benefit: { ko: "시설·장비·보육공간 + R&D·투자 연계 (인천 송도)", en: "Facility, R&D, investment (Songdo)" },
     amount: "시설·보육·R&D", season: { ko: "입주 모집공고", en: "By notice" },
     url: "https://www.tipa.or.kr/", forSmallBiz: false, forFranchise: false, dataYear: "2026",
+    // 2026-07-10: 바이오·헬스 wet-lab 보육 — 제조/SW 세부업종에 새지 않도록 바이오·헬스 세부업종에만.
+    subIndustries: ["biotech-medtech", "healthtech-startup"],
     regions: ["인천"], businessYearRange: [0, 7], applicationStatus: "open", fundingType: "grant",
   },
   {
@@ -2243,6 +2256,15 @@ export function getMatchedProgramsV2(
     //   *낮은 점수로* 추천됨. 정의되어 있으면 사용자 industryCategoryId 가 그 안에 *없으면 제외*.
     if (p.industries && p.industries.length > 0 && criteria.industryCategoryId) {
       if (!p.industries.includes(criteria.industryCategoryId)) {
+        eligible = false;
+      }
+    }
+
+    // ⚠️ 세부업종 하드필터 (2026-07-10): 카테고리(industries)로는 못 거르는 도메인 특화 프로그램.
+    //   예: 스마트공장(제조)은 industries=["startup-tech"] 라 전 SW 세부업종에 새던 것을,
+    //   subIndustries 화이트리스트로 제조형 세부업종(hardware-iot 등)에만 한정. subIndustryId 미전달 시 무필터(후방호환).
+    if (p.subIndustries && p.subIndustries.length > 0 && criteria.subIndustryId) {
+      if (!p.subIndustries.includes(criteria.subIndustryId)) {
         eligible = false;
       }
     }

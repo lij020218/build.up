@@ -46,7 +46,11 @@ export function ModePathCard({
   const { language, startupOperatingMode, setStartupOperatingMode } = d;
   const ko = language === "ko";
   const mode = startupOperatingMode;
-  const content = getStageModeContent(stageId, mode);
+  // 2026-07-10: '다른 모드 비교' 클릭이 저장 모드를 즉시 덮어써 사용자의 실제 모드(예: 시드)가 유실되던 버그 수정.
+  //   비교는 previewMode(로컬)로만 렌더하고, '이 모드로 변경'을 눌러야 저장. displayMode = 미리보기 우선.
+  const [previewMode, setPreviewMode] = useState<OperatingMode | null>(null);
+  const displayMode = previewMode ?? mode;
+  const content = getStageModeContent(stageId, displayMode);
 
   // 모드 변경 토글 — 기본은 닫혀있음 (사용자가 BudgetSetupStage 에서 이미 저장한 모드만 보임)
   // 다른 모드와 비교하고 싶을 때만 펼쳐짐
@@ -139,12 +143,13 @@ export function ModePathCard({
             </div>
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginBottom: "6px" }}>
               {(["indie", "bootstrap", "seed", "seriesA"] as OperatingMode[]).map((m) => {
-                const active = mode === m;
+                const active = displayMode === m;      // 현재 렌더 중인(미리보기 우선) 모드
+                const isSaved = mode === m;             // 저장된 내 모드
                 return (
                   <button
                     key={m}
                     type="button"
-                    onClick={() => setStartupOperatingMode(m)}
+                    onClick={() => setPreviewMode(m === mode ? null : m)}  // 저장 X — 미리보기만
                     style={{
                       padding: "6px 12px",
                       borderRadius: "999px",
@@ -152,22 +157,39 @@ export function ModePathCard({
                       fontWeight: active ? 700 : 600,
                       background: active ? MIDNIGHT : "transparent",
                       color: active ? "#fff" : "rgba(15,23,42,0.55)",
-                      border: active ? "none" : "1px solid rgba(25,25,112,0.12)",
+                      border: active ? "none" : isSaved ? `1px solid ${MIDNIGHT}` : "1px solid rgba(25,25,112,0.12)",
                       cursor: "pointer",
                       boxShadow: active ? "0 2px 6px rgba(25,25,112,0.22)" : "none",
                     }}
                     title={ko ? MODE_DISPLAY_INFO[m].descKo : MODE_DISPLAY_INFO[m].descEn}
                   >
-                    {ko ? MODE_DISPLAY_INFO[m].ko : MODE_DISPLAY_INFO[m].en}
+                    {ko ? MODE_DISPLAY_INFO[m].ko : MODE_DISPLAY_INFO[m].en}{isSaved ? " ✓" : ""}
                   </button>
                 );
               })}
             </div>
-            <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5 }}>
-              {ko
-                ? "⚠️ 칩 클릭 시 본인 모드가 즉시 변경됩니다. 단순 비교만 원하면 다시 본인 모드로 돌아가세요."
-                : "⚠️ Clicking switches your saved mode. Click back to your mode if just comparing."}
-            </div>
+            {previewMode && previewMode !== mode ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5 }}>
+                  {ko
+                    ? `미리보기 중 — 저장 모드는 '${MODE_DISPLAY_INFO[mode].ko}'(✓) 입니다. 실제로 바꾸려면 아래 버튼을 누르세요.`
+                    : `Previewing — your saved mode is '${MODE_DISPLAY_INFO[mode].en}' (✓). Press the button to actually switch.`}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setStartupOperatingMode(previewMode); setPreviewMode(null); }}
+                  style={{ padding: "5px 10px", borderRadius: "8px", border: "none", background: MIDNIGHT, color: "#fff", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" as const }}
+                >
+                  {ko ? `'${MODE_DISPLAY_INFO[previewMode].ko}'(으)로 변경` : `Switch to '${MODE_DISPLAY_INFO[previewMode].en}'`}
+                </button>
+              </div>
+            ) : (
+              <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5 }}>
+                {ko
+                  ? "✓ = 저장된 내 모드. 다른 칩은 미리보기만 — 클릭해도 저장 모드는 바뀌지 않습니다."
+                  : "✓ = your saved mode. Other chips are preview only — clicking does not change your saved mode."}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -306,7 +328,7 @@ export function ModePathCard({
           (기본은 startup-foundation 의 page 4 풀 사이즈 SuccessCasesShowcase
            에서만 보여 중복 제거 — 사용자 요청)
           ═════════════════════════════════════════════════════════ */}
-      {showCases && <SuccessCasesShowcase mode={mode} ko={ko} compact />}
+      {showCases && <SuccessCasesShowcase mode={displayMode} ko={ko} compact />}
     </div>
   );
 }

@@ -127,7 +127,7 @@ export function BizRegistrationPanel() {
               label: ko ? "과세유형 결정 (간이/일반)" : "Tax type (Simplified/Standard)",
               status: taxTypeChecked ? (ko ? "결정됨" : "Decided") : (ko ? "미결정" : "Pending"),
               done: taxTypeChecked,
-              hint: ko ? `${taxGuideRef} — 1억 400만 미만 시 간이` : `${taxGuideRef} — Simplified if <104M KRW`,
+              hint: ko ? `${taxGuideRef} — 개인은 1억 400만 미만 시 간이 / 법인은 매출 무관 무조건 일반과세(간이 선택 불가)` : `${taxGuideRef} — Sole prop: Simplified if <104M / Corporation: always Standard (no Simplified)`,
             },
             {
               label: ko ? "홈택스 회원가입" : "Hometax registration",

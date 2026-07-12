@@ -555,7 +555,3 @@ export function shouldShowCardByIndustry(cardId: CardId, industryId: IndustryId 
   return meta.industries.includes(industryId);
 }
 
-/** 신규 카드 (Phase 2b-l 작성 예정) 목록 — 우선순위 별도 PR 계획 */
-export function getPlannedCards(): readonly CardMeta[] {
-  return Object.values(CARD_META).filter((m) => m.status === "planned");
-}

@@ -109,6 +109,13 @@ public struct PreLaunchFinalStageView: View {
     }
 
     private var cluster: PreLaunchCluster { PreLaunchCluster.from(industryId: industryId) }
+    /// online 안에서도 디지털 콘텐츠(무배송)는 포장·송장·택배·재고가 성립하지 않음 — 자동 전달 트랙 재분기. (웹 isDigital 미러, 2026-07-10)
+    ///   ⚠️ 반드시 online cluster 로 게이팅 — ai-application 은 isDigitalFulfillment=true 이지만 startup cluster 라,
+    ///     게이팅이 없으면 helperText 등 cluster switch 밖 지점에서 스타트업이 디지털 문구를 받는다.
+    private var isDigital: Bool {
+        if case .online = cluster { return isDigitalFulfillment(industryId) }
+        return false
+    }
 
     // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·주방 설비·식자재' 등 음식 전용 점검이 뜸.
     //   오프라인을 업종군으로 분기 — food(음식·카페) / retail(소매) / service(미용·피트니스·반려·교육·생활).
@@ -130,7 +137,9 @@ public struct PreLaunchFinalStageView: View {
     private var pages: [String] {
         switch cluster {
         case .offline: return ["왜 중요한가", "오픈 전 점검", "당일 운영", "홍보 타임라인"]
-        case .online:  return ["왜 중요한가", "스토어 점검", "발송 1사이클", "런칭 홍보"]
+        case .online:  return isDigital
+            ? ["왜 중요한가", "스토어 점검", "전달 1사이클", "런칭 홍보"]
+            : ["왜 중요한가", "스토어 점검", "발송 1사이클", "런칭 홍보"]
         case .startup: return ["왜 중요한가", "런칭 전 점검", "D-Day 운영", "D-28~D+14"]
         }
     }
@@ -150,7 +159,20 @@ public struct PreLaunchFinalStageView: View {
             .init(title: "D-7부터 매일 1개 행동 — 캘린더에 미리 등록하고 시작",
                   detail: "D-7 PH 예약 + 메일링 알림 / D-3 SNS 티저 + 데모 영상 / D-1 최종 배포 + 모니터링 / D-Day 06시 PT 게시 / D+1 핫픽스 + 감사 메시지 / D+7 첫 주 지표 리뷰."),
         ]
-        case .online: return [
+        case .online:
+            if isDigital {
+                return [
+                    .init(title: "첫 주문 자동 전달 1번 모의 시뮬레이션 — 결제→다운로드/접근 권한까지",
+                          detail: "결제 즉시 자동 전달이 안 되면 구매자 즉시 환불 + 부정 후기. 첫 후기 3개가 노출 순위 좌우. 본인 계정으로 결제→자동 다운로드 링크 수신→파일 정상 열림까지 1번 끝까지 돌려보세요."),
+                    .init(title: "파일 스토리지·다운로드 링크 상태 점검 — 용량·트래픽·만료 정책 확인",
+                          detail: "스토어 카테고리·환불정책(디지털 청약철회 예외 고지) 최종 확인 + 카카오톡 채널/네이버 톡톡 CS 오픈 + 자동 발송(메일·다운로드) 정상 작동 확인."),
+                    .init(title: "주문 알림 즉시 확인 → 전달 실패 30분 내 대응 워크플로 고정",
+                          detail: "자동 전달 실패(메일 누락·링크 만료·용량 초과) 시 30분 내 수동 재전달. 알림 OFF 절대 금지. 발급·전달 로그 보관 = 분쟁 대비 결정적 증거."),
+                    .init(title: "오픈 7일 전부터 인스타 릴스 매일 1개 — 프리뷰·미리보기 하이라이트 누적",
+                          detail: "D-7 첫 구매 쿠폰 + 오픈 예약 / D-3 릴스 상품 프리뷰(미리보기) / D-1 최종 점검 / D-Day SNS 공유 + 첫 후기 요청 / D+7 데이터 분석 + 플랫폼·SNS 광고 시작."),
+                ]
+            }
+            return [
             .init(title: "첫 주문 처리 1번 모의 시뮬레이션 — 박스·완충재·송장 전부 준비",
                   detail: "스마트스토어 발송기한 (오늘출발 = 결제 당일 또는 +1영업일) 미준수 시 구매자 즉시 환불. 첫 리뷰 3개가 노출 순위 좌우. 실제 주문→포장→사진→발송까지 1번 끝까지 돌려보세요."),
             .init(title: "재고 시스템 실수량 vs 표시수량 일치 확인 — 품절·중복판매 방지",
@@ -259,14 +281,27 @@ public struct PreLaunchFinalStageView: View {
                 ("영업배상·화재보험 가입 확인", $insuranceOK),
             ]
             }
-        case .online: return [
+        case .online:
+            if isDigital {
+                return [
+                    ("사업자등록증·통신판매업 신고증 게시", $permitOK),
+                    ("스토어 카테고리·상세페이지·환불정책(청약철회 예외 고지) 최종 검수", $equipmentOK),
+                    ("파일 스토리지 용량·다운로드 링크 만료 정책·트래픽 한도 점검", $stockOK),
+                    ("CS 채널 (카톡 채널·톡톡) 응대 템플릿 5종 준비", $staffOK),
+                    ("결제 (PG·네이버페이·카카오페이) 100원 실거래 테스트", $posOK),
+                    ("자기 결제 → 자동 다운로드/접근 권한 발급 → 파일 열림 1사이클 완주", $hygieneOK),
+                    ("환불 정책 페이지 게시 (디지털 청약철회 예외 + 개인정보보호법(2023 개정) 준수)", $emergencyOK),
+                    ("분쟁 대비 발급·전달 로그 자동 저장 워크플로", $insuranceOK),
+                ]
+            }
+            return [
             ("사업자등록증·통신판매업 신고증 게시", $permitOK),
             ("스토어 카테고리·상세페이지·반품정책 최종 검수", $equipmentOK),
             ("박스·완충재·테이프·송장 라벨지 5묶음 백업 입고", $stockOK),
             ("CS 채널 (카톡 채널·톡톡) 응대 템플릿 5종 준비", $staffOK),
             ("결제 (PG·네이버페이·카카오페이) 100원 실거래 테스트", $posOK),
             ("자기 주문 → 포장 → 송장 → 발송 1사이클 완주", $hygieneOK),
-            ("환불·교환 정책 페이지 게시 (PIPA 2025 준수)", $emergencyOK),
+            ("환불·교환 정책 페이지 게시 (개인정보보호법(2023 개정) 준수)", $emergencyOK),
             ("배송 분쟁 대비 포장 사진 자동 저장 워크플로", $insuranceOK),
         ]
         case .startup: return [
@@ -329,7 +364,16 @@ public struct PreLaunchFinalStageView: View {
                 ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
             ]
             }
-        case .online: return [
+        case .online:
+            if isDigital {
+                return [
+                    ("주문 알림 30분 룰 — 자동 전달 성공 여부 즉시 확인", $dayOpenOK),
+                    ("톡톡·카톡 채널 12시간 SLA — 첫날 문의 100% 답변", $dayBriefingOK),
+                    ("상품 프리뷰(미리보기) 하이라이트 콘텐츠 SNS 게시", $dayPhotoOK),
+                    ("첫날 매출·전환율·이탈률 15분 회고", $dayFeedbackOK),
+                ]
+            }
+            return [
             ("주문 알림 30분 룰 — 첫 주문 즉시 발송 시작", $dayOpenOK),
             ("톡톡·카톡 채널 12시간 SLA — 첫날 문의 100% 답변", $dayBriefingOK),
             ("첫 발송 패키지 언박싱 사진 SNS 게시", $dayPhotoOK),
@@ -363,7 +407,9 @@ public struct PreLaunchFinalStageView: View {
             stageId: stageId,
             title: "개업 최종 준비",
             stageEyebrow: cluster.stageEyebrow,
-            helperText: cluster.helperText,
+            helperText: isDigital
+                ? "디지털 상품 첫 1주는 자기 결제 → 자동 다운로드/접근 권한 발급 1사이클 완주가 핵심. 알림받기 100명 + 스토리지·다운로드 링크 상태 점검 권장."
+                : cluster.helperText,
             canAdvance: allDone,
             advanceLabel: cluster.advanceLabel,
             advanceHint: advanceHint,

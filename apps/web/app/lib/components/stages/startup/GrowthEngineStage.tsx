@@ -134,12 +134,12 @@ export function GrowthEngineStage() {
           {(ko ? [
             { name: "PMF 테스트", desc: "\"이 제품을 못 쓰면?\" — 40%+가 '매우 실망'이면 PMF 달성. 미달이면 최고 만족 세그먼트에 집중." },
             { name: "AARRR", desc: "Acquisition→Activation→Retention→Revenue→Referral. 가장 나쁜 단계를 먼저 고쳐라." },
-            { name: "Unit Economics", desc: "CAC(획득비) vs LTV(생애가치). 비율 3:1 이상, 회수 12개월 이하가 건강한 사업." },
+            { name: "Unit Economics", desc: "LTV:CAC 비율 — 고객 생애가치(LTV)가 획득비용(CAC)의 3배 이상(LTV/CAC ≥ 3:1)이고 CAC 회수 12개월 이하가 건강한 사업." },
             { name: "OKR", desc: "분기 목표 3개 + 측정 가능한 핵심 결과. 숫자 없는 목표는 목표가 아님." },
           ] : [
             { name: "PMF Test", desc: "\"How'd you feel if you couldn't use this?\" — 40%+ 'very disappointed' = PMF." },
             { name: "AARRR", desc: "Acquisition→Activation→Retention→Revenue→Referral. Fix the worst stage first." },
-            { name: "Unit Economics", desc: "CAC vs LTV. Ratio 3:1+, payback under 12 months = healthy business." },
+            { name: "Unit Economics", desc: "LTV:CAC ratio — LTV ≥ 3× CAC (LTV/CAC ≥ 3:1), CAC payback under 12 months = healthy business." },
             { name: "OKR", desc: "3 quarterly objectives + measurable key results. No numbers = no goal." },
           ]).map(f => (
             <div key={f.name} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
@@ -477,7 +477,7 @@ export function GrowthEngineStage() {
           "유료 광고 — ROAS 200% 미만 시 즉시 중단, 「쓸수록 손해」 패턴 인식",
           "CAC vs LTV — LTV/CAC 3배 미만이면 성장 자제, 단위경제 흑자 보장 후 가속",
           "추적 도구 — Mixpanel·Amplitude 등 셋업, raw 데이터·코호트·funnel 추적 시스템",
-          "개인정보 — 트래킹 동의 별도 수집, 위반 시 개인정보보호법 과징금 (매출 3% 이내)",
+          "개인정보 — 행동 트래킹은 적격 동의 별도 수집. 안전조치 위반 시 개인정보보호법 과징금은 '위반 관련 매출'이 아니라 '전체 매출액의 3% 이하'(2023 개정) — 위반 무관 매출은 기업이 입증해야 제외",
         ]}
         nextSummaryKo="북극성·주간 리뷰·리텐션·성장 가설 셋업 완료 → 펀드레이징 준비 단계로 진입"
       />

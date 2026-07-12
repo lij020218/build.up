@@ -1,5 +1,6 @@
 import type { KnowledgeItemRecord, KnowledgeItemSourceRecord } from "./types/freshness";
 import type { RecommendationItem, RoadmapStageState } from "./types/roadmap";
+import { isDigitalOnlineSubtype } from "./digital-subtypes";
 
 export type Language = "en" | "ko";
 
@@ -109,9 +110,9 @@ const uiCopy = {
       chooseIndustryHelp:
         "Pick one sub-industry first. Startup type comes in the next step.",
       startupTypeHelp:
-        "Now choose whether this startup is independent, franchise-led, or still undecided.",
+        "Now choose whether this startup is independent or franchise-led.",
       businessModelHelp:
-        "Choose the operating model that best fits your plan. This unlocks budget setup next.",
+        "Choose the operating model that best fits your plan. This unlocks target customer definition next.",
       budgetHelp:
         "Set capital and a target opening window. The market stage unlocks when both are saved.",
       locationHelp:
@@ -243,9 +244,9 @@ const uiCopy = {
       chooseIndustryHelp:
         "먼저 세부 업종 하나만 고르세요. 창업 형태는 다음 단계에서 선택합니다.",
       startupTypeHelp:
-        "이제 독립 창업인지, 프랜차이즈인지, 아직 미정인지 선택하세요.",
+        "이제 독립 창업인지, 프랜차이즈인지 선택하세요.",
       businessModelHelp:
-        "운영 방식을 정하면 그에 맞는 예산 설정 단계가 다음으로 열립니다.",
+        "운영 방식을 정하면 다음으로 타깃 고객 정의 단계가 열립니다.",
       budgetHelp:
         "자본금과 목표 오픈 시점을 정하면 상권 검토 단계가 열립니다.",
       locationHelp:
@@ -489,7 +490,7 @@ const recCopy: Record<
   "reservation-space": { ko: { title: "예약형 공간 대여", summary: "스튜디오, 파티룸, 연습실처럼 시간 단위 예약이 중심인 공간 모델입니다.", reasons: ["시간 단위 수익화가 명확함", "목적형 수요를 받기 좋음"], warnings: ["가동률이 가장 중요"], categoryLabel: "운영 방식" } },
   "membership-space": { ko: { title: "멤버십 공간형", summary: "스터디카페, 공유오피스처럼 반복 이용이 중심인 공간 모델입니다.", reasons: ["반복 매출 구조 가능", "이용 패턴 예측이 쉬움"], warnings: ["위치 적합성과 이탈률 관리 중요"], categoryLabel: "운영 방식" } },
   "hospitality-operations": { ko: { title: "숙박/호스피탈리티 운영형", summary: "게스트하우스처럼 운영 난도가 더 높은 숙박형 모델입니다.", reasons: ["숙박 경험으로 차별화 가능", "입지 효과가 큼"], warnings: ["운영·규정 부담이 큼"], categoryLabel: "운영 방식" } },
-  "marketplace-seller": { ko: { title: "마켓플레이스 판매형", summary: "스마트스토어, 위탁판매처럼 입점형 판매가 중심인 온라인 모델입니다.", reasons: ["가장 빠르게 시작 가능", "수요를 먼저 검증하기 좋음"], warnings: ["수수료와 유입 경쟁 압박"], categoryLabel: "운영 방식" } },
+  "marketplace-seller": { ko: { title: "마켓플레이스 판매형", summary: "스마트스토어·크몽처럼 오픈마켓·재능마켓에 입점해 판매가 중심인 온라인 모델입니다.", reasons: ["가장 빠르게 시작 가능", "수요를 먼저 검증하기 좋음"], warnings: ["수수료와 유입 경쟁 압박"], categoryLabel: "운영 방식" } },
   "brand-storefront-online": { ko: { title: "브랜드 자사몰형", summary: "브랜드 경험과 반복 구매를 직접 관리하고 싶은 온라인 판매 모델입니다.", reasons: ["브랜드 통제력이 높음", "고객 데이터를 더 잘 쌓을 수 있음"], warnings: ["마케팅 역량이 더 필요"], categoryLabel: "운영 방식" } },
   "content-membership-model": { ko: { title: "콘텐츠/멤버십형", summary: "디지털 상품, 뉴스레터, 크리에이터 서비스처럼 구독과 콘텐츠가 중심인 모델입니다.", reasons: ["고정비가 낮음", "구독형 반복 매출 가능"], warnings: ["신뢰와 꾸준함이 가장 중요"], categoryLabel: "운영 방식" } },
   seongsu: { ko: { title: "성수", summary: "브랜드형 카페/디저트 콘셉트에 유리하고 목적형 유입이 강합니다.", reasons: ["20~30대 유동 인구가 강함", "브랜딩형 카페와 궁합이 좋음", "목적형 리테일 유입의 파급이 큼"], warnings: ["임대료 부담이 높음", "경쟁 밀도가 이미 높음"] } },
@@ -600,6 +601,11 @@ function getStageCopyForCategory(
         goal: "SaaS 구독, API 과금, 프리미엄, 마켓플레이스 중 수익 모델을 정합니다.",
         whyNow: "수익 모델이 제품 설계, 가격 정책, GTM 전략의 출발점입니다."
       },
+      target_customer_definition: {
+        title: "타깃 고객 정의",
+        goal: "주 고객 ICP — 산업·기업 규모·담당자 역할 — 을 명확히 정해, 제품 기능·요금제·영업 방식이 평균이 아닌 실제 타깃 기업에 집중되도록 합니다.",
+        whyNow: "후속 결정 (기능 우선순위·가격·GTM·영업 채널) 이 모두 '누가 고객인가' 에 달려 있습니다. 지금 5-10분 입력하면 몇 달의 시행착오를 줄입니다."
+      },
       tax_guide: {
         title: "스타트업 세무 가이드",
         goal: "법인세, R&D 세액공제, 스톡옵션 과세 등 서비스 론칭 전 세무 구조를 점검합니다.",
@@ -630,8 +636,13 @@ function getStageCopyForCategory(
     const onlineOverrides: Record<string, { title: string; goal: string; whyNow: string }> = {
       business_model: {
         title: "판매 방식 선택",
-        goal: "마켓플레이스(스마트스토어·쿠팡)·자사몰·콘텐츠형 중 판매 채널과 수익 모델을 정합니다.",
+        goal: "마켓플레이스(실물=스마트스토어·쿠팡, 디지털=크몽·클래스101)·자사몰·콘텐츠형(구독·멤버십) 중 판매 채널과 수익 모델을 정합니다.",
         whyNow: "예산·후속 단계 추천이 선택한 판매 방식에 따라 달라집니다."
+      },
+      target_customer_definition: {
+        title: "타깃 고객 정의",
+        goal: "주 고객 페르소나 — 연령대·라이프스타일·가격 민감도 — 를 한 명으로 정해, 플랫폼·상품(콘텐츠)·마케팅이 평균값이 아닌 실제 한 사람에게 집중되도록 합니다.",
+        whyNow: "후속 결정 (판매 채널·가격대·광고 채널) 이 모두 '누가 고객인가' 에 달려 있습니다. 지금 5-10분 입력하면 몇 달의 시행착오를 줄입니다."
       },
       location_candidates: {
         title: "운영 거점 비교",
@@ -866,7 +877,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // pre-launch-final — startup-tech overrides
   "launch-date-locked__startup-tech":      { ko: "D-Day 화·수 12:01 PT 확정 (4~6주 후) + 베타 사용자 10명 명단 (인터뷰·waitlist 추출)" },
   "production-deployed__startup-tech":     { ko: "프로덕션 배포 + 도메인·SSL + Sentry/Slack 알람 실제 에러 트리거 검증" },
-  "payment-and-legal-ready__startup-tech": { ko: "Stripe/Toss 라이브 100원 결제 1사이클 + 법적 풋터 + PIPA 2025 (이동권·동의 분리·국내대리인)" },
+  "payment-and-legal-ready__startup-tech": { ko: "Stripe/Toss 라이브 100원 결제 1사이클 + 법적 풋터 + 개인정보보호법(2023 개정) (이동권·동의 분리·국내대리인)" },
   "runbook-prepared__startup-tech":        { ko: "D-Day 매뉴얼 — 시간대별 11슬롯 + 댓글 5종 템플릿 + 응급 5종 + 역할 분담" },
   "calendar-alarms-set__startup-tech":     { ko: "13개 알림 (D-28~D+14) + Product Hunt 예약 (D-7 publish) + D-Day 24h·D-1·D+1 봉인" },
   // pre-launch-final — online-digital overrides
@@ -875,12 +886,42 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "payment-and-legal-ready__online-digital": { ko: "본인 주문 → 포장 → 송장 → 발송 1번 완주 + 사업자·통신판매업 정보 + 환불 템플릿 5종" },
   "runbook-prepared__online-digital":        { ko: "주문 알림 30분 룰 + 톡톡 12시간 SLA + 분쟁 대비 포장 사진 자동 저장 + CS 템플릿" },
   "calendar-alarms-set__online-digital":     { ko: "D-7 매일 1콘텐츠 예약 + 첫 구매 쿠폰 + D+7 광고 시작 알림 + 발송 마감 시간 봉인" },
+  // ── "{taskId}__digital" — 디지털 콘텐츠(무배송) 서브타입 전용 (2026-07-10) ──
+  //   대상 판정: digital-subtypes.ts isDigitalOnlineSubtype (digital-products·creator-service·newsletter-membership·ai-application).
+  //   카테고리(__online-digital)보다 우선 적용 — KC인증·도매상·택배·포장이 성립하지 않는 무배송 트랙.
+  //   iOS 미러: FoundOneCore/StageTaskRegistry.swift titleOverrides.
+  // sourcing-setup — digital
+  "kc-trademark-reviewed__digital": { ko: "폰트·디자인·소스 등 외부 에셋 저작권(라이선스) 범위 확인 + 상표권 검토" },
+  "supplier-contracted__digital":   { ko: "상품 제작 파이프라인 수립 및 산출물 표준화 (기획 → 제작 → 검수 → 업데이트)" },
+  "product-photographed__digital":  { ko: "디지털 상품 원본 파일 포맷 및 자동 발송 구조 검수 완료" },
+  "detail-page-created__digital":   { ko: "상품 상세 페이지 설명 및 미리보기(샘플) 이미지 등록" },
+  // store-setup — digital
+  "store-configured__digital":         { ko: "스토어 카테고리·상세 구성·환불 정책(디지털 청약철회 예외 고지) 구성" },
+  "shipping-setup__digital":           { ko: "다운로드 링크·이메일 자동 발송 솔루션 연동" },
+  "brand-identity-online__digital":    { ko: "브랜드 자산 준비 — 스토어 로고·배너·디지털 썸네일 디자인" },
+  "packaging-supplies-ready__digital": { ko: "전달 자동화 테스트 — 결제 후 다운로드/접근 권한 부여 1건 테스트 필수" },
+  // online-marketing — digital
+  "store-seo-done__digital": { ko: "입점 플랫폼 검색 최적화 (상품명·태그·카테고리)" },
+  "first-ad-set__digital":   { ko: "크몽·클래스101 등 플랫폼 광고 또는 SNS 성과형 첫 캠페인 설정" },
+  // pre-launch-final — digital
+  "launch-date-locked__digital":      { ko: "오픈 D-Day 확정 (자기 주문 → 자동 전달 시뮬 완료 후) + 알림받기 100명 사전 모집" },
+  "production-deployed__digital":     { ko: "스토어 카테고리·상세페이지·환불 정책(청약철회 예외 고지) + 파일 스토리지·다운로드 링크 트래픽 점검" },
+  "payment-and-legal-ready__digital": { ko: "본인 결제 → 자동 다운로드/접근 권한 발급 1번 완주 + 사업자·통신판매업 정보 + 환불 템플릿 5종" },
+  "runbook-prepared__digital":        { ko: "주문 알림 30분 룰 + 문의 12시간 SLA + 전달 실패(링크 만료·용량) 대응 시나리오 + CS 템플릿" },
+  "calendar-alarms-set__digital":     { ko: "D-7 매일 1콘텐츠 예약 + 첫 구매 쿠폰 + D+7 광고 시작 알림 + 전달 자동화 모니터링 알림" },
   // ⚠️ "first-month-check" 단계는 운영 대시보드로 이전 — 관련 task 라벨 삭제.
 };
 
-export function localizeTaskTitle(taskId: string, language: Language, industryCategoryId?: string): string | undefined {
+export function localizeTaskTitle(taskId: string, language: Language, industryCategoryId?: string, subIndustryId?: string): string | undefined {
   if (language === "en") return undefined;
-  // Try industry-specific override first (e.g. "inventory-first-order__startup-tech")
+  // 1) 디지털 콘텐츠(무배송) 서브타입 전용 오버라이드 — online-digital 카테고리 안에서만 (e.g. "shipping-setup__digital").
+  //   ⚠️ ai-application 은 DIGITAL_ONLINE_SUBTYPES 이지만 startup-tech 카테고리라, 카테고리 가드가 없으면
+  //     pre-launch-final(전 클러스터 공용)에서 스타트업이 디지털 커머스 라벨을 받는 버그 발생 → 반드시 online-digital 로 한정.
+  if (industryCategoryId === "online-digital" && isDigitalOnlineSubtype(subIndustryId)) {
+    const digitalKey = `${taskId}__digital`;
+    if (taskTitleCopy[digitalKey]?.ko) return taskTitleCopy[digitalKey].ko;
+  }
+  // 2) Industry-specific override (e.g. "inventory-first-order__startup-tech")
   if (industryCategoryId) {
     const overrideKey = `${taskId}__${industryCategoryId}`;
     if (taskTitleCopy[overrideKey]?.ko) return taskTitleCopy[overrideKey].ko;

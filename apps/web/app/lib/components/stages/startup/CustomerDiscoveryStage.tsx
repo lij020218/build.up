@@ -24,6 +24,9 @@ export function CustomerDiscoveryStage() {
   const setGuideStepIndex = d.setGuideStepIndex;
   // 2026-07-06: 문제정의 폴백(6단계 startup-foundation)을 버튼 활성/전송에도 반영 — 입력창엔 값이 보이는데 버튼이 비활성이던 버그 수정
   const interviewProblem = guideSelections["interview-problem"] ?? (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "";
+  // 2026-07-10: 타깃 고객도 4단계(target-customer-definition) ICP 저장값으로 프리필 — 하드코딩 B2C 예시 대신 사용자 데이터 연동.
+  //   primaryAgeRange = tech 트랙에서 ICP(산업·규모). 미입력 시 폴백, 사용자가 입력하면 그 값 우선.
+  const interviewTarget = guideSelections["interview-target"] ?? (decisions["target-customer-definition"]?.inputs?.primaryAgeRange as string) ?? "";
 
   const pgLabels = ko
     ? ["왜 중요한가", "1. 인터뷰 준비", "2. 인터뷰 실행", "3. AI 분석"]
@@ -172,8 +175,8 @@ export function CustomerDiscoveryStage() {
             />
             <input
               type="text"
-              placeholder={ko ? "타겟 고객 (예: 월매출 3천만원 이하 음식점 사장님)" : "Target customer"}
-              value={guideSelections["interview-target"] ?? ""}
+              placeholder={ko ? "타깃 고객 ICP (예: 직원 50-200명 B2B SaaS 팀의 운영 담당자)" : "Target ICP (e.g., ops lead at a 50-200-person B2B SaaS team)"}
+              value={interviewTarget}
               onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-target": e.target.value }))}
               style={{
                 padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.12)",
@@ -185,7 +188,7 @@ export function CustomerDiscoveryStage() {
           </div>
           <button
             type="button"
-            disabled={!interviewProblem.trim() || !guideSelections["interview-target"]?.trim() || guideSelections["interview-loading"] === "true"}
+            disabled={!interviewProblem.trim() || !interviewTarget.trim() || guideSelections["interview-loading"] === "true"}
             onClick={async () => {
               d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-loading": "true", "interview-error": "" }));
               try {
@@ -197,7 +200,7 @@ export function CustomerDiscoveryStage() {
                   body: JSON.stringify({
                     industryCategoryId: d.industryCategoryId,
                     problemStatement: interviewProblem,
-                    targetCustomer: guideSelections["interview-target"],
+                    targetCustomer: interviewTarget,
                     language: d.language,
                   }),
                 });
@@ -210,10 +213,10 @@ export function CustomerDiscoveryStage() {
             }}
             style={{
               width: "100%", padding: "10px", borderRadius: "10px", border: "none",
-              background: (interviewProblem.trim() && guideSelections["interview-target"]?.trim() && guideSelections["interview-loading"] !== "true") ? MIDNIGHT : "rgba(25,25,112,0.1)",
-              color: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "#fff" : "rgba(25,25,112,0.3)",
+              background: (interviewProblem.trim() && interviewTarget.trim() && guideSelections["interview-loading"] !== "true") ? MIDNIGHT : "rgba(25,25,112,0.1)",
+              color: (interviewProblem.trim() && interviewTarget.trim()) ? "#fff" : "rgba(25,25,112,0.3)",
               fontSize: "13px", fontWeight: 700, cursor: "pointer",
-              boxShadow: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "0 2px 8px rgba(25,25,112,0.2)" : "none",
+              boxShadow: (interviewProblem.trim() && interviewTarget.trim()) ? "0 2px 8px rgba(25,25,112,0.2)" : "none",
             }}
           >
             {guideSelections["interview-loading"] === "true"

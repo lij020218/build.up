@@ -110,13 +110,27 @@ public struct BudgetSetupStageView: View {
         "beauty":         4_500_000,
         "fitness":        7_000_000,
         "education":      4_000_000,
-        "online-digital": 2_500_000,
+        "online-digital": 500_000, // fallback only — 세부 업종 미상일 때. 실제는 아래 세부업종 벤치마크 사용.
+    ]
+
+    /// online-digital 세부 업종별 월 운영비 (원). 웹 SSOT cluster-budget-benchmarks.ts SPECIALTY_BUDGET_BENCHMARKS.monthlyOpsEstimateWan × 1만.
+    ///   과거 카테고리 단일값 250만은 과대(디지털콘텐츠 5만 vs 사입 스마트스토어 50만) → 세부업종별로 정합.
+    private static let onlineDigitalMonthlyBySubIndustry: [String: Int] = [
+        "smart-store":            500_000,
+        "digital-products":        50_000,
+        "creator-service":        200_000,
+        "consignment-commerce":   100_000,
+        "newsletter-membership":   50_000,
+        "global-buying":          100_000,
     ]
 
     private var monthlyEstimate: Int {
         if isStartup {
             let sub = Self.startupMatrix[industryId] ?? Self.startupMatrix["ai-application"]!
             return sub[startupMode] ?? sub["bootstrap"] ?? 8_000_000
+        }
+        if categoryId == "online-digital", let m = Self.onlineDigitalMonthlyBySubIndustry[industryId] {
+            return m
         }
         let cid = categoryId ?? "food"
         return Self.offlineMonthlyByCategory[cid] ?? 5_000_000
@@ -362,6 +376,7 @@ public struct BudgetSetupStageView: View {
         let criteria = FundingMatchCriteria(
             startupType: startupType.isEmpty ? nil : startupType,
             industryCategoryId: categoryId,
+            subIndustryId: industryId.isEmpty ? nil : industryId,
             age: computedAge,
             capital: startupWon > 0 ? startupWon : nil,
             businessStage: stage,

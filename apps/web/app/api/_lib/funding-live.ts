@@ -20,6 +20,7 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
+  decodeHtmlEntities,
   fetchKStartupPrograms,
   normalizeLiveProgram,
   mergeFundingPrograms,
@@ -60,6 +61,19 @@ async function fetchLiveNormalized(): Promise<StartupProgram[]> {
   return gov.map((g) => normalizeLiveProgram(g)).filter((p) => p.applicationStatus === "open");
 }
 
+/** 스냅샷 행의 문자열 필드 HTML 엔티티 정리 — 어댑터 디코드(2026-07-10) 이전에 저장된
+ *  구캐시 행에 &apos; 등이 남아 있어, 다음 cron 재수집 전까지 읽기 경로에서도 교정. */
+function decodeProgramStrings<T>(value: T): T {
+  if (typeof value === "string") return decodeHtmlEntities(value) as unknown as T;
+  if (Array.isArray(value)) return value.map(decodeProgramStrings) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = decodeProgramStrings(v);
+    return out as unknown as T;
+  }
+  return value;
+}
+
 /** Supabase 스냅샷 읽기(빠른 경로). 없거나 손상 시 null. */
 async function readSnapshot(): Promise<{ live: StartupProgram[]; at: number } | null> {
   const sb = getReadClient();
@@ -72,7 +86,7 @@ async function readSnapshot(): Promise<{ live: StartupProgram[]; at: number } | 
       .maybeSingle();
     if (error || !data || !Array.isArray(data.live_programs)) return null;
     return {
-      live: data.live_programs as StartupProgram[],
+      live: (data.live_programs as StartupProgram[]).map(decodeProgramStrings),
       at: data.fetched_at ? new Date(data.fetched_at as string).getTime() : 0,
     };
   } catch {

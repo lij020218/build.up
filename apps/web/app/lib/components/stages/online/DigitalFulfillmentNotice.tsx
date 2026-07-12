@@ -10,18 +10,15 @@
  *  디지털(무배송) 서브타입 SSOT: starter-data.ts online-digital 하위.
  */
 
+import { DIGITAL_ONLINE_SUBTYPES as SHARED_DIGITAL_SUBTYPES, isDigitalOnlineSubtype } from "@foundone/shared";
+
 const MIDNIGHT = "#191970";
 
-/** 물리 배송이 없는 디지털·창작자 온라인 서브타입. */
-export const DIGITAL_ONLINE_SUBTYPES = new Set<string>([
-  "digital-products",
-  "creator-service",
-  "newsletter-membership",
-  "ai-application",
-]);
+/** 물리 배송이 없는 디지털·창작자 온라인 서브타입 — SSOT는 packages/shared/src/digital-subtypes.ts (재수출). */
+export const DIGITAL_ONLINE_SUBTYPES = new Set<string>(SHARED_DIGITAL_SUBTYPES);
 
 export function isDigitalFulfillment(selectedIndustryId: string | null | undefined): boolean {
-  return !!selectedIndustryId && DIGITAL_ONLINE_SUBTYPES.has(selectedIndustryId);
+  return isDigitalOnlineSubtype(selectedIndustryId);
 }
 
 type NoticeContent = { title: string; subtitle: string; items: { label: string; detail: string }[] };

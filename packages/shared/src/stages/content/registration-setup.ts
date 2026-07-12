@@ -481,7 +481,7 @@ const byCategory: Record<string, CategoryContent> = {
     requiredPermits: [
       { label: "사업자등록", agency: "관할 세무서·홈택스", detail: "일반·간이 과세 선택. 통신판매업 신고 전 필수", estimatedDays: 3 },
       { label: "통신판매업 신고", agency: "공정거래위원회 (전자공정거래시스템)", detail: "온라인 판매 의무. 사업용 통장 + 구매안전서비스(에스크로) 필요", estimatedDays: 5 },
-      { label: "구매안전서비스 (에스크로) 가입", agency: "PG사 (이니시스·KG이니시스 등)", detail: "통신판매업 신고 전 필수. PG 가입 시 자동 포함", estimatedDays: 7 },
+      { label: "구매안전서비스 (에스크로) 가입", agency: "PG사 (KG이니시스·토스페이먼츠 등)", detail: "통신판매업 신고 전 필수. PG 가입 시 자동 포함", estimatedDays: 7 },
       { label: "상품 안전·KC 인증 (해당시)", agency: "한국제품안전협회", detail: "전자제품·아동·화장품 — 미인증 판매는 과태료 + 게시중지", estimatedDays: 30 },
       { label: "개인정보처리방침 게시", agency: "개인정보보호위원회", detail: "회원·결제 정보 수집 시 의무. 위반 시 과태료", estimatedDays: 1 },
     ],
@@ -524,7 +524,7 @@ const byCategory: Record<string, CategoryContent> = {
       ],
       requirements: [
         "개인사업자 → 법인 전환 또는 신규 법인 설립",
-        "이용약관·개인정보처리방침 게시 (PIPA 2025 준수)",
+        "이용약관·개인정보처리방침 게시 (개인정보보호법(2023 개정) 준수)",
         "결제 받는 SaaS·앱은 통신판매업 신고 의무",
         "상표·특허는 공개(데모·베타) 전 출원 필수 (선출원주의)",
       ],
@@ -534,7 +534,7 @@ const byCategory: Record<string, CategoryContent> = {
     },
     requiredPermits: [
       { label: "법인설립등기·사업자등록", agency: "법원·세무서", detail: "개인사업자 → 법인 전환 또는 신규 법인 설립. 법무사 5-10만원", estimatedDays: 7 },
-      { label: "이용약관·개인정보처리방침 게시", agency: "개인정보보호위원회", detail: "유저 가입 전 필수. PIPA 2025 (이동권·동의 분리·국내대리인) 준수", estimatedDays: 3 },
+      { label: "이용약관·개인정보처리방침 게시", agency: "개인정보보호위원회", detail: "유저 가입 전 필수. 개인정보보호법(2023 개정) (이동권·동의 분리·국내대리인) 준수", estimatedDays: 3 },
       { label: "통신판매업 신고 (B2C·결제)", agency: "공정거래위원회", detail: "결제 받는 SaaS·앱 모두 의무. PG 가입 동시", estimatedDays: 5 },
       { label: "상표·특허 출원", agency: "특허청 (KIPRIS / 특허로)", detail: "공개(데모·베타) 전 출원 필수. 상표 5-30만, 특허 50-150만", estimatedDays: 30 },
       { label: "벤처기업 인증 (선택)", agency: "벤처기업확인기관 (venture.or.kr)", detail: "세제 50% 감면 + TIPS·창업패키지 자격", estimatedDays: 30 },

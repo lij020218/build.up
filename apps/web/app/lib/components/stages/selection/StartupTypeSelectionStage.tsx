@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
+import { isDigitalFulfillment } from "../online/DigitalFulfillmentNotice";
 import {
   computeOverallScore,
   formatFranchiseCost,
@@ -50,6 +51,17 @@ const STARTUP_TYPE_NEXT_SUMMARY_KO: Record<StartupTypeCluster, string> = {
   online: "창업 형태 확정 → 운영 모델(위탁판매·국내몰 사입·해외 구매대행·자체 제조 등) 선택 진입",
   tech: "창업 형태 확정 → 사업·수익 모델(제품·수익 구조·시장 진입) 설계 진입",
 };
+// 2026-07-10 정합: online 안에서도 디지털 콘텐츠(무배송) 서브타입은 위탁·사입·MOQ·총판이 성립하지 않아 전용 항목.
+const STARTUP_TYPE_VERIFY_ITEMS_ONLINE_DIGITAL_KO: string[] = [
+  "독립창업 — 콘텐츠 제작·툴 구독·마케팅 비용을 본인 부담으로 인식, 초기 시드머니 + 광고비 버퍼 별도 확보 (재고·인테리어·권리금 없음)",
+  "독립창업 — 검증된 레퍼런스(경쟁 콘텐츠 분석·제작 역량·판매 데이터) 1개 이상 확보 후 진입",
+  "자체 제작 vs 외부 라이선스 — 직접 제작(고마진) 또는 외부 소스 재가공(라이선스 비용 발생) 중 선택",
+  "플랫폼 의존 리스크 — 크몽·클래스101·스티비 등 수수료·노출 정책 변경에 매출이 흔들림, 자사몰(자동 전달) 병행 검토",
+  "통신판매업 신고 선행 + 저작권·라이선스(폰트·이미지·음원 2차 사용권) 확보, 유료 강의·교육은 학원·평생교육시설 등록 대상 여부 확인",
+  "디지털 환불 정책 명문화 — 콘텐츠 청약철회 예외 요건·이용약관을 판매 전에 고지 (분쟁·차지백 예방)",
+];
+const STARTUP_TYPE_NEXT_SUMMARY_ONLINE_DIGITAL_KO =
+  "창업 형태 확정 → 판매 방식(플랫폼 입점·자사몰·구독형 등) 선택 진입";
 
 export function StartupTypeSelectionStage() {
   const d = useDashboardCtx();
@@ -79,9 +91,33 @@ export function StartupTypeSelectionStage() {
     isStartupCategory ? "tech"
     : industryCategoryId === "online-digital" ? "online"
     : "offline";
-  const startupTypeOptions: Array<"independent" | "franchise"> = isStartupCategory
-    ? ["independent"]
-    : ["independent", "franchise"];
+  const isDigitalContent = startupTypeCluster === "online" && isDigitalFulfillment(selectedIndustryId);
+
+  // 2026-07-10: 프랜차이즈가 개념적으로 성립하지 않는 카테고리에서만 옵션을 숨김.
+  //   startup-tech = 설계상 독립창업 전용 / online-digital = 등록 프랜차이즈 없고 성격상 무관.
+  //   ⚠️ 오프라인 세부업종(요가·펫호텔 등)의 브랜드 DB 공백은 "데이터 문제"이지 "경로 부재"가 아니므로 숨기지 않음
+  //     (프랜차이즈 카드 유지 + 브랜드 없으면 종전의 빈 피커 안내). 데이터가 채워지면 자동 노출됨.
+  const franchiseAvailable = industryCategoryId !== "startup-tech" && industryCategoryId !== "online-digital";
+  const startupTypeOptions: Array<"independent" | "franchise"> = franchiseAvailable
+    ? ["independent", "franchise"]
+    : ["independent"];
+
+  // stale 상태 방어: 이전 오프라인 업종에서 franchise 를 골라둔 채 online-digital/tech 로 바꿔 재진입하면
+  //   startupType 이 "franchise" 로 남아 예산 단계가 franchise-application 으로 오라우팅됨 → 진입 시 리셋.
+  useEffect(() => {
+    if (!franchiseAvailable && startupType === "franchise") {
+      setStartupType(undefined);
+      setSelectedFranchiseBrandId(null);
+      setShowFranchisePicker(false);
+    }
+  }, [franchiseAvailable, startupType, setStartupType, setSelectedFranchiseBrandId, setShowFranchisePicker]);
+
+  const startupTypeVerifyItems = isDigitalContent
+    ? STARTUP_TYPE_VERIFY_ITEMS_ONLINE_DIGITAL_KO
+    : STARTUP_TYPE_VERIFY_ITEMS_KO[startupTypeCluster];
+  const startupTypeNextSummary = isDigitalContent
+    ? STARTUP_TYPE_NEXT_SUMMARY_ONLINE_DIGITAL_KO
+    : STARTUP_TYPE_NEXT_SUMMARY_KO[startupTypeCluster];
 
   return (
     <>
@@ -100,7 +136,11 @@ export function StartupTypeSelectionStage() {
         /* ── Screen 1: Choose startup type ── */
         <>
           <div style={styles.helper}>
-            {copy.home.startupTypeHelp}
+            {!franchiseAvailable && !isStartupCategory
+              ? (language === "ko"
+                  ? "이 업종은 등록된 프랜차이즈 브랜드가 없어 독립 창업으로 진행합니다."
+                  : "No franchise brands are registered for this industry — you'll proceed as an independent founder.")
+              : copy.home.startupTypeHelp}
           </div>
           <div ref={startupTypeRef} style={{ display: "grid", gridTemplateColumns: `repeat(${startupTypeOptions.length}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
             {startupTypeOptions.map((type) => {
@@ -170,14 +210,21 @@ export function StartupTypeSelectionStage() {
           <StageWrapup
             ko={language === "ko"}
             nextStageLabelKo={isStartupCategory ? "운영 모델" : "운영 모델"}
-            doneItemsKo={[
-              { label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈 2옵션 비교 (스타트업은 독립창업만 노출)" },
+            doneItemsKo={franchiseAvailable ? [
+              { label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈 2옵션 비교" },
               { label: "2. 형태별 장단점 인식", detail: "독립=자유도/리스크, 프랜차이즈=즉시런칭/로열티" },
               { label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단" },
-              { label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 5개 비교 후 1개 확정" },
+              { label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 비교 후 1개 확정" },
+            ] : [
+              { label: "1. 창업 형태 확인", detail: isStartupCategory
+                ? "기술 스타트업은 독립창업으로 진행"
+                : "이 업종은 등록된 프랜차이즈가 없어 독립창업으로 진행" },
+              { label: "2. 독립창업 장단점 인식", detail: "자유도가 높은 대신 상품·시스템·마케팅을 직접 구축" },
+              { label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단" },
+              { label: "4. 형태 확정", detail: "독립창업으로 확정 후 다음 단계 진입" },
             ]}
-            verifyItemsKo={STARTUP_TYPE_VERIFY_ITEMS_KO[startupTypeCluster]}
-            nextSummaryKo={STARTUP_TYPE_NEXT_SUMMARY_KO[startupTypeCluster]}
+            verifyItemsKo={startupTypeVerifyItems}
+            nextSummaryKo={startupTypeNextSummary}
           />
 
           <div style={styles.stageFooter}>

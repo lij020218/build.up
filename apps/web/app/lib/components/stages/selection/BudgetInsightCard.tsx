@@ -62,10 +62,11 @@ export function BudgetInsightCard() {
     if (!cluster) return [];
     return getMatchedProgramsV2({
       industryCategoryId,
+      subIndustryId: selectedIndustryId || undefined,
       capital: userBudgetWon || undefined,
       businessStage: "pre-startup",
     }).slice(0, 4);
-  }, [industryCategoryId, userBudgetWon, cluster]);
+  }, [industryCategoryId, selectedIndustryId, userBudgetWon, cluster]);
 
   // 이제 conditional return — 모든 hooks 호출 후
   if (!cluster || !CLUSTER_BUDGET_BENCHMARKS[cluster]) return null;

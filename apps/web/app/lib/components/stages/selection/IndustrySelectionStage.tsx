@@ -33,6 +33,7 @@ import { styles } from "../../../styles";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
 import { getSpecialtyOptions } from "./specialty-data";
+import { isDigitalFulfillment } from "../online/DigitalFulfillmentNotice";
 import {
   localizeRecommendationItem,
   localizeStarterIndustryCategory,
@@ -186,7 +187,7 @@ const SELECTION_VERIFY_ITEMS_KO: Record<SelectionCluster, string[]> = {
   online: [
     "초기 자본이 소싱·광고비에 맞는지 — 무자본 위탁~소자본 사입, 인테리어·권리금 없이 상품 매입비 + 마케팅(광고) 예산 중심으로 계획",
     "카테고리 경쟁 강도 확인 — 네이버쇼핑 상품 수 대비 검색량(키워드 경쟁률)이 낮은 틈새인지 키워드 분석으로 점검",
-    "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 필수 + 취급 품목별 추가(식품=식품판매업, 건강기능식품=건강기능식품판매업, 화장품=화장품책임판매업)",
+    "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 필수 + 취급 품목별 추가 인허가(식품=식품소분·판매업 등, 건강기능식품=건강기능식품 일반판매업 영업신고, 화장품=화장품책임판매업)",
     "마진 구조 검증 — 판매가에서 매입·플랫폼 수수료·광고비·배송비를 빼고 남는지 (위탁판매는 마진 수수료 방식이라 특히 얇음)",
     "아이템 트렌드 지속성 검토 — 단기 유행 상품은 재고·광고비 회수 전 검색량이 꺾일 리스크",
     "동일 카테고리 상위 스토어 대비 차별점 1줄 정리 — 상세페이지·가격·배송 중 하나는 이겨야 노출·전환",
@@ -200,6 +201,18 @@ const SELECTION_VERIFY_ITEMS_KO: Record<SelectionCluster, string[]> = {
     "경쟁 대비 방어 가능한 차별점(모트) 1줄 — 기술·데이터·네트워크 효과 중 지킬 수 있는 축",
   ],
 };
+
+// 2026-07-10 정합: online 안에서도 디지털 콘텐츠(전자책·에셋·강의 등 무배송) 서브타입은
+//   위탁·사입·재고·배송·품목별 인허가가 성립하지 않아 별도 확인 항목으로 분기.
+//   대상 SSOT: DIGITAL_ONLINE_SUBTYPES (DigitalFulfillmentNotice) — isDigitalFulfillment().
+const SELECTION_VERIFY_ITEMS_ONLINE_DIGITAL_KO: string[] = [
+  "초기 자본이 제작·마케팅비에 맞는지 — 재고·사입·물류 없이 콘텐츠 제작(외주·툴 구독) + 플랫폼 수수료 + 마케팅 예산 중심으로 계획 (인테리어·권리금 없음)",
+  "카테고리 경쟁 강도 확인 — 크몽·클래스101 등 동일 주제 상품 수 대비 검색 수요(키워드)가 있는 틈새인지 점검",
+  "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 필수. 디지털 콘텐츠는 품목별 인허가는 없으나, 저작권(폰트·이미지·음원 2차 사용권) 확보 + 유료 강의·교육은 학원·평생교육시설 등록 대상 여부 확인",
+  "마진 구조 검증 — 판매가에서 플랫폼·PG 수수료·마케팅비를 빼고 남는지 (자체 제작은 복제 원가 0이라 고마진, 외부 소스 재가공은 라이선스비 반영)",
+  "아이템 트렌드 지속성 검토 — 단기 유행 주제는 제작·광고비 회수 전 검색 수요가 꺾일 리스크",
+  "동일 주제 상위 판매자 대비 차별점 1줄 정리 — 깊이·최신성·실무 적용성 중 하나는 이겨야 노출·전환",
+];
 
 export function IndustrySelectionStage() {
   const d = useDashboardCtx();
@@ -225,6 +238,13 @@ export function IndustrySelectionStage() {
     selectedIndustryCategoryId === "startup-tech" ? "tech"
     : selectedIndustryCategoryId === "online-digital" ? "online"
     : "offline";
+  // online 안에서도 디지털 콘텐츠(무배송) 서브타입은 전용 확인 항목.
+  const isDigitalContent = selectionCluster === "online" && isDigitalFulfillment(selectedIndustryId);
+  const selectionVerifyItems = isDigitalContent
+    ? SELECTION_VERIFY_ITEMS_ONLINE_DIGITAL_KO
+    : SELECTION_VERIFY_ITEMS_KO[selectionCluster];
+  // 프랜차이즈 안내는 오프라인에서만 유효 (온라인·스타트업은 다음 단계에서 프랜차이즈 옵션 비노출).
+  const franchiseRelevant = selectionCluster === "offline";
 
   return (
     <>
@@ -406,10 +426,14 @@ export function IndustrySelectionStage() {
         doneItemsKo={[
           { label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프·공간·온라인·스타트업 11개 대분류 검토" },
           { label: "2. 세부 업종 선택", detail: "관심 카테고리 안에서 한 가지 세부 업종 확정 (예: 케어 살롱, 베이커리 스튜디오)" },
-          { label: "3. 후속 단계 준비", detail: "업종 확정 후 창업 형태(독립창업·프랜차이즈)를 정하는 단계로 진입 준비" },
+          { label: "3. 후속 단계 준비", detail: franchiseRelevant
+            ? "업종 확정 후 창업 형태(독립창업·프랜차이즈)를 정하는 단계로 진입 준비"
+            : "업종 확정 후 창업 형태를 정하는 단계로 진입 준비" },
         ]}
-        verifyItemsKo={SELECTION_VERIFY_ITEMS_KO[selectionCluster]}
-        nextSummaryKo="업종 확정 → 창업 형태(독립창업·프랜차이즈) 선택 단계로 진입"
+        verifyItemsKo={selectionVerifyItems}
+        nextSummaryKo={franchiseRelevant
+          ? "업종 확정 → 창업 형태(독립창업·프랜차이즈) 선택 단계로 진입"
+          : "업종 확정 → 창업 형태 선택 단계로 진입"}
         nextSummaryEn="Industry locked → enter startup type selection"
       />
 

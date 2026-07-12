@@ -2,10 +2,13 @@
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
+import { isDigitalFulfillment } from "./DigitalFulfillmentNotice";
 
 export function OnlineMarketingStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
+  // 디지털 콘텐츠(무배송)는 쿠팡·배송·실물 체험단이 성립하지 않음 — 플랫폼(크몽·클래스101)·베타리더 트랙으로 분기. (2026-07-10)
+  const isDigital = isDigitalFulfillment(d.selectedIndustryId);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
@@ -16,7 +19,9 @@ export function OnlineMarketingStage() {
             ? "SEO + 첫 광고 + 초기 리뷰 — 노출·전환·신뢰 3축을 동시에"
             : "SEO + first ads + early reviews — exposure, conversion, trust at once",
           detail: ko
-            ? "네이버 쇼핑 상품명·태그 최적화로 무료 노출, 첫 광고 캠페인은 ROAS 200% 목표로 작게 시작, 초기 리뷰는 지인·체험단·낮은 가격 신규 할인 3종 병행."
+            ? (isDigital
+                ? "입점 플랫폼(크몽·클래스101) 검색 최적화로 무료 노출, 첫 광고는 ROAS 200% 목표로 작게 시작, 초기 후기는 베타 리더·후기 이벤트·커뮤니티 3종 병행."
+                : "네이버 쇼핑 상품명·태그 최적화로 무료 노출, 첫 광고 캠페인은 ROAS 200% 목표로 작게 시작, 초기 리뷰는 지인·체험단·낮은 가격 신규 할인 3종 병행.")
             : "Optimize Naver Shopping titles/tags for free exposure, start the first ad campaign small at a 200% ROAS target, and seed early reviews via friends, testers, and new-customer discounts.",
         }}
       />
@@ -25,18 +30,24 @@ export function OnlineMarketingStage() {
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
             <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#03C75A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "13px", fontWeight: 700 }}>N</div>
-            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "네이버 쇼핑 SEO 최적화" : "Naver Shopping SEO"}</span>
+            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? (isDigital ? "입점 플랫폼 검색 최적화" : "네이버 쇼핑 SEO 최적화") : "Naver Shopping SEO"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>{ko ? "온라인 매출의 60%+가 검색에서 시작됩니다. 첫 1개월이 노출 순위를 결정합니다." : "60%+ of online sales start from search. The first month determines your ranking."}</div>
         </div>
         <div style={{ padding: "0 22px 16px", display: "grid", gap: "6px" }}>
-          {(ko ? [
+          {(ko ? (isDigital ? [
+            { title: "상품명 = 핵심 키워드 + 결과물", detail: "\"실무 엑셀 템플릿 30종 — 보고서 자동화\" — 검색어를 앞에, 구매자가 얻는 결과를 뒤에" },
+            { title: "카테고리·태그 정확히 매칭", detail: "크몽·클래스101 카테고리와 상품이 불일치하면 노출 자체가 안 됩니다" },
+            { title: "상세페이지 = 미리보기 + 목차", detail: "샘플 페이지·목차·결과물 스크린샷이 전환의 핵심. 검색용 텍스트 설명도 본문에 포함" },
+            { title: "후기 관리", detail: "첫 10개 후기가 플랫폼 랭킹·전환을 좌우 — 구매자 후기 요청 메시지 템플릿 준비" },
+            { title: "최신성 — 업데이트·신규 등록 주기", detail: "플랫폼은 업데이트되는 상품을 우대합니다. 버전 업데이트·신규 상품 등록을 주기화" },
+          ] : [
             { title: "상품명 = 핵심 키워드 + 속성", detail: "\"여성 린넨 원피스 여름 A라인 프리사이즈\" — 검색어를 순서대로 넣으세요. 브랜드명은 앞에" },
             { title: "카테고리 정확히 매칭", detail: "네이버 쇼핑 카테고리와 상품이 불일치하면 노출 자체가 안 됩니다" },
             { title: "상세페이지 텍스트 최적화", detail: "이미지만 넣지 마세요. 검색 크롤러는 텍스트를 읽습니다. 핵심 키워드를 본문에 포함" },
             { title: "태그 10개 모두 채우기", detail: "스마트스토어 태그는 최대 10개만 등록됨(초과 입력해도 10개까지) — 검색 노출에 직접 영향, 관련 키워드로 10개 꽉 채우기" },
             { title: "최신성 점수 — 신상품 등록 주기", detail: "네이버는 신상품을 우대합니다. 주 2-3회 신규 상품 등록이 이상적" },
-          ] : [
+          ]) : [
             { title: "Product name = keywords + attributes", detail: "Put search terms in order. Brand name first" },
             { title: "Category matching", detail: "Mismatched category = zero exposure" },
             { title: "Detail page text optimization", detail: "Don't rely on images only. Crawlers read text" },
@@ -58,11 +69,15 @@ export function OnlineMarketingStage() {
           <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>{ko ? "초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요." : "First 2 weeks are data collection. Start at ₩5-10K/day."}</div>
         </div>
         <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
-          {(ko ? [
+          {(ko ? (isDigital ? [
+            { platform: "입점 플랫폼 광고 (크몽·클래스101 등)", budget: "일 5,000~15,000원", desc: "플랫폼 내 검색·기획전 상단 노출. 입점 판매 시 우선 채널", color: "#EAB308", url: "https://kmong.com" },
+            { platform: "인스타그램·메타 성과형 광고", budget: "일 10,000~20,000원", desc: "관심사 타깃 도달. 미리보기·후기 콘텐츠와 결합 시 전환 최고", color: "#E4405F", url: "https://business.instagram.com" },
+            { platform: "네이버 검색광고 (파워링크)", budget: "일 5,000~10,000원", desc: "정보 탐색형 키워드(\"엑셀 템플릿\", \"전자책 만들기\")에서 유입. ROAS 확인 후 증액", color: "#03C75A", url: "https://searchad.naver.com" },
+          ] : [
             { platform: "네이버 쇼핑 검색광고", budget: "일 5,000~10,000원", desc: "구매 의도가 가장 높은 채널. CPC 300~800원. ROAS 확인 후 증액", color: "#03C75A", url: "https://searchad.naver.com" },
             { platform: "인스타그램 광고", budget: "일 10,000~20,000원", desc: "비주얼 제품에 효과적. 25-34세 여성 타깃. 릴스 광고 CTR 최고", color: "#E4405F", url: "https://business.instagram.com" },
             { platform: "쿠팡 CPC 광고", budget: "일 5,000~15,000원", desc: "쿠팡 내 검색 결과 상단 노출. 쿠팡 판매 시 필수", color: "#1460F3", url: "https://wing.coupang.com" },
-          ] : [
+          ]) : [
             { platform: "Naver Shopping Ads", budget: "₩5-10K/day", desc: "Highest purchase intent. CPC ₩300-800", color: "#03C75A", url: "https://searchad.naver.com" },
             { platform: "Instagram Ads", budget: "₩10-20K/day", desc: "Great for visual products. Reels ads best CTR", color: "#E4405F", url: "https://business.instagram.com" },
             { platform: "Coupang CPC Ads", budget: "₩5-15K/day", desc: "Top of Coupang search. Essential for Coupang sellers", color: "#1460F3", url: "https://wing.coupang.com" },
@@ -84,11 +99,15 @@ export function OnlineMarketingStage() {
         <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "8px" }}>{ko ? "초기 리뷰 확보 전략" : "Early Review Strategy"}</div>
         <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
         <div style={{ display: "grid", gap: "6px" }}>
-          {(ko ? [
+          {(ko ? (isDigital ? [
+            { method: "베타 리더 모집 (소규모)", detail: "타깃 커뮤니티에서 3~5명에게 무료 제공 → 후기·개선 피드백 확보. 비용: 없음(디지털 복제 원가 0)", tip: "무료" },
+            { method: "후기 이벤트", detail: "구매 고객 후기 작성 시 업데이트 우선 제공·보너스 자료 증정. 전환율 대비 가장 효율적", tip: "무료" },
+            { method: "지인·커뮤니티 초기 구매", detail: "솔직하게 부탁하세요. 자작·조작 후기는 플랫폼 제재 대상. 실제 구매 필수", tip: "실비" },
+          ] : [
             { method: "체험단 모집 (소규모)", detail: "쇼핑·블로그 체험단 3~5명 병행. 스마트스토어 실구매 포토·동영상 리뷰가 쇼핑 상위노출·전환에 더 직접적 (블로그 리뷰도 동시 확보). 비용: 제품 원가 + 배송비", tip: "무료" },
             { method: "포토리뷰 이벤트", detail: "구매 고객에게 포토리뷰 작성 시 500~1,000원 적립금. 전환율 대비 가장 효율적", tip: "₩500/건" },
             { method: "지인·친구 초기 구매", detail: "솔직하게 부탁하세요. 조작 리뷰는 네이버 패널티 대상. 실제 구매+배송 필수", tip: "실비" },
-          ] : [
+          ]) : [
             { method: "Micro influencer trials", detail: "3-5 bloggers. Cost: product + shipping. Blog reviews boost search", tip: "Free" },
             { method: "Photo review event", detail: "₩500-1K store credit for photo reviews. Most efficient conversion", tip: "₩500/ea" },
             { method: "Friends & family first buys", detail: "Be honest. Fake reviews get penalized. Real purchase required", tip: "Cost" },
@@ -106,9 +125,11 @@ export function OnlineMarketingStage() {
 
       <StageWrapup
         ko={ko}
-        nextStageLabelKo="첫 달 점검"
+        nextStageLabelKo="월 운영비 검토"
         doneItemsKo={[
-          { label: "1. 채널 우선순위", detail: "네이버 검색·인스타·카카오·블로그 4축 중 업종 적합 2~3개 선택" },
+          { label: "1. 채널 우선순위", detail: isDigital
+            ? "플랫폼 광고·인스타·네이버 검색·커뮤니티 4축 중 업종 적합 2~3개 선택"
+            : "네이버 검색·인스타·카카오·블로그 4축 중 업종 적합 2~3개 선택" },
           { label: "2. 광고 예산 배분", detail: "유료 광고 vs 콘텐츠 마케팅 비중 결정 + ROAS 목표 설정" },
           { label: "3. 콘텐츠 일정", detail: "주간 SNS 포스팅 + 리뷰 유도 + 인플루언서 협업 일정 셋업" },
           { label: "4. 측정 지표 설정", detail: "방문자·전환율·CTR·CAC·LTV 5개 지표 대시보드 셋업" },
@@ -117,11 +138,13 @@ export function OnlineMarketingStage() {
           "광고 표현 — 「최저가」 「최고」 「유일」 등 비교 광고 객관 근거 필수, 위반 시 표시광고법 과징금",
           "인플루언서 협업 — 「유료 광고」 표시 의무 (#광고 #협찬), 미표시 시 공정위 과징금 + 인플루언서도 책임",
           "네이버 검색광고 — 키워드 입찰 단가 인상 추세, ROAS 200% 미만이면 즉시 중단·재구성",
-          "쿠팡 광고 — 노출 위치별 효율 차이 큼, 카테고리 검색·상세 페이지 광고 분리 측정",
+          isDigital
+            ? "플랫폼 광고 — 크몽·클래스101 광고는 노출 위치별 효율 차이 큼, 검색·기획전 광고 분리 측정"
+            : "쿠팡 광고 — 노출 위치별 효율 차이 큼, 카테고리 검색·상세 페이지 광고 분리 측정",
           "리뷰 — 자작·가족·지인 리뷰 적발 시 플랫폼 영구정지 + 표시광고법 위반 (10만원 이하 과태료/건)",
           "개인정보 — 마케팅 활용 동의 별도 수집 의무, 위반 시 개인정보보호법 과징금 (매출 3% 이내)",
         ]}
-        nextSummaryKo="채널·예산·콘텐츠·측정 4축 셋업 완료 → 첫 달 점검 단계로 진입"
+        nextSummaryKo="채널·예산·콘텐츠·측정 4축 셋업 완료 → 월 운영비 검토 단계로 진입"
       />
     </div>
   );

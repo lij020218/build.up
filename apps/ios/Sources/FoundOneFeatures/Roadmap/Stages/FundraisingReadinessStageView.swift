@@ -102,7 +102,7 @@ public struct FundraisingReadinessStageView: View {
                 .init(label: "4. 투자자 매칭·미팅", detail: "VC·엔젤 매칭 + 1차 미팅 + 듀딜 자료 사전 준비"),
                 ],
                 verifyItems: [
-                "캡테이블 — 공동창업자 vesting 미설정 시 투자 거절 1순위, 1년 cliff + 4년 vesting 표준",
+                "캡테이블 — 공동창업자 vesting 미설정 시 투자 거절 1순위, cliff 2년(스톡옵션 법정, 상법 §340-4) + 4년 vesting 표준",
                 "정부지원금 — TIPS·예비창업·초기창업 등 신청 후 입금까지 평균 4~12주, 일정 역산",
                 "런웨이 — 18개월 미만이면 fundraising에 집중, 12개월 미만이면 위기",
                 "데크 — 「Big Idea + Team + Traction」 3축 명확, 모호한 사업 모델은 즉시 거절",

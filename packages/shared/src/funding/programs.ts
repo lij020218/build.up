@@ -203,7 +203,7 @@ export const FUNDING_PROGRAMS: FundingProgram[] = [
     category: "matching-fund",
     modes: ["seed", "seriesA"],
     amount: "운영사 선투자 2억(비수도권 1억) + 정부 R&D 최대 8억",
-    eligibility: "기술창업 — 운영사로부터 선투자(수도권 2억/비수도권 1억) 받은 기업",
+    eligibility: "기술창업 — 운영사 선투자(수도권 2억/비수도권 1억) 받은 기업. ※ 지분요건(창업기업 60%↑·운영사 30%↓)상 주식회사(법인) 전제 — 개인사업자는 법인 전환 후, 최종 선정 시 법인 설립 필수",
     summary: "기술창업 매칭 펀드 — 운영사 선투자 + 정부 R&D 최대 8억 (일반트랙 총 10억)",
     description: "2026 개편: 민간 액셀러레이터(운영사) 선투자 수도권 2억·비수도권 1억 → 정부 R&D 최대 8억 매칭(일반트랙 총 10억). 졸업기업 후속 R&D 3년 15억, 글로벌TIPS 최대 50억.",
     url: "https://www.jointips.or.kr/",

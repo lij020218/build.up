@@ -19,7 +19,6 @@ import { MilestoneToast } from "./MilestoneToast";
 import { RevenueCalendar } from "./RevenueCalendar";
 import { DetailTabs } from "./DetailTabs";
 import { shell, bentoHoverCSS } from "./operationalStyles";
-import { getKstDate } from "../../utils/business-day";
 
 type Props = { d: DashboardHook };
 
@@ -62,7 +61,6 @@ export default function OperationalDashboard({ d }: Props) {
     todayEntry,
     recent7Entries,
     totalSales,
-    totalCustomers,
     workingDays,
     avgDailySales,
     recent7Sales,
@@ -119,25 +117,7 @@ export default function OperationalDashboard({ d }: Props) {
 
   // headlineStats + pnlChangePercent 제거됨 (display:none 상태에서 중복 계산만 하던 죽은 코드)
 
-  // CSV 내보내기
-  const handleExportCSV = () => {
-    const rows = [ko ? ["날짜", "매출(원)", "고객수"] : ["Date", "Sales(KRW)", "Customers"]];
-    for (const entry of allEntries) {
-      rows.push([entry.date, String(entry.sales), String(entry.customers)]);
-    }
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `foundone-sales-${getKstDate(new Date())}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // suppress unused variable warnings
-  void totalCustomers;
-  void handleExportCSV;
+  // handleExportCSV 제거됨 (2026-07-12) — 버튼 미연결 죽은 코드. CSV 내보내기는 ExportPanel(Tier 5) SSOT.
 
   return (
     <section style={shell}>

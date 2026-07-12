@@ -48,6 +48,8 @@ public struct StartupProgram: Decodable, Sendable, Hashable, Identifiable {
     public let maxAge: Int?
     public let businessYearRange: [Int]?
     public let industries: [String]?
+    /// 세부업종 화이트리스트 (nil/미설정 = 세부업종 무관). 설정 시 그 세부업종에만 노출 (웹 subIndustries 미러).
+    public let subIndustries: [String]?
     public let regions: [String]?
     public let applicationStatus: String?     // "open" | "upcoming" | "closed"
     public let requiredDocs: [StartupProgramLocalized]?
@@ -65,6 +67,7 @@ public struct StartupProgram: Decodable, Sendable, Hashable, Identifiable {
 public struct StartupProgramMatchCriteria: Sendable {
     public var startupType: String?
     public var industryCategoryId: String?
+    public var subIndustryId: String?
     public var age: Int?
     public var businessYears: Int?
     public var region: String?
@@ -81,14 +84,14 @@ public struct StartupProgramMatchCriteria: Sendable {
     public var isDisabledOwner: Bool?
 
     public init(
-        startupType: String? = nil, industryCategoryId: String? = nil, age: Int? = nil,
+        startupType: String? = nil, industryCategoryId: String? = nil, subIndustryId: String? = nil, age: Int? = nil,
         businessYears: Int? = nil, region: String? = nil, capital: Int? = nil,
         businessStage: String? = nil, runwayMonths: Double? = nil, weeklySalesChangePct: Double? = nil,
         employeesCount: Int? = nil, monthlyAvgRevenue: Int? = nil, hasUserSales: Bool? = nil,
         ncbScore: Int? = nil, consideringClosure: Bool? = nil, salesDeclinePct: Double? = nil,
         isDisabledOwner: Bool? = nil
     ) {
-        self.startupType = startupType; self.industryCategoryId = industryCategoryId; self.age = age
+        self.startupType = startupType; self.industryCategoryId = industryCategoryId; self.subIndustryId = subIndustryId; self.age = age
         self.businessYears = businessYears; self.region = region; self.capital = capital
         self.businessStage = businessStage; self.runwayMonths = runwayMonths
         self.weeklySalesChangePct = weeklySalesChangePct; self.employeesCount = employeesCount
@@ -193,6 +196,12 @@ public enum StartupProgramRegistry {
                 } else {
                     eligible = false
                 }
+            }
+
+            // 세부업종 하드필터 (2026-07-10, 웹 미러) — 도메인 특화(스마트공장=제조 등).
+            //   subIndustryId 미전달 시 무필터(후방호환).
+            if let subs = p.subIndustries, !subs.isEmpty, let sid = criteria.subIndustryId {
+                if !subs.contains(sid) { eligible = false }
             }
 
             // 정책자금 가드

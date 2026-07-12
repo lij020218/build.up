@@ -99,7 +99,7 @@ enum StartupFoundationModeContent {
             actions: [
                 SFModeAction(label: "1단계: 주식회사 설립 (자본금 100만~2천만)", detail: "헬프미·자비스 등 온라인 30-50만 (DIY) 또는 법무사 위임 80-120만. 등록면허세 11.25만 + 지방교육세 (20%) + 법원수수료 2-3.5만."),
                 SFModeAction(label: "⚠️ 과밀억제권역 (서울·수도권) 중과세 주의", detail: "수도권 본점 설립 시 등록면허세 3배. 자본금 1천만 → 등록면허세 33.75만 (수도권). 비수도권 설립 후 본점 이전도 옵션."),
-                SFModeAction(label: "2단계: 공동창업자 SHA (주주간 계약서) 즉시 작성", detail: "벤처기업 인증 후 cliff 1년 적용 가능 (일반 회사는 2년 cliff 의무). 4년 베스팅 + 1-2년 cliff 표준. Drag-Along·Tag-Along·Right of First Refusal 포함."),
+                SFModeAction(label: "2단계: 공동창업자 SHA (주주간 계약서) 즉시 작성", detail: "cliff 2년 의무(주총 결의일부터 2년 재직 — 상법 §340-4, 벤처기업도 완화 불가). 4년 베스팅 + 2년 cliff 표준. Drag-Along·Tag-Along·Right of First Refusal 포함."),
                 SFModeAction(label: "3단계: 옵션풀 5-10% 사전 확보", detail: "벤처기업 인증 + 옵션풀 50% 한도까지 가능. 부트스트랩은 5-10% 시작 — 시드 시 추가 발행 협상력."),
                 SFModeAction(label: "4단계: 상표·도메인 출원 (변리사 30-50만)", detail: "법인 명의 출원 — 회사 자산. 시드 라운드 due diligence 1순위 항목."),
             ],
@@ -123,12 +123,12 @@ enum StartupFoundationModeContent {
             why: [
                 "시드 자금 받은 시점부터 시리즈A 마감 18-24개월. 이 기간 안에 법인 + SHA + 옵션풀 + IP + 벤처기업 인증 모두 정비해야 due diligence 통과.",
                 "옵션풀 부족 시 시리즈A 시 추가 발행 → 대표 지분 5-10% 추가 희석. 시드 시 미리 10-15% 확보가 협상력.",
-                "벤처기업 인증 시 옵션풀 50% 한도 + cliff 1년 적용 + 스톡옵션 비과세 (연 2억·누적 5억, 2027.12.31까지).",
+                "벤처기업 인증 시 옵션풀 50% 한도 + 스톡옵션 비과세 (연 2억·누적 5억, 2027.12.31까지). ※ cliff 2년은 법정이라 벤처기업도 단축 불가.",
             ],
             actions: [
                 SFModeAction(label: "1단계: 변호사 위임 SHA 정비 (200-500만)", detail: "시드 VC 가 요구하는 표준 조항 반영: Liquidation Preference 1x non-participating · Anti-dilution Broad-Based · Pro-Rata Right · Drag-Along · Tag-Along · ROFR."),
                 SFModeAction(label: "2단계: 옵션풀 10-15% 사전 발행 + ESOP 정책", detail: "시리즈A VC는 옵션풀 부족 시 추가 발행 요구 — 사전 확보가 핵심. 직원 별 grant 정책 (Engineer 0.1-1% / Senior 1-3% / VP 1-5%) 표준화."),
-                SFModeAction(label: "3단계: 벤처기업 인증 (투자유치형, 시드 1억+)", detail: "VC·액셀러레이터 1억+ 투자 받았으면 자동 자격. 옵션풀 50% 한도 + 법인세 5년 50% 감면 + R&D 25% 세액공제 + 병역특례."),
+                SFModeAction(label: "3단계: 벤처기업 인증 (벤처투자유형)", detail: "적격투자기관으로부터 5천만원 이상 + 자본금의 10% 이상 유치 시 신청 요건 충족 → 벤처기업확인기관 평가·심의 통과 시 확인(자동 아님). 옵션풀 50% 한도 + 법인세 5년 50% 감면 + R&D 25% 세액공제 + 병역특례."),
                 SFModeAction(label: "4단계: 정식 IP 전략 (변리사 정기 자문 50-100만/월)", detail: "트레이드마크 다국가 (한국·미국·EU·중국) + 핵심 특허 출원 + Trade Secret 정책. 스타트업 (사업개시 3년 이내) 우선심사 신청료 70% 감면 (연 10건 한정) 활용."),
                 SFModeAction(label: "5단계: 회계 시스템 + 월간 결산 (자비스·더존)", detail: "VC 보고용 표준 재무제표. 자비스 SaaS 친화 + 영문 출력. 월 30-50만원."),
             ],
@@ -142,7 +142,7 @@ enum StartupFoundationModeContent {
             ],
             tools: [
                 SFCorpTool(name: "ZUZU (캡테이블·SHA)", desc: "시드 VC 표준 SHA 템플릿 + 옵션풀 관리", price: "무료~ 유료"),
-                SFCorpTool(name: "벤처기업 인증 (벤처인)", desc: "투자유치형 자동 자격 (시드 1억+)", price: ""),
+                SFCorpTool(name: "벤처기업 인증 (벤처인)", desc: "벤처투자유형 — 적격투자 5천만+·자본금 10%+ 요건 + 평가·심의", price: ""),
                 SFCorpTool(name: "자비스·더존 (회계 SaaS)", desc: "VC 보고 표준 재무제표", price: "30-50만원/월"),
                 SFCorpTool(name: "법무법인 위임 (SHA 정비)", desc: "표준 VC 조항 반영", price: "200-500만원"),
             ]
@@ -212,7 +212,7 @@ enum StartupFoundationModeContent {
             why: [
                 "공동창업자 있으면 분담으로 속도 2-3배. 단 함의·합의·문서화 안 하면 6-12개월 후 갈등 폭발 (스타트업 폐업 사유 1순위 — 'co-founder dispute').",
                 "지분 비율은 결정 즉시 — 입찰 처럼. 미루면 매출·외부 투자 후 협상력 0. YC 권장: 동등 또는 근접 배분 (예: 50/50 또는 55/45).",
-                "베스팅 4년 + cliff (한국 상법 2년 / 벤처기업 1년) 표준. 한 명 이탈 시 vesting 전 지분 회수 가능.",
+                "베스팅 4년 + cliff 2년(주총 결의일부터 2년 재직 법정 — 상법 §340-4, 벤처기업도 완화 불가) 표준. 한 명 이탈 시 vesting 전 지분 회수 가능.",
             ],
             actions: [
                 SFModeAction(label: "1단계: 공동창업자 역할·책임 명시 (서면)", detail: "CEO·CTO·CPO 역할 분담 명문화. '의견 불일치 시 누가 최종 결정?' 캐스팅 보트 필수 (50/50 데드락 방지). Notion·Google Doc 으로 기록 + 모두 서명."),
@@ -245,7 +245,7 @@ enum StartupFoundationModeContent {
             actions: [
                 SFModeAction(label: "1단계: 첫 채용 = founding engineer (tech 스타트업)", detail: "시드 클로징 직후. 직접 빌드 + 의사결정 자율 + 최소 가이드. 0.5-1% equity + 시중 base 80% (옵션 풀 활용). YC 표준 첫 채용."),
                 SFModeAction(label: "2단계: 두 번째 채용 = 본인이 약한 영역", detail: "B2B SaaS ACV $50K+ → founding salesperson. B2C/PLG sub-$10K → founding marketer. tech-first product → founding designer."),
-                SFModeAction(label: "3단계: 옵션 grant 정책 표준화 (이전 채용에도 소급 적용)", detail: "Engineer 0.1-1% / Senior 1-3% / Founding 2-5%. cliff 1년 (벤처기업 인증 시) + 4년 베스팅. RSU vs 스톡옵션 결정 (한국은 보통 스톡옵션)."),
+                SFModeAction(label: "3단계: 옵션 grant 정책 표준화 (이전 채용에도 소급 적용)", detail: "Engineer 0.1-1% / Senior 1-3% / Founding 2-5%. cliff 2년(법정 — 벤처기업도 동일, 완화 불가) + 4년 베스팅. RSU vs 스톡옵션 결정 (한국은 보통 스톡옵션)."),
                 SFModeAction(label: "4단계: 채용 프로세스 표준화 (founder 60% 시간)", detail: "Job spec 작성 → ATS (Greenhouse·Workable·자체 Notion) → 4-step 면접 (recruiter·hiring manager·peer·founder) → 레퍼런스 콜 3명. 채용 결정 만장일치 권장."),
                 SFModeAction(label: "5단계: 코어 팀 도구·문화 셋업", detail: "Slack + Linear/GitHub + Notion + Google Workspace. 주간 1on1 + 분기 OKR + 월간 all-hands. 빠른 의사결정 문화 (Amazon 'disagree and commit')."),
             ],
@@ -265,7 +265,7 @@ enum StartupFoundationModeContent {
                 SFModeResource(name: "사람인·잡코리아 (비개발 직군)", desc: "마케터·디자이너·세일즈는 일반 잡포털이 효과적"),
                 SFModeResource(name: "LinkedIn", desc: "글로벌 시니어·외국인 채용 (K-Startup Grand Challenge 트랙)"),
                 SFModeResource(name: "Greenhouse / Workable / Notion ATS", desc: "채용 프로세스 표준화 (지원자 추적)"),
-                SFModeResource(name: "벤처인 (벤처기업 인증)", desc: "시드 1억+ 후 자동 자격 → 옵션풀 50% 한도"),
+                SFModeResource(name: "벤처인 (벤처기업 인증)", desc: "적격투자 5천만+·자본금 10%+ 요건 후 평가·심의 통과 시 → 옵션풀 50% 한도"),
             ]
         ),
 
@@ -280,7 +280,7 @@ enum StartupFoundationModeContent {
                 SFModeAction(label: "1단계: C-suite 채용 (CTO·CPO·VP Engineering·VP Sales)", detail: "총 12-18개월 사이클. 첫 1명 = CTO 또는 VP Engineering (tech 스타트업). 다음 = CPO·VP Sales (각 산업별 우선순위). C-suite equity 0.5-2% + 시장 base + 시그닝."),
                 SFModeAction(label: "2단계: Growth marketer 첫 채용 (mid-senior)", detail: "VP/Head of Growth 는 premature (팀 없으면 무의미). Mid-senior IC (4-7yr 경력) 1-2명 시작. base $110K-$150K + 0.1-0.5% equity. 6-12개월 후 VP 승격 또는 외부 영입."),
                 SFModeAction(label: "3단계: 이사회 구성 + 분기 운영", detail: "시리즈A 클로징 후 30일 내 첫 board meeting. 분기 정기 미팅 + 월간 update + 연간 strategy off-site. Reid Hoffman 표준: investor 1-2 + 외부 1 + founder."),
-                SFModeAction(label: "4단계: 옵션풀 추가 발행 (총 15-25%) + ESOP 정책", detail: "C-suite·VP grant 별도 풀. CTO 2-5% / CPO 1-3% / VP 0.5-2%. 4년 베스팅 + 1년 cliff (벤처기업)."),
+                SFModeAction(label: "4단계: 옵션풀 추가 발행 (총 15-25%) + ESOP 정책", detail: "C-suite·VP grant 별도 풀. CTO 2-5% / CPO 1-3% / VP 0.5-2%. 4년 베스팅 + cliff 2년(법정 — 벤처기업도 동일)."),
                 SFModeAction(label: "5단계: 운영 OS 정립 (OKR + 부문 KPI + 주간 리뷰)", detail: "Andrew Chen 표준: compounding growth loops. Growth team + Data infra + Experimentation platform. 시리즈B 18-24개월 내 — 메트릭 트래킹 (NRR·Burn Multiple·Magic Number 등) 정착."),
             ],
             decisions: [

@@ -54,6 +54,9 @@ public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
     public let id: String
     /// "curated"(미설정 포함) = 손큐레이션, "kftc" = 공정위 공개데이터 자동 수록.
     public let tier: String?
+    /// 사업 형태. nil/"franchise" = 가맹. "consignment-tutor" = 위탁 학습지(방문교사·공부방)
+    ///  — 대교 눈높이·교원 구몬처럼 가맹점이 아닌 위탁 모델. 프랜차이즈 피커에서 제외(웹 businessModel 미러).
+    public let businessModel: String?
     public let subIndustryIds: [String]
     /// 세부업종(specialty) 매핑 — sub-industry 보다 세밀한 필터.
     ///   예: korean-casual 안의 "국밥·해장국 전문점" / "한정식" / "분식" 등.
@@ -161,7 +164,7 @@ public enum FranchiseBrandRegistry {
 
     /// categoryId 매칭 브랜드 (정렬: startupCost 낮은 순). 로드맵 선택용 → curated 만.
     public static func brands(forCategory categoryId: String) -> [FranchiseBrand] {
-        curated.filter { $0.categoryId == categoryId }
+        curated.filter { $0.categoryId == categoryId && $0.businessModel != "consignment-tutor" }
             .sorted { $0.startupCostWon < $1.startupCostWon }
     }
 
@@ -202,7 +205,7 @@ public enum FranchiseBrandRegistry {
     public static func brands(forSubIndustry subIndustryId: String, specialtyId: String? = nil, limit: Int = 60) -> [FranchiseBrand] {
         let group = Set(expandSubIndustryGroup(subIndustryId))
         let sorted = all
-            .filter { !Set($0.subIndustryIds).isDisjoint(with: group) }
+            .filter { !Set($0.subIndustryIds).isDisjoint(with: group) && $0.businessModel != "consignment-tutor" }
             .sorted { a, b in
                 if a.costVerified != b.costVerified { return a.costVerified } // 검증(큐레이션) 우선
                 return a.storeCount > b.storeCount                            // 가맹점수 큰 순

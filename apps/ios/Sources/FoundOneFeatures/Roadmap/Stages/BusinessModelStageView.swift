@@ -38,6 +38,8 @@ public struct BusinessModelStageView: View {
     private let stageId = "business-model"
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+    /// online 안에서도 디지털 콘텐츠(무배송) 서브타입 — 배송·택배·사입·재고 비성립. (웹 isDigitalFulfillment 미러)
+    private var isDigitalContent: Bool { cluster.isOnline && isDigitalFulfillment(industryId) }
 
     /// 수익 모델 selector 표시 여부 — startup-tech / online-digital 만 (웹 SSOT showRevenueModel).
     private var showRevenueModel: Bool {
@@ -59,6 +61,14 @@ public struct BusinessModelStageView: View {
                 .init(label: "4. 시장 진입 방식 결정", detail: "PLG(제품 주도)·세일즈·파트너 등 시장 진입(GTM) 방식 확정"),
             ]
         }
+        if isDigitalContent {
+            return [
+                .init(label: "1. 판매 채널·모델 선택", detail: "마켓플레이스(크몽·클래스101)·자사몰(자동 전달)·콘텐츠형(구독·멤버십) 등 판매 채널·모델 결정"),
+                .init(label: "2. 핵심 상품·콘텐츠 확정", detail: "코어·시그니처·확장·실험 4-tier로 콘텐츠·상품 우선순위 정의"),
+                .init(label: "3. CS·발송 운영 설정", detail: "문의 응대(CS) 가능 시간 + 결제 후 콘텐츠 자동 발송(다운로드·메일) 시스템 점검"),
+                .init(label: "4. 수익 모델 결정", detail: "단건 판매·구독·멤버십 등 카테고리별 매출 흐름 모델 확정"),
+            ]
+        }
         if cluster.isOnline {
             return [
                 .init(label: "1. 판매 채널·모델 선택", detail: "마켓플레이스(스마트스토어·쿠팡)·자사몰·콘텐츠형 등 판매 채널·모델 결정"),
@@ -76,13 +86,27 @@ public struct BusinessModelStageView: View {
     }
     private var bizWrapupVerifyItems: [String] {
         if cluster.isStartupTech {
+            // 2026-07-10: 첫 항목을 선택 수익 모델별 결제·판매 법령으로 동적화 (웹 미러). 규제산업 언급은 유지.
+            let legal = revenueModelId == "marketplace-fee"
+                ? "플랫폼 정산 구조 — 대금을 예치·정산하면 결제대금예치업(에스크로) 등록 또는 전자금융업/혁신금융서비스 해당 여부 확인(전자금융거래법). 규제산업(핀테크·헬스·의료기기)은 별도 인허가 병행"
+                : "결제·판매 법령 — 소비자(B2C) 대상 판매·구독이면 온라인 결제(PG)+통신판매업 신고·전자상거래법 준수 확인(순수 B2B는 면제 가능). 규제산업(핀테크=전자금융업·헬스=식약처)은 별도 인허가"
             return [
-                "수익 모델별 규제 트랙 확인 — 핀테크=전자금융업, 헬스·의료기기=식약처 인증 등 인허가 필요 여부",
+                legal,
                 "핵심 기능 — 개발 공수·인프라 비용·유지보수 부담을 기능 단위로 점검",
                 "가격·과금 설계 — 요금제·과금 단위를 고객 획득 비용(CAC) 대비 회수 가능하게 (무료 남용·과금 이탈 방지)",
                 "수익 모델 — 유료 고객 수 × ARPU로 MRR 추정, 번레이트 대비 런웨이(생존 개월)·유지율(리텐션) 함께 점검",
                 "복합 모델이면 주 수익원 1개로 표준화 — 초기 분산은 지표를 흐림",
                 "유닛 이코노믹스 — 고객 생애가치(LTV)가 획득 비용(CAC)을 웃도는 회수 구조인지 초기 가설 설정",
+            ]
+        }
+        if isDigitalContent {
+            return [
+                "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 필수. 디지털 콘텐츠는 품목별 인허가 없음(저작권·라이선스 확보, 유료 강의·교육은 학원·평생교육시설 등록 대상 여부 확인)",
+                "핵심 콘텐츠 — 제작 원가(외주·툴·시간)·업데이트 주기·완성도를 기준으로 점검",
+                "발송 운영 — 결제 후 콘텐츠 전달 방식(자동 다운로드/메일) 정상 동작 + 결제·플랫폼 수수료 체계 사전 점검",
+                "수익 모델 — 유입(트래픽) × 구매전환율(CVR) × 객단가(AOV)로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
+                "자체 제작 vs 외부 라이선스 — 직접 제작=고마진, 외부 소스 재가공=라이선스비 발생. 초기 현금흐름에 맞게 선택",
+                "플랫폼 의존 리스크 — 플랫폼 수수료 + 결제(PG) 수수료 합산 시 실마진이 남는지, 자사몰(자동 전달) 병행 검토",
             ]
         }
         if cluster.isOnline {
@@ -106,12 +130,14 @@ public struct BusinessModelStageView: View {
     }
     private var bizWrapupNextSummary: String {
         if cluster.isStartupTech { return "수익 모델·핵심 기능·가격 확정 → 타깃 고객 정의 단계로 진입" }
+        if isDigitalContent { return "판매 채널·콘텐츠·발송(자동 전달) 운영 확정 → 타깃 고객 정의 단계로 진입" }
         if cluster.isOnline { return "판매 채널·상품·CS/배송 운영 확정 → 타깃 고객 정의 단계로 진입" }
         return "운영 모델·메뉴·시간 확정 → 타깃 고객 정의 단계로 진입"
     }
     // 화면 서브타이틀(helperText)도 카테고리군별 분기 — 온라인엔 POS·인건비가 무의미.
     private var bizHelperText: String {
         if cluster.isStartupTech { return "수익 모델에 따라 가격·과금·시장 진입(GTM) 구성이 달라집니다." }
+        if isDigitalContent { return "판매 방식에 따라 인허가·플랫폼 수수료·콘텐츠 전달(자동 발송) 구성이 달라집니다." }
         if cluster.isOnline { return "판매 방식에 따라 인허가·플랫폼 수수료·물류(배송) 구성이 달라집니다." }
         return "운영 방식에 따라 인허가·인건비·POS 구성이 달라집니다."
     }
@@ -232,7 +258,7 @@ public struct BusinessModelStageView: View {
         ]
         case .onlineDigital: return [
             .init(id: "marketplace-seller",       icon: "cart.fill", color: blue,
-                  titleKo: "마켓플레이스 판매형", descKo: "스마트스토어·위탁판매처럼 입점형 판매 중심", tagKo: "추천"),
+                  titleKo: "마켓플레이스 판매형", descKo: "스마트스토어·크몽처럼 오픈마켓·재능마켓 입점형 판매 중심", tagKo: "추천"),
             .init(id: "brand-storefront-online",  icon: "globe",     color: green,
                   titleKo: "브랜드 자사몰형", descKo: "브랜드 경험·반복 구매·고객 데이터를 직접 관리", tagKo: nil),
             .init(id: "content-membership-model", icon: "newspaper.fill", color: orange,

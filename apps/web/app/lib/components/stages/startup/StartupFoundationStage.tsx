@@ -223,7 +223,7 @@ export function StartupFoundationStage() {
         // - Series A growth marketer: mid-senior 4-7yr, 0.1-0.5% equity, $110-150K base
         // - VP/Head of Growth는 Series A 단계엔 premature (팀 없으면)
         // - YC 표준: 공동창업자 동등 또는 근접 분배
-        // - 베스팅: 한국 상법 cliff 최소 2년 / 벤처기업 1년 cliff 가능
+        // - 베스팅: 스톡옵션 cliff 2년 법정(상법 §340-4) — 벤처기업도 완화 불가. 계약 vesting은 통상 4년.
         const modeContent: Record<string, {
           headline: string;
           why: string[];
@@ -275,11 +275,11 @@ export function StartupFoundationStage() {
             why: ko ? [
               "공동창업자 있으면 분담으로 속도 2-3배. 단 함의·합의·문서화 안 하면 6-12개월 후 갈등 폭발 (스타트업 폐업 사유 1순위 — 'co-founder dispute').",
               "지분 비율은 결정 즉시 — 입찰 처럼. 미루면 매출·외부 투자 후 협상력 0. YC 권장: 동등 또는 근접 배분 (예: 50/50 또는 55/45).",
-              "베스팅 4년 + cliff (한국 상법 2년 / 벤처기업 1년) 표준. 한 명 이탈 시 vesting 전 지분 회수 가능.",
+              "베스팅 4년 + cliff 2년(주총 결의일부터 2년 재직 법정 — 상법 §340-4, 벤처기업도 완화 불가) 표준. 한 명 이탈 시 vesting 전 지분 회수 가능.",
             ] : [
               "Co-founders 2-3x speed via division. But undocumented = 6-12mo conflict explosion (#1 startup killer).",
               "Equity split immediate decision. YC: equal or near-equal (50/50 or 55/45).",
-              "4-yr vesting + cliff (Korea: 2yr / venture cert: 1yr) standard. Departure = pre-vest equity recovery.",
+              "4-yr vesting + 2-yr statutory cliff (Commercial Act §340-4; not shortened by venture cert). Departure = pre-vest equity recovery.",
             ],
             actions: ko ? [
               { label: "1단계: 공동창업자 역할·책임 명시 (서면)", detail: "CEO·CTO·CPO 역할 분담 명문화. '의견 불일치 시 누가 최종 결정?' 캐스팅 보트 필수 (50/50 데드락 방지). Notion·Google Doc 으로 기록 + 모두 서명." },
@@ -324,13 +324,13 @@ export function StartupFoundationStage() {
             actions: ko ? [
               { label: "1단계: 첫 채용 = founding engineer (tech 스타트업)", detail: "시드 클로징 직후. 직접 빌드 + 의사결정 자율 + 최소 가이드. 0.5-1% equity + 시중 base 80% (옵션 풀 활용). YC 표준 첫 채용." },
               { label: "2단계: 두 번째 채용 = 본인이 약한 영역", detail: "B2B SaaS ACV $50K+ → founding salesperson. B2C/PLG sub-$10K → founding marketer. tech-first product → founding designer." },
-              { label: "3단계: 옵션 grant 정책 표준화 (이전 채용에도 소급 적용)", detail: "Engineer 0.1-1% / Senior 1-3% / Founding 2-5%. cliff 1년 (벤처기업 인증 시) + 4년 베스팅. RSU vs 스톡옵션 결정 (한국은 보통 스톡옵션)." },
+              { label: "3단계: 옵션 grant 정책 표준화 (이전 채용에도 소급 적용)", detail: "Engineer 0.1-1% / Senior 1-3% / Founding 2-5%. cliff 2년(법정 — 벤처기업도 동일, 완화 불가) + 4년 베스팅. RSU vs 스톡옵션 결정 (한국은 보통 스톡옵션)." },
               { label: "4단계: 채용 프로세스 표준화 (founder 60% 시간)", detail: "Job spec 작성 → ATS (Greenhouse·Workable·자체 Notion) → 4-step 면접 (recruiter·hiring manager·peer·founder) → 레퍼런스 콜 3명. 채용 결정 만장일치 권장." },
               { label: "5단계: 코어 팀 도구·문화 셋업", detail: "Slack + Linear/GitHub + Notion + Google Workspace. 주간 1on1 + 분기 OKR + 월간 all-hands. 빠른 의사결정 문화 (Amazon 'disagree and commit')." },
             ] : [
               { label: "Step 1: First hire = founding engineer (tech)", detail: "Right after seed close. Builds, decides, minimal guidance. 0.5-1% equity + 80% market base. YC standard." },
               { label: "Step 2: Second hire = your weak area", detail: "B2B SaaS $50K+ ACV → founding salesperson. B2C/PLG → founding marketer." },
-              { label: "Step 3: Standardize option grants (retroactive)", detail: "Engineer 0.1-1% / Senior 1-3% / Founding 2-5%. 1-yr cliff (venture cert) + 4-yr vest." },
+              { label: "Step 3: Standardize option grants (retroactive)", detail: "Engineer 0.1-1% / Senior 1-3% / Founding 2-5%. 2-yr cliff (statutory, incl. venture) + 4-yr vest." },
               { label: "Step 4: Hiring process (founder 60% time)", detail: "Job spec → ATS → 4-step interview → 3 reference calls. Unanimous decision recommended." },
               { label: "Step 5: Team tools/culture", detail: "Slack + Linear/GitHub + Notion + Google. Weekly 1on1 + Quarterly OKR + Monthly all-hands." },
             ],
@@ -355,7 +355,7 @@ export function StartupFoundationStage() {
               { name: ko ? "사람인·잡코리아 (비개발 직군)" : "Saramin / JobKorea", desc: ko ? "마케터·디자이너·세일즈는 일반 잡포털이 효과적" : "Marketers/designers/sales — general boards work better", url: "https://www.saramin.co.kr" },
               { name: "LinkedIn", desc: ko ? "글로벌 시니어·외국인 채용 (K-Startup Grand Challenge 트랙)" : "Global senior + foreigner hiring", url: "https://www.linkedin.com" },
               { name: ko ? "Greenhouse / Workable / Notion ATS" : "Greenhouse / Workable / Notion ATS", desc: ko ? "채용 프로세스 표준화 (지원자 추적)" : "ATS for hiring pipeline" },
-              { name: ko ? "벤처인 (벤처기업 인증)" : "Venture cert", desc: ko ? "시드 1억+ 후 자동 자격 → 옵션풀 50% 한도" : "Auto-eligible after 100M seed", url: "https://www.smes.go.kr/venturein/" },
+              { name: ko ? "벤처인 (벤처기업 인증)" : "Venture cert", desc: ko ? "적격투자 5천만+·자본금 10%+ 요건 후 평가·심의 통과 시 → 옵션풀 50% 한도" : "Requires 50M+ qualified investment (10%+ of capital) + review", url: "https://www.smes.go.kr/venturein/" },
             ],
           },
           seriesA: {
@@ -373,13 +373,13 @@ export function StartupFoundationStage() {
               { label: "1단계: C-suite 채용 (CTO·CPO·VP Engineering·VP Sales)", detail: "총 12-18개월 사이클. 첫 1명 = CTO 또는 VP Engineering (tech 스타트업). 다음 = CPO·VP Sales (각 산업별 우선순위). C-suite equity 0.5-2% + 시장 base + 시그닝." },
               { label: "2단계: Growth marketer 첫 채용 (mid-senior)", detail: "VP/Head of Growth 는 premature (팀 없으면 무의미). Mid-senior IC (4-7yr 경력) 1-2명 시작. base $110K-$150K + 0.1-0.5% equity. 6-12개월 후 VP 승격 또는 외부 영입." },
               { label: "3단계: 이사회 구성 + 분기 운영", detail: "시리즈A 클로징 후 30일 내 첫 board meeting. 분기 정기 미팅 + 월간 update + 연간 strategy off-site. Reid Hoffman 표준: investor 1-2 + 외부 1 + founder." },
-              { label: "4단계: 옵션풀 추가 발행 (총 15-25%) + ESOP 정책", detail: "C-suite·VP grant 별도 풀. CTO 2-5% / CPO 1-3% / VP 0.5-2%. 4년 베스팅 + 1년 cliff (벤처기업)." },
+              { label: "4단계: 옵션풀 추가 발행 (총 15-25%) + ESOP 정책", detail: "C-suite·VP grant 별도 풀. CTO 2-5% / CPO 1-3% / VP 0.5-2%. 4년 베스팅 + cliff 2년(법정 — 벤처기업도 동일)." },
               { label: "5단계: 운영 OS 정립 (OKR + 부문 KPI + 주간 리뷰)", detail: "Andrew Chen 표준: compounding growth loops. Growth team + Data infra + Experimentation platform. 시리즈B 18-24개월 내 — 메트릭 트래킹 (NRR·Burn Multiple·Magic Number 등) 정착." },
             ] : [
               { label: "Step 1: C-suite (CTO/CPO/VP Engineering/VP Sales)", detail: "12-18mo cycle. First = CTO or VP Eng (tech). Next = CPO/VP Sales. Equity 0.5-2% + market base + signing." },
               { label: "Step 2: First growth marketer (mid-senior)", detail: "VP/Head premature without team. Mid-senior IC (4-7yr) 1-2. Base $110-150K + 0.1-0.5% eq. Promote/hire VP after 6-12mo." },
               { label: "Step 3: Board + quarterly cadence", detail: "First board meeting within 30 days post-Series A close. Quarterly + monthly updates + annual off-site." },
-              { label: "Step 4: Additional option pool (15-25% total) + ESOP", detail: "C-suite/VP separate. CTO 2-5%, CPO 1-3%, VP 0.5-2%. 4-yr vest + 1-yr cliff." },
+              { label: "Step 4: Additional option pool (15-25% total) + ESOP", detail: "C-suite/VP separate. CTO 2-5%, CPO 1-3%, VP 0.5-2%. 4-yr vest + 2-yr statutory cliff." },
               { label: "Step 5: Operating OS (OKR + dept KPI + weekly review)", detail: "Compounding growth loops. Growth team + Data + Experiments. Series B in 18-24mo." },
             ],
             decisions: ko ? [
@@ -672,7 +672,7 @@ export function StartupFoundationStage() {
         // - 과밀억제권역 (수도권): 등록면허세 3배 중과세
         // - 토스페이먼츠/세이브택스: 개인사업자 6-45% / 법인 10-25% (2026.1 인상), 순이익 2억+ 시 법인 전환 권장
         // - ZUZU: 옵션풀 일반 10% / 상장 15% / 벤처기업 50%
-        // - 한국 상법: 스톡옵션 cliff 최소 2년 / 벤처기업법은 1년 cliff 가능
+        // - 한국 상법 §340-4: 스톡옵션 행사 위해 주총 결의일부터 2년 재직 필요 — 벤처기업도 완화 불가(1년 cliff 불가).
         // - 매쉬업벤처스/Star Law: 4년 베스팅 + cliff 표준
         // - KIPRIS: 상표 출원 변리사 30-50만, 직접 무료. 특허 스타트업 (사업개시 3년 이내) 우선심사 신청료 70% 감면 (연 10건 한정)
         // - 스톡옵션 비과세: 연 2억·누적 5억 (2027.12.31까지 부여)
@@ -736,13 +736,13 @@ export function StartupFoundationStage() {
             actions: ko ? [
               { label: "1단계: 주식회사 설립 (자본금 100만~2천만)", detail: "헬프미·자비스 등 온라인 30-50만 (DIY) 또는 법무사 위임 80-120만. 등록면허세 11.25만 + 지방교육세 (20%) + 법원수수료 2-3.5만." },
               { label: "⚠️ 과밀억제권역 (서울·수도권) 중과세 주의", detail: "수도권 본점 설립 시 등록면허세 3배. 자본금 1천만 → 등록면허세 33.75만 (수도권). 비수도권 설립 후 본점 이전도 옵션." },
-              { label: "2단계: 공동창업자 SHA (주주간 계약서) 즉시 작성", detail: "벤처기업 인증 후 cliff 1년 적용 가능 (일반 회사는 2년 cliff 의무). 4년 베스팅 + 1-2년 cliff 표준. Drag-Along·Tag-Along·Right of First Refusal 포함." },
+              { label: "2단계: 공동창업자 SHA (주주간 계약서) 즉시 작성", detail: "cliff 2년 의무(주총 결의일부터 2년 재직 — 상법 §340-4, 벤처기업도 완화 불가). 4년 베스팅 + 2년 cliff 표준. Drag-Along·Tag-Along·Right of First Refusal 포함." },
               { label: "3단계: 옵션풀 5-10% 사전 확보", detail: "벤처기업 인증 + 옵션풀 50% 한도까지 가능. 부트스트랩은 5-10% 시작 — 시드 시 추가 발행 협상력." },
               { label: "4단계: 상표·도메인 출원 (변리사 30-50만)", detail: "법인 명의 출원 — 회사 자산. 시드 라운드 due diligence 1순위 항목." },
             ] : [
               { label: "Step 1: Incorporate (capital 1M-20M KRW)", detail: "Help-me/Jobis online ~$300-400 DIY or attorney $700-1000. Registration tax 112.5K + education tax (20%) + court fee 20-35K." },
               { label: "⚠️ Seoul metro 3x surcharge", detail: "Capital 10M = registration tax 337.5K (metro). Consider non-metro then HQ relocation." },
-              { label: "Step 2: SHA immediately", detail: "4-yr vesting + 1-2 yr cliff. Venture cert reduces cliff to 1yr (vs 2yr standard)." },
+              { label: "Step 2: SHA immediately", detail: "4-yr vesting + 2-yr statutory cliff (Commercial Act §340-4; venture cert does NOT shorten it)." },
               { label: "Step 3: Option pool 5-10% pre-allocation", detail: "Venture cert allows up to 50%. Bootstrap = 5-10% start." },
               { label: "Step 4: File trademark + IP (300-500K via patent attorney)", detail: "In corp's name. #1 due diligence item for seed." },
             ],
@@ -771,22 +771,22 @@ export function StartupFoundationStage() {
             why: ko ? [
               "시드 자금 받은 시점부터 시리즈A 마감 18-24개월. 이 기간 안에 법인 + SHA + 옵션풀 + IP + 벤처기업 인증 모두 정비해야 due diligence 통과.",
               "옵션풀 부족 시 시리즈A 시 추가 발행 → 대표 지분 5-10% 추가 희석. 시드 시 미리 10-15% 확보가 협상력.",
-              "벤처기업 인증 시 옵션풀 50% 한도 + cliff 1년 적용 + 스톡옵션 비과세 (연 2억·누적 5억, 2027.12.31까지).",
+              "벤처기업 인증 시 옵션풀 50% 한도 + 스톡옵션 비과세 (연 2억·누적 5억, 2027.12.31까지). ※ cliff 2년은 법정이라 벤처기업도 단축 불가.",
             ] : [
               "Seed → Series A is 18-24 months. Need corp + SHA + option pool + IP + venture cert all aligned.",
               "Insufficient pool = 5-10% extra dilution at Series A.",
-              "Venture cert: 50% option pool, 1-yr cliff, tax-free options (200M/yr, 500M cumulative until 2027.12.31).",
+              "Venture cert: 50% option pool, tax-free options (200M/yr, 500M cumulative until 2027.12.31). Note: 2-yr cliff is statutory — not shortened by venture status.",
             ],
             actions: ko ? [
               { label: "1단계: 변호사 위임 SHA 정비 (200-500만)", detail: "시드 VC 가 요구하는 표준 조항 반영: Liquidation Preference 1x non-participating · Anti-dilution Broad-Based · Pro-Rata Right · Drag-Along · Tag-Along · ROFR." },
               { label: "2단계: 옵션풀 10-15% 사전 발행 + ESOP 정책", detail: "시리즈A VC는 옵션풀 부족 시 추가 발행 요구 — 사전 확보가 핵심. 직원 별 grant 정책 (Engineer 0.1-1% / Senior 1-3% / VP 1-5%) 표준화." },
-              { label: "3단계: 벤처기업 인증 (투자유치형, 시드 1억+)", detail: "VC·액셀러레이터 1억+ 투자 받았으면 자동 자격. 옵션풀 50% 한도 + 법인세 5년 50% 감면 + R&D 25% 세액공제 + 병역특례." },
+              { label: "3단계: 벤처기업 인증 (벤처투자유형)", detail: "적격투자기관으로부터 5천만원 이상 + 자본금의 10% 이상 유치 시 신청 요건 충족 → 벤처기업확인기관 평가·심의 통과 시 확인(자동 아님). 옵션풀 50% 한도 + 법인세 5년 50% 감면 + R&D 25% 세액공제 + 병역특례." },
               { label: "4단계: 정식 IP 전략 (변리사 정기 자문 50-100만/월)", detail: "트레이드마크 다국가 (한국·미국·EU·중국) + 핵심 특허 출원 + Trade Secret 정책. 스타트업 (사업개시 3년 이내) 우선심사 신청료 70% 감면 (연 10건 한정) 활용." },
               { label: "5단계: 회계 시스템 + 월간 결산 (자비스·더존)", detail: "VC 보고용 표준 재무제표. 자비스 SaaS 친화 + 영문 출력. 월 30-50만원." },
             ] : [
               { label: "Step 1: Lawyer-drafted SHA (2-5M KRW)", detail: "Standard VC clauses: Liq Pref 1x non-part, Anti-dilution BB, Pro-Rata, Drag/Tag-Along, ROFR." },
               { label: "Step 2: Pre-issue 10-15% option pool", detail: "Series A demands extra dilution if pool too small." },
-              { label: "Step 3: Venture cert (Investment type, after 100M+ seed)", detail: "Auto-eligible. 50% option cap, 1-yr cliff, tax-free options, military exemption." },
+              { label: "Step 3: Venture cert (Investment type)", detail: "Requires 50M+ from qualified investors (10%+ of capital), then agency review — not automatic. 50% option cap, tax-free options, military exemption." },
               { label: "Step 4: Formal IP strategy", detail: "Multi-country trademark + core patents + trade secret policy." },
               { label: "Step 5: Accounting system (Jobis/Douzone)", detail: "Standard reports for VC. ~300-500K/mo." },
             ],
@@ -807,7 +807,7 @@ export function StartupFoundationStage() {
             ],
             tools: [
               { name: "ZUZU (캡테이블·SHA)", desc: ko ? "시드 VC 표준 SHA 템플릿 + 옵션풀 관리" : "Cap table + SHA templates", price: ko ? "무료~ 유료" : "Free / Paid", url: "https://zuzu.network" },
-              { name: ko ? "벤처기업 인증 (벤처인) " : "Venture cert", desc: ko ? "투자유치형 자동 자격 (시드 1억+)" : "Auto-eligible after 100M seed", url: "https://www.smes.go.kr/venturein/" },
+              { name: ko ? "벤처기업 인증 (벤처인) " : "Venture cert", desc: ko ? "벤처투자유형 — 적격투자 5천만+·자본금 10%+ 요건 + 평가·심의" : "Investment type — 50M+ qualified investment (10%+ capital) + review", url: "https://www.smes.go.kr/venturein/" },
               { name: ko ? "자비스·더존 (회계 SaaS)" : "Jobis/Douzone", desc: ko ? "VC 보고 표준 재무제표" : "VC-grade reports", price: "30-50만원/월" },
               { name: ko ? "법무법인 위임 (SHA 정비)" : "Law firm SHA", desc: ko ? "표준 VC 조항 반영" : "Standard VC clauses", price: "200-500만원" },
             ],
@@ -1030,13 +1030,13 @@ export function StartupFoundationStage() {
         ko={ko}
         nextStageLabelKo="고객 발견"
         doneItemsKo={[
-          { label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting 4년 + 2년 cliff(한국 상법 기본, 벤처 인증 후 1년 cliff 가능) 명문화" },
+          { label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting 4년 + cliff 2년(주총 결의일부터 2년 재직 법정 — 상법 §340-4, 벤처기업도 완화 불가) 명문화" },
           { label: "2. 시장·문제 정의", detail: "타깃 고객 ICP + 핵심 문제 3개 + 가설 1줄 정리" },
           { label: "3. 법인 형태 결정", detail: "개인사업자 vs 법인 의사결정 (실제 등록은 다음 '법인 설립·등록' 단계)" },
           { label: "4. 검증 사례·전략 학습", detail: "본인 모드(인디/부트스트랩/시드/시리즈A) 5개 검증 사례 검토 + 교훈 3개 메모" },
         ]}
         verifyItemsKo={[
-          "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위. 한국 상법 기본 2년 cliff + 4년 vesting, 1년 cliff는 벤처기업 인증 후에만 가능",
+          "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위. 스톡옵션은 주총 결의일부터 2년 재직해야 행사 가능(상법 §340-4)이며 벤처기업도 이 2년을 단축 못 함. 계약상 vesting은 통상 4년 + cliff 2년. 벤처기업 예외는 '사망·정년·귀책 없는 퇴직 시 상실 안 됨'일 뿐 cliff 단축 아님",
           "지분 합의 — 시간·자본·아이디어 기여도 별도 명문화, 모호한 합의는 분쟁 후 해결 불가",
           "노무·출자 구조 — 법인 설립 전이므로 공동창업자는 근로계약이 아닌 동업 관계. 초기 자본·용역 출자 비율 명시 + 법인 설립 후 임원 등기·근로/등기임원 계약 전환 조건 사전 합의",
           "지분 매수권 — 퇴사 시 회사가 매수권 보유 명문화, 미명시 시 외부에 팔릴 위험",

@@ -257,7 +257,7 @@ public struct IndustryCluster: Sendable, Hashable {
         ]
         case .startupTech: return [
             .init(label: "법인설립등기·사업자등록", agency: "법원·세무서", detail: "개인사업자 → 법인 전환 또는 신규 법인 설립. 법무사 5-10만원", estimatedDays: 7),
-            .init(label: "이용약관·개인정보처리방침 게시", agency: "개인정보보호위원회", detail: "유저 가입 전 필수. PIPA 2025 (이동권·동의 분리·국내대리인) 준수", estimatedDays: 3),
+            .init(label: "이용약관·개인정보처리방침 게시", agency: "개인정보보호위원회", detail: "유저 가입 전 필수. 개인정보보호법(2023 개정) (이동권·동의 분리·국내대리인) 준수", estimatedDays: 3),
             .init(label: "통신판매업 신고 (B2C·결제)", agency: "공정거래위원회", detail: "결제 받는 SaaS·앱 모두 의무. PG 가입 동시", estimatedDays: 5),
             .init(label: "상표·특허 출원",     agency: "특허청 (KIPRIS / 특허로)", detail: "공개(데모·베타) 전 출원 필수. 상표 5-30만, 특허 50-150만", estimatedDays: 30),
             .init(label: "벤처기업 인증 (선택)", agency: "벤처기업확인기관 (venture.or.kr)", detail: "세제 50% 감면 + TIPS·창업패키지 자격", estimatedDays: 30),

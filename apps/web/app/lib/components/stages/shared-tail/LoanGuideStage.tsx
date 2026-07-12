@@ -176,12 +176,12 @@ export function LoanGuideStage() {
 
   const recommendations: Recommendation[] = isStartup ? (ko ? [
     { icon: Sparkles, title: "예비창업패키지 / 청년창업사관학교", bucket: "1억 이하 시드 전", rate: "무상 (갚지 않음)", limit: "최대 1억", why: "사업자등록 전·만 39세 이하·창업 3년 이내. 1월~2월 모집. 사업비 70% 지원 + 공간·교육·코칭", href: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do", primary: true },
-    { icon: Banknote, title: "TIPS (민간투자주도형)", bucket: "5억~8억 시드~프리A", rate: "무상 + 매칭투자", limit: "최대 8억 (R&D 5억 + 사업화 3억)", why: "기술 기반 스타트업 핵심 트랙. 149개 운영사 중 매칭 → 운영사 선투자 → 정부 매칭. 벤처인증 가산점", href: "https://www.jointips.or.kr" },
+    { icon: Banknote, title: "TIPS (민간투자주도형)", bucket: "5억~8억 시드~프리A", rate: "무상 + 매칭투자", limit: "최대 8억 (R&D 5억 + 사업화 3억)", why: "기술 기반 스타트업 핵심 트랙. 149개 운영사 중 매칭 → 운영사 선투자 → 정부 매칭. ※ 지분요건(창업기업 60%↑·운영사 30%↓)상 주식회사(법인) 전제 — 개인사업자는 법인 전환 후 신청", href: "https://www.jointips.or.kr" },
     { icon: FileText, title: "AI·데이터·클라우드 바우처", bucket: "도입 비용 부담 시", rate: "70~90% 정부 부담", limit: "AI 3억 / 데이터 5천 / 클라우드 크레딧", why: "사업계획서 간소 — 견적서 + 도입 계획만. 신청 진입 장벽 가장 낮음", href: "https://www.nipa.kr" },
     { icon: ShieldCheck, title: "기보 + 시중은행 (지분 X)", bucket: "운영자금 1~5억", rate: "보증료 0.5~1.5%", limit: "최대 5억 무담보", why: "기술보증기금 기술평가 → 보증서 → 시중은행 저금리 대출. 벤처인증 시 보증료 우대", href: "https://www.kibo.or.kr/main/work/work010301.do" },
   ] : [
     { icon: Sparkles, title: "Pre-Startup / Youth Startup Academy", bucket: "≤100M seed", rate: "Grant (no repayment)", limit: "Up to 100M", why: "Pre-registration, under 39, <3yr old. Jan-Feb. 70% project cost + space + coaching", href: "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do", primary: true },
-    { icon: Banknote, title: "TIPS Program", bucket: "500M-800M seed-preA", rate: "Grant + matched investment", limit: "Up to 800M (R&D 500M + GTM 300M)", why: "Core tech-startup track. 149 operators match → invest → gov matches", href: "https://www.jointips.or.kr" },
+    { icon: Banknote, title: "TIPS Program", bucket: "500M-800M seed-preA", rate: "Grant + matched investment", limit: "Up to 800M (R&D 500M + GTM 300M)", why: "Core tech-startup track. 149 operators match → invest → gov matches. Note: equity rules require a corporation (not sole proprietor)", href: "https://www.jointips.or.kr" },
     { icon: FileText, title: "AI / Data / Cloud Vouchers", bucket: "Adoption cost relief", rate: "70-90% gov-covered", limit: "AI 300M / Data 50M / Cloud credits", why: "Simplest application — quote + adoption plan only", href: "https://www.nipa.kr" },
     { icon: ShieldCheck, title: "KIBO + Bank (no equity)", bucket: "OpEx 100-500M", rate: "Guarantee fee 0.5-1.5%", limit: "Up to 500M unsecured", why: "KIBO tech assessment → guarantee → bank low-rate", href: "https://www.kibo.or.kr/main/work/work010301.do" },
   ]) : (

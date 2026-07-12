@@ -233,7 +233,15 @@ public struct TargetCustomerStageView: View {
         }
     }
 
+    /// online 안에서도 디지털 콘텐츠(무배송) 서브타입 — 상권·주문 대신 키워드·검색 수요가 근거. (웹 isDigitalFulfillment 미러)
+    private var isDigitalContent: Bool {
+        if case .online = clusterGroup { return isDigitalFulfillment(industryId) }
+        return false
+    }
     private var whyTargetPlaceholder: String {
+        if isDigitalContent {
+            return "예: 키워드 검색량 분석에서 직장인 실무 템플릿 니즈 급증 / 기존 상품은 이론 중심 → 실무 양식 미공급"
+        }
         switch clusterGroup {
         case .tech:    return "예: 50-200인 SaaS 팀이 우리 ICP. PMF 인터뷰 12건 중 9건이 같은 페인."
         case .online:  return "예: 인스타 광고 ROAS 280% 채널이 이 페르소나. 첫 100 주문 60%가 동일 세그먼트."

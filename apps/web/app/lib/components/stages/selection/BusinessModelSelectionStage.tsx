@@ -10,6 +10,7 @@ import {
 import { BusinessHoursInput } from "../shared/BusinessHoursInput";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
+import { isDigitalFulfillment } from "../online/DigitalFulfillmentNotice";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
@@ -118,6 +119,23 @@ const BIZ_MODEL_NEXT_SUMMARY_KO: Record<BizModelCluster, string> = {
   online: "판매 채널·상품·CS/배송 운영 확정 → 타깃 고객 정의 단계로 진입",
   tech: "수익 모델·핵심 기능·가격 확정 → 타깃 고객 정의 단계로 진입",
 };
+// 2026-07-10 정합: online 안에서도 디지털 콘텐츠(무배송) 서브타입은 배송·택배·사입·재고가 성립하지 않아 전용 문구.
+const BIZ_MODEL_DONE_ITEMS_ONLINE_DIGITAL_KO: Array<{ label: string; detail: string }> = [
+  { label: "1. 판매 채널·모델 선택", detail: "마켓플레이스(크몽·클래스101)·자사몰(자동 전달)·콘텐츠형(구독·멤버십) 등 판매 채널·모델 결정" },
+  { label: "2. 핵심 상품·콘텐츠 확정", detail: "코어·시그니처·확장·실험 4-tier로 콘텐츠·상품 우선순위 정의" },
+  { label: "3. CS·발송 운영 설정", detail: "문의 응대(CS) 가능 시간 + 결제 후 콘텐츠 자동 발송(다운로드·메일) 시스템 점검" },
+  { label: "4. 수익 모델 결정", detail: "단건 판매·구독·멤버십 등 카테고리별 매출 흐름 모델 확정" },
+];
+const BIZ_MODEL_VERIFY_ITEMS_ONLINE_DIGITAL_KO: string[] = [
+  "온라인 판매 필수 신고 확인 — 반복 판매는 통신판매업 신고 필수. 디지털 콘텐츠는 품목별 인허가 없음(저작권·라이선스 확보, 유료 강의·교육은 학원·평생교육시설 등록 대상 여부 확인)",
+  "핵심 콘텐츠 — 제작 원가(외주·툴·시간)·업데이트 주기·완성도를 기준으로 점검",
+  "발송 운영 — 결제 후 콘텐츠 전달 방식(자동 다운로드/메일) 정상 동작 + 결제·플랫폼 수수료 체계 사전 점검",
+  "수익 모델 — 유입(트래픽) × 구매전환율(CVR) × 객단가(AOV)로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
+  "자체 제작 vs 외부 라이선스 — 직접 제작=고마진, 외부 소스 재가공=라이선스비 발생. 초기 현금흐름에 맞게 선택",
+  "플랫폼 의존 리스크 — 플랫폼 수수료 + 결제(PG) 수수료 합산 시 실마진이 남는지, 자사몰(자동 전달) 병행 검토",
+];
+const BIZ_MODEL_NEXT_SUMMARY_ONLINE_DIGITAL_KO =
+  "판매 채널·콘텐츠·발송(자동 전달) 운영 확정 → 타깃 고객 정의 단계로 진입";
 
 export function BusinessModelSelectionStage() {
   const d = useDashboardCtx();
@@ -150,6 +168,19 @@ export function BusinessModelSelectionStage() {
     industryCategoryId === "startup-tech" ? "tech"
     : industryCategoryId === "online-digital" ? "online"
     : "offline";
+  const isDigitalContent = bizModelCluster === "online" && isDigitalFulfillment(selectedIndustryId);
+  const bizModelDoneItems = isDigitalContent ? BIZ_MODEL_DONE_ITEMS_ONLINE_DIGITAL_KO : BIZ_MODEL_DONE_ITEMS_KO[bizModelCluster];
+  // 2026-07-10: tech 트랙의 첫 verify 항목(규제 트랙)을 선택 수익 모델에 맞춰 결제·판매 법령 확인으로 동적화.
+  //   기존 정적 "핀테크=전자금융업·헬스=식약처"는 SaaS엔 무의미했음 → 규제산업 언급은 유지하되 수익모델별 법령을 앞세움.
+  const bizModelVerifyItems = (() => {
+    const base = isDigitalContent ? BIZ_MODEL_VERIFY_ITEMS_ONLINE_DIGITAL_KO : BIZ_MODEL_VERIFY_ITEMS_KO[bizModelCluster];
+    if (bizModelCluster !== "tech") return base;
+    const legal = selectedRevenueModelId === "marketplace-fee"
+      ? "플랫폼 정산 구조 — 대금을 예치·정산하면 결제대금예치업(에스크로) 등록 또는 전자금융업/혁신금융서비스 해당 여부 확인(전자금융거래법). 규제산업(핀테크·헬스·의료기기)은 별도 인허가 병행"
+      : "결제·판매 법령 — 소비자(B2C) 대상 판매·구독이면 온라인 결제(PG)+통신판매업 신고·전자상거래법 준수 확인(순수 B2B는 면제 가능). 규제산업(핀테크=전자금융업·헬스=식약처)은 별도 인허가";
+    return [legal, ...base.slice(1)];
+  })();
+  const bizModelNextSummary = isDigitalContent ? BIZ_MODEL_NEXT_SUMMARY_ONLINE_DIGITAL_KO : BIZ_MODEL_NEXT_SUMMARY_KO[bizModelCluster];
 
   return (
     <>
@@ -325,9 +356,9 @@ export function BusinessModelSelectionStage() {
       <StageWrapup
         ko={language === "ko"}
         nextStageLabelKo="타깃 고객 정의"
-        doneItemsKo={BIZ_MODEL_DONE_ITEMS_KO[bizModelCluster]}
-        verifyItemsKo={BIZ_MODEL_VERIFY_ITEMS_KO[bizModelCluster]}
-        nextSummaryKo={BIZ_MODEL_NEXT_SUMMARY_KO[bizModelCluster]}
+        doneItemsKo={bizModelDoneItems}
+        verifyItemsKo={bizModelVerifyItems}
+        nextSummaryKo={bizModelNextSummary}
       />
 
       <div style={styles.stageFooter}>

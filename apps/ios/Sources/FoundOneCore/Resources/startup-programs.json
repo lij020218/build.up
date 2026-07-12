@@ -1934,8 +1934,8 @@
       "en": "MSS"
     },
     "target": {
-      "ko": "민간 운영사 매칭 + R&D 정부 매칭 — 시리즈A 직전 기술기업",
-      "en": "Tech companies pre-Series A (private + R&D matching)"
+      "ko": "민간 운영사 매칭 + R&D 정부 매칭 — 시리즈A 직전 기술기업 (지분투자 구조상 개인사업자 불가·주식회사 필수)",
+      "en": "Tech companies pre-Series A (private + R&D matching; corporation required, sole-proprietor ineligible)"
     },
     "benefit": {
       "ko": "운영사 선투자 2억(비수도권 1억) + 정부 R&D 최대 8억 + 멘토링. 졸업 시 후속 R&D 3년 15억",
@@ -3754,6 +3754,13 @@
     "industries": [
       "startup-tech"
     ],
+    "subIndustries": [
+      "hardware-iot",
+      "robotics-physical-ai",
+      "semiconductor",
+      "biotech-medtech",
+      "climate-energy"
+    ],
     "dataYear": "2026",
     "applicationStatus": "open",
     "fundingType": "grant"
@@ -3953,6 +3960,10 @@
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
+    "subIndustries": [
+      "biotech-medtech",
+      "healthtech-startup"
+    ],
     "regions": [
       "인천"
     ],

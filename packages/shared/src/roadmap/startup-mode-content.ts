@@ -69,7 +69,7 @@ export const STARTUP_STAGE_MODE_CONTENT: Record<string, Record<OperatingMode, Mo
     bootstrap: {
       why: "1-3명 팀의 가장 큰 위험은 '암묵적 합의' 입니다. 지분·역할·의사결정 구조가 문서화되지 않으면 6-12개월 후 갈등으로 회사 끝납니다. 자비 부담이라 자본 압박도 큼.",
       actions: [
-        { title: "공동창업자 지분 합의 + Vesting 계약 (4년 1년 cliff)", detail: "지분 비율 + 이탈 시 회수 조건 명시. 표준 4년 vesting + 1년 cliff. 변호사 (윤앤장·세종 등) 검토 추천." },
+        { title: "공동창업자 지분 합의 + Vesting 계약 (4년 vesting · cliff 2년)", detail: "지분 비율 + 이탈 시 회수 조건 명시. 표준 4년 vesting + cliff 2년(스톡옵션 법정, 상법 §340-4 — 벤처기업도 완화 불가). 변호사 (윤앤장·세종 등) 검토 추천." },
         { title: "역할·의사결정 구조 문서화", detail: "CEO·CTO 역할 · 50/50 데드락 방지 (캐스팅 보트 또는 sole CEO 권장) · 주간 동기화 시간." },
         { title: "공유 운영 도구 (Notion + Slack + Linear/GitHub)", detail: "분산 작업 + 의사결정 로그. MicroConf 표준: 매주 1회 30분 동기화 + 분기별 retro." },
         { title: "37signals 모델 학습 (No-VC 20년 사례)", detail: "Basecamp 가 보여준 sustainable growth. Stair Step Approach (Walling): 단일 판매 제품 → 스케일 → SaaS." },
@@ -282,16 +282,16 @@ export const STARTUP_STAGE_MODE_CONTENT: Record<string, Record<OperatingMode, Mo
       evidence: "MicroConf 분석: 부트스트랩 SaaS 평균 첫 채널 + 12개월 = 50% 매출. 37signals: 콘텐츠 = 영원한 자산.",
     },
     seed: {
-      why: "시드 자금으로 정식 GTM 팀 구축. Marketing + Sales 분리 (시드는 marketing-led, 시리즈A 는 sales-led 시작). 다채널 실험 + 데이터 기반 결정.",
+      why: "시드 자금(특히 5천만~수억 초기 시드)에서 먼저 할 것은 '팀 채용'이 아니라 창업자 직접 세일즈(founder-led)로 첫 고객·PMF 확보. 채용·유료광고는 반복 가능한 세일즈 공식과 초기 지표가 검증된 뒤. 런웨이 관리가 최우선.",
       actions: [
-        { title: "Growth marketer / Founding salesperson 1-2명 채용", detail: "B2C/PLG = growth. B2B SaaS = founder 가 첫 10 고객 직접, 그 후 sales 채용. YC 표준: founder-led sales 50명까진." },
-        { title: "다채널 실험 (3-5 channels in parallel)", detail: "Paid (Google·LinkedIn) + Organic (SEO·콘텐츠) + Outbound (cold email) + PR + 파트너십. 매월 ROAS 측정." },
-        { title: "GTM stack 구축 (CRM·marketing automation·analytics)", detail: "HubSpot/Salesforce + Mixpanel/Posthog + Marketing automation (Customer.io). 데이터 통합 표준화." },
-        { title: "PR + thought leadership", detail: "TechCrunch·플래텀·EOTW 노출 — 시리즈A 신호. 분기 1-2회 컨텐츠 임팩트." },
+        { title: "창업자 직접 세일즈(founder-led) 먼저 — 채용은 그 다음", detail: "첫 10~50 고객은 창업자가 직접 판매·온보딩(YC 표준: 50번째 고객까진 founder-led). Growth marketer·salesperson 채용은 반복 가능한 세일즈 공식이 검증된 뒤 1명씩." },
+        { title: "무료 채널(오가닉) 먼저 — Build in Public·콘텐츠·커뮤니티", detail: "X 빌드 인 퍼블릭 + 블로그·SEO + 타깃 커뮤니티. 비용 0로 초기 유입·신뢰 축적. 유료광고는 PMF·전환율 확인 후 소액부터, ROAS 1.5+ 안 나오면 즉시 중단." },
+        { title: "가벼운 GTM stack + 지표 계측", detail: "과한 CRM 대신 스프레드시트·경량 CRM + Posthog/Mixpanel 5개 핵심 이벤트. 데이터로 다음 채널 결정." },
+        { title: "지표 확보 후 차기 투자 준비", detail: "유료 전환 고객·리텐션·MRR 우상향을 만든 뒤 PR·시리즈A 스토리 구성. TechCrunch·플래텀 노출은 지표가 뒷받침될 때." },
       ],
-      pace: "GTM 팀 6개월 내 채용. ARR $1M 12-18개월.",
-      pitfall: "Founder 가 sales 안 함 → '시장 안 맞아서' 자기 변명. YC: founder-led sales 50번째 고객까지 표준.",
-      evidence: "Andrew Chen compounding growth loops. YC 시드 → 시리즈A: $1M ARR 가 일반 시그널.",
+      pace: "초기 목표: 유료 전환 고객 50~100명 + MRR 300만~500만원 확보 후 차기 투자 준비. ※ ARR $1M(약 13억)은 '1년차 목표'가 아니라 자금·팀 갖춘 시드가 시리즈A로 넘어가는 신호(통상 12~24개월+).",
+      pitfall: "시드 자금으로 채용·유료광고부터 태우면 몇 달 만에 런웨이 소진. Founder 가 sales 안 하면 '시장 안 맞아서' 자기 변명이 됨.",
+      evidence: "YC: founder-led sales 50번째 고객까지 표준. $1M ARR 는 시리즈A '진입' 신호(초기 시드 1년차 목표 아님).",
     },
     seriesA: {
       why: "시리즈A+ 는 다채널 GTM + 글로벌 진출. Sales-led + Marketing engine + Partnership ecosystem 모두 필요. 채널 다양화 + 검증된 채널 자본 투입.",
@@ -437,7 +437,7 @@ export const STARTUP_STAGE_MODE_CONTENT: Record<string, Record<OperatingMode, Mo
     seed: {
       why: "시드 단계는 투자유치형 벤처기업 인증 (1억+ 시드 받음 시) → 가장 강력한 카테고리. 정부지원·세제·해외진출까지 모두 매칭.",
       actions: [
-        { title: "투자유치형 벤처인증 (시드 1억+ 받은 경우)", detail: "VC·액셀러레이터 1억+ 투자 시 자동 자격. 인증 즉시." },
+        { title: "벤처투자유형 벤처인증 (적격투자 5천만+·자본금 10%+)", detail: "적격투자기관 5천만원 이상 + 자본금의 10% 이상 유치 시 신청 요건 충족. 이후 벤처기업확인기관 평가·심의 통과 시 확인(자동 아님)." },
         { title: "TIPS 매칭 + 후속 정부지원", detail: "TIPS 7억 + 정부 R&D 추가 + 해외진출 지원. 시드 직후 1년 내 신청." },
         { title: "벤처기업 글로벌 진출 지원 (KOTRA·중기부)", detail: "해외사무소 + 박람회 + 바이어 매칭. 시리즈A 전 글로벌 진출 시드." },
         { title: "인재 채용 시 벤처기업 혜택 활용 (병역·세제)", detail: "병역특례 + 스톡옵션 비과세 (연 2억·누적 5억, 2027.12.31 까지)." },

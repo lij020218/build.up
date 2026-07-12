@@ -29,13 +29,20 @@ public struct BUStageTask: Identifiable, Sendable, Hashable {
 
 public enum BUStageTaskRegistry {
 
-    public static func tasks(for stageId: String, industryCategoryId: String? = nil) -> [BUStageTask] {
+    public static func tasks(for stageId: String, industryCategoryId: String? = nil, subIndustryId: String? = nil) -> [BUStageTask] {
         guard let base = stageMap[stageId] else { return [] }
-        guard let categoryId = industryCategoryId else { return base }
-        // industry-specific title overrides
+        // ⚠️ ai-application 은 DIGITAL_ONLINE_SUBTYPES 이지만 startup-tech 카테고리라, online-digital 로 한정해야
+        //   pre-launch-final(전 클러스터 공용)에서 스타트업이 디지털 커머스 라벨을 받는 버그를 막는다. (웹 미러)
+        //   iOS 스테이지 뷰는 industryCategoryId 를 shell 에 안 넘겨(nil) → subIndustryId 에서 카테고리를 직접 도출.
+        let subCategory = subIndustryId.flatMap { StarterIndustryData.option(by: $0)?.categoryId }
+        let isDigital = subCategory == "online-digital" && isDigitalOnlineSubtype(subIndustryId)
+        guard industryCategoryId != nil || isDigital else { return base }
+        // title overrides — ① 디지털(무배송) 서브타입 "{taskId}__digital" 우선, ② 카테고리 "{taskId}__{categoryId}"
         return base.map { task in
-            let overrideKey = "\(task.id)__\(categoryId)"
-            if let overrideTitle = titleOverrides[overrideKey] {
+            if isDigital, let digitalTitle = titleOverrides["\(task.id)__digital"] {
+                return BUStageTask(id: task.id, title: digitalTitle, estimatedMinutes: task.estimatedMinutes, required: task.required)
+            }
+            if let categoryId = industryCategoryId, let overrideTitle = titleOverrides["\(task.id)__\(categoryId)"] {
                 return BUStageTask(id: task.id, title: overrideTitle, estimatedMinutes: task.estimatedMinutes, required: task.required)
             }
             return task
@@ -304,7 +311,7 @@ public enum BUStageTaskRegistry {
         // pre-launch-final — startup-tech
         "launch-date-locked__startup-tech":      "D-Day 화·수 12:01 PT 확정 (4~6주 후) + 베타 사용자 10명 명단 (인터뷰·waitlist 추출)",
         "production-deployed__startup-tech":     "프로덕션 배포 + 도메인·SSL + Sentry/Slack 알람 실제 에러 트리거 검증",
-        "payment-and-legal-ready__startup-tech": "Stripe/Toss 라이브 100원 결제 1사이클 + 법적 풋터 + PIPA 2025 (이동권·동의 분리·국내대리인)",
+        "payment-and-legal-ready__startup-tech": "Stripe/Toss 라이브 100원 결제 1사이클 + 법적 풋터 + 개인정보보호법(2023 개정) (이동권·동의 분리·국내대리인)",
         "runbook-prepared__startup-tech":        "D-Day 매뉴얼 — 시간대별 11슬롯 + 댓글 5종 템플릿 + 응급 5종 + 역할 분담",
         "calendar-alarms-set__startup-tech":     "13개 알림 (D-28~D+14) + Product Hunt 예약 (D-7 publish) + D-Day 24h·D-1·D+1 봉인",
 
@@ -314,6 +321,28 @@ public enum BUStageTaskRegistry {
         "payment-and-legal-ready__online-digital": "본인 주문 → 포장 → 송장 → 발송 1번 완주 + 사업자·통신판매업 정보 + 환불 템플릿 5종",
         "runbook-prepared__online-digital":        "주문 알림 30분 룰 + 톡톡 12시간 SLA + 분쟁 대비 포장 사진 자동 저장 + CS 템플릿",
         "calendar-alarms-set__online-digital":     "D-7 매일 1콘텐츠 예약 + 첫 구매 쿠폰 + D+7 광고 시작 알림 + 발송 마감 시간 봉인",
+
+        // ── "{taskId}__digital" — 디지털 콘텐츠(무배송) 서브타입 전용 (2026-07-10, 웹 i18n.ts 미러) ──
+        //   대상 판정: DigitalSubtypes.swift isDigitalOnlineSubtype — 카테고리(__online-digital)보다 우선.
+        // sourcing-setup — digital
+        "kc-trademark-reviewed__digital": "폰트·디자인·소스 등 외부 에셋 저작권(라이선스) 범위 확인 + 상표권 검토",
+        "supplier-contracted__digital":   "상품 제작 파이프라인 수립 및 산출물 표준화 (기획 → 제작 → 검수 → 업데이트)",
+        "product-photographed__digital":  "디지털 상품 원본 파일 포맷 및 자동 발송 구조 검수 완료",
+        "detail-page-created__digital":   "상품 상세 페이지 설명 및 미리보기(샘플) 이미지 등록",
+        // store-setup — digital
+        "store-configured__digital":         "스토어 카테고리·상세 구성·환불 정책(디지털 청약철회 예외 고지) 구성",
+        "shipping-setup__digital":           "다운로드 링크·이메일 자동 발송 솔루션 연동",
+        "brand-identity-online__digital":    "브랜드 자산 준비 — 스토어 로고·배너·디지털 썸네일 디자인",
+        "packaging-supplies-ready__digital": "전달 자동화 테스트 — 결제 후 다운로드/접근 권한 부여 1건 테스트 필수",
+        // online-marketing — digital
+        "store-seo-done__digital": "입점 플랫폼 검색 최적화 (상품명·태그·카테고리)",
+        "first-ad-set__digital":   "크몽·클래스101 등 플랫폼 광고 또는 SNS 성과형 첫 캠페인 설정",
+        // pre-launch-final — digital
+        "launch-date-locked__digital":      "오픈 D-Day 확정 (자기 주문 → 자동 전달 시뮬 완료 후) + 알림받기 100명 사전 모집",
+        "production-deployed__digital":     "스토어 카테고리·상세페이지·환불 정책(청약철회 예외 고지) + 파일 스토리지·다운로드 링크 트래픽 점검",
+        "payment-and-legal-ready__digital": "본인 결제 → 자동 다운로드/접근 권한 발급 1번 완주 + 사업자·통신판매업 정보 + 환불 템플릿 5종",
+        "runbook-prepared__digital":        "주문 알림 30분 룰 + 문의 12시간 SLA + 전달 실패(링크 만료·용량) 대응 시나리오 + CS 템플릿",
+        "calendar-alarms-set__digital":     "D-7 매일 1콘텐츠 예약 + 첫 구매 쿠폰 + D+7 광고 시작 알림 + 전달 자동화 모니터링 알림",
     ]
 }
 

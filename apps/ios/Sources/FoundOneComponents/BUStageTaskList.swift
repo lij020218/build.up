@@ -22,6 +22,9 @@ public struct BUStageTaskList: View {
     public let stageId: String
     public let industryCategoryId: String?
     @Binding public var completed: Set<String>
+    // 세부 업종 — 디지털 콘텐츠(무배송) 서브타입의 "{taskId}__digital" 라벨 오버라이드용.
+    //   전역 로드맵 선택값을 직접 구독(호출부 무변경) — 앱 전체가 같은 키를 쓰는 표준 패턴.
+    @AppStorage("roadmap.selectedIndustryId") private var subIndustryId = ""
 
     public init(stageId: String, industryCategoryId: String? = nil, completed: Binding<Set<String>>) {
         self.stageId = stageId
@@ -30,7 +33,11 @@ public struct BUStageTaskList: View {
     }
 
     private var tasks: [BUStageTask] {
-        BUStageTaskRegistry.tasks(for: stageId, industryCategoryId: industryCategoryId)
+        BUStageTaskRegistry.tasks(
+            for: stageId,
+            industryCategoryId: industryCategoryId,
+            subIndustryId: subIndustryId.isEmpty ? nil : subIndustryId
+        )
     }
 
     private var doneCount: Int {

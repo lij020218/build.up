@@ -236,7 +236,7 @@ export function CompanySetupStage() {
             </div>
             <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
               {ko
-                ? "벤처기업 인증 후 스톡옵션 부여 시 직원 1인당 연 5,000만원까지 비과세. 4년 베스팅/1년 클리프가 업계 표준. ZUZU로 캡테이블 관리 권장."
+                ? "벤처기업 인증 후 스톡옵션 부여 시 행사이익 비과세(연 2억·누적 5억 한도). 4년 베스팅 + cliff 2년(법정, 상법 §340-4 — 벤처기업도 완화 불가)이 표준. ZUZU로 캡테이블 관리 권장."
                 : "After venture cert, stock options tax-free up to ₩50M/yr per employee. 4-year vesting / 1-year cliff is industry standard. Use ZUZU for cap table."}
             </div>
           </div>
@@ -402,7 +402,7 @@ export function CompanySetupStage() {
             { step: "2", title: "특허고객번호 발급 (특허로, 무료)", detail: "patent.go.kr → 공동인증서 등록" },
             { step: "3", title: "명세서 작성 + 청구항 (변리사 권장 100~250만원)", detail: "청구항 작성이 핵심 — 셀프 작성 시 거절·축소 위험. 변리사 위임이 ROI 높음." },
             { step: "4", title: "심사 청구 + 대기 (12~18개월) ⏳", detail: "개인·중소기업 출원료·심사청구료·최초 3년 등록료 70% 감면(상시), 4년차~ 50%. 우선심사 신청 시 3~6개월." },
-            { step: "5", title: "등록 결정 + 등록료 납부", detail: "1~3년차 등록료 일시 납부. 4년차부터 매년 갱신료 납부 (총 20년)." },
+            { step: "5", title: "등록 결정 + 등록료 납부", detail: "1~3년차 등록료 일시 납부. 4년차부터 매년 연차등록료 납부, 미납 시 특허권 소멸 (최장 20년)." },
           ] : [
             { step: "1", title: "Prior art search (KIPRIS / Google Patents)", detail: "Check novelty + inventiveness." },
             { step: "2", title: "Get patent customer number (free)", detail: "patent.go.kr with digital cert." },
@@ -524,6 +524,17 @@ export function CompanySetupStage() {
             : (ko ? "과세 유형을 선택하세요. 선택에 따라 세금 신고 방식과 부담이 달라집니다." : "Choose your tax type. This affects filing frequency and tax burden.")}
         </div>
 
+        {/* B2B tech 경고 — 소프트웨어 개발·공급업은 간이과세 배제 다수 + B2B는 세금계산서·매입세액 환급 필요 (2026-07-10) */}
+        {!isCorp && (
+        <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.06)", border: "1px solid rgba(182,76,76,0.18)", marginBottom: "12px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 640, color: "#b64c4c", lineHeight: 1.6 }}>
+            {ko
+              ? "⚠️ B2B SaaS·소프트웨어 개발/공급업은 국세청 고시상 간이과세 배제인 경우가 많습니다. 기업 고객 세금계산서 발급 + 초기 서버·인프라 매입세액 환급을 위해 일반과세가 유리·필요합니다. (법인 설립 시 자동 일반과세)"
+              : "⚠️ B2B SaaS / software dev is often excluded from Simplified taxation by NTS notice. General taxation is usually required/better — for B2B invoicing and reclaiming input VAT on early infra. (Corporations are auto-General.)"}
+          </div>
+        </div>
+        )}
+
         {/* 개인사업자: 간이/일반 선택 */}
         {!isCorp && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
@@ -536,7 +547,6 @@ export function CompanySetupStage() {
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: taxType === "simplified" ? "6px solid #191970" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
               <div style={{ fontSize: "14px", fontWeight: 680, color: taxType === "simplified" ? MIDNIGHT : "#0f172a" }}>{ko ? "간이과세자" : "Simplified"}</div>
-              <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: "rgba(25,25,112,0.08)", color: MIDNIGHT }}>{ko ? "추천" : "Rec."}</span>
             </div>
             <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
               {ko ? "• 매출 1억 400만원 미만\n• 부가세 1.5~4% 수준\n• 4,800만원 미만: 부가세 면제\n• 세금 신고 연 1회\n• 간편장부 허용" : "• Revenue < ₩104M\n• VAT 1.5-4%\n• Under ₩48M: VAT exempt\n• Annual filing\n• Simple bookkeeping"}
@@ -551,6 +561,7 @@ export function CompanySetupStage() {
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: taxType === "general" ? "6px solid #191970" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
               <div style={{ fontSize: "14px", fontWeight: 680, color: taxType === "general" ? MIDNIGHT : "#0f172a" }}>{ko ? "일반과세자" : "General"}</div>
+              <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: "rgba(25,25,112,0.08)", color: MIDNIGHT }}>{ko ? "B2B 추천" : "B2B Rec."}</span>
             </div>
             <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
               {ko ? "• 매출 1억 400만원 이상\n• 부가세 10% (매입세액 공제)\n• 세금계산서 발급 의무\n• 반기 신고 (연 2회)\n• B2B 거래 시 필수" : "• Revenue ≥ ₩104M\n• VAT 10% (input deductible)\n• Must issue invoices\n• Semi-annual filing\n• Required for B2B"}

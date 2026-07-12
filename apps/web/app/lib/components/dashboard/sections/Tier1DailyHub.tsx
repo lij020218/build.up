@@ -120,7 +120,6 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
           ingredientRatio={c.ingredientRatio}
           laborRatio={c.laborRatio}
           rentRatio={c.rentRatio}
-          primeCost={c.primeCost}
           projectedProfit={c.projectedProfit}
           workingDays={c.workingDays}
           ko={ko}

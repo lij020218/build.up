@@ -10,6 +10,7 @@ import {
   getFranchiseBrandById,
   starterBudgetPresets,
   starterOpenDatePresets,
+  SPECIALTY_BUDGET_BENCHMARKS,
 } from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
@@ -91,7 +92,15 @@ export function BudgetSetupStage() {
         }}
       />
       <div style={styles.helper}>
-        {copy.home.budgetHelp}
+        {isStartup
+          ? (language === "ko"
+              ? "자본금과 목표 오픈 시점을 정하면 창업팀 및 법인 기본 구조 설계 단계가 열립니다."
+              : "Set capital and target date to unlock the founding-team & entity setup step.")
+          : isOnline
+            ? (language === "ko"
+                ? "자본금과 목표 오픈 시점을 정하면 판매 플랫폼 선택 단계가 열립니다."
+                : "Set capital and target opening date to unlock the sales-platform selection step.")
+            : copy.home.budgetHelp}
       </div>
 
       {/* ── Franchise cost guide panel ── */}
@@ -382,12 +391,17 @@ export function BudgetSetupStage() {
           "beauty": 4_500_000,
           "fitness": 7_000_000,
           "education": 4_000_000,
-          "online-digital": 2_500_000,
+          "online-digital": 500_000, // fallback only — 세부 업종 미상일 때. 실제는 아래 세부업종 벤치마크 사용.
         };
         const subMatrix = STARTUP_MATRIX[selectedIndustryId ?? ""] ?? STARTUP_MATRIX["ai-application"];
+        // online-digital 은 세부 업종별 월 운영비 편차가 큼(디지털콘텐츠 5만 vs 사입 스마트스토어 50만).
+        //   과거 카테고리 단일값 250만은 과대 → 세부업종 벤치마크(monthlyOpsEstimateWan)로 정합. 아래 '업종 평균' 카드와 동일 SSOT.
+        const onlineDigitalMonthly = industryCategoryId === "online-digital" && selectedIndustryId
+          ? (SPECIALTY_BUDGET_BENCHMARKS[selectedIndustryId]?.monthlyOpsEstimateWan ?? 0) * 10_000
+          : 0;
         const estimatedMonthly = isStartup
           ? (subMatrix[startupMode] ?? subMatrix.bootstrap)
-          : (offlineMonthlyByCategory[industryCategoryId] ?? 5_000_000);
+          : (onlineDigitalMonthly || offlineMonthlyByCategory[industryCategoryId] || 5_000_000);
 
         // ── 권장 범위 ──
         //  스타트업: 12~24개월 런웨이 (시리즈A 평균 21개월 — ZUZU 분석)

@@ -142,6 +142,7 @@ public struct FundingMatchResponse: Sendable, Decodable {
 public struct FundingMatchCriteria: Sendable, Encodable {
     public var startupType: String?              // "independent" | "franchise"
     public var industryCategoryId: String?
+    public var subIndustryId: String?
     public var age: Int?
     public var businessYears: Int?
     public var region: String?
@@ -160,6 +161,7 @@ public struct FundingMatchCriteria: Sendable, Encodable {
     public init(
         startupType: String? = nil,
         industryCategoryId: String? = nil,
+        subIndustryId: String? = nil,
         age: Int? = nil,
         businessYears: Int? = nil,
         region: String? = nil,
@@ -177,6 +179,7 @@ public struct FundingMatchCriteria: Sendable, Encodable {
     ) {
         self.startupType = startupType
         self.industryCategoryId = industryCategoryId
+        self.subIndustryId = subIndustryId
         self.age = age
         self.businessYears = businessYears
         self.region = region
@@ -389,6 +392,7 @@ public actor FundingRepository {
         let coreCriteria = StartupProgramMatchCriteria(
             startupType: criteria.startupType,
             industryCategoryId: criteria.industryCategoryId,
+            subIndustryId: criteria.subIndustryId,
             age: criteria.age,
             businessYears: criteria.businessYears,
             region: criteria.region,

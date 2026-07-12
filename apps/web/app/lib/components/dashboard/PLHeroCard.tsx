@@ -16,8 +16,6 @@ type Props = {
   ingredientRatio: number;
   laborRatio: number;
   rentRatio: number;
-  /** @deprecated 2026-05-13 — 원가율 SSOT 는 CostStructureCard. 이 prop 은 받지만 사용 안 함 (caller 호환 유지). */
-  primeCost?: number;
   projectedProfit: number;
   workingDays: number;
   ko: boolean;

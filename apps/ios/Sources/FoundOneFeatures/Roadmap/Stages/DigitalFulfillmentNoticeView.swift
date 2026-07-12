@@ -11,15 +11,11 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneComponents
+import FoundOneCore
 
-/// 물리 배송이 없는 디지털·창작자 온라인 서브타입 (starter-data.ts online-digital 하위 SSOT).
+/// 물리 배송이 없는 디지털·창작자 온라인 서브타입 — SSOT는 FoundOneCore/DigitalSubtypes.swift (위임).
 public func isDigitalFulfillment(_ industryId: String) -> Bool {
-    switch industryId {
-    case "digital-products", "creator-service", "newsletter-membership", "ai-application":
-        return true
-    default:
-        return false
-    }
+    isDigitalOnlineSubtype(industryId)
 }
 
 public enum DigitalFulfillmentStage: Sendable { case sourcing, store }

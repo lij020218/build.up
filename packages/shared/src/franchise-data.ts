@@ -25,6 +25,12 @@ export type FranchiseBrand = {
    *  자동 생성(점수는 실데이터 산출, confidence "low"). UI 가 배지로 구분.
    */
   tier?: "curated" | "kftc";
+  /**
+   * 사업 형태. 미설정 = "franchise"(가맹). "consignment-tutor" = 위탁 학습지(방문교사·공부방)
+   *  — 대교 눈높이·교원 구몬처럼 가맹점이 아닌 위탁 교사 모델(공정위 가맹 등록 대상 아님).
+   *  프랜차이즈 브랜드 피커/매칭에서 제외되지만, 기록은 보존해 재추가·오분류 방지.
+   */
+  businessModel?: "franchise" | "consignment-tutor";
   subIndustryIds: string[];
   specialtyIds?: string[];
   categoryId: string;
@@ -328,9 +334,12 @@ function enrichBrandSubIndustries(b: FranchiseBrand): FranchiseBrand {
   return { ...b, subIndustryIds: merged };
 }
 
-/** 보강된 전체 풀(큐레이션 우선 + 공정위). 매칭의 기준 데이터. */
+/** 보강된 전체 풀(큐레이션 우선 + 공정위). 매칭의 기준 데이터.
+ *  위탁 학습지(consignment-tutor)는 가맹점이 아니므로 프랜차이즈 매칭 풀에서 제외. */
 export const franchiseBrandsAllEnriched: FranchiseBrand[] =
-  franchiseBrandsAll.map(enrichBrandSubIndustries);
+  franchiseBrandsAll
+    .filter((b) => b.businessModel !== "consignment-tutor")
+    .map(enrichBrandSubIndustries);
 
 // 교차명 중복 — 공정위 영업표지와 큐레이션 마케팅명이 다른 동일 브랜드.
 //  접미사 제거(스터디카페·치킨 등) 자동 매칭은 위험(피자마루↔치킨마루 오병합)하므로
@@ -415,7 +424,9 @@ function sortBrandsForPicker(brands: FranchiseBrand[]): FranchiseBrand[] {
 
 /** Get franchise brands for a category (fallback) — 로드맵 선택용이라 큐레이션만 (탐색은 franchiseBrandsAll) */
 export function getFranchiseBrandsForCategory(categoryId: string): FranchiseBrand[] {
-  return franchiseBrands.filter((fb) => fb.categoryId === categoryId);
+  return franchiseBrands.filter(
+    (fb) => fb.categoryId === categoryId && fb.businessModel !== "consignment-tutor",
+  );
 }
 
 /** Get a single franchise brand by ID — 큐레이션 + 공정위 전체에서 조회 */
@@ -805,11 +816,6 @@ const brandSupplyOverrides: Record<string, FranchiseSupplyItem[]> = {
     { category: { ko: "샐러드 재료·드레싱", en: "Salad ingredients & dressing" }, type: "hq-exclusive", items: [{ ko: "본사 레시피 드레싱·토핑 공급", en: "HQ recipe dressing/topping supply" }] },
     { category: { ko: "신선 채소", en: "Fresh vegetables" }, type: "free-purchase", items: [{ ko: "채소·과일 현지 구매 (신선도 관리 핵심)", en: "Vegetables/fruit local purchase (freshness critical)" }], note: { ko: "식재료 신선도 관리가 핵심 — 오피스 상권 필수", en: "Freshness management is key — office district essential" } },
     { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "브랜드 용기·봉투", en: "Brand containers/bags" }] },
-  ],
-  "vips": [
-    { category: { ko: "식재료 전체", en: "All ingredients" }, type: "hq-exclusive", items: [{ ko: "CJ푸드빌 통합 식자재 공급 (CJ프레시웨이 물류)", en: "CJ Foodville integrated supply (CJ Freshway logistics)" }], note: { ko: "CJ그룹 계열 — 안정적 공급망. 샐러드바·스테이크·파스타 전 메뉴 본사 레시피", en: "CJ Group — stable supply chain. All menus HQ recipe" } },
-    { category: { ko: "장비·인테리어", en: "Equipment & interior" }, type: "hq-designated", items: [{ ko: "대형 주방설비·샐러드바·인테리어 (100평+ 필수)", en: "Large kitchen, salad bar, interior (100+ pyeong)" }] },
-    { category: { ko: "소모품", en: "Consumables" }, type: "free-purchase", items: [{ ko: "세제·위생용품", en: "Detergent, hygiene" }] },
   ],
   "rolling-pasta": [
     { category: { ko: "파스타 소스·면", en: "Pasta sauce & noodles" }, type: "hq-exclusive", items: [{ ko: "더본코리아 통합 물류 공급 (소스·면·토핑)", en: "The Born integrated supply (sauce, noodles, toppings)" }], note: { ko: "더본코리아 계열 — 백종원 레시피 기반. 배달 비중 높아 포장재 소모 많음", en: "The Born brand — Baek Jongwon recipes. High delivery = high packaging use" } },

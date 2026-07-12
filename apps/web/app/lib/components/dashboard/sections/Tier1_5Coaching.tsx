@@ -41,9 +41,8 @@ import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 //   표준 (AI 통합 hero) 정합. 11 업종 임계값 룰엔진은 useIndustryRuleSignal hook 으로 추출 →
 //   useMorningBriefingBrain 이 흡수 → resolveHero 우선순위 1.6 으로 CEOMorningHero 에서 자동 노출.
 //   22 자료 검증 통과 (NN/G·Carbon·M3·Toast·Amplitude·Square·Mercury·Reforge 등).
-// 2026-05-13 Phase 2: IntegrationHubCard 마이페이지 이동 — profile/ 폴더에 개별 OAuth
-//   카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X.
-// import { IntegrationHubCard } from "../IntegrationHubCard";
+// 2026-05-13 Phase 2: IntegrationHubCard 마이페이지 이동(2026-07-12 컴포넌트 삭제) — profile/
+//   폴더에 개별 OAuth 카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X.
 import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
 import { MenuProfitabilityCard } from "../MenuProfitabilityCard";

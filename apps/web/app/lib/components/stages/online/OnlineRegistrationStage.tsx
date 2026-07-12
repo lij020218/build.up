@@ -4,11 +4,26 @@ import { StoreNameInput } from "../shared/StoreNameInput";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
 
+// 세부업종별 홈택스 업종코드 (국세청 6자리 기준경비율 코드 — 2026-07-10 공식 검증).
+//   ⚠️ 종전 47911은 통계청 표준산업분류(KSIC)라 홈택스 입력 코드가 아님 → 525101로 교정.
+//   smart-store·위탁판매=525101 / 구매대행=525105(대행 수수료업) / 전자책=221100+525101 병기 /
+//   크리에이터=940306(면세·무시설) vs 921505(과세·시설), 매출 8천만원↑는 921505.
+const INDUSTRY_CODE_STEP_KO: Record<string, { step: string; detail: string }> = {
+  "smart-store": { step: "업종코드 입력: 전자상거래 소매업 (525101)", detail: "오픈마켓·스마트스토어 입점 셀러의 기본 업종코드" },
+  "consignment-commerce": { step: "업종코드 입력: 전자상거래 소매업 (525101)", detail: "위탁판매도 내 명의로 판매·CS하면 소매업 — 판매자·구매자 연결만 하는 순수 중개는 소매중개업(525102)" },
+  "global-buying": { step: "업종코드 입력: 해외직구대행업 (525105)", detail: "재화 판매가 아닌 구매대행 서비스 — 대행 수수료 기준 과세라 세금 구조가 다름" },
+  "digital-products": { step: "업종코드 입력: 서적출판업(전자책·전자출판, 221100) + 전자상거래 소매업(525101) 병기", detail: "전자책·디지털 콘텐츠는 출판업 코드에 온라인 판매 겸업 코드를 함께 등록" },
+  "creator-service": { step: "업종코드 입력: 1인미디어콘텐츠창작자(940306) 또는 미디어콘텐츠창작업(921505)", detail: "무시설·1인=940306(면세) / 시설·인력 보유=921505(과세) — 연매출 8천만원 이상이면 921505" },
+  "newsletter-membership": { step: "업종코드 입력: 1인미디어콘텐츠창작자(940306) 등 콘텐츠 창작 계열", detail: "유료 뉴스레터·멤버십은 콘텐츠 창작 계열 — 홈택스 업종코드 조회 후 세무서 최종 확인 권장" },
+};
+const INDUSTRY_CODE_STEP_FALLBACK_KO = { step: "업종코드 입력: 전자상거래 소매업 (525101)", detail: "온라인 판매의 기본 업종코드 — 홈택스 업종코드 조회에서 확인" };
+
 export function OnlineRegistrationStage() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
   const regPage = d.regPage;
   const setRegPage = d.setRegPage;
+  const industryCodeStep = INDUSTRY_CODE_STEP_KO[d.selectedIndustryId ?? ""] ?? INDUSTRY_CODE_STEP_FALLBACK_KO;
 
   const pages = [
     // ── 페이지 0: 사업자등록 ──
@@ -83,13 +98,13 @@ export function OnlineRegistrationStage() {
           {(ko ? [
             { step: "홈택스 접속 → 로그인 (공동인증서)", detail: "공동인증서가 없으면 세무서 방문도 가능합니다" },
             { step: "신청/제출 → 사업자등록 신청 클릭", detail: "개인사업자 선택 (법인 아님)" },
-            { step: "업종코드 입력: 전자상거래 소매업 (47911)", detail: "온라인 판매의 기본 업종코드입니다" },
+            { step: industryCodeStep.step, detail: industryCodeStep.detail },
             { step: "사업장 주소 입력", detail: "자택도 가능 — 전입세대열람원으로 대체" },
             { step: "제출 후 즉일~3영업일 내 발급", detail: "문자로 발급 알림이 옵니다" },
           ] : [
             { step: "Log into Hometax (certificate required)", detail: "Visit tax office if no certificate" },
             { step: "Apply → Business Registration", detail: "Select sole proprietor (not corporation)" },
-            { step: "Industry code: 47911 (e-commerce retail)", detail: "Standard code for online selling" },
+            { step: "Industry code: 525101 (e-commerce retail) — varies by sub-industry", detail: "Digital content/creator businesses use different codes (221100 / 940306)" },
             { step: "Enter business address", detail: "Home address allowed" },
             { step: "Submit — issued in 0~3 business days", detail: "SMS notification when ready" },
           ]).map((s, i) => (
@@ -307,9 +322,9 @@ export function OnlineRegistrationStage() {
 
       <StageWrapup
         ko={ko}
-        nextStageLabelKo="공급처·소싱"
+        nextStageLabelKo="사업자등록 & 금융 세팅"
         doneItemsKo={[
-          { label: "1. 사업자등록 신청", detail: "홈택스 온라인 신청 — 업태·종목 「전자상거래 소매업」 + 임대차 없는 경우 자택 주소 가능" },
+          { label: "1. 사업자등록 신청", detail: "홈택스 온라인 신청 — 업태·종목은 위 가이드의 세부 업종별 업종코드 기준 + 임대차 없는 경우 자택 주소 가능" },
           { label: "2. 통신판매업 신고", detail: "관할 구청 또는 정부24 — 사업자등록증·구매안전서비스 이용 확인증 필요, 1~3일 발급" },
           { label: "3. 구매안전서비스(에스크로) 확보", detail: "마켓플레이스(스마트스토어·쿠팡)는 플랫폼 구매안전서비스 이용확인증 / 자사몰은 PG사(토스페이먼츠·KG이니시스 등) 계약" },
           { label: "4. 스토어 기본 셋업", detail: "스토어명 중복 검색 + 사업자 판매자 등록·통장 연동 + 자사몰 시 도메인·로고 등록" },
@@ -322,7 +337,7 @@ export function OnlineRegistrationStage() {
           "청약철회 — 7일 이내 무조건 청약철회 의무 (예외: 맞춤제작·식품·디지털콘텐츠), 약관 명시 필수",
           "개인정보 처리방침 — 개인정보보호법 의무 게시 + 수집·이용·제공·파기 4항목 명문화",
         ]}
-        nextSummaryKo="사업자등록·통신판매 신고 완료 → 공급처·소싱 단계로 진입"
+        nextSummaryKo="사업자등록·통신판매 신고 완료 → 사업자등록 & 금융 세팅(사업용 통장·세무 대리) 단계로 진입"
       />
     </div>
   );

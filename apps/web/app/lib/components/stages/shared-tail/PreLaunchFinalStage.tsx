@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { StageWrapup } from "../shared/StageWrapup";
 import { resolveSpecialtyKeyAction } from "@foundone/shared";
+import { isDigitalFulfillment } from "../online/DigitalFulfillmentNotice";
 
 const MIDNIGHT = "#191970";
 
@@ -36,6 +37,8 @@ export function PreLaunchFinalStage() {
   const specialtyKA = resolveSpecialtyKeyAction("pre-launch-final", selectedIndustryId ?? undefined, industryCategoryId ?? undefined);
   const isStartup = industryCategoryId === "startup-tech";
   const isOnline = industryCategoryId === "online-digital";
+  // online 안에서도 디지털 콘텐츠(무배송)는 포장·송장·택배·재고가 성립하지 않음 — 자동 전달 트랙으로 재분기. (2026-07-10)
+  const isDigital = isOnline && isDigitalFulfillment(selectedIndustryId);
   // 2026-06-30 사장님 신고: 미용실인데 '조리대 살균·직원 위생복' 등 음식 전용 점검이 뜸.
   //   오프라인을 업종군으로 분기 — food(음식·카페) / retail(소매) / service(미용·피트니스·반려·교육·생활).
   const offlineKind: "food" | "retail" | "beauty" | "fitness" | "pet" | "space" | "service" =
@@ -72,6 +75,21 @@ export function PreLaunchFinalStage() {
           ? { title: "D-7부터 매일 1개 행동 — 캘린더에 미리 등록하고 시작", detail: "D-7 PH 예약 + 메일링 알림 / D-3 SNS 티저 + 데모 영상 / D-1 최종 배포 + 모니터링 / D-Day 06시 PT 게시 / D+1 핫픽스 + 감사 메시지 / D+7 첫 주 지표 리뷰." }
           : { title: "One action per day starting D-7", detail: "D-7 PH schedule + mailing / D-3 SNS teaser + demo / D-1 final deploy / D-Day post 12:01 PT / D+1 hotfix + thanks / D+7 metrics review." },
       }
+    : isDigital
+      ? {
+          0: ko
+            ? { title: "첫 주문 자동 전달 1번 모의 시뮬레이션 — 결제→다운로드/접근 권한까지", detail: "결제 즉시 자동 전달이 안 되면 구매자 즉시 환불 + 부정 후기. 첫 후기 3개가 노출 순위 좌우. 본인 계정으로 결제→자동 다운로드 링크 수신→파일 정상 열림까지 1번 끝까지 돌려보세요." }
+            : { title: "Run one full auto-delivery simulation — payment → download/access", detail: "Failed instant delivery = instant refund + bad review. First 3 reviews drive rank. Walk through one purchase end-to-end yourself." },
+          1: ko
+            ? { title: "파일 스토리지·다운로드 링크 상태 점검 — 용량·트래픽·만료 정책 확인", detail: "스토어 카테고리·환불정책(디지털 청약철회 예외 고지) 최종 확인 + 카카오톡 채널/네이버 톡톡 CS 오픈 + 자동 발송(메일·다운로드) 정상 작동 확인." }
+            : { title: "Check file storage & download link health — capacity, traffic, expiry", detail: "Categories, refund policy (digital withdrawal exceptions), KakaoTalk/Naver TalkTalk CS, auto-delivery verified." },
+          2: ko
+            ? { title: "주문 알림 즉시 확인 → 전달 실패 30분 내 대응 워크플로 고정", detail: "자동 전달 실패(메일 누락·링크 만료·용량 초과) 시 30분 내 수동 재전달. 알림 OFF 절대 금지. 발급·전달 로그 보관 = 분쟁 대비 결정적 증거." }
+            : { title: "Lock the alert→re-deliver-within-30min workflow", detail: "On delivery failure (missing mail, expired link) re-send within 30 min. Keep delivery logs — decisive dispute evidence." },
+          3: ko
+            ? { title: "오픈 7일 전부터 인스타 릴스 매일 1개 — 프리뷰·미리보기 하이라이트 누적", detail: "D-7 첫 구매 쿠폰 + 오픈 예약 / D-3 릴스 상품 프리뷰(미리보기) / D-1 최종 점검 / D-Day SNS 공유 + 첫 후기 요청 / D+7 데이터 분석 + 플랫폼·SNS 광고 시작." }
+            : { title: "One Instagram Reel per day from D-7 — preview highlights", detail: "D-7 coupon + reservation / D-3 product preview reels / D-1 final check / D-Day share + ask review / D+7 ads start." },
+        }
     : isOnline
       ? {
           0: ko
@@ -134,6 +152,37 @@ export function PreLaunchFinalStage() {
           { label: "No D+1 thank-you = 0 retention", text: "Even PH #1 dies if D+7 retention <5%. Personal D+1 DMs 2-3× retention." },
         ],
       }
+    : isDigital
+      ? {
+          0: ko ? [
+            { label: "첫 주문 자동 전달 실패 = 즉시 1점 후기 + 노출 패널티", text: "메일 발송 누락·다운로드 링크 오류는 신규 디지털 셀러 가장 흔한 사고. 자기 결제 모의 1번이 30만원 광고비보다 효과적." },
+            { label: "초기 후기 3개가 향후 6개월 노출 결정", text: "플랫폼은 초기 평점을 노출에 크게 가중. 첫 3건은 정말 정성을 들여 처리해야 함." },
+          ] : [
+            { label: "Failed auto-delivery = 1-star + ranking penalty", text: "Missing email / broken download link is the #1 new digital-seller incident. One self-purchase dry run beats 300K KRW in ads." },
+            { label: "First 3 reviews lock 6-month visibility", text: "Platforms weight early ratings heavily." },
+          ],
+          1: ko ? [
+            { label: "다운로드 링크 만료·용량 초과 = 전달 불가 + 자동 환불", text: "스토리지 용량·링크 만료 정책·트래픽 한도를 오픈 전에 확인. 전달 불가 상태로 판매하면 환불 + 노출 점수 하락." },
+            { label: "청약철회 예외 미고지 = 환불 분쟁 100% 패소", text: "디지털 콘텐츠는 '다운로드 즉시 청약철회 제한'을 판매 페이지에 사전 고지해야 예외 인정. 미고지 시 7일 무조건 환불 의무." },
+          ] : [
+            { label: "Expired link / storage overflow = undeliverable + auto refund", text: "Verify storage capacity, link expiry, and traffic limits before opening." },
+            { label: "No withdrawal-exception notice = lose every refund dispute", text: "Digital content must state the download-voids-withdrawal clause on the sales page." },
+          ],
+          2: ko ? [
+            { label: "전달 로그 미보관 = 분쟁 시 셀러 책임", text: "발급·전달 로그(메일 발송 기록·다운로드 이력)가 분쟁의 결정적 증거. 자동 저장 구조를 미리 확인." },
+            { label: "CS 알림 OFF / 답변 24시간 지연 = 환불 의무", text: "CS 응답 SLA를 운영 정책에 사전 등록 + 야간 자동응답 메시지 설정." },
+          ] : [
+            { label: "No delivery logs = seller loses disputes", text: "Email send records + download history are decisive evidence. Verify auto-logging." },
+            { label: "CS off / 24h delayed reply = mandatory refund", text: "Pre-set CS SLA in store policy + after-hours auto-reply." },
+          ],
+          3: ko ? [
+            { label: "광고만 돌리면 ROAS 100% 미만으로 적자", text: "오픈 첫 주 광고는 콘텐츠(릴스·블로그) 누적 후 시작. 콘텐츠 0개에서 광고 = 돈 태우기." },
+            { label: "쿠폰 남발하면 본가 매출 회복 불가", text: "오픈 첫 구매 5-10% 쿠폰까지만. 30% 이상 쿠폰은 신규고객만 데려오고 그들이 다시 안 옴." },
+          ] : [
+            { label: "Ads-only = ROAS <100%", text: "Build content first (Reels, blog), then ads. Ads on zero content = burn." },
+            { label: "Heavy coupons = no recovery on full price", text: "5-10% open coupon max. 30%+ attracts deal-only buyers who never return." },
+          ],
+        }
     : isOnline
       ? {
           0: ko ? [
@@ -204,7 +253,7 @@ export function PreLaunchFinalStage() {
         { item: "Sentry 에러 모니터링 + Slack 알림 실제 트리거 테스트", priority: "필수", required: true, how: "코드에 throw new Error('test-' + Date.now()) 1줄 → Slack 채널에 메시지 도착 확인 → 즉시 제거" },
         { item: "결제 플로우 라이브 키로 100원 1건 결제 + 환불 완주", priority: "필수", required: true, how: "Toss/Stripe 라이브 키로 본인 카드 100원 결제 → 웹훅 수신 → 자동 환불 → 영수증 메일 도착" },
         { item: "랜딩 페이지: 헤드라인·CTA·OG 이미지 모바일 미리보기", priority: "필수", required: true, how: "metatags.io에서 OG 이미지 검증 + 카카오톡·X·LinkedIn 미리보기 1번씩 확인" },
-        { item: "이용약관 + 개인정보처리방침 + 사업자 정보 풋터 표시", priority: "법적 필수", required: true, how: "동의 분리(마케팅·필수) + AI 기능 있으면 고지·산출물 표시(AI 기본법) + 자동결정 시 거부·설명 창구 + 외국 법인이면 국내대리인" },
+        { item: "이용약관 + 개인정보처리방침 + 사업자 정보 풋터 표시", priority: "법적 필수", required: true, how: "동의 분리(마케팅·필수) + AI 기능 있으면 고지·산출물 표시(AI 기본법) + 자동결정 시 거부·설명 창구 + 마케팅 발송 시 '(광고)' 표기·수신거부(정보통신망법 §50) + 외국 법인이면 국내대리인" },
         { item: "404·500 페이지 + 로딩 상태 + 에러 fallback UI", priority: "필수", required: true, how: "next.config 에 not-found.tsx + error.tsx + loading.tsx 3종 작성. 댓글에 깨진 화면 캡처 = 치명적." },
         { item: "robots.txt + sitemap.xml + Google Search Console 등록", priority: "필수", required: true, how: "next-sitemap 패키지 → 빌드 시 자동 생성 → GSC에 sitemap 제출 → 색인 요청" },
         { item: "Status 페이지 (Better Stack / Instatus) + RSS 피드", priority: "필수", required: true, how: "Better Stack 무료 → 6개 모니터 등록 (web/api/db/auth/payment/cdn) → status.{domain} 서브도메인 연결" },
@@ -221,7 +270,7 @@ export function PreLaunchFinalStage() {
         { item: "Sentry + Slack alarm triggered with real error", priority: "Required", required: true, how: "throw new Error('test-' + Date.now()) → confirm Slack message → remove" },
         { item: "Live payment: 100 KRW charge + refund completed", priority: "Required", required: true, how: "Live key → real card → webhook → auto-refund → email receipt" },
         { item: "Landing: headline, CTA, OG image mobile-preview", priority: "Required", required: true, how: "metatags.io + Kakao/X/LinkedIn previews" },
-        { item: "Legal: Terms, Privacy, biz info footer (PIPA 2025 + AI Basic Act)", priority: "Legal", required: true, how: "Granular consent + AI disclosure/output labeling if AI feature + automated-decision opt-out channel + KR rep if offshore entity" },
+        { item: "Legal: Terms, Privacy, biz info footer (Privacy Act 2023 amend. + AI Basic Act)", priority: "Legal", required: true, how: "Granular consent + AI disclosure/output labeling if AI feature + automated-decision opt-out channel + '(광고)' labeling for marketing sends (Network Act §50) + KR rep if offshore entity" },
         { item: "404/500 + loading + error fallback UI", priority: "Required", required: true, how: "not-found.tsx + error.tsx + loading.tsx" },
         { item: "robots.txt + sitemap.xml + GSC registered", priority: "Required", required: true, how: "next-sitemap → submit to GSC" },
         { item: "Status page (Better Stack/Instatus) + RSS", priority: "Required", required: true, how: "6 monitors: web/api/db/auth/payment/cdn" },
@@ -234,6 +283,26 @@ export function PreLaunchFinalStage() {
         { item: "PH page draft — 60-char tagline + 5 screenshots + GIF", priority: "Recommended", required: false, how: "'X for Y' pattern. First screenshot = core value." },
         { item: "Show HN draft — 'Show HN: Product – use case' (honest)", priority: "Recommended", required: false, how: "Post +8h after PH. Be candid about trade-offs." },
       ])
+    : isDigital
+      ? (ko ? [
+          { item: "스토어 카테고리·배너·환불정책(디지털 청약철회 예외 고지) 최종 확인", priority: "필수", required: true },
+          { item: "본인 결제 → 자동 다운로드/접근 권한 발급 → 파일 정상 열림까지 1번 완주 (자기 주문)", priority: "필수", required: true },
+          { item: "파일 스토리지 용량·다운로드 링크 만료 정책·트래픽 한도 점검", priority: "필수", required: true },
+          { item: "환불·전달 실패 시나리오 시뮬레이션 + 응답 템플릿 5종", priority: "필수", required: true },
+          { item: "CS 채널 오픈: 카카오톡 채널 / 네이버 톡톡 + 야간 자동응답", priority: "필수", required: true },
+          { item: "원본 파일 최신 버전 확인 + 발급·전달 로그 자동 저장 구조 확인", priority: "필수", required: true },
+          { item: "자동 발송 솔루션(메일·다운로드) 예비 수동 전달 경로 확보", priority: "권장", required: false },
+          { item: "상세 페이지 모바일 미리보기 + 4초 첫인상 점검", priority: "권장", required: false },
+        ] : [
+          { item: "Store categories, banners, refund policy (digital withdrawal exceptions) finalized", priority: "Required", required: true },
+          { item: "Self-purchase full cycle: pay → auto download/access → file opens", priority: "Required", required: true },
+          { item: "Storage capacity, link expiry policy, traffic limits checked", priority: "Required", required: true },
+          { item: "Refund/delivery-failure scenarios + 5 reply templates", priority: "Required", required: true },
+          { item: "CS channel open + after-hours auto-reply", priority: "Required", required: true },
+          { item: "Latest master files verified + delivery logs auto-saved", priority: "Required", required: true },
+          { item: "Manual fallback delivery path prepared", priority: "Recommended", required: false },
+          { item: "Mobile detail-page preview + 4-sec first-impression test", priority: "Recommended", required: false },
+        ])
     : isOnline
       ? (ko ? [
           { item: "스토어 카테고리·배너·반품정책 최종 확인", priority: "필수", required: true },
@@ -400,6 +469,20 @@ export function PreLaunchFinalStage() {
         { role: "Community", task: "Discord/Kakao open + dedicated feedback channel + 24h monitoring", icon: MessageSquare },
         { role: "Live ops", task: "Bug + CS + marketing roles (solo priority: bugs > CS > marketing)", icon: Bug },
       ])
+    : isDigital
+      ? (ko ? [
+          { role: "주문 확인", task: "푸시 알림 즉시 확인 → 결제·자동 전달 정상 여부 확인 (30분 내)", icon: BellRing },
+          { role: "전달 확인", task: "자동 다운로드/메일 발송 성공 확인 → 발급·전달 로그 보관 (분쟁 대비)", icon: PackageCheck },
+          { role: "재전달 대응", task: "전달 실패(메일 누락·링크 만료) 시 30분 내 수동 재전달 + 원인 기록", icon: Reply },
+          { role: "CS 대응", task: "이용 문의·환불(청약철회 예외 안내) 5종 템플릿. 24시간 내 1차 응답이 환불 의무 회피", icon: MessageSquare },
+          { role: "상품 관리", task: "당일 판매량 기록 → 후기·문의에서 나온 개선점 반영 → 파일 버전 관리", icon: ClipboardList },
+        ] : [
+          { role: "Order check", task: "Push alert → verify payment & auto-delivery (within 30 min)", icon: BellRing },
+          { role: "Delivery check", task: "Confirm download/email success → keep delivery logs (dispute proof)", icon: PackageCheck },
+          { role: "Re-delivery", task: "On failure (missing mail, expired link) re-send within 30 min", icon: Reply },
+          { role: "CS", task: "5 reply templates incl. withdrawal-exception notice. <24h first reply", icon: MessageSquare },
+          { role: "Product care", task: "Daily sales log → apply review feedback → version control", icon: ClipboardList },
+        ])
     : isOnline
       ? (ko ? [
           { role: "주문 확인", task: "푸시 알림 즉시 확인 → 주문 상세 검토 → 재고 차감 (30분 내)", icon: BellRing },
@@ -533,6 +616,22 @@ export function PreLaunchFinalStage() {
         { when: "D+7",  what: "Metrics review: DAU · D+7 retention 25-35% target · drop-off", channel: "Internal · Email" },
         { when: "D+14", what: "Cohort plateau — verify D+14 retention 18-25%. Below = pivot core value", channel: "Internal" },
       ])
+    : isDigital
+      ? (ko ? [
+          { when: "D-7", what: "스토어 오픈 예약 설정 + 첫 구매 5-10% 쿠폰 생성 + 오픈 알림 등록", channel: "판매 플랫폼" },
+          { when: "D-3", what: "인스타 릴스 상품 프리뷰(미리보기 하이라이트) + 오픈 카운트다운 일 1콘텐츠", channel: "인스타그램" },
+          { when: "D-1", what: "파일 스토리지·다운로드 링크 트래픽 점검 + 자기 결제 1건 자동 전달 시뮬", channel: "내부" },
+          { when: "D-Day", what: "스토어 오픈 + SNS 라이브 + 전달 실패 문의 30분 내 대응 + 첫 후기 요청", channel: "전 채널" },
+          { when: "D+1", what: "첫날 주문·매출·문의 정리 + 상세페이지 미세 수정", channel: "내부" },
+          { when: "D+7", what: "첫 주 데이터 분석 + 플랫폼·SNS 광고 시작 (콘텐츠 누적 후)", channel: "광고" },
+        ] : [
+          { when: "D-7", what: "Reservation set + 5-10% open coupon + alerts scheduled", channel: "Platform" },
+          { when: "D-3", what: "Daily Instagram Reels product previews + countdown", channel: "Instagram" },
+          { when: "D-1", what: "Storage/link traffic check + one self-purchase auto-delivery sim", channel: "Internal" },
+          { when: "D-Day", what: "Store open + SNS live + delivery-fail replies <30 min + review request", channel: "All" },
+          { when: "D+1", what: "Day 1 orders/revenue/inquiries review + listing edits", channel: "Internal" },
+          { when: "D+7", what: "Week 1 data + start platform/SNS ads (content first)", channel: "Ads" },
+        ])
     : isOnline
       ? (ko ? [
           { when: "D-7", what: "스토어 오픈 예약 설정 + 첫 구매 5-10% 쿠폰 생성 + 오픈 알림 등록", channel: "스마트스토어" },
@@ -724,7 +823,7 @@ export function PreLaunchFinalStage() {
       ])
     : [];
 
-  // ─── PIPA 2025 법적 필수 ───
+  // ─── 개인정보보호법(2023 개정) 법적 필수 ───
   type LegalItem = { title: string; deadline: string; detail: string };
   const legalRequirements: LegalItem[] = isStartup
     ? (ko ? [
@@ -733,6 +832,7 @@ export function PreLaunchFinalStage() {
         { title: "동의 분리 의무",                    deadline: "상시 적용",        detail: "필수 수집·마케팅·제3자 제공 동의를 절대 묶음 처리 X. 항목별 별도 체크박스" },
         { title: "개인정보 전송요구권 (마이데이터)",   deadline: "분야별 단계 2025~2027", detail: "2025 의료·통신 → 2026 에너지·교육·고용·여가 → 2027 복지·교통 등. 지정된 대규모 기관부터라 초기 스타트업 대부분은 즉시 의무 X. 해당 분야면 대비 + GDPR·신뢰 위해 데이터 export 권장" },
         { title: "외국 사업자 국내대리인 지정",       deadline: "2025.10.2 시행",   detail: "한국 이용자 대상, 국내 주소·영업소 없는 외국 법인은 국내대리인 지정·게시 의무 (해외 법인 구조면 확인). 미지정 시 과태료" },
+        { title: "마케팅·광고성 정보 표기 (정보통신망법 §50)", deadline: "발송 시 상시", detail: "론칭 메일·문자·알림 등 영리 광고성 정보는 사전 수신동의 + 제목 시작점에 '(광고)' 표기 + 본문에 전송자 명칭·연락처·수신거부(무료) 방법 명시. 야간(21~08시) 발송은 별도 동의 필요. 위반 시 최대 3천만원 과태료 + KISA 스팸 신고 대상" },
         { title: "이용약관 + 개인정보처리방침 + 풋터", deadline: "오픈 즉시 필수",   detail: "사업자 정보 (상호·대표·주소·사업자번호·통신판매업) + 환불 정책 + 문의처 표시" },
       ] : [
         { title: "Generative AI disclosure (AI Basic Act)", deadline: "In force Jan 22 2026 · 1yr+ grace", detail: "If you ship an AI chatbot/generation feature, disclose 'AI-powered/AI-generated' up front + label outputs. Grace period now (fines 2027+) — bake copy/labels in before launch. Note: high-impact AI (healthcare·energy·transport·hiring) carries extra duties (risk mgmt, impact assessment)" },
@@ -740,6 +840,7 @@ export function PreLaunchFinalStage() {
         { title: "Granular consent",            deadline: "Always",       detail: "Never bundle required·marketing·3rd-party consent — separate checkbox per item" },
         { title: "Data portability (MyData)",   deadline: "Phased 2025-2027", detail: "2025 health·telecom → 2026 energy·education·employment → 2027+. Applies to designated large holders first, so most early startups aren't yet obligated. Prepare if in-scope; offer export for GDPR·trust" },
         { title: "Foreign-business domestic rep", deadline: "In force Oct 2 2025", detail: "Foreign entities without a KR establishment serving KR users must appoint & publish a domestic representative (check if offshore-incorporated)" },
+        { title: "Marketing/ad labeling (Network Act §50)", deadline: "Whenever sending", detail: "Commercial marketing email/SMS/push needs prior opt-in + '(광고)' at the start of the subject + sender name/contact & a free unsubscribe method in the body. Night sends (21:00–08:00) need separate consent. Up to ₩30M fine + KISA spam report" },
         { title: "Terms + Privacy + Footer",    deadline: "Day 1",        detail: "Business info (name·CEO·address·biz number·e-commerce permit) + refund policy + contact" },
       ])
     : [];
@@ -790,6 +891,50 @@ export function PreLaunchFinalStage() {
           { verb: "Lock D-Day calendar — no meetings",  detail: "Block 24h on D-Day + 4h each on D-1 and D+1. No meetings, no errands",                          time: "5 min" },
         ],
       })
+    : isDigital
+      ? (ko ? {
+          0: [
+            { verb: "오픈 D-Day 날짜 확정",              detail: "원본 파일 최신화·자동 발송 점검 완료 후 일자 — 오늘부터 1~2주 후 평일 권장",                   time: "10분" },
+            { verb: "자기 주문 시뮬 1번 완주",            detail: "본인 계정으로 결제 → 자동 다운로드 링크 메일 수신 → 파일 정상 열림까지 한 번 끝까지",          time: "30분" },
+            { verb: "톡톡·카카오톡 채널 12시간 SLA 설정",  detail: "자동응답 + 영업외 시간 안내 + Slack 푸시 연결",                                                time: "30분" },
+          ],
+          1: [
+            { verb: "원본 파일 ↔ 판매 페이지 버전 일치 확인", detail: "구버전 파일 판매 = 환불·부정 후기 1순위. 업데이트 이력 표기",                              time: "30분" },
+            { verb: "스토리지 용량·다운로드 트래픽 점검",   detail: "링크 만료 정책 + 트래픽 한도 + 용량 여유 — 첫 주 수요량 ×3",                                  time: "30분" },
+            { verb: "환불·전달 실패 응답 템플릿 5종 작성",  detail: "단순 변심(청약철회 예외 안내)·파일 하자·전달 실패·중복 결제·CS 미응답 5종을 미리 작성해 톡톡 빠른답장에 등록", time: "30분" },
+          ],
+          2: [
+            { verb: "주문 알림 푸시 ON + 30분 룰 고정",    detail: "스마트폰·PC 양쪽 알림 + 매일 아침 첫 일과로 설정",                                               time: "10분" },
+            { verb: "발급·전달 로그 자동 저장 확인",        detail: "메일 발송 기록·다운로드 이력이 분쟁의 결정적 증거 — 자동 저장 구조 확인",                       time: "15분" },
+            { verb: "수동 재전달 예비 경로 확보",          detail: "자동 발송 실패 시 30분 내 수동 전달할 경로(메일 직송·클라우드 링크) 준비",                       time: "10분" },
+          ],
+          3: [
+            { verb: "D-7 첫 구매 쿠폰 + 알림받기 발행",     detail: "5~10% 쿠폰 (이상 X). 알림받기 100명 사전 모집",                                                time: "30분" },
+            { verb: "인스타 D-7부터 매일 1콘텐츠 예약",     detail: "릴스(프리뷰·미리보기) 7개를 미리 만들어 예약 — 즉흥 콘텐츠는 망함",                             time: "2시간" },
+            { verb: "D+7 광고 시작 알림 등록",              detail: "후기 3개+ 누적 후 시작이 정답. 광고 시작 알림을 D+7 캘린더에 등록",                            time: "5분" },
+          ],
+        } : {
+          0: [
+            { verb: "Lock open D-Day",                   detail: "After master files + auto-delivery verified — pick a weekday 1-2 weeks out",                    time: "10 min" },
+            { verb: "Run one self-purchase full cycle",  detail: "Your own payment → auto download link → file opens — full E2E",                                 time: "30 min" },
+            { verb: "TalkTalk/Kakao 12h SLA setup",       detail: "Auto-reply + after-hours notice + Slack push",                                                  time: "30 min" },
+          ],
+          1: [
+            { verb: "Sync master files ↔ listing version", detail: "Selling stale files = #1 refund cause. Show update history",                                   time: "30 min" },
+            { verb: "Check storage & download traffic",   detail: "Link expiry + traffic limits + capacity. First-week demand × 3",                                time: "30 min" },
+            { verb: "5 refund/delivery-fail templates",   detail: "Withdrawal-exception·defect·delivery-fail·double-charge·CS-miss — pre-write into quick-replies", time: "30 min" },
+          ],
+          2: [
+            { verb: "Push alerts ON + 30-min rule",       detail: "Phone + PC notifications + daily morning routine",                                              time: "10 min" },
+            { verb: "Verify delivery-log auto-save",      detail: "Send records + download history = decisive dispute evidence",                                   time: "15 min" },
+            { verb: "Prepare manual re-delivery path",    detail: "Email direct-send / cloud link fallback within 30 min",                                         time: "10 min" },
+          ],
+          3: [
+            { verb: "D-7 first-buy coupon + alerts",      detail: "5-10% coupon (no more). 100 alert subscribers ahead",                                          time: "30 min" },
+            { verb: "Schedule daily Instagram from D-7",  detail: "Pre-make 7 preview Reels and schedule — improv = fail",                                        time: "2 hrs" },
+            { verb: "Calendar 'start ads' for D+7",       detail: "After 3+ reviews. Set calendar reminder",                                                       time: "5 min" },
+          ],
+        })
     : isOnline
       ? (ko ? {
           0: [
@@ -1294,10 +1439,10 @@ export function PreLaunchFinalStage() {
             </div>
           )}
 
-          {/* PIPA 2025 법적 필수 */}
+          {/* 개인정보보호법(2023 개정) 법적 필수 */}
           {legalRequirements.length > 0 && (
             <div style={{ marginTop: "16px" }}>
-              <div style={sectionLabel}>{ko ? "법적 필수 — PIPA 2025 + AI 기본법" : "Legal Required — PIPA 2025 + AI Basic Act"}</div>
+              <div style={sectionLabel}>{ko ? "법적 필수 — 개인정보보호법(2023 개정) + AI 기본법" : "Legal Required — Privacy Act (2023 amend.) + AI Basic Act"}</div>
               <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
                 {legalRequirements.map((l, i) => (
                   <div key={l.title}>

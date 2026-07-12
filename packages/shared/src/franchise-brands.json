@@ -6747,140 +6747,6 @@
     }
   },
   {
-    "id": "vips",
-    "subIndustryIds": [
-      "western-pasta-brunch"
-    ],
-    "categoryId": "food",
-    "name": {
-      "ko": "빕스",
-      "en": "VIPS"
-    },
-    "tagline": {
-      "ko": "⚠ 가맹 모집 안 함 — CJ푸드빌 100% 직영 운영 (35개 매장, 2025)",
-      "en": "WARNING: no franchise — CJ Foodville 100% direct (35 stores 2025)"
-    },
-    "startupCostWon": 50000,
-    "franchiseFee": 2000,
-    "monthlyRoyalty": 55,
-    "avgAnnualRevenueWon": 120000,
-    "storeCount": 35,
-    "closureRate": 1.5,
-    "scores": {
-      "profitability": 85,
-      "stability": 88,
-      "accessibility": 5,
-      "brandPower": 90,
-      "support": 90
-    },
-    "roadmapNotes": {
-      "ko": [
-        "※ CJ푸드빌 직영 중심 — 가맹 표본이 적어 일부 수치는 참고용",
-        "⚠ CJ푸드빌 100% 직영 운영 — 가맹 모집 사실상 없음",
-        "2025년 매장 35개로 회복세 (전년 30개 돌파 후)",
-        "CJ푸드빌 2025 매출 1조 208억 — 7년 만에 1조 클럽 복귀",
-        "프리미엄 패밀리레스토랑·샐러드바 시그니처"
-      ],
-      "en": [
-        "Note: CJ Foodville direct-run brand — limited franchise sample, some figures indicative",
-        "WARNING: CJ Foodville 100% direct-operated — virtually no franchise opportunity",
-        "35 stores in 2025 (recovered after 30+ in 2024)",
-        "CJ Foodville 2025 revenue KRW 1.0208T — back to 1T club after 7 years",
-        "Premium family restaurant + salad bar signature"
-      ]
-    },
-    "franchiseUrl": "https://www.ivips.co.kr/",
-    "costVerified": false,
-    "description": {
-      "ko": [
-        "⚠ 빕스는 CJ푸드빌이 100% 직영으로 운영하는 패밀리레스토랑 — 일반 사장님이 가맹점주로 진입하는 모델이 사실상 존재하지 않습니다.",
-        "2025년 기준 전국 35개 매장으로 회복했으며 CJ푸드빌의 2025년 매출 1조 208억(7년 만에 1조 클럽 복귀) 의 핵심 사업 중 하나입니다.",
-        "프리미엄 스테이크·샐러드바·뷔페 모델로 객단가 약 5만 원대를 유지 — 외식 불황 속 '아·애·빕(아웃백·애슐리퀸즈·빕스)' 제2 전성기 구간에 있습니다.",
-        "다만 직영 모델이므로 가맹점 창업이 아닌 'CJ푸드빌 입사 후 매니저' 경로 외에는 진입할 수 없습니다.",
-        "**예비 사장님은 빕스가 아닌 다른 프랜차이즈를 검토하시기 권장 — 본 정보는 시장 비교용으로만 활용하세요.**"
-      ],
-      "en": [
-        "WARNING: VIPS is operated 100% directly by CJ Foodville — there is virtually no franchise model for individual owners.",
-        "35 stores in 2025; one of CJ Foodville's core businesses (2025 revenue KRW 1.0208T, back to 1T club after 7 years).",
-        "Premium steak + salad bar + buffet model with ~KRW 50K avg ticket — currently in 'A-A-B' (Outback-Ashley-VIPS) second-prime cycle.",
-        "However, as a direct-operated brand, the only entry path is 'CJ Foodville hire → manager' — not franchise ownership.",
-        "**Prospective owners should consider other franchises — this entry exists for market-comparison reference only.**"
-      ]
-    },
-    "pros": {
-      "ko": [
-        "CJ푸드빌 2025 매출 1조 208억 — 7년 만에 1조 클럽 복귀, 본사 안정성 최상위",
-        "직영 모델로 통합 운영·서비스 품질 우수 — 가맹 본사가 아니므로 점주 분쟁 무관",
-        "2024년 30개 → 2025년 35개로 매장 확대 — 회복 모멘텀 강함",
-        "프리미엄 객단가 5만 원대 유지 — 외식 불황 속 '아·애·빕' 트렌드 수혜"
-      ],
-      "en": [
-        "CJ Foodville 2025 revenue KRW 1.0208T — back to 1T club after 7 years, top-tier HQ stability",
-        "Direct model: integrated ops and service quality, no franchisee disputes",
-        "Stores expanded 30 (2024) → 35 (2025) — strong recovery momentum",
-        "Premium KRW 50K avg ticket — beneficiary of 'A-A-B' second-prime trend"
-      ]
-    },
-    "cons": {
-      "ko": [
-        "⚠ 가맹점주 모집 사실상 없음 — 사장님 창업 옵션이 아님 (가장 큰 단점)",
-        "직영 매장이므로 입점 위치는 CJ푸드빌이 결정 — 외부 진입 불가",
-        "100평 이상 대형 매장·뷔페 인프라 필수 — 자영업 모델로 복제 불가능",
-        "데이터는 시장 비교 참고용 — 실제 점포당 매출 12억은 직영 기준"
-      ],
-      "en": [
-        "WARNING: virtually no franchisee recruitment — not an owner option (biggest drawback)",
-        "Locations chosen by CJ Foodville — no external entry",
-        "100+ pyeong large store + buffet infrastructure required — uncopyable as self-employed",
-        "Data is for market comparison only — KRW 1.2B per-store is direct-store basis"
-      ]
-    },
-    "bestLocation": {
-      "ko": [
-        "⚠ 가맹 모집 안 함 — 입점 위치는 CJ푸드빌이 직영으로 선정",
-        "참고: 빕스 직영점은 백화점·복합쇼핑몰·도심 핵심 상권 (마곡·영등포·인천공항 등) 중심",
-        "예비 사장님은 본 카테고리에서 가맹 가능한 다른 패밀리·뷔페 브랜드 검토 권장 (예: 아웃백, 애슐리퀸즈)"
-      ],
-      "en": [
-        "WARNING: no franchise recruitment — locations chosen by CJ Foodville directly",
-        "Reference: VIPS direct stores are concentrated in department stores, malls, and prime urban areas (Magok, Yeongdeungpo, Incheon Airport)",
-        "Prospective owners: consider other franchise-available family/buffet brands (e.g., Outback, Ashley Queens)"
-      ]
-    },
-    "sources": [
-      {
-        "label": "VIPS 공식 홈페이지 (CJ푸드빌)",
-        "url": "https://ivips.co.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "CJ 뉴스룸 — CJ푸드빌 빕스 신규 매장 성과 호조",
-        "url": "https://cjnews.cj.net/cj%ED%91%B8%EB%93%9C%EB%B9%8C-%EB%B9%95%EC%8A%A4-%EC%8B%A0%EA%B7%9C-%EB%A7%A4%EC%9E%A5-%EC%84%B1%EA%B3%BC-%ED%98%B8%EC%A1%B0-%ED%95%B5%EC%8B%AC-%EC%83%81%EA%B6%8C-%EC%A4%91%EC%8B%AC%EC%9C%BC/",
-        "tier": "primary"
-      },
-      {
-        "label": "헤럴드경제 — 뚜레쥬르 끌고 빕스 밀고 CJ푸드빌 7년만에 1조 클럽 (2026)",
-        "url": "https://biz.heraldcorp.com/article/10709639",
-        "tier": "media"
-      },
-      {
-        "label": "다음 — 가성비 업은 아애빕 제2 전성기 (2025.10)",
-        "url": "https://v.daum.net/v/20251028164749344",
-        "tier": "media"
-      },
-      {
-        "label": "머니투데이 — 빕스 마곡점 매출 1위 프리미엄·리로케이션 통했다 (2025.02)",
-        "url": "https://news.mt.co.kr/mtview.php?no=2025022610051246748&type=2&sec=industry&pDepth2=Itotal",
-        "tier": "media"
-      }
-    ],
-    "confidence": "high",
-    "dataYear": "2025",
-    "specialtyIds": [
-      "fb-steak"
-    ]
-  },
-  {
     "id": "rolling-pasta",
     "subIndustryIds": [
       "western-pasta-brunch"
@@ -13336,8 +13202,8 @@
       "en": "Noonnoppi"
     },
     "tagline": {
-      "ko": "⚠ 대교 매출 7,000억대 유지(2025) — 단 학령인구 -200만명(2020→2030) 구조적 위기 + 교사 영업 압박 논란",
-      "en": "WARNING: Daekyo KRW ~700B revenue but 5M→4.7M school-age population decline + teacher sales-pressure controversy"
+      "ko": "위탁 학습지 — 대교 방문교사·공부방(교사 위탁, 가맹점 아님). 표기 매장 수는 교사·공부방 규모",
+      "en": "Consignment worksheet tutoring — Daekyo home-visit/study-room (teacher consignment, not a franchise store)"
     },
     "startupCostWon": 3000,
     "franchiseFee": 100,
@@ -13475,7 +13341,8 @@
     ],
     "confidence": "high",
     "dataYear": "2025",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "businessModel": "consignment-tutor"
   },
   {
     "id": "kumon",
@@ -13488,8 +13355,8 @@
       "en": "Kumon"
     },
     "tagline": {
-      "ko": "교원그룹 100% 자회사 — 1991년 일본 구몬 판권 인수, 자기주도학습 프린트 1위",
-      "en": "Kyowon Group 100% subsidiary — Japan Kumon license since 1991, #1 self-paced worksheets"
+      "ko": "위탁 학습지 — 교원 구몬 방문교사(위탁, 가맹점 아님). 표기 매장 수는 교사·회원 관리 규모",
+      "en": "Consignment worksheet tutoring — Kyowon Kumon home-visit teachers (consignment, not a franchise store)"
     },
     "startupCostWon": 2500,
     "franchiseFee": 100,
@@ -13617,7 +13484,8 @@
     ],
     "confidence": "medium",
     "dataYear": "2025",
-    "specialtyIds": []
+    "specialtyIds": [],
+    "businessModel": "consignment-tutor"
   },
   {
     "id": "yoonsaeng",

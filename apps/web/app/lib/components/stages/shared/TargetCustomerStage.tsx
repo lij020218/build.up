@@ -32,6 +32,7 @@
 
 import { Target, Users, MapPin, AlertTriangle, Check } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { isDigitalFulfillment } from "../online/DigitalFulfillmentNotice";
 import {
   MIDNIGHT,
   MIDNIGHT_BORDER,
@@ -156,6 +157,17 @@ export function TargetCustomerStage() {
   const guideSelections = d.guideSelections;
 
   const clusterGroup = classifyCluster(d.industryCategoryId ?? undefined);
+  // online 안에서도 디지털 콘텐츠(무배송) 서브타입은 상권·주문 대신 키워드·검색 수요가 페르소나 근거.
+  const isDigitalContent = clusterGroup === "online" && isDigitalFulfillment(d.selectedIndustryId);
+  // "왜 이 타깃인가" placeholder — 오프라인=상권, 온라인=광고/주문, 디지털=키워드, 스타트업=ICP/인터뷰.
+  const whyTargetPlaceholder: { ko: string; en: string } =
+    clusterGroup === "tech"
+      ? { ko: "예: 50-200인 SaaS 팀이 우리 ICP. PMF 인터뷰 12건 중 9건이 같은 페인.", en: "e.g., 50-200-seat SaaS teams are our ICP. 9 of 12 PMF interviews share the same pain." }
+    : isDigitalContent
+      ? { ko: "예: 키워드 검색량 분석에서 직장인 실무 템플릿 니즈 급증 / 기존 상품은 이론 중심 → 실무 양식 미공급", en: "e.g., keyword search shows surging demand for work templates / existing products are theory-heavy → unmet need for practical formats" }
+    : clusterGroup === "online"
+      ? { ko: "예: 인스타 광고 ROAS 280% 채널이 이 페르소나. 첫 100 주문 60%가 동일 세그먼트.", en: "e.g., the Instagram-ads ROAS 280% channel is this persona. 60% of the first 100 orders are one segment." }
+    : { ko: "예: 상권 분석에서 28-38세 직장인 비중 42% / 경쟁점은 모두 가족 타깃 → 1인 직장인 시장 미공급", en: "e.g., 42% of foot traffic is 28-38 workers / competitors all target families → unserved niche" };
   // offline 이면 업종군별 콘텐츠(통계·예시·객단가·검증) 선택.
   const oc = OFFLINE_TC[toOfflineKind(d.industryCategoryId ?? undefined)];
   const L = ko ? "ko" : "en";
@@ -421,9 +433,7 @@ export function TargetCustomerStage() {
                   {ko ? "4. 왜 이 타깃인가 (선택)" : "4. Why this target (optional)"}
                 </label>
                 <textarea
-                  placeholder={ko
-                    ? "예: 상권 분석에서 28-38세 직장인 비중 42% / 경쟁점은 모두 가족 타깃 → 1인 직장인 시장 미공급"
-                    : "e.g., 42% of foot traffic is 28-38 workers / competitors all target families → unserved niche"}
+                  placeholder={ko ? whyTargetPlaceholder.ko : whyTargetPlaceholder.en}
                   value={inputs.whyTarget ?? guideSelections["why-target"] ?? ""}
                   onChange={(e) => {
                     setInput("whyTarget", e.target.value);

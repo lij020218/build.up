@@ -64,6 +64,23 @@ function normKstartupDate(raw: unknown): string | undefined {
  *   필드: biz_pbanc_nm·supt_biz_clsfc·supt_regin·biz_trgt_age·biz_enyy·prfn_matr·
  *         pbanc_rcpt_bgng_dt·pbanc_rcpt_end_dt·detl_pg_url·sprv_inst·pbanc_ntrp_nm·Rcrt_prgs_yn
  */
+/**
+ * K-Startup 응답의 HTML 엔티티(&apos;·&amp;·&#39; 등) 정리 — 원문이 인코딩된 채 내려와
+ *  화면에 날것("&apos;")으로 노출되는 문제 교정. 신규 페치(어댑터)와
+ *  기존 캐시 스냅샷 읽기(funding-live) 양쪽에서 사용. (2026-07-10)
+ */
+export function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(Number(d)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&"); // 마지막에 처리 — 이중 인코딩(&amp;apos;) 1단계 해제
+}
+
 export async function fetchKStartupPrograms(
   config: SupportProgramsConfig,
   params: SupportProgramsParams = {}
@@ -109,22 +126,22 @@ export async function fetchKStartupPrograms(
         return {
           id: `kstartup-${it.pbanc_sn ?? it.biz_pbanc_nm}`,
           source: "kstartup" as const,
-          programName: String(it.biz_pbanc_nm ?? ""),
-          organizerName: String(it.pbanc_ntrp_nm || "창업지원기관"),
+          programName: decodeHtmlEntities(String(it.biz_pbanc_nm ?? "")),
+          organizerName: decodeHtmlEntities(String(it.pbanc_ntrp_nm || "창업지원기관")),
           organizerType: it.sprv_inst ? String(it.sprv_inst) : undefined,
-          supportCategory: String(it.supt_biz_clsfc ?? "창업"),
+          supportCategory: decodeHtmlEntities(String(it.supt_biz_clsfc ?? "창업")),
           applicationStart: start,
           applicationEnd: end,
           isOpen,
-          targetDescription: String(it.aply_trgt_ctnt || it.aply_trgt || "") || undefined,
-          benefitDescription: String(it.pbanc_ctnt || "") || undefined,
+          targetDescription: decodeHtmlEntities(String(it.aply_trgt_ctnt || it.aply_trgt || "")) || undefined,
+          benefitDescription: decodeHtmlEntities(String(it.pbanc_ctnt || "")) || undefined,
           applicationMethod: it.aply_mthd_onli_rcpt_istc ? String(it.aply_mthd_onli_rcpt_istc) : undefined,
           contactInfo: it.prch_cnpl_no ? String(it.prch_cnpl_no) : undefined,
           url: String(it.detl_pg_url || it.biz_gdnc_url || "") || undefined,
           region: it.supt_regin ? String(it.supt_regin) : undefined,
           targetAge: it.biz_trgt_age ? String(it.biz_trgt_age) : undefined,
           businessPeriod: it.biz_enyy ? String(it.biz_enyy) : undefined,
-          preferentialNote: it.prfn_matr ? String(it.prfn_matr) : undefined,
+          preferentialNote: it.prfn_matr ? decodeHtmlEntities(String(it.prfn_matr)) : undefined,
           fetchedAt: now,
         };
       });

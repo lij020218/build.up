@@ -8,6 +8,8 @@ import { getVisibleTaskProgressTasks } from "./current-stage-task-progress";
 type GenericTaskChecklistProps = {
   decisions: WorkflowDecisionMap;
   industryCategoryId: string | null | undefined;
+  /** 세부 업종 — 디지털 콘텐츠(무배송) 서브타입의 "{taskId}__digital" 라벨 오버라이드용. */
+  subIndustryId?: string | null;
   isPreLaunch: boolean;
   isStrictConstructionFranchise: boolean;
   language: Language;
@@ -20,6 +22,7 @@ type GenericTaskChecklistProps = {
 export function GenericTaskChecklist({
   decisions,
   industryCategoryId,
+  subIndustryId,
   isPreLaunch,
   isStrictConstructionFranchise,
   language,
@@ -34,6 +37,7 @@ export function GenericTaskChecklist({
         const itemState = getGenericTaskChecklistItemState({
           decisions,
           industryCategoryId,
+          subIndustryId,
           isPreLaunch,
           isStrictConstructionFranchise,
           language,

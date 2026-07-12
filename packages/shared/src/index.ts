@@ -18,6 +18,7 @@ export * from "./finance/loan-faq";
 export * from "./guide/qa";
 export * from "./i18n";
 export * from "./starter-data";
+export * from "./digital-subtypes";
 export * from "./operations-channels";
 export * from "./marketing-channels";
 export * from "./cashflow-presets";

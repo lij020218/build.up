@@ -2995,7 +2995,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     // ── Page 1 — 결제 + 법적 (통합) ──
     {
       taskId: "payment-and-legal-ready",
-      title: "Live 100 KRW payment cycle + legal footer + PIPA 2025 (consent, portability, refund)",
+      title: "Live 100 KRW payment cycle + legal footer + Privacy Act 2023 amend. (consent, portability, refund)",
       status: "todo",
       required: true,
       estimatedMinutes: 90

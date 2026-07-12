@@ -33,6 +33,7 @@ export function GenericTaskStageSection() {
     resetDemo,
     saveStatus,
     selectedFranchiseBrandId,
+    selectedIndustryId,
     setSaveStatus,
     softOpenChecks,
     softOpenPricing,
@@ -90,6 +91,7 @@ export function GenericTaskStageSection() {
       <GenericTaskChecklist
         decisions={decisions}
         industryCategoryId={industryCategoryId}
+        subIndustryId={selectedIndustryId}
         isPreLaunch={stageState.isPreLaunch}
         isStrictConstructionFranchise={stageState.isStrictConstructionFranchise}
         language={language}

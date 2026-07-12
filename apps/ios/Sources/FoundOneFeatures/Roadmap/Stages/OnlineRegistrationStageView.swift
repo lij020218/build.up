@@ -23,8 +23,26 @@ public struct OnlineRegistrationStageView: View {
     @AppStorage("or2.taxType")     private var taxType     = ""
     @AppStorage("or2.telecomDone") private var telecomDone = false
     @AppStorage("or2.done")        private var done        = false
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
 
     private let pages = ["사업자등록", "통신판매업 신고"]
+
+    /// 세부업종별 홈택스 업종코드 (국세청 6자리, 웹 INDUSTRY_CODE_STEP_KO 미러 — 2026-07-10 공식 검증).
+    ///   smart-store·위탁판매=525101 / 구매대행=525105 / 전자책=221100+525101 병기 / 크리에이터=940306 vs 921505.
+    private var industryCodeStep: (title: String, detail: String) {
+        switch industryId {
+        case "global-buying":
+            return ("업태: 서비스 / 종목: 해외직구대행업 (업종코드 525105)", "재화 판매가 아닌 구매대행 서비스 — 대행 수수료 기준 과세")
+        case "digital-products":
+            return ("업태: 출판·소매 / 종목: 서적출판업(전자책, 221100) + 전자상거래 소매업(525101) 병기", "전자책·디지털 콘텐츠는 출판업 코드에 온라인 판매 겸업 코드를 함께 등록")
+        case "creator-service":
+            return ("종목: 1인미디어콘텐츠창작자(940306) 또는 미디어콘텐츠창작업(921505)", "무시설·1인=940306(면세) / 시설·인력 보유=921505(과세) — 연매출 8천만원 이상이면 921505")
+        case "newsletter-membership":
+            return ("종목: 1인미디어콘텐츠창작자(940306) 등 콘텐츠 창작 계열", "유료 뉴스레터·멤버십은 콘텐츠 창작 계열 — 홈택스 업종코드 조회 후 세무서 최종 확인 권장")
+        default:
+            return ("업태: 소매업 / 종목: 전자상거래 소매업 (업종코드 525101)", "오픈마켓·스마트스토어 입점 셀러의 기본 업종코드")
+        }
+    }
 
     private struct TaxOption {
         let id: String; let name: String; let desc: String
@@ -62,7 +80,7 @@ public struct OnlineRegistrationStageView: View {
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["taxType": taxType]) },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 사업자등록 신청", detail: "홈택스 온라인 신청 — 업태·종목 「전자상거래 소매업」 + 임대차 없는 경우 자택 주소 가능"),
+                .init(label: "1. 사업자등록 신청", detail: "홈택스 온라인 신청 — 업태·종목은 위 가이드의 세부 업종별 업종코드 기준 + 임대차 없는 경우 자택 주소 가능"),
                 .init(label: "2. 통신판매업 신고", detail: "관할 구청 또는 정부24 — 사업자등록증·구매안전서비스 이용 확인증 필요, 1~3일 발급"),
                 .init(label: "3. 구매안전서비스(에스크로) 확보", detail: "마켓플레이스(스마트스토어·쿠팡)는 플랫폼 구매안전서비스 이용확인증 / 자사몰은 PG사(토스페이먼츠·KG이니시스 등) 계약"),
                 .init(label: "4. 스토어 기본 셋업", detail: "스토어명 중복 검색 + 사업자 판매자 등록·통장 연동 + 자사몰 시 도메인·로고 등록"),
@@ -75,8 +93,8 @@ public struct OnlineRegistrationStageView: View {
                 "청약철회 — 7일 이내 무조건 청약철회 의무 (예외: 맞춤제작·식품·디지털콘텐츠), 약관 명시 필수",
                 "개인정보 처리방침 — 개인정보보호법 의무 게시 + 수집·이용·제공·파기 4항목 명문화",
                 ],
-                nextStageLabel: "공급처·소싱",
-                nextSummary: "사업자등록·통신판매 신고 완료 → 공급처·소싱 단계로 진입"
+                nextStageLabel: "사업자등록 & 금융 세팅",
+                nextSummary: "사업자등록·통신판매 신고 완료 → 사업자등록 & 금융 세팅(사업용 통장·세무 대리) 단계로 진입"
             ),
             currentPage: page,
             onNextPage: { withAnimation { page += 1 } },
@@ -110,8 +128,8 @@ public struct OnlineRegistrationStageView: View {
                         .padding(.bottom, BUSpacing.sm)
                     stepRow(num: 1, title: "홈택스(hometax.go.kr) → 신청/제출 → 사업자등록신청",
                             detail: nil)
-                    stepRow(num: 2, title: "업태: 소매업 / 종목: 전자상거래 소매업",
-                            detail: nil)
+                    stepRow(num: 2, title: industryCodeStep.title,
+                            detail: industryCodeStep.detail)
                     stepRow(num: 3, title: "개업일·사업장 주소·대표자 정보 입력",
                             detail: nil)
                     stepRow(num: 4, title: "보완 서류 없으면 당일~3일 내 발급",

@@ -80,55 +80,57 @@ export const DAILY_KPI_BY_INDUSTRY: Record<string, KpiCellConfig[]> = {
   ],
 
   // ─── 소매 / 리테일 ───────────────────────────────────────────────
+  // 2026-07-12 — 셀 순서 규칙: 미구현("준비 중") 지표는 맨 뒤. 대표(1번) 셀은 항상 계산 가능한 지표.
+  //   (inventory-days 등은 데이터 모델 부재로 의도적 정직 강등 상태 — 위조 금지, 구현 시 실값+원위치.)
   retail: [
     { id: "yesterday-sales", labelKo: "어제 매출", labelEn: "Sales", type: "currency" },
-    { id: "inventory-days", labelKo: "재고 회전일수", labelEn: "Inventory Days", type: "days",
-      thresholds: { direction: "lower-is-better", good: 20, warning: 30, bad: 45 },
-      hintKo: "재고가 매출로 회전되는 평균 일수. 30일 초과 = 재고 묶임 위험" },
     { id: "cogs-ratio", labelKo: "매입원가율", labelEn: "COGS %", type: "percent",
       thresholds: { direction: "lower-is-better", good: 55, warning: 65, bad: 75 } },
     { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
       thresholds: { direction: "higher-is-better", good: 12, warning: 6, bad: 3 } },
     { id: "avg-ticket", labelKo: "객단가", labelEn: "Avg Ticket", type: "currency" },
+    { id: "inventory-days", labelKo: "재고 회전일수", labelEn: "Inventory Days", type: "days",
+      thresholds: { direction: "lower-is-better", good: 20, warning: 30, bad: 45 },
+      hintKo: "재고가 매출로 회전되는 평균 일수. 30일 초과 = 재고 묶임 위험" },
   ],
 
   // ─── 미용 / 뷰티 ──────────────────────────────────────────────────
   beauty: [
-    { id: "booking-utilization", labelKo: "예약 가동률", labelEn: "Booking Util.", type: "percent",
-      thresholds: { direction: "higher-is-better", good: 70, warning: 50, bad: 35 },
-      hintKo: "예약 슬롯 ÷ 가용 슬롯. 50% 미만이면 마케팅·시간대 조정 필요" },
+    { id: "yesterday-customers", labelKo: "어제 손님", labelEn: "Customers", type: "number" },
     { id: "avg-ticket", labelKo: "객단가", labelEn: "Avg Ticket", type: "currency" },
     { id: "labor-ratio", labelKo: "인건비율", labelEn: "Labor %", type: "percent",
       thresholds: { direction: "lower-is-better", good: 40, warning: 50, bad: 60 },
       hintKo: "인건비 ÷ 매출. 미용업 평균 40-50%, 50% 초과 시 스케줄 최적화" },
     { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
       thresholds: { direction: "higher-is-better", good: 12, warning: 6, bad: 3 } },
-    { id: "yesterday-customers", labelKo: "어제 손님", labelEn: "Customers", type: "number" },
+    { id: "booking-utilization", labelKo: "예약 가동률", labelEn: "Booking Util.", type: "percent",
+      thresholds: { direction: "higher-is-better", good: 70, warning: 50, bad: 35 },
+      hintKo: "예약 슬롯 ÷ 가용 슬롯. 50% 미만이면 마케팅·시간대 조정 필요" },
   ],
 
   // ─── 공간 / 스터디카페 / 피트니스 ───────────────────────────────
   space: [
-    { id: "seat-utilization", labelKo: "좌석 가동률", labelEn: "Seat Util.", type: "percent",
-      thresholds: { direction: "higher-is-better", good: 60, warning: 40, bad: 25 },
-      hintKo: "좌석 시간 사용률. 시간대별 분포는 Tier 2 히트맵 참조" },
+    { id: "active-members", labelKo: "활성 회원", labelEn: "Active Members", type: "number" },
     { id: "arpu", labelKo: "회원 ARPU", labelEn: "ARPU", type: "currency",
       hintKo: "월 매출 ÷ 회원 수. 회원 가치 측정" },
     { id: "rent-ratio", labelKo: "임대료 비율", labelEn: "Rent %", type: "percent",
       thresholds: { direction: "lower-is-better", good: 25, warning: 30, bad: 40 } },
     { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
       thresholds: { direction: "higher-is-better", good: 12, warning: 6, bad: 3 } },
-    { id: "active-members", labelKo: "활성 회원", labelEn: "Active Members", type: "number" },
+    { id: "seat-utilization", labelKo: "좌석 가동률", labelEn: "Seat Util.", type: "percent",
+      thresholds: { direction: "higher-is-better", good: 60, warning: 40, bad: 25 },
+      hintKo: "좌석 시간 사용률. 시간대별 분포는 Tier 2 히트맵 참조" },
   ],
 
   fitness: [
-    { id: "seat-utilization", labelKo: "장소 가동률", labelEn: "Facility Util.", type: "percent",
-      thresholds: { direction: "higher-is-better", good: 60, warning: 40, bad: 25 } },
+    { id: "active-members", labelKo: "활성 회원", labelEn: "Active Members", type: "number" },
     { id: "arpu", labelKo: "회원 ARPU", labelEn: "ARPU", type: "currency" },
     { id: "rent-ratio", labelKo: "임대료 비율", labelEn: "Rent %", type: "percent",
       thresholds: { direction: "lower-is-better", good: 25, warning: 30, bad: 40 } },
     { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
       thresholds: { direction: "higher-is-better", good: 12, warning: 6, bad: 3 } },
-    { id: "active-members", labelKo: "활성 회원", labelEn: "Active Members", type: "number" },
+    { id: "seat-utilization", labelKo: "장소 가동률", labelEn: "Facility Util.", type: "percent",
+      thresholds: { direction: "higher-is-better", good: 60, warning: 40, bad: 25 } },
   ],
 
   // ─── SaaS / 구독 (subscription 또는 online-digital) ───────────────
@@ -139,14 +141,16 @@ export const DAILY_KPI_BY_INDUSTRY: Record<string, KpiCellConfig[]> = {
       hintKo: "신규 - 이탈. 양수 유지가 성장의 시작" },
     { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
       thresholds: { direction: "higher-is-better", good: 18, warning: 12, bad: 6 } },
+    { id: "active-users", labelKo: "활성 사용자", labelEn: "Active Users", type: "number" },
     { id: "nrr", labelKo: "NRR", labelEn: "NRR", type: "percent",
       thresholds: { direction: "higher-is-better", good: 110, warning: 100, bad: 90 },
       hintKo: "Net Revenue Retention. 100% 이상 = 기존 고객 매출 성장" },
-    { id: "active-users", labelKo: "활성 사용자", labelEn: "Active Users", type: "number" },
   ],
 
   // ─── Pre-PMF 스타트업 (런칭 전 ~ 3개월) ──────────────────────────
   "startup-tech": [
+    { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
+      thresholds: { direction: "higher-is-better", good: 18, warning: 12, bad: 6 } },
     { id: "cumulative-users", labelKo: "누적 사용자", labelEn: "Total Users", type: "number",
       thresholds: { direction: "higher-is-better", good: 50, warning: 20, bad: 5 },
       hintKo: "Sam Altman 룰 — 50명을 사랑하게 만드는 게 첫 목표" },
@@ -154,8 +158,6 @@ export const DAILY_KPI_BY_INDUSTRY: Record<string, KpiCellConfig[]> = {
       hintKo: "지난 7일 활성 사용자. 누적 대비 비율로 retention 추정" },
     { id: "repeat-rate", labelKo: "재방문율", labelEn: "Repeat Rate", type: "percent",
       thresholds: { direction: "higher-is-better", good: 40, warning: 25, bad: 10 } },
-    { id: "cash-runway", labelKo: "런웨이", labelEn: "Runway", type: "months",
-      thresholds: { direction: "higher-is-better", good: 18, warning: 12, bad: 6 } },
     { id: "pmf-score", labelKo: "PMF 점수", labelEn: "PMF Score", type: "percent",
       thresholds: { direction: "higher-is-better", good: 40, warning: 25, bad: 10 },
       hintKo: "Sean Ellis 40% Test — '없으면 매우 아쉬워요' 응답 비율" },
