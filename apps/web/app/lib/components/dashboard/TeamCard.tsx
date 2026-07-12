@@ -74,7 +74,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
         </div>
         <button
           type="button"
-          onClick={() => d.navigateToSurface("analytics")}
+          onClick={() => d.navigateToSurface("team")}
           style={{
             fontSize: "12px",
             fontWeight: 600,
@@ -133,7 +133,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
       {c.employees.length === 0 && (
         <button
           type="button"
-          onClick={() => d.navigateToSurface("analytics")}
+          onClick={() => d.navigateToSurface("team")}
           style={{
             width: "100%",
             padding: "12px",
@@ -147,8 +147,8 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
           }}
         >
           {ko
-            ? "직원을 등록하면 급여·보험 현황을 한눈에 볼 수 있어요"
-            : "Add staff to see payroll & insurance at a glance"}
+            ? "직원 페이지에서 초대 링크로 직원을 연결하세요 — 근무표·출퇴근·연차 관리"
+            : "Invite staff from the Team page — schedules, attendance & time off"}
         </button>
       )}
 

@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
+import { InviteLinkSection } from "../InviteLinkSection";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -156,9 +157,12 @@ export function TeamSurface({ ko }: { ko: boolean }) {
               <UserPlus size={18} strokeWidth={1.7} style={{ color: MIDNIGHT }} />
               <div style={{ fontSize: 15, fontWeight: 750, color: INK }}>{ko ? "아직 연결된 직원이 없어요" : "No staff yet"}</div>
             </div>
-            <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, margin: 0 }}>
-              {ko ? "홈 대시보드의 「직원」에서 초대 링크를 만들어 직원을 연결하면, 여기서 근무표를 배정할 수 있어요." : "Invite staff from the dashboard to assign schedules here."}
+            <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, margin: "0 0 12px" }}>
+              {ko
+                ? "아래에서 초대 링크를 만들어 직원에게 카톡·문자로 보내세요. 직원이 링크로 가입·연결되면 여기서 근무표·연차·출퇴근을 관리할 수 있어요."
+                : "Create an invite link below and send it to your staff. Once they join, you can manage schedules, time off, and attendance here."}
             </p>
+            <InviteLinkSection ko={ko} />
           </div>
         ) : (
           <>
@@ -226,6 +230,15 @@ export function TeamSurface({ ko }: { ko: boolean }) {
                   />
                 ))}
               </div>
+            </section>
+
+            {/* 직원 추가 초대 — 운영 중에도 새 직원 연결 (2026-07-12: 종전엔 초대 진입로가 로드맵 채용 단계에만 있었음) */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <UserPlus size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "직원 추가" : "Add staff"}</div>
+              </div>
+              <InviteLinkSection ko={ko} />
             </section>
           </>
         )}

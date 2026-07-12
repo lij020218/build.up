@@ -13,6 +13,7 @@ import { PopbillConnectCard } from "../profile/PopbillConnectCard";
 import { SaasMetricsConnectCard } from "../profile/SaasMetricsConnectCard";
 import { SubscriptionWebhookConnectCard } from "../profile/SubscriptionWebhookConnectCard";
 import { FeedbackCard } from "../profile/FeedbackCard";
+import { StoreConnectCard } from "../profile/StoreConnectCard";
 import { SubscriptionPlanManager } from "../dashboard/SubscriptionPlanManager";
 import { DashboardLayoutCard } from "../profile/DashboardLayoutCard";
 import { OwnerProfileChips } from "../dashboard/OwnerProfileChips";
@@ -199,6 +200,11 @@ export function ProfileView() {
           </span>
         </div>
       </article>
+
+      {/* ── 카드 1.5: 가게 연결 (직원용) — 받은 초대·초대 코드 입력 (2026-07-12) ── */}
+      <div style={{ marginTop: "12px" }}>
+        <StoreConnectCard ko={ko} />
+      </div>
 
       {/* ── 카드 2: 내 여정 진행 상황 ── */}
       <article style={{ ...card, marginTop: "12px" }}>

@@ -245,9 +245,9 @@ public struct TodayView: View {
             }
         }
         .sheet(isPresented: $showTeamSheet) {
-            if let si = storeInfo {
-                TeamManagementSheet(storeInfoStore: si)
-            }
+            // 2026-07-12 — 웹 TeamCard 관리하기 → team 서피스 미러.
+            //   초대·근무표·연차(TeamManagementView)가 기본, 수동 급여 명단은 그 안의 버튼으로.
+            TeamManagementView(isSheet: true, storeInfoStore: storeInfo)
         }
         .sheet(isPresented: $showCustomerSheet) {
             if let si = storeInfo {

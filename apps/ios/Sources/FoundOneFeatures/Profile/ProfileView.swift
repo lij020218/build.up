@@ -52,6 +52,7 @@ public struct ProfileView: View {
     // 서버 초기화 실패 시 — 로컬을 지우지 않고 사장님께 명확히 알림(가짜 "완료" 금지).
     @State private var resetFailedMsg: String?
     @State private var showDataConnections: Bool = false
+    @State private var showStoreConnect: Bool = false
     @State private var showFeedbackSheet: Bool = false
     @State private var showStoreEdit: Bool = false
     @State private var connectionCount: Int? = nil
@@ -68,6 +69,7 @@ public struct ProfileView: View {
                 storeCard
                 ownerProfileCard
                 dataConnectionCard
+                storeConnectCard
                 notificationCard
                 languageCard
                 supportCard
@@ -83,6 +85,9 @@ public struct ProfileView: View {
             Task { await refreshConnectionCount() }
         }) {
             DataConnectionSheet()
+        }
+        .sheet(isPresented: $showStoreConnect) {
+            StoreConnectSheet()
         }
         .sheet(isPresented: $showFeedbackSheet) {
             FeedbackSheet()
@@ -406,6 +411,47 @@ public struct ProfileView: View {
                         .padding(.vertical, 4)
                         .background(BUColor.success.opacity(0.10), in: Capsule())
                 }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+            .padding(BUSpacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // ── 가게 연결 (직원용) — 초대 코드 입력·받은 초대 (2026-07-12, 웹 StoreConnectCard 미러) ──
+    private var storeConnectCard: some View {
+        Button { showStoreConnect = true } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(BUColor.midnight08)
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "person.badge.key")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("가게 연결 (직원용)")
+                        .font(.system(size: 14.5, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    Text("사장님께 받은 초대 코드로 직원 연결 — 근무표·연차")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(BUColor.inkMuted)

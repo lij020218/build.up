@@ -23,6 +23,9 @@ public extension Notification.Name {
     /// 원격(다른 기기) 초기화 — core 테이블(사용자당 1행)의 DELETE 수신. AppRoot 가 *따라서* 로컬을
     ///   비운다. 재조회(refresh)는 flush-우선/key-merge 라 stale 로컬을 서버에 되살리므로 금지.
     static let buildupRemoteWipe = Notification.Name("buildup.remoteWipe")
+    /// 내 계정 역할(user_role)이 바뀌었을 수 있음 — 초대 수락(owner→staff) 등.
+    ///   AppRoot 역할 게이트가 받아 business_profiles.user_role 재조회 (2026-07-12).
+    static let buildupRoleMayHaveChanged = Notification.Name("buildup.roleMayHaveChanged")
 }
 
 @MainActor

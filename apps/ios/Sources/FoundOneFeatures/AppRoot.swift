@@ -62,6 +62,9 @@ public struct AppRoot: View {
     @State private var demoMode: MockScenario? = nil
     /// 기존 가게 등록 완료 후 loadDashboardIfNeeded 에서 StoreInfo / AppStorage 에 적용할 임시 저장.
     @State private var pendingRegistration: StoreRegistration? = nil
+    /// 계정 역할 (business_profiles.user_role) — nil=미확정(스켈레톤), "staff"/"manager"=직원 대시보드,
+    ///   그 외("owner"·행 없음·조회 실패)=사장 화면. 웹 fast-gate(roleResolved) 미러 (2026-07-12).
+    @State private var userRole: String? = nil
 
     public enum Tab: Hashable, Sendable {
         case home
@@ -72,6 +75,7 @@ public struct AppRoot: View {
         case marketing
         case reports
         case analytics
+        case team
         case profile
     }
 
@@ -117,6 +121,17 @@ public struct AppRoot: View {
                 }
             } else if coordinator.isAuthenticated {
                 if let store = dashboardStore {
+                    // ── 역할 게이트 (2026-07-12, 웹 fast-gate 미러) ──
+                    //   business_profiles.user_role 확정 전엔 스켈레톤(사장 화면 flash 방지),
+                    //   staff/manager 면 직원 대시보드만 노출 (웹 starter-stage-demo staff routing 미러).
+                    if userRole == nil {
+                        AuthenticatedLoadingView()
+                            .task { await resolveUserRole() }
+                    } else if userRole == "staff" || userRole == "manager" {
+                        StaffDashboardView(onSignOut: {
+                            Task { await coordinator.signOut() }
+                        })
+                    } else {
                     // 신규 사장님 — 아무것도 안 한 상태 → OnboardingChoiceView
                     // (웹과 동일: category 미정 + 영업 미시작 + 매출/비용 데이터 0)
                     // ⚠️ 2026-05-25: .animation + .transition 추가 — "진행 초기화" 후
@@ -161,6 +176,7 @@ public struct AppRoot: View {
                     }
                     } // Group
                     .animation(.easeInOut(duration: 0.45), value: needsOnboarding(store: store))
+                    } // 역할 게이트 else (owner)
                 } else {
                     AuthenticatedLoadingView()
                         .task {
@@ -198,12 +214,14 @@ public struct AppRoot: View {
                                         UserDefaults.standard.set(uid, forKey: lastKey)
                                     }
                                     dashboardStore = nil  // 새 계정 데이터로 강제 재로드(가드 해제)
+                                    userRole = nil        // 역할 게이트 재확정 (계정 전환 시 직원↔사장 누출 방지)
                                     loadedUid = uid
                                     await loadDashboardIfNeeded(coordinator: coordinator)
                                 }
                             } else {
                                 // signedOut / tokenRefreshFailed — 비인증 전환 + 로컬 정리(self-gated)
                                 loadedUid = nil
+                                userRole = nil
                                 coordinator.handleSessionLost()
                             }
                         }
@@ -220,6 +238,10 @@ public struct AppRoot: View {
         // 2단계 실시간 — RealtimeSyncManager 가 원격 변경 수신 시 알림 → 안전한 재조회.
         .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteDataChanged)) { _ in
             Task { await refreshAllFromRemote() }
+        }
+        // 역할 변경 가능성(초대 수락 owner→staff 등) → 역할 게이트 재조회 (2026-07-12).
+        .onReceive(NotificationCenter.default.publisher(for: .buildupRoleMayHaveChanged)) { _ in
+            Task { await resolveUserRole() }
         }
         // 다른 기기에서 초기화(core 행 DELETE) → 이 기기도 따라서 로컬 wipe.
         //   refreshAllFromRemote(flush-우선/key-merge)를 타면 stale 로컬이 서버에 부활하므로 그 경로 대신 wipe.
@@ -263,6 +285,24 @@ public struct AppRoot: View {
     }
 
     @MainActor
+    /// business_profiles.user_role 1행 조회 — 역할 게이트 해제.
+    ///   실패·행 없음은 "owner"(기존 iOS 동작 유지 — 웹은 역할선택 화면이 backstop, iOS 신규가입은 웹에서 처리).
+    private func resolveUserRole() async {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        struct Row: Decodable { let user_role: String? }
+        do {
+            let rows: [Row] = try await BUSupabase.shared.client
+                .from("business_profiles")
+                .select("user_role")
+                .eq("user_id", value: uid.uuidString)
+                .limit(1)
+                .execute().value
+            userRole = rows.first?.user_role ?? "owner"
+        } catch {
+            userRole = "owner"
+        }
+    }
+
     private func loadDashboardIfNeeded(coordinator: AuthCoordinator) async {
         guard let session = coordinator.currentSession, dashboardStore == nil else { return }
 
@@ -990,6 +1030,8 @@ private struct MainTabs: View {
                 ReportsView(mock: mockData)
             case .analytics:
                 MyStoreView(store: store, storeInfo: storeInfo)
+            case .team:
+                TeamManagementView(storeInfoStore: storeInfo)
             case .profile:
                 ProfileView(store: store, coordinator: coordinator, storeInfo: storeInfo)
             }
@@ -1062,6 +1104,7 @@ private func webSurfaceTabs(businessLaunched: Bool) -> [FoundOneSurfaceTab] {
         businessLaunched ? .init(id: .marketing, label: "마케팅", systemImage: "megaphone") : nil,
         businessLaunched ? .init(id: .reports, label: "보고서", systemImage: "doc.richtext") : nil,
         businessLaunched ? .init(id: .analytics, label: "내 가게", systemImage: "chart.bar") : nil,
+        businessLaunched ? .init(id: .team, label: "직원", systemImage: "person.2") : nil,
         .init(id: .profile, label: "내 정보", systemImage: "person.crop.circle"),
     ].compactMap { $0 }
 }
@@ -1560,6 +1603,8 @@ struct DemoTabs: View {
                 ReportsView(mock: mockData)
             case .analytics:
                 MyStoreView(store: demoDashboardStore, storeInfo: demoStoreInfo)
+            case .team:
+                TeamManagementView(storeInfoStore: demoStoreInfo)
             case .profile:
                 // Demo 모드: coordinator nil → dangerCard (로그아웃 / 계정 삭제) 숨김.
                 ProfileView(store: demoDashboardStore, coordinator: nil, storeInfo: demoStoreInfo)
