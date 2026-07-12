@@ -559,12 +559,14 @@ export default function StarterStageDemo({
 
   const showOperationalHero = !(
     (activeSurface === "home" && mounted && businessLaunched) ||
-    // 4개 surface(보고서·마케팅·프랜차이즈·펀딩)는 모두 자체 hero header 를 가져
-    // 외부 hero 중복 노출을 방지. 미드나이트 단색 + eyebrow + title + subtitle 패턴 통일.
+    // 자체 hero header 를 가진 surface 는 외부 hero 중복 노출 방지.
+    // 미드나이트 단색 + eyebrow + title + subtitle 패턴 통일.
     activeSurface === "reports" ||
     activeSurface === "marketing" ||
     activeSurface === "franchise" ||
-    activeSurface === "guides"
+    activeSurface === "guides" ||
+    // 직원(team)도 자체 헤더("근무표 · 연차 관리") 보유 — 2026-07-12 히어로 중복 제거
+    activeSurface === "team"
   );
   // ━━━ 네비게이션 통일 (2026-06-04) ━━━
   //   이전: 출시 전 = 상단 pill nav / 출시 후 = 좌측 사이드바 → 출시 경계에서 네비 위치가

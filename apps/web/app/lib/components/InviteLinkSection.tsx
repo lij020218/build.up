@@ -111,46 +111,76 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
 
       {status !== "ready" && (
         <>
-          {showEmail ? (
+          {/* 이메일 초대 모드일 때만 입력란 노출 — 버튼 2개는 항상 같은 크기 (2026-07-12 UI 정리) */}
+          {showEmail && (
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoFocus
               placeholder={ko ? "직원 이메일 (그 계정만 수락 가능)" : "Employee email (only that account can accept)"}
               style={{
                 width: "100%", boxSizing: "border-box", marginBottom: 8,
-                padding: "10px 12px", borderRadius: 10,
+                padding: "11px 12px", borderRadius: 10,
                 border: "1px solid rgba(25,25,112,0.18)", fontSize: 13, outline: "none",
               }}
             />
-          ) : (
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
             <button
               type="button"
-              onClick={() => setShowEmail(true)}
-              style={{ marginBottom: 8, fontSize: 11.5, fontWeight: 600, color: MIDNIGHT, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+              onClick={generate}
+              disabled={status === "loading"}
+              style={{
+                flex: 1,
+                padding: "11px 12px",
+                borderRadius: 10,
+                border: "none",
+                background: MIDNIGHT,
+                color: "white",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: status === "loading" ? "default" : "pointer",
+                opacity: status === "loading" ? 0.5 : 1,
+              }}
             >
-              {ko ? "+ 이메일로 지정 초대 (이미 가입한 직원에게 추천)" : "+ Invite by email (best for existing members)"}
+              {status === "loading" && !showEmail ? (ko ? "생성 중…" : "Creating…") : ko ? "+ 초대 링크 생성" : "+ Create invite link"}
             </button>
+            <button
+              type="button"
+              disabled={status === "loading" || (showEmail && !email.trim().includes("@") && email.trim() !== "")}
+              onClick={() => {
+                if (!showEmail) { setShowEmail(true); return; }
+                if (email.trim().includes("@")) { void generate(); return; }
+                setShowEmail(false); // 빈 입력 상태에서 다시 누르면 접기
+              }}
+              style={{
+                flex: 1,
+                padding: "11px 12px",
+                borderRadius: 10,
+                border: `1px solid ${MIDNIGHT_BORDER}`,
+                background: showEmail && email.trim().includes("@") ? MIDNIGHT : "white",
+                color: showEmail && email.trim().includes("@") ? "white" : MIDNIGHT,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: status === "loading" ? "default" : "pointer",
+                opacity: status === "loading" ? 0.5 : 1,
+              }}
+            >
+              {status === "loading" && showEmail
+                ? (ko ? "생성 중…" : "Creating…")
+                : showEmail && email.trim().includes("@")
+                  ? (ko ? "✉ 이 이메일로 초대" : "✉ Invite this email")
+                  : (ko ? "✉ 이메일로 초대" : "✉ Invite by email")}
+            </button>
+          </div>
+          {showEmail && (
+            <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)", lineHeight: 1.5 }}>
+              {ko
+                ? "이미 가입한 직원에게 추천 — 그 계정만 수락할 수 있고, 로그인하면 「받은 초대」로 표시됩니다."
+                : "Best for existing members — only that account can accept."}
+            </div>
           )}
-          <button
-            type="button"
-            onClick={generate}
-            disabled={status === "loading"}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "none",
-              background: MIDNIGHT,
-              color: "white",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: status === "loading" ? "default" : "pointer",
-              opacity: status === "loading" ? 0.5 : 1,
-            }}
-          >
-            {status === "loading" ? (ko ? "생성 중…" : "Creating…") : ko ? "+ 새 초대 생성" : "+ Generate invite"}
-          </button>
         </>
       )}
 

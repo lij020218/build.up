@@ -302,6 +302,21 @@ private struct InviteCreateCard: View {
         return "\(BUSupabase.shared.env.webAppURL)/invite/\(code)"
     }
 
+    private func create(invitedEmail: String?) {
+        Task {
+            status = .loading
+            do {
+                let newCode = try await repo.createInvite(invitedEmail: invitedEmail)
+                code = newCode
+                directedEmail = invitedEmail?.contains("@") == true ? invitedEmail?.lowercased() : nil
+                status = .ready
+                onInviteCreated()
+            } catch {
+                status = .error
+            }
+        }
+    }
+
     var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
@@ -319,6 +334,7 @@ private struct InviteCreateCard: View {
                     .lineSpacing(2)
 
                 if status != .ready {
+                    // 이메일 초대 모드일 때만 입력란 노출 — 버튼 2개는 항상 같은 크기 (2026-07-12 UI 정리, 웹 미러)
                     if showEmailField {
                         TextField("직원 이메일 (그 계정만 수락 가능)", text: $email)
                             .font(.system(size: 13))
@@ -326,36 +342,47 @@ private struct InviteCreateCard: View {
                             .textInputAutocapitalization(.never)
                             .keyboardType(.emailAddress)
                             .autocorrectionDisabled()
-                    } else {
-                        Button { showEmailField = true } label: {
-                            Text("+ 이메일로 지정 초대 (이미 가입한 직원에게 추천)")
-                                .font(.system(size: 11.5, weight: .semibold))
-                                .foregroundStyle(BUColor.midnight)
+                    }
+                    HStack(spacing: 8) {
+                        Button { create(invitedEmail: nil) } label: {
+                            Text(status == .loading && !showEmailField ? "생성 중…" : "+ 초대 링크 생성")
+                                .font(.system(size: 13, weight: .heavy))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 11)
+                                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
                         }
                         .buttonStyle(.plain)
-                    }
-                    Button {
-                        Task {
-                            status = .loading
-                            do {
-                                let newCode = try await repo.createInvite(invitedEmail: showEmailField ? email : nil)
-                                code = newCode
-                                directedEmail = (showEmailField && email.contains("@")) ? email.lowercased() : nil
-                                status = .ready
-                                onInviteCreated()
-                            } catch {
-                                status = .error
-                            }
+                        .disabled(status == .loading)
+
+                        Button {
+                            if !showEmailField { showEmailField = true; return }
+                            if email.contains("@") { create(invitedEmail: email); return }
+                            showEmailField = false // 빈 입력 상태에서 다시 누르면 접기
+                        } label: {
+                            let armed = showEmailField && email.contains("@")
+                            Text(status == .loading && showEmailField
+                                 ? "생성 중…"
+                                 : armed ? "✉ 이 이메일로 초대" : "✉ 이메일로 초대")
+                                .font(.system(size: 13, weight: .heavy))
+                                .foregroundStyle(armed ? .white : BUColor.midnight)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 11)
+                                .background(
+                                    armed ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(.white),
+                                    in: RoundedRectangle(cornerRadius: 10)
+                                )
+                                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
                         }
-                    } label: {
-                        Text(status == .loading ? "생성 중…" : "+ 새 초대 생성")
-                            .font(.system(size: 13, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 11)
-                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                        .buttonStyle(.plain)
+                        .disabled(status == .loading)
                     }
-                    .disabled(status == .loading)
+                    if showEmailField {
+                        Text("이미 가입한 직원에게 추천 — 그 계정만 수락할 수 있고, 로그인하면 「받은 초대」로 표시됩니다.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .lineSpacing(2)
+                    }
                     if status == .error {
                         Text("초대 생성에 실패했어요. 네트워크 확인 후 다시 시도해 주세요.")
                             .font(.system(size: 12))
