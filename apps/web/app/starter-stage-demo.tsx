@@ -150,6 +150,7 @@ import {
 } from "./lib/helpers";
 import { LocationMapPanel } from "./lib/components/LocationMapPanel";
 import { SurfaceIcon } from "./lib/components/SurfaceIcon";
+import { InviteOfferModal } from "./lib/components/InviteOfferModal";
 import { ExistingBusinessOnboarding } from "./lib/components/ExistingBusinessOnboarding";
 import { StaffDashboard } from "./lib/components/surfaces/StaffDashboard";
 import TaxCalendarCard from "./lib/components/TaxCalendarCard";
@@ -1073,6 +1074,9 @@ export default function StarterStageDemo({
         ? (sidebarCollapsed ? operationalShellSidebarCollapsed : operationalShellSidebar)
         : (showOperationalHero ? styles.shell : operationalShell)}
     >
+      {/* 받은 채용 초대장 — 지정 초대가 있으면 어느 화면에서든 자동 표시 (2026-07-12).
+          직원(staff) 계정은 이 return 전에 StaffDashboard 로 분기되므로 여기 미도달. */}
+      <InviteOfferModal ko={d.language === "ko"} />
       {showOperationalHero ? (
       <section style={styles.hero}>
         <div style={styles.eyebrow}>Found.One</div>

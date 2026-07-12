@@ -65,6 +65,10 @@ public struct AppRoot: View {
     /// 계정 역할 (business_profiles.user_role) — nil=미확정(스켈레톤), "staff"/"manager"=직원 대시보드,
     ///   그 외("owner"·행 없음·조회 실패)=사장 화면. 웹 fast-gate(roleResolved) 미러 (2026-07-12).
     @State private var userRole: String? = nil
+    /// 받은 채용 초대장 — owner 역할 확정 시 my_pending_invites 체크 → 자동 표시 (웹 InviteOfferModal 미러).
+    @State private var offeredInvite: TeamPendingInvite? = nil
+    /// 「나중에」 누른 초대 코드 — 이 세션 동안 재표시 안 함.
+    @State private var dismissedInviteCodes: Set<String> = []
 
     public enum Tab: Hashable, Sendable {
         case home
@@ -243,6 +247,12 @@ public struct AppRoot: View {
         .onReceive(NotificationCenter.default.publisher(for: .buildupRoleMayHaveChanged)) { _ in
             Task { await resolveUserRole() }
         }
+        // 받은 채용 초대장 — 수락 시 시트 내부에서 역할 알림 발신 → 위 onReceive 가 직원 화면 전환.
+        .sheet(item: $offeredInvite) { inv in
+            InviteOfferSheet(invite: inv, onDismissLater: {
+                dismissedInviteCodes.insert(inv.inviteCode)
+            })
+        }
         // 다른 기기에서 초기화(core 행 DELETE) → 이 기기도 따라서 로컬 wipe.
         //   refreshAllFromRemote(flush-우선/key-merge)를 타면 stale 로컬이 서버에 부활하므로 그 경로 대신 wipe.
         .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteWipe)) { _ in
@@ -300,6 +310,20 @@ public struct AppRoot: View {
             userRole = rows.first?.user_role ?? "owner"
         } catch {
             userRole = "owner"
+        }
+        // 사장(또는 미지정) 계정에 지정 초대가 와 있으면 초대장 자동 표시.
+        if userRole != "staff" && userRole != "manager" {
+            await offerPendingInviteIfAny()
+        }
+    }
+
+    /// my_pending_invites 체크 — 있으면 초대장 시트 (마이그레이션 20260712 미적용 환경에선 조용히 skip).
+    private func offerPendingInviteIfAny() async {
+        guard offeredInvite == nil else { return }
+        let repo = TeamRepository(supabase: BUSupabase.shared.client)
+        guard let invites = try? await repo.pendingInvites() else { return }
+        if let first = invites.first(where: { !dismissedInviteCodes.contains($0.inviteCode) }) {
+            offeredInvite = first
         }
     }
 
