@@ -71,6 +71,25 @@ public struct TeamLeaveRequest: Decodable, Sendable, Identifiable, Equatable {
     }
 }
 
+/// 추가 수당 신청 (2026-07-13, 웹 allowance_requests 미러)
+public struct TeamAllowanceRequest: Decodable, Sendable, Identifiable, Equatable {
+    public let id: UUID
+    public let memberUserId: UUID
+    public let workDate: String        // YYYY-MM-DD
+    public let allowanceType: String   // overtime | night | holiday | other
+    public let minutes: Int
+    public let reason: String?
+    public let status: String          // pending | approved | rejected
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case memberUserId = "member_user_id"
+        case workDate = "work_date"
+        case allowanceType = "allowance_type"
+        case minutes, reason, status
+    }
+}
+
 public struct TeamScheduleRule: Decodable, Sendable, Identifiable, Equatable {
     public let id: UUID
     public let memberUserId: UUID
@@ -193,6 +212,30 @@ public actor TeamRepository {
         let iso = ISO8601DateFormatter().string(from: Date())
         try await client
             .from("leave_requests")
+            .update(Patch(status: approved ? "approved" : "rejected", decided_at: iso))
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    // ── 추가 수당 신청 목록 (사장 — RLS 가 내 가게 범위로 한정) ──
+    public func allowanceRequests(limit: Int = 40) async throws -> [TeamAllowanceRequest] {
+        try await client
+            .from("allowance_requests")
+            .select("id, member_user_id, work_date, allowance_type, minutes, reason, status")
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute().value
+    }
+
+    // ── 추가 수당 승인/반려 (사장) ──
+    public func decideAllowance(id: UUID, approved: Bool) async throws {
+        struct Patch: Encodable {
+            let status: String
+            let decided_at: String
+        }
+        let iso = ISO8601DateFormatter().string(from: Date())
+        try await client
+            .from("allowance_requests")
             .update(Patch(status: approved ? "approved" : "rejected", decided_at: iso))
             .eq("id", value: id.uuidString)
             .execute()
@@ -434,6 +477,49 @@ public extension TeamRepository {
     func cancelLeave(id: UUID) async throws {
         try await client
             .from("leave_requests")
+            .delete()
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    /// 내 추가 수당 신청 목록 (2026-07-13)
+    func myAllowances(limit: Int = 20) async throws -> [TeamAllowanceRequest] {
+        let uid = try await client.auth.session.user.id
+        return try await client
+            .from("allowance_requests")
+            .select("id, member_user_id, work_date, allowance_type, minutes, reason, status")
+            .eq("member_user_id", value: uid.uuidString)
+            .order("work_date", ascending: false)
+            .limit(limit)
+            .execute().value
+    }
+
+    /// 추가 수당 신청 (pending — 승인/반려는 사장). 신청 시 사장에게 push(트리거)
+    @discardableResult
+    func submitAllowance(ownerUserId: UUID, workDate: String, type: String, minutes: Int, reason: String?) async throws -> TeamAllowanceRequest {
+        struct Insert: Encodable {
+            let owner_user_id: UUID
+            let member_user_id: UUID
+            let work_date: String
+            let allowance_type: String
+            let minutes: Int
+            let reason: String?
+        }
+        let uid = try await client.auth.session.user.id
+        return try await client
+            .from("allowance_requests")
+            .insert(Insert(owner_user_id: ownerUserId, member_user_id: uid,
+                           work_date: workDate, allowance_type: type, minutes: minutes,
+                           reason: (reason?.isEmpty == true) ? nil : reason))
+            .select("id, member_user_id, work_date, allowance_type, minutes, reason, status")
+            .single()
+            .execute().value
+    }
+
+    /// 추가 수당 신청 취소 (pending 본인 것 — RLS)
+    func cancelAllowance(id: UUID) async throws {
+        try await client
+            .from("allowance_requests")
             .delete()
             .eq("id", value: id.uuidString)
             .execute()

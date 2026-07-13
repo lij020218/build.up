@@ -47,6 +47,8 @@ public struct StaffDashboardView: View {
     @State private var exceptions: [StaffScheduleException] = []
     @State private var monthAtt: [StaffAttendance] = []
     @State private var leaves: [TeamLeaveRequest] = []
+    @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
+    @State private var showAllowanceSheet = false
     @State private var busy = false
     @State private var viewMonth: (y: Int, m: Int) = {
         let c = Calendar.current.dateComponents([.year, .month], from: Date())
@@ -63,6 +65,32 @@ public struct StaffDashboardView: View {
                      rules: rules, exceptions: exceptions)
     }
     private var workdays: Set<Int> { Set(rules.map(\.weekday)) }
+    // 정규 시간 초과 근무 자동 감지 (웹 overtimeCandidates 미러) — 이미 신청한 날짜 제외, 10분↑만
+    private var overtimeCandidates: [OvertimeCandidate] {
+        let requested = Set(allowances.map(\.workDate))
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let isoPlain = ISO8601DateFormatter()
+        isoPlain.formatOptions = [.withInternetDateTime]
+        func parseClockOut(_ s: String) -> Date? { iso.date(from: s) ?? isoPlain.date(from: s) }
+        var out: [OvertimeCandidate] = []
+        for a in monthAtt {
+            guard let outStr = a.clockOutAt, !requested.contains(a.workDate) else { continue }
+            guard let day = f.date(from: a.workDate) else { continue }
+            let weekday = Calendar.current.component(.weekday, from: day) - 1
+            guard let sched = resolveShift(dateStr: a.workDate, weekday: weekday, rules: rules, exceptions: exceptions) else { continue }
+            let ep = sched.end.prefix(5).split(separator: ":").compactMap { Int($0) }
+            let sp = sched.start.prefix(5).split(separator: ":").compactMap { Int($0) }
+            guard ep.count == 2, sp.count == 2 else { continue }
+            var end = Calendar.current.date(bySettingHour: ep[0], minute: ep[1], second: 0, of: day) ?? day
+            if ep[0] * 60 + ep[1] <= sp[0] * 60 + sp[1] { end = Calendar.current.date(byAdding: .day, value: 1, to: end) ?? end } // 자정 넘는 야간영업
+            guard let clockOut = parseClockOut(outStr) else { continue }
+            let otMin = Int(clockOut.timeIntervalSince(end) / 60)
+            if otMin >= 10 { out.append(OvertimeCandidate(workDate: a.workDate, minutes: otMin)) }
+        }
+        return out.sorted { $0.workDate > $1.workDate }
+    }
     // 주 근무 분 — 반복 규칙 합산 (웹 StaffDashboard weeklyMinutes 미러)
     private var weeklyMinutes: Int {
         rules.reduce(0) { sum, r in
@@ -95,6 +123,14 @@ public struct StaffDashboardView: View {
                         leaveCard
                         // 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장 판정과 동일 SSOT, 2026-07-13)
                         StaffRightsCard(hourlyWage: ctx.hourlyWage, hireDate: ctx.hireDate, joinedAt: ctx.joinedAt, weeklyMinutes: weeklyMinutes)
+                        // 추가 수당 신청 — 연장·야간·휴일근로 (2026-07-13)
+                        StaffAllowanceCard(
+                            allowances: allowances,
+                            candidates: overtimeCandidates,
+                            onQuickRequest: { c in Task { await submitAllowance(workDate: c.workDate, type: "overtime", minutes: c.minutes, reason: "") } },
+                            onOpenForm: { showAllowanceSheet = true },
+                            onCancel: { id in Task { await cancelAllowance(id: id) } }
+                        )
                         // 로그아웃은 「내 정보」 시트로 통합 (2026-07-13)
                     } else {
                         notConnectedCard
@@ -114,6 +150,11 @@ public struct StaffDashboardView: View {
                 guard let owner = ctx?.ownerUserId else { return }
                 try? await repo.submitLeave(ownerUserId: owner, type: type, startDate: start, endDate: end, reason: reason)
                 await load()
+            }
+        }
+        .sheet(isPresented: $showAllowanceSheet) {
+            StaffAllowanceSheet { workDate, type, minutes, reason in
+                await submitAllowance(workDate: workDate, type: type, minutes: minutes, reason: reason)
             }
         }
         // 「내 정보」 — 팝업(sheet) 아닌 전체 화면(사장 ProfileView 탭과 동일 취지, 2026-07-13).
@@ -166,8 +207,9 @@ public struct StaffDashboardView: View {
             async let e = repo.myScheduleExceptions(monthStart: monthStart, monthEnd: monthEnd)
             async let a = repo.myAttendance(monthStart: monthStart, monthEnd: monthEnd)
             async let l = repo.myLeaves()
-            let (rr, ee, aa, ll) = try await (r, e, a, l)
-            rules = rr; exceptions = ee; monthAtt = aa; leaves = ll
+            async let al = repo.myAllowances()
+            let (rr, ee, aa, ll, alw) = try await (r, e, a, l, al)
+            rules = rr; exceptions = ee; monthAtt = aa; leaves = ll; allowances = alw
             loading = false
         } catch {
             loading = false
@@ -190,6 +232,19 @@ public struct StaffDashboardView: View {
         defer { busy = false }
         try? await repo.clockOut(attendanceId: att.id)
         await load()
+    }
+
+    // ── 추가 수당 (2026-07-13) ──
+    private func submitAllowance(workDate: String, type: String, minutes: Int, reason: String) async {
+        guard let owner = ctx?.ownerUserId else { return }
+        if let rec = try? await repo.submitAllowance(ownerUserId: owner, workDate: workDate, type: type, minutes: minutes, reason: reason) {
+            allowances.insert(rec, at: 0)
+        }
+    }
+
+    private func cancelAllowance(id: UUID) async {
+        try? await repo.cancelAllowance(id: id)
+        allowances.removeAll { $0.id == id }
     }
 
     // ── ① 가게 헤더 ──
@@ -827,5 +882,211 @@ private struct StaffRightsCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background((on ? ok.opacity(0.06) : BUColor.midnight.opacity(0.05)), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(on ? ok.opacity(0.25) : Color.clear, lineWidth: 1))
+    }
+}
+
+// ═══ 추가 수당 신청 (웹 StaffAllowanceCard.tsx 미러) ═══════════════════════
+//
+//  정규 시간 초과 근무 자동 감지 → 원탭 신청. 야간·휴일은 직접 신청 폼.
+//  냉정 리뷰: 가산 50%(§56)는 상시 5인 이상만 의무 → 금액 아닌 시간·유형만 신청.
+//
+struct OvertimeCandidate: Identifiable {
+    let workDate: String
+    let minutes: Int
+    var id: String { workDate }
+}
+
+private func allowanceTypeLabel(_ t: String) -> String {
+    switch t { case "overtime": return "연장근로"; case "night": return "야간근로"; case "holiday": return "휴일근로"; default: return "기타" }
+}
+private func minsLabel(_ min: Int) -> String {
+    let h = min / 60, m = min % 60
+    if h > 0 && m > 0 { return "\(h)시간 \(m)분" }
+    if h > 0 { return "\(h)시간" }
+    return "\(m)분"
+}
+private func mdShort(_ d: String) -> String {
+    let p = d.split(separator: "-")
+    guard p.count == 3 else { return d }
+    return "\(Int(p[1]) ?? 0)월 \(Int(p[2]) ?? 0)일"
+}
+
+private struct StaffAllowanceCard: View {
+    let allowances: [TeamAllowanceRequest]
+    let candidates: [OvertimeCandidate]
+    let onQuickRequest: (OvertimeCandidate) -> Void
+    let onOpenForm: () -> Void
+    let onCancel: (UUID) -> Void
+
+    private let ok = Color(red: 26 / 255, green: 122 / 255, blue: 54 / 255)
+
+    var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "wonsign.circle").font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    Text("추가 수당 신청").font(.system(size: 15, weight: .heavy)).foregroundStyle(BUColor.ink)
+                    Spacer(minLength: 0)
+                    Button(action: onOpenForm) {
+                        Label("직접 신청", systemImage: "plus")
+                            .font(.system(size: 12, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // ① 자동 감지 연장근로
+                if !candidates.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("정규 시간을 초과한 근무가 있어요", systemImage: "clock")
+                            .font(.system(size: 12.5, weight: .heavy)).foregroundStyle(LEAVE_COLOR)
+                        ForEach(candidates) { c in
+                            HStack(spacing: 10) {
+                                Text(mdShort(c.workDate)).font(.system(size: 12.5, weight: .heavy)).foregroundStyle(BUColor.ink)
+                                Text("연장 \(minsLabel(c.minutes))").font(.system(size: 12.5, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                                Spacer(minLength: 0)
+                                Button { onQuickRequest(c) } label: {
+                                    Text("신청").font(.system(size: 12, weight: .heavy)).foregroundStyle(.white)
+                                        .padding(.horizontal, 14).padding(.vertical, 6)
+                                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(10)
+                            .background(LEAVE_COLOR.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(LEAVE_COLOR.opacity(0.22), lineWidth: 1))
+                        }
+                    }
+                }
+
+                // ② 내 신청 목록
+                if !allowances.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(allowances) { a in
+                            HStack(spacing: 8) {
+                                Text(allowanceTypeLabel(a.allowanceType))
+                                    .font(.system(size: 11, weight: .heavy)).foregroundStyle(.white)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(a.allowanceType == "night" ? LEAVE_COLOR : BUColor.midnight, in: Capsule())
+                                Text("\(mdShort(a.workDate)) · \(minsLabel(a.minutes))")
+                                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.ink)
+                                Spacer(minLength: 0)
+                                Text(a.status == "approved" ? "승인" : a.status == "rejected" ? "반려" : "대기")
+                                    .font(.system(size: 11, weight: .heavy))
+                                    .foregroundStyle(a.status == "approved" ? Color.white : BUColor.inkSecondary)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(a.status == "approved" ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.07)), in: Capsule())
+                                if a.status == "pending" {
+                                    Button { onCancel(a.id) } label: {
+                                        Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.inkMuted).padding(5)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+
+                if candidates.isEmpty && allowances.isEmpty {
+                    Text("연장·야간·휴일 근로가 있으면 여기서 신청하세요. 정규 시간을 초과해 근무하면 자동으로 감지됩니다.")
+                        .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                }
+
+                Text("연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과 시간분 시급 지급. 정확한 금액은 사장님과 확인하세요.")
+                    .font(.system(size: 11)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            }
+        }
+    }
+}
+
+// ═══ 추가 수당 신청 시트 (직접 신청 — 유형·날짜·시간·사유) ══════════════════
+private struct StaffAllowanceSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    var onSubmit: (_ workDate: String, _ type: String, _ minutes: Int, _ reason: String) async -> Void
+
+    @State private var type = "overtime"
+    @State private var date = Date()
+    @State private var hours = 1
+    @State private var mins = 0
+    @State private var reason = ""
+    @State private var submitting = false
+
+    private let types: [(String, String)] = [("overtime", "연장근로"), ("night", "야간근로"), ("holiday", "휴일근로"), ("other", "기타")]
+    private var totalMin: Int { max(0, hours * 60 + mins) }
+
+    var body: some View {
+        NavigationStack {
+            ZStack(alignment: .top) {
+                BUBackgroundSurface()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        HStack(spacing: 8) {
+                            ForEach(types, id: \.0) { t in
+                                let sel = type == t.0
+                                Button { type = t.0 } label: {
+                                    Text(t.1)
+                                        .font(.system(size: 12.5, weight: .heavy))
+                                        .foregroundStyle(sel ? .white : BUColor.inkSecondary)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(sel ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.05)), in: RoundedRectangle(cornerRadius: 10))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        BUCard(.outer) {
+                            VStack(spacing: 12) {
+                                DatePicker("근무일", selection: $date, in: ...Date(), displayedComponents: .date)
+                                    .environment(\.locale, Locale(identifier: "ko_KR"))
+                                HStack {
+                                    Text("추가 근로시간").font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.ink)
+                                    Spacer()
+                                    Picker("시간", selection: $hours) {
+                                        ForEach(0..<13, id: \.self) { Text("\($0)시간").tag($0) }
+                                    }.pickerStyle(.menu).tint(BUColor.midnight)
+                                    Picker("분", selection: $mins) {
+                                        ForEach([0, 10, 15, 20, 30, 40, 45, 50], id: \.self) { Text("\($0)분").tag($0) }
+                                    }.pickerStyle(.menu).tint(BUColor.midnight)
+                                }
+                                TextField("사유 (선택)", text: $reason).textFieldStyle(.roundedBorder)
+                            }
+                        }
+                        Button {
+                            submitting = true
+                            Task {
+                                let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+                                await onSubmit(f.string(from: date), type, totalMin, reason)
+                                submitting = false
+                                dismiss()
+                            }
+                        } label: {
+                            Text(submitting ? "신청 중…" : "신청하기")
+                                .font(.system(size: 14, weight: .heavy)).foregroundStyle(.white)
+                                .frame(maxWidth: .infinity).padding(.vertical, 13)
+                                .background(totalMin > 0 ? BUColor.midnight : BUColor.midnight.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(submitting || totalMin <= 0)
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, BUSpacing.md)
+                    .padding(.top, BUSpacing.sm)
+                }
+            }
+            .navigationTitle("추가 수당 신청")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                #if os(iOS)
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
+                }
+                #endif
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }

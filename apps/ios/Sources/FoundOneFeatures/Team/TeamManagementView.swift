@@ -32,6 +32,7 @@ public struct TeamManagementView: View {
     // ── 데이터 상태 ──
     @State private var members: [TeamMember]? = nil     // nil = 로딩 전
     @State private var leaves: [TeamLeaveRequest] = []
+    @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var rules: [TeamScheduleRule] = []
     @State private var loadFailed = false
     @State private var showPayrollSheet = false
@@ -40,6 +41,7 @@ public struct TeamManagementView: View {
 
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var pendingLeaves: [TeamLeaveRequest] { leaves.filter { $0.status == "pending" } }
+    private var pendingAllowances: [TeamAllowanceRequest] { allowances.filter { $0.status == "pending" } }
 
     public var body: some View {
         NavigationStack {
@@ -54,6 +56,7 @@ public struct TeamManagementView: View {
                                 emptyState
                             } else {
                                 if !pendingLeaves.isEmpty { leaveApprovalCard }
+                                if !pendingAllowances.isEmpty { allowanceApprovalCard }
                                 memberScheduleList(members)
                             }
                         } else if loadFailed {
@@ -105,10 +108,12 @@ public struct TeamManagementView: View {
             async let m = repo.members()
             async let l = repo.leaveRequests()
             async let r = repo.scheduleRules()
-            let (mm, ll, rr) = try await (m, l, r)
+            async let al = repo.allowanceRequests()
+            let (mm, ll, rr, aa) = try await (m, l, r, al)
             members = mm
             leaves = ll
             rules = rr
+            allowances = aa
             loadFailed = false
         } catch {
             if members == nil { loadFailed = true }
@@ -233,6 +238,87 @@ public struct TeamManagementView: View {
         case "half": return "반차"
         case "sick": return "병가"
         default: return "휴가"
+        }
+    }
+
+    private func allowanceLabel(_ type: String) -> String {
+        switch type {
+        case "overtime": return "연장근로"
+        case "night": return "야간근로"
+        case "holiday": return "휴일근로"
+        default: return "기타"
+        }
+    }
+
+    private func minLabel(_ min: Int) -> String {
+        let h = min / 60, m = min % 60
+        if h > 0 && m > 0 { return "\(h)시간 \(m)분" }
+        if h > 0 { return "\(h)시간" }
+        return "\(m)분"
+    }
+
+    private func mdLabel(_ d: String) -> String {
+        let parts = d.split(separator: "-")
+        guard parts.count == 3 else { return d }
+        return "\(Int(parts[1]) ?? 0)월 \(Int(parts[2]) ?? 0)일"
+    }
+
+    // ── 추가 수당 승인 큐 (2026-07-13, 웹 TeamSurface 미러) ──
+    private var allowanceApprovalCard: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    Image(systemName: "wonsign.circle")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                    Text("추가 수당 승인")
+                        .font(.system(size: 15, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    Text("\(pendingAllowances.count)")
+                        .font(.system(size: 11, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(BUColor.midnight, in: Capsule())
+                }
+                ForEach(pendingAllowances) { a in
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(memberName(a.memberUserId)) · \(allowanceLabel(a.allowanceType))")
+                                .font(.system(size: 13.5, weight: .heavy))
+                                .foregroundStyle(BUColor.ink)
+                            Text("\(mdLabel(a.workDate)) · \(minLabel(a.minutes))")
+                                .font(.system(size: 12))
+                                .foregroundStyle(BUColor.inkSecondary)
+                            if let reason = a.reason, !reason.isEmpty {
+                                Text(reason).font(.system(size: 11.5)).foregroundStyle(BUColor.inkMuted).lineLimit(1)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Button {
+                            Task { try? await repo.decideAllowance(id: a.id, approved: true); await load() }
+                        } label: {
+                            Label("승인", systemImage: "checkmark")
+                                .font(.system(size: 12.5, weight: .heavy))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12).padding(.vertical, 7)
+                                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
+                        }
+                        Button {
+                            Task { try? await repo.decideAllowance(id: a.id, approved: false); await load() }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 12.5, weight: .heavy))
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .padding(8)
+                                .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 9))
+                        }
+                    }
+                    .padding(10)
+                    .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12))
+                }
+                Text("연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과분 시급 지급.")
+                    .font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            }
         }
     }
 

@@ -28,6 +28,7 @@ import { supabase } from "../../../../lib/supabase";
 import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
 import { StaffProfileView } from "./StaffProfileView";
 import { StaffRightsCard } from "./StaffRightsCard";
+import { StaffAllowanceCard, type AllowanceReq, type AllowanceType, type OvertimeCandidate } from "./StaffAllowanceCard";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -90,6 +91,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const [monthSched, setMonthSched] = useState<Schedule[]>([]); // 날짜 예외
   const [rules, setRules] = useState<Rule[]>([]);               // 주간 반복 규칙
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [allowances, setAllowances] = useState<AllowanceReq[]>([]); // 추가 수당 신청 (2026-07-13)
 
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0); // 실시간 경과 타이머용
@@ -126,7 +128,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     const monthEnd = `${y}-${pad(m + 1)}-${pad(new Date(y, m + 1, 0).getDate())}`;
     const td = ymd(new Date());
 
-    const [attRes, schedRes, ruleRes, leaveRes] = await Promise.all([
+    const [attRes, schedRes, ruleRes, leaveRes, allowRes] = await Promise.all([
       supabase.from("attendance_records" as never)
         .select("id, work_date, clock_in_at, clock_out_at")
         .eq("member_user_id", user.id).gte("work_date", monthStart).lte("work_date", monthEnd),
@@ -139,6 +141,9 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       supabase.from("leave_requests" as never)
         .select("id, leave_type, start_date, end_date, reason, status")
         .eq("member_user_id", user.id).order("start_date", { ascending: false }).limit(12),
+      supabase.from("allowance_requests" as never)
+        .select("id, work_date, allowance_type, minutes, reason, status")
+        .eq("member_user_id", user.id).order("work_date", { ascending: false }).limit(20),
     ]);
 
     const att = (attRes.data ?? []) as Attendance[];
@@ -148,6 +153,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     setMonthSched(exceptions);
     setRules(ruleList);
     setLeaves((leaveRes.data ?? []) as Leave[]);
+    setAllowances((allowRes.data ?? []) as AllowanceReq[]);
     setTodayAtt(att.find((a) => a.work_date === td) ?? null);
     setTodaySched(resolveShift(td, new Date().getDay(), ruleList, exceptions));
     setLoading(false);
@@ -174,6 +180,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "staff_schedule_rules", filter: `member_user_id=eq.${uid}` }, fire)
       .on("postgres_changes", { event: "*", schema: "public", table: "staff_schedules", filter: `member_user_id=eq.${uid}` }, fire)
       .on("postgres_changes", { event: "*", schema: "public", table: "leave_requests", filter: `member_user_id=eq.${uid}` }, fire)
+      .on("postgres_changes", { event: "*", schema: "public", table: "allowance_requests", filter: `member_user_id=eq.${uid}` }, fire)
       .on("postgres_changes", { event: "*", schema: "public", table: "attendance_records", filter: `member_user_id=eq.${uid}` }, fire)
       .subscribe();
     return () => { void supabase.removeChannel(ch); };
@@ -229,6 +236,43 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     if (error) { console.error("[staff] leave cancel failed:", error); return; }
     setLeaves((p) => p.filter((l) => l.id !== id));
   };
+
+  // ── 추가 수당 (2026-07-13) ──
+  const submitAllowance = async (payload: { work_date: string; allowance_type: AllowanceType; minutes: number; reason: string }) => {
+    if (!ctx) return false;
+    const { data, error } = (await supabase.from("allowance_requests" as never)
+      .insert({ owner_user_id: ctx.ownerUserId, member_user_id: ctx.userId, work_date: payload.work_date, allowance_type: payload.allowance_type, minutes: payload.minutes, reason: payload.reason || null } as never)
+      .select("id, work_date, allowance_type, minutes, reason, status").maybeSingle()) as { data: AllowanceReq | null; error: unknown };
+    if (error) { console.error("[staff] allowance submit failed:", error); return false; }
+    if (data) setAllowances((p) => [data, ...p]);
+    return true;
+  };
+
+  const cancelAllowance = async (id: string) => {
+    const { error } = await supabase.from("allowance_requests" as never).delete().eq("id", id);
+    if (error) { console.error("[staff] allowance cancel failed:", error); return; }
+    setAllowances((p) => p.filter((a) => a.id !== id));
+  };
+
+  // 정규 시간 초과 근무 자동 감지 — 이번 달 출퇴근(퇴근 완료) vs 근무표 종료시각.
+  //   이미 신청(또는 처리)한 날짜는 제외. 10분 이상만 후보(반올림 잡음 회피).
+  const overtimeCandidates = useMemo<OvertimeCandidate[]>(() => {
+    const requestedDates = new Set(allowances.map((a) => a.work_date));
+    const out: OvertimeCandidate[] = [];
+    for (const a of monthAtt) {
+      if (!a.clock_out_at || requestedDates.has(a.work_date)) continue;
+      const d = new Date(`${a.work_date}T00:00:00`);
+      const sched = resolveShift(a.work_date, d.getDay(), rules, monthSched);
+      if (!sched) continue;
+      const [eh, em] = sched.end_time.split(":").map(Number);
+      const end = new Date(`${a.work_date}T00:00:00`); end.setHours(eh, em, 0, 0);
+      const [sh, sm] = sched.start_time.split(":").map(Number);
+      if (eh * 60 + em <= sh * 60 + sm) end.setDate(end.getDate() + 1); // 자정 넘는 야간영업 보정
+      const otMin = Math.round((new Date(a.clock_out_at).getTime() - end.getTime()) / 60000);
+      if (otMin >= 10) out.push({ work_date: a.work_date, minutes: otMin });
+    }
+    return out.sort((x, y) => (x.work_date < y.work_date ? 1 : -1));
+  }, [monthAtt, rules, monthSched, allowances]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -343,6 +387,9 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {/* ④ 연차·휴가 */}
         <LeaveCard ko={ko} leaves={leaves} onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave} />
+
+        {/* ④-b 추가 수당 신청 (연장·야간·휴일근로, 2026-07-13) */}
+        <StaffAllowanceCard ko={ko} allowances={allowances} candidates={overtimeCandidates} onRequest={submitAllowance} onCancel={cancelAllowance} />
 
         {/* ⑤ 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장과 동일 판정, 2026-07-13) */}
         <StaffRightsCard

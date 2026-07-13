@@ -14,7 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2 } from "lucide-react";
+import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
@@ -47,6 +47,10 @@ type Leave = { id: string; member_user_id: string; leave_type: LeaveType; start_
 type Exception = { id: string; member_user_id: string; work_date: string; start_time: string | null; end_time: string | null; is_off: boolean };
 
 const LEAVE_LABEL: Record<LeaveType, string> = { annual: "연차", half: "반차", sick: "병가", other: "기타" };
+type AllowanceType = "overtime" | "night" | "holiday" | "other";
+type Allowance = { id: string; member_user_id: string; work_date: string; allowance_type: AllowanceType; minutes: number; reason: string | null; status: LeaveStatus };
+const ALLOWANCE_LABEL: Record<AllowanceType, string> = { overtime: "연장근로", night: "야간근로", holiday: "휴일근로", other: "기타" };
+const fmtMinKo = (min: number) => { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`; };
 const ymdLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 
 export function TeamSurface({ ko }: { ko: boolean }) {
@@ -55,6 +59,7 @@ export function TeamSurface({ ko }: { ko: boolean }) {
   const [rules, setRules] = useState<Rule[]>([]);
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [allowances, setAllowances] = useState<Allowance[]>([]); // 추가 수당 신청 (2026-07-13)
   const [loading, setLoading] = useState(true);
   // 직원 상세 팝업 (시급·근태·연차 — 2026-07-13)
   const [detailMember, setDetailMember] = useState<Member | null>(null);
@@ -63,16 +68,18 @@ export function TeamSurface({ ko }: { ko: boolean }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setOwnerId(user.id);
-    const [mRes, rRes, exRes, lRes] = await Promise.all([
+    const [mRes, rRes, exRes, lRes, aRes] = await Promise.all([
       supabase.rpc("get_store_members" as never),
       supabase.from("staff_schedule_rules" as never).select("id, member_user_id, weekday, start_time, end_time, active").eq("owner_user_id", user.id),
       supabase.from("staff_schedules" as never).select("id, member_user_id, work_date, start_time, end_time, is_off").eq("owner_user_id", user.id).gte("work_date", ymdLocal()).order("work_date"),
       supabase.from("leave_requests" as never).select("id, member_user_id, leave_type, start_date, end_date, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
+      supabase.from("allowance_requests" as never).select("id, member_user_id, work_date, allowance_type, minutes, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
     ]);
     setMembers((((mRes as { data: unknown }).data ?? []) as Member[]));
     setRules(((rRes.data ?? []) as Rule[]));
     setExceptions(((exRes.data ?? []) as Exception[]));
     setLeaves(((lRes.data ?? []) as Leave[]));
+    setAllowances(((aRes.data ?? []) as Allowance[]));
     setLoading(false);
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -85,6 +92,7 @@ export function TeamSurface({ ko }: { ko: boolean }) {
     const fire = () => reloadRef.current();
     const ch = supabase.channel(`team-rt-${ownerId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "leave_requests", filter: `owner_user_id=eq.${ownerId}` }, fire)
+      .on("postgres_changes", { event: "*", schema: "public", table: "allowance_requests", filter: `owner_user_id=eq.${ownerId}` }, fire)
       .on("postgres_changes", { event: "*", schema: "public", table: "attendance_records", filter: `owner_user_id=eq.${ownerId}` }, fire)
       .on("postgres_changes", { event: "*", schema: "public", table: "staff_schedule_rules", filter: `owner_user_id=eq.${ownerId}` }, fire)
       .on("postgres_changes", { event: "*", schema: "public", table: "staff_schedules", filter: `owner_user_id=eq.${ownerId}` }, fire)
@@ -97,6 +105,13 @@ export function TeamSurface({ ko }: { ko: boolean }) {
       .update({ status, decided_at: new Date().toISOString() } as never).eq("id", id);
     if (error) { console.error("[team] decide failed:", error); return; }
     setLeaves((p) => p.map((l) => (l.id === id ? { ...l, status } : l)));
+  };
+
+  const decideAllowance = async (id: string, status: "approved" | "rejected") => {
+    const { error } = await supabase.from("allowance_requests" as never)
+      .update({ status, decided_at: new Date().toISOString() } as never).eq("id", id);
+    if (error) { console.error("[team] allowance decide failed:", error); return; }
+    setAllowances((p) => p.map((a) => (a.id === id ? { ...a, status } : a)));
   };
 
   const saveRules = async (memberId: string, workdays: Set<number>, start: string, end: string): Promise<boolean> => {
@@ -139,7 +154,10 @@ export function TeamSurface({ ko }: { ko: boolean }) {
 
   const pending = leaves.filter((l) => l.status === "pending");
   const decided = leaves.filter((l) => l.status !== "pending").slice(0, 8);
+  const allowPending = allowances.filter((a) => a.status === "pending");
+  const allowDecided = allowances.filter((a) => a.status !== "pending").slice(0, 8);
   const nameOf = (id: string) => members?.find((m) => m.member_user_id === id)?.name ?? (ko ? "직원" : "Staff");
+  const mdDay = (d: string) => { const [, mm, dd] = d.split("-"); return ko ? `${Number(mm)}월 ${Number(dd)}일` : `${mm}/${dd}`; };
 
   return (
     <div style={wrap}>
@@ -209,6 +227,51 @@ export function TeamSurface({ ko }: { ko: boolean }) {
                   </div>
                 </div>
               )}
+            </section>
+
+            {/* 추가 수당 승인 큐 (2026-07-13) */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <Coins size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "추가 수당 승인" : "Allowance approvals"}</div>
+                {allowPending.length > 0 && <span style={badge}>{allowPending.length}</span>}
+              </div>
+
+              {allowPending.length === 0 ? (
+                <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>{ko ? "대기 중인 신청이 없어요. 직원이 연장·야간·휴일근로 수당을 신청하면 여기 표시됩니다." : "No pending requests."}</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {allowPending.map((a) => (
+                    <div key={a.id} style={leaveRow}>
+                      <span style={leaveType}>{ALLOWANCE_LABEL[a.allowance_type]}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: INK }}>{nameOf(a.member_user_id)} · {mdDay(a.work_date)} · {fmtMinKo(a.minutes)}</div>
+                        {a.reason && <div style={{ fontSize: 12, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.reason}</div>}
+                      </div>
+                      <button type="button" style={approveBtn} onClick={() => decideAllowance(a.id, "approved")}><Check size={14} strokeWidth={2.4} />{ko ? "승인" : "Approve"}</button>
+                      <button type="button" style={rejectBtn} onClick={() => decideAllowance(a.id, "rejected")} aria-label={ko ? "반려" : "Decline"}><X size={15} strokeWidth={2.2} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {allowDecided.length > 0 && (
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${MIDNIGHT_SOFT2}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT_MUTED, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>{ko ? "최근 처리" : "Recent"}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {allowDecided.map((a) => (
+                      <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: MUTED }}>
+                        <span style={{ fontWeight: 700, color: INK }}>{nameOf(a.member_user_id)}</span>
+                        <span>{ALLOWANCE_LABEL[a.allowance_type]} · {mdDay(a.work_date)} · {fmtMinKo(a.minutes)}</span>
+                        <span style={{ marginLeft: "auto", ...(a.status === "approved" ? approvedPill : rejectedPill) }}>{a.status === "approved" ? (ko ? "승인" : "Approved") : (ko ? "반려" : "Declined")}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ fontSize: 11, color: MIDNIGHT_MUTED, marginTop: 12, lineHeight: 1.55 }}>
+                {ko ? "연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과분 시급 지급." : "50% premium at workplaces with 5+ staff (LSA §56)."}
+              </div>
             </section>
 
             {/* 직원별 근무표 */}
