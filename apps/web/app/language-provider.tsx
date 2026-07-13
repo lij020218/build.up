@@ -4,6 +4,7 @@ import type { Language } from "@foundone/shared";
 import { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useNotifications, type NotifItem } from "./notification-context";
+import { enableWebPush, isWebPushGranted, isWebPushSupported } from "./lib/push-subscribe";
 
 type LanguageContextValue = {
   language: Language;
@@ -18,6 +19,16 @@ export function LanguageProvider(props: { children: ReactNode }) {
   // localStorage 에 이전 선택 (en/ko) 있으면 그걸로 덮어씀 (아래 useEffect).
   const [language, setLanguage] = useState<Language>("ko");
   const [notifOpen, setNotifOpen] = useState(false);
+  // 웹 푸시 구독 상태 (2026-07-12) — "idle"=버튼 노출, "enabled"=숨김/완료 표시
+  const [pushState, setPushState] = useState<"idle" | "enabling" | "enabled" | "failed">("idle");
+  useEffect(() => {
+    if (isWebPushGranted()) setPushState("enabled");
+  }, []);
+  const handleEnablePush = async () => {
+    setPushState("enabling");
+    const result = await enableWebPush();
+    setPushState(result === "enabled" ? "enabled" : "failed");
+  };
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -155,6 +166,32 @@ export function LanguageProvider(props: { children: ReactNode }) {
                   </span>
                 )}
               </div>
+
+              {/* 푸시 알림 켜기 — 초대장·연차·위기 알림을 브라우저 밖에서도 (2026-07-12) */}
+              {isWebPushSupported() && pushState !== "enabled" && (
+                <div style={{ padding: "10px 18px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
+                  <button
+                    type="button"
+                    onClick={handleEnablePush}
+                    disabled={pushState === "enabling"}
+                    style={{
+                      width: "100%", padding: "9px 12px", borderRadius: "10px", border: "none",
+                      background: "#191970", color: "white", fontSize: "12.5px", fontWeight: 700,
+                      cursor: pushState === "enabling" ? "default" : "pointer",
+                      opacity: pushState === "enabling" ? 0.6 : 1,
+                    }}
+                  >
+                    {pushState === "enabling"
+                      ? (ko ? "설정 중…" : "Enabling…")
+                      : (ko ? "🔔 푸시 알림 켜기 — 초대장·연차·위기 알림" : "🔔 Enable push notifications")}
+                  </button>
+                  {pushState === "failed" && (
+                    <div style={{ marginTop: "6px", fontSize: "11px", color: "#b64c4c", lineHeight: 1.4 }}>
+                      {ko ? "설정 실패 — 로그인 상태와 브라우저 알림 권한을 확인해 주세요." : "Failed — check sign-in and browser permission."}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* 알림 없음 */}
               {notifications.length === 0 && (

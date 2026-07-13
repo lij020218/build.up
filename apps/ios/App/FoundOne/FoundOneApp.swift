@@ -14,6 +14,9 @@ import KakaoSDKAuth
 @main
 struct FoundOneApp: App {
 
+    // APNs 원격 푸시 등록 (2026-07-12) — 토큰 수신 → user_push_tokens upsert.
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var pushDelegate
+
     init() {
         #if canImport(KakaoSDKCommon)
         if let key = Bundle.main.infoDictionary?["KAKAO_NATIVE_APP_KEY"] as? String,

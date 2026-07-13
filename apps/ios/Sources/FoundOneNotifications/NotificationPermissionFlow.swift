@@ -33,6 +33,11 @@ public final class NotificationPermissionFlow {
         if granted {
             // 권한 받자마자 모닝 브리핑 1회 스케줄.
             await NotificationScheduler.shared.scheduleMorningBrief()
+            // 원격 푸시(APNs) 등록 — 토큰은 PushAppDelegate 가 수신해 저장 (2026-07-12).
+            //   capability 미설정이면 didFail 로 조용히 끝남(무해).
+            #if canImport(UIKit)
+            UIApplication.shared.registerForRemoteNotifications()
+            #endif
             status = .granted
         } else {
             status = .denied

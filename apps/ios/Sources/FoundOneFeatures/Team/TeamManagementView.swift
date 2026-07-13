@@ -459,11 +459,25 @@ private struct MemberScheduleCard: View {
     var onSetHireDate: (String) -> Void
 
     @State private var days: Set<Int> = []
-    @State private var start = "09:00"
-    @State private var end = "18:00"
+    // 시간은 네이티브 휠(DatePicker) — 웹도 select 로 통일 (2026-07-13, 타이핑식 입력의 편집성 신고 대응)
+    @State private var startTime: Date = Self.time(17, 0)
+    @State private var endTime: Date = Self.time(23, 0)
     @State private var editingHireDate = false
     @State private var hireDatePick = Date()
     @State private var saved = false
+
+    private static func time(_ h: Int, _ m: Int) -> Date {
+        Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date()
+    }
+    private static func parseTime(_ s: String) -> Date? {
+        let parts = s.prefix(5).split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return nil }
+        return time(parts[0], parts[1])
+    }
+    private static func formatTime(_ d: Date) -> String {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: d)
+        return String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
+    }
 
     /// 웹 WEEK_KO 미러 — index = weekday (0=일)
     private static let weekKo = ["일", "월", "화", "수", "목", "금", "토"]
@@ -535,18 +549,20 @@ private struct MemberScheduleCard: View {
                 }
 
                 HStack(spacing: 8) {
-                    TextField("09:00", text: $start)
-                        .font(.system(size: 13, design: .monospaced))
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 76)
+                    DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .environment(\.locale, Locale(identifier: "ko_KR"))
+                        .onChange(of: startTime) { _, _ in saved = false }
                     Text("~").foregroundStyle(BUColor.inkMuted)
-                    TextField("18:00", text: $end)
-                        .font(.system(size: 13, design: .monospaced))
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 76)
+                    DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .environment(\.locale, Locale(identifier: "ko_KR"))
+                        .onChange(of: endTime) { _, _ in saved = false }
                     Spacer(minLength: 0)
                     Button {
-                        onSave(days, start, end)
+                        onSave(days, Self.formatTime(startTime), Self.formatTime(endTime))
                         saved = true
                     } label: {
                         Text(saved ? "저장됨" : "근무표 저장")
@@ -566,8 +582,8 @@ private struct MemberScheduleCard: View {
     private func syncFromRules() {
         days = Set(rules.map(\.weekday))
         if let first = rules.first {
-            start = String(first.startTime.prefix(5))
-            end = String(first.endTime.prefix(5))
+            if let s = Self.parseTime(first.startTime) { startTime = s }
+            if let e = Self.parseTime(first.endTime) { endTime = e }
         }
     }
 

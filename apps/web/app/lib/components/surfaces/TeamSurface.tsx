@@ -330,11 +330,11 @@ function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSav
       <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
         <div style={{ flex: 1 }}>
           <label style={fieldLabel}>{ko ? "출근" : "Start"}</label>
-          <input type="time" value={start} onChange={(e) => { setStart(e.target.value); setState("dirty"); }} style={timeInput} />
+          <TimeSelect value={start} onChange={(v) => { setStart(v); setState("dirty"); }} ko={ko} ariaLabel={ko ? "출근 시간" : "Start time"} />
         </div>
         <div style={{ flex: 1 }}>
           <label style={fieldLabel}>{ko ? "퇴근" : "End"}</label>
-          <input type="time" value={end} onChange={(e) => { setEnd(e.target.value); setState("dirty"); }} style={timeInput} />
+          <TimeSelect value={end} onChange={(v) => { setEnd(v); setState("dirty"); }} ko={ko} ariaLabel={ko ? "퇴근 시간" : "End time"} />
         </div>
         <button type="button" onClick={save} disabled={state === "saving" || state === "idle" || state === "saved"} style={{
           padding: "11px 16px", borderRadius: 12, border: "none", fontSize: 13.5, fontWeight: 700, minWidth: 78,
@@ -392,8 +392,8 @@ function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSav
             </div>
             {exMode === "custom" && (
               <div style={{ display: "flex", gap: 10 }}>
-                <div style={{ flex: 1 }}><label style={fieldLabel}>{ko ? "출근" : "Start"}</label><input type="time" value={exStart} onChange={(e) => setExStart(e.target.value)} style={timeInput} /></div>
-                <div style={{ flex: 1 }}><label style={fieldLabel}>{ko ? "퇴근" : "End"}</label><input type="time" value={exEnd} onChange={(e) => setExEnd(e.target.value)} style={timeInput} /></div>
+                <div style={{ flex: 1 }}><label style={fieldLabel}>{ko ? "출근" : "Start"}</label><TimeSelect value={exStart} onChange={setExStart} ko={ko} ariaLabel={ko ? "대타 출근 시간" : "Start"} /></div>
+                <div style={{ flex: 1 }}><label style={fieldLabel}>{ko ? "퇴근" : "End"}</label><TimeSelect value={exEnd} onChange={setExEnd} ko={ko} ariaLabel={ko ? "대타 퇴근 시간" : "End"} /></div>
               </div>
             )}
             <button type="button" onClick={addException} disabled={exSaving} style={{
@@ -428,3 +428,29 @@ const approvedPill: React.CSSProperties = { fontSize: 11, fontWeight: 700, color
 const rejectedPill: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: MIDNIGHT_MUTED, background: "transparent", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "2px 9px", borderRadius: 999, textDecoration: "line-through" };
 const fieldLabel: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 700, color: MIDNIGHT_MUTED, marginBottom: 6 };
 const timeInput: React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: 11, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", fontSize: 14, color: INK, WebkitTextFillColor: INK, boxSizing: "border-box", fontFamily: "inherit" };
+
+// ── 시간 선택 (2026-07-13) ───────────────────────────────────────
+// 네이티브 <input type="time">는 맥 Safari 에서 피커 없이 세그먼트 키보드 편집만 가능해
+// "시간 수정이 안 된다"는 신고(사장님 실사용)로 이어짐 → 30분 단위 select 로 교체.
+// 브라우저 무관하게 클릭 2번으로 확실히 동작, 오전/오후 표기.
+const TIME_OPTIONS: string[] = Array.from({ length: 48 }, (_, i) => {
+  const h = Math.floor(i / 2);
+  return `${String(h).padStart(2, "0")}:${i % 2 ? "30" : "00"}`;
+});
+function timeLabel(t: string, ko: boolean): string {
+  const [h, m] = t.split(":").map(Number);
+  if (!ko) return t;
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h < 12 ? "오전" : "오후"} ${h12}:${String(m).padStart(2, "0")}`;
+}
+function TimeSelect({ value, onChange, ko, ariaLabel }: { value: string; onChange: (v: string) => void; ko: boolean; ariaLabel: string }) {
+  // 기존 저장값이 30분 단위가 아니면(예: 17:15) 그 값을 옵션에 포함해 표시 보존
+  const options = TIME_OPTIONS.includes(value) ? TIME_OPTIONS : [value, ...TIME_OPTIONS];
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={ariaLabel} style={{ ...timeInput, cursor: "pointer", appearance: "none", WebkitAppearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23191970' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", paddingRight: 30 }}>
+      {options.map((t) => (
+        <option key={t} value={t}>{timeLabel(t, ko)}</option>
+      ))}
+    </select>
+  );
+}

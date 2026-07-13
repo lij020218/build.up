@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { signOutUser } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
+import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -232,23 +233,39 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   };
 
   // ── 렌더: 로딩 / 미연결 ──
+  // 직원용 미니 헤더 — 사장 화면 사이드바 로고와 동일한 아이덴티티 (2026-07-13 디자인 정합)
+  const logoHeader = (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "2px 4px" }}>
+      <FoundOneSpiralLogo size={26} color="#3A3AC8" style={{ flexShrink: 0 }} />
+      <span style={{ fontSize: 15, fontWeight: 700, color: INK, letterSpacing: "-0.03em" }}>
+        Found<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>One</span>
+      </span>
+    </div>
+  );
+
   if (loading) {
     return (
       <main style={pageStyle}>
-        <div style={{ ...cardStyle, textAlign: "center", color: MUTED }}>{ko ? "직원 정보 불러오는 중…" : "Loading…"}</div>
+        <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
+          {logoHeader}
+          <div style={{ ...cardStyle, textAlign: "center", color: MUTED }}>{ko ? "직원 정보 불러오는 중…" : "Loading…"}</div>
+        </div>
       </main>
     );
   }
   if (connected === false || !ctx) {
     return (
       <main style={pageStyle}>
-        <div style={cardStyle}>
-          <div style={eyebrow}>Found.One · {ko ? "직원" : "Staff"}</div>
-          <h1 style={h1}>{ko ? "아직 가게에 연결되지 않았어요" : "Not connected yet"}</h1>
-          <p style={sub}>{ko ? "사장님께 받은 초대 링크를 다시 눌러주세요. 링크는 7일간 유효합니다." : "Tap the invite link again. Valid for 7 days."}</p>
-          <button type="button" style={primaryBtn} onClick={handleSignOut} disabled={signingOut}>
-            <LogOut size={14} strokeWidth={1.6} /> {ko ? "로그아웃" : "Sign out"}
-          </button>
+        <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
+          {logoHeader}
+          <div style={cardStyle}>
+            <div style={eyebrow}>Found.One · {ko ? "직원" : "Staff"}</div>
+            <h1 style={h1}>{ko ? "아직 가게에 연결되지 않았어요" : "Not connected yet"}</h1>
+            <p style={sub}>{ko ? "사장님께 받은 초대 링크를 다시 눌러주세요. 링크는 7일간 유효합니다." : "Tap the invite link again. Valid for 7 days."}</p>
+            <button type="button" style={primaryBtn} onClick={handleSignOut} disabled={signingOut}>
+              <LogOut size={14} strokeWidth={1.6} /> {ko ? "로그아웃" : "Sign out"}
+            </button>
+          </div>
         </div>
       </main>
     );
@@ -259,6 +276,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   return (
     <main style={pageStyle}>
       <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
+        {logoHeader}
 
         {/* ① 가게 헤더 */}
         <section style={{ ...cardStyle, paddingBottom: 22 }}>
@@ -673,16 +691,18 @@ function LeaveSheet({ ko, onClose, onSubmit }: {
 }
 
 /* ══════════════════════ 스타일 ══════════════════════ */
+// 2026-07-13 디자인 정합 — 자체 플랫 배경(#f4f4fb)이 전역 오로라를 덮던 문제 제거,
+//   카드 규격을 사장 화면 표준(TeamSurface: radius 20·padding 22·h1 24/1.25)과 통일.
 const pageStyle: React.CSSProperties = {
-  minHeight: "100vh", background: "#f4f4fb", display: "flex", alignItems: "flex-start",
-  justifyContent: "center", padding: "28px 20px 48px",
+  minHeight: "100vh", display: "flex", alignItems: "flex-start",
+  justifyContent: "center", padding: "24px 20px 48px",
 };
 const cardStyle: React.CSSProperties = {
-  width: "100%", background: "white", borderRadius: 22, padding: "24px 22px",
+  width: "100%", background: "white", borderRadius: 20, padding: "22px 22px",
   boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)",
 };
-const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MIDNIGHT_MUTED, marginBottom: 10 };
-const h1: React.CSSProperties = { fontSize: 23, fontWeight: 800, letterSpacing: "-0.02em", color: INK, margin: 0, lineHeight: 1.3 };
+const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MIDNIGHT_MUTED, marginBottom: 8 };
+const h1: React.CSSProperties = { fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: INK, margin: 0, lineHeight: 1.25, wordBreak: "keep-all" };
 const sub: React.CSSProperties = { fontSize: 14, color: MUTED, lineHeight: 1.65, margin: "10px 0 22px" };
 const chipRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 8 };
 const chip: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: MIDNIGHT_SOFT, color: MIDNIGHT, fontSize: 12.5, fontWeight: 600 };
