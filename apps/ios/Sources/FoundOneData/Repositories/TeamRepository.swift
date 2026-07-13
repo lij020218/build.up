@@ -27,6 +27,8 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
     public let role: String
     public let joinedAt: String?
     public let hireDate: String?
+    /// 시급(원) — 사장 설정. RLS 상 직원 본인 행만 조회 가능 (동료 시급 비노출).
+    public let hourlyWage: Int?
 
     public var id: UUID { memberUserId }
 
@@ -35,6 +37,18 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
         case name, role
         case joinedAt = "joined_at"
         case hireDate = "hire_date"
+        case hourlyWage = "hourly_wage"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        memberUserId = try c.decode(UUID.self, forKey: .memberUserId)
+        name = try c.decode(String.self, forKey: .name)
+        role = try c.decode(String.self, forKey: .role)
+        joinedAt = try c.decodeIfPresent(String.self, forKey: .joinedAt)
+        hireDate = try c.decodeIfPresent(String.self, forKey: .hireDate)
+        // 마이그레이션 20260713 미적용 환경(hourly_wage 키 부재)에서도 디코딩 안전
+        hourlyWage = try c.decodeIfPresent(Int.self, forKey: .hourlyWage)
     }
 }
 
@@ -216,6 +230,28 @@ public actor TeamRepository {
                        weekday: $0, start_time: start, end_time: end, active: true)
         }
         try await client.from("staff_schedule_rules").insert(rows).execute()
+    }
+
+    // ── 시급 설정 (사장 — 마이그레이션 20260713_000001) ──
+    public func setHourlyWage(memberId: UUID, wage: Int) async throws {
+        struct Patch: Encodable { let hourly_wage: Int }
+        try await client
+            .from("store_members")
+            .update(Patch(hourly_wage: wage))
+            .eq("member_user_id", value: memberId.uuidString)
+            .execute()
+    }
+
+    // ── 특정 직원의 이번 달 출근 기록 (사장 — att_owner_read RLS) ──
+    public func memberAttendance(memberId: UUID, monthStart: String, monthEnd: String) async throws -> [StaffAttendance] {
+        try await client
+            .from("attendance_records")
+            .select("id, work_date, clock_in_at, clock_out_at")
+            .eq("member_user_id", value: memberId.uuidString)
+            .gte("work_date", value: monthStart)
+            .lte("work_date", value: monthEnd)
+            .order("work_date", ascending: false)
+            .execute().value
     }
 
     // ── 입사일 지정 (사장 — 근속 계산 기준) ──

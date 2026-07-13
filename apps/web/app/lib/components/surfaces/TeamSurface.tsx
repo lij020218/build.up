@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { InviteLinkSection } from "../InviteLinkSection";
+import { StaffDetailModal } from "./StaffDetailModal";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -28,7 +29,7 @@ const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 const WEEK_KO = ["일", "월", "화", "수", "목", "금", "토"];
 
-type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null };
+type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null };
 
 // 근속(勤續) 일차 — 입사일(없으면 가게 연결일) 기준 오늘이 N일째
 function tenureDays(hireDate: string | null, joinedAt: string | null): number | null {
@@ -55,6 +56,8 @@ export function TeamSurface({ ko }: { ko: boolean }) {
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
+  // 직원 상세 팝업 (시급·근태·연차 — 2026-07-13)
+  const [detailMember, setDetailMember] = useState<Member | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -227,6 +230,7 @@ export function TeamSurface({ ko }: { ko: boolean }) {
                     onSaveException={(date, isOff, s, e) => saveException(m.member_user_id, date, isOff, s, e)}
                     onDeleteException={deleteException}
                     onSetHireDate={(date) => setHireDate(m.member_user_id, date)}
+                    onOpenDetail={() => setDetailMember(m)}
                   />
                 ))}
               </div>
@@ -243,27 +247,71 @@ export function TeamSurface({ ko }: { ko: boolean }) {
           </>
         )}
       </div>
+
+      {/* 직원 상세 팝업 — 시급(사장 편집)·예상 급여·이번 달 근태·연차 */}
+      {detailMember && (
+        <StaffDetailModal
+          member={detailMember}
+          rules={rules.filter((r) => r.member_user_id === detailMember.member_user_id && r.active)}
+          leaves={leaves.filter((l) => l.member_user_id === detailMember.member_user_id)}
+          ko={ko}
+          onClose={() => setDetailMember(null)}
+          onWageSaved={(wage) => {
+            setDetailMember((prev) => (prev ? { ...prev, hourly_wage: wage } : prev));
+            void load();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSave, onSaveException, onDeleteException, onSetHireDate }: {
+function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSave, onSaveException, onDeleteException, onSetHireDate, onOpenDetail }: {
   ko: boolean; member: Member; memberRules: Rule[]; memberExceptions: Exception[];
   onSave: (workdays: Set<number>, start: string, end: string) => Promise<boolean>;
   onSaveException: (date: string, isOff: boolean, start: string, end: string) => Promise<boolean>;
   onDeleteException: (id: string) => void;
   onSetHireDate: (date: string) => void;
+  onOpenDetail: () => void;
 }) {
   const tdays = tenureDays(member.hire_date, member.joined_at);
   const hireVal = member.hire_date ?? (member.joined_at ? member.joined_at.slice(0, 10) : "");
-  const initDays = new Set(memberRules.map((r) => r.weekday));
-  const initStart = memberRules[0]?.start_time?.slice(0, 5) ?? "17:00";
-  const initEnd = memberRules[0]?.end_time?.slice(0, 5) ?? "23:00";
+  // 저장된 현재값 — 읽기 모드는 항상 props(서버 상태)에서 직접 계산
+  const savedDays = new Set(memberRules.map((r) => r.weekday));
+  const savedStart = memberRules[0]?.start_time?.slice(0, 5) ?? "17:00";
+  const savedEnd = memberRules[0]?.end_time?.slice(0, 5) ?? "23:00";
 
-  const [days, setDays] = useState<Set<number>>(initDays);
-  const [start, setStart] = useState(initStart);
-  const [end, setEnd] = useState(initEnd);
-  const [state, setState] = useState<"idle" | "dirty" | "saving" | "saved">("idle");
+  // ── 수정/저장 모드 (사장님 데이터 카드 표준 패턴, 2026-07-13 재작성) ──
+  //   기본 = 읽기 전용. 「수정」 클릭 시에만 draft 편집 → 「저장」으로 서버 반영.
+  //   상태 4단계: idle / saving / saved(2초 후 idle) / error.
+  const [editing, setEditing] = useState(false);
+  const [days, setDays] = useState<Set<number>>(savedDays);
+  const [start, setStart] = useState(savedStart);
+  const [end, setEnd] = useState(savedEnd);
+  const [hireDraft, setHireDraft] = useState(hireVal);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const handleEdit = () => {
+    setDays(new Set(savedDays));
+    setStart(savedStart);
+    setEnd(savedEnd);
+    setHireDraft(hireVal);
+    setSaveStatus("idle");
+    setEditing(true);
+  };
+  const handleCancel = () => { setEditing(false); setSaveStatus("idle"); };
+  const handleSave = async () => {
+    setSaveStatus("saving");
+    const ok = await onSave(days, start, end);
+    if (ok && hireDraft && hireDraft !== hireVal) onSetHireDate(hireDraft);
+    if (ok) {
+      setSaveStatus("saved");
+      setEditing(false);
+      window.setTimeout(() => setSaveStatus("idle"), 2000);
+    } else {
+      setSaveStatus("error");
+    }
+  };
 
   // 날짜 예외(대타/휴무) 추가 폼
   const [exOpen, setExOpen] = useState(false);
@@ -280,72 +328,141 @@ function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSav
   };
   const md1 = (d: string) => { const x = new Date(`${d}T00:00:00`); return `${x.getMonth() + 1}.${x.getDate()} (${WEEK_KO[x.getDay()]})`; };
 
-  const toggle = (w: number) => { setDays((prev) => { const n = new Set(prev); n.has(w) ? n.delete(w) : n.add(w); return n; }); setState("dirty"); };
-  const save = async () => {
-    setState("saving");
-    const ok = await onSave(days, start, end);
-    setState(ok ? "saved" : "dirty");
-    if (ok) window.setTimeout(() => setState("idle"), 1600);
-  };
+  const toggle = (w: number) => { setDays((prev) => { const n = new Set(prev); n.has(w) ? n.delete(w) : n.add(w); return n; }); };
 
-  const durMin = (() => { const [sh, sm] = start.split(":").map(Number); const [eh, em] = end.split(":").map(Number); let d = eh * 60 + em - (sh * 60 + sm); if (d <= 0) d += 1440; return d; })();
+  // 요약 칩·읽기 표시는 화면 모드에 맞는 값으로 (읽기=저장값, 수정=draft)
+  const viewDays = editing ? days : savedDays;
+  const viewStart = editing ? start : savedStart;
+  const viewEnd = editing ? end : savedEnd;
+  const durMin = (() => { const [sh, sm] = viewStart.split(":").map(Number); const [eh, em] = viewEnd.split(":").map(Number); let d = eh * 60 + em - (sh * 60 + sm); if (d <= 0) d += 1440; return d; })();
   const durLabel = `${Math.floor(durMin / 60)}${ko ? "시간" : "h"}${durMin % 60 ? ` ${durMin % 60}${ko ? "분" : "m"}` : ""}`;
 
   return (
     <div style={{ padding: "16px 16px 14px", borderRadius: 16, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 999, background: MIDNIGHT_SOFT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Users size={15} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 750, color: INK }}>{member.name}</div>
+        {/* 이름 영역 클릭 → 직원 상세(시급·근태) 팝업 (2026-07-13) */}
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          title={ko ? "직원 상세 — 시급·근태·연차" : "Staff details"}
+          style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
+          <div style={{ width: 30, height: 30, borderRadius: 999, background: MIDNIGHT_SOFT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Users size={15} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 750, color: INK, textDecoration: "underline", textDecorationColor: "rgba(25,25,112,0.25)", textUnderlineOffset: 3 }}>{member.name}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT_MUTED }}>{ko ? "상세 ›" : "Details ›"}</span>
+        </button>
         <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: MIDNIGHT_SOFT, padding: "2px 8px", borderRadius: 999 }}>{member.role === "manager" ? (ko ? "매니저" : "Manager") : ko ? "직원" : "Staff"}</span>
         {tdays != null && tdays >= 1 && (
           <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: "white", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "2px 8px", borderRadius: 999 }}>
             {ko ? `근속 ${tdays.toLocaleString()}일차` : `Day ${tdays.toLocaleString()}`}
           </span>
         )}
-        {days.size > 0 && <span style={{ marginLeft: "auto", fontSize: 12, color: MIDNIGHT_MUTED, fontWeight: 600 }}>{ko ? `주 ${days.size}일 · ${durLabel}` : `${days.size}d/wk · ${durLabel}`}</span>}
+        {viewDays.size > 0 && <span style={{ marginLeft: "auto", fontSize: 12, color: MIDNIGHT_MUTED, fontWeight: 600 }}>{ko ? `주 ${viewDays.size}일 · ${durLabel}` : `${viewDays.size}d/wk · ${durLabel}`}</span>}
+        {!editing && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginLeft: viewDays.size > 0 ? 0 : "auto" }}>
+            {saveStatus === "saved" && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: MIDNIGHT }}>
+                <CheckCircle2 size={13} strokeWidth={2.2} />{ko ? "저장됨" : "Saved"}
+              </span>
+            )}
+            <button type="button" onClick={handleEdit} style={{
+              padding: "7px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+              border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: MIDNIGHT,
+            }}>
+              {ko ? "수정" : "Edit"}
+            </button>
+          </span>
+        )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 11.5, fontWeight: 700, color: MIDNIGHT_MUTED, flexShrink: 0 }}>{ko ? "입사일" : "Hire date"}</span>
-        <input type="date" value={hireVal} max={ymdLocal()} onChange={(e) => onSetHireDate(e.target.value)} style={{ ...timeInput, maxWidth: 168, padding: "8px 10px" }} aria-label={ko ? "입사일 (근속 계산 기준)" : "Hire date"} />
-        <span style={{ fontSize: 11.5, color: MUTED }}>{ko ? "근속 계산 기준" : "for tenure"}</span>
-      </div>
-
-      <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-        {WEEK_KO.map((w, i) => {
-          const on = days.has(i);
-          return (
-            <button key={i} type="button" onClick={() => toggle(i)} aria-pressed={on} style={{
-              flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
-              border: `1px solid ${on ? MIDNIGHT : MIDNIGHT_BORDER}`,
-              background: on ? MIDNIGHT : "white", color: on ? "white" : i === 0 ? LEAVE : MIDNIGHT_MUTED,
-              transition: "background 160ms, color 160ms, border-color 160ms",
-            }}>{w}</button>
-          );
-        })}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
-        <div style={{ flex: 1 }}>
-          <label style={fieldLabel}>{ko ? "출근" : "Start"}</label>
-          <TimeSelect value={start} onChange={(v) => { setStart(v); setState("dirty"); }} ko={ko} ariaLabel={ko ? "출근 시간" : "Start time"} />
+      {!editing ? (
+        /* ── 읽기 모드 — 저장된 근무표 요약 (편집 불가) ── */
+        <div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            {WEEK_KO.map((w, i) => {
+              const on = savedDays.has(i);
+              return (
+                <span key={i} aria-hidden style={{
+                  flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+                  background: on ? MIDNIGHT : MIDNIGHT_SOFT,
+                  color: on ? "white" : i === 0 ? LEAVE : MIDNIGHT_MUTED,
+                }}>{w}</span>
+              );
+            })}
+          </div>
+          {savedDays.size > 0 ? (
+            <div style={{ fontSize: 13, color: INK, fontWeight: 600 }}>
+              {ko
+                ? `${timeLabel(savedStart, true)} – ${timeLabel(savedEnd, true)} · ${durLabel}`
+                : `${savedStart} – ${savedEnd} · ${durLabel}`}
+              {hireVal && <span style={{ color: MUTED, fontWeight: 500 }}> · {ko ? "입사일" : "Hired"} {hireVal}</span>}
+            </div>
+          ) : (
+            <div style={{ fontSize: 12.5, color: MUTED }}>
+              {ko ? "근무표 미설정 — 「수정」을 눌러 요일과 시간을 배정하세요." : "No schedule yet — press Edit to assign."}
+            </div>
+          )}
         </div>
-        <div style={{ flex: 1 }}>
-          <label style={fieldLabel}>{ko ? "퇴근" : "End"}</label>
-          <TimeSelect value={end} onChange={(v) => { setEnd(v); setState("dirty"); }} ko={ko} ariaLabel={ko ? "퇴근 시간" : "End time"} />
+      ) : (
+        /* ── 수정 모드 — draft 편집 + 저장/취소 ── */
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: MIDNIGHT_MUTED, flexShrink: 0 }}>{ko ? "입사일" : "Hire date"}</span>
+            <input type="date" value={hireDraft} max={ymdLocal()} onChange={(e) => setHireDraft(e.target.value)} style={{ ...timeInput, maxWidth: 168, padding: "8px 10px" }} aria-label={ko ? "입사일 (근속 계산 기준)" : "Hire date"} />
+            <span style={{ fontSize: 11.5, color: MUTED }}>{ko ? "근속 계산 기준" : "for tenure"}</span>
+          </div>
+
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            {WEEK_KO.map((w, i) => {
+              const on = days.has(i);
+              return (
+                <button key={i} type="button" onClick={() => toggle(i)} aria-pressed={on} style={{
+                  flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  border: `1px solid ${on ? MIDNIGHT : MIDNIGHT_BORDER}`,
+                  background: on ? MIDNIGHT : "white", color: on ? "white" : i === 0 ? LEAVE : MIDNIGHT_MUTED,
+                  transition: "background 160ms, color 160ms, border-color 160ms",
+                }}>{w}</button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={fieldLabel}>{ko ? "출근" : "Start"}</label>
+              <TimeSelect value={start} onChange={setStart} ko={ko} ariaLabel={ko ? "출근 시간" : "Start time"} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={fieldLabel}>{ko ? "퇴근" : "End"}</label>
+              <TimeSelect value={end} onChange={setEnd} ko={ko} ariaLabel={ko ? "퇴근 시간" : "End time"} />
+            </div>
+          </div>
+
+          {saveStatus === "error" && (
+            <div style={{ fontSize: 12, color: "#b64c4c", marginBottom: 10 }}>
+              {ko ? "저장에 실패했어요. 네트워크 확인 후 다시 시도해 주세요." : "Save failed — please retry."}
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button type="button" onClick={handleCancel} disabled={saveStatus === "saving"} style={{
+              padding: "10px 16px", borderRadius: 11, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              border: `1px solid ${MIDNIGHT_BORDER}`, background: "transparent", color: MUTED,
+            }}>
+              {ko ? "취소" : "Cancel"}
+            </button>
+            <button type="button" onClick={handleSave} disabled={saveStatus === "saving"} style={{
+              padding: "10px 18px", borderRadius: 11, fontSize: 13.5, fontWeight: 700, minWidth: 86,
+              border: "none", background: MIDNIGHT, color: "white",
+              cursor: saveStatus === "saving" ? "wait" : "pointer",
+              opacity: saveStatus === "saving" ? 0.6 : 1,
+            }}>
+              {saveStatus === "saving" ? (ko ? "저장 중…" : "Saving…") : ko ? "저장" : "Save"}
+            </button>
+          </div>
         </div>
-        <button type="button" onClick={save} disabled={state === "saving" || state === "idle" || state === "saved"} style={{
-          padding: "11px 16px", borderRadius: 12, border: "none", fontSize: 13.5, fontWeight: 700, minWidth: 78,
-          cursor: state === "dirty" ? "pointer" : "default",
-          background: state === "saved" ? "rgba(25,25,112,0.10)" : state === "dirty" ? MIDNIGHT : MIDNIGHT_SOFT,
-          color: state === "saved" ? MIDNIGHT : state === "dirty" ? "white" : MIDNIGHT_MUTED,
-          display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5,
-        }}>
-          {state === "saved" ? <><CheckCircle2 size={14} strokeWidth={2.2} />{ko ? "저장됨" : "Saved"}</> : state === "saving" ? (ko ? "저장 중" : "…") : (ko ? "저장" : "Save")}
-        </button>
-      </div>
+      )}
 
       {/* 날짜 예외 — 대타/특정일 휴무 */}
       <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${MIDNIGHT_SOFT2}` }}>

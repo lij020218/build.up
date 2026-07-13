@@ -35,6 +35,8 @@ public struct TeamManagementView: View {
     @State private var rules: [TeamScheduleRule] = []
     @State private var loadFailed = false
     @State private var showPayrollSheet = false
+    /// 직원 상세 시트 (시급·근태·연차 — 2026-07-13)
+    @State private var detailMember: TeamMember? = nil
 
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var pendingLeaves: [TeamLeaveRequest] { leaves.filter { $0.status == "pending" } }
@@ -85,6 +87,14 @@ public struct TeamManagementView: View {
             }
             .sheet(isPresented: $showPayrollSheet) {
                 if let si = storeInfoStore { TeamManagementSheet(storeInfoStore: si) }
+            }
+            .sheet(item: $detailMember) { m in
+                StaffDetailSheet(
+                    member: m,
+                    rules: rules.filter { $0.memberUserId == m.memberUserId },
+                    leaves: leaves.filter { $0.memberUserId == m.memberUserId },
+                    onWageSaved: { Task { await load() } }
+                )
             }
             .task { await load() }
         }
@@ -242,14 +252,18 @@ public struct TeamManagementView: View {
                     member: member,
                     rules: rules.filter { $0.memberUserId == member.memberUserId },
                     onSave: { weekdays, start, end in
-                        Task {
-                            try? await repo.saveRules(memberId: member.memberUserId, weekdays: weekdays, start: start, end: end)
+                        do {
+                            try await repo.saveRules(memberId: member.memberUserId, weekdays: weekdays, start: start, end: end)
                             await load()
+                            return true
+                        } catch {
+                            return false
                         }
                     },
                     onSetHireDate: { date in
                         Task { try? await repo.setHireDate(memberId: member.memberUserId, date: date); await load() }
-                    }
+                    },
+                    onOpenDetail: { detailMember = member }
                 )
             }
         }
@@ -455,16 +469,22 @@ private struct InviteCreateCard: View {
 private struct MemberScheduleCard: View {
     let member: TeamMember
     let rules: [TeamScheduleRule]
-    var onSave: (Set<Int>, String, String) -> Void
+    /// 저장 결과를 반환 — saved/error 상태를 실제 결과로 표시 (optimistic 금지)
+    var onSave: (Set<Int>, String, String) async -> Bool
     var onSetHireDate: (String) -> Void
+    var onOpenDetail: () -> Void
 
+    // ── 수정/저장 모드 (사장님 데이터 카드 표준 패턴, 2026-07-13 재작성 — 웹 미러) ──
+    //   기본 = 읽기 전용 요약. 「수정」 탭 시에만 draft 편집 → 「저장」/「취소」.
+    @State private var editing = false
     @State private var days: Set<Int> = []
-    // 시간은 네이티브 휠(DatePicker) — 웹도 select 로 통일 (2026-07-13, 타이핑식 입력의 편집성 신고 대응)
+    // 시간은 네이티브 휠(DatePicker) — 웹도 select 로 통일 (2026-07-13)
     @State private var startTime: Date = Self.time(17, 0)
     @State private var endTime: Date = Self.time(23, 0)
-    @State private var editingHireDate = false
     @State private var hireDatePick = Date()
-    @State private var saved = false
+    @State private var saveStatus: SaveStatus = .idle
+
+    private enum SaveStatus { case idle, saving, saved, error }
 
     private static func time(_ h: Int, _ m: Int) -> Date {
         Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date()
@@ -486,9 +506,19 @@ private struct MemberScheduleCard: View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    Text(member.name)
-                        .font(.system(size: 14, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
+                    // 이름 탭 → 직원 상세(시급·근태) 시트 (2026-07-13, 웹 미러)
+                    Button(action: onOpenDetail) {
+                        HStack(spacing: 4) {
+                            Text(member.name)
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(BUColor.ink)
+                                .underline(true, color: BUColor.midnight.opacity(0.25))
+                            Text("상세 ›")
+                                .font(.system(size: 10.5, weight: .heavy))
+                                .foregroundStyle(BUColor.inkMuted)
+                        }
+                    }
+                    .buttonStyle(.plain)
                     Text(member.role == "manager" ? "매니저" : "직원")
                         .font(.system(size: 10, weight: .heavy))
                         .foregroundStyle(BUColor.midnight)
@@ -500,91 +530,165 @@ private struct MemberScheduleCard: View {
                             .foregroundStyle(BUColor.inkMuted)
                     }
                     Spacer(minLength: 0)
-                    Button {
-                        editingHireDate.toggle()
-                    } label: {
-                        Text(member.hireDate ?? "입사일 지정")
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundStyle(BUColor.inkSecondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if editingHireDate {
-                    HStack(spacing: 8) {
-                        DatePicker("", selection: $hireDatePick, displayedComponents: .date)
-                            .datePickerStyle(.compact)
-                            .labelsHidden()
-                            .environment(\.locale, Locale(identifier: "ko_KR"))
-                        Button("저장") {
-                            let fmt = DateFormatter()
-                            fmt.dateFormat = "yyyy-MM-dd"
-                            onSetHireDate(fmt.string(from: hireDatePick))
-                            editingHireDate = false
+                    if !editing {
+                        if saveStatus == .saved {
+                            Label("저장됨", systemImage: "checkmark.circle")
+                                .font(.system(size: 11, weight: .heavy))
+                                .foregroundStyle(BUColor.midnight)
                         }
-                        .font(.system(size: 12, weight: .heavy))
-                        .foregroundStyle(BUColor.midnight)
-                    }
-                }
-
-                // 요일 칩 (0=일 … 6=토)
-                HStack(spacing: 6) {
-                    ForEach(0..<7, id: \.self) { wd in
-                        let selected = days.contains(wd)
                         Button {
-                            if selected { days.remove(wd) } else { days.insert(wd) }
-                            saved = false
+                            startEdit()
                         } label: {
-                            Text(Self.weekKo[wd])
+                            Text("수정")
                                 .font(.system(size: 12, weight: .heavy))
-                                .foregroundStyle(selected ? .white : BUColor.inkSecondary)
-                                .frame(width: 34, height: 34)
-                                .background(
-                                    selected ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.05)),
-                                    in: Circle()
-                                )
+                                .foregroundStyle(BUColor.midnight)
+                                .padding(.horizontal, 13).padding(.vertical, 6)
+                                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
                         }
                         .buttonStyle(.plain)
                     }
                 }
 
-                HStack(spacing: 8) {
-                    DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .environment(\.locale, Locale(identifier: "ko_KR"))
-                        .onChange(of: startTime) { _, _ in saved = false }
-                    Text("~").foregroundStyle(BUColor.inkMuted)
-                    DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .environment(\.locale, Locale(identifier: "ko_KR"))
-                        .onChange(of: endTime) { _, _ in saved = false }
-                    Spacer(minLength: 0)
-                    Button {
-                        onSave(days, Self.formatTime(startTime), Self.formatTime(endTime))
-                        saved = true
-                    } label: {
-                        Text(saved ? "저장됨" : "근무표 저장")
-                            .font(.system(size: 12.5, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 14).padding(.vertical, 8)
-                            .background(saved ? BUColor.midnight.opacity(0.5) : BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
+                if !editing {
+                    // ── 읽기 모드 — 저장된 근무표 요약 ──
+                    let savedDays = Set(rules.map(\.weekday))
+                    HStack(spacing: 6) {
+                        ForEach(0..<7, id: \.self) { wd in
+                            let on = savedDays.contains(wd)
+                            Text(Self.weekKo[wd])
+                                .font(.system(size: 12, weight: .heavy))
+                                .foregroundStyle(on ? .white : (wd == 0 ? Color(red: 139/255, green: 127/255, blue: 212/255) : BUColor.inkMuted))
+                                .frame(width: 34, height: 34)
+                                .background(
+                                    on ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.05)),
+                                    in: Circle()
+                                )
+                        }
                     }
-                    .disabled(days.isEmpty)
+                    if let first = rules.first {
+                        Text("\(readTimeLabel(first.startTime)) – \(readTimeLabel(first.endTime))\(member.hireDate.map { " · 입사일 \($0)" } ?? "")")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(BUColor.ink)
+                    } else {
+                        Text("근무표 미설정 — 「수정」을 눌러 요일과 시간을 배정하세요.")
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(BUColor.inkSecondary)
+                    }
+                } else {
+                    // ── 수정 모드 — draft 편집 + 저장/취소 ──
+                    HStack(spacing: 8) {
+                        Text("입사일").font(.system(size: 11.5, weight: .heavy)).foregroundStyle(BUColor.inkMuted)
+                        DatePicker("", selection: $hireDatePick, displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .environment(\.locale, Locale(identifier: "ko_KR"))
+                        Spacer(minLength: 0)
+                    }
+
+                    // 요일 칩 (0=일 … 6=토)
+                    HStack(spacing: 6) {
+                        ForEach(0..<7, id: \.self) { wd in
+                            let selected = days.contains(wd)
+                            Button {
+                                if selected { days.remove(wd) } else { days.insert(wd) }
+                            } label: {
+                                Text(Self.weekKo[wd])
+                                    .font(.system(size: 12, weight: .heavy))
+                                    .foregroundStyle(selected ? .white : BUColor.inkSecondary)
+                                    .frame(width: 34, height: 34)
+                                    .background(
+                                        selected ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.05)),
+                                        in: Circle()
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    HStack(spacing: 8) {
+                        DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .environment(\.locale, Locale(identifier: "ko_KR"))
+                        Text("~").foregroundStyle(BUColor.inkMuted)
+                        DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .environment(\.locale, Locale(identifier: "ko_KR"))
+                        Spacer(minLength: 0)
+                    }
+
+                    if saveStatus == .error {
+                        Text("저장에 실패했어요. 네트워크 확인 후 다시 시도해 주세요.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(BUColor.danger)
+                    }
+
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        Button {
+                            editing = false
+                            saveStatus = .idle
+                        } label: {
+                            Text("취소")
+                                .font(.system(size: 12.5, weight: .semibold))
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .padding(.horizontal, 14).padding(.vertical, 9)
+                                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.midnight.opacity(0.14), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(saveStatus == .saving)
+                        Button {
+                            Task { await commit() }
+                        } label: {
+                            Text(saveStatus == .saving ? "저장 중…" : "저장")
+                                .font(.system(size: 13, weight: .heavy))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 18).padding(.vertical, 9)
+                                .background(BUColor.midnight.opacity(saveStatus == .saving ? 0.6 : 1), in: RoundedRectangle(cornerRadius: 10))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(saveStatus == .saving || days.isEmpty)
+                    }
                 }
             }
         }
-        .onAppear { syncFromRules() }
-        .onChange(of: rules) { _, _ in syncFromRules() }
     }
 
-    private func syncFromRules() {
+    private func startEdit() {
         days = Set(rules.map(\.weekday))
         if let first = rules.first {
             if let s = Self.parseTime(first.startTime) { startTime = s }
             if let e = Self.parseTime(first.endTime) { endTime = e }
         }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        hireDatePick = member.hireDate.flatMap { f.date(from: $0) } ?? Date()
+        saveStatus = .idle
+        editing = true
+    }
+
+    private func commit() async {
+        saveStatus = .saving
+        let ok = await onSave(days, Self.formatTime(startTime), Self.formatTime(endTime))
+        if ok {
+            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+            let hire = f.string(from: hireDatePick)
+            if hire != member.hireDate { onSetHireDate(hire) }
+            saveStatus = .saved
+            editing = false
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            if saveStatus == .saved { saveStatus = .idle }
+        } else {
+            saveStatus = .error
+        }
+    }
+
+    private func readTimeLabel(_ t: String) -> String {
+        let parts = t.prefix(5).split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return String(t.prefix(5)) }
+        let h = parts[0], m = parts[1]
+        let h12 = h % 12 == 0 ? 12 : h % 12
+        return "\(h < 12 ? "오전" : "오후") \(h12):\(String(format: "%02d", m))"
     }
 
     private var tenureDays: Int? {
