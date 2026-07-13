@@ -311,10 +311,10 @@ public struct AppRoot: View {
         } catch {
             userRole = "owner"
         }
-        // 사장(또는 미지정) 계정에 지정 초대가 와 있으면 초대장 자동 표시.
-        if userRole != "staff" && userRole != "manager" {
-            await offerPendingInviteIfAny()
-        }
+        // 지정 초대가 와 있으면 초대장 자동 표시 — 역할 무관.
+        //   종전엔 사장(미지정)만 체크해, 이미 staff 인 계정이 (연결이 끊긴 뒤) 새 초대를 받아도
+        //   못 봤음(버그, 2026-07-13). 연결이 끊긴 직원의 재수락(재연결) 경로가 여기서 열린다.
+        await offerPendingInviteIfAny()
     }
 
     /// my_pending_invites 체크 — 있으면 초대장 시트 (마이그레이션 20260712 미적용 환경에선 조용히 skip).

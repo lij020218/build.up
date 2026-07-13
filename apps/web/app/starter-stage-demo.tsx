@@ -694,8 +694,15 @@ export default function StarterStageDemo({
     return roleSelectionNode;
   }
   // ── 직원(또는 매니저) 계정 → 직원 대시보드만 노출. 사장 전용 화면(로드맵·재무·AI) 진입 차단.
+  //   InviteOfferModal 도 함께 마운트 — 직원이 (연결이 끊긴 상태에서) 새 지정 초대를 받으면
+  //   여기서도 초대장이 떠 재수락(재연결) 가능. 종전엔 이 return 아래에만 있어 직원이 초대를 못 봤음(버그, 2026-07-13).
   if (userRole === "staff" || userRole === "manager") {
-    return <StaffDashboard language={language} />;
+    return (
+      <>
+        <StaffDashboard language={language} />
+        <InviteOfferModal ko={language === "ko"} />
+      </>
+    );
   }
   if (shouldShowExistingOnboarding) {
     return (
@@ -1075,7 +1082,7 @@ export default function StarterStageDemo({
         : (showOperationalHero ? styles.shell : operationalShell)}
     >
       {/* 받은 채용 초대장 — 지정 초대가 있으면 어느 화면에서든 자동 표시 (2026-07-12).
-          직원(staff) 계정은 이 return 전에 StaffDashboard 로 분기되므로 여기 미도달. */}
+          직원(staff) 계정은 위 staff 분기에서 별도 마운트 — 여기는 사장/온보딩 화면용. */}
       <InviteOfferModal ko={d.language === "ko"} />
       {showOperationalHero ? (
       <section style={styles.hero}>
