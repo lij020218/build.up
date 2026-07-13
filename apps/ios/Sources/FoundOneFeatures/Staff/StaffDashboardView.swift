@@ -43,6 +43,7 @@ public struct StaffDashboardView: View {
 
     @State private var ctx: StaffStoreContext? = nil
     @State private var loading = true
+    @State private var loadFailed = false   // 연결 조회 RPC 실패 — "미연결"과 구분 (2026-07-13)
     @State private var rules: [TeamScheduleRule] = []
     @State private var exceptions: [StaffScheduleException] = []
     @State private var monthAtt: [StaffAttendance] = []
@@ -112,6 +113,8 @@ public struct StaffDashboardView: View {
                     logoHeaderBar(showProfileBtn: ctx?.connected == true)
                     if loading {
                         ProgressView().frame(maxWidth: .infinity).padding(.vertical, 60)
+                    } else if loadFailed {
+                        loadFailedCard
                     } else if let ctx, ctx.connected {
                         headerCard(ctx)
                         StaffTodayCard(
@@ -194,6 +197,7 @@ public struct StaffDashboardView: View {
 
     // ── 데이터 로드 (웹 loadAll 미러) ──
     private func load() async {
+        loadFailed = false
         do {
             let context = try await repo.staffContext()
             ctx = context
@@ -212,6 +216,9 @@ public struct StaffDashboardView: View {
             rules = rr; exceptions = ee; monthAtt = aa; leaves = ll; allowances = alw
             loading = false
         } catch {
+            // staffContext() RPC 실패 = 일시 오류일 수 있음 → "미연결"이 아니라 재시도 상태로.
+            //   (2026-07-13 hire_date 컬럼 누락으로 서버엔 연결이 있는데 화면만 끊긴 사고 방지)
+            loadFailed = true
             loading = false
         }
     }
@@ -463,6 +470,34 @@ public struct StaffDashboardView: View {
         switch s { case "approved": return "승인"; case "rejected": return "반려"; default: return "대기" }
     }
 
+
+    // 연결 조회 RPC 실패 — "미연결"과 구분해 재시도 유도(서버엔 연결이 있어도 일시 오류일 수 있음).
+    private var loadFailedCard: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("FOUND.ONE · 직원").font(.system(size: 11, weight: .heavy)).foregroundStyle(BUColor.inkMuted).textCase(.uppercase).tracking(0.5)
+                Text("연결 정보를 불러오지 못했어요").font(.system(size: 17, weight: .heavy)).foregroundStyle(BUColor.ink)
+                Text("일시적인 오류일 수 있어요. 잠시 후 다시 시도해 주세요. 연결은 그대로 유지됩니다.")
+                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                HStack(spacing: 8) {
+                    Button { Task { loading = true; await load() } } label: {
+                        Label("다시 시도", systemImage: "arrow.clockwise")
+                            .font(.system(size: 13, weight: .heavy)).foregroundStyle(.white)
+                            .padding(.horizontal, 16).padding(.vertical, 10)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                    Button(action: onSignOut) {
+                        Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
+                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.inkSecondary)
+                            .padding(.horizontal, 16).padding(.vertical, 10)
+                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.midnight.opacity(0.14), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
 
     private var notConnectedCard: some View {
         BUCard(.outer) {

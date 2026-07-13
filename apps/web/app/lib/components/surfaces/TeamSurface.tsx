@@ -61,6 +61,7 @@ export function TeamSurface({ ko }: { ko: boolean }) {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [allowances, setAllowances] = useState<Allowance[]>([]); // 추가 수당 신청 (2026-07-13)
   const [loading, setLoading] = useState(true);
+  const [membersError, setMembersError] = useState(false); // get_store_members RPC 실패 — "직원 없음"과 구분 (2026-07-13)
   // 직원 상세 팝업 (시급·근태·연차 — 2026-07-13)
   const [detailMember, setDetailMember] = useState<Member | null>(null);
 
@@ -75,6 +76,10 @@ export function TeamSurface({ ko }: { ko: boolean }) {
       supabase.from("leave_requests" as never).select("id, member_user_id, leave_type, start_date, end_date, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
       supabase.from("allowance_requests" as never).select("id, member_user_id, work_date, allowance_type, minutes, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
     ]);
+    // RPC 에러(마이그레이션 누락·서버 장애)를 "직원 없음"으로 오인하지 않도록 구분 (2026-07-13).
+    const mErr = (mRes as { error?: unknown }).error;
+    setMembersError(!!mErr);
+    if (mErr) console.error("[team] get_store_members failed:", mErr);
     setMembers((((mRes as { data: unknown }).data ?? []) as Member[]));
     setRules(((rRes.data ?? []) as Rule[]));
     setExceptions(((exRes.data ?? []) as Exception[]));
@@ -172,6 +177,19 @@ export function TeamSurface({ ko }: { ko: boolean }) {
 
         {loading ? (
           <div style={{ ...card, textAlign: "center", color: MUTED }}>{ko ? "불러오는 중…" : "Loading…"}</div>
+        ) : membersError ? (
+          <div style={card}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <Users size={18} strokeWidth={1.7} style={{ color: MIDNIGHT }} />
+              <div style={{ fontSize: 15, fontWeight: 750, color: INK }}>{ko ? "직원 목록을 불러오지 못했어요" : "Couldn't load your team"}</div>
+            </div>
+            <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, margin: "0 0 12px" }}>
+              {ko ? "일시적인 오류일 수 있어요. 연결된 직원 정보는 그대로 유지됩니다. 잠시 후 다시 시도해 주세요." : "This may be temporary — your team data is preserved. Please retry."}
+            </p>
+            <button type="button" onClick={() => { setLoading(true); void load(); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, border: "none", background: MIDNIGHT, color: "white", fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
+              {ko ? "다시 시도" : "Retry"}
+            </button>
+          </div>
         ) : !members || members.length === 0 ? (
           <div style={card}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>

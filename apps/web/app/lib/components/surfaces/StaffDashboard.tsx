@@ -82,6 +82,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const [ctxError, setCtxError] = useState(false); // 연결 조회 RPC 실패 — "미연결"과 구분 (2026-07-13)
   const [signingOut, setSigningOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false); // 내 정보 팝업 (2026-07-13)
 
@@ -104,11 +105,16 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
   // ── 데이터 로드 ──
   const loadAll = useCallback(async (y: number, m: number) => {
+    setCtxError(false);
     const { data: auth } = await supabase.auth.getUser();
     const user = auth?.user;
     if (!user) { setConnected(false); setLoading(false); return; }
 
-    const { data: ctxRaw } = (await supabase.rpc("get_staff_store_context" as never)) as { data: unknown };
+    // ⚠️ RPC 에러(서버 장애·마이그레이션 누락 등)와 "진짜 미연결"을 구분한다.
+    //   전자를 미연결로 처리하면, 서버엔 연결이 있는데도 화면이 끊긴 것처럼 보인다
+    //   (2026-07-13 hire_date 컬럼 누락으로 실제 발생한 사고). 에러면 재시도 상태로.
+    const { data: ctxRaw, error: ctxErr } = (await supabase.rpc("get_staff_store_context" as never)) as { data: unknown; error: unknown };
+    if (ctxErr) { console.error("[staff] get_staff_store_context failed:", ctxErr); setCtxError(true); setLoading(false); return; }
     const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null; hourly_wage?: number | null };
     if (!c.connected || !c.owner_user_id) { setConnected(false); setLoading(false); return; }
 
@@ -312,6 +318,27 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
         <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
           {renderHeader(false)}
           <div style={{ ...cardStyle, textAlign: "center", color: MUTED }}>{ko ? "직원 정보 불러오는 중…" : "Loading…"}</div>
+        </div>
+      </main>
+    );
+  }
+  // 연결 조회 RPC 실패 — "미연결"과 구분해 재시도 유도(서버엔 연결이 있어도 일시 오류일 수 있음).
+  if (ctxError) {
+    return (
+      <main style={pageStyle}>
+        <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
+          {renderHeader(false)}
+          <div style={cardStyle}>
+            <div style={eyebrow}>Found.One · {ko ? "직원" : "Staff"}</div>
+            <h1 style={h1}>{ko ? "연결 정보를 불러오지 못했어요" : "Couldn't load your workplace"}</h1>
+            <p style={sub}>{ko ? "일시적인 오류일 수 있어요. 잠시 후 다시 시도해 주세요. (연결은 그대로 유지됩니다)" : "This may be temporary. Please retry — your connection is preserved."}</p>
+            <button type="button" style={primaryBtn} onClick={() => { setLoading(true); void loadAll(viewMonth.y, viewMonth.m); }}>
+              {ko ? "다시 시도" : "Retry"}
+            </button>
+            <button type="button" style={{ ...primaryBtn, background: "white", color: MUTED, border: `1px solid ${MIDNIGHT_BORDER}`, marginTop: 8 }} onClick={handleSignOut} disabled={signingOut}>
+              <LogOut size={14} strokeWidth={1.6} /> {ko ? "로그아웃" : "Sign out"}
+            </button>
+          </div>
         </div>
       </main>
     );
