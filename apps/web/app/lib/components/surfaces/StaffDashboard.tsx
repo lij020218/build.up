@@ -27,6 +27,7 @@ import { signOutUser } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
 import { StaffProfileView } from "./StaffProfileView";
+import { StaffRightsCard } from "./StaffRightsCard";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -38,7 +39,7 @@ const LEAVE = "#8b7fd4"; // 연차 — 온브랜드 라벤더 (빨강/노랑 대
 const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 
-type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null };
+type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null };
 
 // 근속(勤續) 일차 — 입사일(없으면 가게 연결일) 기준 오늘이 N일째
 function tenureDays(hireDate: string | null, joinedAt: string | null): number | null {
@@ -106,7 +107,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     if (!user) { setConnected(false); setLoading(false); return; }
 
     const { data: ctxRaw } = (await supabase.rpc("get_staff_store_context" as never)) as { data: unknown };
-    const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null };
+    const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null; hourly_wage?: number | null };
     if (!c.connected || !c.owner_user_id) { setConnected(false); setLoading(false); return; }
 
     const context: Ctx = {
@@ -116,6 +117,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       role: c.role === "manager" ? "manager" : "staff",
       joinedAt: c.joined_at ?? null,
       hireDate: c.hire_date ?? null,
+      hourlyWage: c.hourly_wage ?? null,
     };
     setCtx(context);
     setConnected(true);
@@ -341,6 +343,21 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {/* ④ 연차·휴가 */}
         <LeaveCard ko={ko} leaves={leaves} onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave} />
+
+        {/* ⑤ 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장과 동일 판정, 2026-07-13) */}
+        <StaffRightsCard
+          ko={ko}
+          hourlyWage={ctx.hourlyWage}
+          hireDate={ctx.hireDate}
+          joinedAt={ctx.joinedAt}
+          weeklyMinutes={rules.reduce((sum, r) => {
+            const [sh, sm] = r.start_time.split(":").map(Number);
+            const [eh, em] = r.end_time.split(":").map(Number);
+            let d = eh * 60 + em - (sh * 60 + sm);
+            if (d <= 0) d += 1440;
+            return sum + d;
+          }, 0)}
+        />
         {/* 로그아웃·내 정보는 상단 「내 정보」 → 전체 페이지(StaffProfileView)로 (2026-07-13). */}
       </div>
 

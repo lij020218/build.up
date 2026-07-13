@@ -18,8 +18,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { X, Wallet, CalendarCheck2, Clock3 } from "lucide-react";
-import { MINIMUM_WAGE_2026 } from "@foundone/shared";
+import { X, Wallet, CalendarCheck2, Clock3, ShieldCheck } from "lucide-react";
+import { MINIMUM_WAGE_2026, checkSeveranceObligation } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 
 const MIDNIGHT = "#191970";
@@ -104,6 +104,10 @@ export function StaffDetailModal({ member, rules, leaves, ko, onClose, onWageSav
   const weeklyAllowance = wage != null && hasJuhyu ? (weeklyHours / 5) * wage : 0;
   const monthlyPay = wage != null ? Math.round((wage * weeklyHours + weeklyAllowance) * 4.345) : null;
   const belowMinimum = wage != null && wage < MINIMUM_WAGE_2026;
+
+  // 퇴직금 자격 — SSOT(labor-law-checks) 재사용, 직원 화면과 동일 판정 (2026-07-13)
+  const severanceHire = member.hire_date ?? (member.joined_at ? member.joined_at.slice(0, 10) : undefined);
+  const sev = checkSeveranceObligation([{ id: member.member_user_id, name: member.name, hireDate: severanceHire, weeklyHours, hourlyWage: wage ?? 0 }])[0];
 
   // ── 이번 달 근태 요약 ──
   const workedDays = monthAtt?.length ?? 0;
@@ -216,6 +220,41 @@ export function StaffDetailModal({ member, rules, leaves, ko, onClose, onWageSav
           </div>
           <div style={{ fontSize: 10.5, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>
             {ko ? "근무표 기준 추정치 (주휴수당 포함, 4대보험·세금 미반영). 시급·근무표가 바뀌면 자동 재계산." : "Estimate based on schedule, incl. weekly holiday pay."}
+          </div>
+        </div>
+
+        {/* ②-b 퇴직금 자격 — 직원 화면과 동일 판정 (2026-07-13) */}
+        <div style={{
+          padding: "14px 16px", borderRadius: 16, marginBottom: 12,
+          border: `1px solid ${sev?.level === "eligible" ? "rgba(26,122,54,0.25)" : MIDNIGHT_BORDER}`,
+          background: sev?.level === "eligible" ? "rgba(26,122,54,0.05)" : "transparent",
+        }}>
+          <div style={sectionTitle}><ShieldCheck size={13} strokeWidth={2} />{ko ? "퇴직금 의무" : "Severance"}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 800, color: sev?.level === "eligible" ? "#1a7a36" : INK }}>
+              {weeklyHours < 15
+                ? (ko ? "비대상 (주 15h 미만)" : "Not eligible")
+                : sev?.level === "eligible"
+                  ? (ko ? "지급 대상" : "Eligible")
+                  : sev?.level === "approaching"
+                    ? (ko ? `1년 임박 D-${Math.max(0, 365 - (sev?.daysSinceHire ?? 0))}` : `Soon`)
+                    : (ko ? `미도달 D-${Math.max(0, 365 - (sev?.daysSinceHire ?? 0))}` : "Not yet")}
+            </span>
+            {sev && sev.daysSinceHire > 0 && (
+              <span style={{ marginLeft: "auto", fontSize: 11.5, color: MUTED, fontWeight: 600 }}>
+                {ko ? `근속 ${Math.floor(sev.daysSinceHire / 30)}개월 (${sev.daysSinceHire}일)` : `${sev.daysSinceHire}d`}
+              </span>
+            )}
+          </div>
+          {sev?.level === "eligible" && (
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#b64c4c", marginBottom: 4 }}>
+              {ko ? "⚠ 퇴직 시 14일 이내 지급 의무 (위반 시 지연이자 20% + 형사처벌)." : "⚠ Pay within 14 days of leaving."}
+            </div>
+          )}
+          <div style={{ fontSize: 10.5, color: MUTED, lineHeight: 1.5 }}>
+            {ko
+              ? "근로자퇴직급여법 §4 · 1년↑ + 주 15h↑ (5인 미만도 의무). 정확한 금액은 퇴직 전 3개월 평균임금 기준 — 노무사·고용노동부 계산기."
+              : "Severance Act §4 · 1yr+ & 15h+. Exact amount = avg wage of last 3 months."}
           </div>
         </div>
 

@@ -274,6 +274,7 @@ public struct StaffStoreContext: Decodable, Sendable {
     public let storeName: String?
     public let joinedAt: String?
     public let hireDate: String?
+    public let hourlyWage: Int?   // 본인 시급 — 근로 권리 자가진단용 (2026-07-13, 마이그레이션 20260713_000002)
 
     enum CodingKeys: String, CodingKey {
         case connected
@@ -282,6 +283,19 @@ public struct StaffStoreContext: Decodable, Sendable {
         case storeName = "store_name"
         case joinedAt = "joined_at"
         case hireDate = "hire_date"
+        case hourlyWage = "hourly_wage"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        connected = try c.decode(Bool.self, forKey: .connected)
+        ownerUserId = try c.decodeIfPresent(UUID.self, forKey: .ownerUserId)
+        role = try c.decodeIfPresent(String.self, forKey: .role)
+        storeName = try c.decodeIfPresent(String.self, forKey: .storeName)
+        joinedAt = try c.decodeIfPresent(String.self, forKey: .joinedAt)
+        hireDate = try c.decodeIfPresent(String.self, forKey: .hireDate)
+        // 마이그레이션 20260713_000002 미적용 환경(hourly_wage 키 부재)에서도 안전
+        hourlyWage = try c.decodeIfPresent(Int.self, forKey: .hourlyWage)
     }
 }
 

@@ -71,6 +71,7 @@ public struct StaffDetailSheet: View {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         profileHeader
                         payCard
+                        severanceCard
                         attendanceCard
                         leaveCard
                         Color.clear.frame(height: 40)
@@ -194,6 +195,48 @@ public struct StaffDetailSheet: View {
                 Text("근무표 기준 추정치 (주휴수당 포함, 4대보험·세금 미반영).")
                     .font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
             }
+        }
+    }
+
+    // ── ②-b 퇴직금 의무 (직원 화면과 동일 판정 — 분쟁 방지, 2026-07-13) ──
+    private var daysSinceHire: Int {
+        let base = member.hireDate ?? member.joinedAt.map { String($0.prefix(10)) }
+        guard let base else { return 0 }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        guard let d = f.date(from: String(base.prefix(10))) else { return 0 }
+        return max(0, Calendar.current.dateComponents([.day], from: d, to: Date()).day ?? 0)
+    }
+    private var severanceEligible: Bool { weeklyHours >= 15 && daysSinceHire >= 365 }
+    private var severanceApproaching: Bool { weeklyHours >= 15 && daysSinceHire >= 305 && daysSinceHire < 365 }
+    private let okGreen = Color(red: 26 / 255, green: 122 / 255, blue: 54 / 255)
+
+    private var severanceCard: some View {
+        let dDay = max(0, 365 - daysSinceHire)
+        return BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.shield").font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    Text("퇴직금 의무").font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                    Spacer(minLength: 0)
+                    if daysSinceHire > 0 {
+                        Text("근속 \(daysSinceHire / 30)개월 (\(daysSinceHire)일)")
+                            .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
+                    }
+                }
+                Text(weeklyHours < 15
+                        ? "비대상 (주 15h 미만)"
+                        : (severanceEligible ? "지급 대상"
+                            : (severanceApproaching ? "1년 임박 D-\(dDay)" : "미도달 D-\(dDay)")))
+                    .font(.system(size: 13.5, weight: .heavy))
+                    .foregroundStyle(severanceEligible ? okGreen : BUColor.ink)
+                if severanceEligible {
+                    Text("⚠ 퇴직 시 14일 이내 지급 의무 (위반 시 지연이자 20% + 형사처벌).")
+                        .font(.system(size: 11.5, weight: .heavy)).foregroundStyle(BUColor.danger)
+                }
+                Text("근로자퇴직급여법 §4 · 1년↑ + 주 15h↑ (5인 미만도 의무). 정확한 금액은 퇴직 전 3개월 평균임금 기준 — 노무사·고용노동부 계산기.")
+                    .font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

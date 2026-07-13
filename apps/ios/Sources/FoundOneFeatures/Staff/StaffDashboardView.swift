@@ -63,6 +63,17 @@ public struct StaffDashboardView: View {
                      rules: rules, exceptions: exceptions)
     }
     private var workdays: Set<Int> { Set(rules.map(\.weekday)) }
+    // 주 근무 분 — 반복 규칙 합산 (웹 StaffDashboard weeklyMinutes 미러)
+    private var weeklyMinutes: Int {
+        rules.reduce(0) { sum, r in
+            let s = r.startTime.prefix(5).split(separator: ":").compactMap { Int($0) }
+            let e = r.endTime.prefix(5).split(separator: ":").compactMap { Int($0) }
+            guard s.count == 2, e.count == 2 else { return sum }
+            var d = e[0] * 60 + e[1] - (s[0] * 60 + s[1])
+            if d <= 0 { d += 1440 }
+            return sum + d
+        }
+    }
 
     public var body: some View {
         ZStack(alignment: .top) {
@@ -82,6 +93,8 @@ public struct StaffDashboardView: View {
                         )
                         calendarCard
                         leaveCard
+                        // 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장 판정과 동일 SSOT, 2026-07-13)
+                        StaffRightsCard(hourlyWage: ctx.hourlyWage, hireDate: ctx.hireDate, joinedAt: ctx.joinedAt, weeklyMinutes: weeklyMinutes)
                         // 로그아웃은 「내 정보」 시트로 통합 (2026-07-13)
                     } else {
                         notConnectedCard
@@ -679,5 +692,140 @@ private struct StaffLeaveSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+}
+
+// ═══ 내 근로 권리 (웹 StaffRightsCard.tsx 미러) ═══════════════════════════
+//
+//  "몰랐다가 서로 얼굴 붉히는 상황" 방지 — 조건 충족 시 직원에게도 자격 표시.
+//  금액 "계산기" 아님(퇴직금은 평균임금 기반이라 앱은 추정만) → 자격·근거·기한 안내 +
+//  공식 계산기 링크. 판정 로직은 웹 labor-law-checks(checkSeveranceObligation) 동일.
+//
+private struct StaffRightsCard: View {
+    let hourlyWage: Int?
+    let hireDate: String?
+    let joinedAt: String?
+    let weeklyMinutes: Int
+
+    private static let minimumWage2026 = 10_320  // 웹 MINIMUM_WAGE_2026 미러
+    private let ok = Color(red: 26 / 255, green: 122 / 255, blue: 54 / 255)     // 자격 충족
+    private let warn = Color(red: 182 / 255, green: 76 / 255, blue: 76 / 255)   // 미달 경고
+    private let moelSeverance = URL(string: "https://www.moel.go.kr/retirementpayCal.do")!
+    private let minwageCalc = URL(string: "https://www.minimumwage.go.kr/")!
+
+    private var weeklyHours: Double { Double(weeklyMinutes) / 60 }
+    private var daysSinceHire: Int {
+        let base = hireDate ?? joinedAt.map { String($0.prefix(10)) }
+        guard let base else { return 0 }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        guard let d = f.date(from: String(base.prefix(10))) else { return 0 }
+        return max(0, Calendar.current.dateComponents([.day], from: d, to: Date()).day ?? 0)
+    }
+    private var juhyuEligible: Bool { weeklyHours >= 15 }
+    // checkSeveranceObligation level 미러: below-15h / eligible(≥365) / approaching(≥305) / not-eligible
+    private var severanceEligible: Bool { weeklyHours >= 15 && daysSinceHire >= 365 }
+    private var severanceApproaching: Bool { weeklyHours >= 15 && daysSinceHire >= 305 && daysSinceHire < 365 }
+    private var belowMinimum: Bool { (hourlyWage ?? 0) > 0 && (hourlyWage ?? 0) < Self.minimumWage2026 }
+    private var dDay: Int { max(0, 365 - daysSinceHire) }
+
+    var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.shield")
+                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    Text("내 근로 권리").font(.system(size: 15, weight: .heavy)).foregroundStyle(BUColor.ink)
+                }
+                if hourlyWage == nil {
+                    Text("사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 여기 표시됩니다.")
+                        .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                }
+
+                // ① 주휴수당
+                rightRow(
+                    title: "주휴수당",
+                    badge: juhyuEligible ? "대상" : "비대상",
+                    on: juhyuEligible,
+                    body: juhyuEligible
+                        ? "주 \(Int(weeklyHours))시간 근무 — 매주 개근 시 주휴수당 대상입니다."
+                        : "주 \(Int(weeklyHours))시간 — 주 15시간 이상 근무 시 대상이 됩니다.",
+                    law: "근로기준법 §55 · 주 15시간↑ + 개근. 정확한 금액은 급여명세서 확인."
+                )
+
+                // ② 퇴직금
+                rightRow(
+                    title: "퇴직금",
+                    badge: severanceEligible ? "대상 도달" : (severanceApproaching ? "임박" : "미도달"),
+                    on: severanceEligible,
+                    body: weeklyHours < 15
+                        ? "주 15시간 미만 — 퇴직금 비대상입니다."
+                        : (severanceEligible
+                            ? "근속 \(daysSinceHire / 30)개월 — 퇴직 시 퇴직금 지급 대상입니다."
+                            : "근속 \(daysSinceHire)일 — 1년(365일) 도달 시 대상이 됩니다. D-\(dDay)"),
+                    law: "근로자퇴직급여법 §4 · 1년↑ + 주 15시간↑. 사장님은 퇴직 후 14일 이내 지급 의무.",
+                    link: (severanceEligible || severanceApproaching) ? (moelSeverance, "고용노동부 퇴직금 계산기") : nil
+                )
+
+                // ③ 연차
+                rightRow(
+                    title: "연차유급휴가",
+                    badge: daysSinceHire >= 365 ? "15일 발생" : "1년 미만",
+                    on: daysSinceHire >= 365,
+                    body: daysSinceHire >= 365
+                        ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요."
+                        : "근속 1년 도달 시 연차 15일이 발생합니다. D-\(dDay)",
+                    law: "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)."
+                )
+
+                // 최저임금 미달 경고
+                if belowMinimum {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("⚠ 현재 시급 \((hourlyWage ?? 0).formatted())원 — 2026 최저시급 \(Self.minimumWage2026.formatted())원 미달")
+                            .font(.system(size: 12.5, weight: .heavy)).foregroundStyle(warn)
+                        Link(destination: minwageCalc) {
+                            HStack(spacing: 3) {
+                                Text("최저임금 확인").font(.system(size: 11, weight: .semibold))
+                                Image(systemName: "arrow.up.right.square").font(.system(size: 10))
+                            }.foregroundStyle(BUColor.midnight)
+                        }
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(warn.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(warn.opacity(0.22), lineWidth: 1))
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func rightRow(title: String, badge: String, on: Bool, body: String, law: String, link: (URL, String)? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Text(title).font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                Spacer(minLength: 0)
+                Text(badge)
+                    .font(.system(size: 11, weight: .heavy))
+                    .foregroundStyle(on ? ok : BUColor.inkMuted)
+                    .padding(.horizontal, 9).padding(.vertical, 2)
+                    .background((on ? ok : BUColor.inkMuted).opacity(0.10), in: Capsule())
+                    .overlay(Capsule().strokeBorder((on ? ok : BUColor.inkMuted).opacity(0.22), lineWidth: 1))
+            }
+            Text(body).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.ink).lineSpacing(2)
+            Text(law).font(.system(size: 11)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            if let link {
+                Link(destination: link.0) {
+                    HStack(spacing: 3) {
+                        Text(link.1).font(.system(size: 11, weight: .semibold))
+                        Image(systemName: "arrow.up.right.square").font(.system(size: 10))
+                    }.foregroundStyle(BUColor.midnight)
+                }
+                .padding(.top, 2)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background((on ? ok.opacity(0.06) : BUColor.midnight.opacity(0.05)), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(on ? ok.opacity(0.25) : Color.clear, lineWidth: 1))
     }
 }
