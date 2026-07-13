@@ -99,9 +99,12 @@ export function AlertStripBanner() {
     // ── 2. 재고 발주 필요 (low-stock alert, 2026-05-11 실제 inventory 연동) ──
     //  threshold > 0 이면서 quantity ≤ threshold 인 품목 = 발주 필요.
     //  quantity ≤ 0 이면 즉시 (critical), 그 외엔 경고 (warning).
-    const inventory = (d.inventory ?? []) as Array<{ id: string; name: string; quantity: number; minThreshold?: number }>;
+    //  ⚠️ 메뉴(itemType==="product")는 재고가 아니라 판매 품목 — "발주" 대상이 아니다.
+    //    재고 카드(InventoryOpsCard)와 동일하게 재료(material)만 집계 (2026-07-13 감사: 메뉴가
+    //    qty 0 로 "즉시 발주 3개" 오표시되던 버그. 재고 카드는 0개인데 배너만 3개였음).
+    const inventory = (d.inventory ?? []) as Array<{ id: string; name: string; quantity: number; minThreshold?: number; itemType?: string }>;
     const lowStockItems = inventory.filter(
-      (i) => (i.minThreshold ?? 0) > 0 && i.quantity <= (i.minThreshold ?? 0),
+      (i) => i.itemType !== "product" && (i.minThreshold ?? 0) > 0 && i.quantity <= (i.minThreshold ?? 0),
     );
     if (lowStockItems.length > 0) {
       const criticalItems = lowStockItems.filter((i) => i.quantity <= 0);

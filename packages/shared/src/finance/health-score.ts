@@ -364,6 +364,15 @@ export function calculateHealthScore(input: HealthScoreInput): HealthScoreResult
   const weights = getWeights(input.industryCategoryId);
   const categoryId = input.industryCategoryId ?? "";
 
+  // ⚠️ 외식(food/cafe)인데 식재료비가 미입력이면 원가·수익성을 신뢰할 수 없다 —
+  //   식재료 0원은 불가능한 값이라 프라임코스트가 낮게(=우수) 잡히고 마진도 과대. 두 차원을
+  //   null 로 보류해 종합점수가 "완벽"으로 부풀지 않게 한다 (2026-07-13 감사: '건강 94' 부풀림).
+  const _cat = categoryId.toLowerCase();
+  const cogsIncomplete =
+    (_cat === "food" || _cat === "cafe-dessert") &&
+    (input.monthlyCosts.ingredients ?? 0) <= 0 &&
+    input.totalRevenue > 0;
+
   // 비용 합계 + ratios 신뢰도 (cost-ratios SSOT)
   const monthlyCostsTotal = Object.values(input.monthlyCosts).reduce(
     (s, v) => s + (typeof v === "number" ? v : 0),
@@ -412,19 +421,19 @@ export function calculateHealthScore(input: HealthScoreInput): HealthScoreResult
       key: "profitability",
       labelKo: "수익성",
       labelEn: "Profitability",
-      score: profitability.score,
+      score: cogsIncomplete ? null : profitability.score,
       weight: weights.profitability,
-      reasonKo: profitability.reasonKo,
-      reasonEn: profitability.reasonEn,
+      reasonKo: cogsIncomplete ? "식재료비 미입력 — 수익성 판정 보류" : profitability.reasonKo,
+      reasonEn: cogsIncomplete ? "COGS not entered — profitability withheld" : profitability.reasonEn,
     },
     {
       key: "costEfficiency",
       labelKo: "비용 효율",
       labelEn: "Cost Efficiency",
-      score: costEfficiency.score,
+      score: cogsIncomplete ? null : costEfficiency.score,
       weight: weights.costEfficiency,
-      reasonKo: costEfficiency.reasonKo,
-      reasonEn: costEfficiency.reasonEn,
+      reasonKo: cogsIncomplete ? "식재료비 미입력 — 프라임코스트 계산 불가" : costEfficiency.reasonKo,
+      reasonEn: cogsIncomplete ? "COGS not entered" : costEfficiency.reasonEn,
     },
     {
       key: "salesTrend",

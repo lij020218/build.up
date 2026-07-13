@@ -191,6 +191,14 @@ public enum HealthScore {
             thresholds: thresholds
         )
 
+        // ⚠️ 외식(food/cafe)인데 식재료비가 미입력(0)이면 원가·수익성을 신뢰할 수 없다 —
+        //   식재료 0 은 불가능한 값이라 프라임코스트가 낮게(우수) 잡히고 마진도 과대 → 두 도메인을
+        //   보류(.unknown) 처리해 종합점수가 부풀지 않게 한다 (2026-07-13 감사, 웹 health-score.ts 미러).
+        if (category == .restaurant || category == .cafe), costs.ingredients <= 0 {
+            domains[.profit] = .unknown
+            domains[.efficiency] = .unknown
+        }
+
         // 4. Growth domain — 최근 7일 vs 이전 7일 매출 변화
         domains[.growth] = computeGrowthDomain(entries: entries)
 

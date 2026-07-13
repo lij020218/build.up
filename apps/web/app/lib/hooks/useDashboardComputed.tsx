@@ -489,6 +489,7 @@ export function useDashboardComputed(d: DashboardHook) {
     estimatedMonthlyPayroll,
     insuredEmployees,
     monthlyBurn,
+    currentBalance: currentBalance > 0 ? currentBalance : undefined,
     launchDateText,
     daysSinceLaunch,
     totalCapital,

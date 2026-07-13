@@ -180,13 +180,27 @@ function buildKpiValues(
   //   보정값만 사용. 종전엔 `월비용 ÷ MTD 매출` 생나눗셈 → 월초(부분월 입력) 시 200%+ 폭주.
   //   calculateCostRatios 가 월 환산 매출(monthlyRevenueEquivalent)로 나눠 부분월 보정.
   //   ratiosReady===false 면 모든 비율 undefined → "준비 중" empty state.
-  const primeCost = c.ratiosReady ? c.primeCost : null;
+  // 프라임코스트 = 식재료 + 인건비. 식재료 미입력이면 절반이 비어 "건강한 12.5%"로 오해 →
+  //   PLHero 와 동일하게 "식재료 미입력" 상태로 (2026-07-13 감사: 인건비만으로 프라임코스트 단정).
+  const ingredientsEntered = ((d.monthlyCosts as { ingredients?: number })?.ingredients ?? 0) > 0;
+  const primeCostCell: { value: number | undefined; displayOverride?: string } =
+    !c.ratiosReady
+      ? { value: undefined, displayOverride: ko ? "준비 중" : "Soon" }
+      : !ingredientsEntered
+        ? { value: undefined, displayOverride: ko ? "식재료 미입력" : "Add COGS" }
+        : { value: c.primeCost };
   const cogsRatio = c.ratiosReady ? c.ingredientRatio : null;
   const laborRatio = c.ratiosReady ? c.laborRatio : null;
   const rentRatio = c.ratiosReady ? c.rentRatio : null;
-  const selectedBudget = (d.selectedBudget ?? 0) as number;
-  const cashRunway =
-    c.totalCosts > 0 && selectedBudget > 0 ? selectedBudget / c.totalCosts : null;
+  // 런웨이 — 흑자면 번레이트가 없어 "해당 없음", 적자일 때만 현재 잔고 ÷ 월 번레이트.
+  //   ⚠️ 종전 `창업예산 ÷ 월비용` 은 매출을 무시해 흑자 가게에도 유한값이 떠 "곧 자금 소진" 오해를
+  //   줬고, 창업예산은 [시설·창업비] 통이라 현재 현금도 아님 (2026-07-13 감사).
+  const cashRunwayCell: { value: number | undefined; displayOverride?: string } =
+    c.netProfit >= 0
+      ? { value: undefined, displayOverride: ko ? "흑자 · 해당 없음" : "Profitable" }
+      : c.currentBalance != null && c.monthlyBurn > 0
+        ? { value: c.currentBalance / c.monthlyBurn }
+        : { value: undefined, displayOverride: ko ? "잔고 입력 필요" : "Add balance" };
   const avgTicket = c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null;
 
   // SaaS — GA4/Webhook 자동 수집 우선, 없으면 사장님이 입력한 subscribers.active fallback
@@ -238,8 +252,8 @@ function buildKpiValues(
   return {
     "yesterday-sales": { value: yesterdaySales, trendPct: ySalesTrend },
     "yesterday-customers": { value: yesterdayCustomers, trendPct: yCustTrend },
-    "prime-cost": { value: primeCost ?? undefined },
-    "cash-runway": { value: cashRunway ?? undefined },
+    "prime-cost": primeCostCell,
+    "cash-runway": cashRunwayCell,
     "avg-ticket": { value: avgTicket ?? undefined },
     "cogs-ratio": { value: cogsRatio ?? undefined },
     "labor-ratio": { value: laborRatio ?? undefined },
