@@ -34,6 +34,7 @@ public struct TeamManagementView: View {
     @State private var leaves: [TeamLeaveRequest] = []
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var rules: [TeamScheduleRule] = []
+    @State private var categoryId: String? = nil   // 직무 목록 업종 분기 (2026-07-13)
     @State private var loadFailed = false
     @State private var showPayrollSheet = false
     /// 직원 상세 시트 (시급·근태·연차 — 2026-07-13)
@@ -96,7 +97,9 @@ public struct TeamManagementView: View {
                     member: m,
                     rules: rules.filter { $0.memberUserId == m.memberUserId },
                     leaves: leaves.filter { $0.memberUserId == m.memberUserId },
-                    onWageSaved: { Task { await load() } }
+                    categoryId: categoryId,
+                    onWageSaved: { Task { await load() } },
+                    onJobSaved: { Task { await load() } }
                 )
             }
             .task { await load() }
@@ -115,6 +118,14 @@ public struct TeamManagementView: View {
             rules = rr
             allowances = aa
             loadFailed = false
+            // 직무 목록 업종 분기용 — 사장 본인 category (실패 시 공통 직무만 노출)
+            if let uid = BUSupabase.shared.currentUser?.id {
+                struct Row: Decodable { let industry_category_id: String? }
+                let rows: [Row] = (try? await BUSupabase.shared.client
+                    .from("business_profiles").select("industry_category_id")
+                    .eq("user_id", value: uid.uuidString).limit(1).execute().value) ?? []
+                categoryId = rows.first?.industry_category_id
+            }
         } catch {
             if members == nil { loadFailed = true }
         }

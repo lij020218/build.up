@@ -18,8 +18,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { X, Wallet, CalendarCheck2, Clock3, ShieldCheck } from "lucide-react";
-import { MINIMUM_WAGE_2026, checkSeveranceObligation } from "@foundone/shared";
+import { X, Wallet, CalendarCheck2, Clock3, ShieldCheck, Briefcase, Check } from "lucide-react";
+import { MINIMUM_WAGE_2026, checkSeveranceObligation, EMPLOYMENT_TYPES, getJobDuties, jobDutyLabel } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 
 const MIDNIGHT = "#191970";
@@ -29,7 +29,7 @@ const LEAVE = "#8b7fd4";
 const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 
-type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null };
+type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null };
 type Rule = { member_user_id: string; weekday: number; start_time: string; end_time: string };
 type Leave = { member_user_id: string; status: string };
 type Attendance = { id: string; work_date: string; clock_in_at: string; clock_out_at: string | null };
@@ -44,18 +44,40 @@ function fmtDur(min: number, ko: boolean): string {
   return ko ? `${m}분` : `${m}m`;
 }
 
-export function StaffDetailModal({ member, rules, leaves, ko, onClose, onWageSaved }: {
+export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClose, onWageSaved, onJobSaved }: {
   member: Member;
   rules: Rule[];
   leaves: Leave[];
   ko: boolean;
+  categoryId?: string | null;
   onClose: () => void;
   onWageSaved: (wage: number) => void;
+  onJobSaved: (employmentType: string | null, jobDuties: string[]) => void;
 }) {
   // ── 급여: 읽기 default + 수정 + 저장 (사장님 데이터 카드 표준 패턴) ──
   const [editingWage, setEditingWage] = useState(false);
   const [wageInput, setWageInput] = useState(member.hourly_wage != null ? String(member.hourly_wage) : "");
   const [wageState, setWageState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  // ── 고용형태·직무: 읽기 default + 수정 + 저장 (동일 표준 패턴) ──
+  const [editingJob, setEditingJob] = useState(false);
+  const [empType, setEmpType] = useState<string | null>(member.employment_type ?? null);
+  const [duties, setDuties] = useState<string[]>(member.job_duties ?? []);
+  const [jobState, setJobState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const dutyOptions = getJobDuties(categoryId);
+
+  const saveJob = async () => {
+    setJobState("saving");
+    const { error } = await supabase.from("store_members" as never)
+      .update({ employment_type: empType, job_duties: duties } as never)
+      .eq("member_user_id", member.member_user_id);
+    if (error) { setJobState("error"); return; }
+    setJobState("saved");
+    setEditingJob(false);
+    onJobSaved(empType, duties);
+    window.setTimeout(() => setJobState("idle"), 1600);
+  };
+  const toggleDuty = (key: string) => setDuties((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
 
   // ── 이번 달 근태 (owner RLS read) ──
   const [monthAtt, setMonthAtt] = useState<Attendance[] | null>(null);
@@ -163,6 +185,76 @@ export function StaffDetailModal({ member, rules, leaves, ko, onClose, onWageSav
           <button type="button" onClick={onClose} aria-label={ko ? "닫기" : "Close"} style={{ border: "none", background: MIDNIGHT_SOFT, borderRadius: 10, padding: 7, cursor: "pointer" }}>
             <X size={15} strokeWidth={2.2} style={{ color: MIDNIGHT, display: "block" }} />
           </button>
+        </div>
+
+        {/* ①-b 고용형태 · 직무 (사장 설정 → 양쪽 표시) */}
+        <div style={{ padding: "14px 16px", borderRadius: 16, border: `1px solid ${MIDNIGHT_BORDER}`, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: editingJob ? 12 : 10 }}>
+            <div style={{ ...sectionTitle, marginBottom: 0 }}><Briefcase size={13} strokeWidth={2} />{ko ? "고용형태 · 직무" : "Employment · Duties"}</div>
+            {jobState === "saved" && <span style={{ fontSize: 11, fontWeight: 700, color: "#1a7a36" }}>{ko ? "저장됨" : "Saved"}</span>}
+            {!editingJob && (
+              <button type="button" onClick={() => { setEmpType(member.employment_type ?? null); setDuties(member.job_duties ?? []); setEditingJob(true); }}
+                style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, color: MIDNIGHT, background: "white", border: `1px solid ${MIDNIGHT_BORDER}`, borderRadius: 9, padding: "5px 11px", cursor: "pointer" }}>
+                {(member.employment_type || (member.job_duties?.length ?? 0) > 0) ? (ko ? "수정" : "Edit") : (ko ? "설정" : "Set")}
+              </button>
+            )}
+          </div>
+
+          {editingJob ? (
+            <>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 6 }}>{ko ? "고용형태" : "Employment type"}</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+                {EMPLOYMENT_TYPES.map((t) => {
+                  const on = empType === t.key;
+                  return (
+                    <button key={t.key} type="button" onClick={() => setEmpType(on ? null : t.key)}
+                      style={{ flex: 1, padding: "9px 4px", borderRadius: 10, cursor: "pointer", fontSize: 12.5, fontWeight: 700,
+                        border: `1px solid ${on ? MIDNIGHT : MIDNIGHT_BORDER}`, background: on ? MIDNIGHT : "white", color: on ? "white" : INK }}>
+                      {ko ? t.ko : t.en}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 6 }}>{ko ? "업무 직무 (복수 선택)" : "Duties (multi-select)"}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+                {dutyOptions.map((d) => {
+                  const on = duties.includes(d.key);
+                  return (
+                    <button key={d.key} type="button" onClick={() => toggleDuty(d.key)}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "7px 11px", borderRadius: 999, cursor: "pointer", fontSize: 12, fontWeight: 600,
+                        border: `1px solid ${on ? MIDNIGHT : MIDNIGHT_BORDER}`, background: on ? MIDNIGHT : "white", color: on ? "white" : INK }}>
+                      {on && <Check size={11} strokeWidth={2.6} />}{ko ? d.ko : d.en}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => { setEditingJob(false); setJobState("idle"); }} style={{ flex: 1, padding: "10px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: MUTED, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  {ko ? "취소" : "Cancel"}
+                </button>
+                <button type="button" onClick={saveJob} disabled={jobState === "saving"} style={{ flex: 2, padding: "10px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  {jobState === "saving" ? (ko ? "저장 중…" : "…") : ko ? "저장" : "Save"}
+                </button>
+              </div>
+              {jobState === "error" && <div style={{ fontSize: 11.5, color: "#b64c4c", marginTop: 8 }}>{ko ? "저장 실패 — 잠시 후 다시 시도해 주세요." : "Save failed — please retry."}</div>}
+            </>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+              {member.employment_type && (
+                <span style={{ fontSize: 12, fontWeight: 700, color: "white", background: MIDNIGHT, padding: "4px 10px", borderRadius: 999 }}>
+                  {ko ? (EMPLOYMENT_TYPES.find((t) => t.key === member.employment_type)?.ko ?? member.employment_type) : (EMPLOYMENT_TYPES.find((t) => t.key === member.employment_type)?.en ?? member.employment_type)}
+                </span>
+              )}
+              {(member.job_duties ?? []).map((k) => (
+                <span key={k} style={{ fontSize: 12, fontWeight: 600, color: MIDNIGHT, background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}`, padding: "4px 10px", borderRadius: 999 }}>
+                  {jobDutyLabel(k, ko)}
+                </span>
+              ))}
+              {!member.employment_type && (member.job_duties?.length ?? 0) === 0 && (
+                <span style={{ fontSize: 12.5, color: MUTED }}>{ko ? "아직 설정되지 않았어요. [설정]에서 고용형태·직무를 지정하세요." : "Not set yet."}</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ② 급여 */}

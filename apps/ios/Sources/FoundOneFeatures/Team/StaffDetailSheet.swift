@@ -10,6 +10,7 @@
 //
 
 import SwiftUI
+import FoundOneCore
 import FoundOneDesignSystem
 import FoundOneData
 
@@ -20,14 +21,20 @@ public struct StaffDetailSheet: View {
     private let member: TeamMember
     private let rules: [TeamScheduleRule]
     private let leaves: [TeamLeaveRequest]
+    private let categoryId: String?
     private let onWageSaved: () -> Void
+    private let onJobSaved: () -> Void
 
-    public init(member: TeamMember, rules: [TeamScheduleRule], leaves: [TeamLeaveRequest], onWageSaved: @escaping () -> Void) {
+    public init(member: TeamMember, rules: [TeamScheduleRule], leaves: [TeamLeaveRequest], categoryId: String? = nil, onWageSaved: @escaping () -> Void, onJobSaved: @escaping () -> Void = {}) {
         self.member = member
         self.rules = rules
         self.leaves = leaves
+        self.categoryId = categoryId
         self.onWageSaved = onWageSaved
+        self.onJobSaved = onJobSaved
         _wageInput = State(initialValue: member.hourlyWage.map(String.init) ?? "")
+        _empType = State(initialValue: member.employmentType)
+        _duties = State(initialValue: member.jobDuties)
     }
 
     @State private var editingWage = false
@@ -36,7 +43,17 @@ public struct StaffDetailSheet: View {
     @State private var wageState: WageState = .idle
     @State private var monthAtt: [StaffAttendance]? = nil
 
+    // 고용형태·직무 (읽기 default + 수정 + 저장)
+    @State private var editingJob = false
+    @State private var empType: String?
+    @State private var duties: [String]
+    @State private var savedEmp: String? = nil
+    @State private var savedDuties: [String]? = nil
+    @State private var jobState: WageState = .idle
+
     private enum WageState { case idle, saving, saved, error }
+    private var effEmp: String? { savedEmp ?? member.employmentType }
+    private var effDuties: [String] { savedDuties ?? member.jobDuties }
 
     /// 2026 최저시급 — 웹 MINIMUM_WAGE_2026(LEGAL.MINIMUM_WAGE_HOURLY) 미러
     private static let minimumWage2026 = 10_320
@@ -70,6 +87,7 @@ public struct StaffDetailSheet: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         profileHeader
+                        jobCard
                         payCard
                         severanceCard
                         attendanceCard
@@ -137,6 +155,87 @@ public struct StaffDetailSheet: View {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
         guard let d = f.date(from: String(base.prefix(10))) else { return nil }
         return max(1, (Calendar.current.dateComponents([.day], from: d, to: Date()).day ?? 0) + 1)
+    }
+
+    // ── ①-b 고용형태 · 직무 (사장 설정 → 양쪽 표시, 2026-07-13) ──
+    private var jobCard: some View {
+        let options = JobDutyRegistry.duties(for: categoryId)
+        return BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    Label("고용형태 · 직무", systemImage: "briefcase")
+                        .font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                    if jobState == .saved { Text("저장됨").font(.system(size: 11, weight: .heavy)).foregroundStyle(BUColor.midnight) }
+                    Spacer(minLength: 0)
+                    if !editingJob {
+                        Button {
+                            empType = effEmp; duties = effDuties; editingJob = true
+                        } label: {
+                            Text((effEmp != nil || !effDuties.isEmpty) ? "수정" : "설정")
+                                .font(.system(size: 12, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                                .padding(.horizontal, 12).padding(.vertical, 6)
+                                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                if editingJob {
+                    Text("고용형태").font(.system(size: 11, weight: .heavy)).foregroundStyle(BUColor.inkMuted)
+                    HStack(spacing: 6) {
+                        ForEach(JobDutyRegistry.employmentTypes) { t in
+                            let on = empType == t.key
+                            Button { empType = on ? nil : t.key } label: {
+                                Text(t.ko)
+                                    .font(.system(size: 12.5, weight: .heavy))
+                                    .foregroundStyle(on ? .white : BUColor.ink)
+                                    .frame(maxWidth: .infinity).padding(.vertical, 9)
+                                    .background(on ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(Color.white), in: RoundedRectangle(cornerRadius: 10))
+                                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(on ? Color.clear : BUColor.midnight.opacity(0.18), lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    Text("업무 직무 (복수 선택)").font(.system(size: 11, weight: .heavy)).foregroundStyle(BUColor.inkMuted).padding(.top, 4)
+                    FlowChips(options: options, selected: duties) { key in
+                        if duties.contains(key) { duties.removeAll { $0 == key } } else { duties.append(key) }
+                    }
+                    HStack(spacing: 8) {
+                        Button { editingJob = false; jobState = .idle } label: {
+                            Text("취소").font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.inkSecondary)
+                                .frame(maxWidth: .infinity).padding(.vertical, 11)
+                                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+                        }.buttonStyle(.plain)
+                        Button { Task { await saveJob() } } label: {
+                            Text(jobState == .saving ? "저장 중…" : "저장").font(.system(size: 13, weight: .heavy)).foregroundStyle(.white)
+                                .frame(maxWidth: .infinity).padding(.vertical, 11)
+                                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                        }.buttonStyle(.plain).disabled(jobState == .saving)
+                    }
+                    if jobState == .error {
+                        Text("저장 실패 — 잠시 후 다시 시도해 주세요.").font(.system(size: 11.5)).foregroundStyle(BUColor.danger)
+                    }
+                } else if effEmp == nil && effDuties.isEmpty {
+                    Text("아직 설정되지 않았어요. [설정]에서 고용형태·직무를 지정하세요.")
+                        .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary)
+                } else {
+                    FlowTags(emp: JobDutyRegistry.employmentLabel(effEmp, ko: true), duties: effDuties.map { JobDutyRegistry.dutyLabel($0, ko: true) })
+                }
+            }
+        }
+    }
+
+    private func saveJob() async {
+        jobState = .saving
+        do {
+            try await repo.setMemberJob(memberId: member.memberUserId, employmentType: empType, jobDuties: duties)
+            savedEmp = empType; savedDuties = duties
+            jobState = .saved
+            editingJob = false
+            onJobSaved()
+        } catch {
+            jobState = .error
+        }
     }
 
     // ── ② 급여 ──
@@ -331,5 +430,52 @@ public struct StaffDetailSheet: View {
         if h > 0 && m > 0 { return "\(h)시간 \(m)분" }
         if h > 0 { return "\(h)시간" }
         return "\(m)분"
+    }
+}
+
+// 직무 선택 칩 (복수 선택) — adaptive grid 로 자동 줄바꿈
+private struct FlowChips: View {
+    let options: [BUJobDuty]
+    let selected: [String]
+    let onToggle: (String) -> Void
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 6)], alignment: .leading, spacing: 6) {
+            ForEach(options) { d in
+                let on = selected.contains(d.key)
+                Button { onToggle(d.key) } label: {
+                    HStack(spacing: 3) {
+                        if on { Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)) }
+                        Text(d.ko).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+                    }
+                    .foregroundStyle(on ? .white : BUColor.ink)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 10).padding(.vertical, 7)
+                    .background(on ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(Color.white), in: Capsule())
+                    .overlay(Capsule().strokeBorder(on ? Color.clear : BUColor.midnight.opacity(0.18), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+// 읽기 전용 태그 (고용형태 + 직무)
+private struct FlowTags: View {
+    let emp: String?
+    let duties: [String]
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 6)], alignment: .leading, spacing: 6) {
+            if let emp {
+                Text(emp).font(.system(size: 12, weight: .heavy)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(BUColor.midnight, in: Capsule())
+            }
+            ForEach(duties, id: \.self) { d in
+                Text(d).font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight).lineLimit(1)
+                    .frame(maxWidth: .infinity).padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                    .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.16), lineWidth: 1))
+            }
+        }
     }
 }

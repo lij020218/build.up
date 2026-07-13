@@ -1153,7 +1153,7 @@ export default function StarterStageDemo({
 
         {activeSurface === "team" ? (
           <CardErrorBoundary cardLabel="직원">
-            <TeamSurface ko={d.language === "ko"} />
+            <TeamSurface ko={d.language === "ko"} categoryId={d.selectedIndustryCategoryId} />
           </CardErrorBoundary>
         ) : null}
       </div>

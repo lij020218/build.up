@@ -29,7 +29,7 @@ const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 const WEEK_KO = ["일", "월", "화", "수", "목", "금", "토"];
 
-type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null };
+type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null };
 
 // 근속(勤續) 일차 — 입사일(없으면 가게 연결일) 기준 오늘이 N일째
 function tenureDays(hireDate: string | null, joinedAt: string | null): number | null {
@@ -53,7 +53,7 @@ const ALLOWANCE_LABEL: Record<AllowanceType, string> = { overtime: "연장근로
 const fmtMinKo = (min: number) => { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`; };
 const ymdLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 
-export function TeamSurface({ ko }: { ko: boolean }) {
+export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: string | null }) {
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[] | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
@@ -336,9 +336,14 @@ export function TeamSurface({ ko }: { ko: boolean }) {
           rules={rules.filter((r) => r.member_user_id === detailMember.member_user_id && r.active)}
           leaves={leaves.filter((l) => l.member_user_id === detailMember.member_user_id)}
           ko={ko}
+          categoryId={categoryId}
           onClose={() => setDetailMember(null)}
           onWageSaved={(wage) => {
             setDetailMember((prev) => (prev ? { ...prev, hourly_wage: wage } : prev));
+            void load();
+          }}
+          onJobSaved={(employmentType, jobDuties) => {
+            setDetailMember((prev) => (prev ? { ...prev, employment_type: employmentType, job_duties: jobDuties } : prev));
             void load();
           }}
         />

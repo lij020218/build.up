@@ -29,6 +29,10 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
     public let hireDate: String?
     /// 시급(원) — 사장 설정. RLS 상 직원 본인 행만 조회 가능 (동료 시급 비노출).
     public let hourlyWage: Int?
+    /// 고용형태 part_time|full_time|contract (2026-07-13)
+    public let employmentType: String?
+    /// 업무 직무 key 배열 (JobDutyRegistry 로 라벨 해석)
+    public let jobDuties: [String]
 
     public var id: UUID { memberUserId }
 
@@ -38,6 +42,8 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
         case joinedAt = "joined_at"
         case hireDate = "hire_date"
         case hourlyWage = "hourly_wage"
+        case employmentType = "employment_type"
+        case jobDuties = "job_duties"
     }
 
     public init(from decoder: Decoder) throws {
@@ -47,8 +53,10 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
         role = try c.decode(String.self, forKey: .role)
         joinedAt = try c.decodeIfPresent(String.self, forKey: .joinedAt)
         hireDate = try c.decodeIfPresent(String.self, forKey: .hireDate)
-        // 마이그레이션 20260713 미적용 환경(hourly_wage 키 부재)에서도 디코딩 안전
+        // 마이그레이션 미적용 환경(키 부재)에서도 디코딩 안전
         hourlyWage = try c.decodeIfPresent(Int.self, forKey: .hourlyWage)
+        employmentType = try c.decodeIfPresent(String.self, forKey: .employmentType)
+        jobDuties = (try? c.decodeIfPresent([String].self, forKey: .jobDuties)) ?? []
     }
 }
 
@@ -306,6 +314,16 @@ public actor TeamRepository {
             .eq("member_user_id", value: memberId.uuidString)
             .execute()
     }
+
+    // ── 고용형태·직무 설정 (사장 — 20260713_000006) ──
+    public func setMemberJob(memberId: UUID, employmentType: String?, jobDuties: [String]) async throws {
+        struct Patch: Encodable { let employment_type: String?; let job_duties: [String] }
+        try await client
+            .from("store_members")
+            .update(Patch(employment_type: employmentType, job_duties: jobDuties))
+            .eq("member_user_id", value: memberId.uuidString)
+            .execute()
+    }
 }
 
 // ═══ 직원측 (웹 StaffDashboard.tsx 미러) ═══════════════════════════════
@@ -318,6 +336,8 @@ public struct StaffStoreContext: Decodable, Sendable {
     public let joinedAt: String?
     public let hireDate: String?
     public let hourlyWage: Int?   // 본인 시급 — 근로 권리 자가진단용 (2026-07-13, 마이그레이션 20260713_000002)
+    public let employmentType: String?   // 고용형태 (2026-07-13, 20260713_000006)
+    public let jobDuties: [String]        // 업무 직무 key 배열
 
     enum CodingKeys: String, CodingKey {
         case connected
@@ -327,6 +347,8 @@ public struct StaffStoreContext: Decodable, Sendable {
         case joinedAt = "joined_at"
         case hireDate = "hire_date"
         case hourlyWage = "hourly_wage"
+        case employmentType = "employment_type"
+        case jobDuties = "job_duties"
     }
 
     public init(from decoder: Decoder) throws {
@@ -337,8 +359,10 @@ public struct StaffStoreContext: Decodable, Sendable {
         storeName = try c.decodeIfPresent(String.self, forKey: .storeName)
         joinedAt = try c.decodeIfPresent(String.self, forKey: .joinedAt)
         hireDate = try c.decodeIfPresent(String.self, forKey: .hireDate)
-        // 마이그레이션 20260713_000002 미적용 환경(hourly_wage 키 부재)에서도 안전
+        // 마이그레이션 미적용 환경(키 부재)에서도 안전
         hourlyWage = try c.decodeIfPresent(Int.self, forKey: .hourlyWage)
+        employmentType = try c.decodeIfPresent(String.self, forKey: .employmentType)
+        jobDuties = (try? c.decodeIfPresent([String].self, forKey: .jobDuties)) ?? []
     }
 }
 

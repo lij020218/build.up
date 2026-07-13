@@ -13,6 +13,7 @@
 //
 
 import SwiftUI
+import FoundOneCore
 import FoundOneDesignSystem
 import FoundOneData
 
@@ -270,6 +271,21 @@ public struct StaffDashboardView: View {
                 HStack(spacing: 6) {
                     chip(ctx.role == "manager" ? "역할 · 매니저" : "역할 · 직원")
                     if let t = tenure(ctx), t >= 1 { chip("근속 · \(t)일차") }
+                }
+                // 고용형태 · 직무 (사장 설정, 2026-07-13)
+                if ctx.employmentType != nil || !ctx.jobDuties.isEmpty {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 6)], alignment: .leading, spacing: 6) {
+                        if let emp = JobDutyRegistry.employmentLabel(ctx.employmentType, ko: true) {
+                            Text(emp).font(.system(size: 11.5, weight: .heavy)).foregroundStyle(.white)
+                                .frame(maxWidth: .infinity).padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(BUColor.midnight, in: Capsule())
+                        }
+                        ForEach(ctx.jobDuties, id: \.self) { k in
+                            Text(JobDutyRegistry.dutyLabel(k, ko: true)).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(BUColor.midnight).lineLimit(1)
+                                .frame(maxWidth: .infinity).padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                        }
+                    }
                 }
                 // 근무 요일 스트립
                 VStack(alignment: .leading, spacing: 6) {

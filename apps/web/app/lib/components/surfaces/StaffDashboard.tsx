@@ -23,7 +23,7 @@ import {
   LogOut, Store, CalendarDays, LogIn, Timer, ChevronLeft, ChevronRight,
   Plus, CheckCircle2, Clock3, X, Moon, Hourglass, UserRound,
 } from "lucide-react";
-import { signOutUser } from "@foundone/shared";
+import { signOutUser, employmentTypeLabel, jobDutyLabel } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
 import { StaffProfileView } from "./StaffProfileView";
@@ -40,7 +40,7 @@ const LEAVE = "#8b7fd4"; // 연차 — 온브랜드 라벤더 (빨강/노랑 대
 const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 
-type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null };
+type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null; employmentType: string | null; jobDuties: string[] };
 
 // 근속(勤續) 일차 — 입사일(없으면 가게 연결일) 기준 오늘이 N일째
 function tenureDays(hireDate: string | null, joinedAt: string | null): number | null {
@@ -115,7 +115,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     //   (2026-07-13 hire_date 컬럼 누락으로 실제 발생한 사고). 에러면 재시도 상태로.
     const { data: ctxRaw, error: ctxErr } = (await supabase.rpc("get_staff_store_context" as never)) as { data: unknown; error: unknown };
     if (ctxErr) { console.error("[staff] get_staff_store_context failed:", ctxErr); setCtxError(true); setLoading(false); return; }
-    const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null; hourly_wage?: number | null };
+    const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null };
     if (!c.connected || !c.owner_user_id) { setConnected(false); setLoading(false); return; }
 
     const context: Ctx = {
@@ -126,6 +126,8 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       joinedAt: c.joined_at ?? null,
       hireDate: c.hire_date ?? null,
       hourlyWage: c.hourly_wage ?? null,
+      employmentType: c.employment_type ?? null,
+      jobDuties: Array.isArray(c.job_duties) ? c.job_duties : [],
     };
     setCtx(context);
     setConnected(true);
@@ -394,6 +396,12 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
             {(() => { const t = tenureDays(ctx.hireDate, ctx.joinedAt); return t != null && t >= 1 ? (
               <span style={chip}>{ko ? "근속" : "Day"} · <strong style={{ marginLeft: 3 }}>{ko ? `${t.toLocaleString()}일차` : t.toLocaleString()}</strong></span>
             ) : null; })()}
+            {ctx.employmentType && (
+              <span style={{ ...chip, background: MIDNIGHT, color: "white" }}>{employmentTypeLabel(ctx.employmentType, ko)}</span>
+            )}
+            {ctx.jobDuties.map((k) => (
+              <span key={k} style={chip}>{jobDutyLabel(k, ko)}</span>
+            ))}
           </div>
           <WeekdayStrip ko={ko} days={workdays} />
         </section>
