@@ -37,6 +37,7 @@ public struct StaffProfileSheet: View {
                 BUBackgroundSurface()
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        avatarHeader
                         accountCard
                         workplaceCard
                         storeConnectCard
@@ -66,8 +67,26 @@ public struct StaffProfileSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+    }
+
+    // 아바타 + 이름/계정 헤더 (웹 StaffProfileView 미러)
+    private var avatarHeader: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(colors: [Color(red: 59/255, green: 92/255, blue: 140/255), Color(red: 95/255, green: 139/255, blue: 184/255)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 60, height: 60)
+                Text(String((name ?? email ?? "?").prefix(1)).uppercased())
+                    .font(.system(size: 22, weight: .bold)).foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(name.map { "\($0)님" } ?? (email ?? "…"))
+                    .font(.system(size: 18, weight: .bold)).foregroundStyle(BUColor.ink).lineLimit(1)
+                Text("직원 계정").font(.system(size: 12)).foregroundStyle(BUColor.inkMuted)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 4)
     }
 
     // ① 계정

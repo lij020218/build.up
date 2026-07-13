@@ -26,7 +26,7 @@ import {
 import { signOutUser } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
-import { StaffProfileModal } from "./StaffProfileModal";
+import { StaffProfileView } from "./StaffProfileView";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -290,6 +290,20 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
   const isToday = viewMonth.y === new Date().getFullYear() && viewMonth.m === new Date().getMonth();
 
+  // 「내 정보」 — 팝업이 아니라 사장 화면과 동일하게 전체 페이지로 전환 (2026-07-13).
+  if (profileOpen) {
+    return (
+      <StaffProfileView
+        storeName={ctx.storeName}
+        role={ctx.role}
+        ko={ko}
+        signingOut={signingOut}
+        onSignOut={handleSignOut}
+        onBack={() => setProfileOpen(false)}
+      />
+    );
+  }
+
   return (
     <main style={pageStyle}>
       <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -327,20 +341,10 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {/* ④ 연차·휴가 */}
         <LeaveCard ko={ko} leaves={leaves} onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave} />
-        {/* 로그아웃은 상단 「내 정보」 팝업으로 통합 (2026-07-13) — 사장 화면과 동일 위치. */}
+        {/* 로그아웃·내 정보는 상단 「내 정보」 → 전체 페이지(StaffProfileView)로 (2026-07-13). */}
       </div>
 
       {leaveOpen && <LeaveSheet ko={ko} onClose={() => setLeaveOpen(false)} onSubmit={submitLeave} />}
-      {profileOpen && (
-        <StaffProfileModal
-          storeName={ctx.storeName}
-          role={ctx.role}
-          ko={ko}
-          signingOut={signingOut}
-          onSignOut={handleSignOut}
-          onClose={() => setProfileOpen(false)}
-        />
-      )}
     </main>
   );
 }

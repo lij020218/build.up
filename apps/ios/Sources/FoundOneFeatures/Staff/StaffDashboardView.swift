@@ -103,7 +103,8 @@ public struct StaffDashboardView: View {
                 await load()
             }
         }
-        .sheet(isPresented: $showProfileSheet) {
+        // 「내 정보」 — 팝업(sheet) 아닌 전체 화면(사장 ProfileView 탭과 동일 취지, 2026-07-13).
+        .fullScreenCover(isPresented: $showProfileSheet) {
             if let ctx {
                 StaffProfileSheet(
                     storeName: ctx.storeName?.trimmingCharacters(in: .whitespaces).isEmpty == false ? ctx.storeName! : "가게",
