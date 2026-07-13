@@ -21,11 +21,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   LogOut, Store, CalendarDays, LogIn, Timer, ChevronLeft, ChevronRight,
-  Plus, CheckCircle2, Clock3, X, Moon, Hourglass,
+  Plus, CheckCircle2, Clock3, X, Moon, Hourglass, UserRound,
 } from "lucide-react";
 import { signOutUser } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
+import { StaffProfileModal } from "./StaffProfileModal";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -80,6 +81,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false); // 내 정보 팝업 (2026-07-13)
 
   const [todayAtt, setTodayAtt] = useState<Attendance | null>(null);
   const [todaySched, setTodaySched] = useState<Shift | null>(null);
@@ -233,13 +235,28 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   };
 
   // ── 렌더: 로딩 / 미연결 ──
-  // 직원용 미니 헤더 — 사장 화면 사이드바 로고와 동일한 아이덴티티 (2026-07-13 디자인 정합)
-  const logoHeader = (
+  // 직원용 미니 헤더 — 왼쪽: 사장 화면과 동일 로고 아이덴티티 / 오른쪽: 내 정보(연결됐을 때만).
+  const renderHeader = (showProfileBtn: boolean) => (
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "2px 4px" }}>
       <FoundOneSpiralLogo size={26} color="#3A3AC8" style={{ flexShrink: 0 }} />
       <span style={{ fontSize: 15, fontWeight: 700, color: INK, letterSpacing: "-0.03em" }}>
         Found<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>One</span>
       </span>
+      {showProfileBtn && (
+        <button
+          type="button"
+          onClick={() => setProfileOpen(true)}
+          aria-label={ko ? "내 정보" : "My account"}
+          style={{
+            marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "7px 14px", borderRadius: 999, cursor: "pointer",
+            border: `1px solid ${MIDNIGHT_BORDER}`, background: "white",
+            color: MIDNIGHT, fontSize: 12.5, fontWeight: 700,
+          }}
+        >
+          <UserRound size={14} strokeWidth={1.9} />{ko ? "내 정보" : "Account"}
+        </button>
+      )}
     </div>
   );
 
@@ -247,7 +264,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     return (
       <main style={pageStyle}>
         <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
-          {logoHeader}
+          {renderHeader(false)}
           <div style={{ ...cardStyle, textAlign: "center", color: MUTED }}>{ko ? "직원 정보 불러오는 중…" : "Loading…"}</div>
         </div>
       </main>
@@ -257,7 +274,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     return (
       <main style={pageStyle}>
         <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
-          {logoHeader}
+          {renderHeader(false)}
           <div style={cardStyle}>
             <div style={eyebrow}>Found.One · {ko ? "직원" : "Staff"}</div>
             <h1 style={h1}>{ko ? "아직 가게에 연결되지 않았어요" : "Not connected yet"}</h1>
@@ -276,7 +293,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   return (
     <main style={pageStyle}>
       <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
-        {logoHeader}
+        {renderHeader(true)}
 
         {/* ① 가게 헤더 */}
         <section style={{ ...cardStyle, paddingBottom: 22 }}>
@@ -310,13 +327,20 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {/* ④ 연차·휴가 */}
         <LeaveCard ko={ko} leaves={leaves} onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave} />
-
-        <button type="button" style={signOutBtn} onClick={handleSignOut} disabled={signingOut}>
-          <LogOut size={13} strokeWidth={1.6} /> {signingOut ? (ko ? "로그아웃 중…" : "Signing out…") : ko ? "로그아웃" : "Sign out"}
-        </button>
+        {/* 로그아웃은 상단 「내 정보」 팝업으로 통합 (2026-07-13) — 사장 화면과 동일 위치. */}
       </div>
 
       {leaveOpen && <LeaveSheet ko={ko} onClose={() => setLeaveOpen(false)} onSubmit={submitLeave} />}
+      {profileOpen && (
+        <StaffProfileModal
+          storeName={ctx.storeName}
+          role={ctx.role}
+          ko={ko}
+          signingOut={signingOut}
+          onSignOut={handleSignOut}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
     </main>
   );
 }
@@ -721,4 +745,3 @@ const dateInput: React.CSSProperties = { width: "100%", padding: "11px 12px", bo
 const overlay: React.CSSProperties = { position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", backdropFilter: "blur(3px)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50, padding: 0 };
 const sheet: React.CSSProperties = { width: "100%", maxWidth: 480, background: "white", borderRadius: "24px 24px 0 0", padding: "26px 24px 32px", boxShadow: "0 -8px 40px rgba(15,23,42,0.18)", animation: "none" };
 const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 16px", borderRadius: 14, border: "none", background: MIDNIGHT, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer" };
-const signOutBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(15,23,42,0.1)", background: "white", color: INK, fontSize: 13, fontWeight: 600, cursor: "pointer", margin: "0 auto" };

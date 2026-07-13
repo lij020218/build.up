@@ -53,6 +53,7 @@ public struct StaffDashboardView: View {
         return (c.year ?? 2026, c.month ?? 1)
     }()
     @State private var showLeaveSheet = false
+    @State private var showProfileSheet = false   // 내 정보 시트 (2026-07-13)
 
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var today: String { ymd(Date()) }
@@ -68,6 +69,8 @@ public struct StaffDashboardView: View {
             BUBackgroundSurface()
             ScrollView {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
+                    // 로고 + 내 정보 헤더 바 (2026-07-13, 웹 미러) — 연결됐을 때만 내 정보 노출
+                    logoHeaderBar(showProfileBtn: ctx?.connected == true)
                     if loading {
                         ProgressView().frame(maxWidth: .infinity).padding(.vertical, 60)
                     } else if let ctx, ctx.connected {
@@ -79,7 +82,7 @@ public struct StaffDashboardView: View {
                         )
                         calendarCard
                         leaveCard
-                        signOutButton
+                        // 로그아웃은 「내 정보」 시트로 통합 (2026-07-13)
                     } else {
                         notConnectedCard
                     }
@@ -100,6 +103,38 @@ public struct StaffDashboardView: View {
                 await load()
             }
         }
+        .sheet(isPresented: $showProfileSheet) {
+            if let ctx {
+                StaffProfileSheet(
+                    storeName: ctx.storeName?.trimmingCharacters(in: .whitespaces).isEmpty == false ? ctx.storeName! : "가게",
+                    role: ctx.role ?? "staff",
+                    onSignOut: onSignOut
+                )
+            }
+        }
+    }
+
+    // ── 로고 + 내 정보 헤더 바 ──
+    private func logoHeaderBar(showProfileBtn: Bool) -> some View {
+        HStack(spacing: 10) {
+            FoundOneSpiralLogo(size: 26, color: BUColor.midnightBright)
+            (Text("Found").foregroundColor(BUColor.ink)
+             + Text(".").foregroundColor(BUColor.midnight)
+             + Text("One").fontWeight(.heavy).foregroundColor(BUColor.ink))
+                .font(.system(size: 15, weight: .bold))
+            Spacer(minLength: 0)
+            if showProfileBtn {
+                Button { showProfileSheet = true } label: {
+                    Label("내 정보", systemImage: "person.crop.circle")
+                        .font(.system(size: 12.5, weight: .heavy))
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 14).padding(.vertical, 7)
+                        .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     // ── 데이터 로드 (웹 loadAll 미러) ──
@@ -359,17 +394,6 @@ public struct StaffDashboardView: View {
         switch s { case "approved": return "승인"; case "rejected": return "반려"; default: return "대기" }
     }
 
-    private var signOutButton: some View {
-        Button(action: onSignOut) {
-            Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
-                .font(.system(size: 12.5, weight: .semibold))
-                .foregroundStyle(BUColor.inkSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 11)
-                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
-    }
 
     private var notConnectedCard: some View {
         BUCard(.outer) {
