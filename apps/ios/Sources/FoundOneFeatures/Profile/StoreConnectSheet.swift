@@ -202,6 +202,7 @@ public struct StoreConnectSheet: View {
         case "expired": return "만료된 초대예요 (7일 유효). 사장님께 새 초대를 요청하세요."
         case "self": return "본인 가게의 초대는 수락할 수 없어요."
         case "wrong-account": return "이 초대는 다른 이메일 계정으로 지정됐어요. 해당 계정으로 로그인해 주세요."
+        case "already-member": return "이미 채용된 직원입니다. 이 가게에 이미 연결되어 있어요."
         case "not-authenticated": return "로그인이 필요해요."
         default: return "연결에 실패했어요. 잠시 후 다시 시도해 주세요."
         }

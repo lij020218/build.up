@@ -30,7 +30,7 @@ const dismissKey = (code: string) => `fo_invite_dismissed_${code}`;
 
 export function InviteOfferModal({ ko }: { ko: boolean }) {
   const [invite, setInvite] = useState<PendingInvite | null>(null);
-  const [status, setStatus] = useState<"idle" | "accepting" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "accepting" | "done" | "error" | "already">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +58,8 @@ export function InviteOfferModal({ ko }: { ko: boolean }) {
     setStatus("accepting");
     try {
       const { data, error } = await supabase.rpc("accept_store_invite" as never, { p_code: invite.invite_code } as never);
-      const res = data as unknown as { ok?: boolean };
+      const res = data as unknown as { ok?: boolean; reason?: string };
+      if (!error && res?.reason === "already-member") { setStatus("already"); return; } // 이미 채용된 직원
       if (error || !res?.ok) { setStatus("error"); return; }
       setStatus("done");
       // 역할이 staff 로 전환됨 — 게이트 재평가로 직원 대시보드 진입.
@@ -114,7 +115,23 @@ export function InviteOfferModal({ ko }: { ko: boolean }) {
             : "If this is you, press Accept. Your account switches to staff mode with schedule, attendance and time-off."}
         </p>
 
-        {status === "done" ? (
+        {status === "already" ? (
+          <>
+            <div style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: MIDNIGHT, padding: "8px 0 4px" }}>
+              {ko ? "이미 채용된 직원입니다" : "You're already an employee here"}
+            </div>
+            <p style={{ fontSize: 12.5, color: "rgba(15,23,42,0.55)", textAlign: "center", lineHeight: 1.55, margin: "0 0 14px" }}>
+              {ko ? "이 가게에 이미 연결되어 있어요. 별도로 수락할 필요가 없습니다." : "You're already connected to this store — no action needed."}
+            </p>
+            <button
+              type="button"
+              onClick={dismiss}
+              style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", background: MIDNIGHT, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+            >
+              {ko ? "확인" : "OK"}
+            </button>
+          </>
+        ) : status === "done" ? (
           <div style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: MIDNIGHT, padding: "12px 0" }}>
             {ko ? "수락 완료! 직원 화면으로 이동합니다…" : "Accepted! Switching to your staff view…"}
           </div>

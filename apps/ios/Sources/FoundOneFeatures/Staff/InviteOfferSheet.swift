@@ -26,7 +26,7 @@ public struct InviteOfferSheet: View {
     }
 
     @State private var status: AcceptStatus = .idle
-    private enum AcceptStatus { case idle, accepting, done, error }
+    private enum AcceptStatus { case idle, accepting, done, error, already }
 
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var roleLabel: String { invite.role == "manager" ? "매니저" : "직원" }
@@ -63,7 +63,32 @@ public struct InviteOfferSheet: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
 
-                if status == .done {
+                if status == .already {
+                    VStack(spacing: 8) {
+                        Text("이미 채용된 직원입니다")
+                            .font(.system(size: 15, weight: .heavy))
+                            .foregroundStyle(BUColor.midnight)
+                        Text("이 가게에 이미 연결되어 있어요.\n별도로 수락할 필요가 없습니다.")
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(BUColor.inkSecondary)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                        Button {
+                            onDismissLater()
+                            dismiss()
+                        } label: {
+                            Text("확인")
+                                .font(.system(size: 15, weight: .heavy))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 13))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
+                    .padding(.top, 6)
+                } else if status == .done {
                     Text("수락 완료! 직원 화면으로 이동합니다…")
                         .font(.system(size: 14, weight: .heavy))
                         .foregroundStyle(BUColor.midnight)
@@ -119,7 +144,9 @@ public struct InviteOfferSheet: View {
         status = .accepting
         do {
             let result = try await repo.acceptInvite(code: invite.inviteCode)
-            if result.ok {
+            if result.reason == "already-member" {
+                status = .already   // 이미 채용된 직원 — 안내만
+            } else if result.ok {
                 status = .done
                 // 역할 게이트가 재조회해 직원 대시보드로 전환 (AppRoot .buildupRoleMayHaveChanged 수신)
                 try? await Task.sleep(nanoseconds: 1_200_000_000)

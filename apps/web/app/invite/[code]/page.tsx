@@ -19,7 +19,7 @@ import { supabase } from "../../../lib/supabase";
 
 const MIDNIGHT = "#191970";
 
-type InvalidReason = "not-found" | "expired" | "used" | "self" | "error";
+type InvalidReason = "not-found" | "expired" | "used" | "self" | "already-member" | "error";
 
 type LookupState =
   | { status: "loading" }
@@ -29,7 +29,7 @@ type LookupState =
 // store_invites RPC 는 생성된 Database 타입에 없어(as never) 캐스팅으로 우회.
 type RpcResult = { data: unknown; error: unknown };
 const asInvalidReason = (r: unknown): InvalidReason =>
-  r === "expired" || r === "used" || r === "self" || r === "not-found" ? r : "error";
+  r === "expired" || r === "used" || r === "self" || r === "not-found" || r === "already-member" ? r : "error";
 
 export default function InvitePage() {
   const params = useParams();
@@ -145,12 +145,15 @@ export default function InvitePage() {
               {state.reason === "expired" && "만료된 초대 링크입니다"}
               {state.reason === "used" && "이미 사용된 초대 링크입니다"}
               {state.reason === "self" && "본인이 보낸 초대는 받을 수 없습니다"}
+              {state.reason === "already-member" && "이미 채용된 직원입니다"}
               {state.reason === "error" && "초대 정보를 불러오지 못했습니다"}
             </h1>
             <p style={subtitleStyle}>
               {state.reason === "expired"
                 ? "초대 링크는 발송 후 7일간 유효합니다. 사장님께 새 링크를 요청해 주세요."
-                : "사장님께 정확한 링크를 다시 받아주세요."}
+                : state.reason === "already-member"
+                  ? "이 가게에 이미 연결되어 있어요. 별도로 수락할 필요가 없습니다."
+                  : "사장님께 정확한 링크를 다시 받아주세요."}
             </p>
             <button type="button" style={primaryBtnStyle} onClick={() => router.push("/")}>
               메인으로
