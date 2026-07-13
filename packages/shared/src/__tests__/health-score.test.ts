@@ -55,6 +55,31 @@ describe("calculateHealthScore — happy path (food)", () => {
     expect(r.confidence).toBeGreaterThanOrEqual(80);
   });
 
+  it("외식인데 식재료비 미입력 — 수익성·비용효율 차원 보류 (2026-07-13 감사: 건강점수 부풀림 차단)", () => {
+    const r = calculateHealthScore({
+      industryCategoryId: "food",
+      totalRevenue: 15_000_000,
+      workingDays: 26,
+      monthlyCosts: {
+        ingredients: 0, // ⚠️ 미입력 — 외식에서 0 은 불가능한 값
+        labor: 2_000_000,
+        rent: 1_500_000,
+        utilities: 300_000,
+      },
+      hasEmployees: true,
+      currentBalance: 30_000_000,
+      weeklySalesChangePct: 10,
+      daysSinceLaunch: 90,
+    });
+    const prof = r.dimensions.find((d) => d.key === "profitability");
+    const cost = r.dimensions.find((d) => d.key === "costEfficiency");
+    // 두 원가 의존 차원은 null 로 보류돼야 함 (완벽 점수로 부풀지 않음)
+    expect(prof?.score).toBeNull();
+    expect(cost?.score).toBeNull();
+    expect(prof?.reasonKo).toContain("식재료비 미입력");
+    expect(cost?.reasonKo).toContain("식재료비 미입력");
+  });
+
   it("위기 외식 사장님 — 런웨이 부족 + 적자 → 위험", () => {
     const r = calculateHealthScore({
       industryCategoryId: "food",
