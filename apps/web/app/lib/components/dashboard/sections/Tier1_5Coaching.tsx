@@ -43,7 +43,6 @@ import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 //   22 자료 검증 통과 (NN/G·Carbon·M3·Toast·Amplitude·Square·Mercury·Reforge 등).
 // 2026-05-13 Phase 2: IntegrationHubCard 마이페이지 이동(2026-07-12 컴포넌트 삭제) — profile/
 //   폴더에 개별 OAuth 카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X.
-import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
 import { MenuProfitabilityCard } from "../MenuProfitabilityCard";
 import { TeamCard } from "../TeamCard";
@@ -130,18 +129,23 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           매트릭스 카드 수 -1 → 인지 부하 해소.
           향후 IntegrationHubCard.tsx 자체는 profile 폴더로 이동 또는 삭제 (별도 PR). */}
 
-      {/* 2026-05-12 사장님 lock-in moat — 코칭 누적 일지 (14일).
-          매일 FounderBrief 가 노출될 때 hero signal 이 자동 기록됨 (useEffect →
-          recordSignal). 사장님이 떠나면 1년치 코칭 일지 잃음 → 전환비용 발생.
-          캐시노트가 같은 기능 출시해도 누적된 history 는 못 따라옴.
-          v1: localStorage / v2: Supabase `coaching_history` 테이블 + RLS. */}
-      {!hide("coaching-history") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <CoachingHistoryCard ko={ko} />
+      {/* 팀·재고 운영 카드 — 재무 코어(손익·현금) 바로 아래로 승격 (2026-07-13 lean 재설계) */}
+      {opsCards.length > 0 && (
+        <div
+          className="dash-stagger-item"
+          style={{
+            ...nextStaggerStyle(),
+            display: "grid",
+            gridTemplateColumns: `repeat(${opsCols}, minmax(0, 1fr))`,
+            gap: "14px",
+            alignItems: "stretch",
+          }}
+        >
+          {opsCards}
         </div>
       )}
 
-      {/* 1.5 (a) — 오늘의 운영 리추얼 (시기·신호 기반 조건부 항목 포함) */}
+      {/* 오늘의 운영 리추얼 — 매일 점검 습관 엔진 (사장님: 홈 유지) */}
       {!hide("daily-ops-ritual") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <DailyOpsRitualCard
@@ -158,21 +162,8 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 1.5 (a-1) — 재고 + 직원 운영 카드 (사장님 요청으로 상단 이동) */}
-      {opsCards.length > 0 && (
-        <div
-          className="dash-stagger-item"
-          style={{
-            ...nextStaggerStyle(),
-            display: "grid",
-            gridTemplateColumns: `repeat(${opsCols}, minmax(0, 1fr))`,
-            gap: "14px",
-            alignItems: "stretch",
-          }}
-        >
-          {opsCards}
-        </div>
-      )}
+      {/* 코칭 누적 일지 → '이번 주 점검'(Tier2, 접힘)으로 이동 (2026-07-13):
+          매일 필수 아닌 회고성이라 팝업 성격의 접힘 섹션으로. lock-in moat 유지. */}
 
       {/* 1.5 (a-1.5) — 메뉴·서비스 라인업 수익성 (음식·카페·서비스).
           로드맵 menu-design 입력(판매가·원가)을 per-item 원가율·마진으로 표시. 재고(식자재)와

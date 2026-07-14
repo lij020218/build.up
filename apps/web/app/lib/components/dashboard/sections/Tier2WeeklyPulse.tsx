@@ -17,6 +17,7 @@
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DeepDiveSection } from "../DeepDiveSection";
+import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { Cashflow13WeekForecastCard } from "../Cashflow13WeekForecastCard";
 import { SurvivalBoardCard } from "../SurvivalBoardCard";
 import { CostCompositionDonutCard } from "../CostCompositionDonutCard";
@@ -47,6 +48,10 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
       defaultOpen={false}
       ko={ko}
     >
+      {/* 코칭 누적 일지 (14일) — 홈에서 이동 (2026-07-13 lean 재설계): 매일 필수 아닌
+          회고성 lock-in 카드. 접힘 섹션 최상단에 두어 "이번 주 한 번" 성격으로. */}
+      <CoachingHistoryCard ko={ko} />
+
       {/* 13주 자금흐름 예측 — Quicken/CFO 표준 + AI 처방 */}
       <Cashflow13WeekForecastCard
         ko={ko}
