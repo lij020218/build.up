@@ -167,7 +167,9 @@ export function CEOMorningHero({ d }: Props) {
   const monthlyCosts = (d.monthlyCosts ?? {}) as Record<string, number>;
   const totalMonthlyBurn = Object.values(monthlyCosts).reduce((s, v) => s + (typeof v === "number" ? v : 0), 0);
   const capitalKrw = ((d.selectedBudget as number | undefined) ?? 0) + ((d.initialOperatingCapital as number | undefined) ?? 0);
-  const runwayMonths = totalMonthlyBurn > 0 ? capitalKrw / totalMonthlyBurn : 99;
+  // burn=0 (월 비용 미입력) → 런웨이 계산 불가. 종전 99 기본값은 "충분/Healthy" 로
+  // 렌더돼 *비용 데이터가 없을 뿐인데* 재무가 안전하다고 오도 → -1 sentinel = "비용 입력 필요".
+  const runwayMonths = totalMonthlyBurn > 0 ? capitalKrw / totalMonthlyBurn : -1;
 
   // ── 경영 건강 점수 (SSOT 5-dim, 업종별 가중치 분기) — 헤더 inline pill 용 ──
   //   웹 조사 (2026-05-11): FinHealth Network · NetSuite · Altman Z' · Toast · StockTitan
@@ -334,10 +336,13 @@ export function CEOMorningHero({ d }: Props) {
         return {
           label: ko ? "런웨이 (남은 개월)" : "Runway (months)",
           value: runwayMonths,
-          format: (n) => n >= 99 ? (ko ? "충분" : "Healthy") : `${n.toFixed(1)}${ko ? "개월" : " mo"}`,
+          format: (n) =>
+            n < 0 ? (ko ? "비용 입력 필요" : "Enter costs")
+            : n >= 99 ? (ko ? "충분" : "Healthy")
+            : `${n.toFixed(1)}${ko ? "개월" : " mo"}`,
           delta: 0,
           deltaLabel: ko ? "현금 ÷ 월 burn" : "cash ÷ monthly burn",
-          tone: runwayMonths < 6 ? "bad" : runwayMonths < 12 ? "warn" : "good",
+          tone: runwayMonths < 0 ? "warn" : runwayMonths < 6 ? "bad" : runwayMonths < 12 ? "warn" : "good",
         };
       }
       case "mrr": {
@@ -365,11 +370,14 @@ export function CEOMorningHero({ d }: Props) {
     if (isStartup) {
       // 스타트업: 런웨이 (개월) 우선
       const tone: "good" | "warn" | "bad" =
-        runwayMonths < 6 ? "bad" : runwayMonths < 12 ? "warn" : "good";
+        runwayMonths < 0 ? "warn" : runwayMonths < 6 ? "bad" : runwayMonths < 12 ? "warn" : "good";
       return {
         label: ko ? "런웨이 (남은 개월)" : "Runway (months)",
         value: runwayMonths,
-        format: (n) => n >= 99 ? (ko ? "충분" : "Healthy") : `${n.toFixed(1)}${ko ? "개월" : " mo"}`,
+        format: (n) =>
+          n < 0 ? (ko ? "비용 입력 필요" : "Enter costs")
+          : n >= 99 ? (ko ? "충분" : "Healthy")
+          : `${n.toFixed(1)}${ko ? "개월" : " mo"}`,
         delta: wowDelta,
         deltaLabel: ko ? "지난 2주 매출 대비" : "vs prev 2 weeks",
         tone,

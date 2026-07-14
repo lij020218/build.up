@@ -562,10 +562,14 @@ public struct TodayView: View {
         let yesterdaySales = yesterdayEntry?.sales ?? 0
         let yesterdayCust = yesterdayEntry?.customers ?? 0
         let avgT = yesterdayCust > 0 ? yesterdaySales / Double(yesterdayCust) : 0
-        let runwayMonths: Double = {
-            guard let cash = mock.currentCash, mock.costs.total > 0 else { return .nan }
+        // 런웨이 = 현금 ÷ 순월비용. 비용 미입력·현금 미상 → "—"(계산 불가),
+        // 순비용 ≤ 0(흑자) → "흑자"(현금소진 개월 개념 무의미). 종전 99 위조 제거 — 웹 CEOMorningHero 와 동기.
+        let runway: (months: Double, override: String?, grade: HealthGrade) = {
+            guard let cash = mock.currentCash, mock.costs.total > 0 else { return (.nan, "—", .unknown) }
             let monthlyBurn = mock.costs.total - ratios.monthlyRevenueEquivalent
-            return monthlyBurn > 0 ? cash / monthlyBurn : 99
+            guard monthlyBurn > 0 else { return (.nan, "흑자", .healthy) }
+            let m = cash / monthlyBurn
+            return (m, nil, HealthGrade.from(score: m * 10))
         }()
         return [
             .init(label: "어제매출", value: yesterdaySales, grade: yesterdaySales > 0 ? .healthy : .unknown, unit: "원"),
@@ -573,9 +577,9 @@ public struct TodayView: View {
             .init(label: "원가율", value: ratios.primeCostRatio,
                   grade: IndustryThresholds.thresholds(for: mock.category).primeCost?.grade(ratios.primeCostRatio) ?? .unknown,
                   unit: "%"),
-            .init(label: "런웨이", value: runwayMonths.isFinite ? runwayMonths : nil,
-                  displayOverride: runwayMonths.isFinite ? nil : "—",
-                  grade: HealthGrade.from(score: runwayMonths * 10), unit: "개월"),
+            .init(label: "런웨이", value: runway.months.isFinite ? runway.months : nil,
+                  displayOverride: runway.override,
+                  grade: runway.grade, unit: "개월"),
             .init(label: "객단가", value: avgT, grade: avgT > 0 ? .healthy : .unknown, unit: "원"),
         ]
     }
