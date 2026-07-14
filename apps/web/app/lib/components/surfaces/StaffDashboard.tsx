@@ -821,8 +821,10 @@ function LeaveSheet({ ko, onClose, onSubmit }: {
 // 2026-07-13 디자인 정합 — 자체 플랫 배경(#f4f4fb)이 전역 오로라를 덮던 문제 제거,
 //   카드 규격을 사장 화면 표준(TeamSurface: radius 20·padding 22·h1 24/1.25)과 통일.
 const pageStyle: React.CSSProperties = {
+  // 상단 패딩: 모바일에선 전역 고정 벨+언어 클러스터(우상단)가 헤더의 「내 정보」 버튼을
+  //   덮으므로 그만큼 아래로 내림. 데스크톱은 var unset → 24px (globals ≤sm 에서만 재정의). 2026-07-14
   minHeight: "100vh", display: "flex", alignItems: "flex-start",
-  justifyContent: "center", padding: "24px 20px 48px",
+  justifyContent: "center", padding: "var(--staff-page-top, 24px) 20px 48px",
 };
 const cardStyle: React.CSSProperties = {
   width: "100%", background: "white", borderRadius: 20, padding: "22px 22px",

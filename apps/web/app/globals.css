@@ -355,6 +355,8 @@ textarea:focus-visible {
   :root {
     --dash-card-pad: 16px;
     --dash-gap: 12px;
+    /* 직원 대시보드: 전역 고정 벨+언어 클러스터(우상단) 높이만큼 헤더를 아래로 → 「내 정보」 가림 해소 */
+    --staff-page-top: calc(env(safe-area-inset-top) + 64px);
   }
 
   /* ── 모바일 그리드 백스톱 (2026-07-14) ─────────────────────────────────
