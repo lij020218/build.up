@@ -28,14 +28,12 @@
  * 자세한 분기 표 → `DASHBOARD_MAP.md`
  */
 
-import { BP } from "../../../breakpoints";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
 import { UserActivityCard } from "../UserActivityCard";
 import { CashflowHeroCard } from "../CashflowHeroCard";
 import { PLHeroCard } from "../PLHeroCard";
-import { DailyKpiStrip, type KpiValue } from "../DailyKpiStrip";
 import { useProfileStore } from "../../../stores/profile-store";
 
 type Props = {
@@ -53,50 +51,41 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
   const hiddenCards = useProfileStore((s) => s.hiddenCards);
   const showUserActivity = !hiddenCards.includes("user-activity");
   const showPLHero = !hiddenCards.includes("pl-hero");
-  const showDailyKpi = !hiddenCards.includes("daily-kpi-strip");
 
   return (
     <>
-      {/* Tier 1.1 — 매출 흐름 + 사용자 변화 (2-col).
-          2026-05-12 사장님 결정: UserActivity 는 *매일 보는 사용자 수 변화* 로 유지. */}
+      {/* ① 매출 흐름 — full-width (매출 raw 차트가 작아지면 의미 손실) */}
       <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              showUserActivity && c.viewportWidth >= BP.xl
-                ? "minmax(0, 1.35fr) minmax(0, 1fr)"
-                : "1fr",
-            gap: "14px",
-            alignItems: "stretch",
-          }}
-        >
-          <ActivitySnapshotCard
+        <ActivitySnapshotCard
+          d={d}
+          ko={ko}
+          todayStr={c.todayStr}
+          recent7Entries={c.recent7Entries}
+          recent7Sales={c.recent7Sales}
+          weeklySalesChange={c.weeklySalesChange}
+          todayEntry={c.todayEntry}
+          avgDailySales={c.avgDailySales}
+          fmt={fmt}
+          onOpenCalendar={onOpenCalendar}
+        />
+      </div>
+
+      {/* ② 사용자수 — 성장 선행 지표라 매출 바로 아래 full-width (2026-07-13 재배치:
+          종전엔 매출과 2-col 이었으나 "성장→재무" 흐름 위해 매출 직하로 승격) */}
+      {showUserActivity && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <UserActivityCard
             d={d}
             ko={ko}
             todayStr={c.todayStr}
             recent7Entries={c.recent7Entries}
-            recent7Sales={c.recent7Sales}
-            weeklySalesChange={c.weeklySalesChange}
             todayEntry={c.todayEntry}
-            avgDailySales={c.avgDailySales}
             fmt={fmt}
-            onOpenCalendar={onOpenCalendar}
           />
-          {showUserActivity && (
-            <UserActivityCard
-              d={d}
-              ko={ko}
-              todayStr={c.todayStr}
-              recent7Entries={c.recent7Entries}
-              todayEntry={c.todayEntry}
-              fmt={fmt}
-            />
-          )}
         </div>
-      </div>
+      )}
 
-      {/* Tier 1.2 — 현금흐름 + 손익 (2-col → 손익 숨김 시 1-col) */}
+      {/* ③ 손익 · 현금흐름 (2-col → 손익 숨김 시 현금 full-width). 손익 좌 · 현금 우 */}
       <div
         className="dash-stagger-item"
         style={{
@@ -107,11 +96,6 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
           alignItems: "stretch",
         }}
       >
-        <CashflowHeroCard
-          ko={ko}
-          dailyEntries={c.allEntries}
-          fallbackMonthlyCostsTotal={c.totalCosts}
-        />
         {showPLHero && <PLHeroCard
           totalSales={c.totalSales}
           totalCosts={c.totalCosts}
@@ -140,147 +124,16 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
             label: f.label,
           }))}
         />}
+        <CashflowHeroCard
+          ko={ko}
+          dailyEntries={c.allEntries}
+          fallbackMonthlyCostsTotal={c.totalCosts}
+        />
       </div>
 
-      {/* Tier 1.2 — 업종별 5칸 KPI Strip */}
-      {showDailyKpi && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <DailyKpiStrip
-            ko={ko}
-            industryCategoryId={d.businessCtx.categoryId ?? undefined}
-            values={buildKpiValues(d, c, ko)}
-          />
-        </div>
-      )}
+      {/* KPI 5칸 스트립 제거 (2026-07-13 재설계): 죽은 셀 7개 + 나머지는 히어로·손익·현금
+          중복이라 기본 노출에서 제외. 어제매출·객수 트렌드는 매출/사용자수 카드에서 확인. */}
     </>
   );
 }
 
-// ─── KPI Strip 값 매핑 (업종별 cell.id 매칭) ──────────────────────
-function buildKpiValues(
-  d: DashboardHook,
-  c: DashboardComputed,
-  ko: boolean,
-): Record<string, KpiValue | undefined> {
-  const lastEntry = c.allEntries[c.allEntries.length - 1];
-  const prevWeekSameDay = c.allEntries[c.allEntries.length - 8];
-  const yesterdaySales = lastEntry?.sales ?? null;
-  const yesterdayCustomers = lastEntry?.customers ?? null;
-  // ⚠️ 2026-05-18: falsy 0 회피 — prevWeekSameDay.sales===0 (정당한 휴무일) vs undefined (미입력)
-  //   구분. `!= null && > 0` 명시.
-  const ySalesTrend =
-    yesterdaySales != null && prevWeekSameDay?.sales != null && prevWeekSameDay.sales > 0
-      ? ((yesterdaySales - prevWeekSameDay.sales) / prevWeekSameDay.sales) * 100
-      : undefined;
-  const yCustTrend =
-    yesterdayCustomers != null && prevWeekSameDay?.customers != null && prevWeekSameDay.customers > 0
-      ? ((yesterdayCustomers - prevWeekSameDay.customers) / prevWeekSameDay.customers) * 100
-      : undefined;
-  // ⚠️ 2026-06-10 (P1-5): prime-cost/cogs/labor/rent 비율은 SSOT(useDashboardComputed)의
-  //   보정값만 사용. 종전엔 `월비용 ÷ MTD 매출` 생나눗셈 → 월초(부분월 입력) 시 200%+ 폭주.
-  //   calculateCostRatios 가 월 환산 매출(monthlyRevenueEquivalent)로 나눠 부분월 보정.
-  //   ratiosReady===false 면 모든 비율 undefined → "준비 중" empty state.
-  // 프라임코스트 = 식재료 + 인건비. 식재료 미입력이면 절반이 비어 "건강한 12.5%"로 오해 →
-  //   PLHero 와 동일하게 "식재료 미입력" 상태로 (2026-07-13 감사: 인건비만으로 프라임코스트 단정).
-  const ingredientsEntered = ((d.monthlyCosts as { ingredients?: number })?.ingredients ?? 0) > 0;
-  const primeCostCell: { value: number | undefined; displayOverride?: string } =
-    !c.ratiosReady
-      ? { value: undefined, displayOverride: ko ? "준비 중" : "Soon" }
-      : !ingredientsEntered
-        ? { value: undefined, displayOverride: ko ? "식재료 미입력" : "Add COGS" }
-        : { value: c.primeCost };
-  const cogsRatio = c.ratiosReady ? c.ingredientRatio : null;
-  const laborRatio = c.ratiosReady ? c.laborRatio : null;
-  const rentRatio = c.ratiosReady ? c.rentRatio : null;
-  // 런웨이 — 흑자면 번레이트가 없어 "해당 없음", 적자일 때만 현재 잔고 ÷ 월 번레이트.
-  //   ⚠️ 종전 `창업예산 ÷ 월비용` 은 매출을 무시해 흑자 가게에도 유한값이 떠 "곧 자금 소진" 오해를
-  //   줬고, 창업예산은 [시설·창업비] 통이라 현재 현금도 아님 (2026-07-13 감사).
-  const cashRunwayCell: { value: number | undefined; displayOverride?: string } =
-    c.netProfit >= 0
-      ? { value: undefined, displayOverride: ko ? "흑자 · 해당 없음" : "Profitable" }
-      : c.currentBalance != null && c.monthlyBurn > 0
-        ? { value: c.currentBalance / c.monthlyBurn }
-        : { value: undefined, displayOverride: ko ? "잔고 입력 필요" : "Add balance" };
-  const avgTicket = c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null;
-
-  // SaaS — GA4/Webhook 자동 수집 우선, 없으면 사장님이 입력한 subscribers.active fallback
-  const subs = (d as { subscribers?: { active?: number } }).subscribers;
-  const manualActive = subs?.active ?? null;
-  const autoActiveUsers = c.saasMetrics.latest?.active_users ?? null;
-  const autoCumulativeUsers = c.saasMetrics.latest?.cumulative_users ?? null;
-  const autoWau = c.saasMetrics.latest?.weekly_active_users ?? null;
-  const autoNewUsers = c.saasMetrics.latest?.new_users ?? null;
-  const activeUsers = autoActiveUsers ?? manualActive;
-  // ⚠️ cumulative ≠ active. 자동 수집 데이터가 없으면 누적 수치 자체가 불명확하므로 manual active
-  //   로 대체하면 의미 왜곡. 데이터 없을 때 undefined 로 두어 "준비 중" 표시되도록 한다.
-  const cumulativeUsers = autoCumulativeUsers;
-
-  // ⚠️ MRR fix (2026-06-10, P1-6): 종전엔 GA4 active_users(= 방문 활성 사용자, *유료 구독자 아님*)
-  //   × 평균 플랜가로 계산 → 허수 MRR. MRR 정의는 "확정 유료 구독자 × 플랜 가격" 이므로
-  //   Tier3 와 동일하게 누적 planSignups − planChurns(확정 구독 이벤트)로만 계산한다.
-  //   구독 이벤트가 하나도 없으면 undefined → "준비 중" (연동/입력 유도). active_users 로 대체 금지.
-  const plans = (d as { subscriptionPlans?: Array<{ id: string; price: number; isActive: boolean }> }).subscriptionPlans ?? [];
-  const planPriceMap = new Map(plans.map((p) => [p.id, p.price]));
-  const subEntries = c.allEntries as Array<{
-    planSignups?: Record<string, number>;
-    planChurns?: Record<string, number>;
-  }>;
-  const activeByPlan: Record<string, number> = {};
-  let hasSubEvents = false;
-  for (const e of subEntries) {
-    if (e.planSignups) {
-      hasSubEvents = true;
-      for (const [pid, n] of Object.entries(e.planSignups)) {
-        activeByPlan[pid] = (activeByPlan[pid] ?? 0) + (n ?? 0);
-      }
-    }
-    if (e.planChurns) {
-      for (const [pid, n] of Object.entries(e.planChurns)) {
-        activeByPlan[pid] = (activeByPlan[pid] ?? 0) - (n ?? 0);
-      }
-    }
-  }
-  const computedMrr = hasSubEvents
-    ? Math.round(
-        Object.entries(activeByPlan).reduce(
-          (s, [pid, count]) => s + Math.max(0, count) * (planPriceMap.get(pid) ?? 0),
-          0,
-        ),
-      )
-    : null;
-
-  return {
-    "yesterday-sales": { value: yesterdaySales, trendPct: ySalesTrend },
-    "yesterday-customers": { value: yesterdayCustomers, trendPct: yCustTrend },
-    "prime-cost": primeCostCell,
-    "cash-runway": cashRunwayCell,
-    "avg-ticket": { value: avgTicket ?? undefined },
-    "cogs-ratio": { value: cogsRatio ?? undefined },
-    "labor-ratio": { value: laborRatio ?? undefined },
-    "rent-ratio": { value: rentRatio ?? undefined },
-    "inventory-days": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "booking-utilization": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "seat-utilization": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "renewal-rate": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "repeat-rate": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "active-members": { value: activeUsers ?? undefined },
-    "active-users": { value: activeUsers ?? undefined },
-    "cumulative-users": cumulativeUsers != null
-      ? { value: cumulativeUsers }
-      : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    wau:
-      autoWau != null
-        ? { value: autoWau }
-        : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "pmf-score": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    mrr: computedMrr != null
-      ? { value: computedMrr }
-      : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    "net-new":
-      autoNewUsers != null
-        ? { value: autoNewUsers }
-        : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    nrr: { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    arpu: { value: avgTicket ?? undefined },
-  };
-}
