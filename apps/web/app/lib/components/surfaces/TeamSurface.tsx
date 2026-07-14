@@ -433,7 +433,9 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
 
   return (
     <div style={{ padding: "16px 16px 14px", borderRadius: 16, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+      {/* flexWrap: 항목(이름·역할·출근·근속·주간요약·수정)이 많아 좁은 폰에서 한 줄 초과 →
+          줄바꿈 허용해 '수정' 버튼이 카드 밖으로 삐져나가지 않게 (2026-07-14). */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         {/* 이름 영역 클릭 → 직원 상세(시급·근태) 팝업 (2026-07-13) */}
         <button
           type="button"
