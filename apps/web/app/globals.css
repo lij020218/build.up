@@ -391,6 +391,21 @@ textarea:focus-visible {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* 좁은 폰(갤럭시 360px) 오버플로우 백스톱 (2026-07-14): flex 자식의 큰 인라인 min-width 가
+     카드 폭을 초과해 우측 클립을 유발 → 컨테이너 폭을 넘지 않게 캡(min(100%, 160px)).
+     min(100%,…) 라 항상 컨테이너 안에 들어옴(넘침 0). MilestoneToast 내부(min-width:0)는
+     더 구체 선택자가 우선. */
+  [style*="min-width: 200px"],
+  [style*="min-width: 210px"],
+  [style*="min-width: 220px"],
+  [style*="min-width: 240px"],
+  [style*="min-width: 260px"],
+  [style*="min-width: 280px"],
+  [style*="min-width: 300px"],
+  [style*="min-width: 320px"] {
+    min-width: min(100%, 160px) !important;
+  }
 }
 
 @media (max-width: 480px) { /* BP.xs */

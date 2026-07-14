@@ -723,7 +723,9 @@ export function CEOMorningHero({ d }: Props) {
       />
 
       {/* Row 1 — 인사 + 저장 상태 표시 */}
-      <motion.div variants={itemVariants} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "22px", position: "relative", zIndex: 1 }}>
+      {/* flexWrap: 좁은 폰(갤럭시 360px)에서 헤더 min-width(아이콘+가장 넓은 배지+오늘의보고서 버튼)가
+          카드 폭 초과 → 버튼이 카드 밖으로 잘림. 줄바꿈 허용해 버튼이 다음 줄로 (2026-07-14). */}
+      <motion.div variants={itemVariants} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "22px", position: "relative", zIndex: 1, flexWrap: "wrap" as const }}>
         <div style={{
           width: 36, height: 36, borderRadius: 12,
           background: PALETTE.MIDNIGHT_8,
