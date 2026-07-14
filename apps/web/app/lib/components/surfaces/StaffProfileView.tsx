@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, LogOut } from "lucide-react";
 import { styles } from "../../styles";
 import { supabase } from "../../../../lib/supabase";
-import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
+import { FoundOneLogo } from "../ui/FoundOneLogo";
 import { StoreConnectCard } from "../profile/StoreConnectCard";
 import { FeedbackCard } from "../profile/FeedbackCard";
 
@@ -76,10 +76,7 @@ export function StaffProfileView({ storeName, role, ko, onBack, onSignOut, signi
             <ChevronLeft size={18} strokeWidth={2.2} />{ko ? "대시보드" : "Back"}
           </button>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-            <FoundOneSpiralLogo size={24} color="#3A3AC8" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: INK, letterSpacing: "-0.03em" }}>
-              Found<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>One</span>
-            </span>
+            <FoundOneLogo height={24} wordColor={INK} />
           </div>
         </div>
 

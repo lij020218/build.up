@@ -1096,7 +1096,9 @@ export default function StarterStageDemo({
       <InviteOfferModal ko={d.language === "ko"} />
       {showOperationalHero ? (
       <section style={styles.hero}>
-        <div style={styles.eyebrow}>Found.One</div>
+        <div style={{ ...styles.eyebrow, display: "inline-flex" }}>
+          <FoundOneWordmark height={13} color="currentColor" dotColor="currentColor" />
+        </div>
         <div style={styles.title}>
           {isFreshAccount ? copy.home.heroFresh : copy.home.heroActive}
         </div>

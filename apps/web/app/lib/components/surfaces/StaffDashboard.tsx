@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { signOutUser, employmentTypeLabel, jobDutyLabel } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
-import { FoundOneSpiralLogo } from "../ui/FoundOneSpiralLogo";
+import { FoundOneLogo } from "../ui/FoundOneLogo";
 import { StaffProfileView } from "./StaffProfileView";
 import { StaffRightsCard } from "./StaffRightsCard";
 import { StaffAllowanceCard, type AllowanceReq, type AllowanceType, type OvertimeCandidate } from "./StaffAllowanceCard";
@@ -292,10 +292,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   // 직원용 미니 헤더 — 왼쪽: 사장 화면과 동일 로고 아이덴티티 / 오른쪽: 내 정보(연결됐을 때만).
   const renderHeader = (showProfileBtn: boolean) => (
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "2px 4px" }}>
-      <FoundOneSpiralLogo size={26} color="#3A3AC8" style={{ flexShrink: 0 }} />
-      <span style={{ fontSize: 15, fontWeight: 700, color: INK, letterSpacing: "-0.03em" }}>
-        Found<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>One</span>
-      </span>
+      <FoundOneLogo height={26} wordColor={INK} />
       {showProfileBtn && (
         <button
           type="button"
