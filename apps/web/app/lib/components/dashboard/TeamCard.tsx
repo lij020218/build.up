@@ -9,11 +9,15 @@
  *  ─────────────────────────────────────
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, Check } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import type { DashboardComputed } from "../../hooks/useDashboardComputed";
 import { useProfileStore } from "../../stores/profile-store";
+import { supabase } from "../../../../lib/supabase";
+
+// 초대된 직원 (store_members) — 대시보드 팀카드가 세는 대상 (2026-07-14).
+type StoreMember = { member_user_id: string; name: string; role: "staff" | "manager" };
 
 type Props = {
   d: DashboardHook;
@@ -23,6 +27,23 @@ type Props = {
 };
 
 export function TeamCard({ d, c, ko, fmt }: Props) {
+  // ⚠️ 2026-07-14 버그픽스: 종전엔 c.employees(수동 급여 명단, operations-store)만 세어
+  //   초대 링크로 연결된 직원(store_members)이 팀카드에 안 잡혔음 (직원 관리 페이지엔 뜨는데).
+  //   TeamSurface 와 동일하게 get_store_members SECURITY DEFINER RPC 로 조회
+  //   (user_profiles 는 본인전용 RLS라 직접 조인 불가).
+  const [members, setMembers] = useState<StoreMember[]>([]);
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const { data } = await supabase.rpc("get_store_members" as never);
+      if (alive && Array.isArray(data)) setMembers(data as StoreMember[]);
+    })();
+    return () => { alive = false; };
+  }, []);
+  const manualCount = c.employees.length;          // 수동 급여 명단 (시급·4대보험 산정용)
+  const teamCount = members.length > 0 ? members.length : manualCount; // 초대 직원 우선, 없으면 수동
+  const hasPayroll = manualCount > 0;              // 인건비·4대보험은 수동 명단 있을 때만 산정 가능
+
   const payDay = useProfileStore((s) => s.payDay);
   const setPayDay = useProfileStore((s) => s.setPayDay);
   const [editingPayDay, setEditingPayDay] = useState(false);
@@ -68,7 +89,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
               color: "var(--primary)",
             }}
           >
-            {c.employees.length}
+            {teamCount}
             {ko ? "명" : ""}
           </span>
         </div>
@@ -96,7 +117,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
             textAlign: "center" as const,
           }}
         >
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{c.employees.length}</div>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{teamCount}</div>
           <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>
             {ko ? "인원" : "Staff"}
           </div>
@@ -110,7 +131,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
           }}
         >
           <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>
-            {fmt(c.estimatedMonthlyPayroll)}
+            {hasPayroll ? fmt(c.estimatedMonthlyPayroll) : "—"}
           </div>
           <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>
             {ko ? "예상 인건비" : "Labor cost"}
@@ -124,13 +145,37 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
             textAlign: "center" as const,
           }}
         >
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{c.insuredEmployees}</div>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{hasPayroll ? c.insuredEmployees : "—"}</div>
           <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>
             {ko ? "4대보험" : "Insured"}
           </div>
         </div>
       </div>
-      {c.employees.length === 0 && (
+
+      {/* 직원 명단 — 초대된 직원 이름 칩 (사장님: 팀카드에 명단이 안 뜬다) 2026-07-14 */}
+      {members.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          {members.map((m) => (
+            <span
+              key={m.member_user_id}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "5px",
+                fontSize: "12px", fontWeight: 650, color: "#0f172a",
+                background: "rgba(25,25,112,0.05)", padding: "5px 10px", borderRadius: "999px",
+              }}
+            >
+              {m.name}
+              {m.role === "manager" && (
+                <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--primary)" }}>
+                  {ko ? "매니저" : "Mgr"}
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {teamCount === 0 && (
         <button
           type="button"
           onClick={() => d.navigateToSurface("team")}
@@ -153,7 +198,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
       )}
 
       {/* 월급일 설정 — 임금체불 방지 알림용 (사용자 요청 2026-05-09) */}
-      {c.employees.length > 0 && (
+      {teamCount > 0 && (
         <div
           style={{
             display: "flex",
