@@ -197,7 +197,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
                 )}
               </div>
 
-              {/* 푸시 알림 켜기 — 초대장·연차·위기 알림을 브라우저 밖에서도 (2026-07-12) */}
+              {/* 푸시 알림 켜기 — 브라우저 밖에서도 알림 수신 (2026-07-12, 2026-07-14 문구·아이콘 정리) */}
               {isWebPushSupported() && pushState !== "enabled" && (
                 <div style={{ padding: "10px 18px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
                   <button
@@ -209,11 +209,21 @@ export function LanguageProvider(props: { children: ReactNode }) {
                       background: "#191970", color: "white", fontSize: "12.5px", fontWeight: 700,
                       cursor: pushState === "enabling" ? "default" : "pointer",
                       opacity: pushState === "enabling" ? 0.6 : 1,
+                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px",
                     }}
                   >
-                    {pushState === "enabling"
-                      ? (ko ? "설정 중…" : "Enabling…")
-                      : (ko ? "🔔 푸시 알림 켜기 — 초대장·연차·위기 알림" : "🔔 Enable push notifications")}
+                    {pushState === "enabling" ? (
+                      ko ? "설정 중…" : "Enabling…"
+                    ) : (
+                      <>
+                        {/* 서비스 벨 아이콘 (상단 벨 버튼과 동일 shape) — 이모지 대신 (2026-07-14) */}
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden style={{ flexShrink: 0 }}>
+                          <path d="M8 1.5C5.79 1.5 4 3.29 4 5.5V9L2.5 11h11L12 9V5.5C12 3.29 10.21 1.5 8 1.5Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round" fill="none" />
+                          <path d="M6.5 11.5C6.5 12.33 7.17 13 8 13C8.83 13 9.5 12.33 9.5 11.5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+                        </svg>
+                        {ko ? "푸시 알림 켜기" : "Enable push"}
+                      </>
+                    )}
                   </button>
                   {pushState === "failed" && (
                     <div style={{ marginTop: "6px", fontSize: "11px", color: "#b64c4c", lineHeight: 1.4 }}>
