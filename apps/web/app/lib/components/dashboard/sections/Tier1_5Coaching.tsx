@@ -3,15 +3,15 @@
 /**
  * Tier 1.5 — 오늘의 코칭 (작업이 1줄로 직결되는 구체적 카드들).
  *
- * 카드 목록 (위→아래):
- *   (a)   DailyOpsRitualCard       — 오늘의 운영 리추얼 (모든 업종)
- *   (a-1) InventoryOpsCard + TeamCard — 재고·직원 (좌·우 2-up, 사장님 요청 2026-05-07)
- *   (a-2) FoodSafetyComplianceCard — 식약처 위생점검 (food/cafe-dessert 만)
- *   (a-3) PrimeCostCard            — Prime Cost(식자재+인건비) (food/cafe-dessert 만)
- *   (b)   DailyImprovementCard     — Bezos Day-1 nudge (모든 업종)
- *   (b-2) AvgTicketUpsellCard      — 객단가 업셀 (food/cafe/beauty/retail/fitness/education)
- *   (c-1) PolicyFundMatchCard      — 정책자금 매칭 (런웨이 <6개월 위기 시 elevation)
+ * 카드 목록 (위→아래) — 2026-07-13 lean 재설계 반영:
+ *   (a-1) InventoryOpsCard + TeamCard — 재고·직원 (재무 코어 직하로 승격, 2-up)
+ *   (a)   DailyOpsRitualCard       — 오늘의 운영 리추얼 (모든 업종, 홈 유지)
+ *   (a-1.5) MenuProfitabilityCard  — 메뉴 원가·마진 (food/cafe·서비스, 홈 유지)
+ *   (a-2) FoodSafetyComplianceCard — 식약처 위생점검 (food/cafe-dessert, 홈 유지)
+ *   (c-1) PolicyFundMatchCard      — 정책자금 매칭 (self-hide; 매칭 시=곧 받을 돈, 홈 유지)
  *   (c)   StartupHealthSection     — 스타트업 핵심 지표 (startup-tech 만)
+ *   ※ 제거: DailyKpiStrip·CoachingHistory(→이번주점검)·PrimeCostCard(손익 중복)·
+ *          DailyImprovement/AvgTicketUpsell(히어로·리추얼 중복)
  *
  * 자세한 분기 표 → `DASHBOARD_MAP.md`
  */
@@ -20,8 +20,6 @@ import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DailyOpsRitualCard } from "../DailyOpsRitualCard";
 import { FoodSafetyComplianceCard } from "../FoodSafetyComplianceCard";
-import { DailyImprovementCard } from "../DailyImprovementCard";
-import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
 import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
 import { CashZeroDateCard } from "../CashZeroDateCard";
@@ -47,7 +45,6 @@ import { InventoryOpsCard } from "../InventoryOpsCard";
 import { MenuProfitabilityCard } from "../MenuProfitabilityCard";
 import { TeamCard } from "../TeamCard";
 import { CustomerSummaryCard } from "../CustomerSummaryCard";
-import { PrimeCostCard } from "../PrimeCostCard";
 import { SaaSKeyMetricsCard, SubscriptionEnableNudge } from "./Tier3Operations";
 import { useProfileStore } from "../../../stores/profile-store";
 import { shouldShowCardByIndustry } from "../../../industry-card-matrix";
@@ -255,54 +252,12 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 1.5 (a-3) — Prime Cost (외식·카페만 내부 가드, 2026-05-11 추가)
-          글로벌 베스트 프랙티스(Sage·NetSuite·Toast·ChowNow) — 외식 1순위 KPI */}
-      {showByMatrix("prime-cost") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <PrimeCostCard
-            ko={ko}
-            industryCategoryId={d.industryCategoryId}
-            subIndustryId={(d.businessCtx as Record<string, unknown>)?.subIndustryId as string | undefined}
-            ingredientPurchases={c.monthlyCosts.ingredients ?? 0}
-            laborBaseWages={c.monthlyCosts.labor ?? 0}
-            hasEmployees={c.employees.length > 0}
-            totalRevenue={c.totalSales}
-            days={c.workingDays}
-          />
-        </div>
-      )}
+      {/* 프라임코스트·개선/업셀 카드 제거 (2026-07-13 lean 재설계):
+          · 프라임코스트 = 손익 카드가 이미 식재료·인건비 비율 표시 → 완전 중복.
+          · 개선/업셀 = 히어로 "오늘의 한 수" + 리추얼 체크리스트와 "오늘 할 일" 3중 중복.
+          "오늘 무엇을" 니즈는 히어로+리추얼이 담당. 원가 상세는 손익 카드로. */}
 
-      {/* 1.5 (b/b-2) — 매출 추세 기반 분기 (2026-05-12 사장님 결정).
-          동시 노출 X — 한 시점에 1 행동 카드만:
-            · 매출 정체 (WoW -5% ~ +5%) → AvgTicketUpsell (객단가 끌어올리기)
-            · 평상시 / 성장 (WoW > +5%) 또는 위기 외 → DailyImprovement (Bezos Day-1)
-          위기 (WoW < -15%) 는 CEOMorningHero 의 hero 가 흡수 (resolveHero 의 industry-rule 우선순위 1.6). */}
-      {(() => {
-        const isStagnant = c.weeklySalesChange >= -5 && c.weeklySalesChange <= 5;
-        // AvgTicketUpsell 은 외식·카페·뷰티·소매·피트니스·교육 만 의미 있음 (자체 가드 있음)
-        if (isStagnant && showByMatrix("avg-ticket-upsell")) {
-          return (
-            <div className="dash-stagger-item" style={nextStaggerStyle()}>
-              <AvgTicketUpsellCard
-                ko={ko}
-                industryCategoryId={d.industryCategoryId}
-                currentAvgTicket={c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null}
-                menuItems={normalizeMenuItems(d)}
-              />
-            </div>
-          );
-        }
-        if (!hide("daily-improvement")) {
-          return (
-            <div className="dash-stagger-item" style={nextStaggerStyle()}>
-              <DailyImprovementCard ko={ko} industryCategoryId={d.industryCategoryId} />
-            </div>
-          );
-        }
-        return null;
-      })()}
-
-      {/* 1.5 (c-1) — 정책자금 매칭 (평상시·위기 통합 노출. 2026-05 Tier 4 → 1.5 승격) */}
+      {/* 정책자금 매칭 — self-hide(매칭 없으면 미노출)라 "떠 있으면 곧 받을 돈" → 홈 유지 */}
       {!hide("policy-fund-match") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <PolicyFundMatchCard
@@ -379,30 +334,3 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
   );
 }
 
-// ─── helpers ───────────────────────────────────────────────────────
-
-type LooseItem = {
-  id: string;
-  name: string;
-  price?: number;
-  cost?: number;
-  monthlySold?: number;
-  category?: string;
-};
-
-function normalizeMenuItems(d: DashboardHook) {
-  const products = (d.products as LooseItem[] | undefined) ?? [];
-  const unified = (d.unifiedProducts as LooseItem[] | undefined) ?? [];
-  const services =
-    (d as { serviceMenuItems?: LooseItem[] }).serviceMenuItems ?? [];
-  return ([...products, ...unified, ...services] as LooseItem[])
-    .filter((m): m is LooseItem & { price: number } => !!m && m.price != null && m.price > 0)
-    .map((m) => ({
-      id: m.id,
-      name: m.name,
-      price: m.price,
-      cost: m.cost,
-      monthlySold: m.monthlySold,
-      category: m.category,
-    }));
-}
