@@ -1243,18 +1243,7 @@ private struct FoundOneBrandBar<Accessory: View>: View {
             FoundOneSpiralLogo(size: 30, color: BUColor.midnightBright)
                 .frame(width: 30, height: 30)
 
-            Text("Found")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(BUColor.ink)
-                .tracking(-0.48)
-            + Text(".")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(BUColor.midnightInk)
-                .tracking(-0.48)
-            + Text("One")
-                .font(.system(size: 15, weight: .heavy))
-                .foregroundStyle(BUColor.ink)
-                .tracking(-0.48)
+            FoundOneWordmark(height: 15, color: BUColor.ink, dotColor: BUColor.midnightBright)
 
             Spacer(minLength: 0)
             accessory
@@ -1277,11 +1266,8 @@ private struct FoundOneLiquidSidebar: View {
                 FoundOneSpiralLogo(size: 34, color: BUColor.midnightBright)
                     .frame(width: 34, height: 34)
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Found.One")
-                        .font(.system(size: 16, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                        .tracking(-0.45)
+                VStack(alignment: .leading, spacing: 2) {
+                    FoundOneWordmark(height: 16, color: BUColor.ink, dotColor: BUColor.midnightBright)
                     Text("Surface")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(BUColor.inkMuted)

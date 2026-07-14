@@ -444,19 +444,8 @@ private struct BrandMark: View {
             FoundOneSpiralLogo(size: 68, color: BUColor.midnightBright)
                 .frame(width: 72, height: 72)
 
-            // Wordmark — 클래식 세리프(New York) · 비즈니스 격조. "." 은 마크색 액센트.
-            HStack(spacing: 0) {
-                Text("Found")
-                    .font(.system(size: 31, weight: .semibold, design: .serif))
-                    .foregroundStyle(BUColor.ink)
-                Text(".")
-                    .font(.system(size: 31, weight: .semibold, design: .serif))
-                    .foregroundStyle(BUColor.midnightBright)
-                Text("One")
-                    .font(.system(size: 31, weight: .semibold, design: .serif))
-                    .foregroundStyle(BUColor.ink)
-            }
-            .tracking(0.3)
+            // Wordmark — 공식 로고 서체(FoundOneWordmark). "." 은 마크색 액센트.
+            FoundOneWordmark(height: 27, color: BUColor.ink, dotColor: BUColor.midnightBright)
 
             // 부제목
             Text("매일 5초, 사장님 옆에 함께")
