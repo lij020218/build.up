@@ -90,6 +90,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import { FoundOneSpiralLogo } from "./lib/components/ui/FoundOneSpiralLogo";
+import { FoundOneWordmark } from "./lib/components/ui/FoundOneWordmark";
 import { fetchLiveSupportPrograms } from "./lib/services/live-data";
 import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/DashboardContext";
 import { AuroraBackground } from "../components/ui/aurora-background";
@@ -1025,8 +1026,8 @@ export default function StarterStageDemo({
           </svg>
         </button>
         <div className="bup-mobile-topbar-logo">
-          <FoundOneSpiralLogo size={24} color="#3A3AC8" style={{ flexShrink: 0 }} />
-          <span>Found.One</span>
+          <FoundOneSpiralLogo size={24} color="#172A78" style={{ flexShrink: 0 }} />
+          <FoundOneWordmark height={13} style={{ color: "#0f172a" }} />
         </div>
       </header>
     )}
@@ -1040,9 +1041,9 @@ export default function StarterStageDemo({
     {showAppShell && (
       <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} data-mobile-open={mobileNavOpen} aria-label="Navigation">
         <div className="bup-sidebar-logo">
-          <FoundOneSpiralLogo size={28} color="#3A3AC8" style={{ flexShrink: 0 }} />
-          <span className="bup-sidebar-logo-text">
-            Found<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>One</span>
+          <FoundOneSpiralLogo size={28} color="#172A78" style={{ flexShrink: 0 }} />
+          <span className="bup-sidebar-logo-text" style={{ display: "inline-flex", alignItems: "center", color: "#0f172a" }}>
+            <FoundOneWordmark height={15} />
           </span>
         </div>
         {/* 접기/펼치기 토글 — 우측 가장자리 floating */}

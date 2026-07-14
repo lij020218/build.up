@@ -1,16 +1,18 @@
-// Found.One 브랜드 로고 락업 — 나선(fieri) 마크 + "Found.One" 세리프 워드마크.
-//   글씨체: 비즈니스 클래식 세리프 스택(격조·신뢰). 시스템 세리프라 외부 폰트 의존 0 → 빌드/렌더 안전.
-//   "." 은 마크색 액센트. wordColor 기본 currentColor → 부모 색 상속(어두운/밝은 배경 모두 안전).
+// Found.One 브랜드 로고 락업 — fieri 나선 마크 + "FOUND.ONE" 워드마크(공식 서체).
+//   2026-07-14: 세리프 텍스트 → 공식 로고(사장님 제공)로 교체. 마크는 앱의 매끄러운 스파이럴
+//   (제공 SVG 의 추적 초승달보다 고품질), 워드마크는 FoundOneWordmark(F 보정·색상대응).
+//   wordColor 기본 currentColor → 부모 색 상속(어두운/밝은 배경 모두 안전).
 import type { CSSProperties } from "react";
 import { FoundOneSpiralLogo } from "./FoundOneSpiralLogo";
+import { FoundOneWordmark } from "./FoundOneWordmark";
 
-const SERIF =
-  '"Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif';
+// 이미지 기준 색: 미드나잇 네이비 마크/점.
+const MARK_NAVY = "#172A78";
 
 export function FoundOneLogo({
   height = 28,
   direction = "row",
-  markColor = "#3A3AC8",
+  markColor = MARK_NAVY,
   wordColor = "currentColor",
   showWordmark = true,
   style,
@@ -23,32 +25,21 @@ export function FoundOneLogo({
   style?: CSSProperties;
 }) {
   const col = direction === "column";
-  const fontSize = Math.round(height * (col ? 0.62 : 0.9));
+  // 이미지 비례: 워드마크 캡 높이 ≈ 마크 지름의 0.38, 간격 ≈ 0.34.
+  const wordmarkHeight = Math.max(10, Math.round(height * (col ? 0.34 : 0.38)));
   return (
     <span
       style={{
         display: "inline-flex",
         flexDirection: col ? "column" : "row",
         alignItems: "center",
-        gap: col ? Math.round(height * 0.24) : Math.round(height * 0.32),
+        gap: col ? Math.round(height * 0.22) : Math.round(height * 0.34),
         ...style,
       }}
     >
       <FoundOneSpiralLogo size={height} color={markColor} style={{ flexShrink: 0 }} />
       {showWordmark && (
-        <span
-          style={{
-            fontFamily: SERIF,
-            fontSize,
-            fontWeight: 600,
-            letterSpacing: "0.005em",
-            color: wordColor,
-            lineHeight: 1,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Found<span style={{ color: markColor }}>.</span>One
-        </span>
+        <FoundOneWordmark height={wordmarkHeight} color={wordColor} dotColor={markColor} style={{ flexShrink: 0 }} />
       )}
     </span>
   );
