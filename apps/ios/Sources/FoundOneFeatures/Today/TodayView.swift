@@ -57,6 +57,9 @@ public struct TodayView: View {
     @State private var showTeamSheet = false
     @State private var showCustomerSheet = false
     @State private var showBasisSheet = false
+    /// 인앱 알림함 (출근·초대·연차·수당) — 헤더 벨. 데모/비로그인은 자동 비활성(빈 목록). 2026-07-14
+    @StateObject private var notifStore = NotificationsStore(client: BUSupabase.shared.client)
+    @State private var showNotifications = false
     /// storeInfo 변경 감지용 — storeInfo 는 plain let 이라 자체 관찰이 안 되므로
     /// objectWillChange 를 구독해 이 값을 bump → 홈 카드(재고·직원·고객) 즉시 재렌더.
     @State private var storeRevision = 0
@@ -104,8 +107,8 @@ public struct TodayView: View {
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: BUSpacing.shellGap) {
-                // Header (사장님 추가 — 카드 아님)
-                StoreStatusHeader(mock: mock)
+                // Header (사장님 추가 — 카드 아님) + 알림 벨 (2026-07-14)
+                StoreStatusHeader(mock: mock, notifUnread: notifStore.unreadCount, onBell: { showNotifications = true })
                 HomeRitualBanner()
 
                 // ─ 모바일 홈 = 공통 6장 + 업종 핵심 (2026-06-04 사장님 결정) ─
@@ -262,6 +265,12 @@ public struct TodayView: View {
             //   초대·근무표·연차(TeamManagementView)가 기본, 수동 급여 명단은 그 안의 버튼으로.
             TeamManagementView(isSheet: true, storeInfoStore: storeInfo)
         }
+        .sheet(isPresented: $showNotifications) {
+            NotificationsSheet(store: notifStore)
+        }
+        // 인앱 알림 로드 + 실시간 구독 (2026-07-14). 데모/비로그인은 store 가 자동 no-op.
+        .task { await notifStore.start() }
+        .onDisappear { Task { await notifStore.stop() } }
         .sheet(isPresented: $showCustomerSheet) {
             if let si = storeInfo {
                 let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
@@ -602,6 +611,8 @@ public struct TodayView: View {
 
 private struct StoreStatusHeader: View {
     let mock: MockData
+    var notifUnread: Int = 0
+    var onBell: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -617,6 +628,10 @@ private struct StoreStatusHeader: View {
             }
 
             Spacer(minLength: 0)
+
+            if let onBell {
+                NotificationBell(unread: notifUnread, action: onBell)
+            }
         }
         .padding(.top, 4)
     }

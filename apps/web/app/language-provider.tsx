@@ -4,7 +4,20 @@ import type { Language } from "@foundone/shared";
 import { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useNotifications, type NotifItem } from "./notification-context";
+import { useInAppNotifications, type InAppNotif } from "./lib/hooks/useInAppNotifications";
 import { enableWebPush, isWebPushGranted, isWebPushSupported } from "./lib/push-subscribe";
+
+// 알림 url → DashboardSurface (navigateToSurface 가 받는 값). 알 수 없으면 클릭 비활성.
+const NOTIF_SURFACES = new Set(["home", "current", "roadmap", "guides", "franchise", "profile", "analytics", "marketing", "reports", "team"]);
+const surfaceFromUrl = (url: string | null) => (url ?? "").replace(/^\//, "").split(/[/?#]/)[0];
+const timeAgoKo = (iso: string, ko: boolean) => {
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return ko ? "방금 전" : "just now";
+  if (m < 60) return ko ? `${m}분 전` : `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return ko ? `${h}시간 전` : `${h}h ago`;
+  return ko ? `${Math.floor(h / 24)}일 전` : `${Math.floor(h / 24)}d ago`;
+};
 
 type LanguageContextValue = {
   language: Language;
@@ -47,9 +60,21 @@ export function LanguageProvider(props: { children: ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname === "/auth";
   const { notifications } = useNotifications();
+  // DB 인앱 알림함 (출근·초대·연차·수당 — push_dispatch 가 남기는 이벤트) 2026-07-14
+  const { items: events, unreadCount: eventUnread, markRead, markAllRead } = useInAppNotifications();
   const ko = language === "ko";
   const badgeCount = notifications.length;
   const urgentCount = notifications.filter((n: NotifItem) => n.severity === "urgent").length;
+  const totalUnread = badgeCount + eventUnread; // 벨 배지 = 계산 경보 + 미읽음 이벤트
+
+  // 이벤트 알림 클릭 → 읽음 처리 + 해당 surface 로 이동
+  const handleEventClick = (n: InAppNotif) => {
+    void markRead(n.id);
+    const surface = surfaceFromUrl(n.url);
+    if (!NOTIF_SURFACES.has(surface)) return;
+    setNotifOpen(false);
+    window.dispatchEvent(new CustomEvent("bup:navigate-feature", { detail: { surface } }));
+  };
 
   // 알림 클릭 → 해당 surface 로 이동 + (옵션) 셋업 시트 자동 오픈.
   // 처리 자체는 starter-stage-demo 의 'bup:navigate-feature' / CashflowHeroCard 의
@@ -115,13 +140,13 @@ export function LanguageProvider(props: { children: ReactNode }) {
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 1.5C5.79 1.5 4 3.29 4 5.5V9L2.5 11h11L12 9V5.5C12 3.29 10.21 1.5 8 1.5Z"
-                stroke={badgeCount > 0 ? "#1d3557" : "rgba(17,17,17,0.5)"}
+                stroke={totalUnread > 0 ? "#1d3557" : "rgba(17,17,17,0.5)"}
                 strokeWidth="1.3" strokeLinejoin="round" fill="none" />
               <path d="M6.5 11.5C6.5 12.33 7.17 13 8 13C8.83 13 9.5 12.33 9.5 11.5"
-                stroke={badgeCount > 0 ? "#1d3557" : "rgba(17,17,17,0.5)"}
+                stroke={totalUnread > 0 ? "#1d3557" : "rgba(17,17,17,0.5)"}
                 strokeWidth="1.3" strokeLinecap="round" fill="none" />
             </svg>
-            {badgeCount > 0 && (
+            {totalUnread > 0 && (
               <span style={{
                 position: "absolute", top: "-3px", right: "-3px",
                 minWidth: "16px", height: "16px", borderRadius: "999px",
@@ -131,7 +156,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
                 padding: "0 3px", lineHeight: 1,
                 border: "2px solid rgba(255,255,255,0.9)",
               }}>
-                {badgeCount > 9 ? "9+" : badgeCount}
+                {totalUnread > 9 ? "9+" : totalUnread}
               </span>
             )}
           </button>
@@ -193,8 +218,59 @@ export function LanguageProvider(props: { children: ReactNode }) {
                 </div>
               )}
 
-              {/* 알림 없음 */}
-              {notifications.length === 0 && (
+              {/* ── 최근 알림 (DB 이벤트: 출근·초대·연차·수당) 2026-07-14 ── */}
+              {events.length > 0 && (
+                <div>
+                  <div style={{ padding: "11px 18px 5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.5)", letterSpacing: "-0.1px" }}>{ko ? "최근 알림" : "Recent"}</span>
+                    {eventUnread > 0 && (
+                      <button type="button" onClick={() => void markAllRead()} style={{ fontSize: "10.5px", fontWeight: 700, color: "#191970", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                        {ko ? "모두 읽음" : "Mark all read"}
+                      </button>
+                    )}
+                  </div>
+                  {events.map((n: InAppNotif, idx: number) => {
+                    const clickable = NOTIF_SURFACES.has(surfaceFromUrl(n.url));
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => handleEventClick(n)}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(25,25,112,0.04)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = n.is_read ? "transparent" : "rgba(25,25,112,0.03)"; }}
+                        style={{
+                          display: "flex", alignItems: "flex-start", gap: "12px", width: "100%",
+                          padding: "12px 18px", textAlign: "left", fontFamily: "inherit",
+                          border: 0, borderBottom: idx < events.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none",
+                          background: n.is_read ? "transparent" : "rgba(25,25,112,0.03)",
+                          cursor: clickable ? "pointer" : "default", transition: "background 0.15s ease",
+                        }}
+                      >
+                        {/* 미읽음 = 채운 네이비 점, 읽음 = 흐린 테두리 (신호등 색 미사용) */}
+                        <div style={{
+                          width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, marginTop: "4px",
+                          background: n.is_read ? "transparent" : "#191970",
+                          border: n.is_read ? "1.5px solid rgba(0,0,0,0.18)" : "none",
+                          boxShadow: n.is_read ? "none" : "0 0 0 3px rgba(25,25,112,0.14)",
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: n.is_read ? 600 : 700, lineHeight: 1.35, color: "#111" }}>{n.title}</div>
+                          <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.5)", marginTop: "2px", lineHeight: 1.4 }}>{n.body}</div>
+                          <div style={{ fontSize: "10.5px", color: "rgba(0,0,0,0.38)", marginTop: "4px", fontWeight: 600 }}>{timeAgoKo(n.created_at, ko)}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {notifications.length > 0 && (
+                    <div style={{ padding: "9px 18px 4px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.5)" }}>{ko ? "주의 항목" : "Alerts"}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 알림 없음 (계산 경보 + 이벤트 모두 없음) */}
+              {notifications.length === 0 && events.length === 0 && (
                 <div style={{ padding: "28px 18px", textAlign: "center" }}>
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={{ margin: "0 auto 8px", display: "block" }}>
                     <path d="M14 3C9.58 3 6 6.58 6 11V17L4 20h20L22 17V11C22 6.58 18.42 3 14 3Z" stroke="rgba(0,0,0,0.2)" strokeWidth="1.5" strokeLinejoin="round" fill="none" />

@@ -33,6 +33,7 @@ public struct TeamManagementView: View {
     @State private var members: [TeamMember]? = nil     // nil = 로딩 전
     @State private var leaves: [TeamLeaveRequest] = []
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
+    @State private var todayAtt: [OwnerTodayAttendance] = []     // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
     @State private var rules: [TeamScheduleRule] = []
     @State private var categoryId: String? = nil   // 직무 목록 업종 분기 (2026-07-13)
     @State private var loadFailed = false
@@ -112,11 +113,13 @@ public struct TeamManagementView: View {
             async let l = repo.leaveRequests()
             async let r = repo.scheduleRules()
             async let al = repo.allowanceRequests()
+            async let at = repo.ownerTodayAttendance()   // 출근여부 배지 (2026-07-14)
             let (mm, ll, rr, aa) = try await (m, l, r, al)
             members = mm
             leaves = ll
             rules = rr
             allowances = aa
+            todayAtt = (try? await at) ?? []   // 출근 조회 실패는 핵심 로드 무영향 (배지만 미표시)
             loadFailed = false
             // 직무 목록 업종 분기용 — 사장 본인 category (실패 시 공통 직무만 노출)
             if let uid = BUSupabase.shared.currentUser?.id {
@@ -347,6 +350,7 @@ public struct TeamManagementView: View {
             ForEach(members) { member in
                 MemberScheduleCard(
                     member: member,
+                    attToday: todayAtt.first { $0.memberUserId == member.memberUserId },
                     rules: rules.filter { $0.memberUserId == member.memberUserId },
                     onSave: { weekdays, start, end in
                         do {
@@ -565,6 +569,7 @@ private struct InviteCreateCard: View {
 
 private struct MemberScheduleCard: View {
     let member: TeamMember
+    let attToday: OwnerTodayAttendance?   // 오늘 출퇴근 — nil=미출근 (2026-07-14)
     let rules: [TeamScheduleRule]
     /// 저장 결과를 반환 — saved/error 상태를 실제 결과로 표시 (optimistic 금지)
     var onSave: (Set<Int>, String, String) async -> Bool
@@ -599,6 +604,47 @@ private struct MemberScheduleCard: View {
     /// 웹 WEEK_KO 미러 — index = weekday (0=일)
     private static let weekKo = ["일", "월", "화", "수", "목", "금", "토"]
 
+    /// 오늘 출근여부 배지 — 신호등 색 대신 채움 강조: 근무중=채운 네이비 · 완료=소프트 · 미출근=아웃라인 (웹 미러)
+    @ViewBuilder private var attendanceBadge: some View {
+        if let att = attToday {
+            if att.clockOutAt == nil {
+                Label("출근 \(Self.hhmmKST(att.clockInAt))", systemImage: "clock.fill")
+                    .font(.system(size: 10, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8).padding(.vertical, 2.5)
+                    .background(BUColor.midnight, in: Capsule())
+            } else {
+                Label("근무 완료", systemImage: "checkmark.circle.fill")
+                    .font(.system(size: 10, weight: .heavy))
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 8).padding(.vertical, 2.5)
+                    .background(BUColor.midnight.opacity(0.10), in: Capsule())
+            }
+        } else {
+            Text("미출근")
+                .font(.system(size: 10, weight: .heavy))
+                .foregroundStyle(BUColor.inkMuted)
+                .padding(.horizontal, 8).padding(.vertical, 2.5)
+                .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+        }
+    }
+
+    /// ISO timestamptz → KST HH:mm (초 유무 모두 파싱)
+    private static func hhmmKST(_ iso: String) -> String {
+        let parsed: Date? = {
+            let f1 = ISO8601DateFormatter(); f1.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let d = f1.date(from: iso) { return d }
+            let f2 = ISO8601DateFormatter(); f2.formatOptions = [.withInternetDateTime]
+            return f2.date(from: iso)
+        }()
+        guard let date = parsed else { return "" }
+        let out = DateFormatter()
+        out.dateFormat = "HH:mm"
+        out.timeZone = TimeZone(identifier: "Asia/Seoul")
+        out.locale = Locale(identifier: "en_US_POSIX")
+        return out.string(from: date)
+    }
+
     var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
@@ -621,6 +667,7 @@ private struct MemberScheduleCard: View {
                         .foregroundStyle(BUColor.midnight)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(BUColor.midnight.opacity(0.07), in: Capsule())
+                    attendanceBadge   // 오늘 출근여부 (2026-07-14)
                     if let tenure = tenureDays {
                         Text("근속 \(tenure)일차")
                             .font(.system(size: 10, weight: .heavy))

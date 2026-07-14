@@ -305,6 +305,24 @@ public actor TeamRepository {
             .execute().value
     }
 
+    // ── 오늘 전 직원 출퇴근 (사장 — 직원별 "출근함/미출근" 배지용, att_owner_read RLS) 2026-07-14 ──
+    public func ownerTodayAttendance() async throws -> [OwnerTodayAttendance] {
+        try await client
+            .from("attendance_records")
+            .select("member_user_id, clock_in_at, clock_out_at")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .eq("work_date", value: Self.kstToday())
+            .execute().value
+    }
+
+    /// KST 기준 오늘 (YYYY-MM-DD) — work_date 는 KST 자정 기준으로 저장/조회
+    static func kstToday() -> String {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
+        let c = cal.dateComponents([.year, .month, .day], from: Date())
+        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+
     // ── 입사일 지정 (사장 — 근속 계산 기준) ──
     public func setHireDate(memberId: UUID, date: String) async throws {
         struct Patch: Encodable { let hire_date: String }
@@ -375,6 +393,19 @@ public struct StaffAttendance: Decodable, Sendable, Identifiable, Equatable {
     enum CodingKeys: String, CodingKey {
         case id
         case workDate = "work_date"
+        case clockInAt = "clock_in_at"
+        case clockOutAt = "clock_out_at"
+    }
+}
+
+/// 사장 — 오늘 전 직원 출퇴근 (출근여부 배지용, member_user_id 포함). 2026-07-14
+public struct OwnerTodayAttendance: Decodable, Sendable, Equatable {
+    public let memberUserId: UUID
+    public let clockInAt: String
+    public let clockOutAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case memberUserId = "member_user_id"
         case clockInAt = "clock_in_at"
         case clockOutAt = "clock_out_at"
     }

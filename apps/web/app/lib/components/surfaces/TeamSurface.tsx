@@ -52,6 +52,9 @@ type Allowance = { id: string; member_user_id: string; work_date: string; allowa
 const ALLOWANCE_LABEL: Record<AllowanceType, string> = { overtime: "연장근로", night: "야간근로", holiday: "휴일근로", other: "기타" };
 const fmtMinKo = (min: number) => { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`; };
 const ymdLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+// 오늘 출퇴근 — clock_out_at IS NULL 이면 근무 중, 있으면 근무 완료, 행 없으면 미출근 (2026-07-14)
+type Att = { member_user_id: string; clock_in_at: string; clock_out_at: string | null };
+const hhmmKST = (iso: string) => new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul" });
 
 export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: string | null }) {
   const [ownerId, setOwnerId] = useState<string | null>(null);
@@ -60,6 +63,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [allowances, setAllowances] = useState<Allowance[]>([]); // 추가 수당 신청 (2026-07-13)
+  const [todayAtt, setTodayAtt] = useState<Att[]>([]); // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
   const [loading, setLoading] = useState(true);
   const [membersError, setMembersError] = useState(false); // get_store_members RPC 실패 — "직원 없음"과 구분 (2026-07-13)
   // 직원 상세 팝업 (시급·근태·연차 — 2026-07-13)
@@ -69,12 +73,14 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setOwnerId(user.id);
-    const [mRes, rRes, exRes, lRes, aRes] = await Promise.all([
+    const [mRes, rRes, exRes, lRes, aRes, atRes] = await Promise.all([
       supabase.rpc("get_store_members" as never),
       supabase.from("staff_schedule_rules" as never).select("id, member_user_id, weekday, start_time, end_time, active").eq("owner_user_id", user.id),
       supabase.from("staff_schedules" as never).select("id, member_user_id, work_date, start_time, end_time, is_off").eq("owner_user_id", user.id).gte("work_date", ymdLocal()).order("work_date"),
       supabase.from("leave_requests" as never).select("id, member_user_id, leave_type, start_date, end_date, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
       supabase.from("allowance_requests" as never).select("id, member_user_id, work_date, allowance_type, minutes, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
+      // 오늘 출퇴근 — 직원별 "출근함/미출근" 배지용 (owner RLS att_owner_read)
+      supabase.from("attendance_records" as never).select("member_user_id, clock_in_at, clock_out_at").eq("owner_user_id", user.id).eq("work_date", ymdLocal()),
     ]);
     // RPC 에러(마이그레이션 누락·서버 장애)를 "직원 없음"으로 오인하지 않도록 구분 (2026-07-13).
     const mErr = (mRes as { error?: unknown }).error;
@@ -85,6 +91,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setExceptions(((exRes.data ?? []) as Exception[]));
     setLeaves(((lRes.data ?? []) as Leave[]));
     setAllowances(((aRes.data ?? []) as Allowance[]));
+    setTodayAtt(((atRes.data ?? []) as Att[]));
     setLoading(false);
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -305,6 +312,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                 {members.map((m) => (
                   <MemberScheduleEditor
                     key={m.member_user_id} ko={ko} member={m}
+                    attToday={todayAtt.find((a) => a.member_user_id === m.member_user_id) ?? null}
                     memberRules={rules.filter((r) => r.member_user_id === m.member_user_id && r.active)}
                     memberExceptions={exceptions.filter((e) => e.member_user_id === m.member_user_id)}
                     onSave={(wd, s, e) => saveRules(m.member_user_id, wd, s, e)}
@@ -352,8 +360,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   );
 }
 
-function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSave, onSaveException, onDeleteException, onSetHireDate, onOpenDetail }: {
-  ko: boolean; member: Member; memberRules: Rule[]; memberExceptions: Exception[];
+function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExceptions, onSave, onSaveException, onDeleteException, onSetHireDate, onOpenDetail }: {
+  ko: boolean; member: Member; attToday: Att | null; memberRules: Rule[]; memberExceptions: Exception[];
   onSave: (workdays: Set<number>, start: string, end: string) => Promise<boolean>;
   onSaveException: (date: string, isOff: boolean, start: string, end: string) => Promise<boolean>;
   onDeleteException: (id: string) => void;
@@ -440,6 +448,20 @@ function MemberScheduleEditor({ ko, member, memberRules, memberExceptions, onSav
           <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT_MUTED }}>{ko ? "상세 ›" : "Details ›"}</span>
         </button>
         <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: MIDNIGHT_SOFT, padding: "2px 8px", borderRadius: 999 }}>{member.role === "manager" ? (ko ? "매니저" : "Manager") : ko ? "직원" : "Staff"}</span>
+        {/* 오늘 출근여부 — 신호등 색 대신 채움 강조로 구분: 근무중=채운 네이비 · 완료=소프트 · 미출근=아웃라인 (2026-07-14) */}
+        {attToday == null ? (
+          <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, background: "white", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "2px 8px", borderRadius: 999 }}>
+            {ko ? "미출근" : "Not in"}
+          </span>
+        ) : attToday.clock_out_at == null ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 750, color: "white", background: MIDNIGHT, padding: "2px 9px", borderRadius: 999 }}>
+            <Clock3 size={11} strokeWidth={2.4} />{ko ? `출근 ${hhmmKST(attToday.clock_in_at)}` : `In ${hhmmKST(attToday.clock_in_at)}`}
+          </span>
+        ) : (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: MIDNIGHT_SOFT2, padding: "2px 9px", borderRadius: 999 }}>
+            <CheckCircle2 size={11} strokeWidth={2.2} />{ko ? "근무 완료" : "Done"}
+          </span>
+        )}
         {tdays != null && tdays >= 1 && (
           <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: "white", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "2px 8px", borderRadius: 999 }}>
             {ko ? `근속 ${tdays.toLocaleString()}일차` : `Day ${tdays.toLocaleString()}`}
