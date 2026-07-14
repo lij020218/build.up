@@ -165,7 +165,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
           {notifOpen && (
             <div style={{
               position: "absolute", top: "calc(100% + 10px)", right: 0,
-              zIndex: 1001, width: "320px", maxHeight: "440px",
+              zIndex: 1001, width: "min(320px, calc(100vw - 24px))", maxHeight: "440px",
               overflowY: "auto",
               background: "rgba(255,255,255,0.97)",
               backdropFilter: "blur(24px)",
