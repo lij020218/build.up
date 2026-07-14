@@ -78,6 +78,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
+  /* 한국어 줄바꿈: 기본은 CJK 를 음절 단위로 아무데서나 끊어 "매\n출" 처럼 단어 중간이 깨짐.
+     keep-all = 어절(공백) 단위로만 줄바꿈, overflow-wrap = 한 어절이 폭 초과 시에만 강제 분할 (2026-07-14). */
+  word-break: keep-all;
+  overflow-wrap: break-word;
   /* ⚠️ 2026-05-19 모바일 fix: 가로 스크롤 사고 차단 (카드 boxShadow·절대위치·Aurora inset 등이 폭 초과시 가로바 발생). */
   overflow-x: hidden;
 }
@@ -353,6 +357,16 @@ textarea:focus-visible {
   [style*="columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
   }
+
+  /* 마일스톤 토스트: 데스크톱은 상단중앙 고정이나, 폰에선 고정 상단바(52px)+가게명 헤더를
+     덮어 "사..." 잘림처럼 보임. 상단바 아래로 내리고 좌우 여백 full-width (2026-07-14). */
+  .bup-milestone-toast {
+    top: max(64px, calc(env(safe-area-inset-top) + 60px)) !important;
+    left: 12px !important;
+    right: 12px !important;
+    transform: none !important;
+  }
+  .bup-milestone-toast > div { min-width: 0 !important; }
 }
 
 @media (max-width: 480px) { /* BP.xs */

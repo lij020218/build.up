@@ -35,6 +35,7 @@ export function MilestoneToast({ milestone, onDismiss }: Props) {
 
   return (
     <div
+      className="bup-milestone-toast"
       style={{
         position: "fixed",
         top: "24px",

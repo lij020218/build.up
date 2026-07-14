@@ -5,6 +5,7 @@ import { createContext, useContext, useMemo, useState, useEffect, type ReactNode
 import { usePathname } from "next/navigation";
 import { useNotifications, type NotifItem } from "./notification-context";
 import { useInAppNotifications, type InAppNotif } from "./lib/hooks/useInAppNotifications";
+import { useIsMobile } from "./lib/hooks/useIsMobile";
 import { enableWebPush, isWebPushGranted, isWebPushSupported } from "./lib/push-subscribe";
 
 // 알림 url → DashboardSurface (navigateToSurface 가 받는 값). 알 수 없으면 클릭 비활성.
@@ -62,6 +63,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
   const { notifications } = useNotifications();
   // DB 인앱 알림함 (출근·초대·연차·수당 — push_dispatch 가 남기는 이벤트) 2026-07-14
   const { items: events, unreadCount: eventUnread, markRead, markAllRead } = useInAppNotifications();
+  const isMobile = useIsMobile();
   const ko = language === "ko";
   const badgeCount = notifications.length;
   const urgentCount = notifications.filter((n: NotifItem) => n.severity === "urgent").length;
@@ -111,11 +113,14 @@ export function LanguageProvider(props: { children: ReactNode }) {
         />
       )}
 
-      {/* Top-right: bell + language toggle — absolute (페이지 최상단 기준) → 스크롤 시 함께 위로 사라짐 */}
+      {/* Top-right: bell + language toggle.
+          데스크톱: absolute(페이지 최상단, 스크롤 시 사라짐 — 의도된 디자인).
+          모바일: fixed 로 고정 상단바(52px) 우측에 상주 — absolute 면 스크롤 시 상단바와 분리돼
+          벨만 사라지는 문제. safe-area 반영. (2026-07-14) */}
       <div style={{
-        position: "absolute",
-        top: 36,
-        right: 20,
+        position: isMobile ? "fixed" : "absolute",
+        top: isMobile ? "max(9px, env(safe-area-inset-top))" : 36,
+        right: isMobile ? 12 : 20,
         zIndex: 1000,
         display: "flex",
         alignItems: "center",

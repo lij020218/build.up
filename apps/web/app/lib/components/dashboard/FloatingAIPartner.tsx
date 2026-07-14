@@ -522,7 +522,7 @@ const KEYFRAMES = `
 /* ===== FAB (closed state) ===== */
 .fap-fab {
   position: fixed;
-  right: 24px; bottom: 24px;
+  right: 24px; bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px)); /* 홈 인디케이터 회피 (2026-07-14) */
   width: 56px; height: 56px;
   border-radius: 50%;
   border: none;
