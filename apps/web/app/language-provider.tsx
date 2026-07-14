@@ -166,11 +166,14 @@ export function LanguageProvider(props: { children: ReactNode }) {
             )}
           </button>
 
-          {/* Dropdown */}
+          {/* Dropdown — 데스크톱은 벨 기준 absolute; 모바일은 벨 우측에 KO/EN 토글이 있어
+              벨 기준 right:0 이면 폭 320이 화면 왼쪽 밖으로 넘침 → 뷰포트 기준 fixed 로 앵커 (2026-07-14) */}
           {notifOpen && (
             <div style={{
-              position: "absolute", top: "calc(100% + 10px)", right: 0,
-              zIndex: 1001, width: "min(320px, calc(100vw - 24px))", maxHeight: "440px",
+              position: isMobile ? "fixed" : "absolute",
+              top: isMobile ? "max(56px, calc(env(safe-area-inset-top) + 52px))" : "calc(100% + 10px)",
+              right: isMobile ? 12 : 0,
+              zIndex: 1001, width: "min(320px, calc(100vw - 24px))", maxHeight: "min(70vh, 440px)",
               overflowY: "auto",
               background: "rgba(255,255,255,0.97)",
               backdropFilter: "blur(24px)",
