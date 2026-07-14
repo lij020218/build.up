@@ -130,7 +130,30 @@ public struct TodayView: View {
                         ? { showBasisSheet = true } : nil
                 )
 
-                // ③ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
+                // ③ 사용자수(고객 변화) — 성장 선행지표라 매출 직하 always-on.
+                //   2026-07-14 웹 UserActivityCard 정확 미러 (웹 Tier1DailyHub 순서 매출→사용자수→손익→현금 일치).
+                //   회원 로스터(CustomerSummary, ⑥)와 다른 *지표* 카드 — 웹도 둘을 공존시킴(이중 아님).
+                //   데이터 0 이면 마일스톤 '첫 10명' 온보딩 empty (가짜 없음).
+                UserActivityCard(
+                    totalCustomers: totalCustomers,
+                    thisMonthCustomers: thisMonthCustomers,
+                    dailyAvgCustomers: dailyAvgCustomers,
+                    avgTicket: avgTicket
+                )
+
+                // ④ 손익 (2026-06-04 홈 신규 편입) — 월 환산 매출 vs 월 비용 (실데이터).
+                //   웹 순서 손익→현금 미러 (2026-07-14: 종전 현금→손익 에서 스왑).
+                PLHeroCard(
+                    totalSales: ratios.monthlyRevenueEquivalent,
+                    totalCosts: mock.costs.total,
+                    ingredientRatio: ratios.ingredientRatio,
+                    laborRatio: ratios.laborRatio,
+                    rentRatio: ratios.rentRatio,
+                    thresholds: IndustryThresholds.thresholds(for: mock.category),
+                    categoryId: mock.category.benchmarkCategoryId
+                )
+
+                // ⑤ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
                 if let cs = cashflowStore {
                     CashflowSection(
                         store: cs,
@@ -146,18 +169,7 @@ public struct TodayView: View {
                     )
                 }
 
-                // ④ 손익 (2026-06-04 홈 신규 편입) — 월 환산 매출 vs 월 비용 (실데이터)
-                PLHeroCard(
-                    totalSales: ratios.monthlyRevenueEquivalent,
-                    totalCosts: mock.costs.total,
-                    ingredientRatio: ratios.ingredientRatio,
-                    laborRatio: ratios.laborRatio,
-                    rentRatio: ratios.rentRatio,
-                    thresholds: IndustryThresholds.thresholds(for: mock.category),
-                    categoryId: mock.category.benchmarkCategoryId
-                )
-
-                // ⑤ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
+                // ⑥ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
                 if mock.category.showsCustomerCardInsteadOfInventory {
                     let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
                     CustomerSummaryCard(
@@ -173,18 +185,19 @@ public struct TodayView: View {
                     )
                 }
 
-                // ⑤.5 메뉴·서비스 수익성 (음식·카페·서비스) — 로드맵 menu-design 입력(판매가·원가)을
-                //   per-item 원가율·마진으로 표시. 재고(식자재)와 분리. 메뉴 입력 전이면 미노출.
-                if isMenuCardIndustry && !menuProducts.isEmpty {
-                    MenuProfitabilityCard(items: menuProducts, category: mock.category)
-                }
-
-                // ⑥ 직원 관리 (전 업종)
+                // ⑦ 직원 관리 (전 업종) — 웹은 재고·팀을 한 관리 그룹으로 묶음 → 팀을 재고 직후로 올림
+                //   (2026-07-14: 종전 메뉴 뒤 → 재고 옆. 웹 opsCards 그룹 미러).
                 TeamCard(
                     employees: realEmployees,
                     manualLaborCost: mock.costs.labor,
                     onManage: { showTeamSheet = true }
                 )
+
+                // ⑧ 메뉴·서비스 수익성 (음식·카페·서비스) — 로드맵 menu-design 입력(판매가·원가)을
+                //   per-item 원가율·마진으로 표시. 재고(식자재)와 분리. 메뉴 입력 전이면 미노출.
+                if isMenuCardIndustry && !menuProducts.isEmpty {
+                    MenuProfitabilityCard(items: menuProducts, category: mock.category)
+                }
 
                 // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
                 IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)
