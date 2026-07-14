@@ -104,14 +104,14 @@ export const RADIUS = {
 
 export const shell: React.CSSProperties = {
   display: "grid",
-  gap: "18px",
+  gap: "var(--dash-gap, 18px)",
   fontFamily:
     '"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 };
 
 export const heroPanel: React.CSSProperties = {
   borderRadius: "20px",
-  padding: "24px",
+  padding: "var(--dash-card-pad, 24px)",
   background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
@@ -228,7 +228,7 @@ export const headlineGrid: React.CSSProperties = {
 
 export const headlineCard: React.CSSProperties = {
   borderRadius: "16px",
-  padding: "20px",
+  padding: "var(--dash-card-pad, 20px)",
   background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
@@ -273,7 +273,7 @@ export const survivalGrid: React.CSSProperties = {
 
 export const opsCard: React.CSSProperties = {
   borderRadius: "20px",
-  padding: "22px",
+  padding: "var(--dash-card-pad, 22px)",
   background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",

@@ -950,8 +950,17 @@ export default function StarterStageDemo({
         .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn { justify-content: flex-start; }
         .bup-sidebar-toggle { display: none !important; }   /* collapse 토글은 모바일에서 숨김 */
 
-        /* main — 좌측 padding 0 + 상단바 높이만큼 top padding */
-        .bup-shell-sidebar { padding-left: 16px !important; padding-top: 64px !important; }
+        /* main — 모바일은 full-width + 좌우 대칭 16px (2026-07-14: 종전 width calc(100vw-32px)
+           +margin auto(16) +padding-left 16 = 좌 32/우 32 비대칭 잔차로 카드가 우측 치우침 → 시정).
+           edge-to-edge 로 카드 폭 확보 = iOS 컴팩트 톤. 상단바 높이만큼 top padding. */
+        .bup-shell-sidebar {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+          padding-top: 64px !important;
+        }
 
         /* 상단바 (햄버거 + 로고) */
         .bup-mobile-topbar {

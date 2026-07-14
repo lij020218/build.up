@@ -350,6 +350,13 @@ textarea:focus-visible {
   /* Marketing surface */
   .marketing-kpi-grid { grid-template-columns: 1fr !important; }
 
+  /* 대시보드 컴팩트 (2026-07-14): 공용 카드 패딩·간격을 폰에서 축소 → iOS 톤.
+     데스크톱은 operationalStyles 의 var() fallback(24/22/20·18) 유지, 여기서만 재정의. */
+  :root {
+    --dash-card-pad: 16px;
+    --dash-gap: 12px;
+  }
+
   /* ── 모바일 그리드 백스톱 (2026-07-14) ─────────────────────────────────
      스테이지·카드 상당수가 반응형 클래스를 안 붙인 채 인라인 `gridTemplateColumns`
      로 2~4열을 하드코딩 → 폰에서 데스크톱 폭 유지 → overflow-x:hidden 이 클립
