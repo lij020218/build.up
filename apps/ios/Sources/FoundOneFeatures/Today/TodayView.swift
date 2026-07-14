@@ -60,6 +60,8 @@ public struct TodayView: View {
     /// 인앱 알림함 (출근·초대·연차·수당) — 헤더 벨. 데모/비로그인은 자동 비활성(빈 목록). 2026-07-14
     @StateObject private var notifStore = NotificationsStore(client: BUSupabase.shared.client)
     @State private var showNotifications = false
+    /// 초대된 직원(store_members) — 팀카드 인원·명단. 종전 팀카드는 수동 급여명단만 세어 초대직원 누락 (2026-07-14)
+    @State private var invitedStaff: [TeamMember] = []
     /// storeInfo 변경 감지용 — storeInfo 는 plain let 이라 자체 관찰이 안 되므로
     /// objectWillChange 를 구독해 이 값을 bump → 홈 카드(재고·직원·고객) 즉시 재렌더.
     @State private var storeRevision = 0
@@ -192,6 +194,7 @@ public struct TodayView: View {
                 //   (2026-07-14: 종전 메뉴 뒤 → 재고 옆. 웹 opsCards 그룹 미러).
                 TeamCard(
                     employees: realEmployees,
+                    invitedNames: invitedStaff.map(\.name),
                     manualLaborCost: mock.costs.labor,
                     onManage: { showTeamSheet = true }
                 )
@@ -270,6 +273,7 @@ public struct TodayView: View {
         }
         // 인앱 알림 로드 + 실시간 구독 (2026-07-14). 데모/비로그인은 store 가 자동 no-op.
         .task { await notifStore.start() }
+        .task { await loadInvitedStaff() }
         .onDisappear { Task { await notifStore.stop() } }
         .sheet(isPresented: $showCustomerSheet) {
             if let si = storeInfo {
@@ -575,6 +579,14 @@ public struct TodayView: View {
     private var realMembers: [BUMember] {
         guard let si = storeInfo, si.isLoaded else { return [] }
         return si.state.members
+    }
+
+    /// 초대된 직원(store_members) 로드 — 팀카드 인원·명단. get_store_members RPC(사장 본인 소유).
+    ///   데모/비로그인은 RPC 실패 → 빈 배열(수동 급여명단으로 fallback). 2026-07-14
+    private func loadInvitedStaff() async {
+        guard storeInfo != nil else { return }
+        let repo = TeamRepository(supabase: BUSupabase.shared.client)
+        invitedStaff = (try? await repo.members()) ?? []
     }
 
     private var dailyKpiCells: [KpiCellData] {

@@ -168,6 +168,9 @@ public struct InventoryOpsCard: View {
 public struct TeamCard: View {
 
     let employees: [BUEmployee]
+    /// 초대 링크로 연결된 직원(store_members) 이름 — 팀카드 인원·명단 기준 (2026-07-14 버그픽스:
+    /// 종전엔 employees[수동 급여 명단]만 세어 초대 직원이 안 잡혔음. 웹 TeamCard 와 동기).
+    let invitedNames: [String]
     /// 직원 미등록 시 비용카드 인건비를 fallback으로 사용 (mock 혹은 수동 입력값)
     let manualLaborCost: Double
     let onManage: (() -> Void)?
@@ -175,16 +178,21 @@ public struct TeamCard: View {
 
     public init(
         employees: [BUEmployee],
+        invitedNames: [String] = [],
         manualLaborCost: Double = 0,
         onManage: (() -> Void)? = nil,
         ko: Bool = true
     ) {
         self.employees = employees
+        self.invitedNames = invitedNames
         self.manualLaborCost = manualLaborCost
         self.onManage = onManage
         self.ko = ko
     }
 
+    // 초대 직원 우선, 없으면 수동 급여 명단 수. 인건비·보험은 수동 급여 데이터 있을 때만 산정.
+    private var teamCount: Int { invitedNames.count > 0 ? invitedNames.count : employees.count }
+    private var hasPayroll: Bool { !employees.isEmpty }
     private var totalPayroll: Double {
         if employees.isEmpty { return manualLaborCost }
         return employees.reduce(0) { $0 + $1.monthlyBurden }
@@ -195,13 +203,23 @@ public struct TeamCard: View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
                 header
-                if employees.isEmpty {
+                if teamCount == 0 {
                     emptyState
                 } else {
+                    if !invitedNames.isEmpty { rosterRow }
                     statsRow
                 }
             }
         }
+    }
+
+    // 직원 명단 (초대 직원 이름) — 사장님 '팀카드에 명단 안 뜬다'. Text 로 자연 줄바꿈.
+    private var rosterRow: some View {
+        Text(invitedNames.joined(separator: " · "))
+            .font(.system(size: 12.5, weight: .semibold))
+            .foregroundStyle(BUColor.inkSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var header: some View {
@@ -217,9 +235,9 @@ public struct TeamCard: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(ko ? "팀 관리" : "Team")
                     .buSectionEyebrowStyle()
-                Text(employees.isEmpty
+                Text(teamCount == 0
                      ? (ko ? "직원 없음" : "No staff")
-                     : (ko ? "직원 \(employees.count)명" : "\(employees.count) members"))
+                     : (ko ? "직원 \(teamCount)명" : "\(teamCount) members"))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(BUColor.ink)
             }
@@ -233,16 +251,19 @@ public struct TeamCard: View {
     }
 
     private var statsRow: some View {
-        HStack(spacing: 8) {
+        // 인건비·4대보험은 수동 급여 명단(시급·보험)이나 비용카드 인건비가 있을 때만 산정 —
+        //   초대 직원만 있고 급여 데이터 없으면 '—' (0 위장 금지, 웹과 동기).
+        let hasLabor = hasPayroll || manualLaborCost > 0
+        return HStack(spacing: 8) {
             StatTile(
                 label: ko ? "월 인건비" : "Monthly",
-                value: formatKRWCompact(totalPayroll),
-                unit: ko ? "원" : ""
+                value: hasLabor ? formatKRWCompact(totalPayroll) : "—",
+                unit: hasLabor ? (ko ? "원" : "") : ""
             )
             StatTile(
                 label: ko ? "4대보험" : "Insured",
-                value: "\(insuredCount) / \(employees.count)",
-                unit: ko ? "명" : ""
+                value: hasPayroll ? "\(insuredCount) / \(employees.count)" : "—",
+                unit: hasPayroll ? (ko ? "명" : "") : ""
             )
         }
     }
