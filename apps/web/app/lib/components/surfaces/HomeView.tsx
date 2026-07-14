@@ -61,7 +61,8 @@ export function HomeView() {
       <div style={styles.sectionTitle}>{language === "ko" ? "홈" : "Home"}</div>
 
       {/* ── Pre-launch home content ── */}
-      <div style={styles.homeShowcase}>
+      {/* home-showcase-grid: globals.css @media(≤768) 가 2열→1열 (HOME_GRID_COLUMNS 340px min 오버플로우 방지, 2026-07-14 클래스 배선) */}
+      <div style={styles.homeShowcase} className="home-showcase-grid">
         <article style={styles.homeMainPanel} className="dash-stagger-item" aria-label={ko ? "홈 메인 패널" : "Home main panel"} >
           <div className="dash-stagger-item" style={homeStagger(0)}>
             <div style={styles.homePanelEyebrow}>

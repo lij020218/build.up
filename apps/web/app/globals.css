@@ -339,6 +339,20 @@ textarea:focus-visible {
 @media (max-width: 640px) { /* BP.sm */
   /* Marketing surface */
   .marketing-kpi-grid { grid-template-columns: 1fr !important; }
+
+  /* ── 모바일 그리드 백스톱 (2026-07-14) ─────────────────────────────────
+     스테이지·카드 상당수가 반응형 클래스를 안 붙인 채 인라인 `gridTemplateColumns`
+     로 2~4열을 하드코딩 → 폰에서 데스크톱 폭 유지 → overflow-x:hidden 이 클립
+     (탭 잘림·카드 겹침). 폰(≤sm)에서 그런 다열 그리드를 1열로 강제한다.
+     · column 속성에 anchor → grid-template-rows 등 오작동 방지
+     · repeat(5+)·7열(요일 캘린더 등)은 대상 제외 — 의도적 고정열 보존
+     · 컴포넌트가 자체 반응형 클래스를 쓰면 그 규칙이 이 백스톱과 함께/우선 동작 */
+  [style*="columns: repeat(2,"],
+  [style*="columns: repeat(3,"],
+  [style*="columns: repeat(4,"],
+  [style*="columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 @media (max-width: 480px) { /* BP.xs */
