@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Loader2, X, MessageSquare } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 /**
  * FloatingAIPartner — 사장님이 언제든 말 거는 AI 경영 파트너 (오른쪽 하단 떠있는 챗봇)
@@ -146,6 +147,28 @@ export function FloatingAIPartner({ ko, context }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 모바일: 아래로 스크롤 시 FAB 를 슬라이드 아웃(콘텐츠 가림 방지), 위로 스크롤 시 복귀 (2026-07-14)
+  const isMobile = useIsMobile();
+  const [fabHidden, setFabHidden] = useState(false);
+  useEffect(() => {
+    if (!isMobile) { setFabHidden(false); return; }
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y > lastY + 6 && y > 160) setFabHidden(true);        // 아래로 → 숨김
+        else if (y < lastY - 6) setFabHidden(false);             // 위로 → 표시
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isMobile]);
+
   const suggestions = ko ? SUGGESTIONS_KO : SUGGESTIONS_EN;
   const limitReached = remaining !== null && remaining <= 0;
 
@@ -276,7 +299,7 @@ export function FloatingAIPartner({ ko, context }: Props) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label={ko ? "AI 파트너에게 묻기" : "Ask AI Partner"}
-          className="fap-fab"
+          className={fabHidden ? "fap-fab fap-fab--hidden" : "fap-fab"}
         >
           {/* 펄스 글로우 (배경 ring) */}
           <span className="fap-fab-pulse" aria-hidden />
@@ -532,6 +555,13 @@ const KEYFRAMES = `
   display: flex; align-items: center; justify-content: center;
   padding: 0;
   animation: fapFadeIn .42s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform .28s cubic-bezier(0.16, 1, 0.3, 1), opacity .28s ease;
+}
+/* 모바일 스크롤 다운 시 콘텐츠 가림 방지 — 아래로 슬라이드 아웃, 위로 스크롤 시 복귀 (2026-07-14) */
+.fap-fab--hidden {
+  transform: translateY(160%) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
 }
 .fap-fab-pulse {
   position: absolute; inset: 0;

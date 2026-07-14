@@ -51,6 +51,12 @@
   box-sizing: border-box;
 }
 
+/* 미디어 오버플로우 방지 — 이미지·영상·캔버스가 컨테이너/뷰포트를 넘지 않도록 (2026-07-14) */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
 /* ── Pretendard Typography System ── */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
@@ -367,6 +373,15 @@ textarea:focus-visible {
     transform: none !important;
   }
   .bup-milestone-toast > div { min-width: 0 !important; }
+
+  /* 와이드 테이블: 폰 폭 초과 시 클립(overflow-x:hidden) 대신 가로 스크롤 (2026-07-14).
+     display:block → 테이블이 스크롤 가능한 블록이 되고 내부 행/셀은 익명 테이블로 유지. */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (max-width: 480px) { /* BP.xs */
