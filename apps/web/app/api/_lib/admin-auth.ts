@@ -31,6 +31,12 @@ export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
     return { ok: false, status: 403, error: "관리자 권한이 없습니다." };
   }
 
+  // 1.5) 이메일 확인(email_confirmed_at) 필수 — Supabase '이메일 확인' 이 꺼져 있어도
+  //   미확인 계정이 관리자 이메일을 사칭해 통과하는 경로를 코드 레벨에서 차단(방어심층).
+  if (!auth.emailConfirmed) {
+    return { ok: false, status: 403, error: "관리자 권한이 없습니다." };
+  }
+
   // 2) 서버 allowlist 매칭
   const admins = getAdminEmails();
   if (admins.length === 0 || !admins.includes(email)) {

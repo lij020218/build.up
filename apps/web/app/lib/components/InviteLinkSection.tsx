@@ -25,6 +25,18 @@ const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
 
+// 초대 코드 생성 — 암호학적 난수(2026-07-15 보안). 종전 Math.random().toString(36).slice(2,10)
+//   은 예측 가능한 PRNG + 가끔 8자 미만 → 열거로 타 사업장 합류 위험. crypto.getRandomValues 로
+//   Crockford base32(혼동 문자 I·L·O·U 제외) 16자 = 80비트 → 열거 불가능(레이트리밋과 무관).
+const INVITE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // 32자
+function generateInviteCode(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) out += INVITE_ALPHABET[bytes[i] & 31];
+  return out;
+}
+
 export function InviteLinkSection({ ko }: { ko: boolean }) {
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [code, setCode] = useState<string | null>(null);
@@ -49,7 +61,7 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
         return;
       }
       const trimmedEmail = email.trim().toLowerCase();
-      const newCode = Math.random().toString(36).slice(2, 10).toUpperCase();
+      const newCode = generateInviteCode();
       const { error } = await supabase.from("store_invites" as never).insert({
         owner_user_id: user.id,
         invite_code: newCode,

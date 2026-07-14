@@ -177,9 +177,11 @@ public actor TeamRepository {
     }
 
     private static func generateCode() -> String {
-        // 웹과 동일 규격: 대문자 영숫자 8자리 (혼동 문자 제외 없음 — 웹 미러 유지)
-        let chars = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-        return String((0..<8).map { _ in chars.randomElement()! })
+        // 웹 generateInviteCode 미러(2026-07-15 보안): Crockford base32(혼동 문자 I·L·O·U 제외)
+        //   16자 = 80비트. randomElement() 는 SystemRandomNumberGenerator(암호학적 안전) 사용.
+        //   종전 8자(36^8≈41비트)는 만료 전 열거 여지가 있어 강화.
+        let chars = Array("0123456789ABCDEFGHJKMNPQRSTVWXYZ")
+        return String((0..<16).map { _ in chars.randomElement()! })
     }
 
     // ── 초대 수락 (직원 — 코드 입력) ──

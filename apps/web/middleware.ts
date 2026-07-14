@@ -47,7 +47,11 @@ export function middleware(request: NextRequest) {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' https: wss:",
+      // 2026-07-15 보안: connect-src 를 'https:' 와일드카드 → 명시 allowlist 로 축소.
+      //   목적: XSS 가 생기더라도 탈취 토큰을 임의 호스트로 exfil(fetch/beacon/ws) 하지 못하게 봉쇄.
+      //   실제 브라우저 연결처만 허용 — 클라이언트는 외부로 직접 fetch 하지 않고 전부 /api(self)
+      //   경유. 나머지는 SDK: Supabase(REST+realtime wss)·Sentry(telemetry)·PortOne(결제)·Kakao(지도).
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.portone.io https://dapi.kakao.com https://*.daumcdn.net https://t1.daumcdn.net",
       "media-src 'self'",
       "object-src 'none'",
       "worker-src 'self' blob:",

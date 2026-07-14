@@ -13,6 +13,8 @@ if (process.env.NODE_ENV !== "production") {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // 2026-07-15 보안: 프레임워크 핑거프린팅 방지 — `X-Powered-By: Next.js` 헤더 제거.
+  poweredByHeader: false,
   transpilePackages: ["@foundone/shared", "@foundone/ai"],
   async redirects() {
     return [

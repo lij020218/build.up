@@ -115,6 +115,10 @@ export async function POST(request: Request) {
       signal: controller.signal,
       // Vercel/Next 의 fetch 캐시 회피
       cache: "no-store",
+      // 2026-07-15 보안(SSRF): 리다이렉트 거부. assertSafeHttpsUrl 은 첫 홉만 검증하므로,
+      //   fetch 가 3xx 를 따라가면 공격자가 302 Location: http://169.254.169.254 로 내부망을
+      //   찌를 수 있다. 정상 메트릭 API 는 200 JSON 을 반환하므로 리다이렉트는 항상 거부한다.
+      redirect: "error",
     });
   } catch (e) {
     clearTimeout(timer);

@@ -118,6 +118,9 @@ async function fetchEndpoint(
       },
       signal: controller.signal,
       cache: "no-store",
+      // 2026-07-15 보안(SSRF): 리다이렉트 거부. assertSafeHttpsUrl 은 첫 홉만 검증하므로
+      //   fetch 가 3xx 를 따라가면 사설 IP(169.254.169.254 등)로 우회 가능 → 항상 거부.
+      redirect: "error",
     });
     const text = await response.text();
     let parsed: unknown = null;
