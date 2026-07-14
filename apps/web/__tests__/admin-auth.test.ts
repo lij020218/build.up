@@ -18,12 +18,18 @@ const mockAdmins = getAdminEmails as unknown as ReturnType<typeof vi.fn>;
 describe("requireAdmin", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("allowlist 포함 → ok (대소문자 무시)", async () => {
-    mockApiUser.mockResolvedValue({ ok: true, userId: "u1", email: "Lij020218@Naver.com" });
+  it("allowlist 포함 + 이메일 확인됨 → ok (대소문자 무시)", async () => {
+    mockApiUser.mockResolvedValue({ ok: true, userId: "u1", email: "Lij020218@Naver.com", emailConfirmed: true });
     mockAdmins.mockReturnValue(["lij020218@naver.com"]);
     const r = await requireAdmin(req);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.email).toBe("lij020218@naver.com");
+  });
+
+  it("이메일 미확인(email_confirmed_at 없음) → 403 (관리자 이메일 사칭 차단)", async () => {
+    mockApiUser.mockResolvedValue({ ok: true, userId: "u1b", email: "lij020218@naver.com", emailConfirmed: false });
+    mockAdmins.mockReturnValue(["lij020218@naver.com"]);
+    expect(await requireAdmin(req)).toMatchObject({ ok: false, status: 403 });
   });
 
   it("allowlist 미포함 → 403", async () => {
