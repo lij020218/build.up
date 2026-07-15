@@ -264,6 +264,11 @@ export default function AuthPage() {
   const t = txt(language);
   const features = getFeatures(language);
 
+  // 가입 제출 게이트 — [필수] 약관 동의 전에는 제출 불가. disabled·커서·불투명도가 같은 근거를
+  //   쓰도록 한 곳에서 파생 (종전엔 disabled 만 걸리고 스타일은 그대로라 "눌리는 것처럼" 보였음).
+  const signupBlocked = mode === "signup" && !agreedRequired;
+  const submitDisabled = loading || signupBlocked;
+
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
       {/* ━━━ Nav ━━━ */}
@@ -540,9 +545,34 @@ export default function AuthPage() {
                 />
               )}
 
+              {/* [필수] 동의 — 제출 버튼 "위". 동의가 제출의 전제이므로 버튼보다 먼저 읽혀야 하고,
+                  체크해야 아래 버튼이 활성화되는 인과가 눈에 보인다. (종전엔 버튼 아래에 있어
+                  왜 버튼이 안 눌리는지 알 수 없었음.) */}
+              {mode === "signup" && (
+                <label style={{
+                  display: "flex", alignItems: "flex-start", gap: 8,
+                  fontSize: 12.5, color: "rgba(255,255,255,0.7)", lineHeight: 1.55,
+                  margin: "10px 2px 2px", cursor: "pointer",
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={agreedRequired}
+                    onChange={(e) => setAgreedRequired(e.target.checked)}
+                    style={{ marginTop: 2, width: 16, height: 16, accentColor: "#5b7cfa", flexShrink: 0, cursor: "pointer" }}
+                  />
+                  <span>
+                    <span style={{ color: "#9db4ff", fontWeight: 700 }}>[필수]</span>{" "}
+                    <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "underline" }}>이용약관</a>
+                    {" "}및{" "}
+                    <a href="/legal/privacy" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "underline" }}>개인정보 수집·이용</a>
+                    에 동의합니다.
+                  </span>
+                </label>
+              )}
+
               <button
                 type="button"
-                disabled={loading || (mode === "signup" && !agreedRequired)}
+                disabled={submitDisabled}
                 onClick={
                   mode === "signup"
                     ? handleSignup
@@ -563,9 +593,9 @@ export default function AuthPage() {
                   fontSize: 15,
                   fontWeight: 600,
                   letterSpacing: "-0.005em",
-                  boxShadow: "0 2px 10px rgba(30,42,85,0.32)",
-                  cursor: loading ? "wait" : "pointer",
-                  opacity: loading ? 0.6 : 1,
+                  boxShadow: submitDisabled ? "none" : "0 2px 10px rgba(30,42,85,0.32)",
+                  cursor: loading ? "wait" : signupBlocked ? "not-allowed" : "pointer",
+                  opacity: submitDisabled ? 0.45 : 1,
                   transition: "opacity 0.2s"
                 }}
               >
@@ -651,28 +681,6 @@ export default function AuthPage() {
                 >
                   ← 로그인으로 돌아가기
                 </button>
-              )}
-
-              {mode === "signup" && (
-                <label style={{
-                  display: "flex", alignItems: "flex-start", gap: 8,
-                  fontSize: 12.5, color: "rgba(255,255,255,0.7)", lineHeight: 1.55,
-                  margin: "6px 2px 0", cursor: "pointer",
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={agreedRequired}
-                    onChange={(e) => setAgreedRequired(e.target.checked)}
-                    style={{ marginTop: 2, width: 16, height: 16, accentColor: "#5b7cfa", flexShrink: 0, cursor: "pointer" }}
-                  />
-                  <span>
-                    <span style={{ color: "#9db4ff", fontWeight: 700 }}>[필수]</span>{" "}
-                    <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "underline" }}>이용약관</a>
-                    {" "}및{" "}
-                    <a href="/legal/privacy" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "underline" }}>개인정보 수집·이용</a>
-                    에 동의합니다.
-                  </span>
-                </label>
               )}
 
               {mode === "login" && (
