@@ -722,7 +722,10 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   //   (focus 복귀·realtime 재조회가 flush→connectAndLoad 순이라, 뒤에 두면 flush 가 이미 부활시킴).
   //   reset 감지 시 wipe+reload 하고 true 반환(호출부는 flush·load 중단). 표/네트워크 부재 → false.
   const detectResetAndWipe = async (uid: string): Promise<boolean> => {
-    const SEEN_KEY = "__foundone_reset_seen";
+    // 계정별 키 — 전역 키는 한 브라우저를 A·B 가 함께 쓸 때 A 의 seen 이 B 의 감지를 덮어
+    //   B 의 부활 차단을 무력화했다(계정 격리 불변식 위반, 2026-07-15 수정).
+    const SEEN_KEY = `__foundone_reset_seen:${uid}`;
+    const LEGACY_SEEN_KEY = "__foundone_reset_seen";
     let serverResetAt: string | null = null;
     try {
       const markerRes = await (supabase as unknown as {
@@ -732,7 +735,20 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     } catch { return false; }
     if (!serverResetAt) return false;
     let seen: string | null = null;
-    try { seen = window.localStorage.getItem(SEEN_KEY); } catch { /* */ }
+    try {
+      seen = window.localStorage.getItem(SEEN_KEY);
+      // 전역 키 → 계정별 키 1회 승계. 이걸 안 하면 배포 직후 기존 사용자는 seen=null 이 되어
+      //   "다른 기기에서 초기화됨"으로 오판, 멀쩡한 로컬을 wipe 하고 강제 온보딩된다.
+      //   승계 후 전역 키는 제거 — 이후엔 계정별로만 판단(격리 회복).
+      if (seen === null) {
+        const legacy = window.localStorage.getItem(LEGACY_SEEN_KEY);
+        if (legacy) {
+          seen = legacy;
+          window.localStorage.setItem(SEEN_KEY, legacy);
+          window.localStorage.removeItem(LEGACY_SEEN_KEY);
+        }
+      }
+    } catch { /* */ }
     if (seen && serverResetAt <= seen) return false;  // 이미 본 초기화 — 정상.
     // reset_at 이 더 최신 = 다른 기기에서 초기화됨. 로컬에 실제 데이터 있을 때만 wipe(빈/새 브라우저 제외).
     const hasLocalData = (() => {

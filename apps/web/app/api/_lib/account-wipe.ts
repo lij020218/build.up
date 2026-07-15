@@ -57,10 +57,17 @@ export const USER_TABLES = [
   //   marketing_trend_cache 는 user_id 없는 업종 공용 캐시라 제외(개인 데이터 아님).
   "marketing_cases_cache",
   "marketing_play_progress",
+  // ── 2026-07-15 감사: 살아있는데 목록에 없어 초기화 후 잔존하던 것들 (3번째 재발) ──
+  //   이 누락이 반복되어 __tests__/account-wipe-coverage.test.ts 가드를 신설했다.
+  "program_applications",
+  "coaching_feedback",
 ] as const;
 
 // owner_user_id 컬럼 테이블 (사용자가 소유자로 만든 row 만).
 export const OWNER_TABLES = ["store_invites", "store_members"] as const;
+
+// recipient_user_id 컬럼 테이블 — 알림함은 user_id 가 아니라 수신자 기준.
+export const RECIPIENT_TABLES = ["notifications"] as const;
 
 // 계정 완전 삭제 시 추가로 제거할 구독·결제 테이블 (reset 에서는 보존).
 export const SUBSCRIPTION_TABLES = ["foundone_subscriptions", "foundone_payments"] as const;
@@ -95,7 +102,7 @@ export async function wipeUserData(
 
   const userTables = [...USER_TABLES, ...(opts.extraUserTables ?? [])];
 
-  async function wipeBy(table: string, column: "user_id" | "owner_user_id") {
+  async function wipeBy(table: string, column: "user_id" | "owner_user_id" | "recipient_user_id") {
     try {
       const { count: beforeCount, error: countErr } = await supabase
         .from(table)
@@ -123,6 +130,7 @@ export async function wipeUserData(
 
   for (const table of userTables) await wipeBy(table, "user_id");
   for (const table of OWNER_TABLES) await wipeBy(table, "owner_user_id");
+  for (const table of RECIPIENT_TABLES) await wipeBy(table, "recipient_user_id");
 
   const totalDeleted = Object.values(deleted).reduce((s, n) => s + n, 0);
   console.log(`${log} done — userId=${userId.slice(0, 8)} totalDeleted=${totalDeleted} failures=${failures.length}`);

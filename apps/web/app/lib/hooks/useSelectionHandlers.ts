@@ -332,8 +332,10 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       report.apiFailures = data?.failures ?? [];
       // 초기화 표식(tombstone) — API 가 기록한 reset_at 을 *이 기기*가 본 값으로 저장.
       //   이게 없으면 reload 후 connectAndLoad 의 마커 체크가 "다른 기기 초기화"로 오인해 루프.
-      if (typeof data?.resetAt === "string") {
-        try { localStorage.setItem("__foundone_reset_seen", data.resetAt); } catch { /* */ }
+      //   ⚠️ 키는 계정별 — usePersistence.detectResetAndWipe 의 SEEN_KEY 와 반드시 같은 형식일 것.
+      //      (전역 키였을 땐 한 브라우저의 A·B 계정이 서로의 seen 을 덮었다. 2026-07-15 수정)
+      if (typeof data?.resetAt === "string" && userId) {
+        try { localStorage.setItem(`__foundone_reset_seen:${userId}`, data.resetAt); } catch { /* */ }
       }
 
       // ── 2차: client-side 직접 삭제 (RLS 사용) ──
