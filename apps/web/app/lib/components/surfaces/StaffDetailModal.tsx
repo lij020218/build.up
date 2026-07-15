@@ -18,7 +18,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { X, Wallet, CalendarCheck2, Clock3, ShieldCheck, Briefcase, Check } from "lucide-react";
+import { X, Wallet, CalendarCheck2, Clock3, ShieldCheck, Briefcase, Check, UserMinus } from "lucide-react";
 import { MINIMUM_WAGE_2026, checkSeveranceObligation, EMPLOYMENT_TYPES, getJobDuties, jobDutyLabel } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 
@@ -44,7 +44,7 @@ function fmtDur(min: number, ko: boolean): string {
   return ko ? `${m}분` : `${m}m`;
 }
 
-export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClose, onWageSaved, onJobSaved }: {
+export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClose, onWageSaved, onJobSaved, onMarkLeft }: {
   member: Member;
   rules: Rule[];
   leaves: Leave[];
@@ -53,7 +53,11 @@ export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClos
   onClose: () => void;
   onWageSaved: (wage: number) => void;
   onJobSaved: (employmentType: string | null, jobDuties: string[]) => void;
+  /** 퇴사 처리 — 행을 지우지 않고 left_at 만 찍는다(근로기록 보존). 이후 「퇴사자 정산」 섹션으로 이동. */
+  onMarkLeft: () => void;
 }) {
+  // 퇴사 처리는 되돌리기 번거로운 상태 변경이라 2단계 확인.
+  const [confirmLeave, setConfirmLeave] = useState(false);
   // ── 급여: 읽기 default + 수정 + 저장 (사장님 데이터 카드 표준 패턴) ──
   const [editingWage, setEditingWage] = useState(false);
   const [wageInput, setWageInput] = useState(member.hourly_wage != null ? String(member.hourly_wage) : "");
@@ -398,6 +402,40 @@ export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClos
               <div style={statLabel}>{ko ? "대기" : "Pending"}</div>
             </div>
           </div>
+        </div>
+
+        {/* ⑤ 퇴사 처리 (2026-07-15) — 파괴적 동작이 아니라 상태 전환. 근태·연차 기록은 남는다. */}
+        <div style={{ padding: "14px 16px", borderRadius: 16, border: `1px solid ${MIDNIGHT_BORDER}` }}>
+          <div style={sectionTitle}><UserMinus size={13} strokeWidth={2} />{ko ? "퇴사 처리" : "Offboard"}</div>
+          {!confirmLeave ? (
+            <>
+              <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, margin: "0 0 10px" }}>
+                {ko
+                  ? "퇴사 처리하면 근무표에서 빠지고 「퇴사자 정산」 목록으로 이동합니다. 임금·퇴직금은 퇴사일부터 14일 이내에 지급해야 합니다(근로기준법 §36)."
+                  : "Moves to the offboarding list. Final pay is due within 14 days (LSA §36)."}
+              </p>
+              <button type="button" onClick={() => setConfirmLeave(true)}
+                style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "transparent", color: MUTED, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                {ko ? "퇴사 처리" : "Offboard"}
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 12.5, color: INK, fontWeight: 600, lineHeight: 1.55, margin: "0 0 10px" }}>
+                {ko ? `${member.name} 님을 오늘 자로 퇴사 처리할까요?` : `Offboard ${member.name} as of today?`}
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={onMarkLeft}
+                  style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                  {ko ? "퇴사 처리" : "Confirm"}
+                </button>
+                <button type="button" onClick={() => setConfirmLeave(false)}
+                  style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "transparent", color: MUTED, fontSize: 12.5, cursor: "pointer" }}>
+                  {ko ? "취소" : "Cancel"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

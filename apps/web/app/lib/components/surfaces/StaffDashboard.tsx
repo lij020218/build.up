@@ -37,10 +37,18 @@ const MIDNIGHT_SOFT2 = "rgba(25,25,112,0.10)";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.16)";
 const MIDNIGHT_MUTED = "rgba(25,25,112,0.45)";
 const LEAVE = "#8b7fd4"; // 연차 — 온브랜드 라벤더 (빨강/노랑 대신)
+
+/** 이번 달 실제 급여일 — 31일 설정인데 2월이면 28일(서버 cron 의 LEAST 보정과 동일 규칙). */
+function effectivePaydayLocal(day: number): number {
+  const d = new Date();
+  return Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate());
+}
 const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 
-type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null; employmentType: string | null; jobDuties: string[] };
+type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null; employmentType: string | null; jobDuties: string[];
+  /** 사장이 정한 급여일(1~31). 없으면 null — 급여일 카드 자체를 숨긴다(가짜 정보 금지). */
+  paydayDay: number | null };
 
 // 근속(勤續) 일차 — 입사일(없으면 가게 연결일) 기준 오늘이 N일째
 function tenureDays(hireDate: string | null, joinedAt: string | null): number | null {
@@ -115,7 +123,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     //   (2026-07-13 hire_date 컬럼 누락으로 실제 발생한 사고). 에러면 재시도 상태로.
     const { data: ctxRaw, error: ctxErr } = (await supabase.rpc("get_staff_store_context" as never)) as { data: unknown; error: unknown };
     if (ctxErr) { console.error("[staff] get_staff_store_context failed:", ctxErr); setCtxError(true); setLoading(false); return; }
-    const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null };
+    const c = (ctxRaw ?? {}) as { connected?: boolean; owner_user_id?: string; role?: string; store_name?: string; joined_at?: string | null; hire_date?: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null; payday_day?: number | null };
     if (!c.connected || !c.owner_user_id) { setConnected(false); setLoading(false); return; }
 
     const context: Ctx = {
@@ -128,6 +136,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       hourlyWage: c.hourly_wage ?? null,
       employmentType: c.employment_type ?? null,
       jobDuties: Array.isArray(c.job_duties) ? c.job_duties : [],
+      paydayDay: c.payday_day ?? null,
     };
     setCtx(context);
     setConnected(true);
@@ -243,6 +252,19 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     const { error } = await supabase.from("leave_requests" as never).delete().eq("id", id);
     if (error) { console.error("[staff] leave cancel failed:", error); return; }
     setLeaves((p) => p.filter((l) => l.id !== id));
+  };
+
+  // ── 급여 미지급 문의 (2026-07-15) ──
+  //   DEFINER RPC 경유 — payroll_inquiries 는 INSERT 정책이 없어 직접 삽입 불가(위조 방지)이고,
+  //   RPC 가 사장에게 푸시+인앱 알림까지 보낸다. 같은 달 재문의는 서버가 조용히 무시(스팸 방지).
+  const reportUnpaid = async (): Promise<"ok" | "duplicate" | "error"> => {
+    const now = new Date();
+    const period = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+    const { data, error } = (await supabase.rpc("report_payroll_unpaid" as never, { p_period: period } as never)) as
+      { data: { ok?: boolean; duplicate?: boolean } | null; error: unknown };
+    if (error) { console.error("[staff] report_payroll_unpaid failed:", error); return "error"; }
+    if (!data?.ok) return "error";
+    return data.duplicate ? "duplicate" : "ok";
   };
 
   // ── 추가 수당 (2026-07-13) ──
@@ -422,6 +444,11 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {/* ④-b 추가 수당 신청 (연장·야간·휴일근로, 2026-07-13) */}
         <StaffAllowanceCard ko={ko} allowances={allowances} candidates={overtimeCandidates} onRequest={submitAllowance} onCancel={cancelAllowance} />
+
+        {/* ④-c 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 표시 */}
+        {ctx.paydayDay != null && (
+          <StaffPaydayCard ko={ko} paydayDay={ctx.paydayDay} onReportUnpaid={reportUnpaid} />
+        )}
 
         {/* ⑤ 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장과 동일 판정, 2026-07-13) */}
         <StaffRightsCard
@@ -704,6 +731,58 @@ const LEAVE_LABEL: Record<LeaveType, { ko: string; en: string }> = {
   annual: { ko: "연차", en: "Annual" }, half: { ko: "반차", en: "Half-day" },
   sick: { ko: "병가", en: "Sick" }, other: { ko: "기타", en: "Other" },
 };
+
+/**
+ * 급여일 카드 (직원) — 사장이 급여일을 정했을 때만 렌더된다.
+ *   급여일 당일·경과에만 "안 들어왔어요" 버튼 노출(그 전엔 보낼 이유가 없다).
+ *   문의는 같은 달 1회 — 서버가 UNIQUE 로 막고 duplicate 를 조용히 성공 처리한다.
+ */
+function StaffPaydayCard({ ko, paydayDay, onReportUnpaid }: {
+  ko: boolean; paydayDay: number; onReportUnpaid: () => Promise<"ok" | "duplicate" | "error">;
+}) {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const eff = effectivePaydayLocal(paydayDay);
+  const today = new Date().getDate();
+  const due = today >= eff;
+  const send = async () => {
+    setState("sending");
+    const r = await onReportUnpaid();
+    setState(r === "error" ? "error" : "sent");   // duplicate 도 사용자에겐 '전달됨'
+  };
+  return (
+    <section style={cardStyle}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em" }}>{ko ? "급여일" : "Payday"}</div>
+        <span style={{ fontSize: 12.5, fontWeight: 700, color: MIDNIGHT }}>
+          {ko ? `매월 ${paydayDay}일` : `Day ${paydayDay}`}
+          {eff !== paydayDay && (ko ? ` · 이번 달 ${eff}일` : ` · ${eff} this month`)}
+        </span>
+      </div>
+      {!due ? (
+        <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>
+          {ko ? `이번 달 급여일은 ${eff}일이에요.` : `Payday is on the ${eff}th.`}
+        </div>
+      ) : state === "sent" ? (
+        <div style={{ fontSize: 12.5, color: MIDNIGHT, fontWeight: 600, lineHeight: 1.5 }}>
+          {ko ? "✓ 사장님께 전달했어요. 확인하시면 연락이 올 거예요." : "✓ Sent to your manager."}
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 10 }}>
+            {ko ? "급여가 아직 안 들어왔다면 사장님께 알릴 수 있어요." : "Not paid yet? Let your manager know."}
+          </div>
+          <button type="button" onClick={() => void send()} disabled={state === "sending"}
+            style={{ ...smallBtn, opacity: state === "sending" ? 0.5 : 1, cursor: state === "sending" ? "wait" : "pointer" }}>
+            {state === "sending" ? (ko ? "보내는 중..." : "Sending...") : (ko ? "급여가 안 들어왔어요" : "Payroll not received")}
+          </button>
+          {state === "error" && (
+            <div style={{ fontSize: 11.5, color: MUTED, marginTop: 8 }}>{ko ? "전달에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed. Try again."}</div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
 
 function LeaveCard({ ko, leaves, onOpen, onCancel }: { ko: boolean; leaves: Leave[]; onOpen: () => void; onCancel: (id: string) => void }) {
   const md = (d: string) => { const x = new Date(d); return ko ? `${x.getMonth() + 1}.${x.getDate()}` : `${x.getMonth() + 1}/${x.getDate()}`; };

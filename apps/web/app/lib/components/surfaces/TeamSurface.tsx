@@ -14,7 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins } from "lucide-react";
+import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins, Wallet, UserMinus } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
@@ -29,7 +29,10 @@ const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 const WEEK_KO = ["일", "월", "화", "수", "목", "금", "토"];
 
-type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null };
+type Member = { member_user_id: string; name: string; role: "staff" | "manager"; joined_at: string | null; hire_date: string | null; hourly_wage?: number | null; employment_type?: string | null; job_duties?: string[] | null;
+  // 퇴사·정산 (2026-07-15). left_at=퇴사일, settle_due_at=금품청산 기한(퇴사일+14일, 근로기준법 §36).
+  //   정산 완료(settled_at)된 사람은 RPC 가 아예 안 내려준다 → 여기 없으면 '숨김'.
+  left_at?: string | null; severance_amount?: number | null; settle_due_at?: string | null };
 
 // 근속(勤續) 일차 — 입사일(없으면 가게 연결일) 기준 오늘이 N일째
 function tenureDays(hireDate: string | null, joinedAt: string | null): number | null {
@@ -52,6 +55,20 @@ type Allowance = { id: string; member_user_id: string; work_date: string; allowa
 const ALLOWANCE_LABEL: Record<AllowanceType, string> = { overtime: "연장근로", night: "야간근로", holiday: "휴일근로", other: "기타" };
 const fmtMinKo = (min: number) => { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`; };
 const ymdLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+// 급여 기간 키 'YYYY-MM' — DB payroll_confirmations.period 와 동일 형식(cron 도 같은 키를 쓴다).
+const ymLocal = () => ymdLocal().slice(0, 7);
+/** 이번 달 실제 급여일 — payday_day=31 인데 2월이면 28일로 보정(cron 의 LEAST 와 동일 규칙). */
+function effectivePayday(day: number): number {
+  const d = new Date();
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return Math.min(day, daysInMonth);
+}
+/** 금품청산 기한까지 남은 일수(음수=초과). 근로기준법 §36 — 퇴사일+14일. */
+function daysUntil(iso: string): number {
+  const due = new Date(iso); due.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - today.getTime()) / 86_400_000);
+}
 // 오늘 출퇴근 — clock_out_at IS NULL 이면 근무 중, 있으면 근무 완료, 행 없으면 미출근 (2026-07-14)
 type Att = { member_user_id: string; clock_in_at: string; clock_out_at: string | null };
 const hhmmKST = (iso: string) => new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul" });
@@ -66,6 +83,10 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   const [todayAtt, setTodayAtt] = useState<Att[]>([]); // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
   const [loading, setLoading] = useState(true);
   const [membersError, setMembersError] = useState(false); // get_store_members RPC 실패 — "직원 없음"과 구분 (2026-07-13)
+  // 급여일 (2026-07-15) — paidThisMonth: true=보냄 / false=아직 / null=무응답(=cron 이 3일 간격 재알림)
+  const [paydayDay, setPaydayDay] = useState<number | null>(null);
+  const [paidThisMonth, setPaidThisMonth] = useState<boolean | null>(null);
+  const [savingPayroll, setSavingPayroll] = useState(false);
   // 직원 상세 팝업 (시급·근태·연차 — 2026-07-13)
   const [detailMember, setDetailMember] = useState<Member | null>(null);
 
@@ -73,7 +94,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setOwnerId(user.id);
-    const [mRes, rRes, exRes, lRes, aRes, atRes] = await Promise.all([
+    const period = ymLocal();
+    const [mRes, rRes, exRes, lRes, aRes, atRes, psRes, pcRes] = await Promise.all([
       supabase.rpc("get_store_members" as never),
       supabase.from("staff_schedule_rules" as never).select("id, member_user_id, weekday, start_time, end_time, active").eq("owner_user_id", user.id),
       supabase.from("staff_schedules" as never).select("id, member_user_id, work_date, start_time, end_time, is_off").eq("owner_user_id", user.id).gte("work_date", ymdLocal()).order("work_date"),
@@ -81,6 +103,9 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
       supabase.from("allowance_requests" as never).select("id, member_user_id, work_date, allowance_type, minutes, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
       // 오늘 출퇴근 — 직원별 "출근함/미출근" 배지용 (owner RLS att_owner_read)
       supabase.from("attendance_records" as never).select("member_user_id, clock_in_at, clock_out_at").eq("owner_user_id", user.id).eq("work_date", ymdLocal()),
+      // 급여일 설정 + 이번 달 지급 확인 (2026-07-15)
+      supabase.from("payroll_settings" as never).select("payday_day").eq("owner_user_id", user.id).maybeSingle(),
+      supabase.from("payroll_confirmations" as never).select("paid").eq("owner_user_id", user.id).eq("period", period).maybeSingle(),
     ]);
     // RPC 에러(마이그레이션 누락·서버 장애)를 "직원 없음"으로 오인하지 않도록 구분 (2026-07-13).
     const mErr = (mRes as { error?: unknown }).error;
@@ -92,6 +117,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setLeaves(((lRes.data ?? []) as Leave[]));
     setAllowances(((aRes.data ?? []) as Allowance[]));
     setTodayAtt(((atRes.data ?? []) as Att[]));
+    setPaydayDay(((psRes.data as { payday_day?: number } | null)?.payday_day) ?? null);
+    setPaidThisMonth(((pcRes.data as { paid?: boolean } | null)?.paid) ?? null);  // null = 무응답
     setLoading(false);
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -164,6 +191,50 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setMembers((p) => (p ? p.map((m) => (m.member_user_id === memberId ? { ...m, hire_date: date } : m)) : p));
   };
 
+  // ── 급여일·퇴사 정산 (2026-07-15) ──
+  const savePayday = async (day: number) => {
+    if (!ownerId) return;
+    setSavingPayroll(true);
+    const { error } = await supabase.from("payroll_settings" as never)
+      .upsert({ owner_user_id: ownerId, payday_day: day, updated_at: new Date().toISOString() } as never,
+        { onConflict: "owner_user_id" } as never);
+    setSavingPayroll(false);
+    if (error) { console.error("[payroll] payday save failed:", error); return; }
+    setPaydayDay(day);
+  };
+
+  /** "월급 보내셨습니까?" 응답. true=보냄(재알림 중단) / false=아직(3일 간격 재알림 계속). */
+  const confirmPaid = async (paid: boolean) => {
+    if (!ownerId) return;
+    setSavingPayroll(true);
+    const { error } = await supabase.from("payroll_confirmations" as never)
+      .upsert({ owner_user_id: ownerId, period: ymLocal(), paid, confirmed_at: new Date().toISOString() } as never,
+        { onConflict: "owner_user_id,period" } as never);
+    setSavingPayroll(false);
+    if (error) { console.error("[payroll] confirm failed:", error); return; }
+    setPaidThisMonth(paid);
+  };
+
+  const markLeft = async (memberId: string) => {
+    const { error } = await supabase.from("store_members" as never)
+      .update({ left_at: new Date().toISOString() } as never)
+      .eq("owner_user_id", ownerId!).eq("member_user_id", memberId);
+    if (error) { console.error("[team] mark left failed:", error); return; }
+    void load();
+  };
+
+  /** 정산 완료 — 명부에서 사라짐(행·근로기록은 보존). 금액은 입력했을 때만 기록. */
+  const markSettled = async (memberId: string, severance: number | null) => {
+    const { error } = await supabase.from("store_members" as never)
+      .update({ settled_at: new Date().toISOString(), ...(severance != null ? { severance_amount: severance } : {}) } as never)
+      .eq("owner_user_id", ownerId!).eq("member_user_id", memberId);
+    if (error) { console.error("[team] settle failed:", error); return; }
+    void load();
+  };
+
+  const activeMembers = (members ?? []).filter((m) => !m.left_at);
+  const leavers = (members ?? []).filter((m) => !!m.left_at);
+
   const pending = leaves.filter((l) => l.status === "pending");
   const decided = leaves.filter((l) => l.status !== "pending").slice(0, 8);
   const allowPending = allowances.filter((a) => a.status === "pending");
@@ -212,6 +283,79 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
           </div>
         ) : (
           <>
+            {/* ── 급여일 (2026-07-15) — 시간에 걸린 액션이라 맨 위 ── */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <Wallet size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "급여일" : "Payday"}</div>
+              </div>
+              {paydayDay == null ? (
+                <>
+                  <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
+                    {ko ? "급여일을 정하면 그날 사장님과 직원 모두에게 알림이 갑니다. 지급 확인을 안 하시면 3일 간격으로 다시 알려드려요." : "Set a payday to notify you and your staff."}
+                  </p>
+                  <PaydayPicker ko={ko} value={null} saving={savingPayroll} onSave={savePayday} />
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
+                    {ko ? `매월 ${paydayDay}일` : `Day ${paydayDay} monthly`}
+                    {effectivePayday(paydayDay) !== paydayDay && (
+                      <span style={{ color: MIDNIGHT_MUTED }}>{ko ? ` · 이번 달은 ${effectivePayday(paydayDay)}일(말일)` : ` · ${effectivePayday(paydayDay)} this month`}</span>
+                    )}
+                  </p>
+                  {/* 급여일 당일·경과 + 미확인 → 응답 요청 */}
+                  {new Date().getDate() >= effectivePayday(paydayDay) && paidThisMonth !== true ? (
+                    <div style={{ padding: "12px 14px", borderRadius: 12, background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: INK, marginBottom: 10 }}>
+                        {ko ? `${ymLocal()} 급여를 보내셨나요?` : "Did you send this month's payroll?"}
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button type="button" disabled={savingPayroll} onClick={() => void confirmPaid(true)}
+                          style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 13, fontWeight: 700, cursor: savingPayroll ? "wait" : "pointer" }}>
+                          {ko ? "네, 보냈어요" : "Yes, sent"}
+                        </button>
+                        <button type="button" disabled={savingPayroll} onClick={() => void confirmPaid(false)}
+                          style={{ padding: "9px 18px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "transparent", color: MIDNIGHT, fontSize: 13, fontWeight: 700, cursor: savingPayroll ? "wait" : "pointer" }}>
+                          {ko ? "아직이요" : "Not yet"}
+                        </button>
+                      </div>
+                      {paidThisMonth === false && (
+                        <div style={{ fontSize: 11.5, color: MIDNIGHT_MUTED, marginTop: 10, lineHeight: 1.5 }}>
+                          {ko ? "3일 간격으로 다시 알려드릴게요. 임금은 매월 1회 이상 일정한 날짜에 지급해야 합니다(근로기준법 §43)." : "We'll remind you every 3 days."}
+                        </div>
+                      )}
+                    </div>
+                  ) : paidThisMonth === true ? (
+                    <div style={{ fontSize: 13, color: MIDNIGHT, fontWeight: 600 }}>
+                      {ko ? `✓ ${ymLocal()} 급여 지급 확인됨` : `✓ ${ymLocal()} payroll confirmed`}
+                    </div>
+                  ) : (
+                    <PaydayPicker ko={ko} value={paydayDay} saving={savingPayroll} onSave={savePayday} />
+                  )}
+                </>
+              )}
+            </section>
+
+            {/* ── 퇴사·정산 (2026-07-15) — 미정산자만. 정산 완료하면 RPC 가 안 내려줘 사라짐 ── */}
+            {leavers.length > 0 && (
+              <section style={card}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <UserMinus size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                  <div style={sectionTitle}>{ko ? "퇴사자 정산" : "Offboarding"}</div>
+                  <span style={badge}>{leavers.length}</span>
+                </div>
+                <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
+                  {ko ? "퇴직 시 임금·퇴직금 등 일체의 금품은 퇴사일부터 14일 이내에 지급해야 합니다(근로기준법 §36). 정산을 마치면 완료 표시해 주세요." : "Settle final pay within 14 days of departure (LSA §36)."}
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {leavers.map((m) => (
+                    <LeaverRow key={m.member_user_id} ko={ko} member={m} onSettle={(amt) => void markSettled(m.member_user_id, amt)} />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* 연차 승인 큐 */}
             <section style={card}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
@@ -309,7 +453,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                 {ko ? "근무 요일과 기본 근무시간을 정하세요. 특정 날짜만 다르게(대타) 하거나 휴무 처리는 「예외」에서." : "Pick work days and set the default shift time. Use exceptions for one-off changes."}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {members.map((m) => (
+                {/* 퇴사자는 근무표 대상이 아니다 — 위 「퇴사자 정산」 섹션에서만 다룬다. */}
+                {activeMembers.map((m) => (
                   <MemberScheduleEditor
                     key={m.member_user_id} ko={ko} member={m}
                     attToday={todayAtt.find((a) => a.member_user_id === m.member_user_id) ?? null}
@@ -349,6 +494,11 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
           onWageSaved={(wage) => {
             setDetailMember((prev) => (prev ? { ...prev, hourly_wage: wage } : prev));
             void load();
+          }}
+          onMarkLeft={() => {
+            const target = detailMember.member_user_id;
+            setDetailMember(null);
+            void markLeft(target);
           }}
           onJobSaved={(employmentType, jobDuties) => {
             setDetailMember((prev) => (prev ? { ...prev, employment_type: employmentType, job_duties: jobDuties } : prev));
@@ -644,6 +794,77 @@ function mdRange(s: string, e: string): string {
 const wrap: React.CSSProperties = { padding: "8px 4px 40px" };
 const card: React.CSSProperties = { background: "white", borderRadius: 20, padding: "22px 22px", boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)" };
 const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MIDNIGHT_MUTED, marginBottom: 8 };
+/** 급여일 선택 — 1~31일. 31=말일 의도(그 달 말일로 자동 보정). */
+function PaydayPicker({ ko, value, saving, onSave }: { ko: boolean; value: number | null; saving: boolean; onSave: (d: number) => void }) {
+  const [day, setDay] = useState<string>(value != null ? String(value) : "25");
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <span style={{ fontSize: 13, color: MUTED }}>{ko ? "매월" : "Day"}</span>
+      <select value={day} onChange={(e) => setDay(e.target.value)}
+        style={{ padding: "8px 10px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: INK, fontSize: 13.5, fontWeight: 600 }}>
+        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>{d}{ko ? "일" : ""}{d === 31 && ko ? " (말일)" : ""}</option>
+        ))}
+      </select>
+      <button type="button" disabled={saving || String(value ?? "") === day} onClick={() => onSave(Number(day))}
+        style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 13, fontWeight: 700,
+          cursor: saving ? "wait" : "pointer", opacity: saving || String(value ?? "") === day ? 0.45 : 1 }}>
+        {saving ? (ko ? "저장 중..." : "Saving...") : (ko ? "저장" : "Save")}
+      </button>
+    </div>
+  );
+}
+
+/** 퇴사자 1행 — [퇴사] 배지 + 금품청산 D-day + 정산 완료(금액 선택 입력). */
+function LeaverRow({ ko, member, onSettle }: { ko: boolean; member: Member; onSettle: (amount: number | null) => void }) {
+  const [amount, setAmount] = useState("");
+  const [open, setOpen] = useState(false);
+  const left = daysUntil(member.settle_due_at ?? "");
+  const overdue = left < 0;
+  return (
+    <div style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${overdue ? "rgba(220,38,38,0.35)" : MIDNIGHT_BORDER}`, background: MIDNIGHT_SOFT }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13.5, fontWeight: 750, color: INK }}>{member.name}</span>
+        <span style={{ fontSize: 10.5, fontWeight: 800, color: "white", background: MUTED, padding: "2px 7px", borderRadius: 999 }}>
+          {ko ? "퇴사" : "Left"}
+        </span>
+        {member.settle_due_at && (
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: overdue ? "#b91c1c" : MIDNIGHT_MUTED }}>
+            {overdue
+              ? (ko ? `정산 기한 ${-left}일 초과 · 지연이자 발생` : `${-left}d overdue`)
+              : (ko ? `정산 기한 D-${left}` : `D-${left}`)}
+          </span>
+        )}
+      </div>
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)}
+          style={{ marginTop: 10, padding: "8px 16px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+          {ko ? "정산 완료 표시" : "Mark settled"}
+        </button>
+      ) : (
+        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+          <input inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder={ko ? "지급액(원) — 선택 입력" : "Amount (optional)"}
+            style={{ padding: "9px 12px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: INK, fontSize: 13 }} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={() => onSettle(amount ? Number(amount) : null)}
+              style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+              {ko ? "완료" : "Done"}
+            </button>
+            <button type="button" onClick={() => setOpen(false)}
+              style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${MIDNIGHT_BORDER}`, background: "transparent", color: MUTED, fontSize: 12.5, cursor: "pointer" }}>
+              {ko ? "취소" : "Cancel"}
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: MIDNIGHT_MUTED, lineHeight: 1.5 }}>
+            {ko ? "완료 표시하면 명단에서 사라집니다. 근태·연차 기록은 법정 보존을 위해 유지됩니다." : "Removed from the list; work records are retained."}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const h1: React.CSSProperties = { fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: INK, margin: 0, lineHeight: 1.25 };
 const sectionTitle: React.CSSProperties = { fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em" };
 const badge: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: "white", background: LEAVE, minWidth: 18, height: 18, borderRadius: 999, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" };
