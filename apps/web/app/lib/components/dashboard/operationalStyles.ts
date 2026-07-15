@@ -104,6 +104,9 @@ export const RADIUS = {
 
 export const shell: React.CSSProperties = {
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "var(--dash-gap, 18px)",
   fontFamily:
     '"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -116,6 +119,9 @@ export const heroPanel: React.CSSProperties = {
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "20px",
   transition: "box-shadow 0.3s ease, transform 0.3s ease",
 };
@@ -261,12 +267,18 @@ export const headlineNote: React.CSSProperties = {
 
 export const coreGrid: React.CSSProperties = {
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "16px",
   alignItems: "stretch",
 };
 
 export const survivalGrid: React.CSSProperties = {
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "16px",
   alignItems: "stretch",
 };
@@ -278,6 +290,9 @@ export const opsCard: React.CSSProperties = {
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "14px",
 };
 
@@ -311,6 +326,9 @@ export const emptyState: React.CSSProperties = {
 
 export const detailSection: React.CSSProperties = {
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "12px",
 };
 
@@ -338,6 +356,9 @@ export const activityCard: React.CSSProperties = {
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "18px",
 };
 
@@ -395,6 +416,9 @@ export const activityChartWrap: React.CSSProperties = {
 
 export const activityBarCol: React.CSSProperties = {
   display: "grid",
+  // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
+  //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
+  gridTemplateColumns: "minmax(0, 1fr)",
   justifyItems: "center",
   gap: "8px",
 };

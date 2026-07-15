@@ -544,8 +544,10 @@ export function ActivitySnapshotCard({
         const stdCount = (d.products as unknown as Array<{ price?: number }>)
           .filter((p) => (p.price ?? 0) > 0).length;
         const hasProductSummary = invCount + stdCount > 0;
+        // minmax(0,1fr) — 맨 `1fr`(=minmax(auto,1fr))은 min-content 바닥이 남아 좁은 폰에서
+        //   카드를 밀어 우측이 잘린다(2026-07-15 갤럭시 341px 신고의 잔여 원인).
         return (
-      <div style={{ display: "grid", gridTemplateColumns: hasProductSummary ? "1fr 1fr" : "1fr", gap: "14px", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: hasProductSummary ? "minmax(0, 1fr) minmax(0, 1fr)" : "minmax(0, 1fr)", gap: "14px", alignItems: "start" }}>
         {/* ── 왼쪽: 오늘 상태 + 입력/수정 폼 (구독제 사장님은 SubscriptionPlanEntry 만 사용 → 숨김) ── */}
         <div>
         {!usesSubs && (() => {

@@ -370,7 +370,10 @@ textarea:focus-visible {
   [style*="columns: repeat(3,"],
   [style*="columns: repeat(4,"],
   [style*="columns: 1fr 1fr"] {
-    grid-template-columns: 1fr !important;
+    /* ⚠️ `1fr` 이 아니라 `minmax(0, 1fr)`. 1fr = minmax(auto, 1fr) 이고 auto = min-content 라,
+       1열로 바꿔도 자식의 min-content 가 컬럼을 밀어올려 카드가 컨테이너를 넘는다(grid blowout).
+       2026-07-15 갤럭시(341px) 우측 잘림의 잔여 원인 — 1열 전환은 됐는데 잘림은 안 막혔었다. */
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   /* 마일스톤 토스트: 데스크톱은 상단중앙 고정이나, 폰에선 고정 상단바(52px)+가게명 헤더를
