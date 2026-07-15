@@ -975,7 +975,10 @@ export default function StarterStageDemo({
           padding: 6px 14px;
           padding-top: max(6px, env(safe-area-inset-top));
           padding-left: max(14px, env(safe-area-inset-left));
-          padding-right: max(14px, env(safe-area-inset-right));
+          /* ⚠️ 우측은 벨+KO/EN 토글이 차지한다 — 그건 language-provider 의 position:fixed(right:12px,
+             실측 폭 139px) 오버레이라 이 flex 행에 없다. 공간을 예약하지 않으면 로고가 그 아래로
+             파고든다(2026-07-15 갤럭시 신고). 139 + right12 + 여백8 = 159px 예약. */
+          padding-right: max(159px, calc(env(safe-area-inset-right) + 159px));
           background: rgba(255,255,255,0.92);
           backdrop-filter: saturate(180%) blur(20px);
           -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -1009,6 +1012,15 @@ export default function StarterStageDemo({
         display: inline-flex; align-items: center; gap: 8px;
         font-size: 14px; font-weight: 700; color: #1d3557;
         white-space: nowrap;
+        /* 남는 폭에 맞춰 워드마크가 줄어들 수 있게 — min-width:0 이 없으면 flex 아이템은
+           콘텐츠 크기 아래로 안 줄어들어 그대로 넘친다. */
+        min-width: 0;
+      }
+      /* 워드마크는 폭 = 높이×10.78 인 SVG 라 좁은 화면에서 그대로 두면 로고만 화면의 39% 를 먹는다.
+         남는 폭에 맞춰 비례 축소 (viewBox 라 화질 손실 없음). 브레이크포인트 불필요. */
+      .bup-mobile-topbar-logo svg[aria-label="Found.One"] {
+        max-width: 100%;
+        height: auto;
       }
     `}</style>
     {/* ━━━ 모바일 상단바 — 햄버거 + 로고 (≤1080px). 탭은 좌측 드로어(아래 .bup-sidebar)가 담당 ━━━ */}
