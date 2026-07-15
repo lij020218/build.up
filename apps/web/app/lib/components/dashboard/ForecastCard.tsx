@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatKrw } from "../../utils/format-krw";
 import { LineChart } from "lucide-react";
 import { EmptyStateCard } from "./EmptyStateCard";
 import { entriesInLastDays, honestDailyAverage } from "../../utils/daily-windows";
@@ -32,6 +33,9 @@ const fmt = (n: number) => {
   const rounded = Math.round(n);
   const abs = Math.abs(rounded);
   const sign = rounded < 0 ? "−" : ""; // 음수 부호 보존 — 모든 표시 분기에서 일관
+  // 1억 이상은 "15,000만원" 이 아니라 "1억 5,000만원" 이라 읽는다. 억 표기는 SSOT(formatKrw)에 위임 —
+  //   여기서 억 로직을 또 구현하면 같은 계산이 파일마다 복제된다. (2026-07 사장님 지적)
+  if (abs >= 100_000_000) return `${sign}${formatKrw(abs)}`;
   if (abs >= 10000) return `${sign}${Math.round(abs / 10000).toLocaleString()}만원`;
   return `${sign}${abs.toLocaleString()}원`;
 };

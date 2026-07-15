@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatKrw } from "../../utils/format-krw";
 import { ChevronDown, ChevronUp, ExternalLink, Megaphone, Ticket, MessageCircle, Landmark, Users, CreditCard, Package } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { CrisisDetection } from "../../services/cashflow-projection";
@@ -356,6 +357,9 @@ function formatWon(n: number): string {
   //   ("−-15만원" 출력 버그). 항상 abs 기반으로 자릿수 계산, sign은 prefix로만 분리.
   const abs = Math.abs(Math.round(n));
   const sign = n < 0 ? "−" : "";
+  // 1억 이상은 "15,000만원" 이 아니라 "1억 5,000만원" 이라 읽는다. 억 표기는 SSOT(formatKrw)에 위임 —
+  //   여기서 억 로직을 또 구현하면 같은 계산이 파일마다 복제된다. (2026-07 사장님 지적)
+  if (abs >= 100_000_000) return `${sign}${formatKrw(abs)}`;
   if (abs >= 10000) return `${sign}${Math.round(abs / 10000).toLocaleString()}만원`;
   return `${sign}${abs.toLocaleString()}원`;
 }
