@@ -298,12 +298,14 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 12px", lineHeight: 1.5 }}>
-                    {ko ? `매월 ${paydayDay}일` : `Day ${paydayDay} monthly`}
-                    {effectivePayday(paydayDay) !== paydayDay && (
-                      <span style={{ color: MIDNIGHT_MUTED }}>{ko ? ` · 이번 달은 ${effectivePayday(paydayDay)}일(말일)` : ` · ${effectivePayday(paydayDay)} this month`}</span>
-                    )}
-                  </p>
+                  {/* 값 + 「수정」은 PaydayPicker 가 소유(읽기 default). 여기선 말일 보정만 보조 설명. */}
+                  <PaydayPicker ko={ko} value={paydayDay} saving={savingPayroll} onSave={savePayday} />
+                  {effectivePayday(paydayDay) !== paydayDay && (
+                    <p style={{ fontSize: 11.5, color: MIDNIGHT_MUTED, margin: "6px 0 0", lineHeight: 1.5 }}>
+                      {ko ? `이번 달은 ${effectivePayday(paydayDay)}일(말일)에 알려드려요.` : `This month: the ${effectivePayday(paydayDay)}th.`}
+                    </p>
+                  )}
+                  <div style={{ height: 12 }} />
                   {/* 급여일 당일·경과 + 미확인 → 응답 요청 */}
                   {new Date().getDate() >= effectivePayday(paydayDay) && paidThisMonth !== true ? (
                     <div style={{ padding: "12px 14px", borderRadius: 12, background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}` }}>
@@ -331,7 +333,10 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                       {ko ? `✓ ${ymLocal()} 급여 지급 확인됨` : `✓ ${ymLocal()} payroll confirmed`}
                     </div>
                   ) : (
-                    <PaydayPicker ko={ko} value={paydayDay} saving={savingPayroll} onSave={savePayday} />
+                    /* 급여일 전 — 안내만. (값·수정은 위 PaydayPicker 가 이미 소유) */
+                    <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>
+                      {ko ? "급여일에 사장님과 직원 모두에게 알려드려요." : "We'll notify you and your staff on payday."}
+                    </div>
                   )}
                 </>
               )}
@@ -794,9 +799,25 @@ function mdRange(s: string, e: string): string {
 const wrap: React.CSSProperties = { padding: "8px 4px 40px" };
 const card: React.CSSProperties = { background: "white", borderRadius: 20, padding: "22px 22px", boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)" };
 const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MIDNIGHT_MUTED, marginBottom: 8 };
-/** 급여일 선택 — 1~31일. 31=말일 의도(그 달 말일로 자동 보정). */
+/**
+ * 급여일 — 읽기 default + 「수정」 + 저장 (사장님 데이터 카드 표준 패턴, feedback_edit_save_pattern).
+ *   1~31일. 31=말일 의도(그 달 말일로 자동 보정).
+ */
 function PaydayPicker({ ko, value, saving, onSave }: { ko: boolean; value: number | null; saving: boolean; onSave: (d: number) => void }) {
+  const [editing, setEditing] = useState(value == null);   // 미설정이면 바로 입력 상태
   const [day, setDay] = useState<string>(value != null ? String(value) : "25");
+
+  if (!editing) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13.5, fontWeight: 700, color: INK }}>{ko ? `매월 ${value}일` : `Day ${value}`}</span>
+        <button type="button" onClick={() => { setEditing(true); setDay(String(value ?? 25)); }}
+          style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 9, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: MIDNIGHT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          {ko ? "수정" : "Edit"}
+        </button>
+      </div>
+    );
+  }
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
       <span style={{ fontSize: 13, color: MUTED }}>{ko ? "매월" : "Day"}</span>
@@ -806,11 +827,17 @@ function PaydayPicker({ ko, value, saving, onSave }: { ko: boolean; value: numbe
           <option key={d} value={d}>{d}{ko ? "일" : ""}{d === 31 && ko ? " (말일)" : ""}</option>
         ))}
       </select>
-      <button type="button" disabled={saving || String(value ?? "") === day} onClick={() => onSave(Number(day))}
+      <button type="button" disabled={saving} onClick={() => { onSave(Number(day)); setEditing(false); }}
         style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white", fontSize: 13, fontWeight: 700,
-          cursor: saving ? "wait" : "pointer", opacity: saving || String(value ?? "") === day ? 0.45 : 1 }}>
-        {saving ? (ko ? "저장 중..." : "Saving...") : (ko ? "저장" : "Save")}
+          cursor: saving ? "wait" : "pointer", opacity: saving ? 0.45 : 1 }}>
+        {saving ? (ko ? "저장 중…" : "Saving…") : (ko ? "저장" : "Save")}
       </button>
+      {value != null && (
+        <button type="button" onClick={() => setEditing(false)}
+          style={{ padding: "8px 12px", borderRadius: 10, border: "none", background: "transparent", color: MUTED, fontSize: 12.5, cursor: "pointer" }}>
+          {ko ? "취소" : "Cancel"}
+        </button>
+      )}
     </div>
   );
 }
@@ -821,15 +848,17 @@ function LeaverRow({ ko, member, onSettle }: { ko: boolean; member: Member; onSe
   const [open, setOpen] = useState(false);
   const left = daysUntil(member.settle_due_at ?? "");
   const overdue = left < 0;
+  // 긴급도는 신호등 색이 아니라 대비·굵기로 — 브랜드 토큰은 미드나잇 네이비 + 라벤더뿐이고
+  //   빨강/노랑은 금지다. 기한 초과는 배경 tint 를 진하게(SOFT2) + 문구를 풀강도 MIDNIGHT 로.
   return (
-    <div style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${overdue ? "rgba(220,38,38,0.35)" : MIDNIGHT_BORDER}`, background: MIDNIGHT_SOFT }}>
+    <div style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${MIDNIGHT_BORDER}`, background: overdue ? MIDNIGHT_SOFT2 : MIDNIGHT_SOFT }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <span style={{ fontSize: 13.5, fontWeight: 750, color: INK }}>{member.name}</span>
         <span style={{ fontSize: 10.5, fontWeight: 800, color: "white", background: MUTED, padding: "2px 7px", borderRadius: 999 }}>
           {ko ? "퇴사" : "Left"}
         </span>
         {member.settle_due_at && (
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: overdue ? "#b91c1c" : MIDNIGHT_MUTED }}>
+          <span style={{ fontSize: 11.5, fontWeight: overdue ? 800 : 700, color: overdue ? MIDNIGHT : MIDNIGHT_MUTED }}>
             {overdue
               ? (ko ? `정산 기한 ${-left}일 초과 · 지연이자 발생` : `${-left}d overdue`)
               : (ko ? `정산 기한 D-${left}` : `D-${left}`)}
