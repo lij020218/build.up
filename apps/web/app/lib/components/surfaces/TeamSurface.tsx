@@ -851,7 +851,14 @@ function LeaverRow({ ko, member, onSettle }: { ko: boolean; member: Member; onSe
   // 긴급도는 신호등 색이 아니라 대비·굵기로 — 브랜드 토큰은 미드나잇 네이비 + 라벤더뿐이고
   //   빨강/노랑은 금지다. 기한 초과는 배경 tint 를 진하게(SOFT2) + 문구를 풀강도 MIDNIGHT 로.
   return (
-    <div style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${MIDNIGHT_BORDER}`, background: overdue ? MIDNIGHT_SOFT2 : MIDNIGHT_SOFT }}>
+    <div style={{
+      padding: "12px 14px", borderRadius: 12,
+      border: `1px solid ${MIDNIGHT_BORDER}`,
+      // 기한 초과는 좌측 미드나잇 액센트 바로 위계를 준다 — 실렌더로 보니 배경 tint 차이
+      //   (0.06→0.10)만으로는 나란히 놓고서야 겨우 구분됐다. 브랜드 토큰이라 신호등 규칙 위반 아님.
+      borderLeft: overdue ? `3px solid ${MIDNIGHT}` : `1px solid ${MIDNIGHT_BORDER}`,
+      background: overdue ? MIDNIGHT_SOFT2 : MIDNIGHT_SOFT,
+    }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <span style={{ fontSize: 13.5, fontWeight: 750, color: INK }}>{member.name}</span>
         <span style={{ fontSize: 10.5, fontWeight: 800, color: "white", background: MUTED, padding: "2px 7px", borderRadius: 999 }}>

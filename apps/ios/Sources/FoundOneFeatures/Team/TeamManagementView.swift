@@ -1091,5 +1091,16 @@ private struct LeaverRowView: View {
         }
         .padding(12)
         .background(BUColor.midnight.opacity(overdue ? 0.10 : 0.06), in: RoundedRectangle(cornerRadius: 12))
+        // 기한 초과는 좌측 미드나잇 액센트 바로 위계를 준다 — 웹 실렌더로 확인한 결과 배경 tint
+        //   차이만으로는 구분이 약했다(웹 LeaverRow 와 동일 처리). 브랜드 토큰이라 신호등 규칙 준수.
+        .overlay(alignment: .leading) {
+            if overdue {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(BUColor.midnight)
+                    .frame(width: 3)
+                    .padding(.vertical, 2)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
