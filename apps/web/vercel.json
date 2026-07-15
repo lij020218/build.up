@@ -24,6 +24,10 @@
     {
       "path": "/api/cron/billing-renew",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/payroll-check",
+      "schedule": "0 0 * * *"
     }
   ]
 }

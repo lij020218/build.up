@@ -64,7 +64,10 @@ export const USER_TABLES = [
 ] as const;
 
 // owner_user_id 컬럼 테이블 (사용자가 소유자로 만든 row 만).
-export const OWNER_TABLES = ["store_invites", "store_members"] as const;
+//   payroll_settings = 급여일 설정(가게 운영 설정) → 초기화 대상.
+//   ※ payroll_confirmations·payroll_inquiries 는 임금 지급/분쟁 기록이라 보존
+//     (account-wipe-coverage.test.ts 의 INTENTIONALLY_RETAINED 에 사유와 함께 선언).
+export const OWNER_TABLES = ["store_invites", "store_members", "payroll_settings"] as const;
 
 // recipient_user_id 컬럼 테이블 — 알림함은 user_id 가 아니라 수신자 기준.
 export const RECIPIENT_TABLES = ["notifications"] as const;

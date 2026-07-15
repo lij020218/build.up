@@ -35,6 +35,8 @@ const INTENTIONALLY_RETAINED: Record<string, string> = {
   allowance_requests: "근로기준법 수당 기록 보존. 초기화해도 DB 보존, 화면 비노출.",
   staff_schedules: "근로 시간 기록 보존. 초기화해도 DB 보존, 화면 비노출.",
   staff_schedule_rules: "근로 시간 규칙 보존. 초기화해도 DB 보존, 화면 비노출.",
+  payroll_confirmations: "임금 지급 확인 기록. 근로기준법 임금 관련 기록이라 초기화로 지우지 않음.",
+  payroll_inquiries: "직원의 급여 미지급 문의(분쟁 증거). 사장 초기화로 지우면 증거 인멸이 된다.",
 
   // ── 계정 정체성·기기·과금: 초기화는 '가게 데이터'만 지우고 계정은 유지 ──
   user_profiles: "계정 본인 정보(이름·출생연도). 초기화는 로그인 유지가 전제.",
