@@ -33,8 +33,16 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
     public let employmentType: String?
     /// 업무 직무 key 배열 (JobDutyRegistry 로 라벨 해석)
     public let jobDuties: [String]
+    /// 퇴사일. nil = 재직 중. (2026-07-15 — 퇴사는 행 삭제가 아니라 상태 전환: 근로기록 법정 보존)
+    public let leftAt: String?
+    /// 퇴직금/최종 지급액(원). 정산 시 명시했을 때만.
+    public let severanceAmount: Int?
+    /// 금품청산 기한 = 퇴사일 + 14일 (근로기준법 §36). 서버 RPC 가 계산해 내려준다. 재직자는 nil.
+    public let settleDueAt: String?
 
     public var id: UUID { memberUserId }
+    /// 퇴사·미정산 여부 — 정산 완료(settled_at)된 사람은 RPC 가 아예 안 내려주므로 여기 오지 않는다.
+    public var hasLeft: Bool { leftAt != nil }
 
     enum CodingKeys: String, CodingKey {
         case memberUserId = "member_user_id"
@@ -44,6 +52,9 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
         case hourlyWage = "hourly_wage"
         case employmentType = "employment_type"
         case jobDuties = "job_duties"
+        case leftAt = "left_at"
+        case severanceAmount = "severance_amount"
+        case settleDueAt = "settle_due_at"
     }
 
     public init(from decoder: Decoder) throws {
@@ -57,6 +68,9 @@ public struct TeamMember: Decodable, Sendable, Identifiable, Equatable {
         hourlyWage = try c.decodeIfPresent(Int.self, forKey: .hourlyWage)
         employmentType = try c.decodeIfPresent(String.self, forKey: .employmentType)
         jobDuties = (try? c.decodeIfPresent([String].self, forKey: .jobDuties)) ?? []
+        leftAt = try c.decodeIfPresent(String.self, forKey: .leftAt)
+        severanceAmount = try c.decodeIfPresent(Int.self, forKey: .severanceAmount)
+        settleDueAt = try c.decodeIfPresent(String.self, forKey: .settleDueAt)
     }
 }
 
@@ -336,6 +350,85 @@ public actor TeamRepository {
     }
 
     // ── 고용형태·직무 설정 (사장 — 20260713_000006) ──
+    // ── 급여일·퇴사 정산 (2026-07-15, 마이그레이션 20260715_000002) — 웹 TeamSurface 와 동일 계약 ──
+
+    /// 급여일 조회 — 미설정이면 nil (그 경우 급여일 카드를 숨긴다).
+    public func payday() async throws -> Int? {
+        struct Row: Decodable { let payday_day: Int }
+        let rows: [Row] = try await client
+            .from("payroll_settings")
+            .select("payday_day")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .limit(1)
+            .execute().value
+        return rows.first?.payday_day
+    }
+
+    /// 급여일 설정(1~31). 31 = 말일 의도 — 실제 발화일은 서버 cron 이 그 달 말일로 보정한다.
+    public func setPayday(_ day: Int) async throws {
+        struct Row: Encodable { let owner_user_id: String; let payday_day: Int; let updated_at: String }
+        try await client.from("payroll_settings")
+            .upsert(Row(owner_user_id: try await uid().uuidString, payday_day: day,
+                        updated_at: ISO8601DateFormatter().string(from: Date())),
+                    onConflict: "owner_user_id")
+            .execute()
+    }
+
+    /// 이번 달 "월급 보내셨습니까?" 응답 — nil = 무응답(서버가 3일 간격 재알림).
+    public func payrollPaid(period: String) async throws -> Bool? {
+        struct Row: Decodable { let paid: Bool }
+        let rows: [Row] = try await client
+            .from("payroll_confirmations")
+            .select("paid")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .eq("period", value: period)
+            .limit(1)
+            .execute().value
+        return rows.first?.paid
+    }
+
+    /// 지급 확인 응답. true=보냄(재알림 중단) / false=아직(재알림 계속).
+    public func confirmPayroll(period: String, paid: Bool) async throws {
+        struct Row: Encodable { let owner_user_id: String; let period: String; let paid: Bool; let confirmed_at: String }
+        try await client.from("payroll_confirmations")
+            .upsert(Row(owner_user_id: try await uid().uuidString, period: period, paid: paid,
+                        confirmed_at: ISO8601DateFormatter().string(from: Date())),
+                    onConflict: "owner_user_id,period")
+            .execute()
+    }
+
+    /// 퇴사 처리 — 행을 지우지 않고 left_at 만 찍는다(근태·연차 기록 법정 보존).
+    public func markLeft(memberId: UUID) async throws {
+        struct Patch: Encodable { let left_at: String }
+        try await client.from("store_members")
+            .update(Patch(left_at: ISO8601DateFormatter().string(from: Date())))
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .eq("member_user_id", value: memberId.uuidString)
+            .execute()
+    }
+
+    /// 정산 완료 — 명부에서 사라진다(RPC 가 settled_at 있는 행을 제외). 금액은 입력했을 때만 기록.
+    public func markSettled(memberId: UUID, severance: Int?) async throws {
+        struct Patch: Encodable { let settled_at: String; let severance_amount: Int? }
+        try await client.from("store_members")
+            .update(Patch(settled_at: ISO8601DateFormatter().string(from: Date()), severance_amount: severance))
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .eq("member_user_id", value: memberId.uuidString)
+            .execute()
+    }
+
+    /// 직원 → 사장 "급여가 안 들어왔어요". DEFINER RPC 경유(직접 INSERT 정책 없음 = 위조 방지)이며
+    /// RPC 가 사장에게 푸시+인앱 알림까지 보낸다. 같은 달 재문의는 서버가 duplicate 로 조용히 성공 처리.
+    @discardableResult
+    public func reportPayrollUnpaid(period: String) async throws -> Bool {
+        struct Params: Encodable { let p_period: String }
+        struct Result: Decodable { let ok: Bool?; let duplicate: Bool? }
+        let r: Result = try await client
+            .rpc("report_payroll_unpaid", params: Params(p_period: period))
+            .execute().value
+        return r.ok == true
+    }
+
     public func setMemberJob(memberId: UUID, employmentType: String?, jobDuties: [String]) async throws {
         struct Patch: Encodable { let employment_type: String?; let job_duties: [String] }
         try await client
@@ -358,6 +451,10 @@ public struct StaffStoreContext: Decodable, Sendable {
     public let hourlyWage: Int?   // 본인 시급 — 근로 권리 자가진단용 (2026-07-13, 마이그레이션 20260713_000002)
     public let employmentType: String?   // 고용형태 (2026-07-13, 20260713_000006)
     public let jobDuties: [String]        // 업무 직무 key 배열
+    /// 사장이 정한 급여일(1~31). nil = 미설정 → 급여일 카드 자체를 숨긴다(가짜 정보 금지).
+    public let paydayDay: Int?            // (2026-07-15, 20260715_000002)
+    /// 내 퇴사일. nil = 재직 중.
+    public let leftAt: String?
 
     enum CodingKeys: String, CodingKey {
         case connected
@@ -369,6 +466,8 @@ public struct StaffStoreContext: Decodable, Sendable {
         case hourlyWage = "hourly_wage"
         case employmentType = "employment_type"
         case jobDuties = "job_duties"
+        case paydayDay = "payday_day"
+        case leftAt = "left_at"
     }
 
     public init(from decoder: Decoder) throws {
@@ -383,6 +482,8 @@ public struct StaffStoreContext: Decodable, Sendable {
         hourlyWage = try c.decodeIfPresent(Int.self, forKey: .hourlyWage)
         employmentType = try c.decodeIfPresent(String.self, forKey: .employmentType)
         jobDuties = (try? c.decodeIfPresent([String].self, forKey: .jobDuties)) ?? []
+        paydayDay = try c.decodeIfPresent(Int.self, forKey: .paydayDay)
+        leftAt = try c.decodeIfPresent(String.self, forKey: .leftAt)
     }
 }
 

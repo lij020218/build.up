@@ -135,6 +135,11 @@ public struct StaffDashboardView: View {
                             onOpenForm: { showAllowanceSheet = true },
                             onCancel: { id in Task { await cancelAllowance(id: id) } }
                         )
+                        // 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 노출.
+                        //   미설정이면 카드 자체를 숨긴다(추측값 표시 금지 = 가짜 숫자 금지 원칙).
+                        if let payday = ctx.paydayDay {
+                            StaffPaydayCard(paydayDay: payday) { await reportUnpaid() }
+                        }
                         // 로그아웃은 「내 정보」 시트로 통합 (2026-07-13)
                     } else {
                         notConnectedCard
@@ -253,6 +258,14 @@ public struct StaffDashboardView: View {
     private func cancelAllowance(id: UUID) async {
         try? await repo.cancelAllowance(id: id)
         allowances.removeAll { $0.id == id }
+    }
+
+    /// "급여가 안 들어왔어요" — DEFINER RPC 경유(직접 INSERT 정책 없음 = 위조 방지). RPC 가
+    ///   사장에게 푸시+인앱 알림까지 보낸다. 같은 달 재문의는 서버가 조용히 성공 처리(스팸 방지).
+    private func reportUnpaid() async -> Bool {
+        let d = Calendar.current.dateComponents([.year, .month], from: Date())
+        let period = String(format: "%04d-%02d", d.year ?? 0, d.month ?? 0)
+        return (try? await repo.reportPayrollUnpaid(period: period)) ?? false
     }
 
     // ── ① 가게 헤더 ──
@@ -1139,5 +1152,77 @@ private struct StaffAllowanceSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+}
+
+/// 급여일 카드 (직원) — 웹 StaffPaydayCard 미러.
+///   급여일 당일·경과에만 "안 들어왔어요" 노출(그 전엔 보낼 이유가 없다).
+///   문의는 같은 달 1회 — 서버 UNIQUE 가 막고 duplicate 를 조용히 성공 처리하므로
+///   사용자에겐 항상 '전달됨' 으로 보인다.
+struct StaffPaydayCard: View {
+    let paydayDay: Int
+    let onReportUnpaid: () async -> Bool
+
+    enum SendState { case idle, sending, sent, failed }
+    @State private var state: SendState = .idle
+
+    /// 이번 달 실제 급여일 — 31일 설정인데 2월이면 28일(서버 cron 의 LEAST 보정과 동일 규칙).
+    private var effectivePayday: Int {
+        let range = Calendar.current.range(of: .day, in: .month, for: Date())?.count ?? 31
+        return min(paydayDay, range)
+    }
+
+    var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label("급여일", systemImage: "wonsign.circle")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.ink)
+                    Spacer()
+                    Text(effectivePayday != paydayDay
+                         ? "매월 \(paydayDay)일 · 이번 달 \(effectivePayday)일"
+                         : "매월 \(paydayDay)일")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                }
+
+                if Calendar.current.component(.day, from: Date()) < effectivePayday {
+                    Text("이번 달 급여일은 \(effectivePayday)일이에요.")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(BUColor.inkSecondary)
+                } else if state == .sent {
+                    Text("✓ 사장님께 전달했어요. 확인하시면 연락이 올 거예요.")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("급여가 아직 안 들어왔다면 사장님께 알릴 수 있어요.")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        Task {
+                            state = .sending
+                            let ok = await onReportUnpaid()
+                            state = ok ? .sent : .failed
+                        }
+                    } label: {
+                        Text(state == .sending ? "보내는 중…" : "급여가 안 들어왔어요")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16).padding(.vertical, 9)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .disabled(state == .sending)
+                    .opacity(state == .sending ? 0.5 : 1)
+                    if state == .failed {
+                        Text("전달에 실패했어요. 잠시 후 다시 시도해 주세요.")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(BUColor.inkMuted)
+                    }
+                }
+            }
+        }
     }
 }

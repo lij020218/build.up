@@ -38,12 +38,33 @@ public struct TeamManagementView: View {
     @State private var categoryId: String? = nil   // 직무 목록 업종 분기 (2026-07-13)
     @State private var loadFailed = false
     @State private var showPayrollSheet = false
+    // 급여일 (2026-07-15, 웹 TeamSurface 미러) — paidThisMonth: true=보냄 / false=아직 / nil=무응답
+    @State private var paydayDay: Int? = nil
+    @State private var paidThisMonth: Bool? = nil
+    @State private var savingPayroll = false
+    @State private var editingPayday = false
     /// 직원 상세 시트 (시급·근태·연차 — 2026-07-13)
     @State private var detailMember: TeamMember? = nil
 
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var pendingLeaves: [TeamLeaveRequest] { leaves.filter { $0.status == "pending" } }
     private var pendingAllowances: [TeamAllowanceRequest] { allowances.filter { $0.status == "pending" } }
+    /// 재직자 — 퇴사자는 근무표 대상이 아니다(웹과 동일).
+    private var activeMembers: [TeamMember] { (members ?? []).filter { !$0.hasLeft } }
+    /// 퇴사·미정산자. 정산 완료하면 RPC 가 안 내려줘 자동으로 사라진다.
+    private var leavers: [TeamMember] { (members ?? []).filter { $0.hasLeft } }
+
+    /// 급여 기간 키 'YYYY-MM' — 서버 cron·웹과 동일 형식이어야 재알림이 멈춘다.
+    private var currentPeriod: String {
+        let d = Calendar.current.dateComponents([.year, .month], from: Date())
+        return String(format: "%04d-%02d", d.year ?? 0, d.month ?? 0)
+    }
+    /// 이번 달 실제 급여일 — 31일 설정인데 2월이면 28일(서버 cron 의 LEAST 보정과 동일 규칙).
+    private func effectivePayday(_ day: Int) -> Int {
+        let cal = Calendar.current
+        let range = cal.range(of: .day, in: .month, for: Date())?.count ?? 31
+        return min(day, range)
+    }
 
     public var body: some View {
         NavigationStack {
@@ -57,9 +78,12 @@ public struct TeamManagementView: View {
                             if members.isEmpty {
                                 emptyState
                             } else {
+                                // 시간에 걸린 액션이라 맨 위 (웹 TeamSurface 와 동일 순서)
+                                paydayCard
+                                if !leavers.isEmpty { offboardingCard }
                                 if !pendingLeaves.isEmpty { leaveApprovalCard }
                                 if !pendingAllowances.isEmpty { allowanceApprovalCard }
-                                memberScheduleList(members)
+                                memberScheduleList(activeMembers)
                             }
                         } else if loadFailed {
                             loadErrorCard
@@ -120,6 +144,9 @@ public struct TeamManagementView: View {
             rules = rr
             allowances = aa
             todayAtt = (try? await at) ?? []   // 출근 조회 실패는 핵심 로드 무영향 (배지만 미표시)
+            // 급여일 — 마이그레이션 미적용/미설정이면 nil (카드가 '설정' 상태로 뜬다). 실패해도 핵심 로드 무영향.
+            paydayDay = (try? await repo.payday()) ?? nil
+            paidThisMonth = (try? await repo.payrollPaid(period: currentPeriod)) ?? nil
             loadFailed = false
             // 직무 목록 업종 분기용 — 사장 본인 category (실패 시 공통 직무만 노출)
             if let uid = BUSupabase.shared.currentUser?.id {
@@ -182,6 +209,151 @@ public struct TeamManagementView: View {
                 .foregroundStyle(BUColor.inkSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
+        }
+    }
+
+    // ── 급여일 (2026-07-15, 웹 TeamSurface 「급여일」 카드 미러) ──
+    //   읽기 default + 「수정」 (사장님 데이터 카드 표준 패턴). 미설정이면 바로 입력.
+    private var paydayCard: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                Label("급여일", systemImage: "wonsign.circle")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
+
+                if paydayDay == nil || editingPayday {
+                    if paydayDay == nil {
+                        Text("급여일을 정하면 그날 사장님과 직원 모두에게 알림이 갑니다. 지급 확인을 안 하시면 3일 간격으로 다시 알려드려요.")
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(BUColor.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    paydayEditor
+                } else if let day = paydayDay {
+                    HStack {
+                        Text("매월 \(day)일")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(BUColor.ink)
+                        Spacer()
+                        Button("수정") { editingPayday = true }
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(BUColor.midnight)
+                    }
+                    if effectivePayday(day) != day {
+                        Text("이번 달은 \(effectivePayday(day))일(말일)에 알려드려요.")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(BUColor.inkMuted)
+                    }
+                    payrollConfirmBlock(day: day)
+                }
+            }
+        }
+    }
+
+    private var paydayEditor: some View {
+        HStack(spacing: 8) {
+            Picker("급여일", selection: Binding(
+                get: { paydayDay ?? 25 },
+                set: { paydayDay = $0 }
+            )) {
+                ForEach(1...31, id: \.self) { d in
+                    Text(d == 31 ? "31일 (말일)" : "\(d)일").tag(d)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(BUColor.midnight)
+
+            Spacer()
+
+            Button {
+                guard let d = paydayDay else { return }
+                Task {
+                    savingPayroll = true
+                    try? await repo.setPayday(d)
+                    savingPayroll = false
+                    editingPayday = false
+                }
+            } label: {
+                Text(savingPayroll ? "저장 중…" : "저장")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+            }
+            .disabled(savingPayroll)
+            .opacity(savingPayroll ? 0.45 : 1)
+        }
+    }
+
+    /// 급여일 당일·경과 + 미확인 → "보내셨나요?" / 확인됨 → ✓ / 그 전 → 안내
+    @ViewBuilder
+    private func payrollConfirmBlock(day: Int) -> some View {
+        let today = Calendar.current.component(.day, from: Date())
+        if today >= effectivePayday(day) && paidThisMonth != true {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("\(currentPeriod) 급여를 보내셨나요?")
+                    .font(.system(size: 13.5, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                HStack(spacing: 8) {
+                    Button {
+                        Task { savingPayroll = true; try? await repo.confirmPayroll(period: currentPeriod, paid: true); paidThisMonth = true; savingPayroll = false }
+                    } label: {
+                        Text("네, 보냈어요").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 18).padding(.vertical, 9)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    Button {
+                        Task { savingPayroll = true; try? await repo.confirmPayroll(period: currentPeriod, paid: false); paidThisMonth = false; savingPayroll = false }
+                    } label: {
+                        Text("아직이요").font(.system(size: 13, weight: .bold)).foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 18).padding(.vertical, 9)
+                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.midnight.opacity(0.2)))
+                    }
+                }
+                .disabled(savingPayroll)
+                if paidThisMonth == false {
+                    Text("3일 간격으로 다시 알려드릴게요. 임금은 매월 1회 이상 일정한 날짜에 지급해야 합니다(근로기준법 §43).")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(12)
+            .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+        } else if paidThisMonth == true {
+            Text("✓ \(currentPeriod) 급여 지급 확인됨")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(BUColor.midnight)
+        } else {
+            Text("급여일에 사장님과 직원 모두에게 알려드려요.")
+                .font(.system(size: 12.5))
+                .foregroundStyle(BUColor.inkSecondary)
+        }
+    }
+
+    // ── 퇴사자 정산 (2026-07-15, 웹 미러) ──
+    private var offboardingCard: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                HStack(spacing: 8) {
+                    Label("퇴사자 정산", systemImage: "person.badge.minus")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.ink)
+                    Text("\(leavers.count)")
+                        .font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(BUColor.inkMuted, in: Capsule())
+                }
+                Text("퇴직 시 임금·퇴직금 등 일체의 금품은 퇴사일부터 14일 이내에 지급해야 합니다(근로기준법 §36). 정산을 마치면 완료 표시해 주세요.")
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                ForEach(leavers) { m in
+                    LeaverRowView(member: m) { amount in
+                        Task { try? await repo.markSettled(memberId: m.memberUserId, severance: amount); await load() }
+                    }
+                }
+            }
         }
     }
 
@@ -843,5 +1015,81 @@ private struct MemberScheduleCard: View {
         guard let d = fmt.date(from: String(base.prefix(10))) else { return nil }
         let days = Calendar.current.dateComponents([.day], from: d, to: Date()).day ?? 0
         return max(1, days + 1) // 입사일 = 1일차 (웹 tenureDays 미러)
+    }
+}
+
+/// 퇴사자 1행 — [퇴사] 배지 + 금품청산 D-day + 정산 완료(금액 선택 입력). 웹 LeaverRow 미러.
+///   ⚠️ 긴급도는 신호등 색이 아니라 **대비·굵기**로 — 브랜드 토큰은 미드나잇 네이비 + 라벤더뿐이고
+///      빨강/노랑은 금지다(웹과 동일 규칙). 기한 초과는 배경 tint 를 진하게 + 문구를 풀강도로.
+private struct LeaverRowView: View {
+    let member: TeamMember
+    let onSettle: (Int?) -> Void
+
+    @State private var open = false
+    @State private var amount = ""
+
+    /// 금품청산 기한까지 남은 일수(음수=초과). 서버가 내려준 settle_due_at(퇴사일+14일) 기준.
+    private var daysLeft: Int? {
+        guard let due = member.settleDueAt else { return nil }
+        let fmt = ISO8601DateFormatter()
+        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let d = fmt.date(from: due) ?? ISO8601DateFormatter().date(from: due)
+        guard let d else { return nil }
+        let cal = Calendar.current
+        return cal.dateComponents([.day], from: cal.startOfDay(for: Date()), to: cal.startOfDay(for: d)).day
+    }
+
+    var body: some View {
+        let left = daysLeft
+        let overdue = (left ?? 0) < 0
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text(member.name)
+                    .font(.system(size: 13.5, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                Text("퇴사")
+                    .font(.system(size: 10.5, weight: .heavy)).foregroundStyle(.white)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(BUColor.inkMuted, in: Capsule())
+                if let left {
+                    Text(overdue ? "정산 기한 \(-left)일 초과 · 지연이자 발생" : "정산 기한 D-\(left)")
+                        .font(.system(size: 11.5, weight: overdue ? .heavy : .semibold))
+                        .foregroundStyle(overdue ? BUColor.midnight : BUColor.midnight.opacity(0.45))
+                }
+                Spacer(minLength: 0)
+            }
+
+            if !open {
+                Button { open = true } label: {
+                    Text("정산 완료 표시")
+                        .font(.system(size: 12.5, weight: .bold)).foregroundStyle(.white)
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                }
+            } else {
+                TextField("지급액(원) — 선택 입력", text: $amount)
+                    #if os(iOS)
+                    .keyboardType(.numberPad)
+                    #endif
+                    .font(.system(size: 13))
+                    .padding(.horizontal, 12).padding(.vertical, 9)
+                    .background(BUColor.surface, in: RoundedRectangle(cornerRadius: 10))
+                HStack(spacing: 8) {
+                    Button { onSettle(Int(amount)) } label: {
+                        Text("완료").font(.system(size: 12.5, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 16).padding(.vertical, 8)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    Button("취소") { open = false }
+                        .font(.system(size: 12.5)).foregroundStyle(BUColor.inkMuted)
+                }
+                Text("완료 표시하면 명단에서 사라집니다. 근태·연차 기록은 법정 보존을 위해 유지됩니다.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .background(BUColor.midnight.opacity(overdue ? 0.10 : 0.06), in: RoundedRectangle(cornerRadius: 12))
     }
 }
