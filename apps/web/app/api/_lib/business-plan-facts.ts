@@ -21,7 +21,20 @@ import {
   getFranchiseBrandById,
   CLUSTER_LABEL,
   SPECIALTY_BUDGET_BENCHMARKS,
+  formatBudgetPresetLabel,
 } from "@foundone/shared";
+
+/**
+ * 만원 단위 값 → 한국식 금액 표기.
+ *
+ *  ⚠️ `10436..toLocaleString() + "만원"` = "10,436만원" 은 한국어로 안 읽는다. "1억 436만원" 이라 읽는다.
+ *     사업계획서에 "10,436만원" 이 박히면 사장님·심사위원 모두 어색해한다(2026-07 사장님 지적).
+ *     formatBudgetPresetLabel 은 원 단위를 받아 "1억 436만원"/"3억원"/"5천만원" 으로 정확히 끊어준다.
+ *     새 포맷터를 만들지 말고 이 SSOT 를 재사용할 것.
+ */
+function wan(v: number): string {
+  return formatBudgetPresetLabel(Math.round(v) * 10000, "ko");
+}
 
 /**
  * web_search 로 보강할 만큼 데이터가 낡았다고 볼 연차.
@@ -73,8 +86,8 @@ export function buildPlanFacts(input: {
   if (ib) {
     lines.push(
       `[업종 연매출 벤치마크 — ${catLabel}]`,
-      `· 평균 연매출: ${ib.avgAnnualRevenue.toLocaleString()}만원`,
-      `· 상위 10%: ${ib.top10PctRevenue.toLocaleString()}만원 / 하위 10%: ${ib.bottom10PctRevenue.toLocaleString()}만원`,
+      `· 평균 연매출: ${wan(ib.avgAnnualRevenue)}`,
+      `· 상위 10%: ${wan(ib.top10PctRevenue)} / 하위 10%: ${wan(ib.bottom10PctRevenue)}`,
       `· 상위권 공통 차별화 요인: ${ib.keyDifferentiators.join(" / ")}`,
     );
     // 출처 표기 — 공식 통계면 그대로 인용, 내부 추정이면 추정임을 밝히게 한다.
@@ -111,9 +124,9 @@ export function buildPlanFacts(input: {
     lines.push(
       "",
       `[창업비용 벤치마크 — ${specialtyHit ? searchLabel : catLabel}]${est}`,
-      `· 평균 ${bb.avgWan.toLocaleString()}만원 / 중앙값 ${bb.medianWan.toLocaleString()}만원`,
-      `· 하위25% ${bb.p25Wan.toLocaleString()}만원 ~ 상위25% ${bb.p75Wan.toLocaleString()}만원`,
-      `· 월 운영비 추정: ${bb.monthlyOpsEstimateWan.toLocaleString()}만원`,
+      `· 평균 ${wan(bb.avgWan)} / 중앙값 ${wan(bb.medianWan)}`,
+      `· 하위25% ${wan(bb.p25Wan)} ~ 상위25% ${wan(bb.p75Wan)}`,
+      `· 월 운영비 추정: ${wan(bb.monthlyOpsEstimateWan)}`,
       `· 출처: ${bb.source} (${bb.yearReported}년 기준)`,
     );
     if (bb.noteKo) lines.push(`· 참고: ${bb.noteKo}`);
@@ -124,11 +137,16 @@ export function buildPlanFacts(input: {
       const capWan = Math.round(input.capitalWon / 10000);
       const dAvg = capWan - bb.avgWan;
       const dMed = capWan - bb.medianWan;
-      const pct = bb.medianWan > 0 ? Math.round((Math.abs(dMed) / bb.medianWan) * 100) : 0;
+      // delta 0 을 "+0만원(0% 많음)" 이라 쓰면 사람이 안 쓰는 말이 된다 → "동일" 로.
+      const cmp = (delta: number, base: number): string => {
+        if (delta === 0) return "동일";
+        const p = base > 0 ? Math.round((Math.abs(delta) / base) * 100) : 0;
+        return `${delta > 0 ? "+" : "−"}${wan(Math.abs(delta))}(${p}% ${delta > 0 ? "많음" : "부족"})`;
+      };
       lines.push(
         `· [사장님 자본금 대비 — 계산 완료, 그대로 인용하세요]`,
-        `  자본금 ${capWan.toLocaleString()}만원 = 평균(${bb.avgWan.toLocaleString()}만원) 대비 ${dAvg >= 0 ? "+" : "−"}${Math.abs(dAvg).toLocaleString()}만원, ` +
-          `중앙값(${bb.medianWan.toLocaleString()}만원) 대비 ${dMed >= 0 ? "+" : "−"}${Math.abs(dMed).toLocaleString()}만원(${pct}% ${dMed >= 0 ? "많음" : "부족"})`,
+        `  자본금 ${wan(capWan)} = 평균(${wan(bb.avgWan)}) 대비 ${cmp(dAvg, bb.avgWan)}, ` +
+          `중앙값(${wan(bb.medianWan)}) 대비 ${cmp(dMed, bb.medianWan)}`,
       );
     }
     // 연식이 오래된 데이터는 web_search 대신 "밝히게" 한다 — 숨기면 그게 가짜 숫자다.
@@ -147,8 +165,8 @@ export function buildPlanFacts(input: {
       lines.push(
         "",
         `[프랜차이즈 실데이터 — ${brand.name.ko}]`,
-        `· 창업비용 ${brand.startupCostWon.toLocaleString()}만원 / 가맹비 ${brand.franchiseFee.toLocaleString()}만원`,
-        `· 가맹점 평균 연매출: ${brand.avgAnnualRevenueWon.toLocaleString()}만원`,
+        `· 창업비용 ${wan(brand.startupCostWon)} / 가맹비 ${wan(brand.franchiseFee)}`,
+        `· 가맹점 평균 연매출: ${wan(brand.avgAnnualRevenueWon)}`,
         `· 가맹점 수 ${brand.storeCount.toLocaleString()}개 / 폐점률 ${brand.closureRate}%`,
       );
     }

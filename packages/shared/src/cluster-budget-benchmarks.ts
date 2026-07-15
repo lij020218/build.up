@@ -55,7 +55,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     source: "이투데이·퍼펙트커피뉴스 카페창업 평균 (16평 기준)",
     yearReported: 2023,
     monthlyOpsEstimateWan: 1000,
-    noteKo: "10평 소형 7,000~10,000만원 / 30평 중형 20,000~30,000만원. 디저트·베이커리는 +30~50%.",
+    noteKo: "10평 소형 7천만~1억원 / 30평 중형 2억~3억원. 디저트·베이커리는 +30~50%.",
   },
   "offline-retail": {
     avgWan: 17000,
@@ -66,7 +66,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     yearReported: 2024,
     isEstimate: true,
     monthlyOpsEstimateWan: 800,
-    noteKo: "편의점 17,000만원 / 무인점포 3,000만원 / 의류 1,000~4,000만원. 카테고리 편차 매우 큼.",
+    noteKo: "편의점 1억 7천만원 / 무인점포 3천만원 / 의류 1천만~4천만원. 카테고리 편차 매우 큼.",
   },
   "offline-beauty": {
     avgWan: 5000,
@@ -76,7 +76,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     source: "큐플레이스 미용실 가이드 + 에스테틱 1인샵 실제 사례",
     yearReported: 2024,
     monthlyOpsEstimateWan: 600,
-    noteKo: "1인 에스테틱·네일·왁싱 1,200만원대부터 / 미용실 10평 5,000~7,000만원 / 대형 30,000만원+",
+    noteKo: "1인 에스테틱·네일·왁싱 1,200만원대부터 / 미용실 10평 5천만~7천만원 / 대형 3억원+",
   },
   "offline-fitness": {
     avgWan: 20000,
@@ -86,7 +86,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     source: "ssjum·butterflyinvest 헬스장·필라테스 창업가이드",
     yearReported: 2024,
     monthlyOpsEstimateWan: 1500,
-    noteKo: "PT 스튜디오 3,000~7,000만원 / 헬스장 5,000~20,000만원 / 100평+ 50,000만원+. 폐업률 매우 높음.",
+    noteKo: "PT 스튜디오 3천만~7천만원 / 헬스장 5천만~2억원 / 100평+ 5억원+. 폐업률 매우 높음.",
   },
   "offline-education": {
     avgWan: 17000,
@@ -96,7 +96,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     source: "마이스터디카페·imbeyonder 스터디카페 창업비용 (50평 기준)",
     yearReported: 2024,
     monthlyOpsEstimateWan: 800,
-    noteKo: "공부방 1,000만원 미만 / 스터디카페 15,000~20,000만원 / 학원 5,000~30,000만원 편차 큼.",
+    noteKo: "공부방 1천만원 미만 / 스터디카페 1억 5천만~2억원 / 학원 5천만~3억원 편차 큼.",
   },
   "offline-pet": {
     avgWan: 12000,
@@ -107,7 +107,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     yearReported: 2024,
     isEstimate: true,
     monthlyOpsEstimateWan: 700,
-    noteKo: "무인 애견샵 3,000만원 / 멀티펫샵 30평 9,500~20,000만원. 동물병원은 별도 (30,000만원+).",
+    noteKo: "무인 애견샵 3천만원 / 멀티펫샵 30평 9,500만~2억원. 동물병원은 별도 (3억원+).",
   },
   "offline-living": {
     avgWan: 9000,
@@ -117,7 +117,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     source: "모두코리아·imbeyonder 무인세탁(빨래방) 비교",
     yearReported: 2024,
     monthlyOpsEstimateWan: 300,
-    noteKo: "무인세탁 6,000~13,000만원 / 일반 세탁소 3,000~7,000만원 / 청소·수리는 1,000~3,000만원.",
+    noteKo: "무인세탁 6천만~1억 3천만원 / 일반 세탁소 3천만~7천만원 / 청소·수리는 1천만~3천만원.",
   },
   "offline-space": {
     avgWan: 5000,
@@ -128,7 +128,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     yearReported: 2024,
     isEstimate: true,
     monthlyOpsEstimateWan: 300,
-    noteKo: "파티룸 2,000~3,000만원 (가장 저렴) / 공유오피스 프랜차이즈 16,000만원 / 사진 스튜디오 3,000~10,000만원.",
+    noteKo: "파티룸 2천만~3천만원 (가장 저렴) / 공유오피스 프랜차이즈 1억 6천만원 / 사진 스튜디오 3천만~1억원.",
   },
 
   // ── 온라인 ──
@@ -164,7 +164,7 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     yearReported: 2024,
     isEstimate: true,
     monthlyOpsEstimateWan: 2000,
-    noteKo: "EVT 500~3,000만원 / DVT 3,000~10,000만원 / PVT 10,000~30,000만원 / 금형 3,000~10,000만원 / KC인증 200~800만원.",
+    noteKo: "EVT 500~3천만원 / DVT 3천만~1억원 / PVT 1억~3억원 / 금형 3천만~1억원 / KC인증 200~800만원.",
   },
   "tech-deeptech-lab": {
     avgWan: 100000,
