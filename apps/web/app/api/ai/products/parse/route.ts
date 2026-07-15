@@ -70,7 +70,8 @@ export async function POST(request: Request) {
   const dailyLimit = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "products-parse",
-    limit: 30,
+    // 파일 파싱은 출력 8192 로 호출당 비용이 커, 하루 30번 할 일은 드묾 (2026-07: 30→10 하향).
+    limit: 10,
     message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
   });
   if (!dailyLimit.ok) {

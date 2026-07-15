@@ -284,7 +284,9 @@ export async function POST(request: Request) {
   const dailyLimit = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "insights-industry-daily",
-    limit: 30,
+    // 하루 1회 코칭 의도 — 클라 localStorage 캐시가 우회돼도 서버가 강제(2026-07: 30→10 하향).
+    //   다기기·캐시미스 여유로 10회면 충분. 정상 사용은 캐시 hit 로 1회.
+    limit: 10,
     message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
   });
   if (!dailyLimit.ok) {
