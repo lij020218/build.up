@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { buildPlanFacts, PLAN_HONESTY_RULES } from "../../../_lib/business-plan-facts";
 
 // 사업계획서 생성은 긴 AI 응답이 필요하므로 타임아웃 확장
 export const maxDuration = 120; // 120초 (Vercel Pro: 최대 300초)
@@ -14,10 +15,17 @@ export const maxDuration = 120; // 120초 (Vercel Pro: 최대 300초)
  */
 
 type BusinessPlanInput = {
+  /** industryCategoryId (예: "food"). 라벨이 아니라 ID 다 — 벤치마크 조회 키로 쓴다. */
   industry: string;
+  /** selectedIndustryId = 세부업종 ID (예: "korean-restaurant"). 미선택 시 "". */
   subIndustry: string;
   startupType: string;
   franchiseBrand?: string;
+  /** 프랜차이즈 브랜드 ID — 공정위 기반 실데이터(창업비용·평균매출·폐점률) 조회용. */
+  franchiseBrandId?: string;
+  /** 사람이 읽는 업종명. 서버엔 category/specialty 라벨 SSOT 가 없어 클라가 넘겨준다. */
+  industryLabel?: string;
+  subIndustryLabel?: string;
   businessModel: string;
   capital: number;
   targetOpenDate: string;
@@ -143,12 +151,32 @@ PSST 프레임워크 (창업진흥원 평가 기준):
 각 섹션의 content는 3~5문단으로, 구체적인 숫자와 데이터를 포함하여 신뢰감 있게 작성하세요. 추상적 표현 대신 실제 데이터를 인용하세요.
 자금 용도는 "운전자금"처럼 뭉뚱그리지 말고 항목별 구체 금액으로 작성하세요.`;
 
+  // 정직성 규칙(PLAN_HONESTY_RULES)은 두 프롬프트 공통 — 없는 수치를 지어내는 대신
+  //   [확인 필요: …] 플레이스홀더로 남기게 한다. 가짜 출처보다 빈 칸이 신뢰도에 낫다.
   const systemPrompt = ko
-    ? (isStartup ? startupSystemPrompt : smbSystemPrompt)
-    : `You are a startup business consultant. Generate a structured business plan based on the user's data. Respond ONLY in the JSON format specified.`;
+    ? `${isStartup ? startupSystemPrompt : smbSystemPrompt}\n\n${PLAN_HONESTY_RULES}`
+    : `You are a startup business consultant. Generate a structured business plan based on the user's data. Respond ONLY in the JSON format specified.
+Never invent statistics. If a figure is not provided in the [검증된 데이터] block, leave a bracketed placeholder such as "[TODO: verify via Statistics Korea]" instead of fabricating a number or citing an institution without a figure.`;
+
+  // buildPlanFacts 를 먼저 — userData 의 업종 라벨(raw ID 대신)도 여기서 나온다.
+  const facts = buildPlanFacts({
+    industryCategoryId: input.industry,
+    specialtyId: input.subIndustry || undefined,
+    franchiseBrandId: input.franchiseBrandId,
+    industryLabel: input.industryLabel,
+    subIndustryLabel: input.subIndustryLabel,
+    capitalWon: input.capital,
+  });
 
   const userData = [
-    `업종: ${input.industry} (${input.subIndustry})`,
+    // ⚠️ 종전엔 raw ID 를 그대로 넣어 "업종: food (korean-restaurant)" 이 프롬프트에 박혔다.
+    //   facts.searchLabel 은 CLUSTER_LABEL 기반 한글명("음식점·외식") → 모델이 업종을 정확히 인지.
+    //   세부업종은 서버에 한글 라벨 SSOT 가 없어 슬러그뿐이라, 본문 인용 금지를 명시해 함께 넘긴다.
+    //   (안 그러면 "세부 업태가 korean-restaurant인" 처럼 영문 슬러그가 계획서에 그대로 박힌다)
+    `업종: ${facts.searchLabel}`,
+    input.subIndustry
+      ? `세부 업종 코드: ${input.subIndustry} — ⚠️ 내부 식별자입니다. 본문에 이 영문 코드를 절대 쓰지 말고, 뜻하는 업태를 한국어로 풀어 쓰세요.`
+      : null,
     `창업 형태: ${input.startupType}${input.franchiseBrand ? ` — ${input.franchiseBrand}` : ""}`,
     `비즈니스 모델: ${input.businessModel}`,
     `초기 자본금: ${(input.capital / 10000).toLocaleString()}만원`,
@@ -167,6 +195,15 @@ PSST 프레임워크 (창업진흥원 평가 기준):
     input.northStarMetricName ? `핵심 추적 지표: ${input.northStarMetricName}` : null,
     input.interviewInsights ? `고객 인터뷰 인사이트: ${input.interviewInsights}` : null,
   ].filter(Boolean).join("\n");
+
+  // ── 검증된 정량 데이터 주입 ─────────────────────────────────────────
+  //  2026-07 실호출 리뷰: 데이터를 안 주고 "출처를 명시하라"고만 시키니, 모델이 기관명만 대고
+  //  수치는 "매우 크며"·"수십만~수백만" 으로 뭉갰다(= 심사에서 감점되는 인용 흉내).
+  //  우리 SSOT(업종 매출·창업비용·출처·연도)를 그대로 주입해 지어낼 필요 자체를 없앤다.
+  const factsSection = facts.factsBlock
+    ? `\n\n──────────\n[검증된 데이터 — 아래 수치만 출처와 함께 인용하세요]\n${facts.factsBlock}`
+    : "";
+  const userDataWithFacts = `${userData}${factsSection}`;
 
   try {
     // ⚠️ 2026-05-18 마이그레이션: 종전엔 Anthropic URL 로 raw fetch 했는데 OPENAI_API_KEY 가
@@ -193,7 +230,7 @@ PSST 프레임워크 (창업진흥원 평가 기준):
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `아래 데이터를 기반으로 사업계획서를 작성해주세요. 반드시 JSON 형식으로만 응답하세요. 설명이나 머리말 없이 { 로 시작하고 } 로 끝나는 순수 JSON만 출력하세요.\n\n${userData}`,
+            content: `아래 데이터를 기반으로 사업계획서를 작성해주세요. 반드시 JSON 형식으로만 응답하세요. 설명이나 머리말 없이 { 로 시작하고 } 로 끝나는 순수 JSON만 출력하세요.\n\n${userDataWithFacts}`,
           },
         ],
       }),

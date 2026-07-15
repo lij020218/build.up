@@ -276,6 +276,8 @@ export function LoanGuideStage() {
         subIndustry: selectedIndustryId ?? "",
         startupType: startupType ?? "independent",
         franchiseBrand: selectedFranchiseBrandId ? (await import("@foundone/shared")).getFranchiseBrandById(selectedFranchiseBrandId)?.name.ko : undefined,
+        // ID 도 함께 — 서버가 공정위 기반 실데이터(창업비용·평균매출·폐점률)를 프롬프트에 주입한다.
+        franchiseBrandId: selectedFranchiseBrandId ?? undefined,
         businessModel: selectedBusinessModelId ?? "",
         capital: selectedBudget ?? 0,
         targetOpenDate: decisions["budget-setup"]?.inputs?.targetOpenDate ?? "",
