@@ -53,12 +53,31 @@ export type FranchiseBenchmark = {
 
 export type IndustryBenchmark = {
   categoryId: string;
-  avgAnnualRevenue: number;          // 만원 — 소상공인 실태조사 평균
+  avgAnnualRevenue: number;          // 만원 — 업종 평균 연매출
   top10PctRevenue: number;           // 만원 (연간) — ⚠️ 분포 추정치
   bottom10PctRevenue: number;        // 만원 (연간) — ⚠️ 분포 추정치
   keyDifferentiators: string[];      // 상위 10% 차별화 요인
   /** true = 상·하위 분포가 직접 조사값이 아닌 추정 (대부분의 업종이 해당) */
   isEstimate?: boolean;
+
+  /**
+   * avgAnnualRevenue 의 출처. **필수** — 출처 없는 숫자는 사장님께 "업종 평균" 으로 보여줄 수 없다.
+   *
+   *  ⚠️ 2026-07 사고: food 에 23,400(=2.34억) 이 들어 있었는데, 이는 *소상공인 전체 평균*(2022년
+   *     소상공인실태조사)이지 음식점 평균이 아니었다. 실제 음식점업 평균은 1억 1,700만원
+   *     (2020년 소상공인실태조사) → 2배 과대. 대시보드·AI코치·경영인사이트·사업계획서 4곳에
+   *     그대로 노출돼 사장님이 자기 매출을 절반으로 착각할 수 있었다.
+   *     원인은 "출처 필드가 없어 어느 표에서 온 값인지 검증 불가" 였다 → 필드로 강제한다.
+   */
+  source: string;
+  /** avgAnnualRevenue 기준 연도. null = 출처 미상(= avgIsEstimate 여야 함). */
+  yearReported: number | null;
+  /**
+   * true = avgAnnualRevenue 가 공식 통계가 아닌 **내부 추정**.
+   *   (isEstimate 는 상·하위 *분포* 추정 여부라 별개다 — 혼동 금지)
+   *   추정치는 UI·프롬프트에서 반드시 "추정" 으로 표기할 것.
+   */
+  avgIsEstimate?: boolean;
 };
 
 // ─── 브랜드별 벤치마크 ──────────────────────────────────────
@@ -492,15 +511,25 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
 const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
   {
     categoryId: "food",
-    avgAnnualRevenue: 23400,   // 소상공인 전체 평균 2.34억
-    top10PctRevenue: 70000,    // 상위 10% 약 7억+
+    // ⚠️ 2026-07 정정: 종전 23400(2.34억) — 주석이 "소상공인 *전체* 평균" 이라고 스스로 밝히고
+    //   있었는데 그 값이 food 칸에 들어가 있었다(2022년 소상공인실태조사 전체 평균).
+    //   실제 음식점업 사업체당 평균은 1억 1,700만원(2020년 소상공인실태조사) → 2배 과대였다.
+    //   교차검증: 음식점 창업비용이 소상공인실태조사 9,800만원 ↔ 한식진흥원 1억436만원으로 정합.
+    avgAnnualRevenue: 11700,
+    // ⚠️ 아래 분포는 잘못된 평균(2.34억) 기준으로 잡힌 값이라 정정된 평균과 모순된다
+    //   (하위10% 1억 ≈ 평균 1.17억). 공식 분포 통계를 못 찾아 임의로 지어내지 않고 그대로 두고
+    //   avgIsEstimate 와 별개로 isEstimate: true 로 표시한다. 공식 분포 확보 시 교체할 것.
+    top10PctRevenue: 70000,
     bottom10PctRevenue: 10000,
+    isEstimate: true,
     keyDifferentiators: [
       "메뉴 특화 (3-5개 시그니처)와 빠른 회전율",
       "식재료 원가 33% 이하 관리 (공급처 3곳+ 비교)",
       "배달앱 리뷰 관리 (평점 4.5 이상 유지)",
       "시간대별 매출 분석을 통한 인력 배치 최적화",
     ],
+    source: "중소벤처기업부·통계청 소상공인실태조사 — 음식점업 사업체당 평균 매출(1억 1,700만원)",
+    yearReported: 2020,
   },
   {
     categoryId: "cafe-dessert",
@@ -513,6 +542,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "SNS 마케팅 (인스타 주 3회+)으로 신규 유입",
       "원두 직접 로스팅 또는 스페셜티로 차별화",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "retail",
@@ -525,6 +557,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "PB 상품 비중 확대로 마진 10%p 향상",
       "시즌 상품 선제 입고 (2개월 전 준비)",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "beauty",
@@ -537,6 +572,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "시술 메뉴 가격 분석 — 고마진 시술 비중 확대",
       "인스타 비포/애프터 포트폴리오 운영",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "fitness",
@@ -549,6 +587,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "비수기(여름 후, 연말) 프로모션으로 이탈 방지",
       "소규모 그룹 수업으로 효율 극대화",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "education",
@@ -561,6 +602,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "온·오프 하이브리드 수업으로 지역 제한 극복",
       "방학 특강·캠프로 비수기 매출 보완",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "pet",
@@ -572,6 +616,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "미용+용품+호텔 복합 서비스로 객단가 극대화",
       "SNS 귀여운 콘텐츠로 바이럴 마케팅",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "living-service",
@@ -583,6 +630,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "무인 매장(셀프빨래방)으로 인건비 제로 모델",
       "지역 커뮤니티 기반 입소문 마케팅",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "space",
@@ -594,6 +644,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "인테리어·사진 품질이 예약 전환율 직결",
       "비수기 장기 할인 + 성수기 프리미엄 가격 전략",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "online-digital",
@@ -606,6 +659,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "리뷰 100개+ 확보 후 매출 급증 패턴",
       "네이버/쿠팡/자사몰 3채널 동시 운영",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
   {
     categoryId: "startup-tech",
@@ -618,6 +674,9 @@ const INDUSTRY_BENCHMARKS: IndustryBenchmark[] = [
       "핵심 지표(North Star Metric) 1개에 집중",
       "고객 인터뷰 주 5회+ — 제품 시장 적합성 검증",
     ],
+    source: "내부 추정 — 공식 통계 미확인(2026-07 감사에서 출처 없음 확인)",
+    yearReported: null,
+    avgIsEstimate: true,
   },
 ];
 

@@ -76,12 +76,25 @@ export function buildPlanFacts(input: {
       `· 평균 연매출: ${ib.avgAnnualRevenue.toLocaleString()}만원`,
       `· 상위 10%: ${ib.top10PctRevenue.toLocaleString()}만원 / 하위 10%: ${ib.bottom10PctRevenue.toLocaleString()}만원`,
       `· 상위권 공통 차별화 요인: ${ib.keyDifferentiators.join(" / ")}`,
-      // ⚠️ INDUSTRY_BENCHMARKS 는 source/yearReported 필드가 없다(데이터 부채).
-      //   출처를 지어내는 것보다 "내부 참고치"로 정직하게 못박는 게 낫다 — 실호출에서 모델이
-      //   "(출처: 업종 연매출 벤치마크, 연도 미제공)" 이라고 써버려 오히려 이상해졌던 걸 교정.
-      `· ※ 위 연매출 수치는 내부 참고치(출처·조사연도 미기재)입니다. 본문에서 기관 출처를 만들어 붙이지 말고,`,
-      `   "업계 참고치 기준" 정도로만 쓰거나 "[확인 필요: 공식 통계 출처]" 를 병기하세요.`,
     );
+    // 출처 표기 — 공식 통계면 그대로 인용, 내부 추정이면 추정임을 밝히게 한다.
+    //   (2026-07 데이터 부채 해결로 source/yearReported 가 생겼다. 그전엔 모델이
+    //    "출처: 업종 연매출 벤치마크, 연도 미제공" 이라고 써서 오히려 이상했다)
+    if (ib.avgIsEstimate) {
+      lines.push(
+        `· ※ 평균 연매출은 **내부 추정치**(공식 통계 미확인)입니다. 기관 출처를 만들어 붙이지 말고,`,
+        `   "업계 추정 기준" 으로만 쓰거나 "[확인 필요: 공식 통계 출처]" 를 병기하세요.`,
+      );
+    } else {
+      lines.push(`· 출처: ${ib.source}${ib.yearReported ? ` (${ib.yearReported}년 기준)` : ""}`);
+      const age = ib.yearReported ? new Date().getFullYear() - ib.yearReported : 0;
+      if (age >= STALE_NOTE_YEARS) {
+        lines.push(`· ⚠️ ${age}년 전 조사 기준 — 본문에 조사연도를 밝히고 현재와 차이가 있을 수 있음을 함께 쓰세요.`);
+      }
+    }
+    if (ib.isEstimate) {
+      lines.push(`· ※ 상위10%/하위10% 분포는 추정치입니다. 단정하지 말고 "추정 분포" 로 표기하세요.`);
+    }
   } else {
     missing.push(`${catLabel} 업종 평균 연매출`);
   }

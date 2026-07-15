@@ -65,21 +65,24 @@ describe("benchmarkText — 영업이익률 (COMMON_THRESHOLDS, higherIsBetter)"
   });
 });
 
-describe("benchmarkText — 월매출 (INDUSTRY_BENCHMARKS 평균 기반, food=월 1,950만원)", () => {
-  it("월 2,500만원 → 평균 +28% → good", () => {
-    const r = benchmarkText("food", "scale", "monthlyRevenue", 2500, "ko");
+// ⚠️ 2026-07 정정: 종전엔 food 평균을 월 1,950만원(=연 2.34억)으로 고정했는데, 그 2.34억은
+//   *소상공인 전체 평균*(2022년 실태조사)이었고 음식점업 실제 평균은 1억 1,700만원(2020년 실태조사).
+//   테스트가 틀린 값을 그대로 박아둔 탓에 "검증된 숫자" 처럼 보호되고 있었다 → 실제 출처 기준으로 교체.
+describe("benchmarkText — 월매출 (INDUSTRY_BENCHMARKS 평균 기반, food=월 975만원)", () => {
+  it("월 1,300만원 → 평균 +33% → good", () => {
+    const r = benchmarkText("food", "scale", "monthlyRevenue", 1300, "ko");
     expect(r!.status).toBe("good");
-    expect(r!.rangeLabel).toContain("1,950만원");
-    expect(r!.myLabel).toContain("2,500만원");
+    expect(r!.rangeLabel).toContain("975만원");
+    expect(r!.myLabel).toContain("1,300만원");
   });
 
-  it("월 1,000만원 → 평균의 51% → risk", () => {
-    const r = benchmarkText("food", "growth", "monthlyRevenue", 1000, "ko");
+  it("월 500만원 → 평균의 51% → risk", () => {
+    const r = benchmarkText("food", "growth", "monthlyRevenue", 500, "ko");
     expect(r!.status).toBe("risk");
   });
 
-  it("월 1,900만원 → 평균권(±15%) → watch", () => {
-    const r = benchmarkText("food", "growth", "monthlyRevenue", 1900, "ko");
+  it("월 950만원 → 평균권(±15%) → watch", () => {
+    const r = benchmarkText("food", "growth", "monthlyRevenue", 950, "ko");
     expect(r!.status).toBe("watch");
   });
 });
