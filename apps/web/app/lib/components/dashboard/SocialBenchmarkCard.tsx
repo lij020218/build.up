@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Users, TrendingUp, Award } from "lucide-react";
-import { getIndustryBenchmark, FRANCHISE_BENCHMARK_PROVENANCE } from "@foundone/shared";
+import { getIndustryBenchmark } from "@foundone/shared";
 import type { DailyEntry } from "../../stores/finance-store";
 import { EmptyStateCard } from "./EmptyStateCard";
 import { getKstDate } from "../../utils/business-day";
@@ -17,7 +17,9 @@ type Props = {
  * Social Benchmark Card — Hook Model의 "Tribe Reward" (사회적 보상).
  *
  * 사용자 월매출을 업종 평균·상위10%·하위10%와 비교.
- * 데이터 출처: @foundone/shared/franchise-benchmarks (공정거래위원회 기반).
+ * 데이터 출처: @foundone/shared getIndustryBenchmark — 업종별로 출처가 다르다.
+ *   food = 소상공인실태조사(중기부·통계청) / 그 외 = 내부 추정치(공식 통계 미확인).
+ *   ⚠️ 공정위 가맹 정보공개서가 아니다 — 그건 프랜차이즈 브랜드 벤치마크용이다(2026-07 정정).
  *
  * Phase 1: 정적 업종 벤치마크 기반 위치 추정
  * Phase 2: Supabase 익명 집계 (같은 지역·업종 실시간 비교)
@@ -72,6 +74,10 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
       top10Monthly,
       bottom10Monthly,
       percentile: Math.round(percentile),
+      // 출처는 벤치마크 자신의 것을 실어 보낸다 — JSX 에서 남의 출처(프랜차이즈 메타)를 빌려 쓰지 않도록.
+      source: benchmark.source,
+      yearReported: benchmark.yearReported,
+      avgIsEstimate: benchmark.avgIsEstimate === true,
     };
   }, [industryCategoryId, dailyEntries]);
 
@@ -87,8 +93,8 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
         eyebrow={ko ? "업종 비교" : "Industry Benchmark"}
         title={ko ? "3일 이상 기록하면 비교가 열려요" : "Benchmark unlocks after 3 days"}
         description={ko
-          ? "같은 업종 평균·상위 10%와 비교해서 내 매장의 위치를 알려드려요. 공정거래위원회 통계 기반."
-          : "See where you stand vs industry average and top 10%, based on Fair Trade Commission data."}
+          ? "같은 업종 평균·상위 10%와 비교해서 내 매장의 위치를 알려드려요."
+          : "See where you stand vs industry average and top 10%."}
         Icon={Users}
         progress={{
           current: analysis.days,
@@ -271,11 +277,19 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
         {message}
       </div>
 
-      {/* 출처·기준연도·분포추정 (iOS WeeklyPulse 1:1) */}
+      {/* 출처·기준연도·분포추정 (iOS WeeklyPulse 1:1)
+          ⚠️ 2026-07 정정: 종전엔 FRANCHISE_BENCHMARK_PROVENANCE(=공정위 가맹 정보공개서)를 출처로
+             찍었는데, 이 카드가 쓰는 건 *업종* 벤치마크(getIndustryBenchmark)라 출처가 다르다.
+             food 는 소상공인실태조사(중기부·통계청)이고 나머지 업종은 내부 추정치다.
+             → 남의 출처를 빌려 쓰면 그게 가짜 출처다. 벤치마크 자신의 source/yearReported 를 쓴다. */}
       <div style={{ marginTop: "10px", fontSize: "10px", color: "var(--muted)", fontWeight: 500, lineHeight: 1.5 }}>
         {ko
-          ? `※ 기준 ${FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear}년 · 공정거래위원회 가맹사업 정보공개서 · 소상공인실태조사`
-          : `* As of ${FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear} · Fair Trade Commission franchise disclosures · SMB survey`}
+          ? (analysis.avgIsEstimate
+              ? "※ 업종 평균은 공식 통계가 확인되지 않은 내부 추정치입니다."
+              : `※ ${analysis.source}${analysis.yearReported ? ` · ${analysis.yearReported}년 기준` : ""}`)
+          : (analysis.avgIsEstimate
+              ? "* Industry average is an internal estimate (not an official statistic)."
+              : `* ${analysis.source}${analysis.yearReported ? ` · as of ${analysis.yearReported}` : ""}`)}
         <br />
         {ko ? "상·하위 10%는 분포 추정치입니다." : "Upper/lower 10% bands are distribution estimates."}
       </div>
