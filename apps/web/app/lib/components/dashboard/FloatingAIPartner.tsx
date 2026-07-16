@@ -477,6 +477,10 @@ export function FloatingAIPartner({ ko, context }: Props) {
                 {loading ? <Loader2 size={14} className="fap-spin" /> : <Send size={14} strokeWidth={2.2} />}
               </button>
             </div>
+            {/* AI 기본법 생성물 표시 — 대화창 상시 라벨 (답변이 생성형 AI 산출물임을 명시) */}
+            <p style={{ margin: "7px 2px 0", fontSize: "10.5px", lineHeight: 1.5, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
+              {ko ? "답변은 생성형 AI가 작성한 참고 정보입니다 · 법률·세무 자문을 대체하지 않아요" : "Answers are AI-generated for reference · not legal or tax advice"}
+            </p>
           </div>
         </div>
       )}

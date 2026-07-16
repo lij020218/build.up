@@ -722,7 +722,12 @@ export function LoanGuideStage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const full = bpSections.map((s: { title: string; content: string }) => `${s.title}\n\n${s.content}`).join("\n\n---\n\n");
+                    // ⚠️ AI 기본법(2026-01-22 시행) 생성물 표시 의무 — 복사돼 앱 밖으로 나가는 텍스트는
+                    //   '외부 반출물'이라 UI 라벨만으로는 부족하다. 반출물 자체에 가시 표기를 싣는다.
+                    const aiNotice = ko
+                      ? "※ 본 초안은 Found.One의 생성형 AI가 작성했습니다. 참고용이며, 제출 전 반드시 본인이 검토·수정하세요."
+                      : "* This draft was written by Found.One's generative AI. For reference only — review and edit before submitting.";
+                    const full = bpSections.map((s: { title: string; content: string }) => `${s.title}\n\n${s.content}`).join("\n\n---\n\n") + `\n\n---\n\n${aiNotice}`;
                     navigator.clipboard.writeText(full).catch(() => {});
                   }}
                   style={{
@@ -736,6 +741,12 @@ export function LoanGuideStage() {
                   <Copy size={13} strokeWidth={2.2} />
                   {ko ? "전체 텍스트 복사하기" : "Copy Full Text"}
                 </button>
+                {/* AI 기본법 생성물 표시 — 결과 화면 상시 라벨 (약관 §7 사전고지와 별개의 의무) */}
+                <p style={{ marginTop: "10px", fontSize: "11.5px", color: "rgba(0,0,0,0.45)", lineHeight: 1.6, textAlign: "center" }}>
+                  {ko
+                    ? "이 사업계획서는 생성형 AI가 작성한 초안입니다. 참고용이며, 제출 전 반드시 본인이 검토·수정하세요."
+                    : "This plan is an AI-generated draft. For reference only — review and edit before submitting."}
+                </p>
               </div>
             )}
           </div>

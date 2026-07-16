@@ -570,6 +570,18 @@ export default function AuthPage() {
                 </label>
               )}
 
+              {/* 무료 앵커 관리 — "영구 무료"로 앵커되면 유료화 시점에 신뢰가 깨진다(Toast $0.99 선례).
+                  가입 순간부터 "한시 프로모션"으로 기대를 설정한다. 가격 미정이라 금액은 쓰지 않는다. */}
+              {mode === "signup" && (
+                <p style={{
+                  fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.6,
+                  margin: "8px 2px 2px",
+                }}>
+                  지금은 전 기능 무료 프로모션 기간입니다. 정식 운영 후 일부 프리미엄 기능은
+                  유료로 전환될 수 있어요. 입력하신 데이터는 그대로 유지됩니다.
+                </p>
+              )}
+
               <button
                 type="button"
                 disabled={submitDisabled}

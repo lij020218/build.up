@@ -290,6 +290,14 @@ private struct EmailAuthSheet: View {
                                     .foregroundStyle(BUColor.inkMuted)
                             }
                         }
+
+                        // 무료 앵커 관리 — 웹 auth/page.tsx 와 동일 문구 (웹·iOS 동시 원칙).
+                        //   "영구 무료" 앵커 방지: 가입 순간부터 한시 프로모션으로 기대 설정. 가격 미정이라 금액 없음.
+                        Text("지금은 전 기능 무료 프로모션 기간입니다. 정식 운영 후 일부 프리미엄 기능은 유료로 전환될 수 있어요. 입력하신 데이터는 그대로 유지됩니다.")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(BUColor.inkMuted.opacity(0.85))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 2)
                     }
 
                     Button(action: submit) {
