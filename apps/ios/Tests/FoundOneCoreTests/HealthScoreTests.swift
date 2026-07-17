@@ -67,7 +67,9 @@ struct KpiThresholdTests {
         #expect(restaurant.primeCost?.healthy == 65)
 
         let cafe = IndustryThresholds.thresholds(for: .cafe)
-        #expect(cafe.ingredients?.healthy == 28)
+        // 30 = 웹 SSOT(prime-cost.ts cafe cogsTargetMax) 정본. d0e11beb 가 iOS 값을 웹으로
+        //   정합(28→30)하면서 이 기대값 갱신을 빠뜨려 스위트가 깨져 있었다 (2026-07-17 발견).
+        #expect(cafe.ingredients?.healthy == 30)
         #expect(cafe.primeCost?.healthy == 60)
     }
 }

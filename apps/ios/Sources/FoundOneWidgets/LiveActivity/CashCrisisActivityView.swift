@@ -10,6 +10,10 @@ import FoundOneDesignSystem
 
 #if canImport(ActivityKit) && os(iOS)
 import ActivityKit
+// activityBackgroundTint / activitySystemActionForegroundColor 는 WidgetKit 의 View 확장 —
+//   이 import 없이는 컴파일 불가. (이 타깃은 앱 스킴에 미포함이라 오류가 잠복해 있었고,
+//   FoundOne-Package 전체 테스트 빌드에서 처음 드러남. 2026-07-17)
+import WidgetKit
 
 // MARK: - Lock Screen / Banner
 
