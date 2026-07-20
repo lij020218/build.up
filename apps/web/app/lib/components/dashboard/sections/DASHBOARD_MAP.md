@@ -59,10 +59,9 @@ hooks/
 
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
-| 1.5 (top) | **자동 데이터 연동 허브** (IntegrationHub) | `Tier1_5Coaching.tsx` | universal — 사장님 hide 가능 (2026-05-12 추가). 향후 마이페이지로 이동 검토 |
-| 1.5 (top) | **코칭 누적 일지 14일** (CoachingHistory) | `Tier1_5Coaching.tsx` | universal — Supabase mirror + 30일 메타 인사이트 (Phase 1a) |
 | 1.5 (a) | 오늘의 운영 리추얼 (DailyOpsRitual) | `Tier1_5Coaching.tsx` | universal |
 | 1.5 (a-1) | **재고 운영 + 팀 현황** (InventoryOps + Team) | `Tier1_5Coaching.tsx` | 업종 matrix: 재고=식당·카페·소매·이커머스·펫·공간 / 팀=대부분 업종. wide=2-up · narrow=stacked |
+| 1.5 (a-1.5) | **메뉴 수익성** (MenuProfitability) | `Tier1_5Coaching.tsx` | showByMatrix("menu-profitability") — 음식·카페·서비스 계열 (2026-06-23 신설, 맵 누락분 2026-07-21 기재) |
 | 1.5 (a-2) | **식약처 위생점검 대비** (FoodSafety) | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 (showByMatrix) |
 | 1.5 (a-3) | **Prime Cost (식자재+인건비)** | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 (showByMatrix). 외식 글로벌 1순위 KPI (Sage·NetSuite·Toast) |
 | 1.5 (b/b-2) | **DailyImprovement vs AvgTicketUpsell** (매출 추세 분기) | `Tier1_5Coaching.tsx` | 동시 노출 X. WoW -5%~+5% (정체) → AvgTicketUpsell. 그 외 → DailyImprovement. (2026-05-12 추가) |
@@ -75,7 +74,7 @@ hooks/
 | 1.5 (e-1) | **재등록 + 학생 잔존 · 교육** (EducationEnrollment, Phase 2c) | `Tier1_5Coaching.tsx` | education 만. D-14 재등록 + 30/60/90/1년 cohort (학원조아·공선학관 17 자료) |
 | 1.5 (r-1) | **Sell-Through · 소매** (RetailSellThrough, Phase 2d) | `Tier1_5Coaching.tsx` | retail 만. Top 5 Best Seller + Dead Stock + 품절 임박 (Lightspeed·Shopify 12 자료) |
 | 1.5 (b-1) | **예약·노쇼·디자이너 · 뷰티** (BeautyBookingNoshow, Phase 2e) | `Tier1_5Coaching.tsx` | beauty 만. booking-store (신규) + 카카오헤어샵 0.09% (Zenoti·Meevo 11 자료) |
-| 1.5 (ec-1) | **전환·ROAS·반품 · 이커머스** (EcommerceConversion, Phase 2f) | `Tier1_5Coaching.tsx` | ecommerce 만. ecommerce-store (신규) + 채널별 ROAS·CVR·반품 (Polar·OSC 쿠팡 11 자료) |
+| 1.5 (ec-1) | **전환·ROAS·반품 · 이커머스** (ConversionFunnelCard, Phase 2f) | `Tier1_5Coaching.tsx` | ecommerce 만. ecommerce-store (신규) + 채널별 ROAS·CVR·반품 (Polar·OSC 쿠팡 11 자료) |
 | 1.5 (p-1) | **예약·서비스 mix · 펫** (PetBooking, Phase 2g) | `Tier1_5Coaching.tsx` | pet 만. booking-store 재사용 + 90일 서비스 mix + 재방문 (Gingr·VetPort·펫프렌즈 14 자료) |
 | 1.5 (sp-1) | **POR·시간대 · 공간임대** (SpaceOccupancy, Phase 2h) | `Tier1_5Coaching.tsx` | space 만. booking-store 재사용 + 룸별 점유 + BEP 60-70% (OfficeRnD·쏘플 15 자료) |
 | 1.5 (l-1) | **의뢰·기사·FTFR · 생활서비스** (LivingServiceDispatch, Phase 2i) | `Tier1_5Coaching.tsx` | living-service 만. booking-store 재사용 + 기사 가동률 + 청소연구소 88% (ServiceTitan·IBM 13 자료) |
@@ -86,6 +85,7 @@ hooks/
 
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
+| 2 | **코칭 누적 일지 14일** (CoachingHistory) | `Tier2WeeklyPulse.tsx` | universal — Supabase mirror + 30일 메타 인사이트 (Phase 1a). 종전 맵은 Tier1_5 로 오기재 — 실제 렌더는 Tier2WeeklyPulse.tsx (2026-07-21 정정) |
 | 2 | **13주 자금 흐름 예측 (Cashflow13Week)** | `Tier2WeeklyPulse.tsx` | 모두 (미설정 시 nudge) |
 | 2 | 생존 보드 (SurvivalBoard) | `Tier2WeeklyPulse.tsx` | 모두 |
 | 2 | 비용 도넛 (CostCompositionDonut) | `Tier2WeeklyPulse.tsx` | 모두 |

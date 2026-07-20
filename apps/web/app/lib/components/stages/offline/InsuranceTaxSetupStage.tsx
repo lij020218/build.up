@@ -39,7 +39,27 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
-import { mandatoryInsuranceFor } from "@foundone/shared";
+import { mandatoryInsuranceFor, INSURANCE_RATES_2026 } from "@foundone/shared";
+
+// ─── 표시용 요율 문자열 — 계산 SSOT(INSURANCE_RATES_2026)에서 파생 ───
+//   종전엔 프로즈/표에 "9.5%·7.19%" 등을 문자열 하드코딩 → SSOT 요율 개정 시(2027 국민연금
+//   10% 예정) 표시가 자동 갱신되지 않는 드리프트 리스크(2026-07-19 감사 P2). 한 곳에서 파생.
+const pctStr = (v: number): string => {
+  const s = (v * 100).toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+  return `${s}%`;
+};
+const R2026 = INSURANCE_RATES_2026;
+const RATE_STR = {
+  pensionTotal: pctStr(R2026.nationalPension.employer + R2026.nationalPension.employee),   // 9.5%
+  pensionHalf: pctStr(R2026.nationalPension.employer),                                     // 4.75%
+  healthTotal: pctStr(R2026.healthInsurance.employer + R2026.healthInsurance.employee),    // 7.19%
+  healthHalf: pctStr(R2026.healthInsurance.employer),                                      // 3.595%
+  employmentTotal: pctStr(R2026.employmentInsurance.employer + R2026.employmentInsurance.employee), // 1.8%
+  employmentHalf: pctStr(R2026.employmentInsurance.employer),                              // 0.9%
+  longTermOfWage: pctStr((R2026.healthInsurance.employer + R2026.healthInsurance.employee) * R2026.longTermCare.rateOfHealth), // 0.9448%
+  longTermOfHealth: pctStr(R2026.longTermCare.rateOfHealth),                               // 13.14%
+  stabilityMin: pctStr(R2026.employmentStability.employer),                                // 0.25%
+} as const;
 import {
   MIDNIGHT,
   MIDNIGHT_SOFT,
@@ -305,7 +325,7 @@ export function InsuranceTaxSetupStage() {
                   accent: "#0561fc",
                   title: "사업주 부담 = 급여의 약 10% 추가",
                   body:
-                    "근로자 월급 250만원이면 사업주가 추가 부담하는 4대보험료만 약 25만원. 인건비를 계산할 때 '급여 + 사업주 부담분' 으로 봐야 정확한 손익. 2026.1 인상 요율: 국민연금 9.5% (각 4.75%)·건강보험 7.19% (각 3.595%)·고용 1.8% (각 0.9%)+사업주α·산재 0.7-0.8% (업종별).",
+                    `근로자 월급 250만원이면 사업주가 추가 부담하는 4대보험료만 약 25만원. 인건비를 계산할 때 '급여 + 사업주 부담분' 으로 봐야 정확한 손익. 2026.1 인상 요율: 국민연금 ${RATE_STR.pensionTotal} (각 ${RATE_STR.pensionHalf})·건강보험 ${RATE_STR.healthTotal} (각 ${RATE_STR.healthHalf})·고용 ${RATE_STR.employmentTotal} (각 ${RATE_STR.employmentHalf})+사업주α·산재 0.7-0.8% (업종별).`,
                 },
                 {
                   accent: "#1d3557",
@@ -409,10 +429,10 @@ export function InsuranceTaxSetupStage() {
                 <span style={{ textAlign: "right" as const }}>근로자 부담</span>
               </div>
               {[
-                { name: "국민연금", emp: "4.75%", ee: "4.75%", note: "2026년 9.5%로 인상 (기존 9%)" },
-                { name: "건강보험", emp: "3.595%", ee: "3.595%", note: "2026년 7.19%로 인상 (기존 7.09%)" },
-                { name: "장기요양보험", emp: "별도", ee: "별도", note: "임금의 0.9448% (= 건보료 × 13.14%, 2026 인상)" },
-                { name: "고용보험", emp: "0.9% + α", ee: "0.9%", note: "α = 고용안정·직업능력개발 (사업주 0.25~0.85% 추가)" },
+                { name: "국민연금", emp: RATE_STR.pensionHalf, ee: RATE_STR.pensionHalf, note: `2026년 ${RATE_STR.pensionTotal}로 인상 (기존 9%)` },
+                { name: "건강보험", emp: RATE_STR.healthHalf, ee: RATE_STR.healthHalf, note: `2026년 ${RATE_STR.healthTotal}로 인상 (기존 7.09%)` },
+                { name: "장기요양보험", emp: "별도", ee: "별도", note: `임금의 ${RATE_STR.longTermOfWage} (= 건보료 × ${RATE_STR.longTermOfHealth}, 2026 인상)` },
+                { name: "고용보험", emp: `${RATE_STR.employmentHalf} + α`, ee: RATE_STR.employmentHalf, note: `α = 고용안정·직업능력개발 (사업주 ${RATE_STR.stabilityMin}~0.85% 추가)` },
                 { name: "산재보험", emp: accidentInfo.rate, ee: "0%", note: `${accidentInfo.label} — 사업주 100% 부담` },
               ].map((row, i, arr) => (
                 <div

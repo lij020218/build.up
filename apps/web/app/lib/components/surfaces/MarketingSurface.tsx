@@ -563,6 +563,10 @@ function MarketingFocus({
           <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
             {ko ? "내 업종 최신 성공사례로 고른 가장 중요한 1가지. 한 번에 한 채널씩." : "The single most important move, from real cases in your industry."}
           </div>
+          {/* AI 기본법 생성물 표시 — 사례 요약·적용 방법은 생성형 AI 가 웹 조사 후 합성한 내용 */}
+          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "3px" }}>
+            {ko ? "생성형 AI가 웹 사례를 조사·요약한 내용입니다 — 실행 전 출처를 확인하세요." : "Summarized by generative AI from web research — verify sources before acting."}
+          </div>
         </div>
         <button
           type="button"

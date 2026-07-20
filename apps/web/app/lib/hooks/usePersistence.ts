@@ -138,6 +138,9 @@ function isRemoteWipePending(): boolean {
 export function clearLocalUserData(): void {
   try {
     LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
+    // 레거시 스냅샷 키 청소 — 쓰기는 2026-07-21 제거됐지만 기존 브라우저에 남은 PII 잔존분 삭제.
+    localStorage.removeItem("__foundone_last_snapshot");
+    localStorage.removeItem("__foundone_last_snapshot_at");
     // Zustand persist 키 — 모든 foundone-* store. 한 곳에 빠지면 계정 전환 시 stale 상태가
     //   살아남아 cross-account 누출(특히 store-info=상호·주소 PII)이 발생한다.
     //   PERSISTED_STORE_KEYS 가 SSOT — store 추가 시 여기 한 곳만 갱신하면 됨.
@@ -993,13 +996,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       //   evaluateRule 이 fail → stage 회귀. 이전 v1 heal 은 "furthestIdx 보다 앞" 만 backfill 해서
       //   furthestIdx 자체가 회귀 stage 면 안 고쳐짐.
       //
-      // 강화 v2: 두 단계 적용.
-      //   ① 모든 stage 중 "신호 있음 = completedAt OR 어떤 task 라도 status=completed" 면
-      //      그 stage 자체에 completedAt 백필 (사용자가 토글하기 시작했다는 건 진행 흔적).
-      //   ② 위에서 하나라도 backfill 된 가장 뒤 stage idx 까지의 모든 in-roadmap stage 에 backfill
-      //      (path 의 monotonic chain 보장 — 중간 단계가 비어 있을 수 없음).
-      //
-      // 결과: 사용자가 task 만 토글했어도, "다음 단계로" 한 번이라도 눌렀어도, 둘 다 done 으로 인정.
+      // ⚠️ 2026-06-23 근본 수정으로 v2 의 "약신호도 chain 백필" 은 폐기됨 — 현행 동작은
+      //   healCompletedAtChain(workflow.ts) 주석이 정본:
+      //   • chain 백필은 *강신호(completedAt)* 최후방까지만.
+      //   • 약신호(완료 task 만)는 현재 진행 stage 자기 완료만 인정 — chain 을 끌지 않는다
+      //     (약신호가 chain 을 끌면 "모두 완료 + 마지막 단계 점프" 손상 — 2026-06-23 사고).
       // ⚠️ path-aware: 종전엔 배열 인덱스 순으로 backfill 해 배열상 늦은 stage(loan-guide=idx44,
       //   franchise-application=idx26)에 신호가 생기면 그 앞 *배열* 전체를 완료 처리 → "21·22단계
       //   완료로 건너뜀" 버그. healCompletedAtChain 이 resolveNextStageIds 로 사용자 path 를 따라가며
@@ -1579,23 +1580,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       );
     }, 5000);
 
-    const handleBeforeUnload = () => {
-      try {
-        const data = storeDataSnapshotRef.current;
-        if (data && Object.keys(data).length > 0) {
-          localStorage.setItem("__foundone_last_snapshot", JSON.stringify(data));
-          localStorage.setItem("__foundone_last_snapshot_at", new Date().toISOString());
-        }
-      } catch {
-        /* ignore — unload 중 에러 무시 */
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
+    // (2026-07-21 정리) 종전 beforeunload 가 __foundone_last_snapshot 키에 스냅샷을 남겼으나
+    //   읽는 코드가 전무한 죽은 쓰기 + 로그아웃 시 안 지워져 공용 PC 에 storeInfo PII 잔존.
+    //   쓰기를 제거하고 기존 키는 clearLocalUserData 가 청소한다.
     return () => {
       clearInterval(interval);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [persistenceReady]);
 

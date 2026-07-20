@@ -56,7 +56,7 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
     private let getUserId: @Sendable () async throws -> UUID
 
     /// 캐시된 roadmap row id — 첫 호출 시 lazy 로 찾고 (없으면 생성), 이후 재사용.
-    /// userId 변경 시 reset 필요 (resetForNewUser 경로).
+    /// userId 변경은 매 호출 cachedForUserId 비교로 자동 무효화 (계정 전환 안전).
     private var cachedRoadmapId: UUID?
     private var cachedForUserId: UUID?
 

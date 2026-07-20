@@ -418,12 +418,6 @@ public final class RoadmapStore {
         Task { try? await repo.saveStaffPlan(plan, status: status) }
     }
 
-    /// 사장님이 로그아웃·재로그인 했을 때 — 로컬 캐시 비우고 원격 hydrate.
-    public func resetForNewUser() async {
-        resetAll()
-        await syncFromRemote()
-    }
-
     /// 백그라운드 upsert. Supabase upsert 는 idempotent → debounce 불필요.
     ///   실패 시 stageId 를 pendingPushStageIds 에 적재 → 다음 syncFromRemote 성공 시 재전송(보정).
     private func pushUpsert(_ decision: StageDecision) {

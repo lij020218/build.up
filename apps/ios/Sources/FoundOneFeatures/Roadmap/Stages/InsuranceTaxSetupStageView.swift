@@ -50,6 +50,14 @@ public struct InsuranceTaxSetupStageView: View {
     private var accidentRate: Double { cluster.accidentInsuranceRatePct }
     private var accidentRateDecimal: Double { accidentRate / 100.0 }
 
+    /// 소수 요율 → 표시 퍼센트 (0.0475 → "4.75%"). 후행 0 제거, 최대 4자리(장기요양 0.9448%).
+    private func pctText(_ rate: Double) -> String {
+        var s = String(format: "%.4f", rate * 100)
+        while s.hasSuffix("0") { s.removeLast() }
+        if s.hasSuffix(".") { s.removeLast() }
+        return s + "%"
+    }
+
     // 영업장 법정 의무보험(직원 4대보험과 별개). SSOT: packages/shared mandatory-insurance.ts 미러.
     private var mandatoryIns: [MandatoryInsurance] {
         MandatoryInsuranceRegistry.forCategory(StarterIndustryData.option(by: industryId)?.categoryId)
@@ -163,11 +171,14 @@ public struct InsuranceTaxSetupStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("2026년 4대보험 요율 (정부 고시)")
+                    // 표시 요율도 FoundOneCore SSOT(InsuranceRates2026)에서 조립 — 요율 개정 시 자동 갱신.
+                    //   인상 전 옛 요율(9%·7.09%)만 역사적 사실이라 리터럴 유지.
+                    let R = InsuranceRates2026.self
                     let rates: [(String, String, String, String)] = [
-                        ("국민연금",   "9.5%", "근로자 4.75% / 사업주 4.75%", "2026.1 인상 (9% → 9.5%)"),
-                        ("건강보험",   "7.19%","근로자 3.595% / 사업주 3.595%", "2026.1 인상 (7.09% → 7.19%)"),
-                        ("장기요양",   "임금의 0.9448%", "근로자·사업주 각 0.4724% (= 건보료 × 13.14%)", "건강보험료 기준이 아닌 임금 기준"),
-                        ("고용보험",   "1.8%", "근로자 0.9% / 사업주 0.9% + 추가 0.25%↑", "추가 = 고용안정·직업능력개발 (사업주만)"),
+                        ("국민연금",   pctText(R.pensionEmployer + R.pensionEmployee), "근로자 \(pctText(R.pensionEmployee)) / 사업주 \(pctText(R.pensionEmployer))", "2026.1 인상 (9% → \(pctText(R.pensionEmployer + R.pensionEmployee)))"),
+                        ("건강보험",   pctText(R.healthEmployer + R.healthEmployee), "근로자 \(pctText(R.healthEmployee)) / 사업주 \(pctText(R.healthEmployer))", "2026.1 인상 (7.09% → \(pctText(R.healthEmployer + R.healthEmployee)))"),
+                        ("장기요양",   "임금의 \(pctText((R.healthEmployer + R.healthEmployee) * R.longTermCareRateOfHealth))", "근로자·사업주 각 \(pctText(R.healthEmployer * R.longTermCareRateOfHealth)) (= 건보료 × \(pctText(R.longTermCareRateOfHealth)))", "건강보험료 기준이 아닌 임금 기준"),
+                        ("고용보험",   pctText(R.employmentEmployer + R.employmentEmployee), "근로자 \(pctText(R.employmentEmployee)) / 사업주 \(pctText(R.employmentEmployer)) + 추가 \(pctText(R.employmentStabilityEmployer))↑", "추가 = 고용안정·직업능력개발 (사업주만)"),
                         ("산재보험",   String(format: "%.1f%%", accidentRate), "사업주 100% (근로자 부담 없음)", "\(cluster.categoryNounKo) 업종별 요율"),
                     ]
                     ForEach(rates, id: \.0) { name, rate, split, note in

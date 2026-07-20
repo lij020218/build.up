@@ -35,8 +35,14 @@ export function useInAppNotifications() {
       .select("id, title, body, url, is_read, created_at")
       .order("created_at", { ascending: false })
       .limit(30);
-    // 테이블 미적용(마이그레이션 전) 등은 조용히 빈 목록 — 벨은 계속 동작
-    if (error) { setItems([]); return; }
+    // 에러≠부재 (2026-07-13 hire_date 사고 규율): 테이블 미적용(42P01, 마이그레이션 전)만
+    // 조용히 빈 목록으로 soft-fail. 그 외 에러(RLS·GRANT·네트워크)는 기존 목록을 유지해
+    // 일시 장애가 "알림 0건"으로 위장하지 않게 한다 — realtime/다음 load 가 재시도.
+    if (error) {
+      if ((error as { code?: string }).code === "42P01") setItems([]);
+      else console.warn("[notifications] load failed — 기존 목록 유지", error.message);
+      return;
+    }
     setItems(((data ?? []) as InAppNotif[]));
   }, []);
 

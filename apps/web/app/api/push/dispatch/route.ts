@@ -20,6 +20,7 @@ import webpush from "web-push";
 import { importPKCS8, SignJWT } from "jose";
 import { connect as http2Connect } from "node:http2";
 import { getSupabaseServiceRoleKey } from "../../_lib/env";
+import { timingSafeEqualStr } from "../../_lib/timing-safe";
 
 export const runtime = "nodejs";
 
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest) {
   if (!secret || secret.length < 16) {
     return NextResponse.json({ error: "push not configured" }, { status: 503 });
   }
-  if (req.headers.get("x-push-secret") !== secret) {
+  // constant-time 비교 — cron 라우트들과 동일 규율 (문자열 !== 는 timing side-channel)
+  if (!timingSafeEqualStr(req.headers.get("x-push-secret") ?? "", secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

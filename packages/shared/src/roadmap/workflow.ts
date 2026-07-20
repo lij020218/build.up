@@ -416,20 +416,26 @@ export function buildRoadmapState(
     unlockedStageIds
   );
 
-  // ⚠️ path-aware: progressPercent는 reachable(사용자 path) stage 기준으로 계산
+  // ⚠️ path-aware: progressPercent·totalSteps 는 *전체 path 길이* 기준으로 계산.
   // 이전엔 stages.length(전체 ~46개) 기준이라 online 셀러가 9/9 완료해도 ~27% 표시되는 버그.
-  const reachableTotal = reachableIds.size;
-  const reachableCompleted = Array.from(completedStageIds).filter((id) => reachableIds.has(id)).length;
+  // ⚠️ 2026-07-21 정정: 종전 reachableIds 기준은 "완료 단계 + 프론티어 1개"라 k단계 완료 시
+  //   k/(k+1) 로 부풀려졌다 (1완료=50%, 5완료=83% — DB roadmaps.progress_percent 로 저장돼
+  //   관리자 화면이 그대로 표시). traverseUserPath 로 본인 path 전체 길이를 분모로 쓴다
+  //   (웹 correctedProgressPercent 와 동일 공식 — useComputedDashboard.ts pathTotalStages).
+  const pathIds = new Set(
+    traverseUserPath(baseRoadmap.stages, decisions, () => true).map((s) => s.stageId),
+  );
+  const pathTotal = pathIds.size;
+  const pathCompleted = Array.from(completedStageIds).filter((id) => pathIds.has(id)).length;
   const progressPercent =
-    reachableTotal === 0 ? 0 : Math.round((reachableCompleted / reachableTotal) * 100);
+    pathTotal === 0 ? 0 : Math.round((pathCompleted / pathTotal) * 100);
 
-  // ⚠️ path-aware totalSteps: 각 stage 의 totalSteps 를 reachable 카운트로 덮어씀.
+  // ⚠️ path-aware totalSteps: 각 stage 의 totalSteps 를 path 길이로 덮어씀.
   // 이전엔 totalSteps:14 가 하드코딩되어 사장님 화면에 항상 "14단계 중 X" 표시되었으나,
   // 실제 path 길이는 cluster 별로 다름 (offline=15, online=12, startup-tech=14, semiconductor=22 등).
-  // path-aware 카운트로 사장님이 본인 path 의 정확한 단계 수를 봄.
   const stagesWithCorrectTotal = stages.map((stage) =>
-    reachableIds.has(stage.stageId)
-      ? { ...stage, totalSteps: reachableTotal }
+    pathIds.has(stage.stageId)
+      ? { ...stage, totalSteps: pathTotal }
       : stage,
   );
 

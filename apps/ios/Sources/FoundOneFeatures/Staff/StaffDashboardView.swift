@@ -58,6 +58,7 @@ public struct StaffDashboardView: View {
     }()
     @State private var showLeaveSheet = false
     @State private var showProfileSheet = false   // 내 정보 시트 (2026-07-13)
+    @Environment(\.scenePhase) private var scenePhase   // 포그라운드 복귀 재조회 트리거
 
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var today: String { ymd(Date()) }
@@ -151,6 +152,12 @@ public struct StaffDashboardView: View {
             }
         }
         .task { await load() }
+        // 포그라운드 복귀 시 재조회 — staff 테이블(근무표·출퇴근·연차·수당)은 realtime 미구독이라
+        //   진입 1회 로드뿐. 웹 포커스 복귀 재조회와 동일 취지 (AppRoot scenePhase 패턴 미러).
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            guard newPhase == .active, oldPhase != .active, !loading else { return }
+            Task { await load() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteDataChanged)) { _ in
             Task { await load() }
         }

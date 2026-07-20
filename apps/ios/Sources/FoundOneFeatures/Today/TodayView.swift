@@ -27,10 +27,13 @@
 
 import SwiftUI
 import Combine
+import OSLog
 import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneComponents
 import FoundOneData
+
+private let logger = Logger(subsystem: "com.foundone.ios", category: "TodayView")
 
 // MARK: - TodayView
 
@@ -582,11 +585,16 @@ public struct TodayView: View {
     }
 
     /// 초대된 직원(store_members) 로드 — 팀카드 인원·명단. get_store_members RPC(사장 본인 소유).
-    ///   데모/비로그인은 RPC 실패 → 빈 배열(수동 급여명단으로 fallback). 2026-07-14
+    ///   RPC 에러 시 기존 값 유지 — 빈 배열로 덮으면 일시 오류가 "직원 0명"으로 보임(RPC 에러≠부재).
+    ///   데모/비로그인은 초기값 [] 그대로(수동 급여명단으로 fallback). 2026-07-14
     private func loadInvitedStaff() async {
         guard storeInfo != nil else { return }
         let repo = TeamRepository(supabase: BUSupabase.shared.client)
-        invitedStaff = (try? await repo.members()) ?? []
+        do {
+            invitedStaff = try await repo.members()
+        } catch {
+            logger.error("invitedStaff 로드 실패(기존 값 유지): \(error.localizedDescription)")
+        }
     }
 
     private var dailyKpiCells: [KpiCellData] {

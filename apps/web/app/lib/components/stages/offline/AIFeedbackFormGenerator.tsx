@@ -100,9 +100,13 @@ export function AIFeedbackFormGenerator({
   };
 
   // 복사 — 키 단위 (어떤 버튼이 눌렸는지 표시)
+  //   AI 기본법 생성물 표시: 반출물(폼 텍스트) 자체에 고지 삽입 — 사업계획서 반출과 동일 기준.
   const doCopy = async (key: string, text: string) => {
+    const aiNotice = ko
+      ? "\n\n※ 이 질문지 초안은 생성형 AI가 작성했습니다. 배포 전 내용을 검토·수정하세요."
+      : "\n\n* This questionnaire draft was written by generative AI. Review before distributing.";
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(text + aiNotice);
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 1500);
     } catch {
