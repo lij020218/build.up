@@ -17,6 +17,7 @@ import { fetchLiveSupportPrograms } from "../../../services/live-data";
 import { supabase } from "../../../../../lib/supabase";
 import { styles } from "../../../styles";
 import { StageWrapup } from "../shared/StageWrapup";
+import { usePublishPageNav } from "../../../stores/page-nav-store";
 import { LOAN_FAQ_ENTRIES, matchLoanFaq, type LoanFaqEntry } from "@foundone/shared";
 import { useMemo, useState } from "react";
 
@@ -317,6 +318,8 @@ export function LoanGuideStage() {
 
   const pg = guideStepIndex;
   const totalPg = 3;
+  // 페이지 네비 publish — 푸터가 마지막 페이지 전엔 "다음 페이지"를 렌더 (읽기 게이트)
+  usePublishPageNav(pg, totalPg, setGuideStepIndex);
   const pgLabels = ko
     ? ["내 상황 진단", "추천 자금 경로", "AI 사업계획서"]
     : ["My Situation", "Funding Paths", "AI Plan"];
@@ -778,7 +781,9 @@ export function LoanGuideStage() {
         </>
       )}
 
-      {/* ── 2026-05-12 P0: 검토 완료 명시적 confirmation. 다음 단계로 advance 게이트. ── */}
+      {/* ── 2026-05-12 P0: 검토 완료 명시적 confirmation. 다음 단계로 advance 게이트.
+            마지막 페이지에만 노출 — 1페이지에서 체크 후 즉시 통과하면 읽기 게이트 취지가 무너짐. ── */}
+      {pg === totalPg - 1 && (
       <button
         type="button"
         onClick={() => setLoanChecks((prev) => ({ ...prev, [LOAN_REVIEW_KEY]: !prev[LOAN_REVIEW_KEY] }))}
@@ -824,6 +829,7 @@ export function LoanGuideStage() {
           </div>
         </div>
       </button>
+      )}
 
       {/* ── 2026-05-18: 대출 FAQ 카드 (FAQ 우선 + AI fallback 동일 패턴) ── */}
       <LoanFaqCard

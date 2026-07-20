@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { StageWrapup } from "../shared/StageWrapup";
+import { usePublishPageNav } from "../../../stores/page-nav-store";
 import { resolveSpecialtyKeyAction } from "@foundone/shared";
 import { isDigitalFulfillment } from "../online/DigitalFulfillmentNotice";
 
@@ -52,6 +53,8 @@ export function PreLaunchFinalStage() {
     : "service";
   const pg = guideStepIndex;
   const totalPg = 4;
+  // 페이지 네비 publish — 푸터가 마지막 페이지 전엔 "다음 페이지"를 렌더 (읽기 게이트)
+  usePublishPageNav(pg, totalPg, setGuideStepIndex);
 
   const pgLabels = isStartup
     ? (ko ? ["왜 중요한가", "론칭 전 점검", "론칭 당일 실행", "2주 타임라인"] : ["Why", "Pre-check", "Launch Day", "Timeline"])

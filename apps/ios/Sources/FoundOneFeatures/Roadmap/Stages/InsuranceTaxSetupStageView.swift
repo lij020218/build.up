@@ -133,6 +133,7 @@ public struct InsuranceTaxSetupStageView: View {
                 nextSummary: "4대보험·원천세·급여 시스템 셋업 완료 → 채용·운영 세팅 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

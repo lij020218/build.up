@@ -173,6 +173,7 @@ public struct FinancialReviewStageView: View {
                 nextSummary: "고정·변동·기타 비용 시뮬 + BEP 확인 → 개업·론칭 단계로 진입"
             ),
             currentPage: tab,
+            onNextPage: { withAnimation { tab += 1 } },
             totalPages: tabs.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

@@ -56,7 +56,7 @@ describe("업종 전환 진행 삭제 (industry switch purge)", () => {
     const r = markStageAdvanced(base, roadmap, foodDecisions, {}, "industry-selection", switchPayload);
     const healed = healCompletedAtChain(r.decisions, {}, starterRoadmap.stages);
     const newlyHealed = Object.entries(healed.decisions)
-      .filter(([k, d]) => d.completedAt && !r.decisions[k]?.completedAt)
+      .filter(([k, d]) => d?.completedAt && !r.decisions[k]?.completedAt)
       .map(([k]) => k);
     // 이 계약이 깨지면(=오염이 재현 안 되면) heal 로직이 바뀐 것 — 전환 처방과 함께 재검토할 것.
     expect(newlyHealed.length).toBeGreaterThan(0);
@@ -77,7 +77,7 @@ describe("업종 전환 진행 삭제 (industry switch purge)", () => {
     // heal 이 완료 처리할 강신호가 없다 — 자동완료 0
     const healed = healCompletedAtChain(r.decisions, {}, starterRoadmap.stages);
     const newlyHealed = Object.entries(healed.decisions)
-      .filter(([k, d]) => d.completedAt && !r.decisions[k]?.completedAt)
+      .filter(([k, d]) => d?.completedAt && !r.decisions[k]?.completedAt)
       .map(([k]) => k);
     expect(newlyHealed).toEqual([]);
 

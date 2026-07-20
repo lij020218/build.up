@@ -223,6 +223,7 @@ public struct BUStageContentRenderer: View {
             },
             wrapup: wrapupData,
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: content.pages.count,
             keyActionOverride: currentPageKeyAction
         ) {

@@ -124,6 +124,7 @@ public struct BizRegistrationStageView: View {
                 nextSummary: "상호명·통장 확정 → 과세 신고·정책자금 단계로"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

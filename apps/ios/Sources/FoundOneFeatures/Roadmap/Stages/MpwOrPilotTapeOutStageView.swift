@@ -78,6 +78,7 @@ public struct MpwOrPilotTapeOutStageView: View {
                 nextSummary: "테이프아웃 후 6~28주 제조를 거쳐 패키징·테스트 단계로 넘어갑니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

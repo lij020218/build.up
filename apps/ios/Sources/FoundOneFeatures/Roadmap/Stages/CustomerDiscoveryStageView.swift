@@ -98,6 +98,7 @@ public struct CustomerDiscoveryStageView: View {
                 nextSummary: "ICP·문제·솔루션 가설 검증 완료 → MVP 빌드 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

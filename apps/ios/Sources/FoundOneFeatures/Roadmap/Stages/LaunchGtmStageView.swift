@@ -221,6 +221,7 @@ public struct LaunchGtmStageView: View {
                 nextSummary: "출시 스택·첫 100명·콘텐츠 셋업 완료 → 런타임 운영 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

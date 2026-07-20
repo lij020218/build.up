@@ -76,6 +76,7 @@ public struct EdaToolingSetupStageView: View {
                 nextSummary: "확보한 EDA 환경으로 본격 설계·검증에 들어갑니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

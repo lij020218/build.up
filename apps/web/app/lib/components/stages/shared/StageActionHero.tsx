@@ -14,6 +14,7 @@
  */
 
 import { ShieldCheck, AlertTriangle } from "lucide-react";
+import { usePublishPageNav } from "../../../stores/page-nav-store";
 
 const MIDNIGHT = "#191970";
 
@@ -105,6 +106,9 @@ type StageTabNavProps = {
 
 export function StageTabNav({ ko, pageIndex, pageLabels, onPrev, onNext, onJump }: StageTabNavProps) {
   const lastIdx = pageLabels.length - 1;
+  // 페이지 네비를 공유 store 에 publish — 부모 푸터가 "다음 페이지/다음 단계로"를 페이지
+  // 인식형으로 렌더 (종전엔 StartupPageNav 만 발행해 StageTabNav 스테이지는 읽기 게이트가 샜다).
+  usePublishPageNav(pageIndex, pageLabels.length, onJump);
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 8, marginBottom: 16 }}>
       <button

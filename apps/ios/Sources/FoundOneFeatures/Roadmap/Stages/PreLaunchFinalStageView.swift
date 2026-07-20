@@ -467,6 +467,7 @@ public struct PreLaunchFinalStageView: View {
                 nextSummary: "오픈·그랜드오픈·D+7 준비 완료 → 로드맵 전 과정 수료, 마이 대시보드 실전 운영(매출·재고·CS) 시작"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count,
             keyActionOverride: pageKeyAction
         ) {

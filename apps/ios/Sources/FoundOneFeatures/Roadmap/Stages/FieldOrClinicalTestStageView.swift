@@ -82,6 +82,7 @@ public struct FieldOrClinicalTestStageView: View {
                 nextSummary: "검증된 결과를 양산·인증·IR 자료에 활용합니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

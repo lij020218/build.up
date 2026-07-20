@@ -315,6 +315,7 @@ public struct OperationsSetupStageView: View {
                 nextSummary: "POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count,
             keyActionOverride: pageKeyAction
         ) {

@@ -81,6 +81,7 @@ public struct PackagingAndTestStageView: View {
                 nextSummary: "패키징·테스트를 통과한 검증 칩으로 양산 파트너 선정 단계로 넘어갑니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

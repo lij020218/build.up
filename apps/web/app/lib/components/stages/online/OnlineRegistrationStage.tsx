@@ -3,6 +3,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StoreNameInput } from "../shared/StoreNameInput";
 import { StageWrapup } from "../shared/StageWrapup";
 import { KeyActionHero } from "../shared/StageActionHero";
+import { usePublishPageNav } from "../../../stores/page-nav-store";
 
 // 세부업종별 홈택스 업종코드 (국세청 6자리 기준경비율 코드 — 2026-07-10 공식 검증).
 //   ⚠️ 종전 47911은 통계청 표준산업분류(KSIC)라 홈택스 입력 코드가 아님 → 525101로 교정.
@@ -23,6 +24,8 @@ export function OnlineRegistrationStage() {
   const ko = d.language === "ko";
   const regPage = d.regPage;
   const setRegPage = d.setRegPage;
+  // 페이지 네비 publish — 푸터가 마지막 페이지 전엔 "다음 페이지"를 렌더 (읽기 게이트)
+  usePublishPageNav(regPage, 2, setRegPage);
   const industryCodeStep = INDUSTRY_CODE_STEP_KO[d.selectedIndustryId ?? ""] ?? INDUSTRY_CODE_STEP_FALLBACK_KO;
 
   const pages = [

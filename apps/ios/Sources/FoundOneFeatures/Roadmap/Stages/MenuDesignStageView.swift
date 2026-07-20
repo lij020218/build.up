@@ -310,6 +310,7 @@ public struct MenuDesignStageView: View {
                 nextSummary: "메뉴 라인업 확정 → 공급처·식자재 셋업 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: 3
         ) {
             VStack(alignment: .leading, spacing: BUSpacing.cardGap) {

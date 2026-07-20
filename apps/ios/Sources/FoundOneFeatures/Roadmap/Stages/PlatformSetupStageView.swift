@@ -100,6 +100,7 @@ public struct PlatformSetupStageView: View {
                 nextSummary: "플랫폼 선택·개설 순서 확정 → 온라인 사업자등록·통신판매 신고 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

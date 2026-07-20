@@ -302,6 +302,7 @@ public struct TargetCustomerStageView: View {
                 nextSummary: "타깃 페르소나 확정 → 예산·시점 설정 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: 3,
             keyActionOverride: BUStageKeyAction(title: heroTitle, detail: helperText)
         ) {

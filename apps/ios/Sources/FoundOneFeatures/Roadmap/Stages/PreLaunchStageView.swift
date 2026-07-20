@@ -130,6 +130,7 @@ public struct PreLaunchStageView: View {
                 nextSummary: "운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

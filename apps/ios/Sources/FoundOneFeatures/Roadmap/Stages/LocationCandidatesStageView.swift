@@ -220,6 +220,7 @@ public struct LocationCandidatesStageView: View {
                 nextSummary: "입지 1곳 확정 → 임대 계약서 검토 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

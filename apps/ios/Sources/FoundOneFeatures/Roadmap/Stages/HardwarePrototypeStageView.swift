@@ -71,6 +71,7 @@ public struct HardwarePrototypeStageView: View {
                 nextSummary: "검증을 마친 설계로 양산 체제로 전환합니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

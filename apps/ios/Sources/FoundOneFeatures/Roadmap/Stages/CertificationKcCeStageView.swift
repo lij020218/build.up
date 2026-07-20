@@ -77,6 +77,7 @@ public struct CertificationKcCeStageView: View {
                 nextSummary: "KC·CE·FCC 인증 + 한국 대리인 지정 완료 → 양산 파트너 셋업 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

@@ -70,6 +70,7 @@ public struct BomSupplyChainStageView: View {
                 nextSummary: "확정된 BOM으로 만든 제품을 실제 환경에서 검증합니다."
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

@@ -100,6 +100,7 @@ public struct OnlineMarketingStageView: View {
                 nextSummary: "채널·예산·콘텐츠·측정 4축 셋업 완료 → 월 운영비 검토 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

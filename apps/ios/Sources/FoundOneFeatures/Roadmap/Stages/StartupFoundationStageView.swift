@@ -85,6 +85,7 @@ public struct StartupFoundationStageView: View {
                 nextSummary: "공동창업자·지분·비전·팀 셋업 완료 → 고객 발견 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

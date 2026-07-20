@@ -113,6 +113,7 @@ public struct FundraisingReadinessStageView: View {
                 nextSummary: "캡테이블·런웨이·데크·투자자 매칭 완료 → 벤처 인증 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

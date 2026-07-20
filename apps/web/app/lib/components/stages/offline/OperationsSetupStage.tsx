@@ -10,6 +10,7 @@ import {
   Cog, Megaphone, Check, ArrowRight, Sparkles,
 } from "lucide-react";
 import { StageWrapup } from "../shared/StageWrapup";
+import { usePublishPageNav } from "../../../stores/page-nav-store";
 import { getOpsChannels, getOpsChannelLabel } from "@foundone/shared";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러 (PermitCheck/ContractReview/Hiring 과 통일)
@@ -712,6 +713,9 @@ export function OperationsSetupStage() {
   ];
 
   const currentOpsStep = steps[opsStep];
+  // 페이지 네비 publish — 푸터가 마지막 step 전엔 "다음 페이지"를 렌더 (읽기 게이트).
+  //   step 전환은 setOpsStep 하나로 충분 — activeTrack 은 opsStep useEffect 가 자동 전환.
+  usePublishPageNav(opsStep, steps.length, setOpsStep);
   const currentKeyAction = keyActions[opsStep];
   const currentTraps = traps[opsStep] ?? [];
   const currentWhy = whyMatters[opsStep] ?? [];

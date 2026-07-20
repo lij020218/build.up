@@ -108,6 +108,7 @@ public struct SourcingSetupStageView: View {
                 nextSummary: "소싱·공급처 검증 완료 → 스토어 셋업(상품 등록·배송·CS) 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

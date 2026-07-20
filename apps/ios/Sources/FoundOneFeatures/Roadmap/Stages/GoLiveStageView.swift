@@ -106,6 +106,7 @@ public struct GoLiveStageView: View {
                 nextSummary: "실제 출시 + 도메인·앱·PH·모니터링 셋업 완료 → 성장 엔진 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

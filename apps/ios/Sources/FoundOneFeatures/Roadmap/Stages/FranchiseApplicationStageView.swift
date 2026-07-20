@@ -211,6 +211,7 @@ public struct FranchiseApplicationStageView: View {
                 nextSummary: "정보공개서·계약서 검토 완료 → 인테리어 시공·운영 준비 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

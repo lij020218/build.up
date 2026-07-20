@@ -75,6 +75,7 @@ public struct CompanySetupStageView: View {
                 nextSummary: "법인·특허·상표·약관 사전 셋업 완료 → MVP 빌드 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

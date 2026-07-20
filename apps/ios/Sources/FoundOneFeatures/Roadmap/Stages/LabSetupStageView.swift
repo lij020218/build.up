@@ -130,6 +130,7 @@ public struct LabSetupStageView: View {
                     : "GLP 시설·SOP·교정·폐기물 절차 완료 → 프로토타입 반복 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count,
             keyActionOverride: keyAction
         ) {

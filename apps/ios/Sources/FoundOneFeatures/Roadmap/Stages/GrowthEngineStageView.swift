@@ -71,6 +71,7 @@ public struct GrowthEngineStageView: View {
                 nextSummary: "북극성·주간 리뷰·리텐션·성장 가설 셋업 완료 → 펀드레이징 준비 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {

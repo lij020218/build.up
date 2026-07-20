@@ -121,6 +121,7 @@ public struct ConstructionSetupStageView: View {
                 nextSummary: "인테리어 컨셉·견적·자재 확정 → 공급처·장비 발주 단계로 진입"
             ),
             currentPage: page,
+            onNextPage: { withAnimation { page += 1 } },
             totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {
