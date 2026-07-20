@@ -121,6 +121,19 @@ const PERSISTED_STORE_KEYS = [
   "foundone-ecommerce",
 ] as const;
 
+/**
+ * 다른 기기 초기화(core 행 DELETE)로 트리거된 wipe 가 진행 중인지.
+ * true 인 동안 stale 로컬을 서버로 flush 하지 않음 — flush 하면 방금 지운 데이터가
+ * *부활*한다(사장님 신고 "초기화 후 시간 지나면 복구"). realtime doReload 와
+ * 포커스 복귀 flush 두 경로가 같은 판정을 쓴다.
+ */
+function isRemoteWipePending(): boolean {
+  try {
+    const f = window.localStorage.getItem("pending_force_onboarding");
+    return !!f && Date.now() - Number(f) < 120_000;
+  } catch { return false; }
+}
+
 /** Remove all user-specific localStorage keys */
 export function clearLocalUserData(): void {
   try {
@@ -856,14 +869,6 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           realtimeTrailingRef.current = null;
         }
         const uid = result.user.id;
-        // 다른 기기 초기화(core 행 DELETE)로 트리거된 reload 면, stale 로컬을 서버로 flush 하지 않음
-        //   (flush 하면 방금 지운 데이터가 *부활* — 사장님 신고 "초기화 후 시간 지나면 복구").
-        const isRemoteWipePending = () => {
-          try {
-            const f = window.localStorage.getItem("pending_force_onboarding");
-            return !!f && Date.now() - Number(f) < 120_000;
-          } catch { return false; }
-        };
         // 원격 변경 → 재조회(전체 재수화). 빈 로컬 push 금지(로드 전) + 최신 스냅샷 fetch.
         const doReload = () => {
           void (async () => {
@@ -1465,7 +1470,10 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         const uid = realtimeUserRef.current;
         if (uid && await detectResetAndWipe(uid)) return;
         try {
-          await flushStoreDataImmediate();
+          // 🛑 서버 로드 완료 전엔 flush 금지(storeDataReady 불변식) — loadStoreData 실패 상태에서
+          //   포커스 복귀마다 stale 로컬 배열이 다른 기기의 최신 서버 값을 덮어쓰는 것 차단.
+          //   realtime 재조회 경로(doReload)와 동일 가드.
+          if (storeDataReadyRef.current && !isRemoteWipePending()) await flushStoreDataImmediate();
         } catch {
           /* flush 실패해도 재조회는 진행 */
         }
