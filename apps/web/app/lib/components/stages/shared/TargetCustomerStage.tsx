@@ -498,6 +498,8 @@ export function TargetCustomerStage() {
         </>
       )}
 
+      {/* 마무리는 마지막 페이지에만 — 앞 페이지 누출 금지 (StageContentRenderer 게이트와 동일 규율) */}
+      {pg === totalPg - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo={ko ? "예산·시점 설정" : "Budget setup"}
@@ -516,6 +518,7 @@ export function TargetCustomerStage() {
         ]}
         nextSummaryKo={ko ? "타깃 페르소나 확정 → 예산·시점 설정 단계로 진입" : "Target persona locked → enter Budget setup"}
       />
+      )}
     </div>
   );
 }

@@ -320,6 +320,8 @@ export function OnlineRegistrationStage() {
       </div>
       {pages[regPage]()}
 
+      {/* 마무리는 마지막 페이지에만 — 앞 페이지 누출 금지 (iOS 셸 게이트와 동일 규율) */}
+      {regPage === pages.length - 1 && (
       <StageWrapup
         ko={ko}
         nextStageLabelKo="사업자등록 & 금융 세팅"
@@ -339,6 +341,7 @@ export function OnlineRegistrationStage() {
         ]}
         nextSummaryKo="사업자등록·통신판매 신고 완료 → 사업자등록 & 금융 세팅(사업용 통장·세무 대리) 단계로 진입"
       />
+      )}
     </div>
   );
 }

@@ -1745,6 +1745,8 @@ export function OperationsSetupStage() {
         )}
       </div>
 
+      {/* 법정신고·마무리는 마지막 step 에만 — 앞 step 누출 금지 (마무리=단계 끝 규율) */}
+      {opsStep === steps.length - 1 && (<>
       {/* ── 법정 의무 신고 (2026-05-25 audit 추가) ──
             현금영수증 가맹점 가입 (부가가치세법 32조의2) + 옥외 간판 신고 (옥외광고물법 5조).
             이전 운영 단계에 누락 → 미가입/미신고 시 가산세·과태료. iOS SSOT 와 동시 출시. */}
@@ -1834,6 +1836,7 @@ export function OperationsSetupStage() {
         verifyItemsKo={wrapupVerifyItems}
         nextSummaryKo={wrapupNextSummary}
       />
+      </>)}
     </div>
   );
 
