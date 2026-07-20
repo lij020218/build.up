@@ -12,7 +12,7 @@
 //   • online       → 상품 (메인/번들/체험/리필)                       · 마진율 50% 목표
 //   • saas         → 구독 (Free/Starter/Pro/Enterprise 4티어)         · CAC < 12개월 LTV
 //
-//  3페이지: Why → Add → Cost Check + 자동 wrap-up + 자동 task list
+//  4페이지: Why → Add → Cost Check → 마무리(wrapup 전용 탭, 웹 "3. 마무리" 미러)
 //
 
 import SwiftUI
@@ -76,10 +76,48 @@ private enum MenuCluster: String {
 
     var costFieldPlaceholder: String {
         switch self {
-        case .food, .cafe:     return "1인분 원가 (원)"
-        case .service:         return "재료·세션 원가 (원)"
-        case .retail, .online: return "매입가 (원)"
-        case .saas:            return "월 인프라 비용 (원)"
+        case .food:    return "1인분 원가 (원)"
+        case .cafe:    return "1잔 원가 (원)"
+        case .service: return "재료·세션 원가 (원)"
+        case .retail:  return "매입가 (원)"
+        case .online:  return "매입·제조 원가 (원)"
+        case .saas:    return "월 인프라 비용 (원)"
+        }
+    }
+
+    /// 메모(주재료·옵션·feature) placeholder — 웹 notesPlaceholder 1:1.
+    var notesFieldPlaceholder: String {
+        switch self {
+        case .food:    return "주재료 (예: 김치 100g, 돼지고기 60g) — 선택"
+        case .cafe:    return "주재료 (예: 원두 18g, 우유 200ml) — 선택"
+        case .service: return "소요시간·사용도구 (예: 소요 40분) — 선택"
+        case .retail:  return "옵션·초기 재고 (예: 초기 재고 30) — 선택"
+        case .online:  return "옵션·배송비 (예: 옵션 3종, 배송 3000) — 선택"
+        case .saas:    return "핵심 feature·한도 (예: AI 무제한 + 1000 calls) — 선택"
+        }
+    }
+
+    /// COST 페이지 평균 비율 라벨 — 웹 ratioLabel 1:1.
+    var ratioLabel: String {
+        switch self {
+        case .food:    return "메뉴 평균 식자재 원가율"
+        case .cafe:    return "음료 평균 원가율"
+        case .service: return "평균 재료·세션 원가율"
+        case .retail:  return "평균 원가율 (매입/판매)"
+        case .online:  return "평균 원가율 (원가/판매)"
+        case .saas:    return "평균 인프라 비중 (인프라/매출)"
+        }
+    }
+
+    /// 다음 단계 라벨 — 웹 nextStageLabel 1:1.
+    var nextStageLabel: String {
+        switch self {
+        case .food:    return "공급처·식자재 셋업"
+        case .cafe:    return "공급처·부자재 셋업"
+        case .service: return "예약·인력 셋업"
+        case .retail:  return "매입처·진열 셋업"
+        case .online:  return "상세페이지·광고 셋업"
+        case .saas:    return "결제·랜딩·GTM"
         }
     }
 
@@ -94,12 +132,13 @@ private enum MenuCluster: String {
         }
     }
 
-    /// 황금 원가율 (%, 초과 시 마진 경보).
+    /// 황금 원가율 (%, 초과 시 마진 경보). 웹 goldenMax 1:1.
     var costRatioGoldenMax: Double {
         switch self {
         case .food, .cafe:     return 33    // 한국외식산업연구원 표준
         case .service:         return 25    // 미용·피트니스 객단가 25%↓ 재료/세션비
-        case .retail, .online: return 60    // 매입 60%↓ → 마진 40%↑
+        case .retail:          return 60    // 매입 60%↓ → 마진 40%↑
+        case .online:          return 50    // 마진 50%+ (수수료·배송 흡수)
         case .saas:            return 30    // 인프라 매출의 30%↓ → 70% gross margin
         }
     }
@@ -219,7 +258,8 @@ struct LineupItem: Identifiable, Codable {
     var notes: String
 
     var costRatio: Double { price > 0 ? Double(cost) / Double(price) * 100 : 0 }
-    var isWarning: Bool { costRatio > 33 }
+    /// cluster 별 황금 원가율(goldenMax) 초과 여부 — 웹 ratioWarn(ratio > gm) 1:1.
+    func isWarning(goldenMax: Double) -> Bool { price > 0 && costRatio > goldenMax }
 }
 
 // MARK: - MenuDesignStageView
@@ -294,24 +334,22 @@ public struct MenuDesignStageView: View {
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                    .init(label: "1. 메뉴 라인업 확정", detail: "시그니처 3-5개 + 사이드 2-3개 입력 완료"),
-                    .init(label: "2. 원가율 점검", detail: "메뉴별 평균 원가율 33% 이하 (황금률)"),
-                    .init(label: "3. 재고 카드 자동 연동", detail: "메뉴 → 재고 product 로 자동 등록"),
-                    .init(label: "4. 공급처 협상 준비", detail: "월 사용량 추정 가능 → vendor-setup 에서 단가 협상"),
+                    .init(label: "1. \(cluster.noun) 라인업 확정", detail: "\(items.count)개 입력 완료 (시그니처 3-5개 권장)"),
+                    .init(label: "2. 원가율 점검", detail: String(format: "평균 %.1f%% (목표 %d%% 이하)", avgCostRatio, Int(goldenRatio))),
+                    .init(label: "3. 재고 카드 자동 연동", detail: "\(cluster.noun) → 재고 product 로 자동 등록 완료"),
                 ],
                 verifyItems: [
-                    "메뉴 3개 이상 등록했는가 (시그니처 3-5개 + 사이드 2-3개 표준)",
-                    "각 메뉴 원가율 33% 이하인가 (초과 시 인건비 합산 시 영업적자)",
-                    "메뉴별 주재료 명시 — vendor-setup 에서 공급처별 단가 비교 가능한가",
-                    "객단가 타깃 페르소나 가격 민감도와 일치하는가 (target-customer-definition 결과 참조)",
-                    "주방 동선·집기 (construction-setup 완료) 으로 실제 조리 가능한 메뉴인가",
+                    "\(cluster.noun) 3개 이상 등록했는가 (시그니처 3-5개 표준)",
+                    "각 항목 원가율 \(Int(goldenRatio))% 이하인가 (초과 시 마진 압박)",
+                    "각 항목 메모(주재료·옵션·feature) 명시 — 다음 단계 비교 근거가 되는가",
+                    "객단가가 타깃 페르소나 가격 민감도와 일치하는가 (target-customer-definition 참조)",
                 ],
-                nextStageLabel: "공급처·식자재 셋업",
-                nextSummary: "메뉴 라인업 확정 → 공급처·식자재 셋업 단계로 진입"
+                nextStageLabel: cluster.nextStageLabel,
+                nextSummary: "\(cluster.noun) 락 + 재고 등록 → \(cluster.nextStageLabel)"
             ),
             currentPage: page,
             onNextPage: { withAnimation { page += 1 } },
-            totalPages: 3
+            totalPages: 4
         ) {
             VStack(alignment: .leading, spacing: BUSpacing.cardGap) {
                 pageNav
@@ -329,20 +367,19 @@ private extension MenuDesignStageView {
     var pageNav: some View {
         BUWizardPageNav(
             page: page,
-            totalPages: 3,
-            labels: ["왜 중요한가", "메뉴 추가", "원가 점검"],
+            totalPages: 4,
+            labels: ["왜 중요한가", "1. \(cluster.noun) 추가", "2. 원가 점검", "3. 마무리"],
             onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
         )
     }
 
     @ViewBuilder
     var pageContent: some View {
-        if page == 0 {
-            whyPage
-        } else if page == 1 {
-            addPage
-        } else {
-            costCheckPage
+        switch page {
+        case 0: whyPage
+        case 1: addPage
+        case 2: costCheckPage
+        default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시 (웹 "3. 마무리" 탭 미러)
         }
     }
 }
@@ -434,8 +471,8 @@ private extension MenuDesignStageView {
                     }
                 }
 
-                // 주재료 (선택)
-                TextField("주재료 (예: 김치 100g, 돼지고기 60g) — 선택", text: $fNotes, axis: .vertical)
+                // 메모 (주재료·옵션·feature — cluster-aware, 선택)
+                TextField(cluster.notesFieldPlaceholder, text: $fNotes, axis: .vertical)
                     .lineLimit(1...2)
                     .buTextFieldStyle()
 
@@ -446,7 +483,7 @@ private extension MenuDesignStageView {
                     HStack(spacing: 6) {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .bold))
-                        Text("메뉴 추가 + 재고 자동 등록")
+                        Text("\(cluster.noun) 추가 + 재고 자동 등록")
                             .font(.system(size: 13, weight: .bold))
                     }
                     .frame(maxWidth: .infinity)
@@ -460,10 +497,10 @@ private extension MenuDesignStageView {
                 // 등록 목록
                 if !items.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("등록된 메뉴 \(items.count)개")
+                        Text("등록된 \(cluster.noun) \(items.count)개")
                             .buEyebrowStyle()
                         ForEach(items) { item in
-                            MenuItemRow(item: item, onDelete: { deleteItem(id: item.id) })
+                            MenuItemRow(item: item, goldenMax: goldenRatio, onDelete: { deleteItem(id: item.id) })
                         }
                     }
                 }
@@ -562,27 +599,26 @@ private extension MenuDesignStageView {
         VStack(spacing: BUSpacing.cardGap) {
             if items.isEmpty {
                 BUCard(.outer) {
-                    Text("먼저 메뉴를 등록하세요 (메뉴 추가 탭)")
+                    Text("\(cluster.noun)를 먼저 등록하세요 (1. \(cluster.noun) 추가 페이지)")
                         .font(BUFont.bodySmall)
                         .foregroundStyle(BUColor.inkMuted)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, BUSpacing.lg)
                 }
             } else {
-                // 평균 원가율 banner
-                let tint: Color = avgCostRatio > 35 ? BUColor.danger : avgCostRatio > 30 ? BUColor.warn : BUColor.success
+                // 평균 원가율 banner — 웹 1:1: goldenMax 초과 = 벽돌(danger), 이하 = midnight
+                let overGolden = avgCostRatio > goldenRatio
+                let tint: Color = overGolden ? BUColor.danger : BUColor.midnight
                 VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                    Text("메뉴 평균 식자재 원가율")
+                    Text(cluster.ratioLabel)
                         .buEyebrowStyle()
                     Text(String(format: "%.1f%%", avgCostRatio))
                         .font(.system(size: 34, weight: .bold))
                         .foregroundStyle(tint)
                         .tracking(-1.0)
-                    Text(avgCostRatio > 35
-                        ? "⚠ 35% 초과. 인건비 더하면 영업이익 마이너스 위험. 단가 인상 또는 원가 절감 필요."
-                        : avgCostRatio > 30
-                            ? "⚠ 30-35%. 황금률 상한. 인건비 + 임대료 합산해 BEP 점검 권장."
-                            : "✓ 30% 이하. 황금률 안. 인건비 28-32% 이내로 유지하면 BEP 안정."
+                    Text(overGolden
+                        ? "⚠ 목표 \(Int(goldenRatio))% 초과. 단가 인상 또는 원가 절감으로 마진을 확보하세요."
+                        : "✓ 목표 \(Int(goldenRatio))% 이하. 마진 안정 범위입니다."
                     )
                     .font(BUFont.bodySmall)
                     .foregroundStyle(BUColor.inkSecondary)
@@ -596,12 +632,12 @@ private extension MenuDesignStageView {
                         .strokeBorder(tint.opacity(0.20), lineWidth: 1.5)
                 )
 
-                // 33% 초과 경보
-                let warningItems = items.filter { $0.isWarning }
+                // goldenMax 초과 경보 (cluster-aware)
+                let warningItems = items.filter { $0.isWarning(goldenMax: goldenRatio) }
                 if !warningItems.isEmpty {
                     BUCard(.outer) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("원가율 33% 초과 메뉴")
+                            Text("원가율 \(Int(goldenRatio))% 초과 \(cluster.noun)")
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundStyle(BUColor.danger)
                                 .tracking(0.8)
@@ -611,9 +647,10 @@ private extension MenuDesignStageView {
                                     Text("\(item.name) — \(Int(item.costRatio))%")
                                         .font(.system(size: 12.5, weight: .semibold))
                                         .foregroundStyle(BUColor.danger.opacity(0.85))
-                                    let targetPrice = item.cost > 0 ? Int(ceil(Double(item.cost) / 0.33 / 100) * 100) : 0
-                                    let targetCost  = Int(Double(item.price) * 0.33)
-                                    Text("단가 ₩\(targetPrice.formatted()) 로 인상 또는 원가 ₩\(targetCost.formatted()) 로 절감 필요")
+                                    let gmFrac = goldenRatio / 100
+                                    let targetPrice = item.cost > 0 ? Int(ceil(Double(item.cost) / gmFrac / 100) * 100) : 0
+                                    let targetCost  = Int(Double(item.price) * gmFrac)
+                                    Text("판매가 ₩\(targetPrice.formatted()) 로 인상 또는 원가 ₩\(targetCost.formatted()) 로 절감 필요")
                                         .font(.system(size: 11))
                                         .foregroundStyle(BUColor.danger.opacity(0.65))
                                         .lineSpacing(2)
@@ -691,7 +728,10 @@ private struct CategoryChip: View {
 
 private struct MenuItemRow: View {
     let item: LineupItem
+    let goldenMax: Double
     let onDelete: () -> Void
+
+    private var isWarning: Bool { item.isWarning(goldenMax: goldenMax) }
 
     var body: some View {
         HStack(alignment: .top, spacing: BUSpacing.xs) {
@@ -710,7 +750,7 @@ private struct MenuItemRow: View {
                     }
                     Text("₩\(item.price.formatted()) 판매 · ₩\(item.cost.formatted()) 원가 · \(Int(item.costRatio))%")
                         .font(.system(size: 11))
-                        .foregroundStyle(item.isWarning ? BUColor.danger : BUColor.inkMuted)
+                        .foregroundStyle(isWarning ? BUColor.danger : BUColor.inkMuted)
                 }
                 if !item.notes.isEmpty {
                     Text(item.notes)
@@ -729,13 +769,13 @@ private struct MenuItemRow: View {
         .padding(.horizontal, BUSpacing.sm)
         .padding(.vertical, 10)
         .background(
-            item.isWarning ? BUColor.danger.opacity(0.03) : BUColor.midnight.opacity(0.025),
+            isWarning ? BUColor.danger.opacity(0.03) : BUColor.midnight.opacity(0.025),
             in: RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous)
                 .strokeBorder(
-                    item.isWarning ? BUColor.danger.opacity(0.20) : BUColor.midnight.opacity(0.08),
+                    isWarning ? BUColor.danger.opacity(0.20) : BUColor.midnight.opacity(0.08),
                     lineWidth: 1
                 )
         )

@@ -34,19 +34,20 @@ public struct OnlineMarketingStageView: View {
         let id: String; let name: String; let desc: String
     }
 
+    /// 광고 채널 옵션 — 웹 "첫 광고 캠페인 세팅" 3종 1:1 + iOS 게이트용 "광고 없이 시작"(의사결정 요구).
     private var adOptions: [AdOption] {
         if isDigital {
             return [
-                AdOption(id: "platform", name: "입점 플랫폼 광고 (크몽·클래스101 등)", desc: "플랫폼 내 검색·기획전 상단 노출. 입점 판매 시 우선 채널."),
-                AdOption(id: "naver", name: "네이버 검색광고 (파워링크)", desc: "정보 탐색형 키워드(\"엑셀 템플릿\") 유입. ROAS 확인 후 증액."),
-                AdOption(id: "meta",  name: "Meta (인스타·페이스북)", desc: "관심사 타깃 도달. 미리보기·후기 콘텐츠와 결합 시 전환 최고."),
+                AdOption(id: "platform", name: "입점 플랫폼 광고 (크몽·클래스101 등)", desc: "일 5,000~15,000원 · 플랫폼 내 검색·기획전 상단 노출. 입점 판매 시 우선 채널"),
+                AdOption(id: "meta",  name: "인스타그램·메타 성과형 광고", desc: "일 10,000~20,000원 · 관심사 타깃 도달. 미리보기·후기 콘텐츠와 결합 시 전환 최고"),
+                AdOption(id: "naver", name: "네이버 검색광고 (파워링크)", desc: "일 5,000~10,000원 · 정보 탐색형 키워드(\"엑셀 템플릿\", \"전자책 만들기\")에서 유입. ROAS 확인 후 증액"),
                 AdOption(id: "none",  name: "광고 없이 시작",   desc: "SEO·SNS 무료 채널로만. 성장 느리지만 비용 없음."),
             ]
         }
         return [
-            AdOption(id: "naver", name: "네이버 쇼핑 광고", desc: "CPC 클릭당 300~800원. 구매 의도 높은 트래픽. 초기 추천."),
-            AdOption(id: "kakao", name: "카카오 모먼트",    desc: "디스플레이 광고. 브랜드 인지도. CPC 100-500원."),
-            AdOption(id: "meta",  name: "Meta (인스타·페이스북)", desc: "비주얼 상품에 효과적. 리타겟팅 강력. CPM 방식."),
+            AdOption(id: "naver", name: "네이버 쇼핑 검색광고", desc: "일 5,000~10,000원 · 구매 의도가 가장 높은 채널. CPC 300~800원. ROAS 확인 후 증액"),
+            AdOption(id: "meta", name: "인스타그램 광고", desc: "일 10,000~20,000원 · 비주얼 제품에 효과적. 25-34세 여성 타깃. 릴스 광고 CTR 최고"),
+            AdOption(id: "coupang", name: "쿠팡 CPC 광고", desc: "일 5,000~15,000원 · 쿠팡 내 검색 결과 상단 노출. 쿠팡 판매 시 필수"),
             AdOption(id: "none",  name: "광고 없이 시작",   desc: "SEO·SNS 무료 채널로만. 성장 느리지만 비용 없음."),
         ]
     }
@@ -67,8 +68,8 @@ public struct OnlineMarketingStageView: View {
             title: "마케팅 및 론칭",
             stageEyebrow: "단계 13 · 온라인 마케팅",
             helperText: isDigital
-                ? "온라인 매출의 60%는 검색에서 옵니다. 플랫폼 검색 노출 = 상품명·카테고리·후기수·판매량의 함수."
-                : "온라인 커머스 매출의 60%는 검색에서 옵니다. 네이버 쇼핑 SEO = 상품명·카테고리·리뷰수·판매량의 함수.",
+                ? "입점 플랫폼(크몽·클래스101) 검색 최적화로 무료 노출, 첫 광고는 ROAS 200% 목표로 작게 시작, 초기 후기는 베타 리더·후기 이벤트·커뮤니티 3종 병행."
+                : "네이버 쇼핑 상품명·태그 최적화로 무료 노출, 첫 광고 캠페인은 ROAS 200% 목표로 작게 시작, 초기 리뷰는 지인·체험단·낮은 가격 신규 할인 3종 병행.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -128,17 +129,23 @@ public struct OnlineMarketingStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow(isDigital ? "입점 플랫폼 검색 최적화 핵심" : "네이버 쇼핑 SEO 핵심")
+                    BUEyebrow(isDigital ? "입점 플랫폼 검색 최적화" : "네이버 쇼핑 SEO 최적화")
+                    Text("온라인 매출의 60%+가 검색에서 시작됩니다. 첫 1개월이 노출 순위를 결정합니다.")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineSpacing(2)
                     if isDigital {
-                        infoRow(text: "키워드 배치: 상품명 앞 30글자에 핵심 키워드 + 구매자가 얻는 결과물")
-                        infoRow(text: "카테고리 정확도: 크몽·클래스101 카테고리 불일치 = 검색 제외")
-                        infoRow(text: "판매량·후기수: 초기에 낮으면 하위 노출 — 베타 리더·후기 이벤트로 초기 확보")
-                        infoRow(text: "상세페이지: 미리보기(샘플)·목차·결과물 스크린샷이 전환의 핵심")
+                        pairRow(title: "상품명 = 핵심 키워드 + 결과물", detail: "\"실무 엑셀 템플릿 30종 — 보고서 자동화\" — 검색어를 앞에, 구매자가 얻는 결과를 뒤에")
+                        pairRow(title: "카테고리·태그 정확히 매칭", detail: "크몽·클래스101 카테고리와 상품이 불일치하면 노출 자체가 안 됩니다")
+                        pairRow(title: "상세페이지 = 미리보기 + 목차", detail: "샘플 페이지·목차·결과물 스크린샷이 전환의 핵심. 검색용 텍스트 설명도 본문에 포함")
+                        pairRow(title: "후기 관리", detail: "첫 10개 후기가 플랫폼 랭킹·전환을 좌우 — 구매자 후기 요청 메시지 템플릿 준비")
+                        pairRow(title: "최신성 — 업데이트·신규 등록 주기", detail: "플랫폼은 업데이트되는 상품을 우대합니다. 버전 업데이트·신규 상품 등록을 주기화")
                     } else {
-                        infoRow(text: "키워드 배치: 상품명 앞 30글자에 핵심 키워드 포함")
-                        infoRow(text: "카테고리 정확도: 잘못된 카테고리 = 검색 제외")
-                        infoRow(text: "판매량·리뷰수: 초기에 낮으면 하위 노출 — 유료 광고로 초기 트래픽 확보")
-                        infoRow(text: "배송 점수: 빠른 처리로 '빠른 배송' 배지 확보")
+                        pairRow(title: "상품명 = 핵심 키워드 + 속성", detail: "\"여성 린넨 원피스 여름 A라인 프리사이즈\" — 검색어를 순서대로 넣으세요. 브랜드명은 앞에")
+                        pairRow(title: "카테고리 정확히 매칭", detail: "네이버 쇼핑 카테고리와 상품이 불일치하면 노출 자체가 안 됩니다")
+                        pairRow(title: "상세페이지 텍스트 최적화", detail: "이미지만 넣지 마세요. 검색 크롤러는 텍스트를 읽습니다. 핵심 키워드를 본문에 포함")
+                        pairRow(title: "태그 10개 모두 채우기", detail: "스마트스토어 태그는 최대 10개만 등록됨(초과 입력해도 10개까지) — 검색 노출에 직접 영향, 관련 키워드로 10개 꽉 채우기")
+                        pairRow(title: "최신성 점수 — 신상품 등록 주기", detail: "네이버는 신상품을 우대합니다. 주 2-3회 신규 상품 등록이 이상적")
                     }
                 }
             }
@@ -181,7 +188,7 @@ public struct OnlineMarketingStageView: View {
                         Image(systemName: "lightbulb.fill")
                             .font(.system(size: 13))
                             .foregroundStyle(BUColor.midnight)
-                        Text("권장 초기 예산: 월 30-50만원. ROAS(광고비 대비 매출) 목표: 200% 이상 — 미만이면 즉시 중단·재구성.")
+                        Text("초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요. 첫 광고 캠페인은 ROAS 200% 목표로 작게 시작.")
                             .font(BUFont.bodyCaption)
                             .foregroundStyle(BUColor.inkSecondary)
                             .lineSpacing(2)
@@ -233,11 +240,11 @@ public struct OnlineMarketingStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow(isDigital ? "후기가 디지털 상품의 생존을 결정" : "리뷰가 온라인 커머스의 생존을 결정")
-                    infoRow(text: isDigital
-                        ? "플랫폼 랭킹: 후기 10개 이상이 첫 번째 노출 임계값"
-                        : "스마트스토어 알고리즘: 리뷰 10개 이상이 첫 번째 노출 임계값")
-                    infoRow(text: "구매 전환율: 리뷰 10개 → 20개 구간에서 전환율 2배 상승")
+                    BUEyebrow("초기 리뷰 확보 전략")
+                    Text("리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다.")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineSpacing(2)
                 }
             }
 
@@ -266,15 +273,13 @@ public struct OnlineMarketingStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow(isDigital ? "후기 빠르게 확보하는 방법" : "리뷰 빠르게 확보하는 방법")
                     if isDigital {
-                        infoRow(text: "베타 리더 3~5명 무료 제공 → 후기·개선 피드백 확보 (비용: 없음, 디지털 복제)")
-                        infoRow(text: "후기 이벤트: 작성 시 업데이트 우선 제공·보너스 자료 증정")
-                        infoRow(text: "지인·커뮤니티 초기 구매 → 후기 요청 (자작·조작 후기는 플랫폼 제재)")
-                        infoRow(text: "평점 4.5점 이하면 즉시 원인 파악·CS 대응")
+                        methodRow(method: "베타 리더 모집 (소규모)", tip: "무료", detail: "타깃 커뮤니티에서 3~5명에게 무료 제공 → 후기·개선 피드백 확보. 비용: 없음(디지털 복제 원가 0)")
+                        methodRow(method: "후기 이벤트", tip: "무료", detail: "구매 고객 후기 작성 시 업데이트 우선 제공·보너스 자료 증정. 전환율 대비 가장 효율적")
+                        methodRow(method: "지인·커뮤니티 초기 구매", tip: "실비", detail: "솔직하게 부탁하세요. 자작·조작 후기는 플랫폼 제재 대상. 실제 구매 필수")
                     } else {
-                        infoRow(text: "구매 후 리뷰 요청 문자 자동 발송 (스마트스토어 기본 제공)")
-                        infoRow(text: "구매자에게 소정의 리뷰 포인트 제공 (스마트스토어 내 설정)")
-                        infoRow(text: "지인 구매 → 리뷰 요청 (첫 10개를 채우는 가장 빠른 방법)")
-                        infoRow(text: "네이버 리뷰: 4.5점 이하면 즉시 원인 파악·CS 대응")
+                        methodRow(method: "체험단 모집 (소규모)", tip: "무료", detail: "쇼핑·블로그 체험단 3~5명 병행. 스마트스토어 실구매 포토·동영상 리뷰가 쇼핑 상위노출·전환에 더 직접적 (블로그 리뷰도 동시 확보). 비용: 제품 원가 + 배송비")
+                        methodRow(method: "포토리뷰 이벤트", tip: "₩500/건", detail: "구매 고객에게 포토리뷰 작성 시 500~1,000원 적립금. 전환율 대비 가장 효율적")
+                        methodRow(method: "지인·친구 초기 구매", tip: "실비", detail: "솔직하게 부탁하세요. 조작 리뷰는 네이버 패널티 대상. 실제 구매+배송 필수")
                     }
                 }
             }
@@ -290,11 +295,48 @@ public struct OnlineMarketingStageView: View {
 
     // MARK: - Helpers
 
-    private func infoRow(text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("•").font(BUFont.bodyCaption).foregroundStyle(BUColor.midnight).padding(.top, 2)
-            Text(text).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+    /// 제목 + 설명 2줄 행 — 웹 SEO 카드 { title, detail } 아이템 1:1.
+    private func pairRow(title: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(BUFont.bodySmall.weight(.semibold))
+                .foregroundStyle(BUColor.ink)
+            Text(detail)
+                .font(BUFont.bodyCaption)
+                .foregroundStyle(BUColor.inkSecondary)
+                .lineSpacing(2)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    /// 리뷰 확보 방법 행 — 웹 { method, detail, tip } 1:1 (tip = 비용 배지).
+    private func methodRow(method: String, tip: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(method)
+                    .font(BUFont.bodySmall.weight(.semibold))
+                    .foregroundStyle(BUColor.ink)
+                Text(detail)
+                    .font(BUFont.bodyCaption)
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(2)
+            }
+            Spacer(minLength: 0)
+            Text(tip)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(BUColor.midnight)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .fixedSize()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

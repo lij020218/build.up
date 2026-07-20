@@ -4,18 +4,15 @@
 //  웹 SSOT: apps/web/app/lib/components/stages/offline/InsuranceTaxSetupStage.tsx
 //  stageId: "insurance-tax-setup"
 //
-//  2026 요율 (정부 고시 검증 — 2026-05-25 audit):
-//    국민연금: 9.5% (각 4.75%) — 2026.1 인상 (9% → 9.5%)
-//    건강보험: 7.19% (각 3.595%) — 2026.1 인상 (7.09% → 7.19%)
-//    장기요양: 임금의 0.9448% (= 건보료 × 13.14%) — 근로자·사업주 각 0.4724%
-//    고용보험: 1.8% (각 0.9%, 실업급여) + 사업주 추가 0.25%~ (고용안정·직업능력개발)
-//    산재보험: 0.8% (음식·도소매·숙박, 사업주 100% 부담)
-//    두루누리: 월보수 270만 미만 + 10인 미만 → 80% 국가 지원 (최대 36개월)
+//  2026-07-21 웹·iOS 페이지 구조 통일:
+//    웹 5페이지 ["왜 필요한가", "1. 4대보험", "2. 원천세", "3. 급여 + 유리한 길", "마무리"] 1:1.
+//    pg 0 — WHY: 채용 시 자동 발생 의무 5가지 + 영업장 법정 의무보험
+//    pg 1 — 4대보험 요율표 + 신고 절차 + 함정
+//    pg 2 — 원천세 절차 + 매월 vs 반기 비교
+//    pg 3 — 급여 시스템 3옵션 + 직원 수별 유리한 길 + 채용 직후 체크리스트
+//    pg 4 — 마무리 (BUStageShell wrapup)
 //
-//  3-page (세그먼트):
-//    pg 0 — 4대보험 요율 & 두루누리
-//    pg 1 — 세무 세팅 (홈택스·세무사·비용처리)
-//    pg 2 — 완료 체크리스트
+//  요율 표시는 FoundOneCore SSOT(InsuranceRates2026) → pctText 파생 (웹 RATE_STR 미러).
 //
 
 import SwiftUI
@@ -24,31 +21,22 @@ import FoundOneComponents
 import FoundOneCore
 import FoundOneData
 
-// ⚠️ 요율·최저임금은 FoundOneCore SSOT(InsuranceRates2026 / MINIMUM_WAGE_2026)만 참조.
-//    이 파일이 요율을 따로 들고 있던 게 "옛 요율 버그" 원인 — 중복정의 금지.
-private let WAGE_2026 = MINIMUM_WAGE_2026
-private let MONTH_HOURS = MONTHLY_WORK_HOURS_2026
-
 public struct InsuranceTaxSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
-    @State private var monthlyWageText = "\(WAGE_2026 * MONTH_HOURS)"
     private let stageId = "insurance-tax-setup"
 
-    // 세무 선택
-    @AppStorage("insTax.cpaChoice")      private var cpaChoice        = "" // "cpa" or "self"
+    // 세무 선택 — 온보딩(ExistingStoreRegistration)에서 복원되는 계약 키. "cpa"|"self".
+    @AppStorage("insTax.cpaChoice")      private var cpaChoice        = ""
     @AppStorage("insTax.hometaxDone")    private var hometaxDone      = false
-    @AppStorage("insTax.bizCardDone")    private var bizCardDone      = false
     @AppStorage("insTax.insRegDone")     private var insRegDone       = false
-    @AppStorage("insTax.vatDone")        private var vatDone          = false
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
     /// 업종별 산재요율 (%). 웹 SSOT: ACCIDENT_RATE_BY_CATEGORY.
     private var accidentRate: Double { cluster.accidentInsuranceRatePct }
-    private var accidentRateDecimal: Double { accidentRate / 100.0 }
 
     /// 소수 요율 → 표시 퍼센트 (0.0475 → "4.75%"). 후행 0 제거, 최대 4자리(장기요양 0.9448%).
     private func pctText(_ rate: Double) -> String {
@@ -58,48 +46,33 @@ public struct InsuranceTaxSetupStageView: View {
         return s + "%"
     }
 
+    // ─── 표시용 요율 문자열 — 웹 RATE_STR 미러 (SSOT 파생) ───
+    private var R: InsuranceRates2026.Type { InsuranceRates2026.self }
+    private var pensionTotal: String { pctText(R.pensionEmployer + R.pensionEmployee) }        // 9.5%
+    private var pensionHalf: String { pctText(R.pensionEmployer) }                             // 4.75%
+    private var healthTotal: String { pctText(R.healthEmployer + R.healthEmployee) }           // 7.19%
+    private var healthHalf: String { pctText(R.healthEmployer) }                               // 3.595%
+    private var employmentTotal: String { pctText(R.employmentEmployer + R.employmentEmployee) } // 1.8%
+    private var employmentHalf: String { pctText(R.employmentEmployer) }                       // 0.9%
+    private var longTermOfWage: String { pctText((R.healthEmployer + R.healthEmployee) * R.longTermCareRateOfHealth) } // 0.9448%
+    private var longTermOfHealth: String { pctText(R.longTermCareRateOfHealth) }               // 13.14%
+    private var stabilityMin: String { pctText(R.employmentStabilityEmployer) }                // 0.25%
+
     // 영업장 법정 의무보험(직원 4대보험과 별개). SSOT: packages/shared mandatory-insurance.ts 미러.
     private var mandatoryIns: [MandatoryInsurance] {
         MandatoryInsuranceRegistry.forCategory(StarterIndustryData.option(by: industryId)?.categoryId)
     }
 
-    private var monthlyWage: Int { Int(monthlyWageText) ?? (WAGE_2026 * MONTH_HOURS) }
-
-    // ⚠️ 2026-05-25 정합화 (사장님 audit):
-    //   장기요양 = 임금의 0.9448% (= 건보료 × 13.14%). 근로자·사업주 각 절반 0.4724%.
-    //   고용보험 실업급여 = 1.8% (각 0.9%). 사업주 추가 = 고용안정·직업능력개발 0.25%.
-    //   이전 계산식 누락 / 과대:
-    //     • 장기요양 사업주분 0.9% → 0.4724% 로 (절반만 사업주)
-    //     • 고용보험 사업주 실업급여 0.9% 완전 누락 — 추가
-    private var pensionEmployee: Int   { Int(Double(monthlyWage) * InsuranceRates2026.pensionEmployee) }
-    private var healthEmployee: Int    { Int(Double(monthlyWage) * InsuranceRates2026.healthEmployee) }
-    private var ltcareEmployee: Int    { Int(Double(healthEmployee) * InsuranceRates2026.longTermCareRateOfHealth) }  // 장기요양 = 건보료 × 13.14%
-    private var employmentEmployee: Int { Int(Double(monthlyWage) * InsuranceRates2026.employmentEmployee) }
-    private var employeeTotal: Int     { pensionEmployee + healthEmployee + ltcareEmployee + employmentEmployee }
-
-    /// 사업주 부담 = 국민(4.75%) + 건강(3.595%) + 장기요양 사업주분(건보료×13.14%) + 산재(업종별, 100%)
-    ///              + 고용보험 실업급여 사업주분(0.9%) + 고용안정·직업능력개발(0.25%, 사업주만)
-    private var employerExtra: Int {
-        Int(Double(monthlyWage) * (
-            InsuranceRates2026.pensionEmployer
-            + InsuranceRates2026.healthEmployer
-            + InsuranceRates2026.healthEmployer * InsuranceRates2026.longTermCareRateOfHealth
-            + accidentRateDecimal
-            + InsuranceRates2026.employmentEmployer
-            + InsuranceRates2026.employmentStabilityEmployer
-        ))
-    }
-
-    private let pages = ["4대보험", "세무 세팅", "체크리스트", "마무리"]
+    // 웹 5페이지 1:1 — ["왜 필요한가", "1. 4대보험", "2. 원천세", "3. 급여 + 유리한 길", "마무리"]
+    private let pages = ["왜 필요한가", "1. 4대보험", "2. 원천세", "3. 급여 + 유리한 길", "마무리"]
 
     private var canCompleteStage: Bool {
-        insRegDone && hometaxDone && !cpaChoice.isEmpty
+        insRegDone && hometaxDone
     }
 
     private var advanceHint: String {
-        if !insRegDone { return "4대보험 신고 완료를 체크하세요" }
-        if !hometaxDone { return "홈택스 사업장 등록 완료를 체크하세요" }
-        if cpaChoice.isEmpty { return "급여·세무 처리 방식을 선택하세요 (세무사 / 직접)" }
+        if !insRegDone { return "「1. 4대보험」에서 취득 신고 완료를 체크하세요" }
+        if !hometaxDone { return "「2. 원천세」에서 신고 셋업 완료를 체크하세요" }
         return "보험·세무 셋업 완료 — 다음 단계로"
     }
 
@@ -154,9 +127,10 @@ public struct InsuranceTaxSetupStageView: View {
 
                 Group {
                     switch page {
-                    case 0: insurancePage
-                    case 1: taxPage
-                    case 2: checklistPage
+                    case 0: whyPage
+                    case 1: insurancePage
+                    case 2: withholdingPage
+                    case 3: payrollPathPage
                     default: EmptyView()  // 마무리 페이지 — BUStageShell 이 wrapup 표시
                     }
                 }
@@ -164,53 +138,48 @@ public struct InsuranceTaxSetupStageView: View {
         }
     }
 
-    // MARK: - pg 0 4대보험
+    // MARK: - pg 0 왜 필요한가 (웹 PAGE 0 1:1)
 
-    private var insurancePage: some View {
+    private var whyPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("2026년 4대보험 요율 (정부 고시)")
-                    // 표시 요율도 FoundOneCore SSOT(InsuranceRates2026)에서 조립 — 요율 개정 시 자동 갱신.
-                    //   인상 전 옛 요율(9%·7.09%)만 역사적 사실이라 리터럴 유지.
-                    let R = InsuranceRates2026.self
-                    let rates: [(String, String, String, String)] = [
-                        ("국민연금",   pctText(R.pensionEmployer + R.pensionEmployee), "근로자 \(pctText(R.pensionEmployee)) / 사업주 \(pctText(R.pensionEmployer))", "2026.1 인상 (9% → \(pctText(R.pensionEmployer + R.pensionEmployee)))"),
-                        ("건강보험",   pctText(R.healthEmployer + R.healthEmployee), "근로자 \(pctText(R.healthEmployee)) / 사업주 \(pctText(R.healthEmployer))", "2026.1 인상 (7.09% → \(pctText(R.healthEmployer + R.healthEmployee)))"),
-                        ("장기요양",   "임금의 \(pctText((R.healthEmployer + R.healthEmployee) * R.longTermCareRateOfHealth))", "근로자·사업주 각 \(pctText(R.healthEmployer * R.longTermCareRateOfHealth)) (= 건보료 × \(pctText(R.longTermCareRateOfHealth)))", "건강보험료 기준이 아닌 임금 기준"),
-                        ("고용보험",   pctText(R.employmentEmployer + R.employmentEmployee), "근로자 \(pctText(R.employmentEmployee)) / 사업주 \(pctText(R.employmentEmployer)) + 추가 \(pctText(R.employmentStabilityEmployer))↑", "추가 = 고용안정·직업능력개발 (사업주만)"),
-                        ("산재보험",   String(format: "%.1f%%", accidentRate), "사업주 100% (근로자 부담 없음)", "\(cluster.categoryNounKo) 업종별 요율"),
+                    BUEyebrow("왜 이 단계가 중요한가")
+                    Text("직원 1명 채용 = 자동 발생 의무 5가지 (2026 변화 포함)")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    let items: [(Color, String, String)] = [
+                        (BUColor.danger,
+                         "근로계약서 미체결 = 500만원 이하 벌금 또는 과태료",
+                         "채용 당일 또는 출근 전 반드시 작성·교부. 임금·근로시간·휴일·휴가 등 핵심 조건 명시 의무. 표준근로계약서는 고용노동부에서 무료 다운로드 — 근로기준법 17조 위반 시 500만원 이하 벌금(정규직 형사처벌·인당) 또는 과태료(기간제·단시간)."),
+                        (BUColor.midnight,
+                         "4대보험 취득 신고(건강 14일·기타 익월 15일) — 5인 미만 예외 X",
+                         "근로자 1명만 채용해도 4대사회보험 (국민연금·건강보험·고용·산재) 가입 의무. 건강보험 14일 / 국민연금·고용·산재 다음달 15일까지. 미신고 시 가산세 + 소급납부. 국세청 지급명세서와 공단 4대보험 자료 교차검증·근로자 확인청구(제보)로 무신고 적발."),
+                        (BUColor.midnight,
+                         "사업주 부담 = 급여의 약 10% 추가",
+                         "근로자 월급 250만원이면 사업주가 추가 부담하는 4대보험료만 약 25만원. 인건비를 계산할 때 '급여 + 사업주 부담분' 으로 봐야 정확한 손익. 2026.1 인상 요율: 국민연금 \(pensionTotal) (각 \(pensionHalf))·건강보험 \(healthTotal) (각 \(healthHalf))·고용 \(employmentTotal) (각 \(employmentHalf))+사업주α·산재 0.7-0.8% (업종별)."),
+                        (BUColor.midnightDeep,
+                         "두루누리 80% 국가 지원 — 신고 시점에만 신청 가능",
+                         "월 보수 270만원 미만 신규 가입자 + 10인 미만 사업장 = 고용·국민연금 보험료 80%를 정부가 최대 36개월 지원. 4대보험 취득신고 시 '두루누리 지원' 체크박스 — 한 번 놓치면 재신청 불가. 청년·신규 사업주에게 결정적인 자금 여유."),
+                        (BUColor.midnight,
+                         "2026 신규: 건강보험 연말정산 자동화",
+                         "2026년부터 사업주가 국세청에 근로소득 간이지급명세서 제출하면 건강보험 연말정산 자동 연계. 기존 국세청 + 건강보험공단 각각 신고 → 1회 신고로 통합. 페이퍼워크 절감."),
                     ]
-                    ForEach(rates, id: \.0) { name, rate, split, note in
-                        HStack(alignment: .top, spacing: BUSpacing.sm) {
-                            Text(name).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.midnight).frame(width: 64, alignment: .leading)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(rate).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
-                                Text(split).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                                if !note.isEmpty {
-                                    Text(note).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    ForEach(items.indices, id: \.self) { i in
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                                Circle().fill(items[i].0).frame(width: 8, height: 8).padding(.top, 5)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(items[i].1).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text(items[i].2).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
-                            Spacer()
+                            if i < items.count - 1 {
+                                Divider().opacity(0.5).padding(.leading, 18).padding(.top, BUSpacing.sm)
+                            }
                         }
                     }
-                }
-            }
-
-            // 두루누리
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "sparkles").foregroundStyle(BUColor.midnight).font(.system(size: 13))
-                        Text("두루누리 사회보험 지원 (2026)").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
-                    }
-                    Text("월보수 270만원 미만 근로자 + 10인 미만 사업장 → 국민연금·고용보험 사업주 부담의 80% 국가 지원 (최대 36개월).")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                    Text("4insure.or.kr 신고 시 두루누리 동시 신청 가능.")
-                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
-                    Text("⚠️ 취득신고 시점에만 신청 가능 — 한 번 놓치면 재신청 불가. 청년·신규 사업주에겐 사업주 부담을 약 5%까지 낮추는 결정적 자금 여유.")
-                        .font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.midnightDeep).lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -222,7 +191,7 @@ public struct InsuranceTaxSetupStageView: View {
                             Image(systemName: "shield.lefthalf.filled").foregroundStyle(BUColor.midnight).font(.system(size: 13))
                             Text("영업장 법정 의무보험").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
                         }
-                        Text("직원 4대보험과 별개 — 영업신고 전 가입 확인.").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                        Text("직원 보험과 별개 — 미가입 시 과태료. 영업신고 전 확인").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
                         ForEach(mandatoryIns, id: \.name) { ins in
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(ins.name).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
@@ -246,95 +215,347 @@ public struct InsuranceTaxSetupStageView: View {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - pg 1 4대보험 (웹 PAGE 1 1:1 — 요율표 + 신고 절차 + 함정)
+
+    private var insurancePage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            // 요율표
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("2026년 4대보험 요율 (사업주 vs 근로자)")
+                    Text("국민연금·건강보험·고용·산재 — 모두 2026년 인상 반영")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    // 헤더
+                    HStack(spacing: BUSpacing.sm) {
+                        Text("보험 종류").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("사업주 부담").frame(width: 76, alignment: .trailing)
+                        Text("근로자 부담").frame(width: 76, alignment: .trailing)
+                    }
+                    .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                    let rows: [(String, String, String, String)] = [
+                        ("국민연금", pensionHalf, pensionHalf, "2026년 \(pensionTotal)로 인상 (기존 9%)"),
+                        ("건강보험", healthHalf, healthHalf, "2026년 \(healthTotal)로 인상 (기존 7.09%)"),
+                        ("장기요양보험", "별도", "별도", "임금의 \(longTermOfWage) (= 건보료 × \(longTermOfHealth), 2026 인상)"),
+                        ("고용보험", "\(employmentHalf) + α", employmentHalf, "α = 고용안정·직업능력개발 (사업주 \(stabilityMin)~0.85% 추가)"),
+                        ("산재보험", String(format: "%.1f%%", accidentRate), "0%", "\(cluster.categoryNounKo) 업종별 요율 — 사업주 100% 부담"),
+                    ]
+                    ForEach(rows, id: \.0) { name, emp, ee, note in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Divider().opacity(0.5)
+                            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                                Text(name).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(emp).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                                    .monospacedDigit().frame(width: 76, alignment: .trailing)
+                                Text(ee).font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary)
+                                    .monospacedDigit().frame(width: 76, alignment: .trailing)
+                            }
+                            Text(note).font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
+                        }
+                    }
+                }
+            }
+
+            // 신고 절차
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("신고 절차")
+                    Text("다음 달 15일까지(건강보험은 14일 이내) — 4대사회보험 정보연계센터 일괄 신고")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    stepRow(1, "4대사회보험 정보연계센터 회원가입",
+                            "4insure.or.kr 접속 → 사업자등록번호 + 공동인증서·간편인증으로 가입")
+                    stepRow(2, "사업장 성립신고 (최초 1회)",
+                            "사업 개시일 · 업종 · 소재지 · 근로자 수 입력. 성립신고가 안 끝나면 근로자 신고 불가")
+                    stepRow(3, "근로자 자격취득 신고 (직원당)",
+                            "입사일 · 보수월액 · 주민번호 · 부양가족 정보 입력. 4가지 보험 동시 신고됨")
+                    stepRow(4, "두루누리 지원 체크 (해당 시 자동 적용)",
+                            "월 보수 270만 미만 + 10인 미만 사업장이면 신고 화면에서 '두루누리 지원' 체크. 고용보험·국민연금 80% 국가 지원 (36개월)")
+                    Divider().opacity(0.5)
+                    HStack(spacing: BUSpacing.xs) {
+                        metaPair("기한", "익월 15일", "건강보험 14일")
+                        metaPair("비용", "무료", "신고 자체")
+                        metaPair("장소", "4insure.or.kr", nil)
+                    }
+                    HStack(spacing: 6) {
+                        linkChip("4대사회보험 정보연계센터", "https://www.4insure.or.kr")
+                        linkChip("산재보험 업종별 요율", "https://www.comwel.or.kr/comwel/paym/insu/chek1.jsp")
+                    }
+                    linkChip("두루누리 지원 확인", "https://www.4insure.or.kr")
+                    // 게이트 — 실제 신고 완료 확인 (iOS 끝조건)
+                    Divider().opacity(0.5)
+                    Toggle(isOn: $insRegDone) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("4대보험 취득 신고 완료 (4insure.or.kr)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text("건강 14일·기타 익월 15일 이내 필수").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                        }
+                    }.tint(BUColor.midnight)
+                }
+            }
 
             warningCard(title: "사장님이 자주 빠지는 함정", items: [
                 "현금 급여 지급 후 미신고 — 국세청 지급명세서·공단 4대보험 자료 교차검증 및 근로자 확인청구로 적발, 가산세 + 소급납부",
                 "친·인척 직원도 4대보험 신고 의무 (배우자·자녀 포함)",
-                "알바 시급 신고 누락 — 일용직도 고용·산재보험 의무 가입 (1일만 일해도)",
+                "알바 시급 신고 누락 — 일용직도 산재보험 의무 가입",
                 "퇴사자 자격상실 신고 지연 — 사업주가 보험료 계속 부담",
-            ], color: BUColor.danger)
+            ])
+        }
+    }
 
-            // 부담 시뮬레이션 (2026-05-25 정합화: 근로자 4축 모두 표시 + 합계)
+    // MARK: - pg 2 원천세 (웹 PAGE 2 1:1)
+
+    private var withholdingPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("부담 시뮬레이션 (2026년 요율)")
-                    HStack(spacing: BUSpacing.md) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("월 급여 (원)").font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
-                            TextField("월급여", text: $monthlyWageText)
-                                .font(BUFont.body)
-                                .padding(.horizontal, 10).padding(.vertical, 8)
-                                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                .keyboardType(.numberPad)
+                    BUEyebrow("원천세 — 매월 급여 지급 시 세금 공제")
+                    Text("간이세액표로 자동 계산 → 다음 달 10일까지 홈택스 신고")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    stepRow(1, "홈택스에서 간이세액표 조회",
+                            "급여액 + 부양가족 수 입력 → 원천징수 세액 자동 산출. 부양가족 1명당 약 10만원 공제 효과")
+                    stepRow(2, "매월 급여일에 원천징수",
+                            "급여에서 [근로소득세 + 지방소득세 (소득세의 10%)] 공제 후 지급. 월급여 250만원 + 부양 1명 = 약 4.5만원 원천징수")
+                    stepRow(3, "다음 달 10일까지 홈택스 신고·납부",
+                            "홈택스 → 세금신고 → 원천세. 납부지연 시 미납세액 3% + 일 0.022% 가산세 (일할분 최대 10% 한도)")
+                    stepRow(4, "반기납부 신청 검토 (상시근로자 20인 이하)",
+                            "1월·7월 직전 6개월치 일괄 신고. 매월 신고의 부담 절반. 단 자금 흐름 관리 필요")
+                    Divider().opacity(0.5)
+                    HStack(spacing: BUSpacing.xs) {
+                        metaPair("신고기한", "익월 10일", "매월")
+                        metaPair("대안", "반기납부", "20인 이하")
+                        metaPair("장소", "홈택스", nil)
+                    }
+                    HStack(spacing: 6) {
+                        linkChip("홈택스 간이세액표", "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3")
+                        linkChip("원천세 신고 매뉴얼", "https://www.nts.go.kr")
+                    }
+                    linkChip("반기납부 신청", "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3")
+                    // 게이트 — 원천세 셋업 확인 (iOS 끝조건)
+                    Divider().opacity(0.5)
+                    Toggle(isOn: $hometaxDone) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("홈택스 원천세 신고 셋업 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text("매월 10일 신고·납부 + 자동이체 권장").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
                         }
-                    }
-                    Divider()
-                    Text("근로자 부담 (실수령액에서 차감)")
-                        .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
-                    HStack {
-                        simRow(label: "국민연금", value: pensionEmployee)
-                        Spacer()
-                        simRow(label: "건강보험", value: healthEmployee)
-                        Spacer()
-                        simRow(label: "장기요양", value: ltcareEmployee)
-                        Spacer()
-                        simRow(label: "고용보험", value: employmentEmployee)
-                    }
-                    HStack {
-                        Spacer()
-                        simRow(label: "근로자 4축 합계", value: employeeTotal, highlight: true)
-                    }
-                    Divider()
-                    HStack {
-                        Spacer()
-                        simRow(label: "사업주 추가 부담", value: employerExtra, highlight: true)
-                    }
-                    Text("※ 사업주는 위 급여 외에 추가로 \(formatKRW(employerExtra))을 매월 부담합니다 (산재 포함).")
-                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    }.tint(BUColor.midnight)
                 }
             }
 
+            // 매월 vs 반기 비교
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("신고 방법 (4insure.or.kr)")
-                    let steps: [(String, String)] = [
-                        ("4insure.or.kr 접속", "4대보험 통합 신고 사이트 — 국민연금·건강·고용·산재 한 번에"),
-                        ("사업자등록증 + 근로계약서 + 통장 사본 PDF 업로드", "D+14 이내 필수. 약 30분 소요"),
-                        ("자동이체 신청", "매월 납부 자동화 권장"),
-                    ]
-                    ForEach(steps.indices, id: \.self) { i in
-                        HStack(alignment: .top, spacing: BUSpacing.sm) {
-                            ZStack {
-                                Circle().fill(BUColor.midnight).frame(width: 22, height: 22)
-                                Text("\(i+1)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
-                            }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(steps[i].0).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(steps[i].1).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                            }
-                            Spacer()
-                        }
+                    BUEyebrow("매월 신고 vs 반기납부 — 어떤 게 유리?")
+                    Text("자금 흐름 + 페이퍼워크 부담 vs 큰 일괄 납부")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    HStack(alignment: .top, spacing: BUSpacing.sm) {
+                        compareBox(
+                            title: "매월 신고",
+                            lines: ["✓ 매월 소액 납부 (자금 부담 적음)", "✓ 직원 입·퇴사 즉시 반영", "✗ 매월 페이퍼워크 (1-2시간/월)"],
+                            bottom: "권장: 직원 5명+ 또는 변동 잦은 매장",
+                            filled: false
+                        )
+                        compareBox(
+                            title: "반기납부 (20인 이하)",
+                            lines: ["✓ 1월·7월 연 2회만 신고", "✓ 페이퍼워크 부담 1/6", "✗ 큰 금액 일괄 납부 (자금 계획 필요)"],
+                            bottom: "권장: 직원 1-3명, 안정적 운영",
+                            filled: true
+                        )
                     }
-                }
-            }
-
-            // 직원 수별 유리한 길 (웹 PATH "당신 상황에 유리한 길" 1:1)
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("직원 수별 유리한 길")
-                    pathRow("1인 사업자 (직원 0)", "4대보험 신고 불필요 — 본인은 지역가입자",
-                            "대표자 본인은 직장가입자 대상이 아님. 지역의보 + 지역연금으로 자동 가입. 본인을 임원으로 등재한 경우는 별개.")
-                    pathRow("직원 1~2명 + 월급 270만 미만", "두루누리 80% 지원 + 수기 엑셀로 시작",
-                            "신규 가입자면 두루누리로 보험료 80% 지원 → 사업주 부담 약 5%. 페이퍼워크는 엑셀+매월 신고로 충분. 첫 신고는 세무서 방문 권장.")
-                    pathRow("직원 3~5명", "급여 SaaS (flex / 알밤) + 두루누리 + 반기납부",
-                            "SaaS 월 5만 < 수기 실수 위험+시간 비용. 반기납부로 페이퍼워크 1/6. 두루누리 가능자는 반드시 신청. 세무사 위임은 5명부터 검토.")
-                    pathRow("직원 6명 이상", "세무사 위임 적극 검토",
-                            "월 10~30만 = 본인 시간 5시간 가치 이상. 부가세·종소세까지 통합 처리 + 세무조사 리스크 0. 매장 운영 집중이 ROI 높음.")
-                    pathRow("알바·시급 직원만 운영", "일용근로자 신고 — 고용·산재는 1일만 일해도 의무",
-                            "일용직도 고용·산재는 1일만 일해도 의무(근로내용확인신고 익월 15일). 1개월↑ + 월 8일 또는 60시간↑이면 국민연금·건강까지. '산재만'은 오해 — 고용보험 누락 시 과태료.")
                 }
             }
         }
+    }
+
+    // MARK: - pg 3 급여 + 유리한 길 (웹 PAGE 3 1:1)
+
+    private var payrollPathPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            // 급여 지급 방식 3가지
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("급여 시스템 — 3가지 옵션 비교")
+                    Text("매장 규모·예산·실수 리스크에 따라 선택")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    payrollOption(icon: "doc.text",
+                                  title: "수기 관리 (엑셀)",
+                                  desc: "예스폼 급여대장 양식 활용. 4대보험·원천세 직접 계산. 실수 시 본인 책임. 무료지만 5명 넘어가면 위험.",
+                                  cost: "무료", fit: "직원 1~2명")
+                    payrollOption(icon: "building.2",
+                                  title: "세무사 위임",
+                                  desc: "월 수임료 10~30만원. 급여·4대보험·원천세·연말정산 전부 대행. 가장 안전. 세무 리스크 0. 부가세·종소세도 같이 가능.",
+                                  cost: "월 10~30만", fit: "전 규모")
+                    payrollOption(icon: "function",
+                                  title: "급여 SaaS (flex, 알밤, 자비스)",
+                                  desc: "자동 급여 계산 + 명세서 발송 + 4대보험 연동 + 출퇴근 기록. 직원 수 기반 과금. 3명+부터 손익 맞음. 단 세무사 대체는 아님.",
+                                  cost: "월 0~5만", fit: "직원 3명+")
+                }
+            }
+
+            // PATH — 사용자 상황별 유리한 길
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("당신 상황에 유리한 길")
+                    Text("직원 수·매출·업종별 권장 시나리오")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    pathRow("1인 사업자 (직원 0)", "4대보험 신고 불필요 — 본인은 지역가입자",
+                            "대표자 본인은 직장가입자 대상이 아님. 지역의보 + 지역연금으로 자동 가입. 단, 본인 명의 사업장에 본인을 임원으로 등재한 경우는 별개.")
+                    pathRow("직원 1~2명 + 월급 270만 미만", "두루누리 80% 지원 + 수기 엑셀로 시작",
+                            "신규 가입자라면 두루누리로 보험료 80% 지원받음. 사업주 부담만 약 5%로 떨어짐. 페이퍼워크는 엑셀 + 매월 신고로 충분. 단, 실수 위험 큼 — 첫 신고는 세무서 방문 권장.")
+                    pathRow("직원 3~5명", "급여 SaaS (flex / 알밤) + 두루누리 + 반기납부",
+                            "SaaS 월 5만 < 수기 실수 위험 + 시간 비용. 반기납부로 페이퍼워크 1/6. 두루누리 가능자는 반드시 신청. 세무사 위임은 5명부터 검토.")
+                    pathRow("직원 6명 이상", "세무사 위임 적극 검토",
+                            "월 10-30만 = 본인 시간 5시간 가치 이상. 부가세·종소세까지 통합 처리되며 세무조사 리스크 0. 매장 운영에 집중하는 것이 ROI 높음.")
+                    pathRow("알바·시급 직원만 운영", "일용근로자 신고 — 고용·산재는 1일만 일해도 의무",
+                            "일용직도 고용·산재는 1일만 일해도 의무 가입(근로내용확인신고 익월 15일). 1개월 이상 + 월 8일 또는 60시간 이상이면 국민연금·건강까지 의무. '산재만'은 오해 — 고용보험 누락 시 과태료. 시급 알바 늘릴 때 사회보험 부담 미리 계산.")
+                }
+            }
+
+            // 채용 직후 체크리스트
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles").foregroundStyle(BUColor.midnight).font(.system(size: 13))
+                        Text("채용 직후 체크리스트").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                    }
+                    let checklist = [
+                        "채용 즉시: 근로계약서 작성 (필수, 미체결 시 500만원 이하 벌금·과태료)",
+                        "익월 15일까지(건강보험 14일): 4대사회보험 정보연계센터 → 사업장 성립 + 근로자 취득 신고",
+                        "두루누리 자동 적용 체크 (해당자만 — 신청 안 하면 자동 적용 안 됨)",
+                        "첫 급여일 전: 홈택스 간이세액표로 원천세 계산법 숙지",
+                        "첫 급여 지급일 다음 달 10일까지: 홈택스 원천세 신고·납부",
+                        "반기납부 신청 검토 (20인 이하 + 안정적 운영 시)",
+                        "직원 3명+ 시: 급여 SaaS 도입 또는 세무사 면담",
+                    ]
+                    ForEach(checklist.indices, id: \.self) { i in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("\(i + 1).").font(BUFont.bodyCaption.weight(.bold)).foregroundStyle(BUColor.midnight)
+                            Text(checklist[i]).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+
+            // 다음 단계 안내
+            BUCard(.card) {
+                HStack(alignment: .top, spacing: BUSpacing.sm) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(BUColor.midnight.opacity(0.08))
+                            .frame(width: 30, height: 30)
+                        Image(systemName: "arrow.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("다음 단계: 채용 비용 계산기 + 채용·운영 세팅")
+                            .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                        Text("보험·세무 시스템이 완성되면, 다음은 실제 채용 + 매장 운영 세팅. 채용 비용 계산기로 급여 + 4대보험 + 퇴직금까지 합한 실비를 미리 시뮬레이션 해보세요.")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func stepRow(_ number: Int, _ title: String, _ detail: String) -> some View {
+        HStack(alignment: .top, spacing: BUSpacing.sm) {
+            ZStack {
+                Circle().fill(BUColor.midnight).frame(width: 22, height: 22)
+                Text("\(number)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+        }
+    }
+
+    private func metaPair(_ label: String, _ value: String, _ sublabel: String?) -> some View {
+        VStack(alignment: .center, spacing: 2) {
+            Text(label).font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+            Text(value).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            if let sublabel {
+                Text(sublabel).font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func linkChip(_ label: String, _ url: String) -> some View {
+        Group {
+            if let dest = URL(string: url) {
+                Link(destination: dest) {
+                    HStack(spacing: 5) {
+                        Text(label).font(BUFont.bodyCaption.weight(.semibold))
+                        Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .bold))
+                    }
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            }
+        }
+    }
+
+    private func compareBox(title: String, lines: [String], bottom: String, filled: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(filled ? BUColor.midnightDeep : BUColor.midnight)
+            ForEach(lines, id: \.self) { line in
+                Text(line).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(bottom).font(BUFont.bodyCaption.weight(.bold)).foregroundStyle(BUColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(BUSpacing.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(filled ? BUColor.midnight.opacity(0.04) : BUColor.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(BUColor.midnight.opacity(filled ? 0.18 : 0.10), lineWidth: 1)
+        )
+    }
+
+    private func payrollOption(icon: String, title: String, desc: String, cost: String, fit: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: BUSpacing.sm) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(BUColor.midnight.opacity(0.06))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: icon).font(.system(size: 13)).foregroundStyle(BUColor.midnight)
+                }
+                Text(title).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+            }
+            Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 6) {
+                Text(cost)
+                    .font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 9).padding(.vertical, 3)
+                    .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                Text("적합: \(fit)")
+                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(BUColor.inkSecondary)
+                    .padding(.horizontal, 9).padding(.vertical, 3)
+                    .background(BUColor.ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+        }
+        .padding(BUSpacing.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(BUColor.midnight.opacity(0.10), lineWidth: 1)
+        )
     }
 
     private func pathRow(_ condition: String, _ recommendation: String, _ reason: String) -> some View {
@@ -352,155 +573,14 @@ public struct InsuranceTaxSetupStageView: View {
         .overlay(alignment: .top) { Divider().opacity(0.5) }
     }
 
-    // MARK: - pg 1 세무 세팅
-
-    private var taxPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("세무 처리 방식 선택")
-                    HStack(spacing: BUSpacing.sm) {
-                        taxMethodCard(id: "cpa", title: "세무사 선임", desc: "월 10~20만원. 신고 대행·절세 컨설팅. 초기 3년 강력 권장.", icon: "person.badge.shield.checkmark")
-                        taxMethodCard(id: "self", title: "직접 신고", desc: "홈택스 독학. 단순 간이과세자에게만 현실적.", icon: "laptopcomputer")
-                    }
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("홈택스 필수 세팅")
-                    let items: [(String, String)] = [
-                        ("홈택스 회원가입·사업장 등록", "공동인증서 또는 금융인증서로 로그인 후 사업자 등록"),
-                        ("부가세 신고 일정 확인", "간이과세: 1월 신고 1회. 일반과세: 1월·7월 신고 2회"),
-                        ("원천세 자동이체 설정", "직원 월급 지급 후 다음달 10일까지 홈택스 납부"),
-                        ("현금영수증 가맹점 등록", "연 매출 2,400만원+ 의무. 미등록 시 가산세 5%"),
-                    ]
-                    ForEach(items, id: \.0) { title, detail in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("✓").font(.system(size: 12, weight: .bold)).foregroundStyle(BUColor.success)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                            }
-                        }
-                    }
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("절세 핵심 — 비용 처리")
-                    let tips: [(String, String)] = [
-                        ("사업용 카드로만 결제", "개인카드 혼용 시 비용 불인정 — 세금 늘어남"),
-                        ("영수증·세금계산서 보관", "5년 보관 의무. 클라우드 스캔 권장"),
-                        ("인테리어·설비 감가상각", "5~10년 감가상각으로 매년 비용 처리 가능"),
-                    ]
-                    ForEach(tips, id: \.0) { title, detail in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "lightbulb.fill").foregroundStyle(BUColor.warn).font(.system(size: 11))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - pg 2 체크리스트
-
-    private var checklistPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("완료 체크리스트")
-                    Toggle(isOn: $insRegDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("4대보험 신고 완료 (4insure.or.kr)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("채용 D+14 이내 필수").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $hometaxDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("홈택스 회원가입·사업장 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("공동인증서 또는 금융인증서 필요").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $bizCardDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("사업용 카드 분리 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("개인카드 혼용 = 비용 불인정").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $vatDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("부가세 신고 일정 확인").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("간이: 1월 1회 / 일반: 1·7월 2회").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                }
-            }
-
-            warningCard(title: "반드시 확인", items: [
-                "현금 급여 + 미신고 = 세무조사 (지급명세서·공단 자료 교차검증)",
-                "원천세 납부지연 시 미납세액 3% + 일 0.022% 가산세 — 매월 10일까지",
-                "두루누리 신청 대상인지 확인 — 월보수 270만 미만 근로자",
-            ], color: BUColor.danger)
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func formatKRW(_ value: Int) -> String {
-        "\(value.formatted())원"
-    }
-
-    private func simRow(label: String, value: Int, highlight: Bool = false) -> some View {
-        VStack(alignment: .center, spacing: 2) {
-            Text(label).font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
-            Text("\(value.formatted())원")
-                .font(highlight ? BUFont.cardTitleSmall : BUFont.bodySmall)
-                .foregroundStyle(highlight ? BUColor.midnight : BUColor.ink)
-                .monospacedDigit()
-        }
-    }
-
-    private func taxMethodCard(id: String, title: String, desc: String, icon: String) -> some View {
-        let isSelected = cpaChoice == id
-        return Button {
-            cpaChoice = isSelected ? "" : id
-        } label: {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(isSelected ? BUColor.midnight.opacity(0.12) : BUColor.midnight.opacity(0.06))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: icon).font(.system(size: 18)).foregroundStyle(BUColor.midnight)
-                }
-                Text(title).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
-                Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2).multilineTextAlignment(.leading)
-            }
-            .padding(BUSpacing.sm)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(BUColor.surface, in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
-                    .strokeBorder(isSelected ? BUColor.midnight.opacity(0.4) : Color.clear, lineWidth: 2)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
     @ViewBuilder
-    private func warningCard(title: String, items: [String], color: Color) -> some View {
+    private func warningCard(title: String, items: [String]) -> some View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                Text(title).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(color)
+                Text(title).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(BUColor.danger)
                 ForEach(items, id: \.self) { item in
                     HStack(alignment: .top, spacing: 6) {
-                        Circle().fill(color).frame(width: 4, height: 4).padding(.top, 5)
+                        Circle().fill(BUColor.danger).frame(width: 4, height: 4).padding(.top, 5)
                         Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                     }
                 }

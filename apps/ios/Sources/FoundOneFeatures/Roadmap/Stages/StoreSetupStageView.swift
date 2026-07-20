@@ -77,7 +77,7 @@ public struct StoreSetupStageView: View {
             stageId: stageId,
             title: "스토어 및 배송 세팅",
             stageEyebrow: "단계 12 · 스토어 셋업",
-            helperText: "스토어 첫 인상이 구매 전환율을 결정합니다. 스마트스토어 기준 평균 전환율 2-5% — 사진·설명·리뷰가 핵심.",
+            helperText: "카테고리·배너·반품 정책 + 택배사 연동 + (자체몰) PG 연동 + CS 채널(카톡·톡톡) + 포장재 풀세트 실제 워크플로 테스트. 첫 주문 와서 막히면 리뷰가 망가진다.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -130,24 +130,17 @@ public struct StoreSetupStageView: View {
 
     private var storeConfigPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            // 웹 "플랫폼별 스토어 세팅 > 네이버 스마트스토어" 6단계 1:1 (sell.smartstore.naver.com)
             BUCard(.card) {
                 VStack(spacing: 0) {
-                    BUEyebrow("스마트스토어 셋업 순서")
+                    BUEyebrow("네이버 스마트스토어 셋업 (sell.smartstore.naver.com)")
                         .padding(.bottom, BUSpacing.sm)
-                    stepRow(num: 1, title: "스마트스토어 판매자 가입 (sell.smartstore.naver.com)", isLast: false)
-                    stepRow(num: 2, title: "스토어명·대표 카테고리·로고 설정", isLast: false)
-                    stepRow(num: 3, title: "사업자 정보 연동", isLast: false)
-                    stepRow(num: 4, title: "상품 등록 (최소 10개 이상 권장)", isLast: false)
-                    stepRow(num: 5, title: "스토어 오픈 (검수 1-3일)", isLast: true)
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("스토어 SEO 최적화")
-                    infoRow(text: "상품명: 검색 키워드 앞에 배치 (예: '남성 슬림핏 청바지 스트레치')")
-                    infoRow(text: "태그: 10개 풀 활용")
-                    infoRow(text: "카테고리: 정확한 3단계 카테고리 선택")
+                    stepRow(num: 1, title: "스마트스토어 센터 → 판매자 정보 등록 (사업자등록증 + 통신판매업 신고증)", isLast: false)
+                    stepRow(num: 2, title: "스토어 기본 설정: 스토어명, 로고, 대표 이미지, 소개글", isLast: false)
+                    stepRow(num: 3, title: "배송 템플릿 설정: 배송비 (무료/조건부/유료), 출고지, 반품지 주소", isLast: false)
+                    stepRow(num: 4, title: "교환/반품 정책 작성 (7일 이내 교환/반품, 왕복 택배비 5,000원 등)", isLast: false)
+                    stepRow(num: 5, title: "정산 계좌 등록 (법인/개인 계좌 + 세금계산서 발행 설정)", isLast: false)
+                    stepRow(num: 6, title: "쇼핑윈도 카테고리 신청 (의류, 식품 등 카테고리별 추가 심사 필요)", isLast: true)
                 }
             }
 
@@ -171,7 +164,7 @@ public struct StoreSetupStageView: View {
                     Divider()
 
                     Toggle(isOn: $productListed) {
-                        Text("상품 등록 완료 (최소 10개)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                        Text("상품 등록 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                     }
                     .tint(BUColor.midnight)
                 }
@@ -183,22 +176,32 @@ public struct StoreSetupStageView: View {
 
     private var shippingPaymentPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            // 웹 "택배 계약 가이드" 1:1 — 초기에는 우체국택배 → 물량 늘면 계약택배로 전환
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("배송 정책 설정")
-                    infoRow(text: "배송비 기준: 3만원 이상 무료 or 3000원 고정")
-                    infoRow(text: "택배사 계약: CJ대한통운·롯데택배 (소규모: 선불택배 가능)")
-                    infoRow(text: "발송 처리 기한: 영업일 기준 2일 이내 (지연 시 구매 취소)")
-                    infoRow(text: "반품/교환 정책: 7일 이내 무조건 수락 (전자상거래법)")
+                    BUEyebrow("택배 계약 가이드")
+                    Text("초기에는 우체국택배 → 물량 늘면 계약택배로 전환")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineSpacing(2)
+                    labeledRow(label: "우체국택배 (시작)", text: "2,700원~/건 · 도서산간 추가 없음. 소량에 최적. 우체국 직접 접수 — 추천: 일 1-5건")
+                    labeledRow(label: "CJ대한통운", text: "1,850원~/건 (계약) · 점유율 1위. D+1 배송. 편의점 접수. 물량 30건+/월 시 계약 가능 — 추천: 일 5건+")
+                    labeledRow(label: "한진택배", text: "3,000원~/건 (계약) · 중대형 화물 강점. 전국 A/S망 — 대형 상품")
+                    labeledRow(label: "로젠택배", text: "3,000원~/건 (계약) · 계약 할인폭 큰 편. 온라인 접수 편리 — 가격 협상")
+                    infoRow(text: "택배비 협상 팁: 월 30건 이상이면 계약택배 요청 가능. CJ대한통운 1588-1255로 전화하여 '온라인 셀러 계약 택배' 문의하세요. 초기 단가 2,500~3,000원 가능.")
                 }
             }
 
+            // 웹 "오픈 전 필수 확인 사항" 6항목 1:1
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("결제 게이트웨이")
-                    labeledRow(label: "스마트스토어", text: "네이버페이 기본 포함")
-                    labeledRow(label: "자체몰",       text: "토스페이먼츠·KG이니시스·NICE페이 중 선택")
-                    infoRow(text: "결제 실거래 테스트 필수 (1원 결제 후 환불)")
+                    BUEyebrow("오픈 전 필수 확인 사항")
+                    checkRow(item: "교환/반품 정책을 스토어에 등록했는가?", why: "미등록 시 고객 분쟁 + 플랫폼 패널티")
+                    checkRow(item: "배송비 정책이 설정되었는가? (무료/조건부/유료)", why: "배송비 무료 설정 시 상품가에 포함해야 마진 유지")
+                    checkRow(item: "정산 계좌가 등록되었는가?", why: "미등록 시 매출금 수령 불가")
+                    checkRow(item: "사업자 정보가 정확히 입력되었는가?", why: "사업자등록증과 불일치 시 정산 보류")
+                    checkRow(item: "테스트 주문을 해봤는가?", why: "실제 결제→배송→정산 전 과정 1회 테스트 필수")
+                    checkRow(item: "고객 문의 응대 채널이 준비되었는가?", why: "채널톡/카카오톡 상담 연동. 24시간 내 응답이 판매자 등급에 영향")
                 }
             }
 
@@ -212,7 +215,7 @@ public struct StoreSetupStageView: View {
                     Divider()
 
                     Toggle(isOn: $pgLive) {
-                        Text("결제 실거래 테스트 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                        Text("테스트 주문 완료 (실제 결제→배송→정산 1회)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                     }
                     .tint(BUColor.midnight)
                 }
@@ -251,6 +254,29 @@ public struct StoreSetupStageView: View {
             Text("•").font(BUFont.bodyCaption).foregroundStyle(BUColor.midnight).padding(.top, 2)
             Text(text).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
         }
+    }
+
+    /// 체크 항목 + 이유 행 — 웹 "오픈 전 필수 확인 사항" { item, why } 1:1.
+    private func checkRow(item: String, why: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .strokeBorder(BUColor.midnight.opacity(0.3), lineWidth: 1.5)
+                .frame(width: 16, height: 16)
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item)
+                    .font(BUFont.bodySmall.weight(.semibold))
+                    .foregroundStyle(BUColor.ink)
+                Text(why)
+                    .font(BUFont.bodyCaption)
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(2)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.02), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func labeledRow(label: String, text: String) -> some View {
