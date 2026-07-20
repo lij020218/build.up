@@ -53,7 +53,22 @@ public struct IndustrySelectionStageView: View {
     @AppStorage("roadmap.selectedSpecialtyId") private var selectedSpecialtyId: String = ""
     @AppStorage("roadmap.cluster")             private var selectedCluster: String    = "offline-food"
     @State private var activeCategory: String = "food"
+    /// 업종 *전환* 시 삭제 동의 — 경고 카드의 스위치. 전환이 아닐 땐 무시된다.
+    @State private var switchAgreed = false
     private let stageId = "industry-selection"
+
+    // ── 업종 전환 감지 (웹 handleIndustryContinue 미러 · 사장님 결정 2026-07-21) ──
+    //   이미 완료된 industry-selection 과 *다른* 업종 선택 = 전환 → 로드맵 진행 전체 삭제.
+    //   같은 업종 재확정(specialty 변경 포함)은 전환 아님. BUStageShell 은 onAdvance 후
+    //   무조건 화면 전환하므로 알럿 대신 canAdvance 게이팅 + 명시 동의 카드로 확인받는다.
+    private var committedSubIndustryId: String? {
+        guard let d = roadmapStore.decisions[stageId], d.isCompleted else { return nil }
+        return d.selectedPrimaryOptionId ?? d.inputs["subIndustryId"]
+    }
+    private var isIndustrySwitch: Bool {
+        guard let committed = committedSubIndustryId, !selectedIndustryId.isEmpty else { return false }
+        return committed != selectedIndustryId
+    }
 
     // ── Step-2 specialty ───────────────────────────────────────────────
     //   웹 SSOT: IndustrySelectionStage.tsx getSpecialtyOptions/requiresSpecialty 패턴.
@@ -140,6 +155,56 @@ public struct IndustrySelectionStageView: View {
         selectedIndustryId.isEmpty ? nil : selectedIndustryId
     }
 
+    /// 업종 전환 커밋 — RoadmapStore.switchIndustry(진행 전체 삭제 + 새 업종만 기록).
+    /// switchIndustry 의 clearAllAppStorage 가 "roadmap." prefix 로 이 뷰의 선택 키까지
+    /// 지우므로, 호출 전에 값을 붙잡아 두고 직후 복원한다 (새 업종의 값).
+    private func commitIndustrySwitch() {
+        let inputs = currentInputs
+        let primary = currentPrimaryOptionId
+        let keepIndustry = selectedIndustryId
+        let keepSpecialty = selectedSpecialtyId
+        let keepCluster = selectedCluster
+        roadmapStore.switchIndustry(inputs: inputs, selectedPrimaryOptionId: primary)
+        selectedIndustryId = keepIndustry
+        selectedSpecialtyId = keepSpecialty
+        selectedCluster = keepCluster
+        switchAgreed = false
+    }
+
+    /// 업종 전환 경고 카드 — 웹 ConfirmModal 과 동일 문구. 명시 동의 스위치가
+    /// canContinue 게이트를 푼다 (BUStageShell 은 onAdvance 후 무조건 화면 전환이라 알럿 불가).
+    private var industrySwitchNotice: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text("업종 전환")
+                    .font(.system(size: 11, weight: .heavy))
+                    .foregroundStyle(Color.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(BUColor.danger, in: Capsule())
+                Text("기존 로드맵 진행이 삭제됩니다")
+                    .font(.system(size: 13.5, weight: .heavy))
+                    .foregroundStyle(BUColor.ink)
+            }
+            Text("업종을 바꾸면 지금까지의 로드맵 진행(완료한 단계·단계 입력값)이 모두 삭제되고 새 업종의 로드맵을 처음부터 시작합니다. 업종이 다르면 인허가·예산·준비 단계가 달라서 이전 기록을 이어갈 수 없습니다. (매출·직원 등 운영 데이터는 유지)")
+                .font(.system(size: 12.5))
+                .foregroundStyle(BUColor.ink.opacity(0.65))
+                .lineSpacing(3)
+            Toggle(isOn: $switchAgreed) {
+                Text("기존 로드맵 진행 삭제에 동의합니다")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+            }
+            .tint(BUColor.danger)
+        }
+        .padding(16)
+        .background(BUColor.danger08, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(BUColor.danger.opacity(0.25), lineWidth: 1)
+        )
+    }
+
     // ── Onboarding 통합 옵션 (2026-05-20) ──
     /// 처음 열 때 보여줄 카테고리 — Onboarding 에서 카테고리 미리 선택한 경우 주입.
     /// "다음" 액션 후 동작 (dismiss vs wizard push) 은 BUStageShell 의 \.wizardOnAdvance 환경값이 결정.
@@ -158,6 +223,8 @@ public struct IndustrySelectionStageView: View {
     private var canContinue: Bool {
         guard !selectedIndustryId.isEmpty else { return false }
         if requiresSpecialty && selectedSpecialtyId.isEmpty { return false }
+        // 업종 전환은 진행 전체 삭제 — 경고 카드 동의 없이는 진행 불가
+        if isIndustrySwitch && !switchAgreed { return false }
         return true
     }
 
@@ -168,6 +235,9 @@ public struct IndustrySelectionStageView: View {
         }
         if requiresSpecialty && selectedSpecialtyId.isEmpty {
             return "\(opt.titleKo) — 세부 분류를 선택하세요"
+        }
+        if isIndustrySwitch && !switchAgreed {
+            return "\(opt.titleKo) — 업종 전환은 아래 삭제 안내 동의 후 진행됩니다"
         }
         if let spec = specialtyOptions.first(where: { $0.id == selectedSpecialtyId }) {
             return "\(opt.titleKo) · \(spec.label)"
@@ -185,20 +255,30 @@ public struct IndustrySelectionStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(
-                    currentStageId: stageId,
-                    inputs: currentInputs,
-                    selectedPrimaryOptionId: currentPrimaryOptionId
-                )
+                if isIndustrySwitch {
+                    commitIndustrySwitch()
+                } else {
+                    roadmapStore.advanceToNext(
+                        currentStageId: stageId,
+                        inputs: currentInputs,
+                        selectedPrimaryOptionId: currentPrimaryOptionId
+                    )
+                }
                 // dismiss / wizard push 는 BUStageShell 이 \.wizardOnAdvance 환경값 보고 자동 처리.
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(
-                    currentStageId: stageId,
-                    inputs: currentInputs,
-                    selectedPrimaryOptionId: currentPrimaryOptionId
-                )
+                // 전환인데 동의 전이면 아무것도 저장하지 않음 — saveStageEdit 의 inputs 머지가
+                // 옛 업종 decision 위에 새 업종 키를 섞는 오염을 차단 (경고 카드가 안내).
+                if isIndustrySwitch {
+                    if switchAgreed { commitIndustrySwitch() }
+                } else {
+                    roadmapStore.saveStageEdit(
+                        currentStageId: stageId,
+                        inputs: currentInputs,
+                        selectedPrimaryOptionId: currentPrimaryOptionId
+                    )
+                }
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
@@ -223,11 +303,18 @@ public struct IndustrySelectionStageView: View {
                 if requiresSpecialty {
                     specialtySection
                 }
+
+                // 업종 *전환* 경고 + 명시 동의 — 웹 ConfirmModal 미러 (동일 문구).
+                if isIndustrySwitch {
+                    industrySwitchNotice
+                }
             }
         }
         .onChange(of: selectedIndustryId) { _, _ in
             // industry 가 바뀌면 specialty 도 리셋 (새 industry 의 specialty 셋과 호환되지 않음).
             selectedSpecialtyId = ""
+            // 동의는 선택한 업종에 대한 것 — 업종을 또 바꾸면 다시 동의받는다.
+            switchAgreed = false
         }
         .onAppear {
             // 우선순위: 호출자 주입 (Onboarding) > 기존 선택 복원 > food 기본값

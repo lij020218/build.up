@@ -445,6 +445,7 @@ export default function StarterStageDemo({
     handleSignOut,
     resetDemo, isResetting, resetProgress,
     resetConfirmOpen, onResetConfirm, onResetCancel,
+    industrySwitchConfirmOpen, onIndustrySwitchConfirm, onIndustrySwitchCancel,
     contractTasks, activeContractTask, activeContractTaskDetail,
     navigateToSurface, openFinanceFromSummary,
     handleIndustryContinue, handleBusinessModelContinue,
@@ -756,6 +757,22 @@ export default function StarterStageDemo({
       danger
       onConfirm={onResetConfirm}
       onCancel={onResetCancel}
+    />
+    {/* 업종 전환 확인 모달 — 전환 = 로드맵 진행 전체 삭제 (사장님 결정 2026-07-21).
+        운영 데이터(매출·직원·가게정보)는 유지된다는 경계를 문구에 명시. */}
+    <ConfirmModal
+      open={industrySwitchConfirmOpen}
+      title={language === "ko" ? "업종 전환" : "Switch Industry"}
+      message={
+        language === "ko"
+          ? "업종을 바꾸면 지금까지의 로드맵 진행(완료한 단계·단계 입력값)이 모두 삭제되고 새 업종의 로드맵을 처음부터 시작합니다.\n업종이 다르면 인허가·예산·준비 단계가 달라서 이전 기록을 이어갈 수 없습니다. (매출·직원 등 운영 데이터는 유지)"
+          : "Switching industry deletes all roadmap progress (completed stages and stage inputs) and restarts the new industry's roadmap from the beginning.\nPermits, budget and preparation steps differ by industry, so previous records can't carry over. (Sales/staff data is kept.)"
+      }
+      confirmLabel={language === "ko" ? "전환하고 새로 시작" : "Switch & Restart"}
+      cancelLabel={language === "ko" ? "취소" : "Cancel"}
+      danger
+      onConfirm={onIndustrySwitchConfirm}
+      onCancel={onIndustrySwitchCancel}
     />
     {/* surface 전환 애니메이션 제거됨 (사장님 요청 2026-05-13) — 페이지 전환 시 즉시 표시 */}
     <style>{`

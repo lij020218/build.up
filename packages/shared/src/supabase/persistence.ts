@@ -399,6 +399,42 @@ function hydrateBusinessProfile(row: BusinessProfileRow | null): PersistedBusine
   };
 }
 
+/**
+ * 업종 전환 purge — 사장님이 업종(세부업종)을 *다른 것으로* 바꿔 확정했을 때,
+ * 이전 업종의 로드맵 진행(stage_decisions·stage_tasks)을 서버에서 즉시 전부 삭제한다.
+ *
+ * 왜 전부: stageId 가 업종 간 공유(biz-registration·tax-guide 등)라, 이전 업종의
+ * completedAt 이 새 path 의 강신호가 되어 heal 이 사이 단계를 통째로 완료 처리하고
+ * (재현: 외식 → b2b-saas 전환 시 미열람 9단계 자동완료·94%), inputs 잔재(permitType·
+ * specialtyId·franchiseBrandId)가 새 업종에 오염된다. 사장님 결정(2026-07-21):
+ * "업종이 달라지면 정보도 달라지므로 전부 삭제" — 선택 무효화가 아닌 전체 삭제.
+ *
+ * orphan-delete 의 최근-갱신 보호 가드(ORPHAN_DELETE_GUARD_MS)를 *의도적으로* 우회한다
+ * (방금 완료한 단계일수록 오염원). industry-selection 행도 지운다 — 남기면 옛 inputs 를
+ * 가진 행이 잔존하고, 새 선택은 직후 autosave(800ms) 가 fresh 하게 재-upsert 한다.
+ * roadmaps.updated_at bump 로 realtime 메시를 태워 다른 기기(웹·iOS)가 즉시 재조회한다.
+ *
+ * 운영 데이터(user_store_data·매출·직원 등)는 건드리지 않는다 — 그건 "진행 초기화" 영역.
+ */
+export async function purgeRoadmapProgressForIndustrySwitch(
+  client: Client,
+  userId: string
+): Promise<void> {
+  const row = await getLatestRoadmapRow(client, userId);
+  if (!row?.id) return;
+  const [{ error: decErr }, { error: taskErr }] = await Promise.all([
+    client.from("stage_decisions").delete().eq("roadmap_id", row.id),
+    client.from("stage_tasks").delete().eq("roadmap_id", row.id),
+  ]);
+  if (decErr) throw decErr;
+  if (taskErr) throw taskErr;
+  const { error: bumpErr } = await client
+    .from("roadmaps")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", row.id);
+  if (bumpErr) throw bumpErr;
+}
+
 export async function saveRoadmapState(
   client: Client,
   state: PersistedRoadmapState,

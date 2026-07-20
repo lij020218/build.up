@@ -214,12 +214,15 @@ public final class RoadmapStore {
     }
 
     /// 완료 취소 — 사장님이 단계를 다시 열고 "되돌리기" 했을 때.
+    ///   ⚠️ pushUpsert 금지: WriteDTO 가 encodeIfPresent 라 completedAt=nil 이면 키가 생략되어
+    ///   서버 완료 상태가 그대로 남고, 다음 sync 의 원격우선 머지가 로컬 되돌리기를 원복했다
+    ///   (2026-07-20 감사 P1). 전용 clearCompletedAt(명시적 NULL UPDATE)으로 지운다.
     public func uncompleteStage(_ stageId: String) {
         guard var d = decisions[stageId] else { return }
         d.completedAt = nil
         decisions[stageId] = d
         persist()
-        pushUpsert(d)
+        pushClearCompletedAt(stageId)
     }
 
     /// stage 의 입력값만 부분 업데이트.
@@ -251,6 +254,62 @@ public final class RoadmapStore {
         let nextIdx = idx + 1
         guard nextIdx < path.count else { return nil }
         return path[nextIdx]
+    }
+
+    /// 업종 *전환* — 이전 업종의 로드맵 진행 전체 삭제 후 새 industry-selection 만 남긴다.
+    ///   웹 SSOT: useSelectionHandlers.executeIndustrySwitch (사장님 결정 2026-07-21).
+    ///   왜 전부: stageId 가 업종 간 공유(biz-registration·tax-guide 등)라 이전 completedAt 이
+    ///   새 path 의 강신호가 되어 heal 이 미열람 단계를 통째로 완료 처리하고, inputs 잔재
+    ///   (permitType·specialtyId·franchiseBrandId)가 새 업종을 오염시킨다.
+    ///   운영 데이터(매출·직원 등)는 건드리지 않는다 — 그건 "진행 초기화" 영역.
+    public func switchIndustry(
+        inputs: [String: String],
+        selectedPrimaryOptionId: String?
+    ) {
+        // 1) 로컬 wipe — 스테이지 @AppStorage 입력(옛 업종 permit.* 등) + decisions 전체
+        clearAllAppStorage()
+        pendingPushStageIds.removeAll()   // 옛 업종 단계의 재전송 예약도 폐기 (부활 차단)
+        // 새 cluster 즉시 반영 — 아래 persist() 가 cluster 도 재기록하므로 옛 cluster 가
+        // 다시 저장되지 않게 한다 (inputs["cluster"] 는 뷰 currentInputs 계약 키).
+        if let newCluster = inputs["cluster"], !newCluster.isEmpty { cluster = newCluster }
+
+        // 2) 새 industry-selection 완료 기록 (fresh — 옛 inputs 머지 없음)
+        let d = StageDecision(
+            stageId: "industry-selection",
+            completedAt: Self.isoNow(),
+            inputs: inputs,
+            selectedPrimaryOptionId: selectedPrimaryOptionId
+        )
+        decisions["industry-selection"] = d
+        persist()
+        StageInputProjector.project(inputs)
+
+        // 3) 서버 purge → fresh row push. purge 가 industry-selection 행까지 지우므로
+        //    upsert 의 server-inputs 머지에 옛 값이 섞일 수 없다.
+        //    purge 완료 전에는 pendingIndustrySwitchPurge 플래그로 syncFromRemote 의
+        //    원격 머지를 보류한다 — 안 그러면 원격에 남은 옛 업종 진행이 로컬로 부활한다.
+        guard let repo else { return }
+        pendingIndustrySwitchPurge = true
+        Task { [d] in
+            do {
+                try await repo.purgeAllForIndustrySwitch()
+                try await repo.upsert(d)
+                self.pendingIndustrySwitchPurge = false
+            } catch {
+                logger.error("업종 전환 purge/upsert 실패(다음 sync 에서 재시도): \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// 업종 전환의 서버 purge 가 아직 완료되지 않았는지 (오프라인·실패 시 true 잔존).
+    ///   true 인 동안 syncFromRemote 는 원격 머지를 보류하고 purge 를 재시도한다.
+    ///   UserDefaults 영속 — 앱 재시작 후에도 옛 진행 부활을 차단.
+    ///   (clearAllAppStorage 가 "foundone.roadmap." prefix 로 이 키도 지우므로,
+    ///    switchIndustry 는 wipe *후에* 플래그를 세운다.)
+    private static let pendingSwitchPurgeKey = "foundone.roadmap.pendingIndustrySwitchPurge"
+    private var pendingIndustrySwitchPurge: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.pendingSwitchPurgeKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.pendingSwitchPurgeKey) }
     }
 
     /// 전체 reset — 테스트·디버그 용도.
@@ -289,10 +348,40 @@ public final class RoadmapStore {
     /// 실패 시 로컬 상태 유지 (조용히 로그).
     public func syncFromRemote() async {
         guard let repo else { return }
+        // ── 업종 전환 purge 미완(오프라인 등) — 원격에 옛 업종 진행이 남아 있으므로 머지 금지.
+        //    purge 재시도 성공 시에만 계속, 실패하면 로컬(새 업종만)을 유지하고 다음 기회에.
+        if pendingIndustrySwitchPurge {
+            do {
+                try await repo.purgeAllForIndustrySwitch()
+                if let d = decisions["industry-selection"] { try await repo.upsert(d) }
+                pendingIndustrySwitchPurge = false
+            } catch {
+                logger.error("업종 전환 purge 재시도 실패 — 원격 머지 보류: \(error.localizedDescription)")
+                return
+            }
+        }
         do {
             let remote = try await repo.fetchAll()
+            // ── 원격 업종 전환 감지(다른 기기에서 전환) — key-by-key 머지 대신 원격 전체 채택.
+            //    머지하면 서버에서 purge 로 지워진 옛 업종 진행이 로컬에서 부활한다.
+            if let r = remote.first(where: { $0.stageId == "industry-selection" }),
+               let l = decisions["industry-selection"],
+               let remoteSub = r.selectedPrimaryOptionId ?? r.inputs["subIndustryId"],
+               let localSub = l.selectedPrimaryOptionId ?? l.inputs["subIndustryId"],
+               remoteSub != localSub {
+                clearAllAppStorage()   // 옛 업종의 스테이지 @AppStorage 입력도 함께 폐기
+                decisions = Dictionary(uniqueKeysWithValues: remote.map { ($0.stageId, $0) })
+                pendingPushStageIds.removeAll()
+                persist()
+                return
+            }
             var merged = decisions
             for r in remote {
+                // 미전송 로컬 변경(오프라인 완료·되돌리기)은 원격우선 머지로 원복하지 않는다 —
+                // 로컬을 유지하고 아래 retryPendingPushes 가 그 값을 서버로 push (P2-4 레이스 픽스).
+                if pendingPushStageIds.contains(r.stageId), merged[r.stageId] != nil {
+                    continue
+                }
                 if let existing = merged[r.stageId] {
                     var combined = r
                     for (k, v) in existing.inputs where combined.inputs[k] == nil {
@@ -350,13 +439,30 @@ public final class RoadmapStore {
         }
     }
 
+    /// 되돌리기 백그라운드 push — completed_at 명시적 NULL. 실패 시 pending 적재(다음 sync 재시도).
+    private func pushClearCompletedAt(_ stageId: String) {
+        guard let repo else { return }
+        Task {
+            do {
+                try await repo.clearCompletedAt(stageId: stageId)
+                self.pendingPushStageIds.remove(stageId)
+            } catch {
+                self.pendingPushStageIds.insert(stageId)
+                logger.error("clearCompletedAt 실패(재전송 대기) stageId=\(stageId, privacy: .public): \(error.localizedDescription)")
+            }
+        }
+    }
+
     /// syncFromRemote 성공(=네트워크 복구) 직후 호출 — 미전송 단계를 현재 로컬 값으로 재-push.
     ///   무한 루프 방지: 재시도분도 실패 시 pendingPushStageIds 에 그대로 남아 다음 sync 때 다시 시도.
+    ///   되돌리기(completedAt=nil) 단계는 upsert 가 아닌 clearCompletedAt 으로 재시도 —
+    ///   upsert 는 nil 키 생략이라 서버 완료 상태를 못 지운다.
     private func retryPendingPushes() {
         guard !pendingPushStageIds.isEmpty else { return }
         for stageId in Array(pendingPushStageIds) {  // 복사본 순회 — 아래 remove(순회 중 변경) 안전
-            if let d = decisions[stageId] { pushUpsert(d) }
-            else { pendingPushStageIds.remove(stageId) }  // 더 이상 로컬에 없으면 폐기
+            if let d = decisions[stageId] {
+                if d.completedAt == nil { pushClearCompletedAt(stageId) } else { pushUpsert(d) }
+            } else { pendingPushStageIds.remove(stageId) }  // 더 이상 로컬에 없으면 폐기
         }
     }
 

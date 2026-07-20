@@ -30,6 +30,17 @@ public protocol RoadmapDecisionsRepositoryProtocol: Sendable {
     func fetchAll() async throws -> [StageDecision]
     func upsert(_ decision: StageDecision) async throws
     func delete(stageId: String) async throws
+    /// 업종 전환 purge — 로드맵 진행(stage_decisions·stage_tasks) 전체 삭제 (웹 SSOT
+    /// purgeRoadmapProgressForIndustrySwitch 미러). industry-selection 행도 지운다 —
+    /// 남기면 옛 inputs 가 잔존하고, 새 선택은 직후 upsert 가 fresh 하게 재기록
+    /// (행이 없으므로 upsert 의 server-inputs 머지에 옛 값이 섞이지 않음).
+    func purgeAllForIndustrySwitch() async throws
+    /// 되돌리기 전용 — completed_at 을 서버에서 명시적으로 NULL 로 지운다.
+    /// upsert 는 encodeIfPresent 라 nil 이면 키 자체가 생략되어 서버 완료 상태가 남는다
+    /// (타 기기가 계속 완료 표시 + 다음 sync 의 원격우선 머지가 로컬 되돌리기를 원복).
+    /// upsert 인코딩을 항상-명시로 바꾸면 반대 회귀(웹이 완료한 단계를 iOS 입력 저장이
+    /// NULL 로 지움)가 생기므로 전용 경로로만 지운다.
+    func clearCompletedAt(stageId: String) async throws
     /// hiring-setup 채용계획 — inputs.staffPlan(중첩 객체) + inputs.hiringStatus(문자열) 직접 I/O.
     /// 웹 MyHiringPlanCard 와 같은 위치(stage_decisions.inputs)에 web 호환 JSON 으로 저장.
     /// [String:String] 모델로는 중첩 객체 표현 불가 → 전용 경로(AnyJSON).
@@ -219,6 +230,39 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
             .eq("stage_code", value: stageId)
             .execute()
 
+        await touchRoadmap(roadmapId)
+    }
+
+    public func purgeAllForIndustrySwitch() async throws {
+        let userId = try await getUserId()
+        guard let roadmapId = try await resolveRoadmapId(userId: userId, createIfMissing: false) else {
+            return
+        }
+        try await supabase
+            .from("stage_decisions")
+            .delete()
+            .eq("roadmap_id", value: roadmapId)
+            .execute()
+        try await supabase
+            .from("stage_tasks")
+            .delete()
+            .eq("roadmap_id", value: roadmapId)
+            .execute()
+        // roadmaps bump → 웹·다른 기기가 realtime 으로 즉시 재조회 (stale 진행 부활 차단)
+        await touchRoadmap(roadmapId)
+    }
+
+    public func clearCompletedAt(stageId: String) async throws {
+        let userId = try await getUserId()
+        guard let roadmapId = try await resolveRoadmapId(userId: userId, createIfMissing: false) else {
+            return
+        }
+        try await supabase
+            .from("stage_decisions")
+            .update(["completed_at": AnyJSON.null])
+            .eq("roadmap_id", value: roadmapId)
+            .eq("stage_code", value: stageId)
+            .execute()
         await touchRoadmap(roadmapId)
     }
 
@@ -449,6 +493,14 @@ public actor MockRoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol 
 
     public func delete(stageId: String) async throws {
         storage.removeValue(forKey: stageId)
+    }
+
+    public func purgeAllForIndustrySwitch() async throws {
+        storage.removeAll()
+    }
+
+    public func clearCompletedAt(stageId: String) async throws {
+        storage[stageId]?.completedAt = nil
     }
 
     private var mockStaffPlan: StaffPlan?

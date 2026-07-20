@@ -11,6 +11,7 @@ import {
   getFranchiseBrandsForSubIndustry,
   getFranchiseBrandsForCategory,
   saveStoreData,
+  purgeRoadmapProgressForIndustrySwitch,
   type RecommendationItem,
   type StageTransitionResult,
   type WorkflowDecisionMap,
@@ -143,6 +144,8 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   // ── 진행 초기화 확인 모달 상태 ────────────────────────────────────────────
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  // ── 업종 전환 확인 모달 상태 (전환 = 로드맵 진행 전체 삭제) ───────────────
+  const [industrySwitchConfirmOpen, setIndustrySwitchConfirmOpen] = useState(false);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -154,19 +157,56 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
+  const industrySelectionPayload = () => ({
+    selectedPrimaryOptionId: selectedIndustryId as string,
+    inputs: {
+      subIndustryId: selectedIndustryId as string,
+      categoryId: getIndustryCategoryIdByOptionId(selectedIndustryId as string) ?? "",
+      // specialty(세부업종): SPECIALTY_BY_INDUSTRY 분기가 있는 industry 만 값이 채워짐.
+      //   stage_decisions.inputs 와 business_profiles.selected_specialty_id 양쪽 모두에 영구화.
+      ...(selectedSpecialtyId ? { specialtyId: selectedSpecialtyId } : {}),
+    },
+  });
+
   const handleIndustryContinue = () => {
     if (!selectedIndustryId) return;
-    const result = markViewedStageAdvanced("industry-selection", decisions, roadmap, taskMap, {
-      selectedPrimaryOptionId: selectedIndustryId,
-      inputs: {
-        subIndustryId: selectedIndustryId,
-        categoryId: getIndustryCategoryIdByOptionId(selectedIndustryId) ?? "",
-        // specialty(세부업종): SPECIALTY_BY_INDUSTRY 분기가 있는 industry 만 값이 채워짐.
-        //   stage_decisions.inputs 와 business_profiles.selected_specialty_id 양쪽 모두에 영구화.
-        ...(selectedSpecialtyId ? { specialtyId: selectedSpecialtyId } : {}),
-      },
-    });
+    // ── 업종 *전환* 감지 (사장님 결정 2026-07-21: 전환 = 진행 전체 삭제 후 새 출발) ──
+    //   stageId 가 업종 간 공유라 이전 completedAt/inputs 가 새 로드맵을 오염시킴
+    //   (재현: 외식 → b2b-saas 전환 시 미열람 9단계 heal 자동완료·94%). 같은 업종
+    //   재확정(specialty 변경 포함)은 전환이 아니므로 기존 진행 유지.
+    const prev = decisions["industry-selection"];
+    const prevSub =
+      prev?.selectedPrimaryOptionId ??
+      (typeof prev?.inputs?.subIndustryId === "string" ? prev.inputs.subIndustryId : undefined);
+    if (prev?.completedAt && prevSub && prevSub !== selectedIndustryId) {
+      setIndustrySwitchConfirmOpen(true);
+      return;
+    }
+    const result = markViewedStageAdvanced("industry-selection", decisions, roadmap, taskMap, industrySelectionPayload());
     applySelectionAdvance(result);
+  };
+
+  /** 업종 전환 확정 — 로드맵 진행(decisions·tasks) 전체 삭제 후 새 업종만 남긴다.
+   *  운영 데이터(매출·직원·가게정보)는 보존 — 그건 "진행 초기화" 영역.
+   *  서버는 purgeRoadmapProgressForIndustrySwitch 가 즉시 비우고(roadmaps bump → 타 기기
+   *  realtime 재조회), 새 industry-selection 행은 직후 autosave 가 fresh 하게 upsert. */
+  const executeIndustrySwitch = () => {
+    setIndustrySwitchConfirmOpen(false);
+    if (!selectedIndustryId) return;
+    const freshDecisions: WorkflowDecisionMap = {};
+    const freshTasks = cloneStarterTaskMap();
+    const result = markViewedStageAdvanced("industry-selection", freshDecisions, roadmap, freshTasks, industrySelectionPayload());
+    setTaskMap(freshTasks);
+    applySelectionAdvance(result);
+    void (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data.user) await purgeRoadmapProgressForIndustrySwitch(supabase, data.user.id);
+      } catch (e) {
+        // 실패해도 로컬은 이미 fresh — 다음 autosave 의 orphan-delete 가 (가드 창 후) 보정
+        console.warn("[industry-switch] server purge failed", e);
+      }
+    })();
   };
 
   const handleBusinessModelContinue = () => {
@@ -576,5 +616,8 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     resetConfirmOpen,
     onResetConfirm: executeResetDemo,
     onResetCancel: () => setResetConfirmOpen(false),
+    industrySwitchConfirmOpen,
+    onIndustrySwitchConfirm: executeIndustrySwitch,
+    onIndustrySwitchCancel: () => setIndustrySwitchConfirmOpen(false),
   };
 }
