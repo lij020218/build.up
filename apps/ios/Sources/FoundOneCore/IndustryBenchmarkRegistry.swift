@@ -32,7 +32,10 @@ public enum IndustryBenchmarkRegistry {
 
     /// 웹 INDUSTRY_BENCHMARKS 1:1 (11 업종).
     static let all: [IndustryBenchmark] = [
-        .init(categoryId: "food", avgAnnualRevenue: 23400, top10PctRevenue: 70000, bottom10PctRevenue: 10000, keyDifferentiators: [
+        // ⚠️ 2026-07 정정(웹 franchise-benchmarks.ts 미러): 종전 23400 은 소상공인 *전체* 평균이
+        //   food 칸에 잘못 들어간 값. 음식점업 사업체당 평균 = 1억 1,700만원(2020 소상공인실태조사).
+        //   분포(top/bottom10)는 공식 통계 부재로 추정치 유지 — 웹 isEstimate: true 와 동일 취지.
+        .init(categoryId: "food", avgAnnualRevenue: 11700, top10PctRevenue: 70000, bottom10PctRevenue: 10000, keyDifferentiators: [
             "메뉴 특화 (3-5개 시그니처)와 빠른 회전율",
             "식재료 원가 33% 이하 관리 (공급처 3곳+ 비교)",
             "배달앱 리뷰 관리 (평점 4.5 이상 유지)",
