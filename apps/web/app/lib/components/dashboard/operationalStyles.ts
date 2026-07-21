@@ -460,6 +460,25 @@ export const bentoHoverCSS = `
   .dash-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* ── 오늘의 요약 그리드 (2026-07-21 사장님 목업 참고: 타일 2 + AI 코칭 / 차트 2 나란히) ──
+   좁으면 1열 스택(타일→AI→차트 순). 넓으면:
+     [매출 타일][고객 타일][AI 코칭]
+     [매출 추이──────────][고객 추이] */
+.dash-summary-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.dash-mgmt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@container (min-width: 860px) {
+  .dash-summary-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr);
+    grid-template-areas: "st ct ai" "sc sc cc";
+  }
+  .dash-area-st { grid-area: st; }
+  .dash-area-ct { grid-area: ct; }
+  .dash-area-ai { grid-area: ai; }
+  .dash-area-sc { grid-area: sc; }
+  .dash-area-cc { grid-area: cc; }
+  .dash-mgmt-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+}
 @keyframes bentoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bentoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }

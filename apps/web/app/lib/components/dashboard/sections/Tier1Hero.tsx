@@ -20,14 +20,19 @@ import { AlertStripBanner } from "../AlertStripBanner";
 type Props = {
   d: DashboardHook;
   nextStaggerStyle: () => React.CSSProperties;
+  /** 전체 브리핑 펼침 여부 — 오늘의 요약 AI 카드의 [자세히 보기] 토글 (2026-07-21 밀도 재설계).
+   *  접힘 상태에서도 brain 요약은 TodaySummarySection AI 카드가 항상 표시 — 정보 유실 0. */
+  showBriefing: boolean;
 };
 
-export function Tier1Hero({ d, nextStaggerStyle }: Props) {
+export function Tier1Hero({ d, nextStaggerStyle, showBriefing }: Props) {
   return (
     <>
-      <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <CEOMorningHero d={d} />
-      </div>
+      {showBriefing && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <CEOMorningHero d={d} />
+        </div>
+      )}
       <div className="dash-stagger-item" style={nextStaggerStyle()}>
         <AlertStripBanner />
       </div>

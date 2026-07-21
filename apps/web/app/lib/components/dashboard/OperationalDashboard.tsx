@@ -8,6 +8,8 @@ import { useDashboardComputed } from "../../hooks/useDashboardComputed";
 import { Tier0Header } from "./sections/Tier0Header";
 import { Tier1Hero } from "./sections/Tier1Hero";
 import { FeatureNudgeSection } from "./FeatureNudgeCard";
+import { TodaySummarySection } from "./sections/TodaySummarySection";
+import { TodayManagementSection } from "./sections/TodayManagementSection";
 import { Tier1DailyHub } from "./sections/Tier1DailyHub";
 import { Tier1_5Coaching } from "./sections/Tier1_5Coaching";
 import { Tier2WeeklyPulse } from "./sections/Tier2WeeklyPulse";
@@ -108,6 +110,8 @@ export default function OperationalDashboard({ d }: Props) {
 
   // 캘린더 모달 (orchestrator 만의 로컬 UI 상태)
   const [showCalendar, setShowCalendar] = useState(false);
+  // 전체 AI 브리핑(CEOMorningHero) 펼침 — 요약 카드의 [자세히 보기] 토글 (2026-07-21 밀도 재설계)
+  const [showFullBriefing, setShowFullBriefing] = useState(false);
 
   // CSS-only stagger
   const STAGGER_STEP_MS = 70;
@@ -127,8 +131,27 @@ export default function OperationalDashboard({ d }: Props) {
       {/* ━━━ Tier 0 — 상호명 + 리추얼 배너 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
       <Tier0Header d={d} ko={ko} isStaff={isStaff} nextStaggerStyle={nextStaggerStyle} />
 
-      {/* ━━━ Tier 1 Hero — CEOMorningHero + FeatureNudge + AlertStrip (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
-      {!isStaff && <Tier1Hero d={d} nextStaggerStyle={nextStaggerStyle} />}
+      {/* ━━━ 오늘의 요약 — 타일(매출·고객) + AI 코칭 + 추이 차트 2개 (2026-07-21 사장님 목업 참고) ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <TodaySummarySection
+            d={d} c={c} ko={ko} fmt={fmt}
+            onOpenCalendar={() => setShowCalendar(true)}
+            briefingExpanded={showFullBriefing}
+            onToggleBriefing={() => setShowFullBriefing((v) => !v)}
+          />
+        </div>
+      )}
+
+      {/* ━━━ 오늘의 관리 — 재고 부족·직원·예약 지표 타일 (데이터 있는 것만) ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <TodayManagementSection d={d} c={c} ko={ko} />
+        </div>
+      )}
+
+      {/* ━━━ Tier 1 Hero — 전체 AI 브리핑(접힘, '자세히 보기'로 펼침) + AlertStrip ━━━ */}
+      {!isStaff && <Tier1Hero d={d} nextStaggerStyle={nextStaggerStyle} showBriefing={showFullBriefing} />}
 
       {/* ━━━ Tier 1.1–1.2 — 데일리 허브 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
       {!isStaff && (

@@ -30,8 +30,6 @@
 
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
-import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
-import { UserActivityCard } from "../UserActivityCard";
 import { CashflowHeroCard } from "../CashflowHeroCard";
 import { PLHeroCard } from "../PLHeroCard";
 import { useProfileStore } from "../../../stores/profile-store";
@@ -54,36 +52,8 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
 
   return (
     <>
-      {/* ① 매출 흐름 — full-width (매출 raw 차트가 작아지면 의미 손실) */}
-      <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <ActivitySnapshotCard
-          d={d}
-          ko={ko}
-          todayStr={c.todayStr}
-          recent7Entries={c.recent7Entries}
-          recent7Sales={c.recent7Sales}
-          weeklySalesChange={c.weeklySalesChange}
-          todayEntry={c.todayEntry}
-          avgDailySales={c.avgDailySales}
-          fmt={fmt}
-          onOpenCalendar={onOpenCalendar}
-        />
-      </div>
-
-      {/* ② 사용자수 — 성장 선행 지표라 매출 바로 아래 full-width (2026-07-13 재배치:
-          종전엔 매출과 2-col 이었으나 "성장→재무" 흐름 위해 매출 직하로 승격) */}
-      {showUserActivity && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <UserActivityCard
-            d={d}
-            ko={ko}
-            todayStr={c.todayStr}
-            recent7Entries={c.recent7Entries}
-            todayEntry={c.todayEntry}
-            fmt={fmt}
-          />
-        </div>
-      )}
+      {/* ①·② 매출 흐름·고객 추이 카드 → '오늘의 요약'(TodaySummarySection)으로 이동
+          (2026-07-21 밀도 재설계 — 첫 화면에 타일·AI 코칭과 함께 나란히). */}
 
       {/* ③ 손익 · 현금흐름 (2-col → 손익 숨김 시 현금 full-width). 손익 좌 · 현금 우 */}
       <div
