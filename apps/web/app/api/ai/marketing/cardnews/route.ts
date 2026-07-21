@@ -52,6 +52,9 @@ export type CardNewsCard = {
   lines: string[];
   /** 제목에서 강조(브랜드 보조색)할 단어 — title 의 부분 문자열일 때만 사용 */
   highlight?: string;
+  /** 이 장과 함께 쓸 사진 촬영 가이드 (유명 카페 인스타 공식 — 사진이 주인공, 글은 설명).
+   *  이미지에는 렌더하지 않고 UI 에서 촬영 지시로만 노출. */
+  photoIdea?: string;
 };
 
 export type CardNewsResult = {
@@ -87,6 +90,7 @@ function sanitize(raw: unknown, topic: string): CardNewsResult | null {
       lines,
       // highlight 는 title 안에 실제로 있을 때만 (canvas 강조 렌더 안전)
       highlight: highlight && title.includes(highlight) ? highlight : undefined,
+      photoIdea: str(co.photoIdea, 90),
     });
   }
   if (cards.length < 3) return null;
@@ -139,6 +143,12 @@ export async function POST(request: Request) {
 
   const cardCount = Math.min(5, Math.max(3, Math.round(body.cardCount ?? 4)));
   const storeName = body.storeName?.trim() || (ko ? "내 가게" : "your business");
+  // 카페 계열 여부 — 유명 카페 인스타 운영 공식(사진 주인공 + 글은 메뉴·이벤트 설명) 플레이북 적용
+  //   (2026-07-21 사장님 관찰: 잘되는 카페는 가게 풍경·신메뉴·손님 컷 사진에 글로 메뉴/이달 이벤트 설명)
+  const isCafeLike =
+    body.industryCategoryId === "cafe-dessert" ||
+    ["takeout-coffee", "specialty-coffee", "bakery-studio", "dessert-cafe", "icecream-bingsu", "self-serve-cafe", "pet-cafe"]
+      .includes(body.subIndustryId ?? "");
   const subGroup = resolveTrendGroup(body.subIndustryId ?? null);
   const groupLabel = subGroup ? (ko ? TREND_GROUP_LABELS[subGroup].ko : TREND_GROUP_LABELS[subGroup].en) : null;
   const label = body.subIndustryLabel?.trim() || groupLabel || (body.industryCategoryId ?? (ko ? "소상공인" : "small business"));
@@ -159,7 +169,14 @@ export async function POST(request: Request) {
 7. 🚨 이 가게의 실데이터만 사용: 메뉴명·가격·동네는 [가게] 블록에 제공된 것만 언급.
    제공되지 않은 메뉴명·가격·리뷰·수상 이력을 지어내지 말 것. 메뉴 데이터가 없으면
    메뉴명 없이 업종 일반 꿀팁으로. 오픈 준비 중이면 "곧 오픈" 예고 톤으로.
-캡션: 2~3문장(첫 문장이 후킹) + 저장 유도 한 줄. 해시태그: 지역/업종/주제 조합 7~9개(한국어, 지역이 있으면 동네 해시태그 2개 포함).`
+캡션: 2~3문장(첫 문장이 후킹) + 저장 유도 한 줄. 해시태그: 지역/업종/주제 조합 7~9개(한국어, 지역이 있으면 동네 해시태그 2개 포함).
+각 카드의 photoIdea: 이 장과 함께 올릴 사진을 사장님이 폰으로 바로 찍을 수 있게 한 문장으로 지시 (예: "창가 자리에서 매장 전경, 오후 자연광").${isCafeLike ? `
+
+📷 카페 인스타 운영 공식 (잘되는 카페들의 실제 패턴 — 반드시 반영):
+- 사진이 주인공, 글은 설명. 카드뉴스도 사진과 번갈아 올리는 전제로 만든다.
+- photoIdea 는 이 3종 위주로 구체적으로: ① 가게 풍경(외관·창가·인테리어 무드) ② 신메뉴/시그니처 클로즈업(김·크림 등 디테일) ③ 손님이 앉아 즐기는 모습(얼굴 비식별, 뒷모습·손).
+- 캡션은 메뉴 설명·이번 달 이벤트 안내 톤 — 감성 한 줄 + 메뉴/이벤트 정보 + 위치·영업시간 자리.
+- CTA 장은 "이번 달 이벤트·신메뉴는 프로필 링크/방문으로" 흐름.` : ""}`
     : `You are a Korean SMB Instagram carousel copywriter. Make save-worthy informational card news.
 Cover: hook title ≤15 chars + why-watch subtitle. One message per card, body 2-3 lines (≤22 chars/line).
 Slide 2 must hook independently. Last card = CTA (save/follow/visit + store name). No hype or false claims.`;
@@ -195,9 +212,9 @@ ${storeFacts}
 반드시 아래 JSON 으로만 응답 (코드블록·설명 없이):
 {
   "cards": [
-    { "role": "cover", "title": "15자 이내 후킹 타이틀", "lines": ["부제 1줄", "부제 2줄(선택)"], "highlight": "강조단어" },
-    { "role": "body", "title": "소제목", "lines": ["본문 1줄", "본문 2줄", "본문 3줄(선택)"] },
-    { "role": "cta", "title": "행동 유도 제목", "lines": ["저장·방문 유도 1~2줄"] }
+    { "role": "cover", "title": "15자 이내 후킹 타이틀", "lines": ["부제 1줄", "부제 2줄(선택)"], "highlight": "강조단어", "photoIdea": "함께 올릴 사진 촬영 지시 1문장" },
+    { "role": "body", "title": "소제목", "lines": ["본문 1줄", "본문 2줄", "본문 3줄(선택)"], "photoIdea": "..." },
+    { "role": "cta", "title": "행동 유도 제목", "lines": ["저장·방문 유도 1~2줄"], "photoIdea": "..." }
   ],
   "caption": "인스타 캡션 2~3문장 + 저장 유도",
   "hashtags": ["#해시태그", "..."]

@@ -500,8 +500,18 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
           {/* 미리보기 스트립 */}
           <div ref={scrollRef} style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, WebkitOverflowScrolling: "touch" }}>
             {result.cards.map((card, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, width: 216 }}>
                 <PreviewCard card={card} index={i} total={result.cards.length} storeName={displayStore} />
+                {/* 함께 올릴 사진 가이드 — 유명 카페 인스타 공식(사진 주인공, 글은 설명) */}
+                {card.photoIdea && (
+                  <div style={{
+                    fontSize: 10.5, lineHeight: 1.5, color: "rgba(15,23,42,0.6)",
+                    background: "rgba(247,248,254,0.8)", border: "1px solid rgba(25,25,112,0.08)",
+                    borderRadius: 8, padding: "6px 8px",
+                  }}>
+                    📷 {card.photoIdea}
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
                   <button type="button" onClick={() => setEditIdx(editIdx === i ? null : i)} style={{
                     padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
