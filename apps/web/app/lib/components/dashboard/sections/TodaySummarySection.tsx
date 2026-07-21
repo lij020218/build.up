@@ -19,6 +19,7 @@ import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
 import { UserActivityCard } from "../UserActivityCard";
+import { CEOMorningHero } from "../CEOMorningHero";
 import { useMorningBriefingBrain } from "../../../hooks/useMorningBriefingBrain";
 import { resolveHero, type Hero } from "../heroInsight";
 import { useProfileStore } from "../../../stores/profile-store";
@@ -66,9 +67,8 @@ export function TodaySummarySection({ d, c, ko, fmt, onOpenCalendar, briefingExp
         {ko ? "오늘의 요약" : "Today at a glance"}
       </div>
 
-      <div className="dash-summary-grid">
-        {/* ① AI 경영 코칭 — 첫 줄 전체 폭. brain 요약 + [자세히 보기](전체 브리핑 펼침) */}
-        <div className="dash-area-ai" style={{
+      {/* ① AI 경영 코칭 — 첫 줄 전체 폭. brain 요약 + [자세히 보기](아래에 전체 브리핑 펼침) */}
+      <div style={{
           background: isCrisisTone
             ? "linear-gradient(180deg, rgba(182,76,76,0.05) 0%, #ffffff 60%)"
             : "linear-gradient(135deg, #F7F8FE 0%, #ffffff 55%)",
@@ -124,6 +124,11 @@ export function TodaySummarySection({ d, c, ko, fmt, onOpenCalendar, briefingExp
           </button>
         </div>
 
+      {/* ①-b [자세히 보기] 펼침 — 기존 AI 경영 브리핑(CEOMorningHero) 그대로, 카드 바로 아래 */}
+      {briefingExpanded && <CEOMorningHero d={d} />}
+
+      {/* ②·③ 차트 2장 — 같은 높이 스트레치 */}
+      <div className="dash-charts-grid">
         {/* ② 매출 흐름 (7일) — 기존 카드 재사용, 고객 변화와 같은 높이로 스트레치 */}
         <div className="dash-area-sc" style={{ minWidth: 0 }}>
           <ActivitySnapshotCard

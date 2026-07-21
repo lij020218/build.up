@@ -461,23 +461,17 @@ export const bentoHoverCSS = `
   .dash-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* ── 오늘의 요약 그리드 (2026-07-21 사장님 지시 v2) ──
-   [AI 경영 코칭 ──────────── 전체 폭]
-   [매출 흐름 (넓게)][고객 변화]  ← 두 카드 같은 높이(stretch), 남는 공간 없음.
-   좁으면 1열 스택(AI→매출→고객). */
-.dash-summary-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
+/* ── 오늘의 요약 (2026-07-21 사장님 지시 v3) ──
+   [AI 경영 코칭 ──────────── 전체 폭]  → [자세히 보기] 시 바로 아래에 전체 브리핑 펼침
+   [매출 흐름 (넓게)][고객 변화]        ← 두 카드 같은 높이(stretch), 남는 공간 없음.
+   좁으면 1열 스택. */
+.dash-charts-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
 /* 차트 두 장 높이 통일 — 셀을 flex 로, 카드 루트를 100% 로 스트레치 */
 .dash-area-sc, .dash-area-cc { display: flex; }
 .dash-area-sc > *, .dash-area-cc > * { flex: 1; height: 100%; box-sizing: border-box; }
 .dash-mgmt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 @container (min-width: 860px) {
-  .dash-summary-grid {
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    grid-template-areas: "ai ai" "sc cc";
-  }
-  .dash-area-ai { grid-area: ai; }
-  .dash-area-sc { grid-area: sc; }
-  .dash-area-cc { grid-area: cc; }
+  .dash-charts-grid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
   .dash-mgmt-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 }
 @keyframes bentoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

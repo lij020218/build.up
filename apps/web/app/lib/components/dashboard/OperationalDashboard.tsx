@@ -150,8 +150,8 @@ export default function OperationalDashboard({ d }: Props) {
         </div>
       )}
 
-      {/* ━━━ Tier 1 Hero — 전체 AI 브리핑(접힘, '자세히 보기'로 펼침) + AlertStrip ━━━ */}
-      {!isStaff && <Tier1Hero d={d} nextStaggerStyle={nextStaggerStyle} showBriefing={showFullBriefing} />}
+      {/* ━━━ Tier 1 — 긴급 AlertStrip (전체 AI 브리핑은 오늘의 요약 카드에서 펼침) ━━━ */}
+      {!isStaff && <Tier1Hero d={d} nextStaggerStyle={nextStaggerStyle} />}
 
       {/* ━━━ Tier 1.1–1.2 — 데일리 허브 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
       {!isStaff && (
