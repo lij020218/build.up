@@ -14,8 +14,10 @@
  */
 
 import { useMemo, useRef, useState } from "react";
-import { Sparkles, Download, RefreshCw, Copy, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Download, RefreshCw, Copy, Check } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
+import { useOperationsStore } from "../../stores/operations-store";
+import { useStoreInfoStore } from "../../stores/store-info-store";
 import type { CardNewsCard, CardNewsResult } from "../../../api/ai/marketing/cardnews/route";
 
 const MIDNIGHT = "#191970";
@@ -28,6 +30,10 @@ type Props = {
   industryCategoryId: string | null;
   subIndustryId: string | null;
   subIndustryLabel?: string | null;
+  /** 운영 중 여부 — 오픈 전이면 "곧 오픈" 예고 톤으로 생성 */
+  isOperating: boolean;
+  /** 최근 매출 기록 — 평균 객단가 산출용 */
+  dailyEntries: Array<{ sales: number; customers: number }>;
 };
 
 // ── 1080×1350 (4:5) canvas 렌더 ──────────────────────────────────────────
@@ -258,7 +264,7 @@ function PreviewCard({ card, index, total, storeName }: { card: CardNewsCard; in
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────
 
-export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryId, subIndustryLabel }: Props) {
+export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryId, subIndustryLabel, isOperating, dailyEntries }: Props) {
   const [topic, setTopic] = useState("");
   const [cardCount, setCardCount] = useState(4);
   const [loading, setLoading] = useState(false);
@@ -271,13 +277,46 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
   const displayStore = storeName?.trim() || (ko ? "내 가게" : "My store");
   const indLabel = subIndustryLabel?.trim() || (ko ? "우리 업종" : "my industry");
 
-  // 추천 주제 칩 — 조사 반영: 정보형(팁·FAQ·과정)이 저장률↑
-  const topicChips = useMemo(() => [
-    `${indLabel} 처음 온 손님 꿀팁 3가지`,
-    "사장님이 매일 하는 준비 과정",
-    "손님들이 자주 묻는 질문 TOP3",
-    "이번 주 메뉴·이벤트 소개",
-  ], [indLabel]);
+  // ── 가게 실데이터 (사장님 지시: 카드는 "이 가게 이야기"여야 함) ──
+  //   메뉴: 메뉴 수익성 입력(products — name·price). 주소: 가게 정보의 도로명에서 시·구/동 추출.
+  const products = useOperationsStore((s) => s.products);
+  const addressRoad = useStoreInfoStore((s) => s.addressRoad);
+  const menuItems = useMemo(
+    () => products
+      .filter((p) => p.name?.trim())
+      .slice(0, 6)
+      .map((p) => ({ name: p.name.trim(), priceWon: p.price > 0 ? p.price : undefined })),
+    [products],
+  );
+  const region = useMemo(() => {
+    const tokens = (addressRoad ?? "").trim().split(/\s+/);
+    if (tokens.length < 2) return undefined;
+    // "서울특별시 마포구 ..." → "마포구" / "성남시 분당구 ..." → "분당구" (동네 감각 토큰)
+    const gu = tokens.find((t) => /(구|군|시)$/.test(t) && t !== tokens[0]) ?? tokens[1];
+    const dong = tokens.find((t) => /(동|로|가)$/.test(t));
+    return [gu, dong].filter(Boolean).join(" ") || undefined;
+  }, [addressRoad]);
+  const avgTicketWon = useMemo(() => {
+    const recent = dailyEntries.slice(-14).filter((e) => e.customers > 0);
+    if (recent.length === 0) return undefined;
+    const sales = recent.reduce((s, e) => s + e.sales, 0);
+    const cust = recent.reduce((s, e) => s + e.customers, 0);
+    return cust > 0 ? Math.round(sales / cust) : undefined;
+  }, [dailyEntries]);
+
+  // 추천 주제 칩 — 가게 실데이터 우선(대표 메뉴), 그 외 정보형(팁·FAQ·과정 = 저장률↑)
+  const topicChips = useMemo(() => {
+    const chips: string[] = [];
+    if (menuItems[0]) chips.push(`"${menuItems[0].name}" 제대로 즐기는 법`);
+    if (!isOperating) chips.push(`곧 오픈! ${displayStore} 미리보기`);
+    chips.push(
+      `${indLabel} 처음 온 손님 꿀팁 3가지`,
+      "사장님이 매일 하는 준비 과정",
+      "손님들이 자주 묻는 질문 TOP3",
+    );
+    if (isOperating) chips.push("이번 주 메뉴·이벤트 소개");
+    return chips.slice(0, 4);
+  }, [menuItems, isOperating, displayStore, indLabel]);
 
   const generate = async () => {
     setLoading(true);
@@ -301,6 +340,11 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
           subIndustryId,
           subIndustryLabel,
           language: ko ? "ko" : "en",
+          // 가게 실데이터 — 있는 것만 (서버 프롬프트가 "제공된 것만 언급" 강제)
+          menuItems: menuItems.length > 0 ? menuItems : undefined,
+          region,
+          isOperating,
+          avgTicketWon,
         }),
       });
       if (!res.ok) {

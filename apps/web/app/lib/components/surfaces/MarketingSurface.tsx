@@ -359,6 +359,8 @@ export function MarketingSurface() {
         industryCategoryId={categoryId}
         subIndustryId={subIndustryId}
         subIndustryLabel={subIndustryLabel}
+        isOperating={!!d.businessLaunched}
+        dailyEntries={(d.dailyEntries ?? []) as Array<{ sales: number; customers: number }>}
       />
 
       {/* ━━━ 섹션 2: 내 마케팅 성과 ━━━ */}

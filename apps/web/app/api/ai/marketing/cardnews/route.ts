@@ -33,6 +33,15 @@ type RequestBody = {
   subIndustryId?: string;
   subIndustryLabel?: string;
   language?: "ko" | "en";
+  // ── 가게 실데이터 (2026-07-21 사장님 지시: "사용자의 가게를 바탕으로") ──
+  /** 대표 메뉴·상품 (메뉴 수익성 입력에서) — 카드가 실제 메뉴명·가격을 언급하게 */
+  menuItems?: Array<{ name: string; priceWon?: number }>;
+  /** 동네/지역 (가게 주소에서) — 해시태그·문구 지역화 */
+  region?: string;
+  /** 운영 중 여부 — 오픈 전이면 오픈 예고 톤 */
+  isOperating?: boolean;
+  /** 평균 객단가(원) — 가격대 감각 */
+  avgTicketWon?: number;
 };
 
 export type CardNewsCard = {
@@ -147,15 +156,41 @@ export async function POST(request: Request) {
 4. 마지막 장(CTA): 저장·팔로우·방문을 자연스럽게 유도 + 가게명 언급.
 5. 어투: 사장님이 직접 말하는 친근한 존댓말. 과장·허위 금지, 이모지는 장당 최대 1개.
 6. highlight 는 title 안에 실제로 포함된 단어만.
-캡션: 2~3문장(첫 문장이 후킹) + 저장 유도 한 줄. 해시태그: 지역/업종/주제 조합 7~9개(한국어).`
+7. 🚨 이 가게의 실데이터만 사용: 메뉴명·가격·동네는 [가게] 블록에 제공된 것만 언급.
+   제공되지 않은 메뉴명·가격·리뷰·수상 이력을 지어내지 말 것. 메뉴 데이터가 없으면
+   메뉴명 없이 업종 일반 꿀팁으로. 오픈 준비 중이면 "곧 오픈" 예고 톤으로.
+캡션: 2~3문장(첫 문장이 후킹) + 저장 유도 한 줄. 해시태그: 지역/업종/주제 조합 7~9개(한국어, 지역이 있으면 동네 해시태그 2개 포함).`
     : `You are a Korean SMB Instagram carousel copywriter. Make save-worthy informational card news.
 Cover: hook title ≤15 chars + why-watch subtitle. One message per card, body 2-3 lines (≤22 chars/line).
 Slide 2 must hook independently. Last card = CTA (save/follow/visit + store name). No hype or false claims.`;
 
+  // ── 가게 실데이터 블록 — 있는 것만 넣는다 (없는 항목은 프롬프트에서 생략 → 위조 여지 차단) ──
+  const menu: Array<{ name: string; priceWon?: number }> = Array.isArray(body.menuItems)
+    ? body.menuItems
+        .map((m) => ({ name: str(m?.name, 40), priceWon: typeof m?.priceWon === "number" && m.priceWon > 0 ? Math.round(m.priceWon) : undefined }))
+        .filter((m) => !!m.name)
+        .map((m) => ({ name: m.name as string, priceWon: m.priceWon }))
+        .slice(0, 6)
+    : [];
+  const region = str(body.region, 40);
+  const avgTicket = typeof body.avgTicketWon === "number" && body.avgTicketWon > 0 ? Math.round(body.avgTicketWon) : null;
+  const storeFacts = [
+    `- 상호: ${storeName}`,
+    `- 업종: ${label}`,
+    region ? `- 동네: ${region}` : null,
+    `- 상태: ${body.isOperating === false ? "오픈 준비 중" : "운영 중"}`,
+    menu.length > 0
+      ? `- 대표 메뉴: ${menu.map((m) => m.priceWon ? `${m.name}(${m.priceWon.toLocaleString()}원)` : m.name).join(", ")}`
+      : null,
+    avgTicket ? `- 평균 객단가: 약 ${avgTicket.toLocaleString()}원` : null,
+  ].filter(Boolean).join("\n");
+
   const user = ko
-    ? `[가게] 상호: ${storeName} / 업종: ${label}
+    ? `[가게]
+${storeFacts}
 [주제] ${topic}
 [장수] 정확히 ${cardCount}장 (표지 1 + 본문 ${cardCount - 2} + CTA 1)
+카드 내용은 위 [가게] 실데이터를 적극 활용해 "이 가게 이야기"로 만드세요 (없는 정보는 지어내지 말 것).
 
 반드시 아래 JSON 으로만 응답 (코드블록·설명 없이):
 {
