@@ -7,6 +7,7 @@ import { BP } from "../../breakpoints";
 import { getKstMonthKey } from "../../utils/business-day";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { supabase } from "../../../../lib/supabase";
+import { CardNewsStudio } from "./CardNewsStudio";
 import {
   useMarketingStore,
   CHANNEL_LIST,
@@ -349,6 +350,15 @@ export function MarketingSurface() {
         onRefresh={handleRegenerateCases}
         doneTitles={doneTitles}
         onToggleDone={toggleDone}
+      />
+
+      {/* ━━━ 섹션 1.5: 카드뉴스 만들기 (2026-07-21 신설 — 지금 무료, 9월부터 프로 전용) ━━━ */}
+      <CardNewsStudio
+        ko={ko}
+        storeName={d.storeName ?? ""}
+        industryCategoryId={categoryId}
+        subIndustryId={subIndustryId}
+        subIndustryLabel={subIndustryLabel}
       />
 
       {/* ━━━ 섹션 2: 내 마케팅 성과 ━━━ */}
