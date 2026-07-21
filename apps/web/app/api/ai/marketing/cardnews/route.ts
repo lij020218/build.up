@@ -62,6 +62,9 @@ export type CardNewsResult = {
   cards: CardNewsCard[];
   caption: string;
   hashtags: string[];
+  /** 렌더 템플릿 — photo: 카페·음식점 특화(1장 사진+타이틀 / 2장~ 사진 / 마지막 로고),
+   *  text: 일반 텍스트형. (2026-07-21 사장님 관찰: 잘되는 카페·음식점 캐러셀 공식) */
+  styleVariant: "photo" | "text";
 };
 
 function str(v: unknown, max = 300): string | undefined {
@@ -69,7 +72,7 @@ function str(v: unknown, max = 300): string | undefined {
 }
 
 /** LLM 산출물 정제 — 장수 3~5 보정, 첫 장 cover·마지막 장 cta 강제, 줄수·길이 클램프 */
-function sanitize(raw: unknown, topic: string): CardNewsResult | null {
+function sanitize(raw: unknown, topic: string, styleVariant: "photo" | "text"): CardNewsResult | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   const cardsRaw = Array.isArray(r.cards) ? r.cards : [];
@@ -111,6 +114,7 @@ function sanitize(raw: unknown, topic: string): CardNewsResult | null {
     cards: clamped,
     caption: str(r.caption, 600) ?? "",
     hashtags,
+    styleVariant,
   };
 }
 
@@ -149,6 +153,8 @@ export async function POST(request: Request) {
     body.industryCategoryId === "cafe-dessert" ||
     ["takeout-coffee", "specialty-coffee", "bakery-studio", "dessert-cafe", "icecream-bingsu", "self-serve-cafe", "pet-cafe"]
       .includes(body.subIndustryId ?? "");
+  // 사진형 템플릿 — 카페·음식점 계열 특화 (1장 사진+타이틀 / 2장~ 사진+한 줄 / 마지막 로고)
+  const styleVariant: "photo" | "text" = isCafeLike || body.industryCategoryId === "food" ? "photo" : "text";
   const subGroup = resolveTrendGroup(body.subIndustryId ?? null);
   const groupLabel = subGroup ? (ko ? TREND_GROUP_LABELS[subGroup].ko : TREND_GROUP_LABELS[subGroup].en) : null;
   const label = body.subIndustryLabel?.trim() || groupLabel || (body.industryCategoryId ?? (ko ? "소상공인" : "small business"));
@@ -170,7 +176,12 @@ export async function POST(request: Request) {
    제공되지 않은 메뉴명·가격·리뷰·수상 이력을 지어내지 말 것. 메뉴 데이터가 없으면
    메뉴명 없이 업종 일반 꿀팁으로. 오픈 준비 중이면 "곧 오픈" 예고 톤으로.
 캡션: 2~3문장(첫 문장이 후킹) + 저장 유도 한 줄. 해시태그: 지역/업종/주제 조합 7~9개(한국어, 지역이 있으면 동네 해시태그 2개 포함).
-각 카드의 photoIdea: 이 장과 함께 올릴 사진을 사장님이 폰으로 바로 찍을 수 있게 한 문장으로 지시 (예: "창가 자리에서 매장 전경, 오후 자연광").${isCafeLike ? `
+각 카드의 photoIdea: 이 장과 함께 올릴 사진을 사장님이 폰으로 바로 찍을 수 있게 한 문장으로 지시 (예: "창가 자리에서 매장 전경, 오후 자연광").${styleVariant === "photo" ? `
+
+📐 사진형 캐러셀 구조 (카페·음식점 잘되는 계정 공식 — 이 구조로만 생성):
+- 1장(cover): 사진 위에 얹을 짧은 타이틀(가게명 또는 주제, 12자 이내) + 부제 1줄. photoIdea 필수(대표 컷).
+- 2장~(body): **사진이 주인공** — title 은 6자 이내 짧은 라벨(메뉴명·키워드), lines 는 사진 아래 띠에 들어갈 한 줄(20자 이내) 딱 1개. photoIdea 필수·구체적으로(각 장 다른 컷).
+- 마지막 장(cta): 로고 마무리 장 — title 은 가게명 그대로, lines 는 마무리 인사·방문 유도 1줄.` : ""}${isCafeLike ? `
 
 📷 카페 인스타 운영 공식 (잘되는 카페들의 실제 패턴 — 반드시 반영):
 - 사진이 주인공, 글은 설명. 카드뉴스도 사진과 번갈아 올리는 전제로 만든다.
@@ -245,14 +256,14 @@ ${storeFacts}
         try { parsed = JSON.parse(m[0]); } catch { parsed = null; }
       }
     }
-    const result = sanitize(parsed, topic);
+    const result = sanitize(parsed, topic, styleVariant);
     if (!result) {
       // graceful empty — UI 는 재시도 안내 (500 throw 금지 규율)
-      return NextResponse.json({ topic, cards: [], caption: "", hashtags: [] } satisfies CardNewsResult, { status: 200 });
+      return NextResponse.json({ topic, cards: [], caption: "", hashtags: [], styleVariant } satisfies CardNewsResult, { status: 200 });
     }
     return NextResponse.json(result);
   } catch (e) {
     console.error("[cardnews] generation failed", e);
-    return NextResponse.json({ topic, cards: [], caption: "", hashtags: [] } satisfies CardNewsResult, { status: 200 });
+    return NextResponse.json({ topic, cards: [], caption: "", hashtags: [], styleVariant } satisfies CardNewsResult, { status: 200 });
   }
 }
