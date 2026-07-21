@@ -894,8 +894,9 @@ export function CEOMorningHero({ d }: Props) {
       )}
 
       {/* ── Row 2+3 밀도 그리드 (2026-07-21) — 데스크톱에서 메트릭과 AI 브리핑을 나란히,
-            히어로 세로 높이를 절반으로. 모바일은 기존대로 세로 스택. ── */}
-      <div className="dash-2col" style={{ position: "relative", zIndex: 1 }}>
+            히어로 세로 높이를 절반으로. 모바일은 기존대로 세로 스택.
+            marginTop: 위 긴급(위험신호) 스트립과 딱 붙지 않게 (사장님 지적) ── */}
+      <div className="dash-2col" style={{ position: "relative", zIndex: 1, marginTop: "14px" }}>
       {/* Row 2 — 메인 메트릭 + sparkline */}
       <motion.div variants={itemVariants} style={{
         background: "#ffffff",
