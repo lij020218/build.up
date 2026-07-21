@@ -456,9 +456,16 @@ export const bentoHoverCSS = `
 .dash-2col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: stretch; }
 .dash-3col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
 .dash-2col > *:empty, .dash-3col > *:empty { display: none; }
+/* 높이가 제각각인 카드 묶음(코칭 구간)용 — 행 정렬 grid 는 옆 카드가 길면 짧은 카드
+   아래가 통째로 비어 보임(2026-07-21 사장님 지적 "규격이 안 맞는다").
+   multi-column 벽돌쌓기로 각 열을 빈틈없이 채운다. 카드는 열 중간에서 쪼개지지 않음. */
+.dash-masonry { display: block; }
+.dash-masonry > * { break-inside: avoid; margin-bottom: 14px; }
+.dash-masonry > *:empty { display: none; margin-bottom: 0; }
 @container (min-width: 860px) {
   .dash-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dash-masonry { columns: 2; column-gap: 14px; }
 }
 
 /* ── 오늘의 요약 (2026-07-21 사장님 지시 v3) ──

@@ -90,9 +90,10 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           매트릭스 카드 수 -1 → 인지 부하 해소.
           향후 IntegrationHubCard.tsx 자체는 profile 폴더로 이동 또는 삭제 (별도 PR). */}
 
-      {/* ── 코칭 카드 밀도 그리드 (2026-07-21) — 데스크톱 2열로 첫 화면 정보량 ↑.
+      {/* ── 코칭 카드 벽돌쌓기 (2026-07-21) — 데스크톱 2열, 높이 제각각인 카드가
+            행 정렬로 빈 공간을 만들지 않게 masonry(columns) 로 각 열을 채움.
             각 카드의 조건부 렌더·stagger 는 유지, 내부 null 카드는 :empty 로 제거됨. ── */}
-      <div className="dash-2col">
+      <div className="dash-masonry">
       {/* 오늘의 운영 리추얼 — 매일 점검 습관 엔진 (사장님: 홈 유지) */}
       {!hide("daily-ops-ritual") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
