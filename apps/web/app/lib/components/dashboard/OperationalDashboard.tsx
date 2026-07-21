@@ -121,7 +121,7 @@ export default function OperationalDashboard({ d }: Props) {
   // handleExportCSV 제거됨 (2026-07-12) — 버튼 미연결 죽은 코드. CSV 내보내기는 ExportPanel(Tier 5) SSOT.
 
   return (
-    <section style={shell}>
+    <section className="dash-shell" style={shell}>
       <style>{bentoHoverCSS}</style>
 
       {/* ━━━ Tier 0 — 상호명 + 리추얼 배너 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}

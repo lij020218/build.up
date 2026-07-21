@@ -446,13 +446,17 @@ export const activityBarLabel: React.CSSProperties = {
 /* ── Bento micro-interaction: inject global hover styles once ── */
 export const bentoHoverCSS = `
 /* ── 정보 밀도 그리드 (2026-07-21 사장님 지시: "한 화면에 카드 여러 장") ──
-   데스크톱(≥1100px)에서 카드를 2열/3열로 배치해 첫 화면 밀도를 높인다.
-   모바일은 1열 유지. 내부에서 null 을 반환하는 카드(정책자금 self-hide,
-   메뉴 수익성 입력 전 등)의 빈 래퍼는 :empty 로 grid 흐름에서 제거. */
+   넓은 화면에서 카드를 2열/3열로 배치해 첫 화면 밀도를 높인다. 좁으면 1열.
+   ⚠️ 뷰포트 media query 금지 — 홈은 좌측 사이드바(200px) *옆*에 렌더라 창 기준으로
+   판정하면 보통 창 폭에서 1열로 남는다(같은 날 1차 구현의 결함). 대시보드 셸
+   (.dash-shell, container-type: inline-size)의 *콘텐츠 폭* 기준 @container 로 판정.
+   내부에서 null 을 반환하는 카드(정책자금 self-hide, 메뉴 수익성 입력 전 등)의
+   빈 래퍼는 :empty 로 grid 흐름에서 제거. */
+.dash-shell { container-type: inline-size; }
 .dash-2col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: stretch; }
 .dash-3col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
 .dash-2col > *:empty, .dash-3col > *:empty { display: none; }
-@media (min-width: 1100px) {
+@container (min-width: 860px) {
   .dash-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
