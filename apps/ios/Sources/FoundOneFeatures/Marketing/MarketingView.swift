@@ -88,6 +88,14 @@ public struct MarketingView: View {
                         onRefresh: { Task { await loadCases(force: true) } }
                     )
 
+                    // 카드뉴스 스튜디오 — 웹 CardNewsStudio 미러 (2026-07-21 신설, 지금 무료·9월부터 프로 전용)
+                    CardNewsStudioCard(
+                        storeName: state.profile?.storeName ?? store.storeName,
+                        industryCategoryId: state.profile?.industryCategoryId,
+                        subIndustryId: state.profile?.subIndustryId,
+                        isOperating: state.profile?.businessLaunched ?? true
+                    )
+
                     MarketingCampaignsList(
                         campaigns: state.campaigns,
                         industryCategoryId: state.profile?.industryCategoryId,

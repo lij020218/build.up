@@ -165,6 +165,45 @@ public struct MarketingCoachContext: Sendable, Encodable {
     public init() {}
 }
 
+// MARK: - Card News (카드뉴스 스튜디오 — 웹 /api/ai/marketing/cardnews 미러, 2026-07-21)
+
+public struct CardNewsRequest: Sendable, Encodable {
+    public var topic: String?
+    public var cardCount: Int = 4
+    public var storeName: String?
+    public var industryCategoryId: String?
+    public var subIndustryId: String?
+    public var subIndustryLabel: String?
+    public var language: String? = "ko"
+    public var isOperating: Bool?
+    public var region: String?
+    public var avgTicketWon: Int?
+
+    public init() {}
+}
+
+public struct CardNewsCardModel: Sendable, Codable, Hashable {
+    /// cover | body | cta
+    public let role: String
+    public var title: String
+    public var lines: [String]
+    public let highlight: String?
+    /// 이 장과 함께 올릴 사진 촬영 가이드 (서버가 생성 — 사진형은 자리표시로도 사용)
+    public let photoIdea: String?
+}
+
+public struct CardNewsResponse: Sendable, Codable {
+    public let topic: String
+    public var cards: [CardNewsCardModel]
+    public let caption: String
+    public let hashtags: [String]
+    /// photo(카페·음식점 특화: 1장 사진+타이틀 / 2장~ 사진 / 마지막 로고) | text(일반)
+    public let styleVariant: String
+    public let error: String?
+
+    enum CodingKeys: String, CodingKey { case topic, cards, caption, hashtags, styleVariant, error }
+}
+
 // MARK: - Marketing Cases (성공사례·트렌드 → 내 사업 적용)
 
 public struct PlayTool: Sendable, Decodable, Hashable {
@@ -244,6 +283,16 @@ public actor MarketingRepository {
         let req = try await jsonRequest(path: "/api/ai/marketing/cases", method: "POST", body: ctx, timeoutSec: 75)
         let resp: CasesResponse = try await perform(req)
         if let err = resp.error, !err.isEmpty, resp.plays.isEmpty {
+            throw MarketingRepositoryError.httpStatus(500, err)
+        }
+        return resp
+    }
+
+    /// 카드뉴스 생성 — 서버가 업종으로 styleVariant(photo/text) 결정·텍스트 생성, 렌더는 클라이언트.
+    public func generateCardNews(_ body: CardNewsRequest) async throws -> CardNewsResponse {
+        let req = try await jsonRequest(path: "/api/ai/marketing/cardnews", method: "POST", body: body, timeoutSec: 45)
+        let resp: CardNewsResponse = try await perform(req)
+        if let err = resp.error, !err.isEmpty, resp.cards.isEmpty {
             throw MarketingRepositoryError.httpStatus(500, err)
         }
         return resp
