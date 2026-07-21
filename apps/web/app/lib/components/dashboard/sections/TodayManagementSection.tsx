@@ -1,131 +1,78 @@
 "use client";
 
 /**
- * 오늘의 관리 — 사장님 목업(2026-07-21)의 하단 지표 타일 줄.
+ * 오늘의 관리 — 재고 관리 + 팀 현황 카드 2-up (2026-07-21 사장님 지시 v2).
  *
- *   [재고 부족 알림 N건] [직원 N명] [오늘 예약 N건] …
- *
- * 원칙(가짜 숫자 금지): 데이터 모델이 있는 타일만 노출 —
- *  · 재고 부족: inventory lowStockItems (재고 카드 쓰는 업종만)
- *  · 직원:     등록된 직원 수 (팀 페이지로 이동)
- *  · 예약:     booking-store 오늘 예약 (예약 업종 + 기록 있을 때만)
- *  · 리뷰 신규: 데이터 소스 없음 → 미노출 (목업엔 있으나 위조 금지 — 리뷰 연동 생기면 추가)
- * 표시할 타일이 없으면 섹션 자체를 렌더하지 않는다.
+ * v1 은 [재고 부족 N건][직원 N명] 요약 타일이었으나, 아래의 실제 카드(재고 관리·팀 현황)와
+ * 중복이라 제거 — 실카드를 이 자리(오늘의 요약 바로 아래)로 승격. 카드·분기 로직은
+ * Tier1_5Coaching 의 opsCards 를 그대로 이동 (business-context + industry-card-matrix SSOT).
  */
 
-import { Package, Users, CalendarCheck } from "lucide-react";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
-import { useBookingStore } from "../../../stores/booking-store";
-
-const MIDNIGHT = "#191970";
-const DANGER = "#b64c4c";
-
-function ManagementTile({ label, value, unit, icon, accent, onClick }: {
-  label: string;
-  value: string;
-  unit: string;
-  icon: React.ReactNode;
-  /** 위험(재고 부족 有 등)만 벽돌 강조 — 그 외 네이비 (신호등 금지) */
-  accent?: boolean;
-  onClick?: () => void;
-}) {
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      type={onClick ? "button" : undefined}
-      onClick={onClick}
-      style={{
-        background: "#ffffff",
-        borderRadius: 14,
-        border: "1px solid rgba(25,25,112,0.10)",
-        boxShadow: "0 1px 3px rgba(25,25,112,0.04)",
-        padding: "14px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        minWidth: 0,
-        width: "100%",
-        textAlign: "left" as const,
-        cursor: onClick ? "pointer" : "default",
-        fontFamily: "inherit",
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: "rgba(25,25,112,0.6)", marginBottom: 3 }}>{label}</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-          <span style={{ fontSize: 24, fontWeight: 750, letterSpacing: "-0.02em", color: accent ? DANGER : "#10104a", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{value}</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(16,16,74,0.7)" }}>{unit}</span>
-        </div>
-      </div>
-      <span style={{
-        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-        background: accent ? "rgba(182,76,76,0.08)" : "rgba(25,25,112,0.06)",
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-      }}>{icon}</span>
-    </Tag>
-  );
-}
+import { InventoryOpsCard } from "../InventoryOpsCard";
+import { CustomerSummaryCard } from "../CustomerSummaryCard";
+import { TeamCard } from "../TeamCard";
+import { useProfileStore } from "../../../stores/profile-store";
+import { shouldShowCardByIndustry } from "../../../industry-card-matrix";
 
 type Props = {
   d: DashboardHook;
   c: DashboardComputed;
   ko: boolean;
+  fmt: (n: number) => string;
 };
 
-export function TodayManagementSection({ d, c, ko }: Props) {
-  const bookings = useBookingStore((s) => s.bookings);
-  const todayBookings = bookings.filter((b) => b.date === c.todayStr).length;
+export function TodayManagementSection({ d, c, ko, fmt }: Props) {
+  const hiddenCards = useProfileStore((s) => s.hiddenCards);
+  const hide = (id: string) => hiddenCards.includes(id);
+  const showByMatrix = (cardId: import("../../../industry-card-matrix").CardId): boolean => {
+    if (hide(cardId)) return false;
+    return shouldShowCardByIndustry(cardId, d.industryCategoryId as import("../../../industry-card-matrix").IndustryId | undefined);
+  };
 
-  const showInventoryTile = !c.usesSubscriptions && d.businessCtx.showInventoryCard;
-  const lowStock = c.lowStockItems.length;
-  const employeeCount = c.employees.length;
-  const showBookingTile = bookings.length > 0; // 예약 기록을 쓰는 업종·계정만 (모델 없으면 미노출)
+  // ── Tier1_5 opsCards 이동분 — 분기 원칙 (web SSOT: business-context.ts) ──
+  //   showInventoryCard=true  (food/cafe/retail/pet/beauty 등)  → 재고 카드
+  //   showInventoryCard=false (fitness/education/space)         → 고객 카드가 그 자리 대체
+  const showInventory = !c.usesSubscriptions && d.businessCtx.showInventoryCard && showByMatrix("inventory-ops");
+  const showCustomer = !c.usesSubscriptions && d.businessCtx.showCustomerCard && !hide("customer-summary");
+  const showTeam = showByMatrix("team-card");
 
-  const tiles: React.ReactNode[] = [];
-  if (showInventoryTile) {
-    tiles.push(
-      <ManagementTile
-        key="lowstock"
-        label={ko ? "재고 부족 알림" : "Low stock"}
-        value={String(lowStock)}
-        unit={ko ? "건" : ""}
-        accent={lowStock > 0}
-        icon={<Package size={16} strokeWidth={1.7} color={lowStock > 0 ? DANGER : MIDNIGHT} />}
-      />,
+  const cards: React.ReactNode[] = [];
+  if (showInventory) {
+    // 메뉴 카드가 활성(음식·카페·서비스)이면 메뉴(product)는 메뉴 수익성 카드가 담당하므로
+    //   재고 카드에선 식자재·소모품(material)만 표시 — "메뉴가 재고 0개" 중복·오해 방지.
+    const menuCardActive = showByMatrix("menu-profitability");
+    const invForCard = menuCardActive ? c.inventory.filter((i) => i.itemType !== "product") : c.inventory;
+    const lowStockForCard = menuCardActive ? c.lowStockItems.filter((i) => i.itemType !== "product") : c.lowStockItems;
+    cards.push(
+      <InventoryOpsCard key="inv" ko={ko} inventory={invForCard} lowStockItems={lowStockForCard} d={d} />,
     );
   }
-  tiles.push(
-    <ManagementTile
-      key="team"
-      label={ko ? "직원" : "Team"}
-      value={String(employeeCount)}
-      unit={ko ? "명" : ""}
-      icon={<Users size={16} strokeWidth={1.7} color={MIDNIGHT} />}
-      onClick={() => d.navigateToSurface("team")}
-    />,
-  );
-  if (showBookingTile) {
-    tiles.push(
-      <ManagementTile
-        key="bookings"
-        label={ko ? "오늘 예약" : "Bookings today"}
-        value={String(todayBookings)}
-        unit={ko ? "건" : ""}
-        icon={<CalendarCheck size={16} strokeWidth={1.7} color={MIDNIGHT} />}
-      />,
-    );
+  if (showCustomer && !showInventory) {
+    cards.push(<CustomerSummaryCard key="customer" d={d} ko={ko} fmt={fmt} />);
   }
-  // 리뷰 신규: 리뷰 데이터 연동이 없어 미노출 — 연동(플레이스·앱리뷰) 생기면 여기에 타일 추가.
+  if (showTeam) {
+    cards.push(<TeamCard key="team" d={d} c={c} ko={ko} fmt={fmt} />);
+  }
 
-  if (tiles.length === 0) return null;
+  if (cards.length === 0) return null;
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
       <div style={{ fontSize: 13, fontWeight: 750, color: "rgba(15,23,42,0.55)", letterSpacing: "0.01em", padding: "2px 2px 0" }}>
         {ko ? "오늘의 관리" : "Today's operations"}
       </div>
-      <div className="dash-mgmt-grid">{tiles}</div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: c.isWide && cards.length === 2 ? "repeat(2, minmax(0, 1fr))" : "minmax(0, 1fr)",
+          gap: "12px",
+          alignItems: "stretch",
+        }}
+      >
+        {cards}
+      </div>
     </div>
   );
 }

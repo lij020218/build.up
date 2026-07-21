@@ -143,10 +143,10 @@ export default function OperationalDashboard({ d }: Props) {
         </div>
       )}
 
-      {/* ━━━ 오늘의 관리 — 재고 부족·직원·예약 지표 타일 (데이터 있는 것만) ━━━ */}
+      {/* ━━━ 오늘의 관리 — 재고 관리·팀 현황 실카드 2-up (요약 타일 중복 제거, 사장님 지시) ━━━ */}
       {!isStaff && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <TodayManagementSection d={d} c={c} ko={ko} />
+          <TodayManagementSection d={d} c={c} ko={ko} fmt={fmt} />
         </div>
       )}
 

@@ -41,10 +41,7 @@ import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 //   22 자료 검증 통과 (NN/G·Carbon·M3·Toast·Amplitude·Square·Mercury·Reforge 등).
 // 2026-05-13 Phase 2: IntegrationHubCard 마이페이지 이동(2026-07-12 컴포넌트 삭제) — profile/
 //   폴더에 개별 OAuth 카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X.
-import { InventoryOpsCard } from "../InventoryOpsCard";
 import { MenuProfitabilityCard } from "../MenuProfitabilityCard";
-import { TeamCard } from "../TeamCard";
-import { CustomerSummaryCard } from "../CustomerSummaryCard";
 import { SaaSKeyMetricsCard, SubscriptionEnableNudge } from "./Tier3Operations";
 import { useProfileStore } from "../../../stores/profile-store";
 import { shouldShowCardByIndustry } from "../../../industry-card-matrix";
@@ -73,41 +70,8 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
     return shouldShowCardByIndustry(cardId, d.industryCategoryId as import("../../../industry-card-matrix").IndustryId | undefined);
   };
 
-  // 재고·고객·직원 카드 동적 행 — 표시 대상 카드 갯수에 따라 1-up 또는 2-up.
-  // (구독 사용 시엔 재고가 SubscriptionPlanManager 로 대체되므로 Tier 3 에서 처리)
-  //
-  // 분기 원칙 (web SSOT: business-context.ts):
-  //   showInventoryCard=true  (food/cafe/retail/pet/beauty 등)  → 재고 카드
-  //   showInventoryCard=false (fitness/education/space)         → 재고 카드 없음
-  //   showCustomerCard=true                                     → 고객 카드 (재고 없는 업종에서 그 자리 대체)
-  //   두 플래그 모두 true (beauty/pet 등 service 모드)           → 재고 + 고객 둘 다 (인지 부하 허용 범위)
-  const showInventory = !c.usesSubscriptions && d.businessCtx.showInventoryCard && showByMatrix("inventory-ops");
-  const showCustomer  = !c.usesSubscriptions && d.businessCtx.showCustomerCard && !hide("customer-summary");
-  const showTeam = showByMatrix("team-card");
-  const opsCards: React.ReactNode[] = [];
-  if (showInventory) {
-    // 메뉴 카드가 활성(음식·카페·서비스)이면 메뉴(product)는 메뉴 수익성 카드가 담당하므로
-    //   재고 카드에선 식자재·소모품(material)만 표시 — "메뉴가 재고 0개" 중복·오해 방지.
-    //   소매·이커머스는 product 가 곧 재고라 menu-profitability 미노출 → 필터 안 함(원본 유지).
-    const menuCardActive = showByMatrix("menu-profitability");
-    const invForCard = menuCardActive ? c.inventory.filter((i) => i.itemType !== "product") : c.inventory;
-    const lowStockForCard = menuCardActive ? c.lowStockItems.filter((i) => i.itemType !== "product") : c.lowStockItems;
-    opsCards.push(
-      <InventoryOpsCard key="inv" ko={ko} inventory={invForCard} lowStockItems={lowStockForCard} d={d} />,
-    );
-  }
-  if (showCustomer && !showInventory) {
-    // 재고 카드가 없는 업종 (fitness/education/space/beauty without inv/pet without inv)
-    // → 같은 행에 고객 카드 표시
-    opsCards.push(
-      <CustomerSummaryCard key="customer" d={d} ko={ko} fmt={fmt} />,
-    );
-  }
-  if (showTeam) {
-    opsCards.push(<TeamCard key="team" d={d} c={c} ko={ko} fmt={fmt} />);
-  }
-  // wide 화면에서 2개일 때만 2-up. 그 외엔 단일 컬럼 (Tier 1.5 의 기본 리듬 유지).
-  const opsCols = c.isWide && opsCards.length === 2 ? 2 : 1;
+  // 재고·고객·직원 카드 행 → '오늘의 관리'(TodayManagementSection)로 이동 (2026-07-21
+  //   사장님 지시: 요약 타일과 실카드 중복 제거, 실카드를 오늘의 요약 바로 아래로 승격).
 
   return (
     <>
@@ -125,22 +89,6 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           가 dashboard-cards-meta 의 default).
           매트릭스 카드 수 -1 → 인지 부하 해소.
           향후 IntegrationHubCard.tsx 자체는 profile 폴더로 이동 또는 삭제 (별도 PR). */}
-
-      {/* 팀·재고 운영 카드 — 재무 코어(손익·현금) 바로 아래로 승격 (2026-07-13 lean 재설계) */}
-      {opsCards.length > 0 && (
-        <div
-          className="dash-stagger-item"
-          style={{
-            ...nextStaggerStyle(),
-            display: "grid",
-            gridTemplateColumns: `repeat(${opsCols}, minmax(0, 1fr))`,
-            gap: "14px",
-            alignItems: "stretch",
-          }}
-        >
-          {opsCards}
-        </div>
-      )}
 
       {/* ── 코칭 카드 밀도 그리드 (2026-07-21) — 데스크톱 2열로 첫 화면 정보량 ↑.
             각 카드의 조건부 렌더·stagger 는 유지, 내부 null 카드는 :empty 로 제거됨. ── */}
