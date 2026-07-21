@@ -16,6 +16,7 @@
  * 자세한 분기 표 → `DASHBOARD_MAP.md`
  */
 
+import { Children } from "react";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DailyOpsRitualCard } from "../DailyOpsRitualCard";
@@ -91,9 +92,10 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           향후 IntegrationHubCard.tsx 자체는 profile 폴더로 이동 또는 삭제 (별도 PR). */}
 
       {/* ── 코칭 카드 벽돌쌓기 (2026-07-21) — 데스크톱 2열, 높이 제각각인 카드가
-            행 정렬로 빈 공간을 만들지 않게 masonry(columns) 로 각 열을 채움.
-            각 카드의 조건부 렌더·stagger 는 유지, 내부 null 카드는 :empty 로 제거됨. ── */}
-      <div className="dash-masonry">
+            행 정렬로 빈 공간을 만들지 않게 React 가 두 열로 직접 분배(TwoColMasonry).
+            CSS multicol 은 Safari 가 전부 첫 열에 몰던 버그로 폐기. 조건부 렌더·stagger
+            유지, 내부 null 카드는 .dash-stagger-item:empty 로 제거됨. ── */}
+      <TwoColMasonry>
       {/* 오늘의 운영 리추얼 — 매일 점검 습관 엔진 (사장님: 홈 유지) */}
       {!hide("daily-ops-ritual") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
@@ -282,8 +284,25 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {c.isStartupCompany && !c.usesSubscriptions && !hide("saas-key-metrics") && (
         <SubscriptionEnableNudge ko={ko} onEnable={() => d.setUsesSubscriptions(true)} nextStaggerStyle={nextStaggerStyle} />
       )}
-      </div>
+      </TwoColMasonry>
     </>
+  );
+}
+
+/**
+ * 높이 제각각 카드용 2열 벽돌쌓기 — React 가 자식을 두 열 스택에 번갈아 분배.
+ * (CSS multicol 은 Safari 가 break-inside 카드를 전부 첫 열에 몰아넣는 버그 → 폐기.)
+ * Children.toArray 가 조건부 false/null 자식을 자동 제거. 좁은 화면(dash-2col 1열)에선
+ * 왼쪽 스택→오른쪽 스택 순서로 세로 나열된다.
+ */
+function TwoColMasonry({ children }: { children: React.ReactNode }) {
+  const items = Children.toArray(children);
+  if (items.length <= 1) return <>{items}</>;
+  return (
+    <div className="dash-2col" style={{ alignItems: "start" }}>
+      <div className="dash-col-stack">{items.filter((_, i) => i % 2 === 0)}</div>
+      <div className="dash-col-stack">{items.filter((_, i) => i % 2 === 1)}</div>
+    </div>
   );
 }
 
