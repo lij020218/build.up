@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Settings2, Check } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, MoveRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Settings2, Check } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
@@ -904,7 +904,9 @@ export function CEOMorningHero({ d }: Props) {
         padding: "16px 18px",
         display: "flex",
         gap: "20px",
-        alignItems: "stretch",
+        // 반폭(2열) 배치에서 옆 카드(AI 브리핑)가 더 길 때 내용이 위에 몰려 하단이 비어 보임
+        // → 세로 중앙 정렬로 여백 균형 (2026-07-21 사장님 지적)
+        alignItems: "center",
         flexWrap: "wrap" as const,
         position: "relative",
         zIndex: 1,
@@ -1021,11 +1023,15 @@ export function CEOMorningHero({ d }: Props) {
           <div style={{ fontSize: "clamp(28px, 3.4vw, 34px)", fontWeight: 700, letterSpacing: "-0.045em", color: PALETTE.MIDNIGHT_DEEP, lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }}>
             <CountUp to={heroMetric.value} duration={1.0} format={heroMetric.format} />
           </div>
-          {/* delta */}
+          {/* delta — 보합(±0.05% 미만)은 상승 화살표 대신 수평 아이콘 (2026-07-21 사장님 지적: "+0.0% ↗" 모순) */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginTop: "10px", padding: "5px 11px", borderRadius: "999px", background: heroMetric.tone === "good" ? PALETTE.SUCCESS_8 : heroMetric.tone === "warn" ? PALETTE.WARN_8 : PALETTE.DANGER_8, color: toneColor }}>
-            {heroMetric.delta >= 0 ? <ArrowUpRight size={13} strokeWidth={2.4} /> : <ArrowDownRight size={13} strokeWidth={2.4} />}
+            {Math.abs(heroMetric.delta) < 0.05
+              ? <MoveRight size={13} strokeWidth={2.4} />
+              : heroMetric.delta > 0
+                ? <ArrowUpRight size={13} strokeWidth={2.4} />
+                : <ArrowDownRight size={13} strokeWidth={2.4} />}
             <span style={{ fontSize: "12.5px", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>
-              {heroMetric.delta >= 0 ? "+" : ""}{heroMetric.delta.toFixed(1)}%
+              {Math.abs(heroMetric.delta) < 0.05 ? "0.0" : `${heroMetric.delta > 0 ? "+" : ""}${heroMetric.delta.toFixed(1)}`}%
             </span>
             <span style={{ fontSize: "11.5px", fontWeight: 600, opacity: 0.75 }}>{heroMetric.deltaLabel}</span>
           </div>
@@ -1240,6 +1246,9 @@ export function CEOMorningHero({ d }: Props) {
               color: PALETTE.INK,
               textAlign: "left" as const,
               boxShadow: "0 1px 2px rgba(25,25,112,0.03)",
+              // 반폭 카드에서 CTA 버튼이 텍스트를 밀고 카드 밖으로 삐져나오던 것 —
+              // 좁으면 버튼이 아랫줄로 내려간다 (2026-07-21 사장님 지적)
+              flexWrap: "wrap" as const,
             }}
           >
             <div style={{
@@ -1312,6 +1321,7 @@ export function CEOMorningHero({ d }: Props) {
                 cursor: "pointer",
                 flexShrink: 0,
                 alignSelf: "center",
+                marginLeft: "auto",   // wrap 으로 아랫줄에 떨어졌을 때 우측 정렬
                 boxShadow: briefing.tone === "crisis" ? "0 2px 6px rgba(182,76,76,0.25)" : briefing.tone === "warning" ? "0 2px 6px rgba(25,25,112,0.25)" : "0 2px 6px rgba(25,25,112,0.22)",
                 transition: "transform 0.15s ease, box-shadow 0.2s ease",
               }}
