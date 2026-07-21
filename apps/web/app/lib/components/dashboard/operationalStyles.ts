@@ -461,6 +461,15 @@ export const bentoHoverCSS = `
    첫 열에 몰아넣는 버그가 있어 React(TwoColMasonry)가 두 열로 직접 분배하고, 각 열은
    이 스택으로 위에서부터 빈틈없이 쌓는다. */
 .dash-col-stack { display: grid; gap: 14px; align-content: start; min-width: 0; }
+/* 지정 쌍 카드(리추얼+정책자금 등) — 같은 규격(높이 스트레치)으로 나란히.
+   한쪽이 self-hide(null)면 :empty 로 빠지고 auto-fit 이 남은 카드를 전체 폭으로. */
+.dash-pair { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+.dash-pair > * { display: flex; min-width: 0; }
+.dash-pair > * > * { flex: 1 1 auto; height: 100%; box-sizing: border-box; }
+.dash-pair > *:empty { display: none; }
+@container (min-width: 860px) {
+  .dash-pair { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+}
 @container (min-width: 860px) {
   .dash-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); }

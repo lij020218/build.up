@@ -91,27 +91,81 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           매트릭스 카드 수 -1 → 인지 부하 해소.
           향후 IntegrationHubCard.tsx 자체는 profile 폴더로 이동 또는 삭제 (별도 PR). */}
 
-      {/* ── 코칭 카드 벽돌쌓기 (2026-07-21) — 데스크톱 2열, 높이 제각각인 카드가
+      {/* ── 리추얼 + 정책자금 — 같은 규격(높이 스트레치) 2열 쌍 (2026-07-21 사장님 지시).
+            정책자금이 self-hide(null)면 auto-fit 이 리추얼을 전체 폭으로. ── */}
+      <div className="dash-pair">
+        {/* 오늘의 운영 리추얼 — 매일 점검 습관 엔진 (사장님: 홈 유지) */}
+        {!hide("daily-ops-ritual") && (
+          <div className="dash-stagger-item" style={nextStaggerStyle()}>
+            <DailyOpsRitualCard
+              ko={ko}
+              industryCategoryId={d.industryCategoryId}
+              selectedIndustryId={d.selectedIndustryId}
+              startupType={d.startupType}
+              condition={{
+                daysSinceLaunch: c.daysSinceLaunch,
+                weeklySalesChangePct: c.weeklySalesChange,
+                isStartup: d.industryCategoryId === "startup-tech",
+              }}
+            />
+          </div>
+        )}
+        {/* 정책자금 매칭 — self-hide(매칭 없으면 미노출)라 "떠 있으면 곧 받을 돈" → 홈 유지 */}
+        {!hide("policy-fund-match") && (
+          <div className="dash-stagger-item" style={nextStaggerStyle()}>
+            <PolicyFundMatchCard
+              ko={ko}
+              isCrisis={c.cashflowCriticalElevation}
+              currentMonthlyInterest={c.monthlyCosts.interest}
+              // MatchCriteria SSOT 사용 — 펀딩 페이지(GuidesView) 와 *동일* 입력 shape.
+              // 같은 사용자에게 두 카드가 동일 매칭 결과 보장.
+              input={{
+                industryCategoryId: d.industryCategoryId,
+                businessYears: Math.floor(c.daysSinceLaunch / 365.25),
+                startupType: (d as { startupType?: string }).startupType,
+                monthlyAvgRevenue: c.totalSales > 0 ? Math.round(c.totalSales) : undefined,
+                hasUserSales: c.allEntries.length > 0,
+                employeesCount: c.employees.length,
+                // ⚠️ 2026-05-18: salesDeclinePct 는 정책자금 매칭 기준으로 통상 *월간* 감소율.
+                //   종전엔 weeklySalesChange (주간) 를 전달해서 한 주만 -20% 이어도 정책자금 위기
+                //   분기 통과 → over-match. monthOnMonth (전월 대비) 로 교체.
+                salesDeclinePct: (() => {
+                  const prev = c.prevMonthSales ?? 0;
+                  return prev > 0 && c.totalSales < prev
+                    ? Math.round(((prev - c.totalSales) / prev) * 100)
+                    : 0;
+                })(),
+                runwayMonths: c.runwayMonths,
+                weeklySalesChangePct: c.weeklySalesChange,
+                // ⚠️ businessStage dead branch fix (2026-05-18): 종전엔 < 30 과 < 365 둘 다 "early"
+                //   를 반환해서 30~365일 구간이 통째로 early 로 swallow → growth 분기 도달 불가 →
+                //   정책자금 매칭 후보가 잘못 좁혀졌음. < 90 early / < 365 growth / < 365*3 established
+                //   로 정정.
+                businessStage: c.daysSinceLaunch < 90
+                  ? "early"
+                  : c.daysSinceLaunch < 365
+                    ? "growth"
+                    : c.daysSinceLaunch < 365 * 3
+                      ? "established"
+                      : "established",
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* 위생점검 대비 — 전체 폭 한 줄 (2026-07-21 사장님 지시). 외식·카페만 내부 가드 */}
+      {showByMatrix("food-safety") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <FoodSafetyComplianceCard ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* ── 나머지 코칭 카드 벽돌쌓기 (2026-07-21) — 데스크톱 2열, 높이 제각각인 카드가
             행 정렬로 빈 공간을 만들지 않게 React 가 두 열로 직접 분배(TwoColMasonry).
             CSS multicol 은 Safari 가 전부 첫 열에 몰던 버그로 폐기. 조건부 렌더·stagger
             유지, 내부 null 카드는 .dash-stagger-item:empty 로 제거됨. ── */}
       <TwoColMasonry>
-      {/* 오늘의 운영 리추얼 — 매일 점검 습관 엔진 (사장님: 홈 유지) */}
-      {!hide("daily-ops-ritual") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <DailyOpsRitualCard
-            ko={ko}
-            industryCategoryId={d.industryCategoryId}
-            selectedIndustryId={d.selectedIndustryId}
-            startupType={d.startupType}
-            condition={{
-              daysSinceLaunch: c.daysSinceLaunch,
-              weeklySalesChangePct: c.weeklySalesChange,
-              isStartup: d.industryCategoryId === "startup-tech",
-            }}
-          />
-        </div>
-      )}
 
       {/* 코칭 누적 일지 → '이번 주 점검'(Tier2, 접힘)으로 이동 (2026-07-13):
           매일 필수 아닌 회고성이라 팝업 성격의 접힘 섹션으로. lock-in moat 유지. */}
@@ -125,12 +179,7 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 1.5 (a-2) — 식약처 위생점검 (외식·카페만 내부 가드) */}
-      {showByMatrix("food-safety") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <FoodSafetyComplianceCard ko={ko} industryCategoryId={d.industryCategoryId} />
-        </div>
-      )}
+      {/* 위생점검(food-safety)은 위 전체 폭 줄로 이동 (2026-07-21) */}
 
       {/* 2026-05-13 Phase 2b — FitnessRetentionCard (피트니스 전용).
           105 자료 (Mindbody·MarianaTek·Glofox·WellnessLiving·FIA Retention) 검증.
@@ -211,48 +260,7 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           · 개선/업셀 = 히어로 "오늘의 한 수" + 리추얼 체크리스트와 "오늘 할 일" 3중 중복.
           "오늘 무엇을" 니즈는 히어로+리추얼이 담당. 원가 상세는 손익 카드로. */}
 
-      {/* 정책자금 매칭 — self-hide(매칭 없으면 미노출)라 "떠 있으면 곧 받을 돈" → 홈 유지 */}
-      {!hide("policy-fund-match") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <PolicyFundMatchCard
-            ko={ko}
-            isCrisis={c.cashflowCriticalElevation}
-            currentMonthlyInterest={c.monthlyCosts.interest}
-            // MatchCriteria SSOT 사용 — 펀딩 페이지(GuidesView) 와 *동일* 입력 shape.
-            // 같은 사용자에게 두 카드가 동일 매칭 결과 보장.
-            input={{
-              industryCategoryId: d.industryCategoryId,
-              businessYears: Math.floor(c.daysSinceLaunch / 365.25),
-              startupType: (d as { startupType?: string }).startupType,
-              monthlyAvgRevenue: c.totalSales > 0 ? Math.round(c.totalSales) : undefined,
-              hasUserSales: c.allEntries.length > 0,
-              employeesCount: c.employees.length,
-              // ⚠️ 2026-05-18: salesDeclinePct 는 정책자금 매칭 기준으로 통상 *월간* 감소율.
-              //   종전엔 weeklySalesChange (주간) 를 전달해서 한 주만 -20% 이어도 정책자금 위기
-              //   분기 통과 → over-match. monthOnMonth (전월 대비) 로 교체.
-              salesDeclinePct: (() => {
-                const prev = c.prevMonthSales ?? 0;
-                return prev > 0 && c.totalSales < prev
-                  ? Math.round(((prev - c.totalSales) / prev) * 100)
-                  : 0;
-              })(),
-              runwayMonths: c.runwayMonths,
-              weeklySalesChangePct: c.weeklySalesChange,
-              // ⚠️ businessStage dead branch fix (2026-05-18): 종전엔 < 30 과 < 365 둘 다 "early"
-              //   를 반환해서 30~365일 구간이 통째로 early 로 swallow → growth 분기 도달 불가 →
-              //   정책자금 매칭 후보가 잘못 좁혀졌음. < 90 early / < 365 growth / < 365*3 established
-              //   로 정정.
-              businessStage: c.daysSinceLaunch < 90
-                ? "early"
-                : c.daysSinceLaunch < 365
-                  ? "growth"
-                  : c.daysSinceLaunch < 365 * 3
-                    ? "established"
-                    : "established",
-            }}
-          />
-        </div>
-      )}
+      {/* 정책자금 매칭은 위 리추얼 쌍(.dash-pair)으로 이동 (2026-07-21) */}
 
       {/* 2026-06-04: AI 공동창업자 데일리 브리프(StartupFounderBrief) → CEOMorningHero 로 흡수.
           런웨이·burn·default-dead·CMGR·Rule of 40 신호를 computeStartupRule 이 산출해
