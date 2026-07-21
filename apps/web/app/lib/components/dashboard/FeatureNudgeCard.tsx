@@ -110,17 +110,19 @@ export function FeatureNudgeCard({ ko, nudges }: Props) {
         </div>
       </header>
 
-      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* 밀도 개선 (2026-07-21): 세로 스택 → 데스크톱 3열 타일 — 첫 화면에서 차지하는 높이 1/3 로 */}
+      <ul className="dash-3col" style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {top.map((n) => (
-          <li key={n.key}>
+          <li key={n.key} style={{ display: "flex" }}>
             <button
               type="button"
               onClick={() => dispatchNavigate(n)}
               style={{
                 width: "100%",
                 display: "flex",
-                alignItems: "center",
-                gap: 12,
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 8,
                 padding: "12px 14px",
                 borderRadius: 12,
                 border: "1px solid rgba(15,23,42,0.06)",

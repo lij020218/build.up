@@ -7,6 +7,7 @@ import { useDashboardComputed } from "../../hooks/useDashboardComputed";
 // ── Tier sections (분기 표 → sections/DASHBOARD_MAP.md) ──
 import { Tier0Header } from "./sections/Tier0Header";
 import { Tier1Hero } from "./sections/Tier1Hero";
+import { FeatureNudgeSection } from "./FeatureNudgeCard";
 import { Tier1DailyHub } from "./sections/Tier1DailyHub";
 import { Tier1_5Coaching } from "./sections/Tier1_5Coaching";
 import { Tier2WeeklyPulse } from "./sections/Tier2WeeklyPulse";
@@ -139,6 +140,13 @@ export default function OperationalDashboard({ d }: Props) {
           nextStaggerStyle={nextStaggerStyle}
           onOpenCalendar={() => setShowCalendar(true)}
         />
+      )}
+
+      {/* ━━━ 미사용 기능 안내 — 데이터(매출·현금·손익) 아래로 (2026-07-21 밀도 개선) ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <FeatureNudgeSection d={d} />
+        </div>
       )}
 
       {/* ━━━ Tier 1.5 — 오늘의 코칭 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}

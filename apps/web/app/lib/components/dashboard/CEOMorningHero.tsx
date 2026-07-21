@@ -679,7 +679,8 @@ export function CEOMorningHero({ d }: Props) {
       style={{
         position: "relative",
         borderRadius: "24px",
-        padding: "28px 28px 24px",
+        // 밀도 개선 (2026-07-21): 28px → 20px — 첫 화면에 아래 카드들이 함께 보이게.
+        padding: "20px 22px 18px",
         // ⚡ 연한 미드나이트 틴트 — Apple/Linear 톤. 텍스트는 어둡게.
         background: "linear-gradient(135deg, #F7F8FE 0%, #EEF0FB 50%, #E5E8F7 100%)",
         color: PALETTE.INK,
@@ -725,7 +726,7 @@ export function CEOMorningHero({ d }: Props) {
       {/* Row 1 — 인사 + 저장 상태 표시 */}
       {/* flexWrap: 좁은 폰(갤럭시 360px)에서 헤더 min-width(아이콘+가장 넓은 배지+오늘의보고서 버튼)가
           카드 폭 초과 → 버튼이 카드 밖으로 잘림. 줄바꿈 허용해 버튼이 다음 줄로 (2026-07-14). */}
-      <motion.div variants={itemVariants} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "22px", position: "relative", zIndex: 1, flexWrap: "wrap" as const }}>
+      <motion.div variants={itemVariants} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "14px", position: "relative", zIndex: 1, flexWrap: "wrap" as const }}>
         <div style={{
           width: 36, height: 36, borderRadius: 12,
           background: PALETTE.MIDNIGHT_8,
@@ -892,12 +893,15 @@ export function CEOMorningHero({ d }: Props) {
         </motion.div>
       )}
 
+      {/* ── Row 2+3 밀도 그리드 (2026-07-21) — 데스크톱에서 메트릭과 AI 브리핑을 나란히,
+            히어로 세로 높이를 절반으로. 모바일은 기존대로 세로 스택. ── */}
+      <div className="dash-2col" style={{ position: "relative", zIndex: 1 }}>
       {/* Row 2 — 메인 메트릭 + sparkline */}
       <motion.div variants={itemVariants} style={{
         background: "#ffffff",
         color: PALETTE.INK,
         borderRadius: "18px",
-        padding: "20px 22px",
+        padding: "16px 18px",
         display: "flex",
         gap: "20px",
         alignItems: "stretch",
@@ -1014,7 +1018,7 @@ export function CEOMorningHero({ d }: Props) {
             </div>,
             document.body
           )}
-          <div style={{ fontSize: "clamp(34px, 5vw, 44px)", fontWeight: 700, letterSpacing: "-0.045em", color: PALETTE.MIDNIGHT_DEEP, lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }}>
+          <div style={{ fontSize: "clamp(28px, 3.4vw, 34px)", fontWeight: 700, letterSpacing: "-0.045em", color: PALETTE.MIDNIGHT_DEEP, lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }}>
             <CountUp to={heroMetric.value} duration={1.0} format={heroMetric.format} />
           </div>
           {/* delta */}
@@ -1112,9 +1116,9 @@ export function CEOMorningHero({ d }: Props) {
       {/* Row 3 — AI 경영 브리핑 (cashflow 위기·이상 신호·AI 액션·업종 인사이트 통합) */}
       {/* 데이터 0건 시 첫 기록 입력 폼으로 분기 (0매출 entry는 정당한 데이터로 취급) */}
       <motion.div variants={itemVariants} style={{
-        marginTop: "12px",
         position: "relative",
         zIndex: 1,
+        minWidth: 0,
       }}>
         {brain.hasNoData ? (
           // ── 데이터 0건: 인라인 첫 기록 폼 ──
@@ -1341,6 +1345,7 @@ export function CEOMorningHero({ d }: Props) {
           </div>
         )}
       </motion.div>
+      </div>
     </motion.section>
   );
 }

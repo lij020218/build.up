@@ -142,6 +142,9 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
+      {/* ── 코칭 카드 밀도 그리드 (2026-07-21) — 데스크톱 2열로 첫 화면 정보량 ↑.
+            각 카드의 조건부 렌더·stagger 는 유지, 내부 null 카드는 :empty 로 제거됨. ── */}
+      <div className="dash-2col">
       {/* 오늘의 운영 리추얼 — 매일 점검 습관 엔진 (사장님: 홈 유지) */}
       {!hide("daily-ops-ritual") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
@@ -330,6 +333,7 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {c.isStartupCompany && !c.usesSubscriptions && !hide("saas-key-metrics") && (
         <SubscriptionEnableNudge ko={ko} onEnable={() => d.setUsesSubscriptions(true)} nextStaggerStyle={nextStaggerStyle} />
       )}
+      </div>
     </>
   );
 }

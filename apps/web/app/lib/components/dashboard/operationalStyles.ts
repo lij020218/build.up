@@ -445,6 +445,17 @@ export const activityBarLabel: React.CSSProperties = {
 
 /* ── Bento micro-interaction: inject global hover styles once ── */
 export const bentoHoverCSS = `
+/* ── 정보 밀도 그리드 (2026-07-21 사장님 지시: "한 화면에 카드 여러 장") ──
+   데스크톱(≥1100px)에서 카드를 2열/3열로 배치해 첫 화면 밀도를 높인다.
+   모바일은 1열 유지. 내부에서 null 을 반환하는 카드(정책자금 self-hide,
+   메뉴 수익성 입력 전 등)의 빈 래퍼는 :empty 로 grid 흐름에서 제거. */
+.dash-2col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.dash-3col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.dash-2col > *:empty, .dash-3col > *:empty { display: none; }
+@media (min-width: 1100px) {
+  .dash-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @keyframes bentoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bentoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
