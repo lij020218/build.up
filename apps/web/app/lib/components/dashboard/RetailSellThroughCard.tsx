@@ -36,6 +36,7 @@
 import { useMemo } from "react";
 import { ShoppingBag, AlertTriangle, Package, TrendingUp, Sparkles } from "lucide-react";
 import { useOperationsStore } from "../../stores";
+import { unifyRetailProducts } from "../../product-unify";
 // 2026-05-13 — SSOT (sell-through.ts, 14 unit tests 검증)
 //   Lightspeed·Shopify·Square Retail·TruRating 표준 — 단일 검증된 공식.
 import {
@@ -63,26 +64,18 @@ export function RetailSellThroughCard(props: Props) {
 }
 
 function RetailSellThroughCardInner({ ko, industryCategoryId }: Props) {
+  const inventory = useOperationsStore((s) => s.inventory);
   const products = useOperationsStore((s) => s.products);
   const unifiedProducts = useOperationsStore((s) => s.unifiedProducts);
 
-  // 두 store 머지 — id 중복 시 unifiedProducts 우선 (더 정교한 데이터)
-  const all: ProductLite[] = useMemo(() => {
-    const byId = new Map<string, ProductLite>();
-    for (const p of products ?? []) {
-      byId.set(p.id, {
-        id: p.id, name: p.name, category: p.category ?? "",
-        price: p.price ?? 0, cost: p.cost ?? 0, stock: p.stock ?? 0, monthlySold: p.monthlySold ?? 0,
-      });
-    }
-    for (const p of unifiedProducts ?? []) {
-      byId.set(p.id, {
-        id: p.id, name: p.name, category: p.category ?? "",
-        price: p.price ?? 0, cost: p.cost ?? 0, stock: p.stock ?? 0, monthlySold: p.monthlySold ?? 0,
-      });
-    }
-    return Array.from(byId.values());
-  }, [products, unifiedProducts]);
+  // 정규화 SSOT — inventory.product(iOS 정본) + unifiedProducts + products 통합.
+  //   (2026-07-22 소매 상품모델 통합: iOS 입력분(inventory)이 웹에도 보이게. 인라인 머지 → SSOT.)
+  const all: ProductLite[] = useMemo(
+    () => unifyRetailProducts({ inventory, products, unifiedProducts }).map((p) => ({
+      id: p.id, name: p.name, category: p.category, price: p.price, cost: p.cost, stock: p.stock, monthlySold: p.monthlySold,
+    })),
+    [inventory, products, unifiedProducts],
+  );
 
   const analysis = useMemo(() => {
     // 2026-05-13 — SSOT (sell-through.ts) 적용. 카드는 *컴포지션* + UX 결정.

@@ -9,6 +9,9 @@ export type InventoryItem = {
   category: "fresh" | "dry" | "frozen" | "beverage" | "supply" | "other";
   itemType: "material" | "product";
   sellingPrice: number;
+  /** 월 판매량 — 소매 상품(itemType=product)의 sell-through 계산용. iOS BUInventoryItem 정합
+   *  (2026-07-22 소매 상품모델 통합: inventory 를 소매 판매상품 정본으로. 기존엔 웹만 누락). */
+  monthlySold?: number;
   expiryDate: string; supplierName: string; supplierUrl: string;
   leadTimeDays: number; dailyUsage: number; lastOrderedAt: string;
   wasteLog: { date: string; qty: number; reason: string }[];
