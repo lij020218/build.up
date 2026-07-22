@@ -15,15 +15,17 @@ public extension BUInventoryItem {
     /// 소매 sell-through 카드용 변환.
     /// monthlySold > 0 이면 실값, == 0 이면 dailyUsage × 26 추정 + isEstimated = true.
     func toSellThroughProduct() -> SellThroughProduct {
+        // 상품 자유분류(displayCategory) 우선, 없으면 enum category 폴백 (2026-07-22 통합, 웹 정합)
+        let cat = (displayCategory?.isEmpty == false) ? displayCategory! : category
         if monthlySold > 0 {
             return SellThroughProduct(
-                id: id, name: name, category: category,
+                id: id, name: name, category: cat,
                 price: sellingPrice, cost: unitCost, stock: quantity,
                 monthlySold: monthlySold, isEstimated: false
             )
         } else {
             return SellThroughProduct(
-                id: id, name: name, category: category,
+                id: id, name: name, category: cat,
                 price: sellingPrice, cost: unitCost, stock: quantity,
                 monthlySold: dailyUsage * 26, isEstimated: true
             )

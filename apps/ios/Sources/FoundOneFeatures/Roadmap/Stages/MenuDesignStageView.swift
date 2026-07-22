@@ -564,6 +564,7 @@ private extension MenuDesignStageView {
                     unitCost: Double(m.cost),
                     category: Self.mapMenuCategoryToInventory(m.category),
                     itemType: "product",
+                    displayCategory: m.category, // 메뉴 분류 무손실 보존 (2026-07-22 통합, 웹 정합)
                     sellingPrice: Double(m.price),
                     leadTimeDays: ex?.leadTimeDays ?? 1,
                     dailyUsage: ex?.dailyUsage ?? 0,

@@ -27,6 +27,14 @@ func inventoryCategoryLabel(_ code: String) -> String {
     }
 }
 
+/// 재고 항목의 분류 칩 라벨. 상품(product)은 자유분류(displayCategory) 우선, 식자재는 enum 라벨.
+/// nil = 칩 미표시. (2026-07-22 상품모델 통합, 웹 정합)
+func inventoryCategoryChipLabel(_ item: BUInventoryItem) -> String? {
+    if item.itemType == "product", let d = item.displayCategory, !d.isEmpty { return d }
+    if !item.category.isEmpty && item.category != "other" { return inventoryCategoryLabel(item.category) }
+    return nil
+}
+
 public struct InventoryManagementSheet: View {
 
     @Environment(\.dismiss) private var dismiss
@@ -270,8 +278,8 @@ public struct InventoryManagementSheet: View {
                                 .padding(.vertical, 2)
                                 .background(BUColor.midnight08, in: Capsule())
                         }
-                        if !item.category.isEmpty && item.category != "other" {
-                            Text(inventoryCategoryLabel(item.category))
+                        if let catLabel = inventoryCategoryChipLabel(item) {
+                            Text(catLabel)
                                 .font(.system(size: 9.5, weight: .semibold))
                                 .foregroundStyle(BUColor.inkSecondary)
                                 .padding(.horizontal, 6)
@@ -455,8 +463,8 @@ private struct InventoryImportPreviewSheet: View {
                         if item.unitCost > 0 {
                             importChip(label: "단가", value: formatKRWCompact(item.unitCost) + "원")
                         }
-                        if !item.category.isEmpty && item.category != "other" {
-                            importChip(label: "분류", value: inventoryCategoryLabel(item.category))
+                        if let catLabel = inventoryCategoryChipLabel(item) {
+                            importChip(label: "분류", value: catLabel)
                         }
                     }
                 }
@@ -623,9 +631,11 @@ private struct InventoryItemForm: View {
             unitCost: Double(unitCost) ?? 0,
             category: category,
             itemType: existing?.itemType ?? "material",
+            displayCategory: existing?.displayCategory, // 상품 자유분류 보존 (이 시트는 material 편집용, 미편집) (2026-07-22)
             sellingPrice: existing?.sellingPrice ?? 0,
             leadTimeDays: existing?.leadTimeDays ?? 1,
             dailyUsage: Double(dailyUsage) ?? 0,
+            monthlySold: existing?.monthlySold ?? 0, // 편집 시 판매량 리셋 버그 수정 (기존 값 보존)
             lastOrderedAt: existing?.lastOrderedAt,
             wasteLog: existing?.wasteLog ?? []
         )

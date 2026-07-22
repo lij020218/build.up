@@ -212,6 +212,9 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     public var unitCost: Double
     public var category: String   // "fresh"|"dry"|"frozen"|"beverage"|"supply"|"other"
     public var itemType: String   // "material"|"product"
+    /// 상품류(itemType=product)의 자유분류 — 메뉴(메인/사이드)·소매(의류/잡화). 웹 InventoryItem.displayCategory 정합.
+    /// category enum 은 식자재 개념이라 상품엔 부적합 → 사장님 입력 분류를 무손실 보존. material 은 미사용. (2026-07-22 통합)
+    public var displayCategory: String?
     public var sellingPrice: Double
     public var leadTimeDays: Int
     public var dailyUsage: Double
@@ -241,6 +244,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         unitCost: Double = 0,
         category: String = "other",
         itemType: String = "material",
+        displayCategory: String? = nil,
         sellingPrice: Double = 0,
         leadTimeDays: Int = 1,
         dailyUsage: Double = 0,
@@ -250,7 +254,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     ) {
         self.id = id; self.name = name; self.quantity = quantity; self.unit = unit
         self.minThreshold = minThreshold; self.unitCost = unitCost; self.category = category
-        self.itemType = itemType; self.sellingPrice = sellingPrice
+        self.itemType = itemType; self.displayCategory = displayCategory; self.sellingPrice = sellingPrice
         self.leadTimeDays = leadTimeDays; self.dailyUsage = dailyUsage
         self.monthlySold = monthlySold
         self.lastOrderedAt = lastOrderedAt; self.wasteLog = wasteLog
@@ -259,6 +263,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     // MARK: Codable — monthlySold 는 기존 JSON 에 없을 수 있어 decodeIfPresent 로 처리
     enum CodingKeys: String, CodingKey {
         case id, name, quantity, unit, minThreshold, unitCost, category, itemType
+        case displayCategory
         case sellingPrice, leadTimeDays, dailyUsage, monthlySold, lastOrderedAt, wasteLog
     }
 
@@ -272,6 +277,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         unitCost       = try c.decode(Double.self,           forKey: .unitCost)
         category       = try c.decode(String.self,           forKey: .category)
         itemType       = try c.decode(String.self,           forKey: .itemType)
+        displayCategory = try? c.decodeIfPresent(String.self, forKey: .displayCategory)
         sellingPrice   = try c.decode(Double.self,           forKey: .sellingPrice)
         leadTimeDays   = try c.decode(Int.self,              forKey: .leadTimeDays)
         dailyUsage     = try c.decode(Double.self,           forKey: .dailyUsage)
