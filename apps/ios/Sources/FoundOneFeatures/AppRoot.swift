@@ -77,6 +77,7 @@ public struct AppRoot: View {
         case guides
         case franchise
         case marketing
+        case tax
         case reports
         case analytics
         case team
@@ -107,6 +108,7 @@ public struct AppRoot: View {
             case "guides", "funding": self._selectedTab = State(initialValue: .guides)
             case "franchise":     self._selectedTab = State(initialValue: .franchise)
             case "marketing":     self._selectedTab = State(initialValue: .marketing)
+            case "tax":           self._selectedTab = State(initialValue: .tax)
             case "reports":       self._selectedTab = State(initialValue: .reports)
             case "analytics", "store": self._selectedTab = State(initialValue: .analytics)
             case "profile", "settings": self._selectedTab = State(initialValue: .profile)
@@ -1050,6 +1052,8 @@ private struct MainTabs: View {
                 FranchiseView()
             case .marketing:
                 MarketingView(store: store, mock: mockData)
+            case .tax:
+                TaxView(store: store)
             case .reports:
                 ReportsView(mock: mockData)
             case .analytics:
@@ -1126,6 +1130,7 @@ private func webSurfaceTabs(businessLaunched: Bool) -> [FoundOneSurfaceTab] {
         businessLaunched ? .init(id: .guides, label: "펀딩", systemImage: "doc.text.magnifyingglass") : nil,
         .init(id: .franchise, label: "프랜차이즈", systemImage: "storefront"),
         businessLaunched ? .init(id: .marketing, label: "마케팅", systemImage: "megaphone") : nil,
+        businessLaunched ? .init(id: .tax, label: "세금", systemImage: "wonsign.circle") : nil,
         businessLaunched ? .init(id: .reports, label: "보고서", systemImage: "doc.richtext") : nil,
         businessLaunched ? .init(id: .analytics, label: "내 가게", systemImage: "chart.bar") : nil,
         businessLaunched ? .init(id: .team, label: "직원", systemImage: "person.2") : nil,
@@ -1609,6 +1614,8 @@ struct DemoTabs: View {
                 FranchiseView()
             case .marketing:
                 MarketingView(store: demoDashboardStore, mock: mockData)
+            case .tax:
+                TaxView(store: demoDashboardStore)
             case .reports:
                 ReportsView(mock: mockData)
             case .analytics:
