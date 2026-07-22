@@ -13,6 +13,7 @@ export * from "./finance/health-score";
 export * from "./finance/inventory-cycle";
 export * from "./finance/cost-classification";
 export * from "./finance/labor-law-checks";
+export * from "./finance/tax-credits";
 export * from "./team/job-duties";
 export * from "./finance/tax-faq";
 export * from "./finance/loan-faq";
