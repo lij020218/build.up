@@ -96,6 +96,16 @@ export function SurfaceIcon(props: { surface: DashboardSurface }) {
     );
   }
 
+  if (props.surface === "tax") {
+    // 영수증/계산서 + ₩ — 세금(계산·공제·일정)
+    return (
+      <svg {...common}>
+        <path d="M4 2.5h8v11l-1.6-1-1.6 1-1.6-1-1.6 1-1.6-1V2.5Z" />
+        <path d="M6.2 6h3.6M6.2 8.4h3.6" />
+      </svg>
+    );
+  }
+
   return (
     <svg {...common}>
       <circle cx="8" cy="5.3" r="2.2" />

@@ -102,6 +102,7 @@ import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
 import { ReportsSurface } from "./lib/components/surfaces/ReportsSurface";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
+import { TaxSurface } from "./lib/components/surfaces/TaxSurface";
 import { TeamSurface } from "./lib/components/surfaces/TeamSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
 import { ProfileView } from "./lib/components/surfaces/ProfileView";
@@ -566,6 +567,7 @@ export default function StarterStageDemo({
     // 미드나이트 단색 + eyebrow + title + subtitle 패턴 통일.
     activeSurface === "reports" ||
     activeSurface === "marketing" ||
+    activeSurface === "tax" ||
     activeSurface === "franchise" ||
     activeSurface === "guides" ||
     // 직원(team)도 자체 헤더("근무표 · 연차 관리") 보유 — 2026-07-12 히어로 중복 제거
@@ -1179,6 +1181,12 @@ export default function StarterStageDemo({
         {activeSurface === "marketing" ? (
           <CardErrorBoundary cardLabel="마케팅">
             <MarketingSurface />
+          </CardErrorBoundary>
+        ) : null}
+
+        {activeSurface === "tax" ? (
+          <CardErrorBoundary cardLabel="세금">
+            <TaxSurface />
           </CardErrorBoundary>
         ) : null}
 
