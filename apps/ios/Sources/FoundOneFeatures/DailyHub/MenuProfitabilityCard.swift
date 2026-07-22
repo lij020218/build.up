@@ -24,10 +24,13 @@ public struct MenuProfitabilityCard: View {
 
     let items: [BUInventoryItem]
     let category: IndustryCategory
+    /// 있으면 "메뉴 레시피 관리" 버튼 노출 → 레시피(BOM) 편집 시트. (2026-07-22)
+    let onManageRecipes: (() -> Void)?
 
-    public init(items: [BUInventoryItem], category: IndustryCategory) {
+    public init(items: [BUInventoryItem], category: IndustryCategory, onManageRecipes: (() -> Void)? = nil) {
         self.items = items
         self.category = category
+        self.onManageRecipes = onManageRecipes
     }
 
     // 로드맵 menu-design 이 product 로 기록한 항목만.
@@ -99,6 +102,7 @@ public struct MenuProfitabilityCard: View {
                     kpiRow
                     if !overItems.isEmpty { overSection }
                     topMarginSection
+                    if let onManageRecipes { recipeButton(onManageRecipes) }
                     forwardNote
                 }
             }
@@ -207,6 +211,21 @@ private extension MenuProfitabilityCard {
                 .background(BUColor.midnight.opacity(0.025), in: RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous))
             }
         }
+    }
+
+    func recipeButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: "list.bullet.rectangle").font(.system(size: 12, weight: .semibold))
+                Text("메뉴 레시피 관리 · 원가율 · 재고 차감").font(.system(size: 12.5, weight: .semibold))
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
+            }
+            .foregroundStyle(BUColor.midnight)
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     var forwardNote: some View {

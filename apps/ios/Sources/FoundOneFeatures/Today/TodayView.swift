@@ -58,6 +58,7 @@ public struct TodayView: View {
     @State private var showInputSheet = false
     @State private var showInventorySheet = false
     @State private var showTeamSheet = false
+    @State private var showRecipeSheet = false
     @State private var showCustomerSheet = false
     @State private var showBasisSheet = false
     /// 인앱 알림함 (출근·초대·연차·수당) — 헤더 벨. 데모/비로그인은 자동 비활성(빈 목록). 2026-07-14
@@ -205,7 +206,8 @@ public struct TodayView: View {
                 // ⑧ 메뉴·서비스 수익성 (음식·카페·서비스) — 로드맵 menu-design 입력(판매가·원가)을
                 //   per-item 원가율·마진으로 표시. 재고(식자재)와 분리. 메뉴 입력 전이면 미노출.
                 if isMenuCardIndustry && !menuProducts.isEmpty {
-                    MenuProfitabilityCard(items: menuProducts, category: mock.category)
+                    MenuProfitabilityCard(items: menuProducts, category: mock.category,
+                                          onManageRecipes: storeInfo != nil ? { showRecipeSheet = true } : nil)
                 }
 
                 // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
@@ -264,6 +266,12 @@ public struct TodayView: View {
         .sheet(isPresented: $showInventorySheet) {
             if let si = storeInfo {
                 InventoryManagementSheet(storeInfoStore: si)
+            }
+        }
+        .sheet(isPresented: $showRecipeSheet) {
+            if let si = storeInfo {
+                MenuRecipeSheet(storeInfoStore: si,
+                                goldenMax: (mock.category == .beauty || mock.category == .fitness || mock.category == .pet || mock.category == .education || mock.category == .livingService || mock.category == .space) ? 25 : 33)
             }
         }
         .sheet(isPresented: $showTeamSheet) {
