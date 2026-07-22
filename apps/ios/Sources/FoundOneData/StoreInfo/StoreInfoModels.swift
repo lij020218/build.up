@@ -202,6 +202,16 @@ public struct WasteLogEntry: Sendable, Codable, Hashable {
     }
 }
 
+/// 레시피 재료 한 줄 — 메뉴 1개당 재료 소요량. web RecipeIngredient 미러(JSON: materialId·qty·unit).
+public struct BURecipeIngredient: Sendable, Codable, Hashable {
+    public var materialId: String
+    public var qty: Double
+    public var unit: String
+    public init(materialId: String, qty: Double, unit: String) {
+        self.materialId = materialId; self.qty = qty; self.unit = unit
+    }
+}
+
 /// 재고 항목 — web InventoryItem 완전 미러.
 public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     public let id: String
@@ -215,6 +225,8 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     /// 상품류(itemType=product)의 자유분류 — 메뉴(메인/사이드)·소매(의류/잡화). 웹 InventoryItem.displayCategory 정합.
     /// category enum 은 식자재 개념이라 상품엔 부적합 → 사장님 입력 분류를 무손실 보존. material 은 미사용. (2026-07-22 통합)
     public var displayCategory: String?
+    /// 레시피(BOM) — 메뉴에 들어가는 재료 소요량. 원가율 계산 + 판매 시 재고 자동차감. web InventoryItem.recipe 미러.
+    public var recipe: [BURecipeIngredient]?
     public var sellingPrice: Double
     public var leadTimeDays: Int
     public var dailyUsage: Double
@@ -245,6 +257,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         category: String = "other",
         itemType: String = "material",
         displayCategory: String? = nil,
+        recipe: [BURecipeIngredient]? = nil,
         sellingPrice: Double = 0,
         leadTimeDays: Int = 1,
         dailyUsage: Double = 0,
@@ -254,16 +267,17 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     ) {
         self.id = id; self.name = name; self.quantity = quantity; self.unit = unit
         self.minThreshold = minThreshold; self.unitCost = unitCost; self.category = category
-        self.itemType = itemType; self.displayCategory = displayCategory; self.sellingPrice = sellingPrice
+        self.itemType = itemType; self.displayCategory = displayCategory; self.recipe = recipe
+        self.sellingPrice = sellingPrice
         self.leadTimeDays = leadTimeDays; self.dailyUsage = dailyUsage
         self.monthlySold = monthlySold
         self.lastOrderedAt = lastOrderedAt; self.wasteLog = wasteLog
     }
 
-    // MARK: Codable — monthlySold 는 기존 JSON 에 없을 수 있어 decodeIfPresent 로 처리
+    // MARK: Codable — monthlySold·recipe 는 기존 JSON 에 없을 수 있어 decodeIfPresent 로 처리
     enum CodingKeys: String, CodingKey {
         case id, name, quantity, unit, minThreshold, unitCost, category, itemType
-        case displayCategory
+        case displayCategory, recipe
         case sellingPrice, leadTimeDays, dailyUsage, monthlySold, lastOrderedAt, wasteLog
     }
 
@@ -278,6 +292,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         category       = try c.decode(String.self,           forKey: .category)
         itemType       = try c.decode(String.self,           forKey: .itemType)
         displayCategory = try? c.decodeIfPresent(String.self, forKey: .displayCategory)
+        recipe         = (try? c.decodeIfPresent([BURecipeIngredient].self, forKey: .recipe)) ?? nil
         sellingPrice   = try c.decode(Double.self,           forKey: .sellingPrice)
         leadTimeDays   = try c.decode(Int.self,              forKey: .leadTimeDays)
         dailyUsage     = try c.decode(Double.self,           forKey: .dailyUsage)

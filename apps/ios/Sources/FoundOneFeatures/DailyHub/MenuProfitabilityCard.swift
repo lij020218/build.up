@@ -32,6 +32,10 @@ public struct MenuProfitabilityCard: View {
 
     // 로드맵 menu-design 이 product 로 기록한 항목만.
     private var menu: [BUInventoryItem] { items.filter { $0.itemType == "product" } }
+    // 재료(material) — 레시피 원가 계산용.
+    private var materials: [BUInventoryItem] { items.filter { $0.itemType != "product" } }
+    // 메뉴 원가 = 레시피 있으면 재료 합산(자동), 없으면 수동 unitCost. (2026-07-22 레시피/BOM)
+    private func costOf(_ m: BUInventoryItem) -> Double { RecipeCost.menuCostPerServing(m, materials: materials) }
 
     private var noun: String {
         switch category {
@@ -58,7 +62,7 @@ public struct MenuProfitabilityCard: View {
     }
 
     private var totalRevenue: Double { menu.reduce(0) { $0 + $1.sellingPrice } }
-    private var totalCost: Double { menu.reduce(0) { $0 + $1.unitCost } }
+    private var totalCost: Double { menu.reduce(0) { $0 + costOf($1) } }
     private var avgRatio: Double { totalRevenue > 0 ? totalCost / totalRevenue * 100 : 0 }
     private var avgPrice: Double { menu.isEmpty ? 0 : totalRevenue / Double(menu.count) }
     private var avgRatioWarn: Bool { avgRatio > goldenMax }
@@ -70,9 +74,10 @@ public struct MenuProfitabilityCard: View {
 
     private var metrics: [Metric] {
         menu.map { m in
-            let ratio = m.sellingPrice > 0 ? m.unitCost / m.sellingPrice * 100 : 0
-            return Metric(id: m.id, name: m.name, price: m.sellingPrice, cost: m.unitCost,
-                          ratio: ratio, margin: m.sellingPrice - m.unitCost)
+            let cost = costOf(m)
+            let ratio = m.sellingPrice > 0 ? cost / m.sellingPrice * 100 : 0
+            return Metric(id: m.id, name: m.name, price: m.sellingPrice, cost: cost,
+                          ratio: ratio, margin: m.sellingPrice - cost)
         }
     }
 
