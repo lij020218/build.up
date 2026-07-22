@@ -22,10 +22,22 @@ public struct TaxView: View {
     @State private var profile: FundingProfileSnapshot?
     @State private var loaded = false
 
+    // 연매출 = 월평균(최근7평균×26) × 12 — 웹 estimateAnnualRevenueWon 과 동일 산정.
     private var annualRevenueWon: Int { (profile?.monthlyAvgRevenue ?? 0) * 12 }
     private var categoryId: String? { profile?.industryCategoryId }
     private var specialtyId: String? { profile?.subIndustryId }
     private var hasEmployees: Bool { (profile?.employeesCount ?? 0) > 0 }
+
+    /// 창업감면 5년 게이트 — 개업일 초과 시 비노출 (냉정리뷰 결함 수정, 웹과 동일).
+    private var startupWindowActive: Bool {
+        guard let iso = profile?.businessLaunchedDate else { return true }
+        let f = ISO8601DateFormatter(); f.formatOptions = [.withFullDate]
+        guard let launch = f.date(from: iso) ?? {
+            let f2 = DateFormatter(); f2.dateFormat = "yyyy-MM-dd"; return f2.date(from: iso)
+        }() else { return true }
+        guard let deadline = Calendar.current.date(byAdding: .year, value: 5, to: launch) else { return true }
+        return Date() <= deadline
+    }
 
     private let hometax = "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3"
 
@@ -114,7 +126,8 @@ public struct TaxView: View {
 
     private var creditSection: some View {
         let mapping = TaxDataRegistry.mapping(specialtyId: specialtyId, categoryId: categoryId)
-        let startupOpen = mapping?.startupReduction.isSurfaced ?? false
+        // 창업감면은 대상 + 5년 이내(개업일 게이트) 둘 다 충족해야 노출.
+        let startupOpen = (mapping?.startupReduction.isSurfaced ?? false) && startupWindowActive
         let specialOpen = mapping?.specialReduction.isSurfaced ?? false
         return VStack(alignment: .leading, spacing: 10) {
             sectionLabel("내가 받을 수 있는 세액공제·감면")

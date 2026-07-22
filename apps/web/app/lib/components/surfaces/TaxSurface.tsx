@@ -16,10 +16,10 @@ import { useMemo } from "react";
 import {
   classifyTaxType, estimateVat, guideIncomeTax,
   COMMON_TAX_BENEFITS, getSpecialtyTaxMapping, isReductionSurfaced,
+  isStartupReductionActive, estimateAnnualRevenueWon,
   type EligibilityLevel,
 } from "@foundone/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { getKstMonthKey } from "../../utils/business-day";
 import TaxCalendarCard from "../TaxCalendarCard";
 
 const MIDNIGHT = "#191970";
@@ -60,23 +60,19 @@ export function TaxSurface() {
   const ko = d.language === "ko";
   const categoryId = d.industryCategoryId || null;
   const specialtyId = d.selectedIndustryId || null;
-  const curMonth = getKstMonthKey();
 
-  // ── 연매출 추정 — 이번 달 매출 × 12 (기록 있을 때), 없으면 0 ──
+  // ── 연매출 추정 (웹·iOS 통일 SSOT: 최근 영업일 평균 × 26 × 12) ──
+  //   ⚠️ 냉정리뷰(2026-07-22): 종전 웹 MTD×365 ≠ iOS monthlyAvgRevenue×12 불일치 → SSOT 통일.
   const annualRevenueWon = useMemo(() => {
     const entries = (d.dailyEntries ?? []) as Array<{ date: string; sales: number }>;
-    const mtd = entries.filter((e) => e.date?.startsWith?.(curMonth)).reduce((s, e) => s + (e.sales ?? 0), 0);
-    if (mtd > 0) {
-      const day = new Date().getDate();
-      return Math.round((mtd / day) * 365); // 이번 달 일평균 × 365
-    }
-    // MTD 없으면 최근 전체 기록 일평균 × 365
-    if (entries.length > 0) {
-      const total = entries.reduce((s, e) => s + (e.sales ?? 0), 0);
-      return Math.round((total / entries.length) * 365);
-    }
-    return 0;
-  }, [d.dailyEntries, curMonth]);
+    return estimateAnnualRevenueWon(entries.map((e) => e.sales ?? 0));
+  }, [d.dailyEntries]);
+
+  // 창업감면 5년 게이트 — 개업일 초과 시 비노출 (냉정리뷰 결함 수정).
+  const startupWindowActive = useMemo(
+    () => isStartupReductionActive((d as { businessLaunchedDate?: string }).businessLaunchedDate ?? null),
+    [d],
+  );
 
   const hasEmployees = ((d.employees ?? []) as unknown[]).length > 0;
 
@@ -90,8 +86,9 @@ export function TaxSurface() {
 
   // ── ② 세액공제 ──
   const mapping = useMemo(() => getSpecialtyTaxMapping(specialtyId, categoryId), [specialtyId, categoryId]);
-  const startupOpen = mapping && isReductionSurfaced(mapping.startupReduction);
-  const specialOpen = mapping && isReductionSurfaced(mapping.specialReduction);
+  // 창업감면은 대상 매핑 + 5년 이내(개업일 게이트) 둘 다 충족해야 노출.
+  const startupOpen = !!mapping && isReductionSurfaced(mapping.startupReduction) && startupWindowActive;
+  const specialOpen = !!mapping && isReductionSurfaced(mapping.specialReduction);
 
   // ── ③ 일정 ──
   const hasData = annualRevenueWon > 0;

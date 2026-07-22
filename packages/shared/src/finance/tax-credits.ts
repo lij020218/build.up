@@ -209,3 +209,31 @@ export function getSpecialtyTaxMapping(specialtyId?: string | null, categoryId?:
 export function isReductionSurfaced(level: EligibilityLevel): boolean {
   return level === "eligible" || level === "likely";
 }
+
+/**
+ * 창업중소기업 세액감면(§6)은 창업 후 5년 이내 과세연도만 유효 — 개업일로 게이트.
+ *  ⚠️ 2026-07-22 냉정리뷰 결함 수정: 종전엔 게이트 없이 매핑만 보고 노출 →
+ *     창업 10년차에게도 "창업감면 대상"이라 뜨는 오분류. 개업일 있으면 5년 초과 시 비노출.
+ *  개업일 미상이면 보수적으로 true(문구에 "5년 이내" 조건 병기) — 확정은 홈택스.
+ */
+export function isStartupReductionActive(launchDateISO?: string | null, now: Date = new Date()): boolean {
+  if (!launchDateISO) return true;
+  const launch = new Date(launchDateISO);
+  if (isNaN(launch.getTime())) return true;
+  const deadline = new Date(launch);
+  deadline.setFullYear(launch.getFullYear() + 5);
+  return now <= deadline;
+}
+
+/**
+ * 연매출 추정 (웹·iOS 통일 SSOT) — 최근 영업일 매출 평균 × 26영업일 × 12개월.
+ *  ⚠️ 2026-07-22 냉정리뷰 결함 수정: 종전 웹(MTD 일평균×365) ≠ iOS(monthlyAvgRevenue×12)로
+ *     같은 사용자가 다른 연매출·부가세를 봄. iOS monthlyAvgRevenue(=최근7평균×26) 산정과 일치시킴.
+ *  @param recentDailySales 0 초과인 최근 매출 기록(최대 7개 사용). 없으면 0.
+ */
+export function estimateAnnualRevenueWon(recentDailySales: number[]): number {
+  const recent = recentDailySales.filter((s) => s > 0).slice(-7);
+  if (recent.length === 0) return 0;
+  const avgDaily = recent.reduce((s, v) => s + v, 0) / recent.length;
+  return Math.round(avgDaily * 26 * 12);
+}
