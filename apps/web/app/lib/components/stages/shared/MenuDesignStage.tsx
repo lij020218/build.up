@@ -857,6 +857,7 @@ function syncMenuToInventory(
         sellingPrice: m.price,
         unitCost: m.cost,
         category: mapCategoryToInventory(m.category),
+        displayCategory: m.category, // 메뉴 분류 무손실 보존 (2026-07-22 통합)
       };
     }
     return {
@@ -867,6 +868,7 @@ function syncMenuToInventory(
       minThreshold: 5,
       unitCost: m.cost,
       category: mapCategoryToInventory(m.category),
+      displayCategory: m.category, // 메뉴 분류 무손실 보존 (2026-07-22 통합)
       itemType: "product" as const,
       sellingPrice: m.price,
       expiryDate: "",

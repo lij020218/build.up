@@ -1,9 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { supabase } from "../../../../../lib/supabase";
-import type { Product } from "../../../stores/operations-store";
+import type { InventoryItem } from "../../../stores/operations-store";
+import { useOperationsStore } from "../../../stores";
+import { unifyRetailProducts, type RetailProduct } from "../../../product-unify";
 
 export function ProductPerformanceCard() {
   const d = useDashboardCtx();
@@ -11,7 +14,7 @@ export function ProductPerformanceCard() {
     language,
     businessCtx,
     products,
-    saveProducts,
+    saveInventory,
     handleProdSave,
     handleProdDelete,
     handleProdSoldChange,
@@ -26,6 +29,15 @@ export function ProductPerformanceCard() {
     prodUnit, setProdUnit,
   } = d;
 
+  // 정본 = inventory(itemType="product"). 홈 MenuProfitabilityCard·로드맵·iOS 와 동일 소스.
+  //  (2026-07-22 상품모델 통합) legacy products 배열도 흡수해 표시(무손실). 신규/편집은 inventory 로.
+  const inventory = useOperationsStore((s) => s.inventory);
+  const unifiedProducts = useOperationsStore((s) => s.unifiedProducts);
+  const displayProducts: RetailProduct[] = useMemo(
+    () => unifyRetailProducts({ inventory, products, unifiedProducts }),
+    [inventory, products, unifiedProducts],
+  );
+
   if (!businessCtx.showProductCard) return null;
 
   const ko = language === "ko";
@@ -36,17 +48,17 @@ export function ProductPerformanceCard() {
   const fmtN = (n: number) => n.toLocaleString();
 
   // 수익성 계산
-  const calcMargin = (p: Product) => p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
-  const calcRevenue = (p: Product) => p.monthlySold * p.price;
-  const calcProfit = (p: Product) => p.monthlySold * (p.price - p.cost);
+  const calcMargin = (p: RetailProduct) => p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
+  const calcRevenue = (p: RetailProduct) => p.monthlySold * p.price;
+  const calcProfit = (p: RetailProduct) => p.monthlySold * (p.price - p.cost);
 
-  const totalRevenue = products.reduce((s, p) => s + calcRevenue(p), 0);
-  const totalProfit = products.reduce((s, p) => s + calcProfit(p), 0);
+  const totalRevenue = displayProducts.reduce((s, p) => s + calcRevenue(p), 0);
+  const totalProfit = displayProducts.reduce((s, p) => s + calcProfit(p), 0);
   const overallMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   // 정렬: 월 매출 기여도 내림차순
-  const sorted = [...products].sort((a, b) => calcRevenue(b) - calcRevenue(a));
-  const dangerItems = products.filter(p => p.cost > 0 && calcMargin(p) < 20);
+  const sorted = [...displayProducts].sort((a, b) => calcRevenue(b) - calcRevenue(a));
+  const dangerItems = displayProducts.filter(p => p.cost > 0 && calcMargin(p) < 20);
 
   const marginColor = (m: number) => m < 0 ? "#b64c4c" : m < 20 ? "#191970" : m < 40 ? "var(--primary)" : "#1d3557";
 
@@ -68,9 +80,9 @@ export function ProductPerformanceCard() {
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
               {businessCtx.productLabel[language] || (ko ? "제품 수익성" : "Product Performance")}
             </div>
-            {products.length > 0 && (
+            {displayProducts.length > 0 && (
               <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                {ko ? `${products.length}개 등록 · 이달 매출 기여 ${fmt(totalRevenue)}` : `${products.length} items · ${fmt(totalRevenue)} this month`}
+                {ko ? `${displayProducts.length}개 등록 · 이달 매출 기여 ${fmt(totalRevenue)}` : `${displayProducts.length} items · ${fmt(totalRevenue)} this month`}
               </div>
             )}
           </div>
@@ -127,19 +139,24 @@ export function ProductPerformanceCard() {
                     if (statusEl) statusEl.textContent = "";
                     return;
                   }
-                  const newProducts = parsed.map((p) => ({
-                    id: `prod-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                  // 정본 inventory(itemType="product")로 등록 — 자유분류는 displayCategory 보존. (2026-07-22 통합)
+                  const newItems: InventoryItem[] = parsed.map((p, i) => ({
+                    id: `prod-${Date.now()}-${Math.random().toString(36).slice(2, 6)}-${i}`,
                     name: p.name,
-                    category: p.category,
-                    price: p.price,
-                    cost: p.cost,
-                    stock: p.stock,
+                    quantity: p.stock ?? 0,
+                    unit: p.unit || "개",
+                    minThreshold: 0,
+                    unitCost: p.cost ?? 0,
+                    category: "other",
+                    itemType: "product",
+                    sellingPrice: p.price ?? 0,
                     monthlySold: 0,
-                    unit: p.unit,
+                    displayCategory: p.category || "",
+                    expiryDate: "", supplierName: "", supplierUrl: "",
+                    leadTimeDays: 0, dailyUsage: 0, lastOrderedAt: "", wasteLog: [],
                   }));
-                  const merged = [...products, ...newProducts];
-                  saveProducts(merged);
-                  if (statusEl) statusEl.textContent = ko ? `${newProducts.length}개 제품 등록 완료` : `${newProducts.length} products added`;
+                  saveInventory([...inventory, ...newItems]);
+                  if (statusEl) statusEl.textContent = ko ? `${newItems.length}개 제품 등록 완료` : `${newItems.length} products added`;
                   setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
                 } catch (err) {
                   alert(ko ? "파일 처리 중 오류가 발생했습니다." : "Error processing file.");
@@ -167,7 +184,7 @@ export function ProductPerformanceCard() {
       )}
 
       {/* 요약 3-col */}
-      {products.length > 0 && totalRevenue > 0 && (
+      {displayProducts.length > 0 && totalRevenue > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
           {[
             { label: ko ? "이달 매출" : "Revenue", value: fmt(totalRevenue), color: "inherit" },
@@ -183,7 +200,7 @@ export function ProductPerformanceCard() {
       )}
 
       {/* 빈 상태 */}
-      {products.length === 0 ? (
+      {displayProducts.length === 0 ? (
         <div style={{ padding: "16px 22px 22px" }}>
           <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
             {ko

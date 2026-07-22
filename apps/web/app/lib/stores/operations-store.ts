@@ -12,6 +12,10 @@ export type InventoryItem = {
   /** 월 판매량 — 소매 상품(itemType=product)의 sell-through 계산용. iOS BUInventoryItem 정합
    *  (2026-07-22 소매 상품모델 통합: inventory 를 소매 판매상품 정본으로. 기존엔 웹만 누락). */
   monthlySold?: number;
+  /** 상품류(itemType=product)의 자유문자열 분류 — 메뉴(메인/사이드/음료)·소매(의류/잡화)·서비스(커트/펌).
+   *  category enum 은 식자재 개념(신선/냉동)이라 상품엔 부적합 → 사장님이 입력한 분류를 무손실 보존.
+   *  material 은 이 필드 미사용(enum category 로 식자재 정리). (2026-07-22 상품모델 통합) */
+  displayCategory?: string;
   expiryDate: string; supplierName: string; supplierUrl: string;
   leadTimeDays: number; dailyUsage: number; lastOrderedAt: string;
   wasteLog: { date: string; qty: number; reason: string }[];
@@ -23,6 +27,8 @@ export type InvForm = {
   category: "fresh" | "dry" | "frozen" | "beverage" | "supply" | "other";
   itemType: "material" | "product";
   sellingPrice: string;
+  /** 상품류 자유문자열 분류 (메인/사이드·의류/잡화 등). material 은 미사용. (2026-07-22 상품모델 통합) */
+  displayCategory?: string;
   expiryDate: string; supplierName: string; url: string; leadTimeDays: string; dailyUsage: string;
 };
 

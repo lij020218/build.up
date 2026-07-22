@@ -58,6 +58,18 @@ describe("unifyRetailProducts", () => {
     expect(withSvc[0]).toMatchObject({ price: 20000, stock: 0, monthlySold: 40 });
   });
 
+  it("displayCategory(자유분류) 가 enum category 보다 우선 표시", () => {
+    // 메뉴/소매 분류는 식자재 enum 이 아니라 사장님이 입력한 자유문자열을 보존해야 한다.
+    const out = unifyRetailProducts({ inventory: [invProduct("a", { category: "other", displayCategory: "메인" })] });
+    expect(out[0].category).toBe("메인");
+  });
+
+  it("displayCategory 없으면 enum category 로 폴백", () => {
+    const noDisp = invProduct("a", { category: "beverage" });
+    delete (noDisp as { displayCategory?: string }).displayCategory;
+    expect(unifyRetailProducts({ inventory: [noDisp] })[0].category).toBe("beverage");
+  });
+
   it("빈 입력 → 빈 배열", () => {
     expect(unifyRetailProducts({})).toEqual([]);
   });

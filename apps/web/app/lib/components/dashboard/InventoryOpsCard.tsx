@@ -13,6 +13,7 @@ type InventoryEntry = {
   unit?: string;
   minThreshold?: number;
   category?: string;
+  displayCategory?: string;
   unitCost?: number;
   expiryDate?: string;
   supplierName?: string;
@@ -426,7 +427,7 @@ export function InventoryOpsCard({
     const byName = (a: InventoryEntry, b: InventoryEntry) => (a.name ?? "").localeCompare(b.name ?? "", "ko");
     const copy = [...arr];
     if (invSortMode === "name") return copy.sort(byName);
-    if (invSortMode === "category") return copy.sort((a, b) => (a.category ?? "").localeCompare(b.category ?? "", "ko") || byName(a, b));
+    if (invSortMode === "category") return copy.sort((a, b) => ((a.displayCategory || a.category) ?? "").localeCompare((b.displayCategory || b.category) ?? "", "ko") || byName(a, b));
     return copy.sort((a, b) => urgencyRank(a) - urgencyRank(b) || byName(a, b));
   };
 
@@ -473,6 +474,16 @@ export function InventoryOpsCard({
     supply: ko ? "소모품" : "Supply",
     other: ko ? "기타" : "Other",
   };
+
+  // 상품(itemType=product) 분류 추천 — 식자재 enum 대신 업종에 맞는 자유분류(무손실). (2026-07-22 통합)
+  const mode = d.businessCtx.inventoryMode;
+  const productCatSuggestions: string[] = d.businessCtx.isOnlineStore
+    ? (ko ? ["의류", "잡화", "디지털", "홈리빙", "기타"] : ["Apparel", "Accessories", "Digital", "Home", "Other"])
+    : mode === "separate"
+      ? (ko ? ["메인", "사이드", "음료", "디저트", "세트"] : ["Main", "Side", "Drink", "Dessert", "Set"])
+      : mode === "service"
+        ? (ko ? ["시술", "케어", "추가", "상품"] : ["Service", "Care", "Add-on", "Product"])
+        : (ko ? ["상품", "소모품", "악세서리", "기타"] : ["Product", "Supplies", "Accessories", "Other"]);
 
   const inputStyle: React.CSSProperties = {
     border: "1px solid rgba(15,23,42,0.10)",
@@ -851,22 +862,41 @@ export function InventoryOpsCard({
               placeholder={ko ? "품목명" : "Item name"}
               style={inputStyle}
             />
-            <select
-              value={invForm.category}
-              onChange={(event) =>
-                d.setInvForm((prev) => ({
-                  ...prev,
-                  category: event.target.value as typeof invForm.category,
-                }))
-              }
-              style={inputStyle}
-            >
-              {Object.entries(categoryLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            {invForm.itemType === "product" ? (
+              /* 상품: 업종 맞춤 자유분류 (식자재 enum 부적합) — displayCategory 로 무손실 보존. */
+              <>
+                <input
+                  type="text"
+                  list="prod-cat-suggestions"
+                  value={invForm.displayCategory ?? ""}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, displayCategory: event.target.value }))}
+                  placeholder={ko ? "분류 (예: 메인·의류·음료)" : "Category"}
+                  style={inputStyle}
+                />
+                <datalist id="prod-cat-suggestions">
+                  {productCatSuggestions.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </>
+            ) : (
+              <select
+                value={invForm.category}
+                onChange={(event) =>
+                  d.setInvForm((prev) => ({
+                    ...prev,
+                    category: event.target.value as typeof invForm.category,
+                  }))
+                }
+                style={inputStyle}
+              >
+                {Object.entries(categoryLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           {/* 판매 상품일 때 판매가 입력 */}
           {invForm.itemType === "product" && (

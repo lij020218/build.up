@@ -165,7 +165,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   const emptyInvForm: InvForm = {
     open: false, editId: null, name: "", qty: "", unit: "개", threshold: "",
     unitCost: "", category: "other", itemType: "material" as const,
-    sellingPrice: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
+    sellingPrice: "", displayCategory: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
   };
 
   const handleInvSave = () => {
@@ -181,6 +181,8 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       category: invForm.category,
       itemType: invForm.itemType,
       sellingPrice: Number(invForm.sellingPrice) || 0,
+      // 상품(product)만 자유분류 보존 — 식자재(material)는 enum category 로 정리. (2026-07-22 통합)
+      displayCategory: invForm.itemType === "product" ? (invForm.displayCategory?.trim() || undefined) : undefined,
       expiryDate: invForm.expiryDate,
       supplierName: invForm.supplierName.trim(),
       supplierUrl: invForm.url.trim(),
@@ -211,6 +213,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       threshold: String(item.minThreshold), unitCost: item.unitCost ? String(item.unitCost) : "",
       category: item.category ?? "other", itemType: item.itemType ?? "material",
       sellingPrice: item.sellingPrice ? String(item.sellingPrice) : "",
+      displayCategory: item.displayCategory ?? "",
       expiryDate: item.expiryDate ?? "",
       supplierName: item.supplierName ?? "", url: item.supplierUrl ?? "",
       leadTimeDays: item.leadTimeDays ? String(item.leadTimeDays) : "",
@@ -376,33 +379,64 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     flushImmediate();
   };
 
+  // ── 상품/메뉴 정본 = inventory(itemType="product") — iOS·홈 MenuProfitabilityCard·로드맵과 통일.
+  //    (2026-07-22 상품모델 통합) 신규 입력은 inventory 로, 레거시 products 배열 항목은 제자리 편집(무손실·롤백).
+  //    소스 인식: id 가 inventory 에 있으면 inventory, 아니면 legacy products.
   const handleProdSave = () => {
     const price = parseInt(prodPrice.replace(/[^0-9]/g, ""), 10);
     const cost = parseInt(prodCost.replace(/[^0-9]/g, ""), 10) || 0;
     const stock = parseInt(prodStock.replace(/[^0-9]/g, ""), 10) || 0;
     if (!prodName.trim() || !price) return;
-    const entry: Product = {
-      id: prodEditId ?? `prod-${Date.now()}`,
-      name: prodName.trim(), category: prodCategory.trim() || (language === "ko" ? "기타" : "Other"),
-      price, cost, stock,
-      monthlySold: prodEditId ? (products.find(p => p.id === prodEditId)?.monthlySold ?? 0) : 0,
-      unit: prodUnit,
-    };
-    const next = prodEditId
-      ? products.map(p => p.id === prodEditId ? entry : p)
-      : [...products, entry];
-    saveProducts(next);
+    const cat = prodCategory.trim() || (language === "ko" ? "기타" : "Other");
+
+    const invExisting = prodEditId ? inventory.find(i => i.id === prodEditId) : undefined;
+    const prodLegacy = prodEditId ? products.find(p => p.id === prodEditId) : undefined;
+
+    if (prodEditId && prodLegacy && !invExisting) {
+      // 레거시 products 항목 편집 → 제자리 유지 (마이그레이션 없이 롤백 안전)
+      const entry: Product = {
+        id: prodEditId, name: prodName.trim(), category: cat,
+        price, cost, stock, monthlySold: prodLegacy.monthlySold ?? 0, unit: prodUnit,
+      };
+      saveProducts(products.map(p => p.id === prodEditId ? entry : p));
+    } else {
+      // 신규 또는 inventory 항목 편집 → inventory(itemType=product) 정본에 기록.
+      //   자유분류(cat)는 displayCategory 로 무손실 보존, enum category 는 기존값/other.
+      const item: InventoryItem = {
+        id: prodEditId ?? `prod-${Date.now()}`,
+        name: prodName.trim(),
+        quantity: stock, unit: prodUnit, minThreshold: invExisting?.minThreshold ?? 0,
+        unitCost: cost, category: invExisting?.category ?? "other", itemType: "product",
+        sellingPrice: price, monthlySold: invExisting?.monthlySold ?? 0,
+        displayCategory: cat,
+        expiryDate: invExisting?.expiryDate ?? "", supplierName: invExisting?.supplierName ?? "",
+        supplierUrl: invExisting?.supplierUrl ?? "", leadTimeDays: invExisting?.leadTimeDays ?? 0,
+        dailyUsage: invExisting?.dailyUsage ?? 0, lastOrderedAt: invExisting?.lastOrderedAt ?? "",
+        wasteLog: invExisting?.wasteLog ?? [],
+      };
+      saveInventory(invExisting
+        ? inventory.map(i => i.id === prodEditId ? item : i)
+        : [...inventory, item]);
+    }
     setProdFormOpen(false); setProdEditId(null);
     setProdName(""); setProdCategory(""); setProdPrice(""); setProdCost(""); setProdStock(""); setProdUnit("개");
   };
 
-  const handleProdDelete = (id: string) => saveProducts(products.filter(p => p.id !== id));
-
-  const handleProdSoldChange = (id: string, delta: number) => {
-    saveProducts(products.map(p => p.id === id ? { ...p, monthlySold: Math.max(0, p.monthlySold + delta) } : p));
+  const handleProdDelete = (id: string) => {
+    if (inventory.some(i => i.id === id)) saveInventory(inventory.filter(i => i.id !== id));
+    else saveProducts(products.filter(p => p.id !== id));
   };
 
-  const openProdEdit = (p: Product) => {
+  const handleProdSoldChange = (id: string, delta: number) => {
+    if (inventory.some(i => i.id === id)) {
+      saveInventory(inventory.map(i => i.id === id ? { ...i, monthlySold: Math.max(0, (i.monthlySold ?? 0) + delta) } : i));
+    } else {
+      saveProducts(products.map(p => p.id === id ? { ...p, monthlySold: Math.max(0, p.monthlySold + delta) } : p));
+    }
+  };
+
+  // 정규화 표시항목(inventory.product + legacy products)에서 폼으로. category = displayCategory||category.
+  const openProdEdit = (p: { id: string; name: string; category: string; price: number; cost: number; stock: number; unit: string }) => {
     setProdEditId(p.id); setProdName(p.name); setProdCategory(p.category);
     setProdPrice(String(p.price)); setProdCost(String(p.cost)); setProdStock(String(p.stock));
     setProdUnit(p.unit); setProdFormOpen(true);

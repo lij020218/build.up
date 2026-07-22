@@ -36,7 +36,9 @@ export type RetailProduct = {
 
 function fromInventory(i: InventoryItem): RetailProduct {
   return {
-    id: i.id, name: i.name, category: i.category ?? "",
+    id: i.id, name: i.name,
+    // 상품류는 사장님이 입력한 자유분류(displayCategory) 우선, 없으면 enum category 폴백.
+    category: i.displayCategory || i.category || "",
     price: i.sellingPrice ?? 0, cost: i.unitCost ?? 0, stock: i.quantity ?? 0,
     monthlySold: i.monthlySold ?? 0, unit: i.unit ?? "",
     minThreshold: i.minThreshold ?? 0, supplierName: i.supplierName ?? "",
