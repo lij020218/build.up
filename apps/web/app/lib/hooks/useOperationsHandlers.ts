@@ -14,6 +14,7 @@ import type {
 } from "../stores/operations-store";
 import type { DailyEntry, CostSnapshot } from "../stores/finance-store";
 import type { DashboardDeps } from "../types";
+import { applyRecipeStockDelta } from "../recipe-cost";
 import { getKstDate } from "../utils/business-day";
 
 /** useOperationsHandlers 전용 추가 deps */
@@ -429,7 +430,9 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const handleProdSoldChange = (id: string, delta: number) => {
     if (inventory.some(i => i.id === id)) {
-      saveInventory(inventory.map(i => i.id === id ? { ...i, monthlySold: Math.max(0, (i.monthlySold ?? 0) + delta) } : i));
+      // 1) 판매량 갱신  2) 레시피(BOM) 있으면 재료 재고 자동 차감(delta>0)·복구(delta<0). (2026-07-22)
+      const withSold = inventory.map(i => i.id === id ? { ...i, monthlySold: Math.max(0, (i.monthlySold ?? 0) + delta) } : i);
+      saveInventory(applyRecipeStockDelta(withSold, id, delta));
     } else {
       saveProducts(products.map(p => p.id === id ? { ...p, monthlySold: Math.max(0, p.monthlySold + delta) } : p));
     }

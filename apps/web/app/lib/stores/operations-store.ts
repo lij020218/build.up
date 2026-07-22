@@ -3,6 +3,10 @@ import { persist } from "zustand/middleware";
 
 // ─── Types (re-exported from useDashboard for backwards compat) ───
 
+/** 레시피 재료 한 줄 — 메뉴 1개당 들어가는 재고(material) 소요량. (2026-07-22 레시피/BOM)
+ *  materialId = inventory 내 material 항목 id. qty 는 unit 기준(0.3 등 소수 허용). */
+export type RecipeIngredient = { materialId: string; qty: number; unit: string };
+
 export type InventoryItem = {
   id: string; name: string; quantity: number; unit: string; minThreshold: number;
   unitCost: number;
@@ -16,6 +20,9 @@ export type InventoryItem = {
    *  category enum 은 식자재 개념(신선/냉동)이라 상품엔 부적합 → 사장님이 입력한 분류를 무손실 보존.
    *  material 은 이 필드 미사용(enum category 로 식자재 정리). (2026-07-22 상품모델 통합) */
   displayCategory?: string;
+  /** 레시피(BOM) — 메뉴(itemType=product)에 들어가는 재료 소요량. 원가율 계산 + 판매 시 재고 자동차감.
+   *  비어있으면 수동 unitCost 폴백. material 은 미사용. (2026-07-22 레시피/BOM) */
+  recipe?: RecipeIngredient[];
   expiryDate: string; supplierName: string; supplierUrl: string;
   leadTimeDays: number; dailyUsage: number; lastOrderedAt: string;
   wasteLog: { date: string; qty: number; reason: string }[];

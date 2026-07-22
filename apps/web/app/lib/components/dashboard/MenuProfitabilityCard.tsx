@@ -24,6 +24,7 @@
 import { useMemo } from "react";
 import { UtensilsCrossed, Coffee, Sparkles, AlertTriangle, TrendingUp } from "lucide-react";
 import { useOperationsStore } from "../../stores";
+import { menuCostPerServing } from "../../recipe-cost";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.10)";
@@ -65,6 +66,10 @@ export function MenuProfitabilityCard({ ko, industryCategoryId }: Props) {
     () => inventory.filter((i) => i.itemType === "product"),
     [inventory],
   );
+  // 재료(material) — 레시피 원가 계산용.
+  const materials = useMemo(() => inventory.filter((i) => i.itemType === "material"), [inventory]);
+  // 메뉴 원가 = 레시피 있으면 재료 합산(자동), 없으면 수동 unitCost. (2026-07-22 레시피/BOM)
+  const costOf = (m: (typeof menu)[number]) => menuCostPerServing(m, materials);
 
   // 빈 카드 금지 — 메뉴 입력 전이면 렌더 안 함.
   if (menu.length === 0) return null;
@@ -76,14 +81,15 @@ export function MenuProfitabilityCard({ ko, industryCategoryId }: Props) {
   const Icon = cluster === "cafe" ? Coffee : cluster === "service" ? Sparkles : UtensilsCrossed;
 
   const totalRevenue = menu.reduce((s, m) => s + (m.sellingPrice || 0), 0);
-  const totalCost = menu.reduce((s, m) => s + (m.unitCost || 0), 0);
+  const totalCost = menu.reduce((s, m) => s + costOf(m), 0);
   const avgRatio = totalRevenue > 0 ? (totalCost / totalRevenue) * 100 : 0;
   const avgPrice = menu.length > 0 ? totalRevenue / menu.length : 0;
 
   const withMetrics = menu.map((m) => {
-    const ratio = m.sellingPrice > 0 ? (m.unitCost / m.sellingPrice) * 100 : 0;
-    const margin = (m.sellingPrice || 0) - (m.unitCost || 0);
-    return { id: m.id, name: m.name, price: m.sellingPrice, cost: m.unitCost, ratio, margin };
+    const cost = costOf(m);
+    const ratio = m.sellingPrice > 0 ? (cost / m.sellingPrice) * 100 : 0;
+    const margin = (m.sellingPrice || 0) - cost;
+    return { id: m.id, name: m.name, price: m.sellingPrice, cost, ratio, margin };
   });
 
   // 원가율 초과(저수익) — 황금률 넘는 메뉴, 비율 높은 순.

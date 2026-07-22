@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { supabase } from "../../../../../lib/supabase";
-import type { InventoryItem } from "../../../stores/operations-store";
+import type { InventoryItem, RecipeIngredient } from "../../../stores/operations-store";
 import { useOperationsStore } from "../../../stores";
 import { unifyRetailProducts, type RetailProduct } from "../../../product-unify";
+import { menuCostPerServing } from "../../../recipe-cost";
+import { RecipeEditorModal } from "./RecipeEditorModal";
 
 export function ProductPerformanceCard() {
   const d = useDashboardCtx();
@@ -38,19 +40,32 @@ export function ProductPerformanceCard() {
     [inventory, products, unifiedProducts],
   );
 
+  // 레시피(BOM) — 메뉴별 재료 소요량. 있으면 원가율을 재료 합산으로 계산 + 판매 시 재고 자동차감.
+  const invById = useMemo(() => new Map(inventory.map((i) => [i.id, i])), [inventory]);
+  const materials = useMemo(() => inventory.filter((i) => i.itemType === "material"), [inventory]);
+  const [recipeMenuId, setRecipeMenuId] = useState<string | null>(null);
+
   if (!businessCtx.showProductCard) return null;
 
   const ko = language === "ko";
   const isRestaurant = businessCtx.inventoryMode === "separate";
+  const goldenMax = businessCtx.inventoryMode === "service" ? 25 : 33; // 서비스 25% / 음식·카페 33%
   const fmt = (n: number) => n >= 10000
     ? `${Math.round(n / 10000).toLocaleString()}만원`
     : `${Math.round(n).toLocaleString()}원`;
   const fmtN = (n: number) => n.toLocaleString();
 
-  // 수익성 계산
-  const calcMargin = (p: RetailProduct) => p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
+  // 원가: 레시피 있으면 재료 합산(자동), 없으면 수동 원가 폴백.
+  const effCost = (p: RetailProduct) => {
+    const inv = invById.get(p.id);
+    return inv?.recipe?.length ? menuCostPerServing(inv, materials) : p.cost;
+  };
+  const recipeCount = (p: RetailProduct) => invById.get(p.id)?.recipe?.length ?? 0;
+
+  // 수익성 계산 (원가 = effCost)
+  const calcMargin = (p: RetailProduct) => p.price > 0 ? ((p.price - effCost(p)) / p.price) * 100 : 0;
   const calcRevenue = (p: RetailProduct) => p.monthlySold * p.price;
-  const calcProfit = (p: RetailProduct) => p.monthlySold * (p.price - p.cost);
+  const calcProfit = (p: RetailProduct) => p.monthlySold * (p.price - effCost(p));
 
   const totalRevenue = displayProducts.reduce((s, p) => s + calcRevenue(p), 0);
   const totalProfit = displayProducts.reduce((s, p) => s + calcProfit(p), 0);
@@ -58,7 +73,14 @@ export function ProductPerformanceCard() {
 
   // 정렬: 월 매출 기여도 내림차순
   const sorted = [...displayProducts].sort((a, b) => calcRevenue(b) - calcRevenue(a));
-  const dangerItems = displayProducts.filter(p => p.cost > 0 && calcMargin(p) < 20);
+  const dangerItems = displayProducts.filter(p => effCost(p) > 0 && calcMargin(p) < 20);
+
+  // 레시피 저장 → 메뉴 inventory 항목에 recipe 기록.
+  const handleSaveRecipe = (menuId: string, recipe: RecipeIngredient[]) => {
+    saveInventory(inventory.map((i) => (i.id === menuId ? { ...i, recipe } : i)));
+    setRecipeMenuId(null);
+  };
+  const recipeMenu = recipeMenuId ? invById.get(recipeMenuId) ?? null : null;
 
   const marginColor = (m: number) => m < 0 ? "#b64c4c" : m < 20 ? "#191970" : m < 40 ? "var(--primary)" : "#1d3557";
 
@@ -214,6 +236,9 @@ export function ProductPerformanceCard() {
             const margin = calcMargin(p);
             const revenue = calcRevenue(p);
             const revenueShare = totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0;
+            const eff = effCost(p);
+            const rc = recipeCount(p);
+            const isMenuItem = invById.has(p.id); // inventory 정본 항목만 레시피 편집 가능(legacy products 제외)
             return (
               <div key={p.id} style={{ padding: "13px 22px", borderBottom: idx < sorted.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none" }}>
                 {/* 이름 행 */}
@@ -226,16 +251,24 @@ export function ProductPerformanceCard() {
                       {margin < 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(182,76,76,0.10)", color: "#b64c4c" }}>{ko ? "적자주의" : "Loss!"}</span>}
                     </div>
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px" }}>
-                      {ko ? `판매가 ${fmtN(p.price)}원 · 원가 ${p.cost > 0 ? fmtN(p.cost) + "원" : "미입력"} · 재고 ${p.stock}${p.unit}` : `Price ₩${fmtN(p.price)} · Cost ${p.cost > 0 ? "₩" + fmtN(p.cost) : "N/A"} · Stock ${p.stock}${p.unit}`}
+                      {ko
+                        ? `판매가 ${fmtN(p.price)}원 · 원가 ${eff > 0 ? fmtN(Math.round(eff)) + "원" : "미입력"}${rc > 0 ? ` (재료 ${rc}종 자동)` : ""} · 재고 ${p.stock}${p.unit}`
+                        : `Price ₩${fmtN(p.price)} · Cost ${eff > 0 ? "₩" + fmtN(Math.round(eff)) : "N/A"}${rc > 0 ? ` (${rc} ing.)` : ""} · Stock ${p.stock}${p.unit}`}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                    {isMenuItem && (
+                      <button type="button" onClick={() => setRecipeMenuId(p.id)}
+                        style={{ fontSize: "11px", fontWeight: 600, color: rc > 0 ? "#191970" : "#3b5c8c", background: rc > 0 ? "rgba(25,25,112,0.07)" : "none", borderRadius: "8px", padding: rc > 0 ? "2px 7px" : "0", border: "none", cursor: "pointer" }}>
+                        {ko ? (rc > 0 ? `재료 ${rc}` : "재료") : "Recipe"}
+                      </button>
+                    )}
                     <button type="button" onClick={() => openProdEdit(p)} style={{ fontSize: "11px", color: "#3b5c8c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
                     <button type="button" onClick={() => handleProdDelete(p.id)} style={{ fontSize: "11px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
                   </div>
                 </div>
                 {/* 마진율 바 */}
-                {p.cost > 0 && (
+                {eff > 0 && (
                   <div style={{ marginBottom: "8px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                       <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>{ko ? "마진율" : "Margin"}</span>
@@ -362,6 +395,18 @@ export function ProductPerformanceCard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 레시피(BOM) 편집 팝업 */}
+      {recipeMenu && (
+        <RecipeEditorModal
+          ko={ko}
+          menu={recipeMenu}
+          materials={materials}
+          goldenMax={goldenMax}
+          onSave={(recipe) => handleSaveRecipe(recipeMenu.id, recipe)}
+          onClose={() => setRecipeMenuId(null)}
+        />
       )}
     </article>
   );
