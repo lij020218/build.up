@@ -22,6 +22,14 @@ describe("compatibleUnits", () => {
   it("무게 재료는 g·kg 선택지", () => expect(compatibleUnits("kg")).toEqual(["kg", "g"]));
   it("부피 재료는 ml·l", () => expect(compatibleUnits("l")).toEqual(["l", "ml"]));
   it("개수 재료는 그 단위만", () => expect(compatibleUnits("개")).toEqual(["개"]));
+  it("한글 단위 별칭 — 그램 재료도 무게로 인식 + 중복 없이", () =>
+    expect(compatibleUnits("그램")).toEqual(["그램", "kg"]));
+});
+
+describe("한글 단위 환산 (별칭)", () => {
+  it("그램↔kg", () => expect(convertQty(200, "그램", "kg")).toBe(0.2));
+  it("킬로→g", () => expect(convertQty(0.5, "킬로", "g")).toBe(500));
+  it("리터↔ml", () => expect(convertQty(0.25, "리터", "ml")).toBe(250));
 });
 
 describe("menuCostPerServing / ratio", () => {

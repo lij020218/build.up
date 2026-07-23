@@ -8,11 +8,18 @@ public enum RecipeCost {
     private static let weight: [String: Double] = ["mg": 0.001, "g": 1, "kg": 1000]
     private static let volume: [String: Double] = ["ml": 1, "cc": 1, "l": 1000]
 
-    private static func norm(_ u: String) -> String { u.trimmingCharacters(in: .whitespaces).lowercased() }
-    private static func uniq(_ arr: [String]) -> [String] {
-        var seen = Set<String>(); return arr.filter { seen.insert($0).inserted }
-    }
+    /// 한글·구어 단위 별칭 (웹 recipe-cost.ts UNIT_ALIAS 미러) — 그램·킬로·리터도 환산.
+    private static let unitAlias: [String: String] = [
+        "그램": "g", "그람": "g", "밀리그램": "mg",
+        "킬로": "kg", "키로": "kg", "킬로그램": "kg", "키로그램": "kg",
+        "밀리리터": "ml", "미리리터": "ml", "미리": "ml", "씨씨": "cc",
+        "리터": "l", "ℓ": "l",
+    ]
 
+    private static func norm(_ u: String) -> String {
+        let t = u.trimmingCharacters(in: .whitespaces).lowercased()
+        return unitAlias[t] ?? t
+    }
     /// qty(fromUnit) → toUnit 환산. 같은 차원만 성공, 비호환이면 nil.
     public static func convertQty(_ qty: Double, from: String, to: String) -> Double? {
         let f = norm(from), t = norm(to)
@@ -23,11 +30,15 @@ public enum RecipeCost {
     }
 
     /// 재료 단위와 호환되는 레시피 입력 단위(첫 항목 = 재료 단위 자체 = 기본값).
+    /// 정규화 기준 중복 제거(그램+g 이중표시 방지) — 웹 compatibleUnits 미러.
     public static func compatibleUnits(_ materialUnit: String) -> [String] {
         let u = norm(materialUnit)
-        if weight[u] != nil { return uniq([materialUnit, "g", "kg"]) }
-        if volume[u] != nil { return uniq([materialUnit, "ml", "l"]) }
-        return [materialUnit.isEmpty ? "개" : materialUnit]
+        let candidates: [String] =
+            weight[u] != nil ? [materialUnit, "g", "kg"]
+            : volume[u] != nil ? [materialUnit, "ml", "l"]
+            : [materialUnit.isEmpty ? "개" : materialUnit]
+        var seen = Set<String>()
+        return candidates.filter { seen.insert(norm($0)).inserted }
     }
 
     /// 재료 한 줄 원가(원). 재료 없거나 단위 비호환이면 nil.

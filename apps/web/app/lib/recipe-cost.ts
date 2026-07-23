@@ -15,8 +15,17 @@ import type { InventoryItem, RecipeIngredient } from "./stores/operations-store"
 const WEIGHT: Record<string, number> = { mg: 0.001, g: 1, kg: 1000 };
 const VOLUME: Record<string, number> = { ml: 1, cc: 1, l: 1000 };
 
+/** 한글·구어 단위 → 정규 단위 별칭 (그램·킬로·리터 등도 환산 대상). */
+const UNIT_ALIAS: Record<string, string> = {
+  "그램": "g", "그람": "g", "밀리그램": "mg",
+  "킬로": "kg", "키로": "kg", "킬로그램": "kg", "키로그램": "kg",
+  "밀리리터": "ml", "미리리터": "ml", "미리": "ml", "씨씨": "cc",
+  "리터": "l", "ℓ": "l",
+};
+
 function norm(u: string): string {
-  return u.trim().toLowerCase();
+  const t = u.trim().toLowerCase();
+  return UNIT_ALIAS[t] ?? t;
 }
 
 /** `qty` (fromUnit) → toUnit 로 환산. 같은 차원만 성공, 비호환이면 null. */
@@ -28,12 +37,20 @@ export function convertQty(qty: number, fromUnit: string, toUnit: string): numbe
   return null;
 }
 
-/** 재료 단위와 호환되는 레시피 입력 단위 목록(첫 항목 = 재료 단위 자체 = 기본값). */
+/** 재료 단위와 호환되는 레시피 입력 단위 목록(첫 항목 = 재료 단위 자체 = 기본값).
+ *  한글 단위(그램·킬로·리터)도 별칭 정규화로 지원 — 정규화 기준 중복 제거(그램+g 이중표시 방지). */
 export function compatibleUnits(materialUnit: string): string[] {
   const u = norm(materialUnit);
-  if (u in WEIGHT) return Array.from(new Set([materialUnit, "g", "kg"]));
-  if (u in VOLUME) return Array.from(new Set([materialUnit, "ml", "l"]));
-  return [materialUnit || "개"];
+  const candidates = u in WEIGHT ? [materialUnit, "g", "kg"]
+    : u in VOLUME ? [materialUnit, "ml", "l"]
+    : [materialUnit || "개"];
+  const seen = new Set<string>();
+  return candidates.filter((c) => {
+    const n = norm(c);
+    if (seen.has(n)) return false;
+    seen.add(n);
+    return true;
+  });
 }
 
 /** 재료 한 줄의 원가(원). 재료 없거나 단위 비호환이면 null(계산 불가 — 위조 금지). */

@@ -605,10 +605,11 @@ private struct InventoryItemForm: View {
                                             .textFieldStyle(.roundedBorder)
                                     }
                                     formField(label: "단위", required: false) {
-                                        TextField("개", text: $unit)
+                                        // g·kg·ml·l 로 등록하면 레시피 소요량에서 그램·리터 환산 활성화
+                                        TextField("개·g·kg·ml", text: $unit)
                                             .textFieldStyle(.roundedBorder)
                                     }
-                                    .frame(width: 70)
+                                    .frame(width: 90)
                                 }
                                 }
                                 if itemType != "product" {

@@ -170,6 +170,9 @@ struct RecipeEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var recipe: [BURecipeIngredient] = []
+    /// 소요량 입력 텍스트 (recipe 와 index 동기) — 숫자에 바로 묶으면 "0." 중간 상태에서
+    /// 소수점이 먹혀 0.3 입력 불가 → 문자열로 유지. (웹 RecipeEditorModal EditRow 정합)
+    @State private var qtyTexts: [String] = []
     @State private var addSel: String = ""
     @State private var loaded = false
 
@@ -205,7 +208,13 @@ struct RecipeEditorView: View {
         }
         .navigationTitle(menu?.name ?? "레시피")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { if !loaded { recipe = menu?.recipe ?? []; loaded = true } }
+        .onAppear {
+            if !loaded {
+                recipe = menu?.recipe ?? []
+                qtyTexts = recipe.map { fmtQty($0.qty) }
+                loaded = true
+            }
+        }
     }
 
     private var summaryCard: some View {
@@ -260,15 +269,27 @@ struct RecipeEditorView: View {
             }
             Spacer(minLength: 4)
             TextField("0", text: Binding(
-                get: { fmtQty(ing.qty) },
-                set: { recipe[idx].qty = Double($0.filter { "0123456789.".contains($0) }) ?? 0 }
+                get: { idx < qtyTexts.count ? qtyTexts[idx] : fmtQty(ing.qty) },
+                set: { newValue in
+                    // 소수점 1개까지 허용 — "0." 중간 상태 보존해 0.3 입력 가능 (웹 sanitizeQty 정합)
+                    var sanitized = newValue.filter { "0123456789.".contains($0) }
+                    if let first = sanitized.firstIndex(of: ".") {
+                        let after = sanitized.index(after: first)
+                        sanitized = String(sanitized[..<after]) + sanitized[after...].filter { $0 != "." }
+                    }
+                    if idx < qtyTexts.count { qtyTexts[idx] = sanitized }
+                    recipe[idx].qty = Double(sanitized) ?? 0
+                }
             ))
             .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
             .frame(width: 54).textFieldStyle(.roundedBorder)
             Picker("", selection: Binding(get: { ing.unit }, set: { recipe[idx].unit = $0 })) {
                 ForEach(units, id: \.self) { Text($0).tag($0) }
             }.pickerStyle(.menu).tint(BUColor.midnight).frame(minWidth: 44)
-            Button { recipe.remove(at: idx) } label: {
+            Button {
+                recipe.remove(at: idx)
+                if idx < qtyTexts.count { qtyTexts.remove(at: idx) }
+            } label: {
                 Image(systemName: "trash").font(.system(size: 14)).foregroundStyle(brick)
             }
         }
@@ -283,6 +304,7 @@ struct RecipeEditorView: View {
             Button {
                 guard let mat = materials.first(where: { $0.id == addSel }) else { return }
                 recipe.append(BURecipeIngredient(materialId: mat.id, qty: 1, unit: RecipeCost.compatibleUnits(mat.unit)[0]))
+                qtyTexts.append("1")
                 addSel = ""
             } label: {
                 Label("추가", systemImage: "plus").font(.system(size: 14, weight: .bold))

@@ -1079,6 +1079,7 @@ export function InventoryOpsCard({
                   type="text"
                   value={invForm.unit}
                   onChange={(event) => d.setInvForm((prev) => ({ ...prev, unit: event.target.value }))}
+                  list="inv-unit-suggestions"
                   placeholder={ko ? "단위 (개, 병)" : "Unit"}
                   style={inputStyle}
                 />
@@ -1112,11 +1113,18 @@ export function InventoryOpsCard({
                 />
                 <input
                   type="text"
+                  list="inv-unit-suggestions"
                   value={invForm.unit}
                   onChange={(event) => d.setInvForm((prev) => ({ ...prev, unit: event.target.value }))}
-                  placeholder={ko ? "단위" : "Unit"}
+                  placeholder={ko ? "단위 (개·g·kg·ml·l)" : "Unit (ea·g·kg·ml·l)"}
                   style={inputStyle}
                 />
+                {/* 무게(g·kg)·부피(ml·l)로 등록하면 레시피에서 그램·리터 소요량 환산이 활성화됨 */}
+                <datalist id="inv-unit-suggestions">
+                  {["개", "g", "kg", "ml", "l", "병", "팩", "캔", "포", "장"].map((u) => (
+                    <option key={u} value={u} />
+                  ))}
+                </datalist>
                 <input
                   type="text"
                   inputMode="numeric"

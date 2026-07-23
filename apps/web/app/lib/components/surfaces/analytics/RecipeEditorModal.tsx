@@ -28,27 +28,44 @@ type Props = {
 
 const won = (n: number) => (isFinite(n) ? `₩${Math.round(n).toLocaleString()}` : "—");
 
+/** 편집 중 행 — 소요량은 문자열로 유지해 "0.3" 같은 소수 입력이 중간 상태("0.")에서 안 깨지게. */
+type EditRow = { materialId: string; qtyText: string; unit: string };
+
+/** 소수점 1개까지 허용하는 수량 문자열 정리. */
+function sanitizeQty(v: string): string {
+  const cleaned = v.replace(/[^0-9.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot === -1) return cleaned;
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
 export function RecipeEditorModal({ ko, menu, materials, goldenMax = 33, onSave, onClose }: Props) {
-  const [recipe, setRecipe] = useState<RecipeIngredient[]>(() => menu.recipe ? [...menu.recipe] : []);
+  const [rows, setRows] = useState<EditRow[]>(() =>
+    (menu.recipe ?? []).map((r) => ({ materialId: r.materialId, qtyText: String(r.qty), unit: r.unit })));
   const [addSel, setAddSel] = useState("");
 
+  // 미리보기·저장용 정규 레시피 (문자열 → 숫자)
+  const recipe = useMemo<RecipeIngredient[]>(
+    () => rows.map((r) => ({ materialId: r.materialId, qty: parseFloat(r.qtyText) || 0, unit: r.unit })),
+    [rows],
+  );
   const preview = useMemo(() => ({ ...menu, recipe }), [menu, recipe]);
   const cost = menuCostPerServing(preview, materials);
   const ratio = menuCostRatio(preview, materials);
   const price = menu.sellingPrice || 0;
 
-  const usedIds = new Set(recipe.map((r) => r.materialId));
+  const usedIds = new Set(rows.map((r) => r.materialId));
   const addable = materials.filter((m) => !usedIds.has(m.id));
 
   const addIngredient = (materialId: string) => {
     const mat = materials.find((m) => m.id === materialId);
     if (!mat) return;
-    setRecipe((prev) => [...prev, { materialId, qty: 1, unit: compatibleUnits(mat.unit)[0] }]);
+    setRows((prev) => [...prev, { materialId, qtyText: "1", unit: compatibleUnits(mat.unit)[0] }]);
     setAddSel("");
   };
-  const updateRow = (i: number, patch: Partial<RecipeIngredient>) =>
-    setRecipe((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  const removeRow = (i: number) => setRecipe((prev) => prev.filter((_, idx) => idx !== i));
+  const updateRow = (i: number, patch: Partial<EditRow>) =>
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
 
   return (
     <OverlayModal label={ko ? `${menu.name} 레시피` : `${menu.name} recipe`} onClose={onClose} maxWidth={520}>
@@ -85,17 +102,17 @@ export function RecipeEditorModal({ ko, menu, materials, goldenMax = 33, onSave,
         ) : (
           <>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {recipe.length === 0 && (
+              {rows.length === 0 && (
                 <div style={{ fontSize: 12.5, color: MUTED, padding: "8px 2px" }}>
                   {ko ? "아직 재료가 없습니다. 아래에서 재료를 추가하세요." : "No ingredients yet. Add below."}
                 </div>
               )}
-              {recipe.map((ing, i) => {
-                const mat = materials.find((m) => m.id === ing.materialId);
+              {rows.map((row, i) => {
+                const mat = materials.find((m) => m.id === row.materialId);
                 const units = compatibleUnits(mat?.unit ?? "개");
-                const lineCost = ingredientCost(ing, materials);
+                const lineCost = ingredientCost(recipe[i], materials);
                 return (
-                  <div key={ing.materialId + i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(15,23,42,0.08)", background: "rgba(25,25,112,0.02)" }}>
+                  <div key={row.materialId + i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(15,23,42,0.08)", background: "rgba(25,25,112,0.02)" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {mat?.name ?? (ko ? "삭제된 재료" : "Deleted")}
@@ -107,14 +124,11 @@ export function RecipeEditorModal({ ko, menu, materials, goldenMax = 33, onSave,
                     </div>
                     <input
                       type="text" inputMode="decimal" aria-label={ko ? "소요량" : "Quantity"}
-                      value={String(ing.qty)}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/[^0-9.]/g, "");
-                        updateRow(i, { qty: v === "" || v === "." ? 0 : parseFloat(v) });
-                      }}
+                      value={row.qtyText}
+                      onChange={(e) => updateRow(i, { qtyText: sanitizeQty(e.target.value) })}
                       style={{ width: 58, textAlign: "right", border: "1px solid rgba(15,23,42,0.14)", borderRadius: 8, padding: "7px 8px", fontSize: 14 }}
                     />
-                    <select value={ing.unit} onChange={(e) => updateRow(i, { unit: e.target.value })} aria-label={ko ? "단위" : "Unit"}
+                    <select value={row.unit} onChange={(e) => updateRow(i, { unit: e.target.value })} aria-label={ko ? "단위" : "Unit"}
                       style={{ border: "1px solid rgba(15,23,42,0.14)", borderRadius: 8, padding: "7px 6px", fontSize: 13, background: "#fff" }}>
                       {units.map((u) => <option key={u} value={u}>{u}</option>)}
                     </select>
