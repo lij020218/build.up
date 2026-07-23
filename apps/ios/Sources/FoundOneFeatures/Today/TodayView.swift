@@ -265,7 +265,11 @@ public struct TodayView: View {
         }
         .sheet(isPresented: $showInventorySheet) {
             if let si = storeInfo {
-                InventoryManagementSheet(storeInfoStore: si)
+                InventoryManagementSheet(
+                    storeInfoStore: si,
+                    isMenuIndustry: isMenuCardIndustry,
+                    goldenMax: (mock.category == .beauty || mock.category == .fitness || mock.category == .pet || mock.category == .education || mock.category == .livingService || mock.category == .space) ? 25 : 33
+                )
             }
         }
         .sheet(isPresented: $showRecipeSheet) {

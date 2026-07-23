@@ -64,8 +64,16 @@ public struct InventoryManagementSheet: View {
     @State private var showImportPreview = false
     @State private var importError: String?
 
-    public init(storeInfoStore: StoreInfoStore) {
+    /// 메뉴 업종(음식·카페·서비스) 여부 — true 면 메뉴 폼에서 재고 수량 숨김 +
+    /// 신규 메뉴 저장 직후 레시피(재료 선택) 편집 자동 오픈. (2026-07-22 사장님 지시, 웹 정합)
+    let isMenuIndustry: Bool
+    let goldenMax: Double
+    @State private var recipeEditMenuId: String?
+
+    public init(storeInfoStore: StoreInfoStore, isMenuIndustry: Bool = false, goldenMax: Double = 33) {
         self.storeInfoStore = storeInfoStore
+        self.isMenuIndustry = isMenuIndustry
+        self.goldenMax = goldenMax
     }
 
     private var items: [BUInventoryItem] { storeInfoStore.state.inventory }
@@ -140,18 +148,33 @@ public struct InventoryManagementSheet: View {
             .sheet(isPresented: $showForm) {
                 InventoryItemForm(
                     existing: editingItem,
+                    isMenuIndustry: isMenuIndustry,
                     onSave: { newItem in
+                        var isNew = false
                         storeInfoStore.commit { state in
                             if let idx = state.inventory.firstIndex(where: { $0.id == newItem.id }) {
                                 state.inventory[idx] = newItem
                             } else {
                                 state.inventory.append(newItem)
+                                isNew = true
                             }
                         }
                         showForm = false
+                        // 신규 메뉴 → 재료 선택(레시피) 자동 오픈: 추가→레시피가 한 흐름. (웹 정합)
+                        if isNew && isMenuIndustry && newItem.itemType == "product" {
+                            recipeEditMenuId = newItem.id
+                        }
                     },
                     onCancel: { showForm = false }
                 )
+            }
+            .sheet(isPresented: Binding(get: { recipeEditMenuId != nil }, set: { if !$0 { recipeEditMenuId = nil } })) {
+                if let menuId = recipeEditMenuId {
+                    NavigationStack {
+                        RecipeEditorView(storeInfoStore: storeInfoStore, menuId: menuId, goldenMax: goldenMax)
+                            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("닫기") { recipeEditMenuId = nil }.foregroundStyle(BUColor.midnight) } }
+                    }
+                }
             }
             .sheet(isPresented: $showImportPreview) {
                 InventoryImportPreviewSheet(
@@ -492,6 +515,8 @@ private struct InventoryItemForm: View {
     @Environment(\.dismiss) private var dismiss
 
     let existing: BUInventoryItem?
+    /// 메뉴 업종이면 메뉴 폼에서 재고 수량 숨김(만들어 파는 품목) — 웹 폼 정합. (2026-07-22)
+    let isMenuIndustry: Bool
     let onSave: (BUInventoryItem) -> Void
     let onCancel: () -> Void
 
@@ -513,8 +538,9 @@ private struct InventoryItemForm: View {
         "beverage": "음료", "supply": "소모품", "other": "기타"
     ]
 
-    init(existing: BUInventoryItem?, onSave: @escaping (BUInventoryItem) -> Void, onCancel: @escaping () -> Void) {
+    init(existing: BUInventoryItem?, isMenuIndustry: Bool = false, onSave: @escaping (BUInventoryItem) -> Void, onCancel: @escaping () -> Void) {
         self.existing = existing
+        self.isMenuIndustry = isMenuIndustry
         self.onSave = onSave
         self.onCancel = onCancel
         _name         = State(initialValue: existing?.name ?? "")
@@ -547,7 +573,7 @@ private struct InventoryItemForm: View {
                                 // 유형 토글: 원재료 / 메뉴·판매상품 (2026-07-22 통합, 웹 폼 정합)
                                 Picker("유형", selection: $itemType) {
                                     Text("원재료").tag("material")
-                                    Text("메뉴·판매상품").tag("product")
+                                    Text(isMenuIndustry ? "메뉴" : "메뉴·판매상품").tag("product")
                                 }
                                 .pickerStyle(.segmented)
                                 formField(label: "항목명", required: true) {
@@ -564,7 +590,14 @@ private struct InventoryItemForm: View {
                                         TextField("메인", text: $displayCategory)
                                             .textFieldStyle(.roundedBorder)
                                     }
+                                    if isMenuIndustry {
+                                        // 메뉴는 재고 수량 없음(만들어 파는 품목) — 저장하면 재료 선택이 바로 열림. (웹 정합)
+                                        Text("저장하면 들어가는 재료를 고르는 화면이 열립니다 — 재료·소요량(0.3개, 200g)으로 원가율 자동 계산, 판매 시 재고 자동 차감.")
+                                            .font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
+                                if !(itemType == "product" && isMenuIndustry) {
                                 HStack(spacing: 8) {
                                     formField(label: itemType == "product" ? "재고 수량" : "현재 재고", required: itemType != "product") {
                                         TextField("0", text: $quantity)
@@ -576,6 +609,7 @@ private struct InventoryItemForm: View {
                                             .textFieldStyle(.roundedBorder)
                                     }
                                     .frame(width: 70)
+                                }
                                 }
                                 if itemType != "product" {
                                 formField(label: "최소 임계 (재주문 기준)", required: false) {
@@ -658,7 +692,8 @@ private struct InventoryItemForm: View {
         let item = BUInventoryItem(
             id: existing?.id ?? UUID().uuidString,
             name: name.trimmingCharacters(in: .whitespaces),
-            quantity: Double(quantity) ?? 0,
+            // 메뉴(수량 필드 숨김)는 기존 수량 보존 (신규는 0)
+            quantity: (itemType == "product" && isMenuIndustry) ? (existing?.quantity ?? 0) : (Double(quantity) ?? 0),
             unit: unit.isEmpty ? "개" : unit,
             minThreshold: Double(minThreshold) ?? 0,
             unitCost: Double(unitCost) ?? 0,

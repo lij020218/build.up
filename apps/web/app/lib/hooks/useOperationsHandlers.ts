@@ -169,8 +169,9 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     sellingPrice: "", displayCategory: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
   };
 
-  const handleInvSave = () => {
-    if (!invForm.name.trim()) return;
+  /** 저장 성공 시 항목 id 반환(신규·수정 공통) — 메뉴 저장 직후 레시피 팝업 자동 오픈용. (2026-07-22) */
+  const handleInvSave = (): string | undefined => {
+    if (!invForm.name.trim()) return undefined;
     const existing = inventory.find(i => i.id === invForm.editId);
     const item: InventoryItem = {
       id: invForm.editId ?? Date.now().toString(),
@@ -196,6 +197,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       ? inventory.map(i => i.id === invForm.editId ? item : i)
       : [...inventory, item]);
     setInvForm(emptyInvForm);
+    return item.id;
   };
 
   const handleInvQty = (id: string, delta: number) => {

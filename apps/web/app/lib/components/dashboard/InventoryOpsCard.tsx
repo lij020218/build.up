@@ -958,7 +958,11 @@ export function InventoryOpsCard({
       {invForm.open ? (
         <div style={inlineEditor}>
           <div style={inlineEditorTitle}>
-            {isEditing ? (ko ? "재고 수정" : "Edit inventory") : (ko ? "재고 추가" : "Add inventory")}
+            {isMenuMode
+              ? (invForm.itemType === "product"
+                ? (isEditing ? (ko ? `${menuNoun} 수정` : "Edit menu") : (ko ? `${menuNoun} 추가` : "Add menu"))
+                : (isEditing ? (ko ? "재료 수정" : "Edit ingredient") : (ko ? "재료 추가" : "Add ingredient")))
+              : isEditing ? (ko ? "재고 수정" : "Edit inventory") : (ko ? "재고 추가" : "Add inventory")}
           </div>
           {/* 유형 선택 — 업종별 라벨 (2026-07-22 통합: 메뉴도 이 카드에서 추가·관리) */}
           <div style={{ display: "flex", gap: "4px", padding: "3px", borderRadius: "10px", background: "rgba(25,25,112,0.04)", marginBottom: "10px" }}>
@@ -1041,7 +1045,26 @@ export function InventoryOpsCard({
             </div>
           )}
           {invForm.itemType === "product" ? (
-            /* ── 판매 상품 폼: 판매가 + 수량 + (선택)원가 ── */
+            isMenuMode ? (
+              /* ── 메뉴·서비스 폼: 재고 수량 없음(만들어 파는 품목) — 원가는 재료(레시피)로 자동.
+                    저장하면 재료 선택 팝업이 바로 열림. (2026-07-22 사장님 지시) ── */
+              <>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.unitCost}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, unitCost: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "원가 (선택 — 재료 지정 시 자동 계산)" : "Cost (opt — auto from recipe)"}
+                  style={inputStyle}
+                />
+                <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, padding: "2px 2px 0" }}>
+                  {ko
+                    ? "저장하면 들어가는 재료를 고르는 창이 열립니다 — 재료·소요량(0.3개, 200g)으로 원가율 자동 계산, 판매 시 재고 자동 차감."
+                    : "After saving, pick the ingredients — cost ratio auto-calculates and stock auto-deducts on sale."}
+                </div>
+              </>
+            ) : (
+            /* ── 판매 상품 폼(소매): 판매가 + 수량 + (선택)원가 ── */
             <>
               <div style={formGridThree}>
                 <input
@@ -1074,6 +1097,7 @@ export function InventoryOpsCard({
                 </div>
               )}
             </>
+            )
           ) : (
             /* ── 원재료 폼: 단가 + 수량 + 최소수량 + 일사용량 + 리드타임 + 공급처 ── */
             <>
@@ -1162,7 +1186,17 @@ export function InventoryOpsCard({
           </div>
           )}
           <div style={editorActions}>
-            <button type="button" onClick={d.handleInvSave} style={opsActionPrimary}>
+            <button
+              type="button"
+              onClick={() => {
+                // 신규 메뉴는 저장 즉시 재료 선택 팝업 자동 오픈 — 추가→레시피 지정이 한 흐름.
+                // (수정은 행의 [재료] 버튼으로 — 매번 팝업 뜨면 성가심) (2026-07-22 사장님 지시)
+                const openRecipe = isMenuMode && invForm.itemType === "product" && !invForm.editId;
+                const savedId = d.handleInvSave();
+                if (openRecipe && savedId) setRecipeMenuId(savedId);
+              }}
+              style={opsActionPrimary}
+            >
               {isEditing ? (ko ? "수정 저장" : "Save") : (ko ? "추가 저장" : "Add")}
             </button>
             <button
