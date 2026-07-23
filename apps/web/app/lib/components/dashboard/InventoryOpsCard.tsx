@@ -5,6 +5,9 @@ import { createPortal } from "react-dom";
 import type { DashboardHook } from "../../useDashboard";
 import { importInventoryFromFile, INVENTORY_IMPORT_ACCEPT } from "../../inventory-file-import";
 import { detectOverstockItems, type OverstockAlert } from "@foundone/shared";
+import type { InventoryItem } from "../../stores/operations-store";
+import { menuCostPerServing } from "../../recipe-cost";
+import { RecipeEditorModal } from "../surfaces/analytics/RecipeEditorModal";
 
 type InventoryEntry = {
   id: string;
@@ -485,6 +488,22 @@ export function InventoryOpsCard({
         ? (ko ? ["시술", "케어", "추가", "상품"] : ["Service", "Care", "Add-on", "Product"])
         : (ko ? ["상품", "소모품", "악세서리", "기타"] : ["Product", "Supplies", "Accessories", "Other"]);
 
+  // ── 메뉴·서비스 섹션 (2026-07-22 통합, 사장님 지시) ─────────────────────
+  //  음식·카페(separate)·서비스(service)의 메뉴는 예전엔 이 카드에서 추가만 되고 목록에선
+  //  걸러져(메뉴 수익성 카드로) 관리 진입점이 없었다 → 이 카드에 메뉴 섹션을 직접 통합.
+  //  메뉴 행 = 판매가·원가율(레시피 자동) + 판매 −/＋(재고 자동차감) + [재료](레시피 편집).
+  const isMenuMode = mode === "separate" || mode === "service";
+  const fullInventory = d.inventory as InventoryItem[];
+  const menus = isMenuMode ? fullInventory.filter((i) => i.itemType === "product") : [];
+  const recipeMaterials = fullInventory.filter((i) => i.itemType === "material");
+  const goldenMax = mode === "service" ? 25 : 33; // 황금률 원가율 (수익성 카드에서 흡수)
+  const [recipeMenuId, setRecipeMenuId] = useState<string | null>(null);
+  const recipeMenu = recipeMenuId ? fullInventory.find((i) => i.id === recipeMenuId) ?? null : null;
+  const menuCost = (m: InventoryItem) => menuCostPerServing(m, recipeMaterials);
+  const menuRatio = (m: InventoryItem) => (m.sellingPrice > 0 ? (menuCost(m) / m.sellingPrice) * 100 : 0);
+  const overMenus = menus.filter((m) => m.sellingPrice > 0 && menuRatio(m) > goldenMax);
+  const menuNoun = mode === "service" ? (ko ? "서비스 메뉴" : "Services") : (ko ? "메뉴" : "Menu");
+
   const inputStyle: React.CSSProperties = {
     border: "1px solid rgba(15,23,42,0.10)",
     borderRadius: "12px",
@@ -561,14 +580,20 @@ export function InventoryOpsCard({
       <div style={opsHeader}>
         <div>
           <div style={sectionEyebrow}>
-            {ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory")}
+            {isMenuMode
+              ? (mode === "separate" ? (ko ? "메뉴 · 식재료" : "Menu · Ingredients") : (ko ? "서비스 · 소모품" : "Services · Supplies"))
+              : ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory")}
           </div>
           <div style={opsTitle}>
             {d.businessCtx.inventoryMode === "unified"
               ? (ko ? "제품·재고 통합 관리" : "Product & inventory")
-              : d.businessCtx.categoryId === "startup-tech"
-                ? (ko ? "자산·도구 관리" : "Assets and tools")
-                : (ko ? "재고 관리" : "Inventory management")}
+              : mode === "separate"
+                ? (ko ? "메뉴·재료 관리" : "Menu & ingredients")
+                : mode === "service"
+                  ? (ko ? "서비스·소모품 관리" : "Services & supplies")
+                  : d.businessCtx.categoryId === "startup-tech"
+                    ? (ko ? "자산·도구 관리" : "Assets and tools")
+                    : (ko ? "재고 관리" : "Inventory management")}
           </div>
         </div>
         <div style={opsActionRow}>
@@ -577,7 +602,12 @@ export function InventoryOpsCard({
             onClick={() => d.setInvForm({ ...d.emptyInvForm, open: true })}
             style={opsActionPrimary}
           >
-            {ko ? (d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가" : d.businessCtx.inventoryLabel?.ko === "소모품 관리" ? "소모품 추가" : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가") : "Add item"}
+            {ko
+              ? (mode === "separate" ? "메뉴·재료 추가"
+                : mode === "service" ? "서비스·소모품 추가"
+                : d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가"
+                : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가")
+              : "Add item"}
           </button>
           <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
             CSV·Excel
@@ -636,6 +666,94 @@ export function InventoryOpsCard({
               }} />
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── 메뉴·서비스 섹션 (2026-07-22 통합) — 원가율·판매(재고 자동차감)·레시피 ── */}
+      {isMenuMode && (
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+              {menuNoun}{menus.length > 0 ? ` · ${menus.length}` : ""}
+            </div>
+            {overMenus.length > 0 && (
+              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#b64c4c", background: "rgba(182,76,76,0.07)", borderRadius: "10px", padding: "3px 9px" }}>
+                {ko ? `원가율 ${goldenMax}% 초과 ${overMenus.length}개` : `${overMenus.length} over ${goldenMax}%`}
+              </span>
+            )}
+          </div>
+          {menus.length === 0 ? (
+            <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", fontSize: "12.5px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
+              {ko
+                ? `[${mode === "separate" ? "메뉴·재료 추가" : "서비스·소모품 추가"}] → ‘${mode === "separate" ? "메뉴" : "서비스 메뉴"}’ 유형으로 등록하면 원가율·판매 기록·재고 자동차감이 여기서 됩니다.`
+                : "Add items with type ‘Product’ to manage price, cost ratio and sales here."}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+              {menus.map((m) => {
+                const cost = menuCost(m);
+                const ratio = menuRatio(m);
+                const rc = m.recipe?.length ?? 0;
+                const over = m.sellingPrice > 0 && ratio > goldenMax;
+                return (
+                  <div key={m.id} style={{ padding: "10px 12px", borderRadius: "12px", border: `1px solid ${over ? "rgba(182,76,76,0.18)" : "rgba(25,25,112,0.08)"}`, background: over ? "rgba(182,76,76,0.03)" : "rgba(25,25,112,0.02)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "7px" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "13.5px", fontWeight: 650, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                          {m.displayCategory && (
+                            <span style={{ fontSize: "9.5px", fontWeight: 600, padding: "1px 6px", borderRadius: "8px", background: "rgba(25,25,112,0.06)", color: "rgba(15,23,42,0.55)", flexShrink: 0 }}>{m.displayCategory}</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px" }}>
+                          {ko
+                            ? `${m.sellingPrice.toLocaleString()}원 · 원가 ${cost > 0 ? `${Math.round(cost).toLocaleString()}원` : "미입력"}${rc > 0 ? ` (재료 ${rc}종 자동)` : ""}`
+                            : `₩${m.sellingPrice.toLocaleString()} · cost ${cost > 0 ? `₩${Math.round(cost).toLocaleString()}` : "N/A"}`}
+                        </div>
+                      </div>
+                      {m.sellingPrice > 0 && (
+                        <span style={{ fontSize: "13px", fontWeight: 750, color: over ? "#b64c4c" : "#191970", flexShrink: 0 }}>{ratio.toFixed(0)}%</span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const }}>
+                      {/* 판매 −/＋ — 레시피만큼 재고 자동 차감·복구 (handleProdSoldChange) */}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <button type="button" onClick={() => d.handleProdSoldChange(m.id, -1)}
+                          aria-label={ko ? `${m.name} 판매 취소` : `Undo ${m.name} sale`}
+                          style={{ width: "26px", height: "26px", borderRadius: "8px 0 0 8px", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                        <div style={{ padding: "0 9px", height: "26px", border: "1px solid rgba(25,25,112,0.14)", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", fontSize: "12px", fontWeight: 650, minWidth: "52px", justifyContent: "center", fontVariantNumeric: "tabular-nums" as const }} aria-live="polite">
+                          {(m.monthlySold ?? 0)}{ko ? " 판매" : " sold"}
+                        </div>
+                        <button type="button" onClick={() => d.handleProdSoldChange(m.id, 1)}
+                          aria-label={ko ? `${m.name} 판매 기록` : `Record ${m.name} sale`}
+                          style={{ width: "26px", height: "26px", borderRadius: "0 8px 8px 0", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                      </div>
+                      {rc === 0 && (
+                        <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{ko ? "재료 등록 시 자동차감" : "Set recipe for auto-deduct"}</span>
+                      )}
+                      <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
+                        <button type="button" onClick={() => setRecipeMenuId(m.id)}
+                          style={{ fontSize: "11px", fontWeight: 650, color: "#191970", background: "rgba(25,25,112,0.07)", border: "none", borderRadius: "9px", padding: "4px 10px", cursor: "pointer" }}>
+                          {ko ? (rc > 0 ? `재료 ${rc}` : "재료") : "Recipe"}
+                        </button>
+                        <button type="button" onClick={() => d.openInvEdit(m)} style={{ fontSize: "11px", color: "#3b5c8c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
+                        <button type="button" onClick={() => { if (window.confirm(ko ? `'${m.name}' 을(를) 삭제하시겠습니까?` : `Delete '${m.name}'?`)) d.handleInvDelete(m.id); }}
+                          style={{ fontSize: "11px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div style={{ height: "1px", background: "rgba(25,25,112,0.07)", margin: "12px 0 0" }} />
+        </div>
+      )}
+
+      {/* 재료(식자재·소모품) 섹션 라벨 — 메뉴 섹션과 구분 */}
+      {isMenuMode && (
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+          {mode === "service" ? (ko ? "소모품 재고" : "Supplies") : (ko ? "재료 재고" : "Ingredients")}
         </div>
       )}
 
@@ -831,11 +949,11 @@ export function InventoryOpsCard({
           <div style={inlineEditorTitle}>
             {isEditing ? (ko ? "재고 수정" : "Edit inventory") : (ko ? "재고 추가" : "Add inventory")}
           </div>
-          {/* 유형 선택: 원재료 / 판매 상품 */}
+          {/* 유형 선택 — 업종별 라벨 (2026-07-22 통합: 메뉴도 이 카드에서 추가·관리) */}
           <div style={{ display: "flex", gap: "4px", padding: "3px", borderRadius: "10px", background: "rgba(25,25,112,0.04)", marginBottom: "10px" }}>
             {([
-              { value: "material" as const, label: ko ? "원재료" : "Material" },
-              { value: "product" as const, label: ko ? "판매 상품" : "Product" },
+              { value: "material" as const, label: ko ? (mode === "service" ? "소모품" : "원재료") : "Material" },
+              { value: "product" as const, label: ko ? (mode === "separate" ? "메뉴" : mode === "service" ? "서비스 메뉴" : "판매 상품") : "Product" },
             ]).map((opt) => (
               <button
                 key={opt.value}
@@ -1046,6 +1164,21 @@ export function InventoryOpsCard({
           </div>
         </div>
       ) : null}
+
+      {/* 레시피(BOM) 편집 팝업 — 메뉴 행 [재료] 버튼 (2026-07-22 통합) */}
+      {recipeMenu && (
+        <RecipeEditorModal
+          ko={ko}
+          menu={recipeMenu}
+          materials={recipeMaterials}
+          goldenMax={goldenMax}
+          onSave={(recipe) => {
+            d.saveInventory(fullInventory.map((i) => (i.id === recipeMenu.id ? { ...i, recipe } : i)));
+            setRecipeMenuId(null);
+          }}
+          onClose={() => setRecipeMenuId(null)}
+        />
+      )}
     </section>
   );
 }

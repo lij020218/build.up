@@ -6,7 +6,7 @@
  * 카드 목록 (위→아래) — 2026-07-13 lean 재설계 반영:
  *   (a-1) InventoryOpsCard + TeamCard — 재고·직원 (재무 코어 직하로 승격, 2-up)
  *   (a)   DailyOpsRitualCard       — 오늘의 운영 리추얼 (모든 업종, 홈 유지)
- *   (a-1.5) MenuProfitabilityCard  — 메뉴 원가·마진 (food/cafe·서비스, 홈 유지)
+ *   (a-1.5) 메뉴 원가·마진 → InventoryOpsCard '메뉴' 섹션으로 흡수 (2026-07-22 통합)
  *   (a-2) FoodSafetyComplianceCard — 식약처 위생점검 (food/cafe-dessert, 홈 유지)
  *   (c-1) PolicyFundMatchCard      — 정책자금 매칭 (self-hide; 매칭 시=곧 받을 돈, 홈 유지)
  *   (c)   StartupHealthSection     — 스타트업 핵심 지표 (startup-tech 만)
@@ -42,7 +42,6 @@ import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 //   22 자료 검증 통과 (NN/G·Carbon·M3·Toast·Amplitude·Square·Mercury·Reforge 등).
 // 2026-05-13 Phase 2: IntegrationHubCard 마이페이지 이동(2026-07-12 컴포넌트 삭제) — profile/
 //   폴더에 개별 OAuth 카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X.
-import { MenuProfitabilityCard } from "../MenuProfitabilityCard";
 import { SaaSKeyMetricsCard, SubscriptionEnableNudge } from "./Tier3Operations";
 import { useProfileStore } from "../../../stores/profile-store";
 import { shouldShowCardByIndustry } from "../../../industry-card-matrix";
@@ -170,14 +169,9 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {/* 코칭 누적 일지 → '이번 주 점검'(Tier2, 접힘)으로 이동 (2026-07-13):
           매일 필수 아닌 회고성이라 팝업 성격의 접힘 섹션으로. lock-in moat 유지. */}
 
-      {/* 1.5 (a-1.5) — 메뉴·서비스 라인업 수익성 (음식·카페·서비스).
-          로드맵 menu-design 입력(판매가·원가)을 per-item 원가율·마진으로 표시. 재고(식자재)와
-          분리해 "메뉴는 메뉴 카드에" — itemType==="product" 만 읽음. 메뉴 입력 전이면 null 반환. */}
-      {showByMatrix("menu-profitability") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <MenuProfitabilityCard ko={ko} industryCategoryId={d.industryCategoryId} />
-        </div>
-      )}
+      {/* 1.5 (a-1.5) — 메뉴 수익성 카드는 '메뉴·재료 관리'(InventoryOpsCard 메뉴 섹션)로 흡수
+          (2026-07-22 사장님 지시: 추가 폼은 재고 카드에 있는데 메뉴 관리 카드가 없던 모순 해소.
+          원가율·황금률 경보·판매·레시피 전부 통합 카드에서. 상세 분석은 분석 화면 유지). */}
 
       {/* 위생점검(food-safety)은 위 전체 폭 줄로 이동 (2026-07-21) */}
 
