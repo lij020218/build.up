@@ -20,6 +20,7 @@ public struct MenuRecipeSheet: View {
     @ObservedObject var storeInfoStore: StoreInfoStore
     let goldenMax: Double
     @Environment(\.dismiss) private var dismiss
+    @State private var showProfitDetail = false // 수익성 상세 팝업 (2026-07-22 사장님 지시)
 
     public init(storeInfoStore: StoreInfoStore, goldenMax: Double = 33) {
         self.storeInfoStore = storeInfoStore
@@ -39,6 +40,8 @@ public struct MenuRecipeSheet: View {
                             Text("메뉴를 먼저 등록하세요. (로드맵 메뉴 설계 또는 재고 관리)")
                                 .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary)
                                 .frame(maxWidth: .infinity).padding(.vertical, 40)
+                        } else {
+                            profitSummaryRow // [자세히 보기] → 수익성 상세 팝업 (웹 정합)
                         }
                         ForEach(menus) { menu in
                             menuCard(menu)
@@ -51,7 +54,39 @@ public struct MenuRecipeSheet: View {
             .navigationTitle("메뉴 레시피")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight) } }
+            .sheet(isPresented: $showProfitDetail) {
+                MenuProfitabilityDetailSheet(menus: menus, materials: materials, goldenMax: goldenMax, noun: "메뉴")
+            }
         }
+    }
+
+    /// 수익성 요약 줄 — 평균 원가율·초과 경보 + [자세히 보기] (웹 MenuProfitabilityModal 진입 정합).
+    private var profitSummaryRow: some View {
+        let totalRevenue = menus.reduce(0) { $0 + $1.sellingPrice }
+        let totalCost = menus.reduce(0) { $0 + RecipeCost.menuCostPerServing($1, materials: materials) }
+        let avgRatio = totalRevenue > 0 ? totalCost / totalRevenue * 100 : 0
+        let overCount = menus.filter { m in
+            guard m.sellingPrice > 0 else { return false }
+            return RecipeCost.menuCostPerServing(m, materials: materials) / m.sellingPrice * 100 > goldenMax
+        }.count
+        return Button { showProfitDetail = true } label: {
+            HStack(spacing: 8) {
+                Text("평균 원가율 \(Int(avgRatio.rounded()))%")
+                    .font(.system(size: 12.5, weight: .bold))
+                    .foregroundStyle(avgRatio > goldenMax ? brick : BUColor.midnight)
+                if overCount > 0 {
+                    Text("초과 \(overCount)개")
+                        .font(.system(size: 10.5, weight: .bold)).foregroundStyle(brick)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(brick.opacity(0.08), in: Capsule())
+                }
+                Spacer()
+                Text("자세히 보기 →").font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     private func menuCard(_ menu: BUInventoryItem) -> some View {
