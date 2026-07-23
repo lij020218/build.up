@@ -8,6 +8,7 @@ import { detectOverstockItems, type OverstockAlert } from "@foundone/shared";
 import type { InventoryItem } from "../../stores/operations-store";
 import { menuCostPerServing } from "../../recipe-cost";
 import { RecipeEditorModal } from "../surfaces/analytics/RecipeEditorModal";
+import { MenuProfitabilityModal } from "./MenuProfitabilityModal";
 
 type InventoryEntry = {
   id: string;
@@ -499,6 +500,7 @@ export function InventoryOpsCard({
   const goldenMax = mode === "service" ? 25 : 33; // 황금률 원가율 (수익성 카드에서 흡수)
   const [recipeMenuId, setRecipeMenuId] = useState<string | null>(null);
   const recipeMenu = recipeMenuId ? fullInventory.find((i) => i.id === recipeMenuId) ?? null : null;
+  const [showProfitDetail, setShowProfitDetail] = useState(false); // 수익성 상세 팝업 (2026-07-22 사장님 지시)
   const menuCost = (m: InventoryItem) => menuCostPerServing(m, recipeMaterials);
   const menuRatio = (m: InventoryItem) => (m.sellingPrice > 0 ? (menuCost(m) / m.sellingPrice) * 100 : 0);
   const overMenus = menus.filter((m) => m.sellingPrice > 0 && menuRatio(m) > goldenMax);
@@ -676,11 +678,20 @@ export function InventoryOpsCard({
             <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {menuNoun}{menus.length > 0 ? ` · ${menus.length}` : ""}
             </div>
-            {overMenus.length > 0 && (
-              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#b64c4c", background: "rgba(182,76,76,0.07)", borderRadius: "10px", padding: "3px 9px" }}>
-                {ko ? `원가율 ${goldenMax}% 초과 ${overMenus.length}개` : `${overMenus.length} over ${goldenMax}%`}
-              </span>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {overMenus.length > 0 && (
+                <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#b64c4c", background: "rgba(182,76,76,0.07)", borderRadius: "10px", padding: "3px 9px" }}>
+                  {ko ? `원가율 ${goldenMax}% 초과 ${overMenus.length}개` : `${overMenus.length} over ${goldenMax}%`}
+                </span>
+              )}
+              {/* 수익성 상세 팝업 (메뉴별 원가율·마진·경보·효자) — 2026-07-22 사장님 지시 */}
+              {menus.length > 0 && (
+                <button type="button" onClick={() => setShowProfitDetail(true)}
+                  style={{ fontSize: "11px", fontWeight: 650, color: "#191970", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  {ko ? "자세히 보기 →" : "Detail →"}
+                </button>
+              )}
+            </div>
           </div>
           {menus.length === 0 ? (
             <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", fontSize: "12.5px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
@@ -1177,6 +1188,18 @@ export function InventoryOpsCard({
             setRecipeMenuId(null);
           }}
           onClose={() => setRecipeMenuId(null)}
+        />
+      )}
+
+      {/* 수익성 상세 팝업 — [자세히 보기] (2026-07-22 사장님 지시) */}
+      {showProfitDetail && (
+        <MenuProfitabilityModal
+          ko={ko}
+          menus={menus}
+          materials={recipeMaterials}
+          goldenMax={goldenMax}
+          noun={menuNoun}
+          onClose={() => setShowProfitDetail(false)}
         />
       )}
     </section>
