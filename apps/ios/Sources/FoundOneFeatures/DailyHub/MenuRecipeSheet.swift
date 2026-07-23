@@ -41,12 +41,7 @@ public struct MenuRecipeSheet: View {
                                 .frame(maxWidth: .infinity).padding(.vertical, 40)
                         }
                         ForEach(menus) { menu in
-                            NavigationLink {
-                                RecipeEditorView(storeInfoStore: storeInfoStore, menuId: menu.id, goldenMax: goldenMax)
-                            } label: {
-                                menuRow(menu)
-                            }
-                            .buttonStyle(.plain)
+                            menuCard(menu)
                         }
                     }
                     .padding(.horizontal, BUSpacing.md)
@@ -59,25 +54,74 @@ public struct MenuRecipeSheet: View {
         }
     }
 
-    private func menuRow(_ menu: BUInventoryItem) -> some View {
+    private func menuCard(_ menu: BUInventoryItem) -> some View {
         let cost = RecipeCost.menuCostPerServing(menu, materials: materials)
         let ratio = menu.sellingPrice > 0 ? cost / menu.sellingPrice * 100 : 0
         let count = menu.recipe?.count ?? 0
         return BUCard(.outer) {
-            HStack(spacing: 10) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(menu.name).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(BUColor.ink)
-                    Text("\(won(menu.sellingPrice)) · 원가 \(won(cost)) · 재료 \(count)종")
-                        .font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary)
+            VStack(alignment: .leading, spacing: 10) {
+                // 상단: 이름·원가 + 원가율
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(menu.name).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(BUColor.ink)
+                        Text("\(won(menu.sellingPrice)) · 원가 \(won(cost)) · 재료 \(count)종")
+                            .font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary)
+                    }
+                    Spacer()
+                    if menu.sellingPrice > 0 {
+                        Text("\(Int(ratio.rounded()))%")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(ratio > goldenMax ? brick : BUColor.midnight)
+                    }
                 }
-                Spacer()
-                if menu.sellingPrice > 0 {
-                    Text("\(Int(ratio.rounded()))%")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(ratio > goldenMax ? brick : BUColor.midnight)
+                // 하단: 판매 −/＋ 카운터(재고 자동 차감·복구) + 레시피 편집 진입 (웹 판매량 카운터 정합)
+                HStack(spacing: 10) {
+                    HStack(spacing: 0) {
+                        stepBtn("minus", disabled: menu.monthlySold <= 0) { recordSale(menu.id, -1) }
+                        Text("\(Int(menu.monthlySold))\u{00A0}판매")
+                            .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.ink)
+                            .frame(minWidth: 62).monospacedDigit()
+                        stepBtn("plus", disabled: count == 0) { recordSale(menu.id, 1) }
+                    }
+                    if count == 0 {
+                        Text("재료 등록 후 차감").font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
+                    }
+                    Spacer()
+                    NavigationLink {
+                        RecipeEditorView(storeInfoStore: storeInfoStore, menuId: menu.id, goldenMax: goldenMax)
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text("재료").font(.system(size: 12.5, weight: .semibold))
+                            Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
+                        }
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(BUColor.midnight.opacity(0.07), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
-                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
             }
+        }
+    }
+
+    private func stepBtn(_ sf: String, disabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: sf).font(.system(size: 13, weight: .bold))
+                .frame(width: 30, height: 30)
+                .foregroundStyle(disabled ? BUColor.inkMuted : BUColor.midnight)
+                .background(BUColor.midnight.opacity(disabled ? 0.03 : 0.08), in: RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain).disabled(disabled)
+    }
+
+    /// 판매 delta 기록 — 판매량 +/− + 레시피만큼 재고 차감/복구 (웹 handleProdSoldChange 정합).
+    private func recordSale(_ menuId: String, _ delta: Int) {
+        storeInfoStore.commit { s in
+            s.inventory = s.inventory.map { it in
+                guard it.id == menuId else { return it }
+                var c = it; c.monthlySold = max(0, c.monthlySold + Double(delta)); return c
+            }
+            s.inventory = RecipeCost.applyRecipeStockDelta(s.inventory, menuId: menuId, delta: Double(delta))
         }
     }
 }
@@ -93,7 +137,6 @@ struct RecipeEditorView: View {
     @State private var recipe: [BURecipeIngredient] = []
     @State private var addSel: String = ""
     @State private var loaded = false
-    @State private var saleToast = false
 
     private var menu: BUInventoryItem? { storeInfoStore.state.inventory.first { $0.id == menuId } }
     private var materials: [BUInventoryItem] { storeInfoStore.state.inventory.filter { $0.itemType != "product" } }
@@ -128,14 +171,6 @@ struct RecipeEditorView: View {
         .navigationTitle(menu?.name ?? "레시피")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { if !loaded { recipe = menu?.recipe ?? []; loaded = true } }
-        .overlay(alignment: .bottom) {
-            if saleToast {
-                Text("1개 판매 기록 · 재고 차감됨").font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white).padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(BUColor.midnight, in: Capsule()).padding(.bottom, 24)
-                    .transition(.opacity)
-            }
-        }
     }
 
     private var summaryCard: some View {
@@ -223,27 +258,14 @@ struct RecipeEditorView: View {
     }
 
     private var saveButton: some View {
-        VStack(spacing: 10) {
-            Button {
-                saveRecipe()
-                dismiss()
-            } label: {
-                Text("저장").font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 13)
-                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12))
-            }
-            // 판매 1개 기록 → 재고 자동 차감 (웹 판매량 카운터 정합)
-            if !recipe.isEmpty {
-                Button {
-                    saveRecipe()
-                    recordOneSale()
-                } label: {
-                    Label("1개 판매 기록 (재고 차감)", systemImage: "minus.circle")
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(BUColor.midnight)
-                        .frame(maxWidth: .infinity).padding(.vertical, 11)
-                        .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-                }
-            }
+        // 판매 기록(재고 차감)은 메뉴 목록의 −/＋ 카운터에서 — 여기선 레시피 저장만. (웹 정합)
+        Button {
+            saveRecipe()
+            dismiss()
+        } label: {
+            Text("저장").font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                .frame(maxWidth: .infinity).padding(.vertical, 13)
+                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -254,20 +276,6 @@ struct RecipeEditorView: View {
                 var c = it; c.recipe = recipe; return c
             }
         }
-    }
-
-    private func recordOneSale() {
-        storeInfoStore.commit { s in
-            // 판매량 +1
-            s.inventory = s.inventory.map { it in
-                guard it.id == menuId else { return it }
-                var c = it; c.monthlySold += 1; return c
-            }
-            // 레시피만큼 재료 차감
-            s.inventory = RecipeCost.applyRecipeStockDelta(s.inventory, menuId: menuId, delta: 1)
-        }
-        withAnimation { saleToast = true }
-        Task { try? await Task.sleep(nanoseconds: 1_600_000_000); await MainActor.run { withAnimation { saleToast = false } } }
     }
 }
 
