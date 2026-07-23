@@ -15,6 +15,7 @@ import { useMemo } from "react";
 import { X, AlertTriangle, TrendingUp } from "lucide-react";
 import type { InventoryItem } from "../../stores/operations-store";
 import { menuCostPerServing } from "../../recipe-cost";
+import { OverlayModal } from "../OverlayModal";
 
 const MIDNIGHT = "#191970";
 const BRICK = "#b64c4c";
@@ -59,15 +60,8 @@ export function MenuProfitabilityModal({ ko, menus, materials, goldenMax, noun, 
   const ratioColor = (r: number) => (r > goldenMax ? BRICK : MIDNIGHT);
 
   return (
-    <div
-      role="dialog" aria-modal="true" aria-label={ko ? `${noun} 수익성 상세` : "Profitability detail"}
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ width: "100%", maxWidth: 560, maxHeight: "88vh", overflowY: "auto", background: "#fff", borderRadius: "20px 20px 0 0", padding: "20px 20px 28px", boxShadow: "0 -8px 40px rgba(15,23,42,0.2)" }}
-      >
+    <OverlayModal label={ko ? `${noun} 수익성 상세` : "Profitability detail"} onClose={onClose}>
+      <>
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
@@ -164,8 +158,8 @@ export function MenuProfitabilityModal({ ko, menus, materials, goldenMax, noun, 
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </>
+    </OverlayModal>
   );
 }
 

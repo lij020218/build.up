@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import type { InventoryItem, RecipeIngredient } from "../../../stores/operations-store";
 import { compatibleUnits, ingredientCost, menuCostPerServing, menuCostRatio } from "../../../recipe-cost";
+import { OverlayModal } from "../../OverlayModal";
 
 const MIDNIGHT = "#191970";
 const BRICK = "#b64c4c";
@@ -50,17 +51,8 @@ export function RecipeEditorModal({ ko, menu, materials, goldenMax = 33, onSave,
   const removeRow = (i: number) => setRecipe((prev) => prev.filter((_, idx) => idx !== i));
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={ko ? `${menu.name} 레시피` : `${menu.name} recipe`}
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ width: "100%", maxWidth: 520, maxHeight: "88vh", overflowY: "auto", background: "#fff", borderRadius: "20px 20px 0 0", padding: "20px 20px 28px", boxShadow: "0 -8px 40px rgba(15,23,42,0.2)" }}
-      >
+    <OverlayModal label={ko ? `${menu.name} 레시피` : `${menu.name} recipe`} onClose={onClose} maxWidth={520}>
+      <>
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
@@ -163,8 +155,8 @@ export function RecipeEditorModal({ ko, menu, materials, goldenMax = 33, onSave,
             {ko ? "취소" : "Cancel"}
           </button>
         </div>
-      </div>
-    </div>
+      </>
+    </OverlayModal>
   );
 }
 
