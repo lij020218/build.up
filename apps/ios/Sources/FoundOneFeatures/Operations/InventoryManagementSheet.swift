@@ -502,6 +502,10 @@ private struct InventoryItemForm: View {
     @State private var dailyUsage: String
     @State private var unitCost: String
     @State private var category: String
+    // 유형 토글 + 메뉴 전용 필드 (2026-07-22 통합 — 웹 InventoryOpsCard 폼 정합)
+    @State private var itemType: String
+    @State private var sellingPrice: String
+    @State private var displayCategory: String
 
     private let categories = ["fresh", "dry", "frozen", "beverage", "supply", "other"]
     private let categoryLabels: [String: String] = [
@@ -520,9 +524,17 @@ private struct InventoryItemForm: View {
         _dailyUsage   = State(initialValue: existing.map { $0.dailyUsage > 0 ? "\(Int($0.dailyUsage))" : "" } ?? "")
         _unitCost     = State(initialValue: existing.map { $0.unitCost > 0 ? "\(Int($0.unitCost))" : "" } ?? "")
         _category     = State(initialValue: existing?.category ?? "other")
+        _itemType     = State(initialValue: existing?.itemType ?? "material")
+        _sellingPrice = State(initialValue: existing.map { $0.sellingPrice > 0 ? "\(Int($0.sellingPrice))" : "" } ?? "")
+        _displayCategory = State(initialValue: existing?.displayCategory ?? "")
     }
 
-    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var canSave: Bool {
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        // 메뉴·판매상품은 판매가 필수 (웹 폼 정합)
+        if itemType == "product" { return (Double(sellingPrice) ?? 0) > 0 }
+        return true
+    }
 
     var body: some View {
         NavigationStack {
@@ -532,12 +544,29 @@ private struct InventoryItemForm: View {
                     VStack(spacing: BUSpacing.md) {
                         BUCard(.outer) {
                             VStack(alignment: .leading, spacing: BUSpacing.md) {
+                                // 유형 토글: 원재료 / 메뉴·판매상품 (2026-07-22 통합, 웹 폼 정합)
+                                Picker("유형", selection: $itemType) {
+                                    Text("원재료").tag("material")
+                                    Text("메뉴·판매상품").tag("product")
+                                }
+                                .pickerStyle(.segmented)
                                 formField(label: "항목명", required: true) {
-                                    TextField("예) 식자재 — 양파", text: $name)
+                                    TextField(itemType == "product" ? "예) 김치볶음밥" : "예) 식자재 — 양파", text: $name)
                                         .textFieldStyle(.roundedBorder)
                                 }
+                                if itemType == "product" {
+                                    formField(label: "판매가 (원)", required: true) {
+                                        TextField("12000", text: $sellingPrice)
+                                            .keyboardType(.numberPad)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    formField(label: "분류 (예: 메인·사이드·음료)", required: false) {
+                                        TextField("메인", text: $displayCategory)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                }
                                 HStack(spacing: 8) {
-                                    formField(label: "현재 재고", required: true) {
+                                    formField(label: itemType == "product" ? "재고 수량" : "현재 재고", required: itemType != "product") {
                                         TextField("0", text: $quantity)
                                             .keyboardType(.numberPad)
                                             .textFieldStyle(.roundedBorder)
@@ -548,6 +577,7 @@ private struct InventoryItemForm: View {
                                     }
                                     .frame(width: 70)
                                 }
+                                if itemType != "product" {
                                 formField(label: "최소 임계 (재주문 기준)", required: false) {
                                     TextField("0", text: $minThreshold)
                                         .keyboardType(.numberPad)
@@ -558,11 +588,13 @@ private struct InventoryItemForm: View {
                                         .keyboardType(.numberPad)
                                         .textFieldStyle(.roundedBorder)
                                 }
-                                formField(label: "단가 (원, 선택)", required: false) {
+                                }
+                                formField(label: itemType == "product" ? "원가 (원, 선택 — 레시피 지정 시 자동)" : "단가 (원, 선택)", required: false) {
                                     TextField("0", text: $unitCost)
                                         .keyboardType(.numberPad)
                                         .textFieldStyle(.roundedBorder)
                                 }
+                                if itemType != "product" {
                                 formField(label: "카테고리", required: false) {
                                     Picker("카테고리", selection: $category) {
                                         ForEach(categories, id: \.self) { c in
@@ -577,6 +609,7 @@ private struct InventoryItemForm: View {
                                     .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
                                     .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(BUColor.cardBorder, lineWidth: 1))
                                 }
+                                }
                             }
                         }
                         Color.clear.frame(height: 40)
@@ -585,7 +618,7 @@ private struct InventoryItemForm: View {
                     .padding(.top, BUSpacing.sm)
                 }
             }
-            .navigationTitle(existing == nil ? "재고 추가" : "재고 수정")
+            .navigationTitle(existing == nil ? "메뉴·재료 추가" : (itemType == "product" ? "메뉴 수정" : "재료 수정"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -630,9 +663,13 @@ private struct InventoryItemForm: View {
             minThreshold: Double(minThreshold) ?? 0,
             unitCost: Double(unitCost) ?? 0,
             category: category,
-            itemType: existing?.itemType ?? "material",
-            displayCategory: existing?.displayCategory, // 상품 자유분류 보존 (이 시트는 material 편집용, 미편집) (2026-07-22)
-            sellingPrice: existing?.sellingPrice ?? 0,
+            itemType: itemType,
+            // 상품 자유분류 — 폼 입력 우선(비면 nil), material 은 nil (2026-07-22 통합)
+            displayCategory: itemType == "product"
+                ? (displayCategory.trimmingCharacters(in: .whitespaces).isEmpty ? nil : displayCategory.trimmingCharacters(in: .whitespaces))
+                : nil,
+            recipe: existing?.recipe, // 레시피 보존 — 편집은 MenuRecipeSheet 에서
+            sellingPrice: itemType == "product" ? (Double(sellingPrice) ?? 0) : (existing?.sellingPrice ?? 0),
             leadTimeDays: existing?.leadTimeDays ?? 1,
             dailyUsage: Double(dailyUsage) ?? 0,
             monthlySold: existing?.monthlySold ?? 0, // 편집 시 판매량 리셋 버그 수정 (기존 값 보존)

@@ -188,9 +188,13 @@ public struct TodayView: View {
                         onManage: { showCustomerSheet = true }
                     )
                 } else if mock.category != .startupTech {
+                    // 통합 '메뉴·재료 관리' (2026-07-22 사장님 지시, 웹 정합):
+                    //   메뉴 업종은 메뉴 섹션(→ MenuRecipeSheet: 원가율·판매 ±·레시피·재고 자동차감) 동봉.
                     InventoryOpsCard(
                         items: inventoryForCard,
-                        onManage: { showInventorySheet = true }
+                        onManage: { showInventorySheet = true },
+                        menuItems: isMenuCardIndustry ? menuProducts : [],
+                        onManageMenus: (isMenuCardIndustry && storeInfo != nil) ? { showRecipeSheet = true } : nil
                     )
                 }
 
@@ -203,12 +207,8 @@ public struct TodayView: View {
                     onManage: { showTeamSheet = true }
                 )
 
-                // ⑧ 메뉴·서비스 수익성 (음식·카페·서비스) — 로드맵 menu-design 입력(판매가·원가)을
-                //   per-item 원가율·마진으로 표시. 재고(식자재)와 분리. 메뉴 입력 전이면 미노출.
-                if isMenuCardIndustry && !menuProducts.isEmpty {
-                    MenuProfitabilityCard(items: menuProducts, category: mock.category,
-                                          onManageRecipes: storeInfo != nil ? { showRecipeSheet = true } : nil)
-                }
+                // ⑧ 메뉴 수익성 카드 → '메뉴·재료 관리'(InventoryOpsCard 메뉴 섹션 → MenuRecipeSheet)로
+                //   흡수 (2026-07-22 통합, 웹 정합 — 추가 폼은 재고 카드인데 관리 카드가 없던 모순 해소).
 
                 // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
                 IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)

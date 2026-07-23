@@ -25,11 +25,18 @@ public struct InventoryOpsCard: View {
     let items: [BUInventoryItem]
     let onManage: (() -> Void)?
     let ko: Bool
+    /// 메뉴(product) 항목 — 음식·카페·서비스에서 '메뉴·재료 관리'로 통합 표시 (2026-07-22, 웹 정합).
+    let menuItems: [BUInventoryItem]
+    /// 메뉴 관리(MenuRecipeSheet) 진입 — 전달되면 통합 카드 모드(제목·메뉴 섹션 활성).
+    let onManageMenus: (() -> Void)?
 
-    public init(items: [BUInventoryItem], onManage: (() -> Void)? = nil, ko: Bool = true) {
+    public init(items: [BUInventoryItem], onManage: (() -> Void)? = nil, ko: Bool = true,
+                menuItems: [BUInventoryItem] = [], onManageMenus: (() -> Void)? = nil) {
         self.items = items
         self.onManage = onManage
         self.ko = ko
+        self.menuItems = menuItems
+        self.onManageMenus = onManageMenus
     }
 
     private var alertItems: [BUInventoryItem] { items.filter { $0.isLowStock } }
@@ -41,10 +48,19 @@ public struct InventoryOpsCard: View {
         return Array(prioritized.prefix(5))
     }
 
+    /// 원가율 황금률 초과 메뉴 수 (음식·카페 33% 고정 — 서비스 구분은 시트에서).
+    private var overMenuCount: Int {
+        menuItems.filter { m in
+            guard m.sellingPrice > 0 else { return false }
+            return RecipeCost.menuCostPerServing(m, materials: items) / m.sellingPrice * 100 > 33
+        }.count
+    }
+
     public var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
                 header
+                if let onManageMenus { menuSection(onManageMenus) }
                 if items.isEmpty {
                     emptyState
                 } else {
@@ -75,7 +91,9 @@ public struct InventoryOpsCard: View {
                     .foregroundStyle(alertCount > 0 ? BUColor.warn : BUColor.midnight)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(ko ? "재고 관리" : "Inventory")
+                Text(onManageMenus != nil
+                     ? (ko ? "메뉴·재료 관리" : "Menu & Ingredients")
+                     : (ko ? "재고 관리" : "Inventory"))
                     .buSectionEyebrowStyle()
                 Text(items.isEmpty
                      ? (ko ? "항목 없음" : "No items")
@@ -92,6 +110,41 @@ public struct InventoryOpsCard: View {
                     .foregroundStyle(BUColor.midnight)
             }
         }
+    }
+
+    /// 메뉴 요약 섹션 (2026-07-22 통합, 웹 InventoryOpsCard 메뉴 섹션 미러) —
+    /// 원가율·판매 ±·레시피는 MenuRecipeSheet(메뉴 관리)에서.
+    private func menuSection(_ manage: @escaping () -> Void) -> some View {
+        Button(action: manage) {
+            HStack(spacing: 8) {
+                Image(systemName: "fork.knife")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+                if menuItems.isEmpty {
+                    Text(ko ? "메뉴 등록 → 원가율·판매·재고 자동차감" : "Add menus for cost ratio & auto-deduct")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(BUColor.inkSecondary)
+                } else {
+                    Text(ko ? "메뉴 \(menuItems.count)개" : "\(menuItems.count) menus")
+                        .font(.system(size: 12.5, weight: .bold))
+                        .foregroundStyle(BUColor.ink)
+                    if overMenuCount > 0 {
+                        Text(ko ? "원가율 초과 \(overMenuCount)" : "\(overMenuCount) over")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundStyle(Color(red: 0.71, green: 0.30, blue: 0.30))
+                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .background(Color(red: 0.71, green: 0.30, blue: 0.30).opacity(0.08), in: Capsule())
+                    }
+                }
+                Spacer()
+                Text(ko ? "메뉴 관리 →" : "Manage →")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     private var emptyState: some View {
