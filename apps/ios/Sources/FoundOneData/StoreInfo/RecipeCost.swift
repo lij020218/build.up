@@ -62,6 +62,29 @@ public enum RecipeCost {
         return menuCostPerServing(menu, materials: materials) / price * 100
     }
 
+    /// "지금 재료로 몇 개 만들 수 있나" — 웹 makeableServings 미러(레시피×재고 파생, 위조 0).
+    public struct Makeable: Sendable { public let servings: Int; public let limitingMaterialId: String? }
+
+    /// 지금 재료 재고로 만들 수 있는 메뉴 수(병목 재료 포함).
+    /// 레시피 없음·재료 삭제·단위 비호환 등 정직하게 계산 불가면 nil(비표시).
+    public static func makeableServings(_ menu: BUInventoryItem, materials: [BUInventoryItem]) -> Makeable? {
+        let recipe = menu.recipe ?? []
+        if recipe.isEmpty { return nil }
+        var minServ = Double.infinity
+        var limiting: String? = nil
+        var counted = 0
+        for ing in recipe {
+            if ing.qty <= 0 { continue }
+            guard let mat = materials.first(where: { $0.id == ing.materialId }) else { return nil }
+            guard let per = convertQty(ing.qty, from: ing.unit, to: mat.unit), per > 0 else { return nil }
+            counted += 1
+            let s = mat.quantity / per
+            if s < minServ { minServ = s; limiting = mat.id }
+        }
+        if counted == 0 { return nil }
+        return Makeable(servings: Int(minServ.rounded(.down)), limitingMaterialId: limiting)
+    }
+
     /// 판매 delta 개 → 재료 재고 차감(delta>0)·복구(delta<0). 0 클램프. 레시피/재료 없으면 무변.
     public static func applyRecipeStockDelta(_ inventory: [BUInventoryItem], menuId: String, delta: Double) -> [BUInventoryItem] {
         guard delta != 0,

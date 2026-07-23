@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { convertQty, compatibleUnits, menuCostPerServing, menuCostRatio, applyRecipeStockDelta } from "../recipe-cost";
+import { convertQty, compatibleUnits, menuCostPerServing, menuCostRatio, applyRecipeStockDelta, makeableServings } from "../recipe-cost";
 import type { InventoryItem } from "../stores/operations-store";
 
 /** 레시피/BOM 원가·재고차감 회귀 가드 (2026-07-22). */
@@ -51,6 +51,31 @@ describe("menuCostPerServing / ratio", () => {
   it("삭제된 재료는 건너뛰고 부분 합산", () => {
     const m = menu("y", { recipe: [{ materialId: "onion", qty: 1, unit: "개" }, { materialId: "gone", qty: 5, unit: "개" }] });
     expect(menuCostPerServing(m, materials)).toBe(500); // gone 제외
+  });
+});
+
+describe("makeableServings — 지금 재료로 N개 가능 (입력 아닌 파생)", () => {
+  const materials = [
+    mat("onion", { unit: "개", quantity: 10 }),
+    mat("pork", { unit: "kg", quantity: 3 }),
+  ];
+  const bibim = menu("bibim", { recipe: [
+    { materialId: "onion", qty: 0.3, unit: "개" },   // 10/0.3 = 33.3
+    { materialId: "pork", qty: 150, unit: "g" },     // 3kg/0.15kg = 20 ← 병목
+  ]});
+  it("병목 재료 기준 내림 — 돼지고기 20개", () => {
+    expect(makeableServings(bibim, materials)).toEqual({ servings: 20, limitingMaterialId: "pork" });
+  });
+  it("재고 0 재료 → 0개(병목 표시)", () => {
+    const out = makeableServings(bibim, [mat("onion", { unit: "개", quantity: 10 }), mat("pork", { unit: "kg", quantity: 0 })]);
+    expect(out).toEqual({ servings: 0, limitingMaterialId: "pork" });
+  });
+  it("레시피 없으면 null(비표시 — 위조 금지)", () => {
+    expect(makeableServings(menu("plain"), materials)).toBeNull();
+  });
+  it("삭제된 재료 포함 시 null(과대표시 방지)", () => {
+    const m = menu("x", { recipe: [{ materialId: "gone", qty: 1, unit: "개" }] });
+    expect(makeableServings(m, materials)).toBeNull();
   });
 });
 

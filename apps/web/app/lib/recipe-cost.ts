@@ -79,6 +79,34 @@ export function menuCostRatio(menu: InventoryItem, materials: InventoryItem[]): 
   return (menuCostPerServing(menu, materials) / price) * 100;
 }
 
+/** "지금 재료로 몇 개 만들 수 있나" 결과 — 입력이 아니라 레시피×재고에서 파생(위조 0). */
+export type MakeableResult = { servings: number; limitingMaterialId: string | null };
+
+/**
+ * 지금 재료 재고로 만들 수 있는 메뉴 수(병목 재료 포함).
+ *  = min over 재료( 재고 / 1인분 소요량 ) 의 내림. 메뉴 "수량"은 입력받지 않고 이걸로 계산.
+ *  레시피 없음·재료 삭제·단위 비호환 등 정직하게 계산 불가면 null(비표시).
+ */
+export function makeableServings(menu: InventoryItem, materials: InventoryItem[]): MakeableResult | null {
+  const recipe = menu.recipe ?? [];
+  if (recipe.length === 0) return null;
+  let min = Infinity;
+  let limiting: string | null = null;
+  let counted = 0;
+  for (const ing of recipe) {
+    if (ing.qty <= 0) continue;
+    const mat = materials.find((m) => m.id === ing.materialId);
+    if (!mat) return null; // 삭제된 재료 → 계산 불가(과대표시 방지)
+    const per = convertQty(ing.qty, ing.unit, mat.unit);
+    if (per == null || per <= 0) return null;
+    counted++;
+    const s = (mat.quantity || 0) / per;
+    if (s < min) { min = s; limiting = mat.id; }
+  }
+  if (counted === 0) return null;
+  return { servings: Math.floor(min), limitingMaterialId: limiting };
+}
+
 /**
  * 판매 delta 개에 따른 재료 재고 차감 결과. delta>0 차감, delta<0 복구.
  *  반환 = 갱신된 inventory 배열(레시피 없는 메뉴/재료 없는 항목은 무변).

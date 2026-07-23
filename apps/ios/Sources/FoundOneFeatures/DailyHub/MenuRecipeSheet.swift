@@ -93,6 +93,8 @@ public struct MenuRecipeSheet: View {
         let cost = RecipeCost.menuCostPerServing(menu, materials: materials)
         let ratio = menu.sellingPrice > 0 ? cost / menu.sellingPrice * 100 : 0
         let count = menu.recipe?.count ?? 0
+        // "지금 재료로 N개 가능" — 입력이 아니라 레시피×재고에서 계산 (웹 정합, 2026-07-23)
+        let makeable = RecipeCost.makeableServings(menu, materials: materials)
         return BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
                 // 상단: 이름·원가 + 원가율
@@ -101,6 +103,16 @@ public struct MenuRecipeSheet: View {
                         Text(menu.name).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(BUColor.ink)
                         Text("\(won(menu.sellingPrice)) · 원가 \(won(cost)) · 재료 \(count)종")
                             .font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary)
+                        if let mk = makeable {
+                            if mk.servings <= 0 {
+                                let limName = mk.limitingMaterialId.flatMap { id in materials.first { $0.id == id }?.name } ?? "재료"
+                                Text("\(limName) 소진 — 만들 수 없음")
+                                    .font(.system(size: 10.5, weight: .bold)).foregroundStyle(brick)
+                            } else {
+                                Text("지금 재료로 \(mk.servings)개 가능")
+                                    .font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
+                            }
+                        }
                     }
                     Spacer()
                     if menu.sellingPrice > 0 {

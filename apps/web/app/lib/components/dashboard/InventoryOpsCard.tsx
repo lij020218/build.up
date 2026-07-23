@@ -6,7 +6,7 @@ import type { DashboardHook } from "../../useDashboard";
 import { importInventoryFromFile, INVENTORY_IMPORT_ACCEPT } from "../../inventory-file-import";
 import { detectOverstockItems, type OverstockAlert } from "@foundone/shared";
 import type { InventoryItem } from "../../stores/operations-store";
-import { menuCostPerServing } from "../../recipe-cost";
+import { menuCostPerServing, makeableServings } from "../../recipe-cost";
 import { RecipeEditorModal } from "../surfaces/analytics/RecipeEditorModal";
 import { MenuProfitabilityModal } from "./MenuProfitabilityModal";
 
@@ -739,9 +739,23 @@ export function InventoryOpsCard({
                           aria-label={ko ? `${m.name} 판매 기록` : `Record ${m.name} sale`}
                           style={{ width: "26px", height: "26px", borderRadius: "0 8px 8px 0", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                       </div>
-                      {rc === 0 && (
+                      {rc === 0 ? (
                         <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{ko ? "재료 등록 시 자동차감" : "Set recipe for auto-deduct"}</span>
-                      )}
+                      ) : (() => {
+                        // "지금 재료로 N개 가능" — 메뉴 수량은 입력이 아니라 레시피×재고에서 계산. (2026-07-23 사장님 승인)
+                        const mk = makeableServings(m, recipeMaterials);
+                        if (!mk) return null;
+                        const limName = mk.limitingMaterialId ? recipeMaterials.find((x) => x.id === mk.limitingMaterialId)?.name : null;
+                        return mk.servings <= 0 ? (
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: "#b64c4c" }}>
+                            {ko ? `${limName ?? "재료"} 소진 — 만들 수 없음` : "Out of ingredients"}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.5)" }}>
+                            {ko ? `지금 재료로 ${mk.servings}개 가능` : `${mk.servings} makeable`}
+                          </span>
+                        );
+                      })()}
                       <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
                         <button type="button" onClick={() => setRecipeMenuId(m.id)}
                           style={{ fontSize: "11px", fontWeight: 650, color: "#191970", background: "rgba(25,25,112,0.07)", border: "none", borderRadius: "9px", padding: "4px 10px", cursor: "pointer" }}>
