@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Lightbulb, ChevronDown, ChevronUp, GitBranch, AlertTriangle } from "lucide-react";
+import { projectTwelveMonths, GROWTH_SCENARIOS, type GrowthScenarioId } from "../../finance-sim";
 
 type MonthlyCosts = {
   ingredients: number;
@@ -30,6 +31,8 @@ type Props = {
    * 스타트업이면 ingredients 라벨이 "서버·클라우드·SaaS" 등으로 자동 분기됨.
    */
   expenseFields?: ExpenseFieldLabel[];
+  /** 재무 페이지 전용 — 레버 시나리오에 성장률을 얹은 12개월 현금 투영 섹션 표시 (2026-07-24) */
+  showProjection?: boolean;
 };
 
 /**
@@ -37,7 +40,7 @@ type Props = {
  * 슬라이더로 매출/비용 조정 → 월 순익, 런웨이, BEP 실시간 재계산.
  * "진단"에서 "의사결정"으로 진화.
  */
-export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, expenseFields }: Props) {
+export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, expenseFields, showProjection }: Props) {
   // 업종별 라벨 lookup — 카테고리에 따라 ingredients = "재료비"/"서버·SaaS"/"매입원가" 등으로 분기
   const labelFor = (fieldKey: string, fallback: { ko: string; en: string }) => {
     const found = expenseFields?.find((f) => f.fieldKey === fieldKey);
@@ -70,6 +73,9 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
       net: newNet,
       runway: newRunway,
       bep,
+      // 12개월 투영용 분해 — 변동비(재료·매입)는 매출 비례, 나머지는 고정 (2026-07-24)
+      variableCosts: newIngredients,
+      fixedCosts: newTotalCosts - newIngredients,
     };
   }, [monthlySales, monthlyCosts, capitalLeft, salesMult, ingredientsMult, laborMult, rentMult, marketingMult]);
 
@@ -84,6 +90,20 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
   const runwayDelta = scenario.runway - currentRunway;
 
   const hasChanges = salesMult !== 100 || ingredientsMult !== 100 || laborMult !== 100 || rentMult !== 100 || marketingMult !== 100;
+
+  // ── 12개월 현금 투영 (재무 페이지 전용, finance-sim SSOT) ──
+  const [growthSel, setGrowthSel] = useState<GrowthScenarioId>("base");
+  const projection = useMemo(() => {
+    if (!showProjection) return null;
+    const growth = GROWTH_SCENARIOS.find((g) => g.id === growthSel) ?? GROWTH_SCENARIOS[1];
+    return projectTwelveMonths({
+      startCash: capitalLeft,
+      monthlySales: scenario.sales,
+      variableCostRatio: scenario.sales > 0 ? scenario.variableCosts / scenario.sales : 0,
+      monthlyFixedCosts: scenario.fixedCosts,
+      growthRatePct: growth.growthRatePct,
+    });
+  }, [showProjection, growthSel, scenario, capitalLeft]);
 
   const [showSecondOrder, setShowSecondOrder] = useState(false);
 
@@ -581,6 +601,79 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── 12개월 현금 투영 (재무 페이지 전용) — 가정 유지 시 산술 결과, 예측 아님 ── */}
+      {showProjection && projection && (
+        <div style={{ marginTop: "18px", paddingTop: "16px", borderTop: "1px solid rgba(15,23,42,0.07)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+            <div style={{ fontSize: "12px", fontWeight: 750, color: "#191970", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+              {ko ? "12개월 현금 투영" : "12-month cash projection"}
+            </div>
+            <div style={{ display: "flex", gap: 5 }}>
+              {GROWTH_SCENARIOS.map((g) => (
+                <button key={g.id} type="button" onClick={() => setGrowthSel(g.id)}
+                  style={{
+                    fontSize: "11px", fontWeight: 650, padding: "5px 11px", borderRadius: 999, cursor: "pointer",
+                    border: `1px solid ${growthSel === g.id ? "#191970" : "rgba(15,23,42,0.12)"}`,
+                    background: growthSel === g.id ? "rgba(25,25,112,0.08)" : "transparent",
+                    color: growthSel === g.id ? "#191970" : "var(--muted)",
+                  }}>
+                  {ko ? g.ko : g.en}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 월별 현금 막대 — 음수 월은 벽돌 */}
+          {(() => {
+            const maxAbs = Math.max(1, ...projection.points.map((pt) => Math.abs(pt.endCash)));
+            return (
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 96, marginBottom: 6 }}>
+                {projection.points.map((pt) => {
+                  const h = Math.max(4, Math.round((Math.abs(pt.endCash) / maxAbs) * 88));
+                  const neg = pt.endCash < 0;
+                  return (
+                    <div key={pt.month} style={{ flex: 1, display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 3 }}>
+                      <div title={`${pt.month}${ko ? "개월" : "mo"}: ${fmt(pt.endCash)}`}
+                        style={{ width: "100%", height: h, borderRadius: 5, background: neg ? "rgba(182,76,76,0.75)" : "rgba(25,25,112,0.55)", alignSelf: "flex-end" }} />
+                      <span style={{ fontSize: 8.5, color: "var(--muted)" }}>{pt.month}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* 판독 — 소진/흑자/12개월 말 */}
+          <div style={{ display: "grid", gap: 6 }}>
+            {projection.cashOutMonth != null ? (
+              <div style={{ fontSize: "12.5px", fontWeight: 650, color: "#b64c4c" }}>
+                {ko
+                  ? `이 가정이면 ${projection.cashOutMonth}개월차에 현금이 소진돼요 (부족 ${fmt(projection.shortfall ?? 0)}).`
+                  : `Cash runs out in month ${projection.cashOutMonth} (short ${fmt(projection.shortfall ?? 0)}).`}
+                {" "}
+                <a href="/guides" style={{ color: "#191970", fontWeight: 700, textDecoration: "none" }}>
+                  {ko ? "정책자금·대출 알아보기 →" : "Explore funding →"}
+                </a>
+              </div>
+            ) : (
+              <div style={{ fontSize: "12.5px", fontWeight: 650, color: "#1d3557" }}>
+                {ko ? `12개월 내 현금 소진 없음 · 12개월 말 ${fmt(projection.finalCash)}` : `No cash-out within 12 months · ends at ${fmt(projection.finalCash)}`}
+              </div>
+            )}
+            {projection.breakEvenMonth != null && projection.breakEvenMonth > 1 && (
+              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.65)" }}>
+                {ko ? `월 순익 흑자 전환: ${projection.breakEvenMonth}개월차 (성장 가정 기준)` : `Monthly net turns positive in month ${projection.breakEvenMonth}`}
+              </div>
+            )}
+            <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.45)", lineHeight: 1.5 }}>
+              {ko
+                ? "가정 기반 산술 투영이에요(예측 아님) — 위 레버·성장 가정이 유지된다고 가정합니다. 단기 정밀 예측은 13주 자금흐름을 보세요."
+                : "Arithmetic projection under the assumptions above — not a forecast. See the 13-week view for near-term precision."}
+            </div>
+          </div>
         </div>
       )}
     </section>

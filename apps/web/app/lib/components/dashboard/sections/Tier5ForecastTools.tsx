@@ -14,7 +14,6 @@
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DeepDiveSection } from "../DeepDiveSection";
-import { ForecastCard } from "../ForecastCard";
 import { FirstCustomersCard } from "../FirstCustomersCard";
 import { ExportPanel } from "../ExportPanel";
 import type {
@@ -48,23 +47,13 @@ export function Tier5ForecastTools({ d, c, ko }: Props) {
       title={ko ? "예측 · 플레이북 · 내보내기" : "Forecast · Playbook · Export"}
       subtitle={
         ko
-          ? "매출 예측 · 첫 100명 플레이북 · 데이터 내보내기"
-          : "Sales forecast · First 100 customers playbook · Data export"
+          ? "첫 100명 플레이북 · 데이터 내보내기"
+          : "First 100 customers playbook · Data export"
       }
       defaultOpen={false}
       ko={ko}
     >
-      {c.allEntries.length >= 3 && (
-        <ForecastCard
-          ko={ko}
-          dailyEntries={c.allEntries}
-          monthlyCosts={d.monthlyCosts as MonthlyCostsDetail}
-          capitalLeft={c.capitalLeft}
-          breakEvenDailySales={c.breakEvenDailySales}
-          industryCategoryId={d.industryCategoryId}
-          initialOperatingCapital={d.initialOperatingCapital}
-        />
-      )}
+      {/* 매출 예측 → 재무 탭으로 이관 (2026-07-24) */}
       {(c.daysSinceLaunch <= 90 || c.daysSinceLaunch === 0) && (
         <FirstCustomersCard
           ko={ko}

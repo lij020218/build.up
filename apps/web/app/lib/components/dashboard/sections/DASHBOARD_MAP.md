@@ -86,12 +86,12 @@ hooks/
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
 | 2 | **코칭 누적 일지 14일** (CoachingHistory) | `Tier2WeeklyPulse.tsx` | universal — Supabase mirror + 30일 메타 인사이트 (Phase 1a). 종전 맵은 Tier1_5 로 오기재 — 실제 렌더는 Tier2WeeklyPulse.tsx (2026-07-21 정정) |
-| 2 | **13주 자금 흐름 예측 (Cashflow13Week)** | `Tier2WeeklyPulse.tsx` | 모두 (미설정 시 nudge) |
-| 2 | 생존 보드 (SurvivalBoard) | `Tier2WeeklyPulse.tsx` | 모두 |
+| ~~2~~ | ~~13주 자금 흐름 예측~~ → **재무 탭 (ReportsSurface)** 이관 (2026-07-24 재무 페이지 신설) |  |  |
+| ~~2~~ | ~~생존 보드~~ → **재무 탭** 이관 (2026-07-24) |  |  |
 | 2 | 비용 도넛 (CostCompositionDonut) | `Tier2WeeklyPulse.tsx` | 모두 |
 | 2 | 동종업 벤치마크 (SocialBenchmark) | `Tier2WeeklyPulse.tsx` | 모두 |
 | 2 | 매출 분해 (SalesBreakdown) | `Tier2WeeklyPulse.tsx` | entries ≥ 2 |
-| 2 | 월간 진행 (MonthlyProgress) | `Tier2WeeklyPulse.tsx` | entries ≥ 2 |
+| ~~2~~ | ~~월간 진행~~ → **재무 탭 손익분기 트래커로 흡수** (2026-07-24) |  |  |
 | 2 | 비용 구조 (CostStructure) | `Tier2WeeklyPulse.tsx` | startup·online 외 |
 | 2 | 벤치마크 (BenchmarkCard) | `Tier2WeeklyPulse.tsx` | entries ≥ 1 |
 
@@ -111,7 +111,7 @@ hooks/
 
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
-| 4 | What-If 시뮬레이터 | `Tier4GrowthTools.tsx` | 매출/비용 있을 때 |
+| ~~4~~ | ~~What-If 시뮬레이터~~ → **재무 탭 12개월 시뮬레이션으로 이관·확장** (2026-07-24) |  |  |
 | 4 | 주간 시간 리포트 (WeeklyTime) | `Tier4GrowthTools.tsx` | 모두 |
 | 4 | 마일스톤 진행 (ProgressMilestones) | `Tier4GrowthTools.tsx` | 모두 |
 | 4 | 고객 인터뷰 (CustomerInterview) | `Tier4GrowthTools.tsx` | 모두 |
@@ -123,7 +123,7 @@ hooks/
 
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
-| 5 | 매출 예측 (Forecast) | `Tier5ForecastTools.tsx` | entries ≥ 3 |
+| ~~5~~ | ~~매출 예측~~ → **재무 탭** 이관 (2026-07-24) |  |  |
 | 5 | 첫 100명 플레이북 (FirstCustomers) | `Tier5ForecastTools.tsx` | 개업 ≤90일 또는 미개업 |
 | 5 | 데이터 내보내기 (ExportPanel) | `Tier5ForecastTools.tsx` | 매출/재고/직원 있을 때 |
 

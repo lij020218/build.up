@@ -18,7 +18,6 @@
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DeepDiveSection } from "../DeepDiveSection";
-import { WhatIfSimulator } from "../WhatIfSimulator";
 import { WeeklyTimeReport } from "../WeeklyTimeReport";
 import { ProgressMilestonesCard } from "../ProgressMilestonesCard";
 import { CustomerInterviewCard } from "../CustomerInterviewCard";
@@ -45,29 +44,7 @@ export function Tier4GrowthTools({ d, c, ko, fmt }: Props) {
       defaultOpen={false}
       ko={ko}
     >
-      {(c.totalSales > 0 || c.totalCosts > 0) && (
-        <WhatIfSimulator
-          ko={ko}
-          monthlySales={c.totalSales}
-          monthlyCosts={
-            d.monthlyCosts as {
-              ingredients: number;
-              labor: number;
-              rent: number;
-              utilities: number;
-              sga: number;
-              marketing: number;
-              other: number;
-              interest: number;
-            }
-          }
-          capitalLeft={c.capitalLeft}
-          expenseFields={d.businessCtx.expenseFields?.map((f) => ({
-            fieldKey: f.fieldKey,
-            label: f.label,
-          }))}
-        />
-      )}
+      {/* What-If 시뮬레이터 → 재무 탭 12개월 시뮬레이션으로 이관·확장 (2026-07-24) */}
 
       <WeeklyTimeReport ko={ko} />
 

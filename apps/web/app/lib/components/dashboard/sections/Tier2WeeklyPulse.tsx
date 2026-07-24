@@ -18,12 +18,9 @@ import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DeepDiveSection } from "../DeepDiveSection";
 import { CoachingHistoryCard } from "../CoachingHistoryCard";
-import { Cashflow13WeekForecastCard } from "../Cashflow13WeekForecastCard";
-import { SurvivalBoardCard } from "../SurvivalBoardCard";
 import { CostCompositionDonutCard } from "../CostCompositionDonutCard";
 import { SocialBenchmarkCard } from "../SocialBenchmarkCard";
 import { SalesBreakdownCard } from "../SalesBreakdownCard";
-import { MonthlyProgressCard } from "../MonthlyProgressCard";
 import { CostStructureCard } from "../CostStructureCard";
 import { BenchmarkCard } from "../BenchmarkCard";
 // 2026-05-12 사장님 결정: UserActivityCard 는 Tier 1 으로 되돌림 — 사용자 수 변화 그래프는 매일 hero level 유지.
@@ -53,37 +50,20 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
       <CoachingHistoryCard ko={ko} />
 
       {/* 13주 자금흐름 예측 — Quicken/CFO 표준 + AI 처방 */}
-      <Cashflow13WeekForecastCard
-        ko={ko}
-        dailyEntries={c.allEntries as Array<{ date: string; sales: number; customers: number }>}
-        fallbackMonthlyCostsTotal={c.totalCosts}
-      />
+      {/* 13주 예측·생존 보드·월간 진행·What-If → "재무" 탭으로 이관 (2026-07-24 재무 페이지 신설) */}
+      <a href="/reports" style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+        padding: "13px 16px", borderRadius: 14, textDecoration: "none",
+        border: "1px solid rgba(25,25,112,0.10)", background: "rgba(25,25,112,0.03)",
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 650, color: "#191970" }}>
+          {ko ? "재무 전망 — 손익분기 · 13주 자금흐름 · 12개월 시뮬레이션" : "Finance — break-even · 13-week cash · 12-month simulation"}
+        </span>
+        <span style={{ fontSize: 12.5, fontWeight: 700, color: "#191970" }}>{ko ? "재무 탭 →" : "Open →"}</span>
+      </a>
 
-      {/* 생존 보드 + 비용 도넛 (2-col) */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: c.isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr",
-          gap: "14px",
-        }}
-      >
-        <SurvivalBoardCard
-          ko={ko}
-          isStartupCompany={c.isStartupCompany}
-          runwayMonths={c.runwayMonths}
-          capitalLeft={c.capitalLeft}
-          weeklySalesChange={c.weeklySalesChange}
-          weeklySignalLabel={c.weeklySignalLabel}
-          healthLabel={c.healthLabel}
-          healthTone={c.healthTone}
-          topRiskLabel={c.topRiskLabel}
-          focusMessage={c.focusMessage}
-          d={d}
-          totalSales={c.totalSales}
-          netProfit={c.netProfit}
-          totalCosts={c.totalCosts}
-          healthScoreNumeric={c.healthScore}
-        />
+      {/* 비용 도넛 (생존 보드는 재무 탭으로 이관) */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
         <CostCompositionDonutCard
           ko={ko}
           totalSales={c.totalSales}
@@ -104,13 +84,8 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
         dailyEntries={c.allEntries as Array<{ date: string; sales: number; customers: number }>}
       />
 
-      {/* 매출 분해 + 월간 진행 (entries ≥ 2) */}
-      {c.allEntries.length >= 2 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-          <SalesBreakdownCard />
-          <MonthlyProgressCard />
-        </div>
-      )}
+      {/* 매출 분해 (entries ≥ 2) — 월간 진행은 재무 탭 손익분기 트래커로 흡수 (2026-07-24) */}
+      {c.allEntries.length >= 2 && <SalesBreakdownCard />}
 
       {/* 비용 구조 + 벤치마크 (entries ≥ 1, 분기 다름) */}
       {c.allEntries.length >= 1 && (
