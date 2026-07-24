@@ -1,56 +1,88 @@
 # build.up — 코드 품질 감사 리포트
 
-**날짜:** 2026-07-23
+**날짜:** 2026-07-24
 **대상:** build.up 모노레포 (`apps/web`, `apps/mobile`, `apps/ios`, `packages/*`)
-**분석 범위:** 844개 TS/TSX 파일 (node_modules · .next · `.claude/worktrees` 제외)
-**직전 리포트:** 2026-07-22 (등급 C+)
+**분석 범위:** 845개 TS/TSX 파일 (node_modules · .next · `.claude/worktrees` 제외)
+**직전 리포트:** 2026-07-23 (등급 C+)
 
 ---
 
-## 종합 등급: **C+** (직전과 동일)
+## 종합 등급: **B-** (직전 C+ → 상승)
 
-코드 위생(console.log·`any`·TODO·`@ts-ignore`)은 여전히 **A급**이고, 어제 등급을 끌어내렸던 **결정적 코드 결함(`dev-dense-preview` Suspense 프리렌더 오류)은 제거됐다** — 명백한 개선이다. 그럼에도 등급을 올리지 못한 이유는 단 하나: **이번 세션에서 클린 프로덕션 빌드를 3회 시도해 3회 모두 실패**했기 때문이다. 다만 실패의 성격이 어제와 완전히 다르다 — 앱 코드는 매번 정상 컴파일되고(3/3 `✓ Compiled successfully`), 3회차에는 139개 정적 페이지가 전부 생성됐다. 실패 지점은 컴파일 이후 후처리 단계에서 발생한 **Next.js 내부 파일 관련 파일시스템 ENOENT 3종**으로, 매 실행마다 다른 에러다. 이는 앱 코드 결함이 아니라 **툴체인/FS 경합**의 징후다.
+이번 사이클의 핵심 사건은 하나다: **3사이클 연속 실패하던 클린 프로덕션 빌드가 완주했다.** `rm -rf .next && npx next build`가 컴파일(9.6s)·정적 생성·빌드 트레이스·라우트 표 출력까지 전부 통과하고 `BUILD_ID`(`wCcSqqW83duOkra3Dslgp`)를 남겼다. 직전 3사이클 등급을 C+에 묶어 둔 단일 원인(후처리 FS ENOENT)이 이번엔 재현되지 않았다 — 명백한 진전이다.
+
+그런데 빌드가 완주하면서 그동안 "측정 불가(N/A)"였던 항목이 처음으로 드러났다: **번들 크기다. 결과가 좋지 않다.** 사용자가 매일 쓰는 9개 핵심 화면(`/current`·`/roadmap`·`/tax`·`/team`·`/profile`·`/reports`·`/guides`·`/franchise`·`/marketing`)이 **전부 First Load JS 2.32 MB**로 나온다. 권장 예산(~250 kB)의 약 **9~10배**다. 이건 어제 대비 악화가 아니라 **처음으로 계측된 기존 부채**다 — 하지만 실사용자 LCP/TTI에 직접 영향을 주므로 등급 상한을 눌렀다.
+
+코드 위생(console.log·`any`·TODO·타입 suppression)은 이번에도 **A급**을 유지했다. 종합하면: 빌드 회복이 C+ → B로 끌어올렸고, 새로 계측된 2.32 MB 번들이 B+ 이상을 막았다 → **B-**.
 
 | 항목 | 결과 | 평가 | 직전 대비 |
 |------|------|------|-----------|
-| 빌드 상태 | 🔴 **미완료** (컴파일 OK·139페이지 생성 OK, 후처리 FS ENOENT로 exit 1 × 3/3) | 🔴 D+ | → (성격 개선, 결과 동일) |
-| 파일 크기 (>500줄) | 114개 (>1000줄 34개, 최대 6,056줄) | ⚠️ C+ | → |
-| console.log (프로덕션) | 26건 — 대부분 서버 API, 클라이언트 컴포넌트 ~0건 | ✅ A | ↑ (29→26) |
-| TODO/FIXME/HACK | 2건 (둘 다 실부채 아님 — 아래 §3) | ✅ A+ | → |
-| 타입 안전성 (`any`) | 3건 · `@ts-ignore`/`@ts-nocheck` **0건** | ✅ A+ | → |
-| 번들 크기 (First Load JS) | **미검증** — 빌드가 라우트 표까지 도달 못 함 | ⚪ N/A | ↓ (측정 불가) |
-| Lint 경고 | 41건 (`exhaustive-deps` 39 + `no-img-element` 1 + 기타 1) | ⚠️ B− | → |
+| 빌드 상태 | 🟢 **완주** (컴파일 9.6s · 라우트 표 생성 · `BUILD_ID` 존재) | 🟢 A | ↑↑ (D+ → A) |
+| 번들 크기 (First Load JS) | 🔴 핵심 9개 화면 **2.32 MB** (권장 ~250 kB의 9~10배) | 🔴 D | ↓ (측정 가능해짐 → 문제 노출) |
+| 파일 크기 (>500줄) | 115개 (>1000줄 34개, 최대 6,056줄) | ⚠️ C+ | → |
+| console.log (프로덕션) | 29건 — 대부분 서버 API, 클라이언트 컴포넌트 ~0건 | ✅ A | → (26→29) |
+| TODO/FIXME/HACK | 1건 (실부채 아님 — §5) | ✅ A+ | ↑ (2→1) |
+| 타입 안전성 (`any`) | 소스 ~3건 · `@ts-ignore`/`@ts-nocheck`/`@ts-expect-error` **0건** | ✅ A+ | → |
+| Lint 경고 | 43건 (`exhaustive-deps` 39 + `no-img-element` 1 + Sentry deprecation 2) | ⚠️ B− | → |
 
 ---
 
-## 0. 빌드 상태 — 🔴 클린 빌드 미완료 (성격은 어제와 다름)
+## 0. 빌드 상태 — 🟢 클린 빌드 완주 (3사이클 만의 회복)
 
-`rm -rf .next && npx next build`를 **3회 클린 실행**했다. 결과:
+```
+✓ Compiled successfully in 9.6s
+  Linting and checking validity of types ...
+  Collecting page data / Generating static pages / Collecting build traces  → 통과
+  Route (app) 표 전체 출력 완료 · BUILD_ID = wCcSqqW83duOkra3Dslgp
+```
 
-| 회차 | 컴파일 | 정적 생성 | 실패 지점 (Next 내부 파일) |
-|------|--------|-----------|----------------------------|
-| 1 | ✓ (47s) | 도달 못 함 | `PageNotFoundError: /_document` + `pages-manifest.json` ENOENT (Collecting page data) |
-| 2 | ✓ (53s) | 도달 못 함 | `rename .next/export/500.html → .next/server/pages/500.html` ENOENT |
-| 3 | ✓ (32s) | **✓ 139/139 생성 완료** | `_not-found/page.js.nft.json` ENOENT (trace collection) |
+직전 3사이클을 깨뜨렸던 후처리 FS ENOENT(`_document`·`pages-manifest.json`·`500.html`·`*.nft.json`)는 이번 실행에서 **재현되지 않았다.** 직전 리포트가 예측한 대로 그 실패는 앱 코드 결함이 아니라 로컬 툴체인/FS 경합이었고, 이번엔 경합이 발생하지 않은 것으로 보인다.
 
-**핵심:** 세 번 모두 **앱 코드는 정상 컴파일**됐고, 3회차는 **139개 페이지 정적 생성까지 성공**한 뒤 파일 추적(nft.json) 단계에서 터졌다. 실패한 파일은 전부 **Next.js가 스스로 생성·이동하는 내부 산출물**(`_document`, `pages-manifest.json`, `500.html`, `_not-found/*.nft.json`)이며, **매 실행마다 실패 파일이 다르다.** 이 비결정성이 결정적 단서다 — 특정 소스 파일의 결함이라면 매번 같은 곳에서 같은 에러가 나야 한다.
+> **반박 검토:** "빌드가 한 번 통과했다고 안정적이라 단정할 수 있나?" — 못 한다. 실패가 비결정적이었던 만큼 성공도 비결정적일 수 있다. 다만 이번 실행에서 **컴파일·정적 생성·트레이스 수집·라우트 표까지 실제로 완주한 것은 검증된 사실**이다. 안정성 확증에는 CI(리눅스 컨테이너 + `CI=true`)에서의 반복 성공 확인이 필요하다.
 
-**가장 유력한 원인 (반박 검토 포함):**
-- `next.config.ts`가 `withSentryConfig(...)`로 감싸져 있다. Sentry Next 플러그인은 빌드 후처리 단계에서 `.next` 산출물을 소스맵 업로드·파일추적 목적으로 조작한다 — 이것이 Next 자체의 출력과 경합하면 정확히 이런 후처리 ENOENT 패턴이 난다.
-- 같은 `next.config.ts`에 이미 *"dev에서 filesystem 캐시 완전 비활성화 — vendor-chunks ENOENT 방지"* 주석이 있다. **이 환경은 과거에도 FS ENOENT 경합과 싸운 이력**이 있다는 뜻이다.
-- 반박: 이게 정말 앱 코드 문제일 가능성? — 낮다. 코드 결함이라면 컴파일 또는 특정 페이지 생성에서 결정적으로 실패해야 하는데, 139/139 생성을 통과했고 실패 파일이 매번 바뀐다.
-
-**배포 위험도:** 이 실패는 **로컬 환경 특정 가능성이 높다.** Vercel 같은 클린 리눅스 컨테이너 + `CI=true`(Sentry 동작이 달라짐) 환경에서는 재현 안 될 수 있다. 다만 **이번 세션에서 그것을 검증하지는 못했다** — Vercel 최근 배포 로그 확인이 다음 조치다.
-
-> 검증(이번 실행): 상단 3회 빌드는 실제 실행 결과다. 어제 빌드를 깨뜨린 `dev-dense-preview/`는 **삭제 확인**(GONE)했다. 오늘 새로 발견된 임시 페이지 `dev-invops-preview/`(§6)를 임시 제외하고도 빌드는 동일하게 실패 — **이 디렉터리는 오늘 빌드 실패의 원인이 아니다.**
+⚠️ 부수 경고 2건 (Sentry, 기능 영향 없음 · 마감 전 정리 권장):
+- `disableLogger` deprecated → `webpack.treeshake.removeDebugLogging`로 이관 권장
+- `sentry.client.config.ts` → `instrumentation-client.ts`로 이관 권장 (Turbopack 대비)
 
 ---
 
-## 1. 파일 크기 감사 — ⚠️ C+
+## 1. 번들 크기 — 🔴 핵심 화면 2.32 MB (이번 사이클 최대 이슈)
 
-500줄 초과 **114개**, 1,000줄 초과 **34개**. 직전과 사실상 동일 — 리팩토링 진전 없음.
+빌드가 완주하며 라우트 표가 처음으로 나왔다. **페이지 고유 JS는 작지만(321~323 B) First Load JS가 2.32 MB** — 즉 공유/지연 청크 하나가 모든 핵심 화면에 통째로 딸려온다.
 
-**데이터 파일 (순수 상수 — 분리 우선순위 낮음):**
+| 라우트 | Page JS | **First Load JS** |
+|--------|---------|-------------------|
+| `/current` | 321 B | 🔴 **2.32 MB** |
+| `/roadmap` | 322 B | 🔴 **2.32 MB** |
+| `/tax` | 322 B | 🔴 **2.32 MB** |
+| `/team` | 321 B | 🔴 **2.32 MB** |
+| `/profile` | 322 B | 🔴 **2.32 MB** |
+| `/reports` | 323 B | 🔴 **2.32 MB** |
+| `/guides` | 322 B | 🔴 **2.32 MB** |
+| `/franchise` | 322 B | 🔴 **2.32 MB** |
+| `/marketing` | 322 B | 🔴 **2.32 MB** |
+| `/auth` | 24 kB | 🟠 1.17 MB |
+| `/guide/[guideId]` | 6.08 kB | 🟠 1.16 MB |
+| `+ First Load JS shared by all` | — | 🟢 **180 kB** (정상) |
+
+공유 청크(180 kB)는 건강하다. 문제는 **정적 청크 디렉터리의 두 거대 파일**이다:
+
+```
+3.8 MB  .next/static/chunks/6135-dae7b06491ca6ea0.js
+3.7 MB  .next/static/chunks/6691-d9bf34679b4a8995.js
+```
+
+이 7.5 MB(비압축)가 9개 화면의 2.32 MB First Load를 만든다. 원인은 **화면 컴포넌트가 모든 스테이지 데이터/뷰를 정적 import로 끌어오는 배럴 구조**로 강하게 의심된다 — §2의 초대형 데이터 파일들(`franchise-interior-data` 2,963줄, `vendor-setup-data` 2,719줄, `sub-industry-interior-data` 2,100줄 등)이 스테이지 전환과 무관하게 초기 번들에 전부 포함되는 경로. `next/dynamic` 지연 로딩과 데이터 파일 코드 스플리팅으로 해결 가능하다.
+
+> **검증:** 위 라우트 표와 청크 크기는 이번 실행의 실제 빌드 산출물이다. "2.32 MB가 곧 사용자에게 전송되는 gzip 크기"는 아니다 — Next 표기는 비압축 parse 기준이며 gzip 후엔 대략 1/3~1/4일 수 있다. 그래도 gzip 기준 ~600 kB+는 여전히 권장 예산의 2~3배로, 저사양·모바일에서 체감 지연이 크다.
+
+---
+
+## 2. 파일 크기 감사 — ⚠️ C+ (변동 없음)
+
+500줄 초과 **115개**, 1,000줄 초과 **34개**. 직전과 사실상 동일 — 리팩토링 진전 없음. §1 번들 문제와 직결되는 항목이다.
+
+**데이터 파일 (순수 상수 — 코드 스플리팅 우선순위 ↑, 번들 원인):**
 | 파일 | 줄 수 |
 |------|------|
 | [packages/shared/src/starter-data.ts](packages/shared/src/starter-data.ts) | 3,043 |
@@ -58,82 +90,81 @@
 | [vendor-setup-data.ts](apps/web/app/lib/components/stages/offline/vendor-setup-data.ts) | 2,719 |
 | [packages/shared/src/startup-programs.ts](packages/shared/src/startup-programs.ts) | 2,530 |
 | [k-hit-cases.ts](packages/shared/src/knowledge/k-hit-cases.ts) | 2,187 |
+| [sub-industry-interior-data.ts](apps/web/app/lib/components/stages/offline/sub-industry-interior-data.ts) | 2,100 |
 | [store-info-schema.ts](apps/web/app/lib/data/store-info-schema.ts) | 2,088 |
 
-**로직 파일 (리팩토링 우선순위 높음):**
+**컴포넌트 파일 (분리 우선순위 ↑ — 로직 포함):**
 | 파일 | 줄 수 |
 |------|------|
-| [apps/mobile/app/dashboard-screen.tsx](apps/mobile/app/dashboard-screen.tsx) | **6,056** 🔴 |
+| [apps/mobile/app/dashboard-screen.tsx](apps/mobile/app/dashboard-screen.tsx) | 6,056 |
 | [OperationsSetupStage.tsx](apps/web/app/lib/components/stages/offline/OperationsSetupStage.tsx) | 1,847 |
 | [PreLaunchFinalStage.tsx](apps/web/app/lib/components/stages/shared-tail/PreLaunchFinalStage.tsx) | 1,842 |
 | [GuidesView.tsx](apps/web/app/lib/components/surfaces/GuidesView.tsx) | 1,718 |
 | [usePersistence.ts](apps/web/app/lib/hooks/usePersistence.ts) | 1,628 |
 | [CEOMorningHero.tsx](apps/web/app/lib/components/dashboard/CEOMorningHero.tsx) | 1,522 |
 | [CashflowSetupSheet.tsx](apps/web/app/lib/components/dashboard/CashflowSetupSheet.tsx) | 1,453 |
-| [AIRoadmapWizard.tsx](apps/web/app/lib/components/AIRoadmapWizard.tsx) | 1,347 |
 
-## 2. console.log 감사 — ✅ A
+---
 
-프로덕션 코드(worktree·테스트·`scripts/` 제외) **26건**. 분포:
-- [api/ai/roadmap/generate/route.ts](apps/web/app/api/ai/roadmap/generate/route.ts) — **14건** (풀 조회·fallback 진단, 서버사이드)
-- `packages/ai/src/roadmap/*` — 3건 (파싱 fallback, 서버)
-- API 라우트 5개 각 1건 · [usePersistence.ts](apps/web/app/lib/hooks/usePersistence.ts) 1건은 **주석 문자열**(오탐)
+## 3. console.log 감사 — ✅ A
 
-**`apps/web/app/lib` 클라이언트 컴포넌트 실제 호출 ~0건.** 브라우저 번들에 로그가 새지 않는다. 조치 불필요.
+프로덕션 코드 **29건**, 대부분 서버 사이드 API 라우트에 집중. 클라이언트 컴포넌트 노출은 사실상 0건.
 
-## 3. TODO / FIXME / HACK — ✅ A+
+| 파일 | 건수 |
+|------|------|
+| [api/ai/roadmap/generate/route.ts](apps/web/app/api/ai/roadmap/generate/route.ts) | 14 |
+| [scripts/seed-insights/case-studies.ts](apps/web/scripts/seed-insights/case-studies.ts) | 4 (시드 스크립트) |
+| 기타 API 라우트 (contractors·products·members·account 등) | 각 1 |
 
-전체 코드베이스에서 **2건, 둘 다 실제 부채 아님**:
-- [apps/web/middleware.ts:36](apps/web/middleware.ts#L36) — `TODO (post-launch P1): nonce 기반 CSP 마이그레이션` (의도적 post-launch 항목)
-- [api/ai/business-plan/generate/route.ts:159](apps/web/app/api/ai/business-plan/generate/route.ts#L159) — AI 프롬프트 **문자열 내부**의 `"[TODO: verify via Statistics Korea]"` — 통계 조작 방지용 지침 텍스트. 코드 TODO 아님(오탐).
+서버 라우트의 `console.log`는 관측성 목적이면 정상이나, 구조화 로거(`console.warn/error` 265건과 함께)로의 일원화를 권장. `api/ai/roadmap/generate`의 14건은 정리 우선순위가 가장 높다.
 
-FIXME · HACK · XXX 0건. 844개 파일 규모에서 이례적으로 깨끗하다.
+---
 
 ## 4. 타입 안전성 — ✅ A+
 
-명시적 `any` **3건**:
-- [kakao-maps.d.ts](apps/web/app/lib/types/kakao-maps.d.ts) — 2건 (외부 Kakao Maps SDK 타입 부재, 불가피)
-- [useFunnelMetrics.ts](apps/web/app/lib/hooks/useFunnelMetrics.ts) — 1건 (`as any` 캐스팅)
+- 소스 코드 실제 `any` ~3건 (`useFunnelMetrics.ts`의 `supabase as any`, `persistence.ts`의 `Record<string, any>` 2건 — 모두 Supabase 동적 스키마 경계로 방어 가능)
+- `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error` **0건** (지속 유지 중 — 우수)
+- 나머지 `any`는 `.d.ts`(kakao-maps 타입 선언)·`.next` 생성물로 소스 부채 아님
 
-`@ts-ignore` · `@ts-expect-error` · `@ts-nocheck` **0건**. 타입 우회 전무.
+---
 
-## 5. 번들 크기 — ⚪ 미검증
+## 5. TODO/FIXME/HACK — ✅ A+
 
-빌드가 라우트 표(First Load JS 출력) 단계까지 도달하지 못해 **이번 사이클은 측정 불가**. 직전 리포트의 2.31 MB 수치는 재확인되지 않았다. §0 빌드 후처리 문제가 해소되면 다음 사이클에서 재측정.
+전체 **1건**, 실부채 아님:
+- [apps/web/middleware.ts:36](apps/web/middleware.ts:36) — `TODO (post-launch P1): nonce 기반 CSP 마이그레이션` (출시 후 계획된 개선, 정상 마커)
 
-## 6. 🟠 신규 발견 — 임시 미리보기 페이지 재발 (프로세스 스멜)
+FIXME·HACK·XXX 0건.
 
-어제 빌드를 깨뜨린 `dev-dense-preview/`는 삭제됐지만, **똑같은 안티패턴이 다시 나타났다**:
-- [apps/web/app/dev-invops-preview/page.tsx](apps/web/app/dev-invops-preview/page.tsx) — git 미추적, 파일 헤더에 *"메뉴 추가 흐름 검증 … 검증 후 삭제"* 명시.
+---
 
-오늘은 이 파일이 빌드 실패의 원인은 **아니다**(제외해도 동일 실패). 하지만 `app/` 라우트 트리에 임시 검증 페이지를 만드는 패턴이 **이틀 연속 반복**됐다 — 어제는 이런 파일이 실제로 빌드를 깼다. 함께 미추적으로 남은 변경: `InventoryOpsCard.tsx`, `useOperationsHandlers.ts` 수정.
+## 6. Lint — ⚠️ B−
+
+총 **43건** 경고 (에러 0):
+- `react-hooks/exhaustive-deps` **39건** — 대부분 `useMemo`/`useEffect` 의존성 배열에서 매 렌더 재생성되는 논리식(`entries`·`dailyEntries`·`costs`)을 콜백 내부 또는 자체 `useMemo`로 옮기라는 경고. 성능 미세 저하 + 잠재적 stale-closure 리스크.
+- `@next/next/no-img-element` 1건 — `next/image` 미사용 (LCP·대역폭)
+- Sentry deprecation 2건 (§0)
+
+에러 없이 빌드를 통과하므로 배포 차단은 아니나, 39건의 exhaustive-deps는 §1 번들 문제와 별개로 렌더 성능에 누적 영향.
 
 ---
 
 ## Top 5 실행 권고
 
-### 1. 🔴 프로덕션 빌드 후처리 실패 규명 — Sentry 플러그인 격리 (최우선)
-로컬 `next build`가 3/3 실패(컴파일·페이지생성은 성공, 후처리 FS ENOENT). **먼저 Vercel 최근 배포 로그를 확인**해 원격 빌드가 정상인지부터 판정할 것 — 정상이면 로컬 한정 문제로 강등. 그다음 로컬 재현: `SENTRY_ORG`/`SENTRY_PROJECT` 환경변수를 비운 채(=Sentry 업로드 비활성) `next build`를 돌려 성공하면 원인이 `withSentryConfig` 후처리로 확정된다. 확정 시 `sentryWebpackPluginOptions`에 로컬 빌드 시 소스맵 업로드/파일추적 비활성 조건을 추가. **번들 수치 재측정이 여기에 막혀 있음.**
+1. **🔴 [최우선] 핵심 9개 화면 2.32 MB First Load JS를 코드 스플리팅으로 절감.**
+   `/current`·`/roadmap`·`/tax`·`/team` 등이 공유하는 두 거대 청크(3.8 MB + 3.7 MB)를 `next/dynamic`으로 지연 로딩하고, 스테이지 데이터 파일(`franchise-interior-data` 등)을 스테이지 진입 시점에만 로드되도록 동적 import로 전환. 목표: First Load JS < 500 kB. **사용자가 매일 쓰는 화면이므로 체감 개선 효과가 가장 크다.**
 
-### 2. 🟠 `app/` 트리에 임시 검증 페이지 만드는 습관 차단 — CI/훅 가드
-이틀 연속 `dev-*-preview/` 임시 페이지가 등장했고, 어제는 그것이 빌드를 깼다. 검증용 페이지는 (a) `app/` 밖 Storybook/독립 스크립트로 빼거나, (b) `app/**/dev-*` 경로를 `.gitignore`에 등록하고 `git add` 시 pre-commit 훅으로 경고. `dev-invops-preview/` 검증 끝났으면 오늘 삭제.
+2. **🟢 [검증] 빌드 안정성을 CI에서 확증.**
+   이번 로컬 완주는 고무적이나 과거 실패가 비결정적이었다. Vercel/CI(리눅스 + `CI=true`)에서 **연속 2~3회 성공**을 확인해 툴체인 경합이 재발하지 않음을 못박을 것. 성공 시 빌드 항목을 안정적 A로 확정.
 
-### 3. 🟠 `useMorningBriefingBrain.ts` exhaustive-deps 14건 정리
-39개 `exhaustive-deps` 경고 중 **최대 클러스터**. `entries`(9건)·`costs`(5건)가 매 렌더 새 참조가 되어 아래 `useMemo` 다수가 전부 무효화된다. 아침 브리핑은 매일 첫 화면이라 체감 성능 직결 — 두 값을 각각 `useMemo`로 감싸면 대부분 해소. 다음 대상: `GuidesView.tsx`(dailyEntries 4건), `SalesBreakdownCard.tsx`.
+3. **⚠️ [부채] 데이터 파일 코드 스플리팅 (권고 1과 시너지).**
+   `starter-data.ts`(3,043줄)·`franchise-interior-data.ts`(2,963줄)·`vendor-setup-data.ts`(2,719줄) 등 순수 상수 파일을 산업/스테이지별 lazy chunk로 분리. 파일 크기(§2)와 번들 크기(§1)를 동시에 해소하는 단일 조치.
 
-### 4. 🟠 상수 데이터 파일 클라이언트 번들 분리 (번들 재측정 후 착수)
-`starter-data.ts`(3,043)·`startup-programs.ts`(2,530)·`k-hit-cases.ts`(2,187)·`success-case-studies.ts`(1,784)·`logistics-platforms.ts`(1,674) — 합계 1.1만 줄 정적 상수. `next/dynamic` 코드 스플릿 또는 `public/*.json` 지연 fetch로 이관. **단, §0·권고1로 번들 실측이 복구된 뒤** `@next/bundle-analyzer`로 실제 기여도부터 확인하고 착수.
+4. **⚠️ [위생] `api/ai/roadmap/generate/route.ts`의 console.log 14건 정리 + Sentry deprecation 2건 이관.**
+   서버 로그를 구조화 로거로 일원화하고, `sentry.client.config.ts` → `instrumentation-client.ts`, `disableLogger` → `webpack.treeshake.removeDebugLogging`로 마이그레이션. 낮은 위험·짧은 작업.
 
-### 5. 🟡 `apps/mobile/app/dashboard-screen.tsx` (6,056줄) 상태 명시
-웹 우선 출시 전략상 mobile이 동결이라면 README에 **명시적 동결 표기**, 활성이라면 웹 `dashboard/` 분리 패턴 적용. 애매한 방치가 최악.
+5. **⚠️ [성능] exhaustive-deps 39건 중 논리식 재생성 패턴부터 수정.**
+   `entries`·`dailyEntries`·`costs` 초기화를 각자의 `useMemo`로 감싸 매 렌더 의존성 변동을 제거. AnalyticsSurface·대시보드 카드 등 자주 렌더되는 컴포넌트 우선.
 
 ---
 
-## 검증 노트
-
-- 파일 수 · `any` · TODO · console.log 수치는 이 세션에서 직접 실행한 `find`/`grep` 결과다.
-- 빌드 3회는 모두 `rm -rf .next && npx next build`로 실제 실행했고, 컴파일 성공·후처리 ENOENT 실패·매회 다른 실패 파일을 로그로 확인했다. 근본 원인(Sentry 후처리 경합)은 **정황 근거 기반 유력 가설이며 격리 실험으로 확정하지 않았다** — 권고 1이 그 확정 절차다.
-- **번들 크기는 이번 사이클 미측정** — 빌드가 라우트 표에 도달하지 못했다.
-- 어제 빌드를 깬 `dev-dense-preview/` 삭제, 신규 `dev-invops-preview/` 등장을 git status로 확인.
-- `apps/ios`(Swift) · `apps/mobile`(Expo) 빌드는 이번 감사에서 실행하지 않음 — **미검증**.
-- 빌드 로그에 `[resolveNextStageIds] … nextStageConditions 매칭 실패` 경고(`budget-setup`, `biz-registration`)가 반복 출력 — 빌드 자체는 진행되나 stage 라우팅 SSOT 잠재 이슈로 별도 조사 대상(직전 리포트에서도 지적).
+*자동 생성: daily-quality-report 스케줄 태스크 · 2026-07-24. 모든 수치는 이번 실행의 실제 빌드/grep 결과이며, 단정 못 하는 항목은 본문에 "반박 검토"로 명시함.*
