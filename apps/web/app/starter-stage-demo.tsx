@@ -836,6 +836,13 @@ export default function StarterStageDemo({
       .bup-sidebar-logo-text {
         font-size: 15px; font-weight: 700; color: #0f172a;
         letter-spacing: -0.03em;
+        /* 워드마크(비율 10.78, h15=162px)가 가용폭(200-패딩32-마크28-갭10=130px)을 넘던 문제:
+           남는 폭 안에서만 그리고 svg 를 비율 유지 축소 (2026-07-24) */
+        display: inline-flex; align-items: center;
+        flex: 1; min-width: 0; overflow: hidden;
+      }
+      .bup-sidebar-logo-text svg {
+        max-width: 100%; height: auto;
       }
       .bup-sidebar-nav {
         display: flex; flex-direction: column; gap: 3px;
@@ -967,6 +974,9 @@ export default function StarterStageDemo({
         .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn-label {
           opacity: 1; width: auto; pointer-events: auto;
         }
+        /* 데스크탑 collapsed 의 display:none 복원 — 모바일 드로어는 항상 라벨 노출 (2026-07-24) */
+        .bup-sidebar[data-collapsed="true"] .bup-sidebar-logo-text { display: inline-flex; }
+        .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn-label { display: inline; }
         .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn { justify-content: flex-start; }
         .bup-sidebar-toggle { display: none !important; }   /* collapse 토글은 모바일에서 숨김 */
 
@@ -1073,7 +1083,8 @@ export default function StarterStageDemo({
       <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} data-mobile-open={mobileNavOpen} aria-label="Navigation">
         <div className="bup-sidebar-logo">
           <FoundOneSpiralLogo size={28} color="#172A78" style={{ flexShrink: 0 }} />
-          <span className="bup-sidebar-logo-text" style={{ display: "inline-flex", alignItems: "center", color: "#0f172a" }}>
+          {/* display 는 CSS 클래스로만 — 인라인이면 collapsed 의 display:none 을 이겨서 접혀도 튀어나옴 (2026-07-24) */}
+          <span className="bup-sidebar-logo-text" style={{ color: "#0f172a" }}>
             <FoundOneWordmark height={15} />
           </span>
         </div>
