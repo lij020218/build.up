@@ -21,6 +21,7 @@ import {
 } from "@foundone/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import TaxCalendarCard from "../TaxCalendarCard";
+import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_DEEP = "#10104a";
@@ -107,6 +108,13 @@ export function TaxSurface() {
             : "Tax type, estimated VAT, credits for your industry, and filing dates — all estimates; confirm with Hometax."}
         </p>
       </header>
+
+      {/* 국세청 바로가기 — 이 화면의 다음 행동(신고·납부)은 홈택스 (2026-07-24 사장님 지시) */}
+      <ExternalQuickLinks
+        title={ko ? "국세청 바로가기" : "NTS quick links"}
+        caption={ko ? "신고·납부·전자세금계산서는 홈택스에서 — 이 화면의 값은 예상치예요." : "File and pay on Hometax — values here are estimates."}
+        links={[{ label: ko ? "국세청 홈택스" : "Hometax", url: HOMETAX, primary: true }]}
+      />
 
       {/* ━━━ ① 세금 계산 ━━━ */}
       <div style={{ display: "grid", gap: 10 }}>

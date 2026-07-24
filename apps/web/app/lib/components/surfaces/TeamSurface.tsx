@@ -18,6 +18,7 @@ import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins, 
 import { supabase } from "../../../../lib/supabase";
 import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
+import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -252,6 +253,20 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
             {ko ? "직원별 근무 요일·시간을 정하고, 연차 신청을 승인/반려하세요. 여기서 정한 근무표는 직원 화면에 그대로 표시됩니다." : "Set each staff's shifts and approve time-off requests."}
           </p>
         </header>
+
+        {/* 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동 (2026-07-24 사장님 지시).
+            URL 은 공식 도메인만, 2026-07-24 전수 200 확인. 고용24 = 정부 운영(무료 공고). */}
+        <ExternalQuickLinks
+          title={ko ? "직원 구인 바로가기" : "Hiring quick links"}
+          caption={ko ? "공고 등록·지원자 관리는 각 사이트에서 하세요." : "Post jobs on these sites."}
+          links={[
+            { label: "알바몬", url: "https://www.albamon.com" },
+            { label: "알바천국", url: "https://www.alba.co.kr" },
+            { label: "사람인", url: "https://www.saramin.co.kr" },
+            { label: "잡코리아", url: "https://www.jobkorea.co.kr" },
+            { label: "고용24", url: "https://www.work24.go.kr", badge: ko ? "정부·무료" : "Gov·Free" },
+          ]}
+        />
 
         {loading ? (
           <div style={{ ...card, textAlign: "center", color: MUTED }}>{ko ? "불러오는 중…" : "Loading…"}</div>

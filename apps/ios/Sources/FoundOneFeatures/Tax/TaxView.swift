@@ -45,6 +45,12 @@ public struct TaxView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: BUSpacing.md) {
                 header
+                // 국세청 바로가기 — 다음 행동(신고·납부)은 홈택스 (2026-07-24 사장님 지시, 웹 정합)
+                BUQuickLinksCard(
+                    title: "국세청 바로가기",
+                    caption: "신고·납부·전자세금계산서는 홈택스에서 — 이 화면의 값은 예상치예요.",
+                    links: [BUQuickLink(label: "국세청 홈택스", url: hometax, isPrimary: true)]
+                )
                 calcSection
                 creditSection
                 scheduleSection

@@ -75,6 +75,20 @@ public struct TeamManagementView: View {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         headerBlock
 
+                        // 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동
+                        // (2026-07-24 사장님 지시, 웹 TeamSurface 정합. URL 전수 200 확인)
+                        BUQuickLinksCard(
+                            title: "직원 구인 바로가기",
+                            caption: "공고 등록·지원자 관리는 각 사이트에서 하세요.",
+                            links: [
+                                BUQuickLink(label: "알바몬", url: "https://www.albamon.com"),
+                                BUQuickLink(label: "알바천국", url: "https://www.alba.co.kr"),
+                                BUQuickLink(label: "사람인", url: "https://www.saramin.co.kr"),
+                                BUQuickLink(label: "잡코리아", url: "https://www.jobkorea.co.kr"),
+                                BUQuickLink(label: "고용24", url: "https://www.work24.go.kr", badge: "정부·무료"),
+                            ]
+                        )
+
                         if let members {
                             if members.isEmpty {
                                 emptyState
