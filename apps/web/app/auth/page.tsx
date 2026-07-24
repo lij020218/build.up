@@ -803,7 +803,9 @@ export default function AuthPage() {
             letterSpacing: "-0.04em",
             maxWidth: 800,
             margin: "0 auto 24px",
-            position: "relative"
+            position: "relative",
+            /* 카피의 \n(…까지,\n한 흐름으로.) 존중 — 없으면 '한'이 윗줄에 남아 어색 (2026-07-24 사장님 지적) */
+            whiteSpace: "pre-line"
           }}
         >
           {t.heroTitle}
