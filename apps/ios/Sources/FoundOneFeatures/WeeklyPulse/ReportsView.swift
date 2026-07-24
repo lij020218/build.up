@@ -41,15 +41,6 @@ public struct ReportsView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: BUSpacing.shellGap) {
                 header
-
-                // ━━━ 재무 전망 (2026-07-24 신설, 웹 ReportsSurface 미러) — 13주 → 12개월 상시 ━━━
-                financeSection
-
-                Text("보고서")
-                    .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(BUColor.inkSecondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
                 periodTabs
 
                 ReportHeroCard(data: data)
@@ -86,7 +77,14 @@ public struct ReportsView: View {
 
                     weeklyOnlyEyebrow
 
-                    // Survival·13주는 상단 재무 전망 섹션으로 상시 승격 (2026-07-24)
+                    SurvivalBoardCard(mock: mock, healthResult: healthResult)
+                    if !weeklyBalances.isEmpty {
+                        Cashflow13WeekCard(
+                            currentBalance: mock.currentCash ?? 0,
+                            weeklyBalances: weeklyBalances,
+                            isCrisis: isCrisis
+                        )
+                    }
                     if ratios.ready && mock.category != .startupTech {
                         CostStructureCard(
                             ingredientRatio: ratios.ingredientRatio,
@@ -110,59 +108,11 @@ public struct ReportsView: View {
         .background(BUBackgroundSurface())
     }
 
-    // MARK: - 재무 전망 (2026-07-24) — 웹 ReportsSurface 재무 섹션 미러
-
-    @ViewBuilder
-    private var financeSection: some View {
-        let ratios = CostRatios.calculate(
-            costs: mock.costs,
-            totalRevenue: mock.entries.reduce(0) { $0 + $1.sales },
-            days: mock.entries.count
-        )
-        let healthResult = HealthScore.calculate(
-            entries: mock.entries, costs: mock.costs, category: mock.category,
-            stage: mock.stage, currentCash: mock.currentCash
-        )
-        let weeklyBalances: [Double] = {
-            guard let cash = mock.currentCash else { return [] }
-            let weeklyNet = (ratios.monthlyRevenueEquivalent - mock.costs.total) / 4.33
-            return (0..<13).map { week in cash + weeklyNet * Double(week) }
-        }()
-        let recent7: [Double] = Array(mock.entries.sorted { $0.date < $1.date }.suffix(7).map { $0.sales })
-        let avgDaily = recent7.isEmpty ? 0 : recent7.reduce(0, +) / Double(recent7.count)
-        let predicted7: [Double] = {
-            guard !recent7.isEmpty else { return [] }
-            let trend = recent7.last! / max(1, recent7.first!) - 1
-            return (1...7).map { i in avgDaily * (1 + trend * Double(i) / 14) }
-        }()
-
-        VStack(spacing: BUSpacing.shellGap) {
-            SurvivalBoardCard(mock: mock, healthResult: healthResult)
-            if !weeklyBalances.isEmpty {
-                Cashflow13WeekCard(
-                    currentBalance: mock.currentCash ?? 0,
-                    weeklyBalances: weeklyBalances,
-                    isCrisis: weeklyBalances.contains(where: { $0 < 0 })
-                )
-            }
-            WhatIfSimulator(
-                baseSales: ratios.monthlyRevenueEquivalent,
-                baseCosts: mock.costs.total,
-                variableCosts: mock.costs.ingredients,
-                startCash: mock.currentCash ?? 0,
-                showProjection: true
-            )
-            if recent7.count >= 3 {
-                ForecastCard(recent7: recent7, predicted7: predicted7, avgDailySales: avgDaily)
-            }
-        }
-    }
-
     // MARK: - Header + tabs
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("재무 · FINANCE")
+            Text("보고서 · REPORTS")
                 .font(.system(size: 11, weight: .heavy))
                 .tracking(1.54)
                 .foregroundStyle(BUColor.inkMuted.opacity(0.7))

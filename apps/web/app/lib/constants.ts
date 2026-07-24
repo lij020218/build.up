@@ -12,6 +12,7 @@ export const SURFACE_HREFS: Record<DashboardSurface, string> = {
   analytics: "/analytics",
   marketing: "/marketing",
   reports: "/reports",
+  finance: "/finance",
   team: "/team",
   tax: "/tax"
 };

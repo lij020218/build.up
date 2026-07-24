@@ -101,6 +101,7 @@ import { OnboardingChoiceScreen } from "./lib/components/onboarding/OnboardingCh
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
 import { ReportsSurface } from "./lib/components/surfaces/ReportsSurface";
+import { FinanceSurface } from "./lib/components/surfaces/FinanceSurface";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
 import { TaxSurface } from "./lib/components/surfaces/TaxSurface";
 import { TeamSurface } from "./lib/components/surfaces/TeamSurface";
@@ -566,6 +567,7 @@ export default function StarterStageDemo({
     // 자체 hero header 를 가진 surface 는 외부 hero 중복 노출 방지.
     // 미드나이트 단색 + eyebrow + title + subtitle 패턴 통일.
     activeSurface === "reports" ||
+    activeSurface === "finance" ||
     activeSurface === "marketing" ||
     activeSurface === "tax" ||
     activeSurface === "franchise" ||
@@ -1204,6 +1206,12 @@ export default function StarterStageDemo({
         {activeSurface === "reports" ? (
           <CardErrorBoundary cardLabel="보고서">
             <ReportsSurface />
+          </CardErrorBoundary>
+        ) : null}
+
+        {activeSurface === "finance" ? (
+          <CardErrorBoundary cardLabel="재무">
+            <FinanceSurface />
           </CardErrorBoundary>
         ) : null}
 

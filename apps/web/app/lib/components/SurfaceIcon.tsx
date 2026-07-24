@@ -83,6 +83,17 @@ export function SurfaceIcon(props: { surface: DashboardSurface }) {
     );
   }
 
+  if (props.surface === "finance") {
+    // 상승 꺾은선 + 원화 — 재무 전망·시뮬레이션
+    return (
+      <svg {...common}>
+        <path d="M2.5 12.5h11" />
+        <path d="M3 10.5l3-3 2.2 2 4.3-4.5" />
+        <path d="M10.5 5h2v2" />
+      </svg>
+    );
+  }
+
   if (props.surface === "reports") {
     // 문서 + 우상단 접힘 + 안에 mini bar chart — 보고서·요약 시각화
     return (

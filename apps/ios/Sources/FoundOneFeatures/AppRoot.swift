@@ -79,6 +79,7 @@ public struct AppRoot: View {
         case marketing
         case tax
         case reports
+        case finance
         case analytics
         case team
         case profile
@@ -110,6 +111,7 @@ public struct AppRoot: View {
             case "marketing":     self._selectedTab = State(initialValue: .marketing)
             case "tax":           self._selectedTab = State(initialValue: .tax)
             case "reports":       self._selectedTab = State(initialValue: .reports)
+            case "finance":       self._selectedTab = State(initialValue: .finance)
             case "analytics", "store": self._selectedTab = State(initialValue: .analytics)
             case "profile", "settings": self._selectedTab = State(initialValue: .profile)
             default: break
@@ -1056,6 +1058,8 @@ private struct MainTabs: View {
                 TaxView(store: store)
             case .reports:
                 ReportsView(mock: mockData)
+            case .finance:
+                FinanceView(mock: mockData)
             case .analytics:
                 MyStoreView(store: store, storeInfo: storeInfo)
             case .team:
@@ -1131,7 +1135,8 @@ private func webSurfaceTabs(businessLaunched: Bool) -> [FoundOneSurfaceTab] {
         .init(id: .franchise, label: "프랜차이즈", systemImage: "storefront"),
         businessLaunched ? .init(id: .marketing, label: "마케팅", systemImage: "megaphone") : nil,
         businessLaunched ? .init(id: .tax, label: "세금", systemImage: "wonsign.circle") : nil,
-        businessLaunched ? .init(id: .reports, label: "재무", systemImage: "chart.xyaxis.line") : nil,
+        businessLaunched ? .init(id: .reports, label: "보고서", systemImage: "doc.richtext") : nil,
+        businessLaunched ? .init(id: .finance, label: "재무", systemImage: "chart.xyaxis.line") : nil,
         businessLaunched ? .init(id: .analytics, label: "내 가게", systemImage: "chart.bar") : nil,
         businessLaunched ? .init(id: .team, label: "직원", systemImage: "person.2") : nil,
         .init(id: .profile, label: "내 정보", systemImage: "person.crop.circle"),
@@ -1618,6 +1623,8 @@ struct DemoTabs: View {
                 TaxView(store: demoDashboardStore)
             case .reports:
                 ReportsView(mock: mockData)
+            case .finance:
+                FinanceView(mock: mockData)
             case .analytics:
                 MyStoreView(store: demoDashboardStore, storeInfo: demoStoreInfo)
             case .team:

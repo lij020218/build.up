@@ -682,7 +682,8 @@ export function useComputedDashboard(
       ? [
           { id: "marketing" as const, label: language === "ko" ? "마케팅" : "Marketing" },
           { id: "tax" as const,       label: language === "ko" ? "세금" : "Tax" },
-          { id: "reports" as const,   label: language === "ko" ? "재무" : "Finance" },
+          { id: "reports" as const,   label: language === "ko" ? "보고서" : "Reports" },
+          { id: "finance" as const,   label: language === "ko" ? "재무" : "Finance" },
           { id: "analytics" as const, label: language === "ko" ? "내 가게" : "My store" },
           { id: "team" as const,      label: language === "ko" ? "직원" : "Team" },
         ]

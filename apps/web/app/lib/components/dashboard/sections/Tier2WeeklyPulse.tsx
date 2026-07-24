@@ -51,7 +51,7 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
 
       {/* 13주 자금흐름 예측 — Quicken/CFO 표준 + AI 처방 */}
       {/* 13주 예측·생존 보드·월간 진행·What-If → "재무" 탭으로 이관 (2026-07-24 재무 페이지 신설) */}
-      <a href="/reports" style={{
+      <a href="/finance" style={{
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
         padding: "13px 16px", borderRadius: 14, textDecoration: "none",
         border: "1px solid rgba(25,25,112,0.10)", background: "rgba(25,25,112,0.03)",
