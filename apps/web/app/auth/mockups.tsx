@@ -31,6 +31,7 @@ export function MockupByIndex({ index, isLight, lang }: { index: number; isLight
   if (index === 3) return <MockupAnalysis {...p} />;
   if (index === 4) return <MockupMarket {...p} />;
   if (index === 5) return <MockupMentoring {...p} />;
+  if (index === 6) return <MockupStaff {...p} />;
   return <MockupOperations {...p} />;
 }
 
@@ -682,6 +683,67 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
           </div>
           <div style={{ flex: 1, padding: "10px 0", borderRadius: 10, background: subtle, border: `1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"}`, fontSize: 13, fontWeight: 500, textAlign: "center", color: muted }}>
             {ko ? "상세 대시보드" : "Full dashboard"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Mockup 8: 직원 관리 — 초대·근무표·연차·급여 (2026-07-24 랜딩 개편) ── */
+export function MockupStaff({ card, muted, subtle, accent, isLight, lang }: MockupProps) {
+  const ko = lang === "ko";
+  const staff = [
+    { name: ko ? "김서연" : "Seoyeon", role: ko ? "홀" : "Floor", days: ko ? "화·수·목·금 10–18" : "Tue–Fri 10–18", on: true },
+    { name: ko ? "박지호" : "Jiho", role: ko ? "주방" : "Kitchen", days: ko ? "토·일 09–17" : "Sat–Sun 09–17", on: false },
+  ];
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto" }}>
+      <div style={{ ...card, padding: 20, borderRadius: 24 }}>
+        {/* header + 초대 pill */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "직원 관리" : "Team"}</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", background: accent, padding: "6px 14px", borderRadius: 999 }}>
+            {ko ? "+ 링크로 초대" : "+ Invite via link"}
+          </div>
+        </div>
+
+        {/* 직원 행 — 출근 배지 + 근무표 */}
+        <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+          {staff.map((m) => (
+            <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: subtle }}>
+              <div style={{ width: 34, height: 34, borderRadius: 17, background: accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                {m.name[0]}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 14, fontWeight: 650 }}>{m.name}</span>
+                  <span style={{ fontSize: 10.5, color: muted }}>{m.role}</span>
+                  {m.on && (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#1d3557", background: isLight ? "rgba(29,53,87,0.08)" : "rgba(255,255,255,0.10)", padding: "2px 8px", borderRadius: 999 }}>
+                      {ko ? "출근 중" : "On shift"}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11.5, color: muted, marginTop: 2 }}>{m.days}</div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: accent, flexShrink: 0 }}>{ko ? "근무표" : "Shifts"}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* 연차 승인 + 급여 요약 */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ padding: "13px 14px", borderRadius: 12, background: subtle }}>
+            <div style={{ fontSize: 11, color: muted, marginBottom: 4 }}>{ko ? "연차 신청 1건" : "1 time-off request"}</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#fff", background: accent, padding: "4px 12px", borderRadius: 8 }}>{ko ? "승인" : "Approve"}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: muted, border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.16)"}`, padding: "4px 12px", borderRadius: 8 }}>{ko ? "반려" : "Decline"}</span>
+            </div>
+          </div>
+          <div style={{ padding: "13px 14px", borderRadius: 12, background: subtle }}>
+            <div style={{ fontSize: 11, color: muted, marginBottom: 2 }}>{ko ? "이번 달 예상 급여 (4대보험 포함)" : "Est. payroll (incl. insurance)"}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: "#191970" }}>{ko ? "312만원" : "$2,400"}</div>
           </div>
         </div>
       </div>
