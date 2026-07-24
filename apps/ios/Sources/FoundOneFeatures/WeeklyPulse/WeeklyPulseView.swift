@@ -65,18 +65,15 @@ public struct WeeklyPulseView: View {
             VStack(spacing: BUSpacing.shellGap) {
                 sectionEyebrow
 
-                SurvivalBoardCard(
-                    mock: mock,
-                    healthResult: healthResult
-                )
-
-                if !weeklyBalances.isEmpty {
-                    Cashflow13WeekCard(
-                        currentBalance: mock.currentCash ?? 0,
-                        weeklyBalances: weeklyBalances,
-                        isCrisis: isCrisis
-                    )
+                // 생존 보드·13주 예측 → "재무" 탭으로 이관 (2026-07-24 재무 페이지 신설, 웹 미러)
+                HStack(spacing: 8) {
+                    Text("재무 전망 — 손익분기 · 13주 자금흐름 · 12개월 시뮬레이션")
+                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    Spacer()
+                    Text("재무 탭 →").font(.system(size: 12, weight: .bold)).foregroundStyle(BUColor.midnight)
                 }
+                .padding(.horizontal, 14).padding(.vertical, 12)
+                .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 if ratios.ready && mock.category != .startupTech {
                     CostStructureCard(

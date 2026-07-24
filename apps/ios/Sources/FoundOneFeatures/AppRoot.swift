@@ -1131,7 +1131,7 @@ private func webSurfaceTabs(businessLaunched: Bool) -> [FoundOneSurfaceTab] {
         .init(id: .franchise, label: "프랜차이즈", systemImage: "storefront"),
         businessLaunched ? .init(id: .marketing, label: "마케팅", systemImage: "megaphone") : nil,
         businessLaunched ? .init(id: .tax, label: "세금", systemImage: "wonsign.circle") : nil,
-        businessLaunched ? .init(id: .reports, label: "보고서", systemImage: "doc.richtext") : nil,
+        businessLaunched ? .init(id: .reports, label: "재무", systemImage: "chart.xyaxis.line") : nil,
         businessLaunched ? .init(id: .analytics, label: "내 가게", systemImage: "chart.bar") : nil,
         businessLaunched ? .init(id: .team, label: "직원", systemImage: "person.2") : nil,
         .init(id: .profile, label: "내 정보", systemImage: "person.crop.circle"),

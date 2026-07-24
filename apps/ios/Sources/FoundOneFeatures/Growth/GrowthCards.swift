@@ -21,14 +21,23 @@ public struct WhatIfSimulator: View {
     let baseSales: Double
     let baseCosts: Double
     let ko: Bool
+    /// 재무 탭 전용 — 12개월 현금 투영 (2026-07-24, 웹 showProjection 미러)
+    let variableCosts: Double
+    let startCash: Double
+    let showProjection: Bool
 
     @State private var salesDelta: Double = 0      // -50% ~ +50%
     @State private var costsDelta: Double = 0
+    @State private var growthSelIdx: Int = 1       // 보수/기준/낙관 (기본 기준)
 
-    public init(baseSales: Double, baseCosts: Double, ko: Bool = true) {
+    public init(baseSales: Double, baseCosts: Double, ko: Bool = true,
+                variableCosts: Double = 0, startCash: Double = 0, showProjection: Bool = false) {
         self.baseSales = baseSales
         self.baseCosts = baseCosts
         self.ko = ko
+        self.variableCosts = variableCosts
+        self.startCash = startCash
+        self.showProjection = showProjection
     }
 
     private var projectedSales: Double { baseSales * (1 + salesDelta / 100) }
@@ -36,6 +45,18 @@ public struct WhatIfSimulator: View {
     private var projectedNet: Double { projectedSales - projectedCosts }
     private var baseNet: Double { baseSales - baseCosts }
     private var netChange: Double { projectedNet - baseNet }
+
+    // 12개월 투영 — 변동비(재료 등)는 비용 레버에 같이 움직이고 매출 비례로 취급 (FinanceSim SSOT)
+    private var projection: FinanceSim.Result? {
+        guard showProjection else { return nil }
+        let variableAdj = variableCosts * (1 + costsDelta / 100)
+        let fixedAdj = max(0, projectedCosts - variableAdj)
+        let ratio = projectedSales > 0 ? variableAdj / projectedSales : 0
+        let growth = FinanceSim.scenarios[growthSelIdx].growthRatePct
+        return FinanceSim.projectTwelveMonths(
+            startCash: startCash, monthlySales: projectedSales,
+            variableCostRatio: ratio, monthlyFixedCosts: fixedAdj, growthRatePct: growth)
+    }
 
     public var body: some View {
         BUCard(.outer) {
@@ -108,6 +129,63 @@ public struct WhatIfSimulator: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 12)
                 .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12))
+
+                // ── 12개월 현금 투영 (재무 탭 전용) — 가정 유지 시 산술 결과, 예측 아님 ──
+                if let proj = projection {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("12개월 현금 투영")
+                                .font(.system(size: 11, weight: .heavy))
+                                .foregroundStyle(BUColor.midnight)
+                                .textCase(.uppercase).kerning(0.6)
+                            Spacer()
+                        }
+                        HStack(spacing: 5) {
+                            ForEach(Array(FinanceSim.scenarios.enumerated()), id: \.offset) { idx, sc in
+                                Button { growthSelIdx = idx } label: {
+                                    Text(sc.labelKo)
+                                        .font(.system(size: 10.5, weight: .semibold))
+                                        .padding(.horizontal, 9).padding(.vertical, 5)
+                                        .background(growthSelIdx == idx ? BUColor.midnight.opacity(0.08) : Color.clear, in: Capsule())
+                                        .overlay(Capsule().strokeBorder(growthSelIdx == idx ? BUColor.midnight : BUColor.midnight.opacity(0.15), lineWidth: 1))
+                                        .foregroundStyle(growthSelIdx == idx ? BUColor.midnight : BUColor.inkSecondary)
+                                }.buttonStyle(.plain)
+                            }
+                        }
+                        // 월별 현금 막대 (음수 = danger)
+                        GeometryReader { _ in EmptyView() }.frame(height: 0)
+                        let maxAbs = max(1, proj.points.map { abs($0.endCash) }.max() ?? 1)
+                        HStack(alignment: .bottom, spacing: 3) {
+                            ForEach(proj.points, id: \.month) { pt in
+                                VStack(spacing: 2) {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(pt.endCash < 0 ? BUColor.danger.opacity(0.75) : BUColor.midnight.opacity(0.55))
+                                        .frame(height: max(4, CGFloat(abs(pt.endCash) / maxAbs) * 72))
+                                        .frame(maxHeight: 76, alignment: .bottom)
+                                    Text("\(pt.month)")
+                                        .font(.system(size: 7.5)).foregroundStyle(BUColor.inkMuted)
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                        }
+                        if let outMonth = proj.cashOutMonth {
+                            Text("이 가정이면 \(outMonth)개월차에 현금이 소진돼요 (부족 \(formatKRW(proj.shortfall ?? 0))) — 펀딩 탭에서 정책자금·대출을 확인하세요.")
+                                .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.danger)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text("12개월 내 현금 소진 없음 · 12개월 말 \(formatKRW(proj.finalCash))")
+                                .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.success)
+                        }
+                        if let bem = proj.breakEvenMonth, bem > 1 {
+                            Text("월 순익 흑자 전환: \(bem)개월차 (성장 가정 기준)")
+                                .font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary)
+                        }
+                        Text("가정 기반 산술 투영이에요(예측 아님) — 레버·성장 가정 유지를 전제합니다. 단기 정밀은 13주 자금흐름을 보세요.")
+                            .font(.system(size: 10)).foregroundStyle(BUColor.inkMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.top, 8)
+                }
             }
         }
     }
@@ -744,18 +822,7 @@ public struct GrowthForecastView: View {
                 }
                 .padding(.top, 4)
 
-                WhatIfSimulator(
-                    baseSales: avgDaily * 26,
-                    baseCosts: mock.costs.total
-                )
-
-                if recent7.count >= 3 {
-                    ForecastCard(
-                        recent7: recent7,
-                        predicted7: predicted7,
-                        avgDailySales: avgDaily
-                    )
-                }
+                // What-If 시뮬·매출 예측 → 재무 탭으로 이관 (2026-07-24 재무 페이지 신설, 웹 미러)
 
                 ProgressMilestonesCard(milestones: milestones)
 
