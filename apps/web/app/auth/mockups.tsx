@@ -392,9 +392,10 @@ export function HeroDashboardPreview({ lang }: { lang: Language }) {
       <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 400, height: 200, background: "radial-gradient(circle, rgba(91,140,255,0.2), transparent 70%)", pointerEvents: "none" }} />
 
       {/* top nav mockup */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {(ko ? ["홈", "현재 단계", "로드맵", "펀딩", "분석"] : ["Home", "Current", "Roadmap", "Funding", "Analytics"]).map((tab, i) => (
-          <div key={tab} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: i === 0 ? "rgba(59,92,140,0.15)" : "rgba(255,255,255,0.05)", color: i === 0 ? "#5B8CFF" : "rgba(255,255,255,0.4)" }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" as const }}>
+        {/* 실제 앱 네비 미러 (2026-07-24 랜딩 2차 — 옛 탭 5종은 현행 제품과 불일치) */}
+        {(ko ? ["홈", "로드맵", "펀딩", "프랜차이즈", "마케팅", "세금", "내 가게", "직원"] : ["Home", "Roadmap", "Funding", "Franchise", "Marketing", "Tax", "My Store", "Team"]).map((tab, i) => (
+          <div key={tab} style={{ padding: "6px 11px", borderRadius: 8, fontSize: 11.5, fontWeight: 500, whiteSpace: "nowrap" as const, background: i === 0 ? "rgba(59,92,140,0.15)" : "rgba(255,255,255,0.05)", color: i === 0 ? "#5B8CFF" : "rgba(255,255,255,0.4)" }}>
             {tab}
           </div>
         ))}
@@ -449,10 +450,22 @@ export function HeroDashboardPreview({ lang }: { lang: Language }) {
             </div>
           </div>
           <div style={{ borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", padding: 14 }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 8 }}>{ko ? "최근 알림" : "Recent Alert"}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: "#191970", flexShrink: 0 }} />
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{ko ? "보건증 유효기간 확인 필요" : "Health certificate expiry check needed"}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 8 }}>{ko ? "오늘의 운영" : "Today's Ops"}</div>
+            <div style={{ display: "grid", gap: 7 }}>
+              {(ko ? [
+                { dot: "#5B8CFF", text: "시그니처 라떼 원가율 24% · 재료로 20잔 가능" },
+                { dot: "#191970", text: "부가세 확정신고 D-7 · 홈택스 바로가기" },
+                { dot: "#3b5c8c", text: "김서연 출근 · 이번 주 근무표 확정" },
+              ] : [
+                { dot: "#5B8CFF", text: "Latte cost ratio 24% · 20 servings makeable" },
+                { dot: "#191970", text: "VAT filing D-7 · open Hometax" },
+                { dot: "#3b5c8c", text: "Seoyeon clocked in · shifts confirmed" },
+              ]).map((r) => (
+                <div key={r.text} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: r.dot, flexShrink: 0 }} />
+                  <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.6)" }}>{r.text}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
