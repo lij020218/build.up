@@ -8,12 +8,14 @@ import {
   getAnthropicApiKey,
   getCronSecret,
   getNaverApiCreds,
+  getOpenAIApiKey,
   getTavilyApiKey,
   getYoutubeApiKey,
 } from "../../_lib/env";
 import { timingSafeEqualStr } from "../../_lib/timing-safe";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { generateTrends } from "../../_lib/trend-generator";
+import { buildWeeklyMemePack, getMemeWeekKey } from "../../_lib/marketing-memes";
 
 /**
  * 매일 08:00 KST (23:00 UTC) Vercel cron 실행.
@@ -85,7 +87,27 @@ export async function GET(request: Request) {
     subIndustryRows: 0,
     failed: [] as Array<{ group: string; language: string; error: string }>,
     durations: [] as Array<{ group: string; language: string; ms: number }>,
+    memePack: null as null | { weekKey: string; status: string; itemCount: number; error?: string },
   };
+
+  // ── 주간 밈·챌린지 팩 (2026-07-24 신설) ──
+  // 매일 도는 이 크론에서 호출하지만 buildWeeklyMemePack 이 멱등이라 실제 수집은 주 1회
+  // (이번 주 팩이 이미 있으면 exists 로 즉시 반환). ?memes=force 로 강제 재수집 가능.
+  // 소스 = 업자용 화이트리스트(고구마팜·캐릿 등). 수집 3개 미만이면 저장 안 함 → 서빙이 지난주/시드 폴백.
+  {
+    const openaiKey = getOpenAIApiKey();
+    const memeForce = url.searchParams.get("memes") === "force";
+    const weekKey = getMemeWeekKey();
+    if (openaiKey && tavilyKey) {
+      const r = await buildWeeklyMemePack(supabase, { openaiKey, tavilyKey, weekKey, force: memeForce });
+      report.memePack = { weekKey, ...r };
+      if (r.status === "error") {
+        report.failed.push({ group: "meme-pack", language: "ko", error: r.error ?? "unknown" });
+      }
+    } else {
+      report.memePack = { weekKey, status: "skipped-no-keys", itemCount: 0 };
+    }
+  }
 
   for (const groupKey of targetGroups) {
     const groupMeta = TREND_GROUP_LABELS[groupKey];

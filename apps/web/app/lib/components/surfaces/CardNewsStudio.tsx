@@ -21,6 +21,7 @@ import { Sparkles, Download, RefreshCw, Copy, Check, ImagePlus } from "lucide-re
 import { supabase } from "../../../../lib/supabase";
 import { useOperationsStore } from "../../stores/operations-store";
 import { useStoreInfoStore } from "../../stores/store-info-store";
+import { deriveRegionFromAddress } from "../../utils/region";
 import type { CardNewsCard, CardNewsResult } from "../../../api/ai/marketing/cardnews/route";
 
 const MIDNIGHT = "#191970";
@@ -494,13 +495,7 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
       .map((p) => ({ name: p.name.trim(), priceWon: p.price > 0 ? p.price : undefined })),
     [products],
   );
-  const region = useMemo(() => {
-    const tokens = (addressRoad ?? "").trim().split(/\s+/);
-    if (tokens.length < 2) return undefined;
-    const gu = tokens.find((t) => /(구|군|시)$/.test(t) && t !== tokens[0]) ?? tokens[1];
-    const dong = tokens.find((t) => /(동|로|가)$/.test(t));
-    return [gu, dong].filter(Boolean).join(" ") || undefined;
-  }, [addressRoad]);
+  const region = useMemo(() => deriveRegionFromAddress(addressRoad), [addressRoad]);
   const avgTicketWon = useMemo(() => {
     const recent = dailyEntries.slice(-14).filter((e) => e.customers > 0);
     if (recent.length === 0) return undefined;

@@ -16,3 +16,6 @@ apps/ios/build/
 apps/ios/.build/
 **/DerivedData/
 *.tsbuildinfo
+
+# 스모크 하네스 산출물 (로컬 평가용)
+apps/web/scripts/output/

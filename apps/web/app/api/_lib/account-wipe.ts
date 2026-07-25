@@ -13,6 +13,7 @@ type Admin = NonNullable<ReturnType<typeof getSupabaseAdmin>>;
 
 // user_id 컬럼 테이블. roadmap → 자식(stage_decisions/stage_tasks)은 ON DELETE CASCADE.
 export const USER_TABLES = [
+  "marketing_engagement_events",
   "business_profiles",
   "user_store_data",
   "roadmaps",

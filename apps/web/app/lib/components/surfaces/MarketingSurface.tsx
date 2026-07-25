@@ -7,6 +7,8 @@ import { BP } from "../../breakpoints";
 import { getKstMonthKey } from "../../utils/business-day";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { supabase } from "../../../../lib/supabase";
+import { useStoreInfoStore } from "../../stores/store-info-store";
+import { deriveRegionFromAddress } from "../../utils/region";
 import { CardNewsStudio } from "./CardNewsStudio";
 import {
   useMarketingStore,
@@ -16,6 +18,8 @@ import {
   type CampaignRecord,
   type MarketingPlay,
   type CasesSource,
+  type MemeItem,
+  type MemePackCache,
 } from "../../stores/marketing-store";
 
 const fmt = (n: number) => {
@@ -29,6 +33,22 @@ const fmt = (n: number) => {
 // StrictMode 이중 마운트 / 빠른 탭 전환 시 동일 요청을 두 번 하지 않도록.
 // 같은 키의 fetch가 이미 돌고 있으면 그 Promise를 공유해 결과만 재사용.
 const CASES_INFLIGHT = new Map<string, Promise<unknown>>();
+
+/** 실행 신호 계측 — fire-and-forget. 실패는 UX 에 절대 개입하지 않음 (2026-07-25). */
+function logMarketingEvent(event: "copy_click" | "meme_origin_click") {
+  void (async () => {
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return;
+      await fetch("/api/ai/marketing/engagement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ weekKey: getIsoWeekKey(), event }),
+      });
+    } catch { /* 계측 실패는 무시 */ }
+  })();
+}
 
 
 // AI 에러 → 사용자 친화 메시지. raw 에 API 키·청구 정보 포함 가능 → 노출 금지.
@@ -72,6 +92,10 @@ export function MarketingSurface() {
   const subIndustryId = d.selectedIndustryId || null; // 세부업종 (starterIndustryOptions.id)
   const curMonth = getKstMonthKey();
 
+  // 동네 라벨 — deliverables 지역 키워드 실주입용 (LLM "○○동" 빈칸 사고 방지, 2026-07-25)
+  const addressRoad = useStoreInfoStore((s) => s.addressRoad);
+  const region = useMemo(() => deriveRegionFromAddress(addressRoad), [addressRoad]);
+
   // ── 세부업종 fine-grained 라벨 (예: "Korean Meals / Casual Dining" → "한식/백반·가정식")
   const subIndustryLabel = useMemo(() => {
     if (!subIndustryId) return null;
@@ -97,6 +121,9 @@ export function MarketingSurface() {
     return () => window.removeEventListener("resize", h);
   }, []);
   const isMobile = viewportWidth < BP.sm;
+
+  // 마케팅 장부(KPI+지출 추적) — 기본 접힘 (2026-07-24 개편: 실행이 주인공, 장부는 요약 한 줄)
+  const [ledgerOpen, setLedgerOpen] = useState(false);
 
   // ── Recommended channels for this business type
   const recommended = RECOMMENDED_CHANNELS[categoryId] ?? RECOMMENDED_CHANNELS["food"];
@@ -124,6 +151,7 @@ export function MarketingSurface() {
     const contextKey = [d.storeName ?? "내가게", subIndustryId ?? categoryId, d.language].join("|");
 
     // 캐시 히트 — 동일 주차·context·실제 데이터·수동 재생성 안 됨 → fetch 스킵
+    // plays[0].mission 체크: v1(설명형) 로컬 캐시는 미스 처리해 v2(미션·실행물) 재조회 (서버 캐시 키도 v2).
     const cache = mkt.casesCache;
     if (
       casesNonce === 0
@@ -132,6 +160,7 @@ export function MarketingSurface() {
       && cache.contextKey === contextKey
       && Array.isArray(cache.plays)
       && cache.plays.length > 0
+      && !!cache.plays[0]?.mission
     ) {
       setPlays(cache.plays);
       setCasesSources(cache.sources ?? []);
@@ -152,6 +181,7 @@ export function MarketingSurface() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({
           storeName: d.storeName,
+          region,
           industryCategoryId: categoryId,
           subIndustryId,
           subIndustryLabel,
@@ -208,6 +238,43 @@ export function MarketingSurface() {
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [d.storeName, subIndustryId, categoryId, d.language, casesNonce]);
+
+  // ── 주간 밈·챌린지 팩 (전역 주 1회 수집 — /api/ai/marketing/meme-pack) ──
+  // 생성이 아니라 DB 읽기(저비용). 캐시: 같은 주차·같은 업종·fresh 면 스킵.
+  const [memePack, setMemePack] = useState<MemePackCache | null>(mkt.memePackCache);
+  useEffect(() => {
+    const weekKey = getIsoWeekKey();
+    const cache = mkt.memePackCache;
+    if (cache && cache.weekKey === weekKey && !cache.stale && cache.categoryId === categoryId && cache.items.length > 0) {
+      setMemePack(cache);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (!token) return;
+        const res = await fetch(`/api/ai/marketing/meme-pack?categoryId=${encodeURIComponent(categoryId)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (cancelled || !Array.isArray(j.items) || j.items.length === 0) return;
+        const next: MemePackCache = {
+          weekKey: typeof j.weekKey === "string" ? j.weekKey : weekKey,
+          stale: !!j.stale,
+          categoryId,
+          items: j.items as MemeItem[],
+          generatedAt: typeof j.generatedAt === "string" ? j.generatedAt : new Date().toISOString(),
+        };
+        setMemePack(next);
+        mkt.setMemePackCache(next);
+      } catch { /* graceful — 이전 캐시/빈 상태 유지 */ }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId]);
 
   // ── 플레이 "했어요" 체크 (실행→측정 피드백 루프) ──
   const currentWeekKey = getIsoWeekKey();
@@ -331,8 +398,8 @@ export function MarketingSurface() {
           lineHeight: 1.55, margin: 0, maxWidth: 580,
         }}>
           {ko
-            ? "이번 주에 딱 하나만 — 내 업종 성공사례로 만든 가장 중요한 마케팅 1가지부터."
-            : "Just one thing this week — your single most important marketing move, from real cases in your industry."}
+            ? "이번 주에 딱 하나. 읽을 건 줄이고, 바로 쓸 것만 드려요."
+            : "Just one thing this week — less to read, more to use right away."}
         </p>
       </header>
 
@@ -352,6 +419,9 @@ export function MarketingSurface() {
         onToggleDone={toggleDone}
       />
 
+      {/* ━━━ 섹션 1.2: 이번 주 밈·챌린지 (2026-07-24 신설 — 전역 주간 팩, 원본만·개사 없음) ━━━ */}
+      <MemeLane pack={memePack} ko={ko} />
+
       {/* ━━━ 섹션 1.5: 카드뉴스 만들기 (2026-07-21 신설 — 지금 무료, 9월부터 프로 전용) ━━━ */}
       <CardNewsStudio
         ko={ko}
@@ -363,7 +433,31 @@ export function MarketingSurface() {
         dailyEntries={(d.dailyEntries ?? []) as Array<{ sales: number; customers: number }>}
       />
 
-      {/* ━━━ 섹션 2: 내 마케팅 성과 ━━━ */}
+      {/* ━━━ 섹션 2+3: 마케팅 장부 (2026-07-24 개편 — 기본 접힘, 요약 한 줄이 먼저 말한다) ━━━ */}
+      <article style={solidCard}>
+        <button
+          type="button"
+          onClick={() => setLedgerOpen((v) => !v)}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
+            background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit", textAlign: "left" as const,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
+              {ko ? "마케팅 장부" : "Marketing Ledger"}
+            </div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
+              {ko
+                ? `이달 ${totalSpend > 0 ? fmt(totalSpend) : "0원"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · 채널 ${activeChannels.length}개`
+                : `MTD ${totalSpend > 0 ? fmt(totalSpend) : "0"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · ${activeChannels.length} channels`}
+            </div>
+          </div>
+          <ChevronRight size={16} strokeWidth={2} color="var(--muted)" style={{ flexShrink: 0, transform: ledgerOpen ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
+        </button>
+      </article>
+
+      {ledgerOpen && (<>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "10px" }}>
         <div style={{ ...kpiCard, borderColor: "rgba(59,92,140,0.1)" }}>
           <div style={kpiLabel}>
@@ -527,6 +621,7 @@ export function MarketingSurface() {
           </div>
         )}
       </article>
+      </>)}
     </main>
   );
 }
@@ -623,7 +718,7 @@ function MarketingFocus({
           <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#3b5c8c", margin: "2px 0 8px" }}>
             {ko ? "이번 주 핵심 1가지" : "Top priority this week"}
           </div>
-          <PlayBlock p={hero} ko={ko} done={doneTitles.has(hero.title)} onToggleDone={onToggleDone} />
+          <PlayBlock p={hero} ko={ko} hero done={doneTitles.has(hero.title)} onToggleDone={onToggleDone} />
           {rest.length > 0 && (
             <div style={{ marginTop: "12px" }}>
               <button
@@ -663,8 +758,87 @@ function MarketingFocus({
   );
 }
 
-// 채널 진행도 — 리서치 우선순위(네이버 플레이스 → 인스타 → 업종 추천)로 "다음 한 채널" 안내
+// 이번 주 밈·챌린지 레인 — 업자용 소스(고구마팜·캐릿 등)에서 주 1회 수집한 전역 팩.
+// 원칙(2026-07-24): 원본 설명 + 원본 링크만 보여주고 적용은 사장님 몫 — AI 개사 금지.
+function MemeLane({ pack, ko }: { pack: MemePackCache | null; ko: boolean }) {
+  if (!pack || pack.items.length === 0) return null; // 팩 없으면 섹션 자체를 숨김 — 빈 껍데기 금지
+  const kindLabel = (k: MemeItem["kind"]) =>
+    k === "meme" ? (ko ? "밈" : "Meme") : k === "challenge" ? (ko ? "챌린지" : "Challenge") : (ko ? "포맷" : "Format");
+  return (
+    <article style={solidCard}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "12px" }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+            <span style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(59,92,140,0.75)" }}>
+              {ko ? "이번 주 밈·챌린지" : "Memes & challenges"}
+            </span>
+            {pack.stale && (
+              <span style={{ fontSize: "10px", fontWeight: 650, color: "var(--muted)", background: "rgba(17,17,17,0.05)", padding: "2px 7px", borderRadius: "6px" }}>
+                {ko ? "지난주 소재" : "Last week"}
+              </span>
+            )}
+          </div>
+          <div style={{ fontSize: "17px", fontWeight: 750, color: "var(--text)", letterSpacing: "-0.02em" }}>
+            {ko ? "요즘 도는 것들" : "What's circulating now"}
+          </div>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
+            {ko
+              ? "마케터들이 보는 트렌드 매체에서 매주 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫."
+              : "Collected weekly from trend media marketers actually read — originals only."}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "10px", overflowX: "auto" as const, paddingBottom: "6px", WebkitOverflowScrolling: "touch" as const }}>
+        {pack.items.map((it, i) => (
+          <div
+            key={`${it.title}-${i}`}
+            style={{
+              minWidth: "218px", maxWidth: "218px", display: "flex", flexDirection: "column" as const, gap: "6px",
+              padding: "14px", borderRadius: "14px", border: "1px solid var(--border)", background: "#fff",
+            }}
+          >
+            <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", color: "var(--muted)" }}>
+              {kindLabel(it.kind)} · {it.sourceName}
+              {it.publishedAt ? <span style={{ fontWeight: 500 }}> · {it.publishedAt.slice(5).replace("-", "/")}</span> : null}
+            </div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", lineHeight: 1.4 }}>{it.title}</div>
+            <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.55 }}>{it.originDesc}</div>
+            {it.originExample && (
+              <div style={{ fontSize: "11.5px", color: "#3b5c8c", lineHeight: 1.5, fontStyle: "italic" as const }}>
+                {ko ? "원문 활용례: " : "From source: "}{it.originExample}
+              </div>
+            )}
+            <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", paddingTop: "8px" }}>
+              {it.effortLabel ? (
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#3b5c8c", background: "rgba(59,92,140,0.08)", padding: "3px 8px", borderRadius: "999px" }}>
+                  {it.effortLabel}
+                </span>
+              ) : <span />}
+              <a
+                href={it.originUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => logMarketingEvent("meme_origin_click")}
+                style={{ fontSize: "12px", fontWeight: 700, color: "#3b5c8c", textDecoration: "none" }}
+              >
+                {ko ? "원본 보기 →" : "View original →"}
+              </a>
+            </div>
+            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#3b5c8c", borderTop: "1px dashed var(--border)", paddingTop: "8px" }}>
+              {it.applyHint}
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+// 채널 진행도 — 리서치 우선순위(네이버 플레이스 → 인스타 → 업종 추천)로 "다음 한 채널" 안내.
+// 2026-07-24 개편: 기본 접힘 — 요약 한 줄("지금은 X")만 보이고, 펼치면 칩·설명.
 function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: MarketingChannel[]; categoryId: string; ko: boolean }) {
+  const [open, setOpen] = useState(false);
   const rec = RECOMMENDED_CHANNELS[categoryId] ?? RECOMMENDED_CHANNELS["food"];
   const ordered: MarketingChannel[] = [];
   for (const c of (["naver-place", "instagram", ...rec] as MarketingChannel[])) {
@@ -678,11 +852,27 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
     return m ? (ko ? m.label.ko : m.label.en) : c;
   };
   return (
-    <div style={{ marginBottom: "16px", padding: "12px 14px", borderRadius: "14px", background: "rgba(59,92,140,0.03)", border: "1px solid rgba(59,92,140,0.08)" }}>
-      <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "8px" }}>
-        {ko ? "채널 우선순위 — 한 번에 하나씩" : "Channel priority — one at a time"}
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+    <div style={{ marginBottom: "16px", padding: "10px 14px", borderRadius: "14px", background: "rgba(59,92,140,0.03)", border: "1px solid rgba(59,92,140,0.08)" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px",
+          background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit", textAlign: "left" as const,
+        }}
+      >
+        <span style={{ fontSize: "12px", color: "var(--text)", fontWeight: 600 }}>
+          <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--muted)", marginRight: "8px" }}>
+            {ko ? "채널 우선순위" : "Channel"}
+          </span>
+          {next
+            ? (ko ? `지금은 ${labelOf(next)} — 한 번에 하나씩` : `Now: ${labelOf(next)}`)
+            : (ko ? "상위 채널 모두 활성" : "All core channels active")}
+        </span>
+        <ChevronRight size={13} strokeWidth={2} color="var(--muted)" style={{ flexShrink: 0, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
+      </button>
+      {open && (<>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
         {top.map((c) => {
           const done = activeSet.has(c);
           const isNext = c === next;
@@ -701,57 +891,88 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
           {ko ? `${labelOf(next)}부터 집중해보세요. 모든 채널 동시에 X.` : `Focus on ${labelOf(next)} next — not all channels at once.`}
         </div>
       )}
+      </>)}
     </div>
   );
 }
 
-// 마케팅 플레이 카드 — 사례/트렌드(왜 통했나) + 내 사업 적용(단계·효과·도구) + "했어요" 체크
-function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolean; done?: boolean; onToggleDone?: (title: string) => void }) {
+// 복사 실행물 한 줄 — "적용 3단계" 를 "버튼" 으로 바꾸는 단위. 클릭 → 클립보드 + 1.6초 확인 표시.
+function CopyRow({ label, content, ko }: { label: string; content: string; ko: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+      logMarketingEvent("copy_click"); // "쓸 재료였는가"의 직접 신호
+    } catch { /* 클립보드 권한 거부 — 조용히 무시 (내용은 화면에 보임) */ }
+  };
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: "10px",
+      background: "rgba(59,92,140,0.04)", border: "1px solid var(--border)", borderRadius: "12px", padding: "10px 12px",
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "12.5px", fontWeight: 650, color: "var(--text)" }}>{label}</div>
+        <div style={{ fontSize: "11.5px", color: "var(--muted)", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+          {content}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        style={{
+          flexShrink: 0, fontSize: "12px", fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
+          padding: "7px 13px", borderRadius: "9px",
+          border: copied ? "1px solid #1d3557" : "1px solid rgba(59,92,140,0.3)",
+          background: copied ? "rgba(25,25,112,0.08)" : "#fff",
+          color: copied ? "#1d3557" : "#3b5c8c",
+        }}
+      >
+        {copied ? (ko ? "✓ 복사됨" : "✓ Copied") : (ko ? "복사" : "Copy")}
+      </button>
+    </div>
+  );
+}
+
+// 마케팅 플레이 카드 (2026-07-24 v2 — "읽는 보고서" → "쓸 재료"):
+//   보이는 것 = 미션 한 문장 + 시간 배지 + 복사 실행물 버튼 + "했어요".
+//   설명(사례 근거·단계·효과·도구)은 "왜 이걸 하래요?" 접기 뒤로 — 지우지 않고 강요만 없앰.
+//   구캐시(v1, mission 없음)는 steps 폴백 렌더로 하위호환.
+function PlayBlock({ p, ko, done, onToggleDone, hero }: { p: MarketingPlay; ko: boolean; done?: boolean; onToggleDone?: (title: string) => void; hero?: boolean }) {
+  const [whyOpen, setWhyOpen] = useState(false);
   const isCase = p.kind === "case";
   const accent = isCase ? "#1d3557" : "#3b5c8c";
   const kindLabel = isCase ? (ko ? "검증된 사례" : "Proven case") : (ko ? "지금 뜨는 트렌드" : "Trending now");
-  const effortLabel = p.application.effortLevel === "low" ? (ko ? "간단" : "Easy")
-    : p.application.effortLevel === "high" ? (ko ? "공들임" : "High effort") : (ko ? "보통" : "Medium");
+  const mission = p.mission || p.title;
+  const deliverables = p.deliverables ?? [];
+  const hasDeliverables = deliverables.length > 0;
   const upper = "uppercase" as const;
   return (
-    <div style={{ borderRadius: "16px", border: "1px solid var(--border)", overflow: "hidden", background: "var(--surface-strong)" }}>
-      {/* 헤더 — 종류 배지 + 제목 */}
-      <div style={{ padding: "13px 15px 11px", borderBottom: "1px solid var(--border)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "6px", background: `${accent}12`, color: accent }}>{kindLabel}</span>
-          {p.source.brand && <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>{p.source.brand}</span>}
-        </div>
-        <div style={{ fontSize: "14.5px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.35 }}>{p.title}</div>
+    <div style={{ borderRadius: "16px", border: "1px solid var(--border)", background: "var(--surface-strong)", padding: "15px 16px" }}>
+      {/* 배지 줄 — 시간이 제일 앞 (사장님의 첫 질문은 "얼마나 걸리는데") */}
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
+        {p.timeLabel && (
+          <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "999px", background: "#1d3557", color: "#fff" }}>
+            ⏱ {p.timeLabel}
+          </span>
+        )}
+        <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "6px", background: `${accent}12`, color: accent }}>{kindLabel}</span>
+        {isCase && p.source.brand && <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>{p.source.brand}</span>}
       </div>
 
-      {/* 사례/트렌드 — 무엇을·왜 */}
-      <div style={{ padding: "12px 15px", background: `${accent}05` }}>
-        <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: upper, color: accent, marginBottom: "6px" }}>
-          {isCase ? (ko ? "이렇게 했어요" : "What they did") : (ko ? "지금 이게 통해요" : "What's working")}
-        </div>
-        <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.55 }}>{p.source.whatHappened}</div>
-        {p.source.whyItWorked && (
-          <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.55, marginTop: "5px" }}>
-            <b style={{ color: accent, fontWeight: 680 }}>{ko ? "왜 통했나 " : "Why "}</b>{p.source.whyItWorked}
-          </div>
-        )}
-        {(p.source.metric || p.source.url) && (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "7px", flexWrap: "wrap" }}>
-            {p.source.metric && <span style={{ fontSize: "11px", fontWeight: 700, color: accent, background: `${accent}10`, padding: "2px 8px", borderRadius: "6px" }}>{p.source.metric}</span>}
-            {p.source.url && <a href={p.source.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: accent, textDecoration: "none" }}>{ko ? "출처 보기 →" : "Source →"}</a>}
-          </div>
-        )}
+      {/* 미션 한 문장 — 첫 화면의 주인공 */}
+      <div style={{ fontSize: hero ? "19px" : "15px", fontWeight: 750, color: "var(--text)", letterSpacing: "-0.015em", lineHeight: 1.35, textWrap: "balance" as const }}>
+        {mission}
       </div>
 
-      {/* 내 사업 적용 — 단계·효과·도구 */}
-      <div style={{ padding: "12px 15px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "8px" }}>
-          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: upper, color: "#1d3557" }}>
-            {ko ? "내 사업에 이렇게 적용" : "Apply to your business"}
-          </div>
-          <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", border: "1px solid var(--border)", padding: "1px 7px", borderRadius: "5px", flexShrink: 0 }}>{effortLabel}</span>
+      {/* 실행물 — 복사 버튼 (v2) / 구캐시는 기존 단계 폴백 */}
+      {hasDeliverables ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px" }}>
+          {deliverables.map((dv, i) => <CopyRow key={i} label={dv.label} content={dv.content} ko={ko} />)}
         </div>
-        <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "7px" }}>
+      ) : (
+        <ol style={{ margin: "12px 0 0", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "7px" }}>
           {p.application.steps.map((s, i) => (
             <li key={i} style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.5, display: "flex", gap: "9px", alignItems: "flex-start" }}>
               <span style={{ flexShrink: 0, width: "19px", height: "19px", borderRadius: "6px", background: "#1d3557", color: "#fff", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: "1px" }}>{i + 1}</span>
@@ -759,45 +980,96 @@ function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolea
             </li>
           ))}
         </ol>
-        {p.application.expectedEffect && (
-          <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.5, marginTop: "9px", padding: "9px 11px", borderRadius: "10px", background: "rgba(25,25,112,0.05)" }}>
-            <b style={{ color: "#1d3557", fontWeight: 680 }}>{ko ? "기대 효과 " : "Impact "}</b>{p.application.expectedEffect}
+      )}
+
+      {/* "왜 이걸 하래요?" — 근거는 지우지 않고 접는다 (신뢰는 원하는 사람만) */}
+      <button
+        type="button"
+        onClick={() => setWhyOpen((v) => !v)}
+        style={{
+          marginTop: "12px", width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px",
+          background: "none", border: "none", borderTop: "1px solid var(--border)", cursor: "pointer",
+          padding: "10px 2px 0", fontFamily: "inherit", fontSize: "12.5px", fontWeight: 650, color: "var(--muted)", textAlign: "left" as const,
+        }}
+      >
+        {ko ? "왜 이걸 하래요?" : "Why this?"}
+        <ChevronRight size={13} strokeWidth={2} style={{ flexShrink: 0, transform: whyOpen ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
+      </button>
+      {whyOpen && (
+        <div style={{ marginTop: "10px", padding: "12px 13px", borderRadius: "12px", background: `${accent}05`, display: "flex", flexDirection: "column", gap: "9px" }}>
+          <div>
+            <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: upper, color: accent, marginBottom: "5px" }}>
+              {isCase ? (ko ? "이렇게 했어요" : "What they did") : (ko ? "지금 이게 통해요" : "What's working")}
+            </div>
+            <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.55 }}>{p.source.whatHappened}</div>
+            {p.source.whyItWorked && (
+              <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.55, marginTop: "5px" }}>
+                <b style={{ color: accent, fontWeight: 680 }}>{ko ? "왜 통했나 " : "Why "}</b>{p.source.whyItWorked}
+              </div>
+            )}
+            {(p.source.metric || p.source.url) && (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "7px", flexWrap: "wrap" }}>
+                {p.source.metric && <span style={{ fontSize: "11px", fontWeight: 700, color: accent, background: `${accent}10`, padding: "2px 8px", borderRadius: "6px" }}>{p.source.metric}</span>}
+                {p.source.url && <a href={p.source.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: accent, textDecoration: "none" }}>{ko ? "출처 보기 →" : "Source →"}</a>}
+              </div>
+            )}
           </div>
-        )}
-        {p.tools.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
-            {p.tools.map((t, i) => {
-              const tc = t.tier === "free" ? "#1d3557" : "#3b5c8c";
-              const tl = t.tier === "free" ? (ko ? "무료" : "Free") : t.tier === "paid" ? (ko ? "유료" : "Paid") : (ko ? "부분무료" : "Freemium");
-              const inner = (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11.5px", fontWeight: 600, color: "var(--text)", border: `1px solid ${tc}22`, background: `${tc}08`, padding: "4px 9px", borderRadius: "8px" }}>
-                  {t.name}
-                  <span style={{ fontSize: "9.5px", fontWeight: 700, color: tc }}>{tl}</span>
-                </span>
-              );
-              return t.url ? <a key={i} href={t.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{inner}</a> : <span key={i}>{inner}</span>;
-            })}
-          </div>
-        )}
-        {onToggleDone && (
-          <button
-            type="button"
-            onClick={() => onToggleDone(p.title)}
-            style={{
-              marginTop: "12px", width: "100%", padding: "10px 14px", borderRadius: "10px",
-              fontSize: "13px", fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
-              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px",
-              border: done ? "1px solid #1d3557" : "1px solid var(--border)",
-              background: done ? "rgba(25,25,112,0.10)" : "var(--surface-strong)",
-              color: done ? "#1d3557" : "var(--text)",
-            }}
-          >
-            {done
-              ? (ko ? "✓ 이번 주에 했어요" : "✓ Done this week")
-              : (ko ? "이거 했어요 — 다음 주 추천에 반영" : "Mark done — shapes next week")}
-          </button>
-        )}
-      </div>
+          {hasDeliverables && p.application.steps.length > 0 && (
+            <div>
+              <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: upper, color: "#1d3557", marginBottom: "5px" }}>
+                {ko ? "자세한 순서" : "Detailed steps"}
+              </div>
+              <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                {p.application.steps.map((s, i) => (
+                  <li key={i} style={{ fontSize: "12.5px", color: "var(--text)", lineHeight: 1.5, display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <span style={{ flexShrink: 0, width: "17px", height: "17px", borderRadius: "5px", background: "#1d3557", color: "#fff", fontSize: "10px", fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: "1px" }}>{i + 1}</span>
+                    <span style={{ flex: 1 }}>{s}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {p.application.expectedEffect && (
+            <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.5, padding: "9px 11px", borderRadius: "10px", background: "rgba(25,25,112,0.05)" }}>
+              <b style={{ color: "#1d3557", fontWeight: 680 }}>{ko ? "기대 효과 " : "Impact "}</b>{p.application.expectedEffect}
+            </div>
+          )}
+          {p.tools.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {p.tools.map((t, i) => {
+                const tc = t.tier === "free" ? "#1d3557" : "#3b5c8c";
+                const tl = t.tier === "free" ? (ko ? "무료" : "Free") : t.tier === "paid" ? (ko ? "유료" : "Paid") : (ko ? "부분무료" : "Freemium");
+                const inner = (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11.5px", fontWeight: 600, color: "var(--text)", border: `1px solid ${tc}22`, background: `${tc}08`, padding: "4px 9px", borderRadius: "8px" }}>
+                    {t.name}
+                    <span style={{ fontSize: "9.5px", fontWeight: 700, color: tc }}>{tl}</span>
+                  </span>
+                );
+                return t.url ? <a key={i} href={t.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{inner}</a> : <span key={i}>{inner}</span>;
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {onToggleDone && (
+        <button
+          type="button"
+          onClick={() => onToggleDone(p.title)}
+          style={{
+            marginTop: "12px", width: "100%", padding: "10px 14px", borderRadius: "10px",
+            fontSize: "13px", fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
+            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px",
+            border: done ? "1px solid #1d3557" : "1px solid var(--border)",
+            background: done ? "rgba(25,25,112,0.10)" : "var(--surface-strong)",
+            color: done ? "#1d3557" : "var(--text)",
+          }}
+        >
+          {done
+            ? (ko ? "✓ 이번 주에 했어요" : "✓ Done this week")
+            : (ko ? "이거 했어요 — 다음 주 추천에 반영" : "Mark done — shapes next week")}
+        </button>
+      )}
     </div>
   );
 }

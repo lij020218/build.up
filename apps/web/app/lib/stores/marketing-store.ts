@@ -96,10 +96,23 @@ export type CoachCache = {
 
 export type PlayTool = { name: string; purpose: string; tier: "free" | "paid" | "freemium"; url?: string };
 
+/** 복사해 바로 쓰는 실행물 (2026-07-24 v2) — 서버 cases/route.ts PlayDeliverable 와 동일. */
+export type PlayDeliverable = {
+  kind: "copy" | "guide";
+  label: string;
+  content: string;
+};
+
 export type MarketingPlay = {
   /** 검증된 성공사례 기반(case) vs 현재 트렌드 기반(trend) — AI 가 더 유용한 쪽 선택 */
   kind: "case" | "trend";
   title: string;
+  /** v2: 미션 한 문장(명령형) — 첫 화면의 주인공. 구캐시엔 없음(하위호환 optional). */
+  mission?: string;
+  /** v2: 소요 시간 배지 — "5분 컷" */
+  timeLabel?: string;
+  /** v2: 복사/저장 버튼이 되는 실행물 */
+  deliverables?: PlayDeliverable[];
   source: {
     brand?: string;
     whatHappened: string;
@@ -122,6 +135,32 @@ export type CasesCache = {
   contextKey: string;    // storeName|subIndustryId|language
   plays: MarketingPlay[];
   sources: CasesSource[];
+};
+
+// ─── 주간 밈·챌린지 팩 (전역 주 1회 수집, /api/ai/marketing/meme-pack) ───
+
+/** 서버 MemeItem(api/_lib/marketing-memes.ts)과 동일 형태 — 원본 설명+링크만, 개사 없음. */
+export type MemeItem = {
+  kind: "meme" | "challenge" | "format";
+  title: string;
+  originDesc: string;
+  originExample?: string;
+  originUrl: string;
+  sourceName: string;
+  publishedAt?: string;
+  industryFit: string[];
+  effortLabel?: string;
+  applyHint: string;
+};
+
+export type MemePackCache = {
+  weekKey: string;
+  /** 이번 주 팩이 아닐 때 true — UI 는 "지난주 소재" 배지로 정직하게 표시 */
+  stale: boolean;
+  /** 서버가 이 categoryId 기준으로 fit-우선 정렬해 준 결과 — 업종 바뀌면 재조회 */
+  categoryId: string;
+  items: MemeItem[];
+  generatedAt: string;
 };
 
 // ─── First 100 Customers Playbook ───
@@ -188,6 +227,7 @@ type MarketingState = {
   trendLoading: boolean;
   coachCache: CoachCache | null;
   casesCache: CasesCache | null;
+  memePackCache: MemePackCache | null;
   // 캠페인 폼
   campFormOpen: boolean;
   campChannel: MarketingChannel;
@@ -207,6 +247,7 @@ type MarketingActions = {
   setTrendLoading: (v: boolean) => void;
   setCoachCache: (v: CoachCache | null) => void;
   setCasesCache: (v: CasesCache | null) => void;
+  setMemePackCache: (v: MemePackCache | null) => void;
   setCampFormOpen: (v: boolean) => void;
   setCampChannel: (v: MarketingChannel) => void;
   setCampSpend: (v: string) => void;
@@ -231,6 +272,7 @@ const initialState: MarketingState = {
   trendLoading: false,
   coachCache: null,
   casesCache: null,
+  memePackCache: null,
   campFormOpen: false,
   campChannel: "instagram",
   campSpend: "",
@@ -252,6 +294,7 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
       setTrendLoading: (v) => set({ trendLoading: v }),
       setCoachCache: (v) => set({ coachCache: v }),
       setCasesCache: (v) => set({ casesCache: v }),
+      setMemePackCache: (v) => set({ memePackCache: v }),
       setCampFormOpen: (v) => set({ campFormOpen: v }),
       setCampChannel: (v) => set({ campChannel: v }),
       setCampSpend: (v) => set({ campSpend: v }),
@@ -303,6 +346,7 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
         trendCache: state.trendCache,
         coachCache: state.coachCache,
         casesCache: state.casesCache,
+        memePackCache: state.memePackCache,
       }),
     },
   ),

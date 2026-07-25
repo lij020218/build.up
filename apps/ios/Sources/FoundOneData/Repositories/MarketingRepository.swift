@@ -96,6 +96,30 @@ public struct MarketingChannelMeta: Sendable, Hashable {
     }
 }
 
+// MARK: - 주간 밈·챌린지 팩 DTO (웹 /api/ai/marketing/meme-pack 미러, 2026-07-24)
+//  원칙: 원본 설명(originDesc)+원본 링크(originUrl)만 — AI 개사 없음, 적용은 사장님 몫.
+
+public struct MemeItem: Sendable, Codable, Hashable {
+    public let kind: String            // "meme" | "challenge" | "format"
+    public let title: String
+    public let originDesc: String
+    public let originExample: String?
+    public let originUrl: String
+    public let sourceName: String
+    public let publishedAt: String?
+    public let industryFit: [String]
+    public let effortLabel: String?
+    public let applyHint: String
+}
+
+public struct MemePackResponse: Sendable, Codable {
+    public let weekKey: String
+    /// 이번 주 팩이 아닐 때 true — UI 는 "지난주 소재" 배지로 정직 표시.
+    public let stale: Bool
+    public let items: [MemeItem]
+    public let generatedAt: String?
+}
+
 // MARK: - Errors
 
 public enum MarketingRepositoryError: LocalizedError, Sendable {
@@ -145,6 +169,8 @@ public enum MarketingRepositoryError: LocalizedError, Sendable {
 
 public struct MarketingCoachContext: Sendable, Encodable {
     public var storeName: String?
+    /// 동네 라벨 (예: "분당구 정자동") — deliverables 지역 키워드 실주입용. 없으면 서버가 지역 문구 생략.
+    public var region: String?
     public var industryCategoryId: String?
     public var subIndustryId: String?
     public var subIndustryLabel: String?
@@ -227,10 +253,23 @@ public struct PlayApplication: Sendable, Decodable, Hashable {
     public let effortLevel: String   // "low" | "medium" | "high"
 }
 
+/// 복사해 바로 쓰는 실행물 (2026-07-24 v2) — 웹 cases/route.ts PlayDeliverable 미러.
+public struct PlayDeliverable: Sendable, Decodable, Hashable {
+    public let kind: String          // "copy" | "guide"
+    public let label: String
+    public let content: String
+}
+
 public struct MarketingPlay: Sendable, Decodable, Identifiable, Hashable {
     public var id: String { "\(kind)-\(title)" }
     public let kind: String          // "case" | "trend"
     public let title: String
+    /// v2: 미션 한 문장(명령형) — 첫 화면 주인공. 구캐시엔 없음(하위호환 optional).
+    public let mission: String?
+    /// v2: 소요 시간 배지 — "5분 컷"
+    public let timeLabel: String?
+    /// v2: 복사 버튼이 되는 실행물
+    public let deliverables: [PlayDeliverable]?
     public let source: PlaySource
     public let application: PlayApplication
     public let tools: [PlayTool]
@@ -327,6 +366,28 @@ public actor MarketingRepository {
         let _: PlayProgressResponse? = try? await perform(req)
     }
 
+    // MARK: - 주간 밈·챌린지 팩
+
+    /// 주간 밈 팩 — 전역 팩 DB 읽기(저비용). 서버가 categoryId 기준 fit-우선 정렬.
+    /// 실패·빈 결과 시 nil — 레인 자체를 숨긴다(빈 껍데기 금지).
+    public func fetchMemePack(categoryId: String?) async -> MemePackResponse? {
+        guard var comps = URLComponents(url: baseURL.appendingPathComponent("/api/ai/marketing/meme-pack"), resolvingAgainstBaseURL: false) else { return nil }
+        if let categoryId, !categoryId.isEmpty {
+            comps.queryItems = [URLQueryItem(name: "categoryId", value: categoryId)]
+        }
+        guard let url = comps.url else { return nil }
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.timeoutInterval = 20
+        do {
+            try await attachAuth(&req)
+            let resp: MemePackResponse = try await perform(req)
+            return resp.items.isEmpty ? nil : resp
+        } catch {
+            return nil
+        }
+    }
+
     // MARK: - Campaigns (Supabase user_store_data 직접)
 
     public func listCampaigns() async throws -> (campaigns: [CampaignRecord], monthlyBudget: Int) {
@@ -377,6 +438,31 @@ public actor MarketingRepository {
         cal.timeZone = timeZone
         let comps = cal.dateComponents([.year, .month], from: now)
         return String(format: "%04d-%02d", comps.year ?? 2026, comps.month ?? 1)
+    }
+
+    /// ISO 주차 키 "YYYY-Www" — KST 기준. 웹 getIsoWeekKey / 서버 getMemeWeekKey 와 동일 규약.
+    public static func currentWeekKey(now: Date = Date(), timeZone: TimeZone = TimeZone(identifier: "Asia/Seoul")!) -> String {
+        var cal = Calendar(identifier: .iso8601)
+        cal.timeZone = timeZone
+        let week = cal.component(.weekOfYear, from: now)
+        let year = cal.component(.yearForWeekOfYear, from: now)
+        return String(format: "%04d-W%02d", year, week)
+    }
+
+    /// 실행 신호 계측 — fire-and-forget (copy_click / meme_origin_click). 실패는 UX 에 개입하지 않음.
+    ///  웹 logMarketingEvent 미러 (2026-07-25). 정적 헬퍼: 뷰 깊은 곳(복사 버튼)에서 의존성 주입 없이 호출.
+    public static func logEngagement(event: String, baseURL: URL = URL(string: "https://foundone.dev")!) {
+        Task.detached(priority: .background) {
+            guard let session = try? await BUSupabase.shared.client.auth.session else { return }
+            struct Body: Encodable { let weekKey: String; let event: String }
+            var req = URLRequest(url: baseURL.appendingPathComponent("/api/ai/marketing/engagement"))
+            req.httpMethod = "POST"
+            req.timeoutInterval = 15
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+            req.httpBody = try? JSONEncoder().encode(Body(weekKey: currentWeekKey(), event: event))
+            _ = try? await URLSession.shared.data(for: req)
+        }
     }
 
     public static func computeKpis(from campaigns: [CampaignRecord], month: String? = nil) -> MarketingKpis {

@@ -62,6 +62,7 @@ const INTENTIONALLY_RETAINED: Record<string, string> = {
 
   // ── 서비스 공용(개인 데이터 아님) ──
   app_config: "서비스 설정. 사용자 데이터 아님.",
+  marketing_meme_packs: "전역 주간 밈 팩(user 컬럼 없음, 모든 사용자 공용). 개인 데이터 아님 — 스캐너가 인접 마이그레이션 주석의 'user_id' 문자열을 오탐해 선언 필요.",
 };
 
 function userScopedTablesFromMigrations(): Map<string, Set<string>> {

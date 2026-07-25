@@ -11,6 +11,9 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneData
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct MarketingCasesCard: View {
     let loading: Bool
@@ -27,6 +30,8 @@ struct MarketingCasesCard: View {
 
     @Environment(\.openURL) private var openURL
     @State private var showMore: Bool = false
+    // 채널 우선순위 — 기본 접힘 (2026-07-24 개편: 요약 한 줄만, 웹 ChannelProgress 패리티)
+    @State private var channelOpen: Bool = false
 
     private let blue = Color(red: 0, green: 0.478, blue: 1.0)
 
@@ -110,7 +115,8 @@ struct MarketingCasesCard: View {
             play: hero,
             done: doneTitles.contains(hero.title),
             onToggleDone: { onToggleDone(hero.title) },
-            openURL: openURL
+            openURL: openURL,
+            hero: true
         )
         if !rest.isEmpty {
             Button {
@@ -200,14 +206,32 @@ struct MarketingCasesCard: View {
     }
 
     // 채널 진행도 — 네이버 플레이스 → 인스타 → 업종 추천. "다음 한 채널" 안내 (웹 ChannelProgress 패리티)
+    // 2026-07-24 개편: 기본 접힘 — 요약 한 줄("지금은 X")만 보이고, 탭하면 칩·설명.
     @ViewBuilder private var channelProgress: some View {
         let priority = channelPriority(categoryId)
         let activeSet = Set(activeChannels)
         let next = priority.first(where: { !activeSet.contains($0) })
         VStack(alignment: .leading, spacing: 8) {
-            Text("채널 우선순위 — 한 번에 하나씩")
-                .font(.system(size: 10.5, weight: .heavy)).tracking(0.5).textCase(.uppercase)
-                .foregroundStyle(BUColor.inkMuted)
+            Button {
+                withAnimation(.easeInOut(duration: 0.15)) { channelOpen.toggle() }
+            } label: {
+                HStack(spacing: 8) {
+                    Text("채널 우선순위")
+                        .font(.system(size: 10.5, weight: .heavy)).tracking(0.5).textCase(.uppercase)
+                        .foregroundStyle(BUColor.inkMuted)
+                    Text(next.map { "지금은 \(channelLabel($0)) — 한 번에 하나씩" } ?? "상위 채널 모두 활성")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(BUColor.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .rotationEffect(.degrees(channelOpen ? 90 : 0))
+                }
+            }
+            .buttonStyle(.plain)
+            if channelOpen {
             FlowChips(items: priority) { ch in
                 let done = activeSet.contains(ch)
                 let isNext = ch == next
@@ -226,6 +250,7 @@ struct MarketingCasesCard: View {
                 (Text("다음: ").font(.system(size: 12, weight: .heavy)).foregroundColor(blue)
                  + Text("\(channelLabel(n))부터 집중해보세요. 모든 채널 동시에 X.").font(.system(size: 12, weight: .medium)).foregroundColor(BUColor.ink))
                     .fixedSize(horizontal: false, vertical: true)
+            }
             }
         }
         .padding(12)
@@ -247,55 +272,137 @@ struct MarketingCasesCard: View {
     }
 }
 
-// MARK: - Play full card
+// MARK: - Play full card (2026-07-24 v2 — 웹 PlayBlock 미러)
+//   보이는 것 = 미션 한 문장 + 시간 배지 + 복사 실행물 + "했어요".
+//   사례 근거·단계·효과·도구는 "왜 이걸 하래요?" 접기 뒤로. 구캐시(v1)는 steps 폴백.
 
 private struct PlayFullCard: View {
     let play: MarketingPlay
     let done: Bool
     let onToggleDone: () -> Void
     let openURL: OpenURLAction
+    var hero: Bool = false
+
+    @State private var whyOpen = false
 
     private var isCase: Bool { play.kind == "case" }
     private var accent: Color {
         isCase ? Color(red: 0.114, green: 0.208, blue: 0.341) : Color(red: 0, green: 0.478, blue: 1.0)
     }
     private var kindLabel: String { isCase ? "검증된 사례" : "지금 뜨는 트렌드" }
-    private var effortLabel: String {
-        switch play.application.effortLevel {
-        case "low":  return "간단"
-        case "high": return "공들임"
-        default:     return "보통"
-        }
-    }
+    private var mission: String { play.mission?.isEmpty == false ? play.mission! : play.title }
+    private var deliverables: [PlayDeliverable] { play.deliverables ?? [] }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 헤더
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
+                // 배지 줄 — 시간이 제일 앞
+                HStack(spacing: 6) {
+                    if let t = play.timeLabel, !t.isEmpty {
+                        Text("⏱ \(t)")
+                            .font(.system(size: 11, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10).padding(.vertical, 3)
+                            .background(Color(red: 0.114, green: 0.208, blue: 0.341), in: Capsule())
+                    }
                     Text(kindLabel)
                         .font(.system(size: 10, weight: .heavy))
                         .foregroundStyle(accent)
                         .padding(.horizontal, 8).padding(.vertical, 2)
                         .background(accent.opacity(0.12), in: Capsule())
-                    if let brand = play.source.brand, !brand.isEmpty {
+                    if isCase, let brand = play.source.brand, !brand.isEmpty {
                         Text(brand)
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(BUColor.inkMuted)
+                            .lineLimit(1)
                     }
                     Spacer(minLength: 0)
                 }
-                Text(play.title)
-                    .font(.system(size: 14.5, weight: .bold))
-                    .tracking(-0.15)
+
+                // 미션 한 문장 — 첫 화면의 주인공
+                Text(mission)
+                    .font(.system(size: hero ? 19 : 15, weight: .bold))
+                    .tracking(-0.3)
                     .foregroundStyle(BUColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(Rectangle().fill(BUColor.cardBorder).frame(height: 1), alignment: .bottom)
 
-            // 사례/트렌드 — 무엇을·왜
+                // 실행물 — 복사 버튼 (v2) / 구캐시는 단계 폴백
+                if !deliverables.isEmpty {
+                    VStack(spacing: 8) {
+                        ForEach(Array(deliverables.enumerated()), id: \.offset) { _, dv in
+                            DeliverableCopyRow(deliverable: dv)
+                        }
+                    }
+                } else {
+                    stepsList(size: 12.5)
+                }
+
+                // "왜 이걸 하래요?" — 근거는 지우지 않고 접는다
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { whyOpen.toggle() }
+                } label: {
+                    HStack {
+                        Text("왜 이걸 하래요?")
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .foregroundStyle(BUColor.inkMuted)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .rotationEffect(.degrees(whyOpen ? 90 : 0))
+                    }
+                    .padding(.top, 8)
+                    .overlay(Rectangle().fill(BUColor.cardBorder).frame(height: 1), alignment: .top)
+                }
+                .buttonStyle(.plain)
+
+                if whyOpen { whyBlock }
+
+                Button(action: onToggleDone) {
+                    HStack(spacing: 6) {
+                        Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 13, weight: .bold))
+                        Text(done ? "이번 주에 했어요" : "이거 했어요 — 다음 주 추천에 반영")
+                            .font(.system(size: 13, weight: .heavy))
+                    }
+                    .foregroundStyle(done ? Color(red: 0.114, green: 0.478, blue: 0.243) : BUColor.ink)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background((done ? BUColor.success.opacity(0.10) : Color(red: 0.97, green: 0.97, blue: 0.98)), in: RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(done ? BUColor.success.opacity(0.4) : BUColor.cardBorder, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.white.opacity(0.96)))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+    }
+
+    private func stepsList(size: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(play.application.steps.enumerated()), id: \.offset) { idx, step in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(idx + 1)")
+                        .font(.system(size: 10.5, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .frame(width: 18, height: 18)
+                        .background(BUColor.success, in: RoundedRectangle(cornerRadius: 5))
+                    Text(step)
+                        .font(.system(size: size, weight: .medium))
+                        .foregroundStyle(BUColor.ink)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+
+    // 접기 내부 — 사례 근거 + (실행물이 있으면) 자세한 순서 + 기대효과 + 도구
+    private var whyBlock: some View {
+        VStack(alignment: .leading, spacing: 9) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(isCase ? "이렇게 했어요" : "지금 이게 통해요")
                     .font(.system(size: 10.5, weight: .heavy))
@@ -330,74 +437,79 @@ private struct PlayFullCard: View {
                     }
                 }
             }
-            .padding(.horizontal, 14).padding(.vertical, 11)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(accent.opacity(0.04))
-
-            // 내 사업 적용
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("내 사업에 이렇게 적용")
+            if !deliverables.isEmpty && !play.application.steps.isEmpty {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("자세한 순서")
                         .font(.system(size: 10.5, weight: .heavy))
                         .tracking(0.5).textCase(.uppercase)
                         .foregroundStyle(BUColor.success)
-                    Spacer(minLength: 0)
-                    Text(effortLabel)
-                        .font(.system(size: 10, weight: .heavy))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .padding(.horizontal, 7).padding(.vertical, 1.5)
-                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+                    stepsList(size: 12)
                 }
-                ForEach(Array(play.application.steps.enumerated()), id: \.offset) { idx, step in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(idx + 1)")
-                            .font(.system(size: 10.5, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .frame(width: 18, height: 18)
-                            .background(BUColor.success, in: RoundedRectangle(cornerRadius: 5))
-                        Text(step)
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(BUColor.ink)
-                            .lineSpacing(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
-                    }
-                }
-                if !play.application.expectedEffect.isEmpty {
-                    (Text("기대 효과 ").font(.system(size: 12, weight: .heavy)).foregroundColor(Color(red: 0.114, green: 0.208, blue: 0.341))
-                     + Text(play.application.expectedEffect).font(.system(size: 12, weight: .semibold)).foregroundColor(BUColor.ink))
-                        .lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 10).padding(.vertical, 8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
-                }
-                if !play.tools.isEmpty {
-                    FlowChips(items: play.tools) { tool in
-                        PlayToolPill(tool: tool, openURL: openURL)
-                    }
-                }
-                Button(action: onToggleDone) {
-                    HStack(spacing: 6) {
-                        Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 13, weight: .bold))
-                        Text(done ? "이번 주에 했어요" : "이거 했어요 — 다음 주 추천에 반영")
-                            .font(.system(size: 13, weight: .heavy))
-                    }
-                    .foregroundStyle(done ? Color(red: 0.114, green: 0.478, blue: 0.243) : BUColor.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background((done ? BUColor.success.opacity(0.10) : Color(red: 0.97, green: 0.97, blue: 0.98)), in: RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(done ? BUColor.success.opacity(0.4) : BUColor.cardBorder, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 4)
             }
-            .padding(.horizontal, 14).padding(.vertical, 12)
+            if !play.application.expectedEffect.isEmpty {
+                (Text("기대 효과 ").font(.system(size: 12, weight: .heavy)).foregroundColor(Color(red: 0.114, green: 0.208, blue: 0.341))
+                 + Text(play.application.expectedEffect).font(.system(size: 12, weight: .semibold)).foregroundColor(BUColor.ink))
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+            }
+            if !play.tools.isEmpty {
+                FlowChips(items: play.tools) { tool in
+                    PlayToolPill(tool: tool, openURL: openURL)
+                }
+            }
         }
+        .padding(11)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.white.opacity(0.96)))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+        .background(accent.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// 복사 실행물 한 줄 — 탭 → 클립보드 + 1.6초 확인 표시 (웹 CopyRow 미러)
+private struct DeliverableCopyRow: View {
+    let deliverable: PlayDeliverable
+    @State private var copied = false
+
+    private let blue = Color(red: 0, green: 0.478, blue: 1.0)
+
+    var body: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(deliverable.label)
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
+                    .lineLimit(1)
+                Text(deliverable.content)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            Button {
+                #if canImport(UIKit)
+                UIPasteboard.general.string = deliverable.content
+                #endif
+                MarketingRepository.logEngagement(event: "copy_click") // "쓸 재료였는가"의 직접 신호
+                copied = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_600_000_000)
+                    copied = false
+                }
+            } label: {
+                Text(copied ? "✓ 복사됨" : "복사")
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(copied ? Color(red: 0.114, green: 0.208, blue: 0.341) : blue)
+                    .padding(.horizontal, 13).padding(.vertical, 7)
+                    .background(copied ? BUColor.success.opacity(0.08) : Color.white, in: RoundedRectangle(cornerRadius: 9))
+                    .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(copied ? BUColor.success.opacity(0.5) : blue.opacity(0.3), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .background(blue.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(BUColor.cardBorder, lineWidth: 1))
     }
 }
 

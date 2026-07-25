@@ -7,6 +7,7 @@
 //    2. 성장 예측 진입 카드 (탭 → GrowthForecastView sheet)
 //    3. 마케팅 작업하기 = 사례 엔진 (MarketingCasesCard) — 히어로 1 + 채널 진행도 + 더 보기.
 //       2026-06-10: 기존 코칭·트렌드 2개 섹션은 이 단일 엔진으로 통합·삭제됨.
+//    3.5. 이번 주 밈·챌린지 (MarketingMemeLane) — 2026-07-24 신설, 전역 주간 팩 미러.
 //    4. 채널별 지출 추적 (추천 chip + list + collapsible add form)
 //    5. 보조: LoyaltyDonut + CampaignIdeas (iOS 고유 유지)
 //
@@ -33,6 +34,9 @@ fileprivate final class MarketingPageState {
     var casesWeekKey: String? = nil
     var doneTitles: Set<String> = []
 
+    // 이번 주 밈·챌린지 팩 (전역 주간 팩 — 웹 MemeLane 패리티)
+    var memePack: MemePackResponse? = nil
+
     var profile: FundingProfileSnapshot? = nil
 }
 
@@ -43,6 +47,8 @@ public struct MarketingView: View {
 
     @State private var state = MarketingPageState()
     @State private var showGrowthForecast: Bool = false
+    // 마케팅 장부(KPI+지출 추적) — 기본 접힘 (2026-07-24 개편, 웹 ledgerOpen 패리티)
+    @State private var ledgerOpen: Bool = false
 
     public init(store: DashboardStore, mock: MockData) {
         self.store = store
@@ -70,7 +76,6 @@ public struct MarketingView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     header
-                    kpiSection
                     growthNavCard
 
                     // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
@@ -88,6 +93,9 @@ public struct MarketingView: View {
                         onRefresh: { Task { await loadCases(force: true) } }
                     )
 
+                    // 이번 주 밈·챌린지 — 웹 MemeLane 미러 (2026-07-24 신설, 전역 주간 팩 · 원본만·개사 없음)
+                    MarketingMemeLane(pack: state.memePack)
+
                     // 카드뉴스 스튜디오 — 웹 CardNewsStudio 미러 (2026-07-21 신설, 지금 무료·9월부터 프로 전용)
                     CardNewsStudioCard(
                         storeName: state.profile?.storeName ?? store.storeName,
@@ -96,12 +104,17 @@ public struct MarketingView: View {
                         isOperating: state.profile?.businessLaunched ?? true
                     )
 
-                    MarketingCampaignsList(
-                        campaigns: state.campaigns,
-                        industryCategoryId: state.profile?.industryCategoryId,
-                        onAdd: { campaign in Task { await addCampaign(campaign) } },
-                        onDelete: { id in Task { await deleteCampaign(id) } }
-                    )
+                    // 마케팅 장부 — 기본 접힘: 요약 한 줄이 먼저 말한다 (웹 패리티, 2026-07-24 개편)
+                    ledgerSummaryCard
+                    if ledgerOpen {
+                        kpiSection
+                        MarketingCampaignsList(
+                            campaigns: state.campaigns,
+                            industryCategoryId: state.profile?.industryCategoryId,
+                            onAdd: { campaign in Task { await addCampaign(campaign) } },
+                            onDelete: { id in Task { await deleteCampaign(id) } }
+                        )
+                    }
 
                     // iOS 고유 보조 블록
                     LoyaltyDonutBlock()
@@ -148,13 +161,48 @@ public struct MarketingView: View {
                 .font(.system(size: 28, weight: .bold))
                 .tracking(-1.12)
                 .foregroundStyle(BUColor.ink)
-            // 웹 MarketingSurface.tsx:326 헤더 카피와 통일.
-            Text("이번 주에 딱 하나만 — 내 업종 성공사례로 만든 가장 중요한 마케팅 1가지부터.")
+            // 웹 MarketingSurface.tsx 헤더 카피와 통일 (2026-07-24 개편).
+            Text("이번 주에 딱 하나. 읽을 건 줄이고, 바로 쓸 것만 드려요.")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
         }
+    }
+
+    // 장부 요약 카드 — "이달 0원 · ROAS — · 채널 N개" 한 줄 + 펼치기 (웹 ledger summary 패리티)
+    private var ledgerSummaryCard: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) { ledgerOpen.toggle() }
+        } label: {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("마케팅 장부")
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(0.8)
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
+                        .textCase(.uppercase)
+                    Text("이달 \(state.kpis.spendWon > 0 ? formatWon(state.kpis.spendWon) + "원" : "0원") · ROAS \(state.kpis.spendWon > 0 ? String(format: "%.1fx", state.kpis.blendedRoas) : "—") · 채널 \(state.kpis.activeChannels)개")
+                        .font(.system(size: 13, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
+                    .rotationEffect(.degrees(ledgerOpen ? 90 : 0))
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: BUSpacing.minTapTarget)
+            .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
+                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var kpiSection: some View {
@@ -231,7 +279,17 @@ public struct MarketingView: View {
             state.profile = await loadProfileQuiet()
         }
         // 2026-06-10: 코칭·트렌드는 단일 엔진(loadCases)으로 통합 — 불필요 LLM 호출 차단.
-        await loadCases()
+        async let cases: () = loadCases()
+        async let memes: () = loadMemePack()
+        _ = await (cases, memes)
+    }
+
+    /// 주간 밈 팩 — 전역 팩 DB 읽기(저비용, LLM 호출 아님). 실패 시 레인 숨김.
+    private func loadMemePack() async {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        if state.profile == nil { state.profile = await loadProfileQuiet() }
+        let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
+        state.memePack = await repo.fetchMemePack(categoryId: state.profile?.industryCategoryId)
     }
 
     private func loadProfileQuiet() async -> FundingProfileSnapshot? {
@@ -261,7 +319,8 @@ public struct MarketingView: View {
         let allowForce = canRegenerateCases
         async let kpi: () = loadKpisAndCampaigns()
         async let cases: () = loadCases(force: allowForce)
-        _ = await (kpi, cases)
+        async let memes: () = loadMemePack()
+        _ = await (kpi, cases, memes)
     }
 
     private func loadCases(force: Bool = false) async {
