@@ -102,6 +102,7 @@ import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
 import { ReportsSurface } from "./lib/components/surfaces/ReportsSurface";
 import { FinanceSurface } from "./lib/components/surfaces/FinanceSurface";
+import { OfferingsSurface } from "./lib/components/surfaces/OfferingsSurface";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
 import { TaxSurface } from "./lib/components/surfaces/TaxSurface";
 import { TeamSurface } from "./lib/components/surfaces/TeamSurface";
@@ -568,6 +569,7 @@ export default function StarterStageDemo({
     // 미드나이트 단색 + eyebrow + title + subtitle 패턴 통일.
     activeSurface === "reports" ||
     activeSurface === "finance" ||
+    activeSurface === "offerings" ||
     activeSurface === "marketing" ||
     activeSurface === "tax" ||
     activeSurface === "franchise" ||
@@ -1212,6 +1214,12 @@ export default function StarterStageDemo({
         {activeSurface === "finance" ? (
           <CardErrorBoundary cardLabel="재무">
             <FinanceSurface />
+          </CardErrorBoundary>
+        ) : null}
+
+        {activeSurface === "offerings" ? (
+          <CardErrorBoundary cardLabel="내가 파는 것">
+            <OfferingsSurface />
           </CardErrorBoundary>
         ) : null}
 

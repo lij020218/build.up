@@ -12,6 +12,8 @@ import {
   starterStepCards,
   calculateCostRatios,
   traverseUserPath,
+  resolveOfferingKind,
+  OFFERING_KIND_META,
 } from "@foundone/shared";
 import type { RoadmapStageState } from "@foundone/shared";
 import {
@@ -167,6 +169,15 @@ export function useComputedDashboard(
     "food";
 
   const businessCtx = resolveBusinessContext(industryCategoryId);
+
+  // 오퍼링(내가 파는 것) 유형 — 탭 라벨·노출 분기 (SSOT: offering-kinds.ts, 2026-07-25)
+  const offeringKind = resolveOfferingKind(
+    selectedIndustryId ??
+      profile?.subIndustryId ??
+      decisions["industry-selection"]?.selectedPrimaryOptionId ??
+      null,
+    industryCategoryId,
+  );
   const isDigitalCategory =
     industryCategoryId === "online-digital" ||
     industryCategoryId === "startup-tech";
@@ -684,6 +695,11 @@ export function useComputedDashboard(
           { id: "tax" as const,       label: language === "ko" ? "세금" : "Tax" },
           { id: "reports" as const,   label: language === "ko" ? "보고서" : "Reports" },
           { id: "finance" as const,   label: language === "ko" ? "재무" : "Finance" },
+          // 오퍼링(내가 파는 것) — 업종별 라벨(메뉴·재료/상품·재고/이용권·회원권…),
+          //   hidden 업종(startup-tech 계열)은 탭 미노출. SSOT = offering-kinds.ts (2026-07-25)
+          ...(offeringKind !== "hidden"
+            ? [{ id: "offerings" as const, label: language === "ko" ? OFFERING_KIND_META[offeringKind].tabLabel.ko : OFFERING_KIND_META[offeringKind].tabLabel.en }]
+            : []),
           { id: "analytics" as const, label: language === "ko" ? "내 가게" : "My store" },
           { id: "team" as const,      label: language === "ko" ? "직원" : "Team" },
         ]

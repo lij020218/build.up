@@ -80,6 +80,7 @@ public struct AppRoot: View {
         case tax
         case reports
         case finance
+        case offerings
         case analytics
         case team
         case profile
@@ -1033,7 +1034,7 @@ private struct MainTabs: View {
     }
 
     var body: some View {
-        FoundOneMobileShell(selectedTab: $selectedTab, tabs: webSurfaceTabs(businessLaunched: store.businessLaunched)) {
+        FoundOneMobileShell(selectedTab: $selectedTab, tabs: webSurfaceTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId)) {
             switch selectedTab {
             case .home:
                 if store.businessLaunched {
@@ -1060,6 +1061,8 @@ private struct MainTabs: View {
                 ReportsView(mock: mockData)
             case .finance:
                 FinanceView(mock: mockData)
+            case .offerings:
+                OfferingsView(storeInfoStore: storeInfo, fallbackCategoryId: mockData.resolverInput.categoryId)
             case .analytics:
                 MyStoreView(store: store, storeInfo: storeInfo)
             case .team:
@@ -1126,8 +1129,15 @@ private struct FoundOneSurfaceTab: Identifiable, Sendable {
     let systemImage: String
 }
 
-private func webSurfaceTabs(businessLaunched: Bool) -> [FoundOneSurfaceTab] {
-    [
+private func webSurfaceTabs(businessLaunched: Bool, offeringCategoryId: String? = nil) -> [FoundOneSurfaceTab] {
+    // 오퍼링 탭 — 업종별 라벨(메뉴·재료/상품·재고/이용권·회원권…), hidden(startup-tech)은 미노출.
+    //   SSOT: OfferingKindsRegistry(자동 생성). 탭 레벨은 categoryId 폴백 해석 —
+    //   세부업종 예외(펫용품 등)의 정밀 라벨은 OfferingsView 헤더가 프로필로 재해석.
+    let offeringKind = BUOfferingKinds.resolve(subIndustryId: nil, categoryId: offeringCategoryId)
+    let offeringTab: FoundOneSurfaceTab? = (businessLaunched && offeringKind != "hidden")
+        ? .init(id: .offerings, label: BUOfferingKinds.metaFor(offeringKind)?.tabLabelKo ?? "내가 파는 것", systemImage: "tag")
+        : nil
+    return [
         .init(id: .home, label: "홈", systemImage: "house"),
         businessLaunched ? nil : .init(id: .current, label: "현재 단계", systemImage: "doc.text"),
         .init(id: .roadmap, label: "로드맵", systemImage: "list.bullet"),
@@ -1137,6 +1147,7 @@ private func webSurfaceTabs(businessLaunched: Bool) -> [FoundOneSurfaceTab] {
         businessLaunched ? .init(id: .tax, label: "세금", systemImage: "wonsign.circle") : nil,
         businessLaunched ? .init(id: .reports, label: "보고서", systemImage: "doc.richtext") : nil,
         businessLaunched ? .init(id: .finance, label: "재무", systemImage: "chart.xyaxis.line") : nil,
+        offeringTab,
         businessLaunched ? .init(id: .analytics, label: "내 가게", systemImage: "chart.bar") : nil,
         businessLaunched ? .init(id: .team, label: "직원", systemImage: "person.2") : nil,
         .init(id: .profile, label: "내 정보", systemImage: "person.crop.circle"),
@@ -1555,7 +1566,7 @@ struct DemoTabs: View {
         ZStack(alignment: .top) {
             FoundOneMobileShell(
                 selectedTab: $selectedTab,
-                tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched),
+                tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId),
                 accessory: {
                     ExitButton(action: onExit)
                 }
@@ -1625,6 +1636,8 @@ struct DemoTabs: View {
                 ReportsView(mock: mockData)
             case .finance:
                 FinanceView(mock: mockData)
+            case .offerings:
+                OfferingsView(storeInfoStore: demoStoreInfo, fallbackCategoryId: mockData.resolverInput.categoryId)
             case .analytics:
                 MyStoreView(store: demoDashboardStore, storeInfo: demoStoreInfo)
             case .team:

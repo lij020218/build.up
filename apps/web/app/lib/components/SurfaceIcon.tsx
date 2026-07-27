@@ -107,6 +107,16 @@ export function SurfaceIcon(props: { surface: DashboardSurface }) {
     );
   }
 
+  if (props.surface === "offerings") {
+    // 가격표 태그 — 오퍼링(내가 파는 것: 메뉴·상품·시술·이용권)
+    return (
+      <svg {...common}>
+        <path d="M8.6 2.8h3.6a1 1 0 0 1 1 1v3.6a1 1 0 0 1-.3.7l-5.5 5.5a1 1 0 0 1-1.4 0L2.9 10.5a1 1 0 0 1 0-1.4l5-5a1 1 0 0 1 .7-.3Z" />
+        <circle cx="10.6" cy="5.4" r="0.9" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+
   if (props.surface === "tax") {
     // 영수증/계산서 + ₩ — 세금(계산·공제·일정)
     return (
