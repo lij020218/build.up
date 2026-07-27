@@ -18,6 +18,11 @@ import FoundOneDesignSystem
 import FoundOneData
 import FoundOneCore
 
+/// 등록 직후 레시피 편집기 sheet(item:) 대상 래퍼
+private struct RecipeTarget: Identifiable {
+    let id: String
+}
+
 public struct OfferingsView: View {
     @ObservedObject var storeInfoStore: StoreInfoStore
     /// 프로필 로드 전 폴백 (AppRoot resolverInput.categoryId)
@@ -36,6 +41,8 @@ public struct OfferingsView: View {
     @State private var newMenuName = ""
     @State private var newMenuPrice = ""
     @State private var newMenuCategory = ""
+    /// 등록 직후 재료 선택(레시피 편집기) 자동 오픈 대상 — 웹 handleInvSave→setRecipeMenuId 정합 (2026-07-27)
+    @State private var recipeTarget: RecipeTarget? = nil
 
     public init(storeInfoStore: StoreInfoStore, fallbackCategoryId: String?) {
         self.storeInfoStore = storeInfoStore
@@ -108,6 +115,18 @@ public struct OfferingsView: View {
         }
         .sheet(isPresented: $showRecipeSheet) {
             MenuRecipeSheet(storeInfoStore: storeInfoStore, goldenMax: goldenMax)
+        }
+        .sheet(item: $recipeTarget) { target in
+            // 메뉴 등록 직후 이어지는 "재료 선택 + 수량" 단계 — 등록된 원재료 중 고르고
+            //   소요량 입력 → 원가율 자동·판매 시 재고 차감 (웹 저장 직후 레시피 팝업 정합)
+            NavigationStack {
+                RecipeEditorView(storeInfoStore: storeInfoStore, menuId: target.id, goldenMax: goldenMax)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("닫기") { recipeTarget = nil }
+                        }
+                    }
+            }
         }
     }
 
@@ -257,8 +276,10 @@ public struct OfferingsView: View {
                 guard !name.isEmpty else { return }
                 let price = Double(newMenuPrice.filter(\.isNumber)) ?? 0
                 let cat = newMenuCategory.trimmingCharacters(in: .whitespaces)
+                let newId = UUID().uuidString
                 storeInfoStore.commit { s in
                     s.inventory.append(BUInventoryItem(
+                        id: newId,
                         name: name, itemType: "product",
                         displayCategory: cat.isEmpty ? nil : cat,
                         sellingPrice: price
@@ -266,8 +287,10 @@ public struct OfferingsView: View {
                 }
                 newMenuName = ""; newMenuPrice = ""; newMenuCategory = ""
                 showMenuAddForm = false
+                // 바로 재료 선택 단계로 — 어떤 원재료가 얼마나 쓰이는지 지정 (사장님 지시)
+                recipeTarget = RecipeTarget(id: newId)
             } label: {
-                Text("추가")
+                Text("추가하고 재료 선택")
                     .font(.system(size: 13, weight: .heavy))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
