@@ -266,11 +266,14 @@ a realistic "timeLabel", and 2-3 "deliverables" (ready-to-paste caption/message/
 Mark kind "case" ONLY when a named brand + source url exist in [RESEARCH]; otherwise "trend". Respond ONLY with JSON:
 {"plays":[{"kind":"case|trend","title":"...","mission":"...","timeLabel":"...","deliverables":[{"kind":"copy|guide","label":"...","content":"..."}],"source":{"brand":"...","whatHappened":"...","whyItWorked":"...","metric":"...","url":"..."},"application":{"steps":["..."],"expectedEffect":"...","effortLevel":"low|medium|high"},"tools":[{"name":"...","purpose":"...","tier":"free|paid|freemium","url":"..."}]}]}`;
 
-  const client = new OpenAI({ apiKey: openaiKey, timeout: 40_000 });
+  const client = new OpenAI({ apiKey: openaiKey, timeout: 55_000 }); // terra 추론 지연 여유 (실측 합성 ~25s)
   const r = await client.chat.completions.create({
-    model: "gpt-5.4-mini",
-    max_completion_tokens: 3400, // v2: deliverables(복사용 실행물) 추가로 상향
-    temperature: 0.4,
+    // 2026-07-27 GPT-5.6 전환 실험: terra = 5.5 동급 성능 절반가($2.5/$15).
+    //  ⚠️ 5.6 계열은 temperature 미지원(400) — 파라미터 제거. reasoning_effort low 로
+    //  추론 토큰(출력 과금)·지연 상한. max 토큰은 추론분 여유 +600.
+    model: "gpt-5.6-terra",
+    reasoning_effort: "low",
+    max_completion_tokens: 4000,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: system },

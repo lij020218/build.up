@@ -235,9 +235,11 @@ ${storeFacts}
   try {
     const client = new OpenAI({ apiKey, timeout: 35_000 });
     const r = await client.chat.completions.create({
-      model: "gpt-5.4-mini",
-      max_completion_tokens: 1600,
-      temperature: 0.7,
+      // 2026-07-27 gpt-5.6-luna 전환 — 인터랙티브(사장님이 기다림)라 최속 티어 + effort none (실측 ~2s).
+      //  5.6 계열은 temperature 미지원(400) — 제거(기본 1.0 거동이 창의 작업에 무방).
+      model: "gpt-5.6-luna",
+      reasoning_effort: "none",
+      max_completion_tokens: 1800,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },

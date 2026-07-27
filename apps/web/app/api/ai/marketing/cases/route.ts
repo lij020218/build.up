@@ -12,7 +12,7 @@ import type { ResearchSource } from "../../../_lib/marketing-research";
  *
  *  2단계 파이프라인 (사례를 *확실히* 찾기 위한 신뢰성 설계):
  *    1) researchMarketingCases — OpenAI web_search(+Tavily 폴백)로 업종 최신 한국 사례·트렌드를 자유 텍스트로 수집
- *    2) OpenAI gpt-5.4-mini(json_object) — 수집 텍스트 + 가게 컨텍스트 → plays[] 구조화 (사례/트렌드 + 내 사업 적용)
+ *    2) OpenAI gpt-5.6-terra(json_object, 2026-07-27 전환) — 수집 텍스트 + 가게 컨텍스트 → plays[] 구조화
  *
  *  2026-07-25: 파이프라인 본체는 _lib/marketing-cases-core.ts 로 추출 —
  *    스모크 하네스(scripts/smoke-marketing-cases.mts)가 라우트와 동일 코드로 품질 평가.
@@ -23,7 +23,7 @@ import type { ResearchSource } from "../../../_lib/marketing-research";
  */
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 90; // 2026-07-27 gpt-5.6-terra 전환 — 리서치+추론 합산 실측 ~40s, 여유 2x
 
 // 하위호환 re-export — 기존 임포트 경로 유지.
 export type { MarketingPlay, PlayDeliverable, PlayTool } from "../../../_lib/marketing-cases-core";

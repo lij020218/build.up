@@ -197,11 +197,13 @@ ${corpus}
 위 자료의 밈·챌린지·릴스 포맷을 아래 JSON 으로만 응답하세요:
 {"items":[{"kind":"meme|challenge|format","title":"원본 이름","originDesc":"원본 설명 1~2문장","originExample":"자료 속 실제 활용례 인용(없으면 생략)","originUrl":"자료의 URL","sourceName":"매체명","publishedAt":"YYYY-MM-DD(자료에 있으면)","industryFit":["food"],"effortLabel":"15초","applyHint":"사장님 ○○에 적용해보세요"}]}`;
 
-  const client = new OpenAI({ apiKey: openaiKey, timeout: 40_000 });
+  const client = new OpenAI({ apiKey: openaiKey, timeout: 55_000 });
   const r = await client.chat.completions.create({
-    model: "gpt-5.4-mini",
-    max_completion_tokens: 2200,
-    temperature: 0.3,
+    // 2026-07-27 gpt-5.6-terra 전환 (주 1회 전역이라 비용 무시 수준, 큐레이션 판단력 우선).
+    //  5.6 계열은 temperature 미지원(400) — 제거. 추론 토큰 여유 +400.
+    model: "gpt-5.6-terra",
+    reasoning_effort: "low",
+    max_completion_tokens: 2600,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: system },
