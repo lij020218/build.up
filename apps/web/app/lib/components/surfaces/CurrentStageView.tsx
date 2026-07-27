@@ -3,6 +3,7 @@
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
 import { ContractReviewStageSection } from "./ContractReviewStageSection";
+import { ExpertCheckpointCard } from "../ExpertCheckpointCard";
 import { CurrentStageDefaultSection } from "./CurrentStageDefaultSection";
 import { CurrentStageHeader } from "./CurrentStageHeader";
 import { CurrentStageSelectionContent } from "./CurrentStageSelectionContent";
@@ -98,6 +99,11 @@ export function CurrentStageView() {
               isViewingPastStage={isViewingPastStage}
               navigateToSurface={navigateToSurface}
             />
+
+            {/* 전문가 체크포인트 — 세무사·노무사·변호사 확인이 필요한 단계에만 노출
+                (2026-07-27, SSOT expert-checkpoints.ts — 시장검증 피드백 '전문성·책임' 대응).
+                헤더 직후 공통 배치라 body 종류(selection/contract/guide/task) 무관. */}
+            <ExpertCheckpointCard stageCode={currentStage.code} ko={language === "ko"} />
 
             {bodyKind === "selection" ? (
               <CurrentStageSelectionContent stageCode={currentStage.code} />

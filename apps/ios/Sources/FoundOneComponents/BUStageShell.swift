@@ -175,6 +175,13 @@ public struct BUStageShell<Content: View>: View {
                             .padding(.top, 4)
                     }
 
+                    // 전문가 체크포인트 — 세무사·노무사·변호사 확인이 필요한 단계에만
+                    //   (registry 미등록 단계 = 미렌더. 웹 CurrentStageView 주입과 미러, 2026-07-27)
+                    if let checkpoint = BUExpertCheckpoints.checkpoint(for: stageId) {
+                        BUExpertCheckpointCard(checkpoint: checkpoint)
+                            .padding(.horizontal, BUSpacing.md)
+                    }
+
                     content
                         .padding(.horizontal, BUSpacing.md)
 
