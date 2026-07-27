@@ -1181,19 +1181,16 @@ private func webSurfaceTabs(businessLaunched: Bool, offeringCategoryId: String? 
 /// 하단 고정 탭 4개 (2026-07-25 사장님 지시) — 자주 쓰는 페이지를 사이드바 없이 상시 노출.
 ///  HIG(2026-06-08 개정) 준수: 탭 바=top-level 내비게이션, 라벨 필수(짧게), filled 심볼 선호,
 ///  탭 수는 적게 + 복잡한 전체 구조는 사이드바 병행("consider a sidebar … as an alternative").
-///  구성: 홈 / 로드맵(오픈 후엔 오퍼링 — "로드맵이 끝났다면 재고 관리") / 직원 / 내 정보.
+///  구성: 홈 / 로드맵(오픈 후엔 마케팅) / 직원 / 내 정보.
+///  2026-07-27 시장조사(5곳 전부 "재고 관리 안 한다" + 인터뷰#1 "마케팅=1위 페인") 반영:
+///  2번 슬롯 오퍼링 → 마케팅 교체. 오퍼링은 사이드바·대시보드 "자세히"로 접근 유지(강등이지 제거 아님).
+///  세무·펀딩은 계절성·이벤트성이라 상시 탭 부적합 — 신고철엔 홈 알림이 담당.
 ///  ⚠️ HIG "Don't disable or hide tab bar buttons" — 2번 슬롯 교체는 세션 내 토글이 아니라
 ///  사업 단계(오픈 전/후) 기반 고정 구성이라 허용 범위 (재무·마케팅 탭 gating 과 동일 원칙).
 private func bottomQuickTabs(businessLaunched: Bool, offeringCategoryId: String?, offeringSubIndustryId: String?) -> [FoundOneSurfaceTab] {
-    let second: FoundOneSurfaceTab = {
-        if businessLaunched {
-            let kind = BUOfferingKinds.resolve(subIndustryId: offeringSubIndustryId, categoryId: offeringCategoryId)
-            if kind != "hidden", let m = BUOfferingKinds.metaFor(kind) {
-                return .init(id: .offerings, label: m.tabLabelKo, systemImage: "tag.fill")
-            }
-        }
-        return .init(id: .roadmap, label: "로드맵", systemImage: "map.fill")
-    }()
+    let second: FoundOneSurfaceTab = businessLaunched
+        ? .init(id: .marketing, label: "마케팅", systemImage: "megaphone.fill")
+        : .init(id: .roadmap, label: "로드맵", systemImage: "map.fill")
     return [
         .init(id: .home, label: "홈", systemImage: "house.fill"),
         second,
