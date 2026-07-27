@@ -26,24 +26,39 @@ public struct BUQuickLinksCard: View {
     let title: String
     let caption: String?
     let links: [BUQuickLink]
+    /// 우측 상단 보조 액션 (예: "당근으로 구하는 법 →" 가이드 시트 트리거) — 웹 ExternalQuickLinks.action 미러 (2026-07-25)
+    let actionLabel: String?
+    let onAction: (() -> Void)?
 
-    public init(title: String, caption: String? = nil, links: [BUQuickLink]) {
+    public init(title: String, caption: String? = nil, links: [BUQuickLink], actionLabel: String? = nil, onAction: (() -> Void)? = nil) {
         self.title = title; self.caption = caption; self.links = links
+        self.actionLabel = actionLabel; self.onAction = onAction
     }
 
     public var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(BUColor.midnight)
-                        .textCase(.uppercase)
-                        .kerning(0.8)
-                    if let caption {
-                        Text(caption)
-                            .font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(.system(size: 11, weight: .heavy))
+                            .foregroundStyle(BUColor.midnight)
+                            .textCase(.uppercase)
+                            .kerning(0.8)
+                        if let caption {
+                            Text(caption)
+                                .font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    if let actionLabel, let onAction {
+                        Spacer(minLength: 0)
+                        Button(action: onAction) {
+                            Text(actionLabel)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(BUColor.midnight)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 // pill wrap — 짧은 목록이라 수동 flow (4개/줄 내외)

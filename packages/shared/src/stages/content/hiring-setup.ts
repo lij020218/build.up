@@ -121,9 +121,11 @@ export const HIRING_SETUP_CONTENT: StageContent = {
           links: [
             { name: "알바몬", desc: "단기·파트타임 1순위 · 소상공인 무료 공고 · 24h 내 지원자 다수", url: "https://www.albamon.com", badge: "알" },
             { name: "알바천국", desc: "음식점·카페 표준 · 네이버 검색 연동 · 인근 거주자 매칭", url: "https://www.alba.co.kr", badge: "천" },
-            { name: "당근 동네알바", desc: "지역 주민 즉시 매칭 · 무료 · 출퇴근 거리 짧은 알바", url: "https://www.daangn.com", badge: "당" },
+            // 당근 URL — 루트 대신 알바 서비스 직접 딥링크 (홈택스 URL 원칙과 동일, 2026-07-25 직원관리 SSOT 정합)
+            { name: "당근 동네알바", desc: "지역 주민 즉시 매칭 · 출퇴근 거리 짧은 알바 · 채팅 면접", url: "https://www.daangn.com/kr/jobs/", badge: "당" },
             { name: "사람인", desc: "정직원·경력직 채용 · 이력서 기반 · 디자이너·강사·기술자", url: "https://www.saramin.co.kr", badge: "사" },
             { name: "잡코리아", desc: "정직원 채용 + 경력 매칭 · 면허·자격증 검증", url: "https://www.jobkorea.co.kr", badge: "잡" },
+            { name: "고용24", desc: "정부 운영 무료 공고 · 채용지원금 안내 연계", url: "https://www.work24.go.kr", badge: "정" },
           ],
         },
         { kind: "interactive", ref: "soloOperator" },

@@ -16,6 +16,7 @@ export * from "./finance/labor-law-checks";
 export * from "./finance/tax-credits";
 export * from "./finance/tax-estimate";
 export * from "./team/job-duties";
+export * from "./team/hiring-channels";
 export * from "./finance/tax-faq";
 export * from "./finance/loan-faq";
 export * from "./guide/qa";

@@ -16,8 +16,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins, Wallet, UserMinus } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
+import { HIRING_QUICK_CHANNELS } from "@foundone/shared";
 import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
+import { DaangnHiringGuideModal } from "../DaangnHiringGuideModal";
 import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
 
 const MIDNIGHT = "#191970";
@@ -83,6 +85,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   const [allowances, setAllowances] = useState<Allowance[]>([]); // 추가 수당 신청 (2026-07-13)
   const [todayAtt, setTodayAtt] = useState<Att[]>([]); // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
   const [loading, setLoading] = useState(true);
+  const [showDaangnGuide, setShowDaangnGuide] = useState(false); // 당근 구인 가이드 팝업 (2026-07-25)
   const [membersError, setMembersError] = useState(false); // get_store_members RPC 실패 — "직원 없음"과 구분 (2026-07-13)
   // 급여일 (2026-07-15) — paidThisMonth: true=보냄 / false=아직 / null=무응답(=cron 이 3일 간격 재알림)
   const [paydayDay, setPaydayDay] = useState<number | null>(null);
@@ -255,18 +258,19 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
         </header>
 
         {/* 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동 (2026-07-24 사장님 지시).
-            URL 은 공식 도메인만, 2026-07-24 전수 200 확인. 고용24 = 정부 운영(무료 공고). */}
+            2026-07-25: 채널 목록을 shared SSOT(HIRING_QUICK_CHANNELS)로 승격 + 당근알바 추가
+            + "당근으로 구하는 법" 가이드 팝업. URL 은 공식 도메인만. */}
         <ExternalQuickLinks
           title={ko ? "직원 구인 바로가기" : "Hiring quick links"}
           caption={ko ? "공고 등록·지원자 관리는 각 사이트에서 하세요." : "Post jobs on these sites."}
-          links={[
-            { label: "알바몬", url: "https://www.albamon.com" },
-            { label: "알바천국", url: "https://www.alba.co.kr" },
-            { label: "사람인", url: "https://www.saramin.co.kr" },
-            { label: "잡코리아", url: "https://www.jobkorea.co.kr" },
-            { label: "고용24", url: "https://www.work24.go.kr", badge: ko ? "정부·무료" : "Gov·Free" },
-          ]}
+          action={{ label: ko ? "당근으로 구하는 법 →" : "How to hire on Daangn →", onClick: () => setShowDaangnGuide(true) }}
+          links={HIRING_QUICK_CHANNELS.map((c) => ({
+            label: ko ? c.label : c.labelEn,
+            url: c.url,
+            badge: c.badge ? (ko ? c.badge.ko : c.badge.en) : undefined,
+          }))}
         />
+        {showDaangnGuide && <DaangnHiringGuideModal ko={ko} onClose={() => setShowDaangnGuide(false)} />}
 
         {loading ? (
           <div style={{ ...card, textAlign: "center", color: MUTED }}>{ko ? "불러오는 중…" : "Loading…"}</div>

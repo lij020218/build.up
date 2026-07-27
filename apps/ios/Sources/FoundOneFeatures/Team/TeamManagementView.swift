@@ -39,6 +39,7 @@ public struct TeamManagementView: View {
     @State private var categoryId: String? = nil   // 직무 목록 업종 분기 (2026-07-13)
     @State private var loadFailed = false
     @State private var showPayrollSheet = false
+    @State private var showDaangnGuide = false   // 당근 구인 가이드 시트 (2026-07-25, 웹 showDaangnGuide 미러)
     // 급여일 (2026-07-15, 웹 TeamSurface 미러) — paidThisMonth: true=보냄 / false=아직 / nil=무응답
     @State private var paydayDay: Int? = nil
     @State private var paidThisMonth: Bool? = nil
@@ -76,17 +77,23 @@ public struct TeamManagementView: View {
                         headerBlock
 
                         // 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동
-                        // (2026-07-24 사장님 지시, 웹 TeamSurface 정합. URL 전수 200 확인)
+                        // (2026-07-24 사장님 지시, 웹 TeamSurface 정합. URL 공식 도메인만)
+                        // ⚠️ SSOT = packages/shared/src/team/hiring-channels.ts HIRING_QUICK_CHANNELS —
+                        //    목록·순서·배지 1:1 수동 미러. 드리프트는 hiring-channels-ios-sync.test.ts 가 차단.
+                        // 2026-07-25: 당근알바 추가(2순위) + "당근으로 구하는 법" 가이드 시트.
                         BUQuickLinksCard(
                             title: "직원 구인 바로가기",
                             caption: "공고 등록·지원자 관리는 각 사이트에서 하세요.",
                             links: [
                                 BUQuickLink(label: "알바몬", url: "https://www.albamon.com"),
+                                BUQuickLink(label: "당근알바", url: "https://www.daangn.com/kr/jobs/", badge: "동네 기반"),
                                 BUQuickLink(label: "알바천국", url: "https://www.alba.co.kr"),
                                 BUQuickLink(label: "사람인", url: "https://www.saramin.co.kr"),
                                 BUQuickLink(label: "잡코리아", url: "https://www.jobkorea.co.kr"),
                                 BUQuickLink(label: "고용24", url: "https://www.work24.go.kr", badge: "정부·무료"),
-                            ]
+                            ],
+                            actionLabel: "당근으로 구하는 법 →",
+                            onAction: { showDaangnGuide = true }
                         )
 
                         if let members {
@@ -131,6 +138,9 @@ public struct TeamManagementView: View {
             }
             .sheet(isPresented: $showPayrollSheet) {
                 if let si = storeInfoStore { TeamManagementSheet(storeInfoStore: si) }
+            }
+            .sheet(isPresented: $showDaangnGuide) {
+                DaangnHiringGuideSheet()
             }
             .sheet(item: $detailMember) { m in
                 StaffDetailSheet(

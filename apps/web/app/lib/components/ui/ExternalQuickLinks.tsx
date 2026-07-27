@@ -29,21 +29,37 @@ type Props = {
   title: string;
   caption?: string;
   links: QuickLink[];
+  /** 우측 상단 보조 액션 (예: "당근으로 구하는 법 →" 가이드 팝업 트리거) — 2026-07-25 */
+  action?: { label: string; onClick: () => void };
 };
 
-export function ExternalQuickLinks({ title, caption, links }: Props) {
+export function ExternalQuickLinks({ title, caption, links, action }: Props) {
   return (
     <div style={{
       background: "white", borderRadius: 16, border: "1px solid rgba(25,25,112,0.10)",
       boxShadow: "0 1px 3px rgba(25,25,112,0.04)", padding: "14px 16px",
       display: "flex", flexDirection: "column", gap: 10,
     }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <div style={{ fontSize: 11, fontWeight: 750, color: MIDNIGHT, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          {title}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 750, color: MIDNIGHT, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            {title}
+          </div>
+          {caption && (
+            <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>{caption}</div>
+          )}
         </div>
-        {caption && (
-          <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>{caption}</div>
+        {action && (
+          <button
+            type="button"
+            onClick={action.onClick}
+            style={{
+              flexShrink: 0, border: "none", background: "none", cursor: "pointer", padding: 0,
+              fontSize: 12, fontWeight: 700, color: MIDNIGHT, fontFamily: "inherit",
+            }}
+          >
+            {action.label}
+          </button>
         )}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

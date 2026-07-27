@@ -4990,8 +4990,8 @@
               },
               {
                 "name": "당근 동네알바",
-                "desc": "지역 주민 즉시 매칭 · 무료 · 출퇴근 거리 짧은 알바",
-                "url": "https://www.daangn.com",
+                "desc": "지역 주민 즉시 매칭 · 출퇴근 거리 짧은 알바 · 채팅 면접",
+                "url": "https://www.daangn.com/kr/jobs/",
                 "badge": "당"
               },
               {
@@ -5005,6 +5005,12 @@
                 "desc": "정직원 채용 + 경력 매칭 · 면허·자격증 검증",
                 "url": "https://www.jobkorea.co.kr",
                 "badge": "잡"
+              },
+              {
+                "name": "고용24",
+                "desc": "정부 운영 무료 공고 · 채용지원금 안내 연계",
+                "url": "https://www.work24.go.kr",
+                "badge": "정"
               }
             ]
           },
