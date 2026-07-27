@@ -67,6 +67,10 @@ public struct AppRoot: View {
     @State private var userRole: String? = nil
     /// 받은 채용 초대장 — owner 역할 확정 시 my_pending_invites 체크 → 자동 표시 (웹 InviteOfferModal 미러).
     @State private var offeredInvite: TeamPendingInvite? = nil
+    /// 프로필 세부업종(business_profiles.subIndustryId) — 오퍼링 탭 라벨의 세부업종 정밀 해석용
+    ///   (웹 useComputedDashboard offeringKind 패리티: pet-supplies=상품·재고 등 categoryId 폴백과 다른 예외).
+    ///   원격 스냅샷 로드·refresh 시 갱신 → 웹에서 업종 변경해도 탭 라벨이 따라온다.
+    @State private var profileSubIndustryId: String? = nil
     /// 「나중에」 누른 초대 코드 — 이 세션 동안 재표시 안 함.
     @State private var dismissedInviteCodes: Set<String> = []
 
@@ -156,6 +160,7 @@ public struct AppRoot: View {
                     } else {
                         MainTabs(
                             store: store,
+                            subIndustryId: profileSubIndustryId,
                             storeInfo: storeInfoStore ?? Self.makeFallbackStoreInfo(),
                             cashflow: cashflowStore,
                             coaching: coachingStore,
@@ -373,6 +378,7 @@ public struct AppRoot: View {
             remoteCategoryId = snapshot.industryCategoryId
             remoteSubIndustryId = snapshot.subIndustryId
             remoteStartupType = snapshot.startupType
+            profileSubIndustryId = snapshot.subIndustryId
         } catch {
             store.recordError("Supabase 데이터 로딩 실패: \(Self.readableError(error))")
             store.setProfile(
@@ -563,6 +569,8 @@ public struct AppRoot: View {
                 )
                 // 업종 변경(웹·다른 기기)도 로드맵 경로에 반영 — cluster re-hydrate.
                 Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, startupType: snapshot.startupType, into: roadmapStore)
+                // 오퍼링 탭 라벨도 세부업종 변경을 따라오도록 갱신 (nil 이면 기존 값 보존 — hydrate 와 동일 방침).
+                if let sub = snapshot.subIndustryId { profileSubIndustryId = sub }
             } catch { /* best-effort — 기존 값 유지 */ }
         }
 
@@ -982,6 +990,8 @@ private struct AuthenticatedLoadingView: View {
 
 private struct MainTabs: View {
     let store: DashboardStore
+    /// 프로필 세부업종 — 오퍼링 탭 라벨 정밀 해석 (AppRoot 원격 스냅샷에서 주입, nil=미로드).
+    let subIndustryId: String?
     @ObservedObject var storeInfo: StoreInfoStore
     /// nil = 아직 로드 전 (TodayView 가 mock 예측 카드로 fallback). 로드 후 게이팅 동작.
     let cashflow: CashflowStore?
@@ -1034,7 +1044,19 @@ private struct MainTabs: View {
     }
 
     var body: some View {
-        FoundOneMobileShell(selectedTab: $selectedTab, tabs: webSurfaceTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId)) {
+        // 세부업종 우선순위 — 웹 useComputedDashboard 미러(selectedIndustryId ?? profile.subIndustryId):
+        //   UD "roadmap.selectedIndustryId"(위저드·원격 hydrate 공용 미러) → 프로필 스냅샷 폴백.
+        let resolvedSubIndustryId: String? = {
+            if let ud = UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"), !ud.isEmpty {
+                return ud
+            }
+            return subIndustryId
+        }()
+        FoundOneMobileShell(
+            selectedTab: $selectedTab,
+            tabs: webSurfaceTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
+            bottomTabs: bottomQuickTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId)
+        ) {
             switch selectedTab {
             case .home:
                 if store.businessLaunched {
@@ -1129,11 +1151,11 @@ private struct FoundOneSurfaceTab: Identifiable, Sendable {
     let systemImage: String
 }
 
-private func webSurfaceTabs(businessLaunched: Bool, offeringCategoryId: String? = nil) -> [FoundOneSurfaceTab] {
+private func webSurfaceTabs(businessLaunched: Bool, offeringCategoryId: String? = nil, offeringSubIndustryId: String? = nil) -> [FoundOneSurfaceTab] {
     // 오퍼링 탭 — 업종별 라벨(메뉴·재료/상품·재고/이용권·회원권…), hidden(startup-tech)은 미노출.
-    //   SSOT: OfferingKindsRegistry(자동 생성). 탭 레벨은 categoryId 폴백 해석 —
-    //   세부업종 예외(펫용품 등)의 정밀 라벨은 OfferingsView 헤더가 프로필로 재해석.
-    let offeringKind = BUOfferingKinds.resolve(subIndustryId: nil, categoryId: offeringCategoryId)
+    //   SSOT: OfferingKindsRegistry(자동 생성). 세부업종 우선 해석(펫용품=상품·재고,
+    //   스터디카페=이용권·회원권 등 categoryId 폴백과 다른 예외) — 웹 탭 라벨과 1:1.
+    let offeringKind = BUOfferingKinds.resolve(subIndustryId: offeringSubIndustryId, categoryId: offeringCategoryId)
     let offeringTab: FoundOneSurfaceTab? = (businessLaunched && offeringKind != "hidden")
         ? .init(id: .offerings, label: BUOfferingKinds.metaFor(offeringKind)?.tabLabelKo ?? "내가 파는 것", systemImage: "tag")
         : nil
@@ -1154,21 +1176,49 @@ private func webSurfaceTabs(businessLaunched: Bool, offeringCategoryId: String? 
     ].compactMap { $0 }
 }
 
+/// 하단 고정 탭 4개 (2026-07-25 사장님 지시) — 자주 쓰는 페이지를 사이드바 없이 상시 노출.
+///  HIG(2026-06-08 개정) 준수: 탭 바=top-level 내비게이션, 라벨 필수(짧게), filled 심볼 선호,
+///  탭 수는 적게 + 복잡한 전체 구조는 사이드바 병행("consider a sidebar … as an alternative").
+///  구성: 홈 / 로드맵(오픈 후엔 오퍼링 — "로드맵이 끝났다면 재고 관리") / 직원 / 내 정보.
+///  ⚠️ HIG "Don't disable or hide tab bar buttons" — 2번 슬롯 교체는 세션 내 토글이 아니라
+///  사업 단계(오픈 전/후) 기반 고정 구성이라 허용 범위 (재무·마케팅 탭 gating 과 동일 원칙).
+private func bottomQuickTabs(businessLaunched: Bool, offeringCategoryId: String?, offeringSubIndustryId: String?) -> [FoundOneSurfaceTab] {
+    let second: FoundOneSurfaceTab = {
+        if businessLaunched {
+            let kind = BUOfferingKinds.resolve(subIndustryId: offeringSubIndustryId, categoryId: offeringCategoryId)
+            if kind != "hidden", let m = BUOfferingKinds.metaFor(kind) {
+                return .init(id: .offerings, label: m.tabLabelKo, systemImage: "tag.fill")
+            }
+        }
+        return .init(id: .roadmap, label: "로드맵", systemImage: "map.fill")
+    }()
+    return [
+        .init(id: .home, label: "홈", systemImage: "house.fill"),
+        second,
+        .init(id: .team, label: "직원", systemImage: "person.2.fill"),
+        .init(id: .profile, label: "내 정보", systemImage: "person.crop.circle.fill"),
+    ]
+}
+
 private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
     @Binding var selectedTab: AppRoot.Tab
     @State private var sidebarOpen = false
     let tabs: [FoundOneSurfaceTab]
+    /// 하단 고정 탭 (비어 있으면 미표시) — 전체 내비는 사이드바(tabs), 자주 쓰는 4개만 하단 상시.
+    let bottomTabs: [FoundOneSurfaceTab]
     let accessory: Accessory
     let content: Content
 
     init(
         selectedTab: Binding<AppRoot.Tab>,
         tabs: [FoundOneSurfaceTab],
+        bottomTabs: [FoundOneSurfaceTab] = [],
         @ViewBuilder accessory: () -> Accessory,
         @ViewBuilder content: () -> Content
     ) {
         self._selectedTab = selectedTab
         self.tabs = tabs
+        self.bottomTabs = bottomTabs
         self.accessory = accessory()
         self.content = content()
     }
@@ -1216,8 +1266,60 @@ private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
                 .ignoresSafeArea(edges: .vertical)
             }
         }
+        .overlay(alignment: .bottom) {
+            // 하단 고정 탭 바 — HIG: "floats above content … Liquid Glass background
+            //   that allows content beneath to peek through". 사이드바 열림 중엔 숨김(모달 예외 규칙).
+            if !bottomTabs.isEmpty && !sidebarOpen {
+                FoundOneBottomTabBar(tabs: bottomTabs, selectedTab: $selectedTab)
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, 6)
+            }
+        }
         .tint(BUColor.midnightInk)
         .animation(.snappy(duration: 0.24), value: sidebarOpen)
+    }
+}
+
+/// 하단 플로팅 탭 바 — Liquid Glass(ultraThinMaterial) 캡슐 위 4탭.
+///  HIG 준수: 아이콘 위 라벨(compact), filled 심볼, 선택 상태는 미드나잇 틴트(신호등 컬러 X).
+private struct FoundOneBottomTabBar: View {
+    let tabs: [FoundOneSurfaceTab]
+    @Binding var selectedTab: AppRoot.Tab
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(tabs) { tab in
+                let selected = selectedTab == tab.id
+                Button {
+                    withAnimation(.snappy(duration: 0.2)) { selectedTab = tab.id }
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: tab.systemImage)
+                            .font(.system(size: 17, weight: .medium))
+                            .symbolVariant(selected ? .fill : .none)
+                        Text(tab.label)
+                            .font(.system(size: 10, weight: selected ? .bold : .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .foregroundStyle(selected ? BUColor.midnightInk : BUColor.inkMuted.opacity(0.72))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(
+                        selected ? AnyShapeStyle(BUColor.midnight.opacity(0.08)) : AnyShapeStyle(Color.clear),
+                        in: Capsule()
+                    )
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.label)
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
+            }
+        }
+        .padding(6)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.55), lineWidth: 0.7))
+        .shadow(color: BUColor.midnight.opacity(0.12), radius: 18, y: 8)
     }
 }
 
@@ -1225,11 +1327,13 @@ private extension FoundOneMobileShell where Accessory == EmptyView {
     init(
         selectedTab: Binding<AppRoot.Tab>,
         tabs: [FoundOneSurfaceTab],
+        bottomTabs: [FoundOneSurfaceTab] = [],
         @ViewBuilder content: () -> Content
     ) {
         self.init(
             selectedTab: selectedTab,
             tabs: tabs,
+            bottomTabs: bottomTabs,
             accessory: { EmptyView() },
             content: content
         )
@@ -1567,6 +1671,7 @@ struct DemoTabs: View {
             FoundOneMobileShell(
                 selectedTab: $selectedTab,
                 tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId),
+                bottomTabs: bottomQuickTabs(businessLaunched: mockData.resolverInput.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: nil),
                 accessory: {
                     ExitButton(action: onExit)
                 }
