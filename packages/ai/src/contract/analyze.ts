@@ -8,9 +8,12 @@ import type { ContractAnalysisResult, ContractClause, ContractType } from "./pro
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
 // 계약서 분석은 법률 고위험 기능 — 진짜 Claude 경로(useRealClaude)에서는 법률 벤치 최상위 Opus 4.8 사용.
 const REAL_CLAUDE_MODEL = "claude-opus-4-8";
+// Opus 가 제대로 안 될 때(키 부재·호출 실패·응답 파싱 불가)의 대체 (2026-07-27 사장님 지시):
+//  gpt-5.6-terra + effort high — 판단형 법률 분석이라 5.4-mini 셔임 대신 상위 티어.
+//  temperature 드롭은 LlmClient 중앙 가드가 처리.
+const FALLBACK_MODEL = "gpt-5.6-terra";
 const DEFAULT_MAX_TOKENS = 2048;
 
 // 계약서는 분석 내용이 많을 수 있어 다른 기능보다 max_tokens를 높게 설정합니다.
@@ -96,32 +99,56 @@ const MAX_CONTRACT_LENGTH = 10_000;
 export async function analyzeContract(
   contractText: string,
   options: AiCallOptions & {
-    /** true 면 진짜 Anthropic(Claude) 호출 — 기본 모델 Opus 4.8. false/미설정 = OpenAI 셔임(gpt-5.4-mini). */
+    /** true 면 진짜 Anthropic(Claude) 호출 — 기본 모델 Opus 4.8. 실패 시 terra 폴백(fallbackApiKey 필요). */
     useRealClaude?: boolean;
+    /** Opus 폴백용 OpenAI 키 — useRealClaude 일 때 전달하면 실패 시 gpt-5.6-terra 로 1회 재시도. */
+    fallbackApiKey?: string;
   },
   contractType: ContractType = "commercial_lease"
 ): Promise<ContractAnalysisResult> {
   const truncated = contractText.slice(0, MAX_CONTRACT_LENGTH);
-  const client = options.useRealClaude
-    ? createRealAnthropicClient(options.apiKey)
-    : createAiClient(options.apiKey);
-
   const userMessage = buildContractUserPrompt(truncated, contractType);
   const systemPrompt = getSystemPromptForType(contractType);
-  const model = options.model ?? (options.useRealClaude ? REAL_CLAUDE_MODEL : DEFAULT_MODEL);
+  const maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
 
-  const message = await client.messages.create({
-    model,
-    max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    // ✦ Prompt Caching — 같은 contract type 반복 분석 시 절감(셔임은 OpenAI 자동캐싱)
-    system: systemWithCache(systemPrompt),
-    messages: [{ role: "user", content: userMessage }]
-  });
+  const attempt = async (
+    client: ReturnType<typeof createAiClient>,
+    model: string,
+    reasoningEffort?: "none" | "low" | "medium" | "high",
+  ): Promise<ContractAnalysisResult> => {
+    const message = await client.messages.create({
+      model,
+      max_tokens: maxTokens,
+      ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+      // ✦ Prompt Caching — 같은 contract type 반복 분석 시 절감(셔임은 OpenAI 자동캐싱)
+      system: systemWithCache(systemPrompt),
+      messages: [{ role: "user", content: userMessage }]
+    });
+    const textBlock = message.content.find((block) => block.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      throw new AiParseError("AI 응답에 텍스트 블록이 없습니다.", JSON.stringify(message.content));
+    }
+    return parseContractResponse(textBlock.text);
+  };
 
-  const textBlock = message.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new AiParseError("AI 응답에 텍스트 블록이 없습니다.", JSON.stringify(message.content));
+  if (options.useRealClaude) {
+    try {
+      return await attempt(
+        createRealAnthropicClient(options.apiKey) as unknown as ReturnType<typeof createAiClient>,
+        options.model ?? REAL_CLAUDE_MODEL,
+      );
+    } catch (err) {
+      // Opus 가 제대로 안 되면(호출 실패·잔액·파싱 불가) terra 로 1회 재시도 (2026-07-27 사장님 지시).
+      //  폴백 키 없으면 원 에러 그대로 — 조용한 품질 강등 대신 명시적 실패.
+      if (!options.fallbackApiKey) throw err;
+      console.warn(
+        "[contract-analyze] Opus 4.8 실패 → gpt-5.6-terra 폴백:",
+        err instanceof Error ? err.message : String(err),
+      );
+      return attempt(createAiClient(options.fallbackApiKey), FALLBACK_MODEL, "high");
+    }
   }
 
-  return parseContractResponse(textBlock.text);
+  // 진짜 Claude 키 자체가 없는 환경 — 처음부터 terra (구 셔임 기본 5.4-mini 에서 승급).
+  return attempt(createAiClient(options.apiKey), options.model ?? FALLBACK_MODEL, "high");
 }

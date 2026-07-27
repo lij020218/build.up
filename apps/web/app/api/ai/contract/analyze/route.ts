@@ -102,7 +102,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await analyzeContract(text, { apiKey, useRealClaude }, contractType);
+    // fallbackApiKey: Opus 실패 시 gpt-5.6-terra 재시도용 (getAnthropicApiKey = OpenAI 우선 셔임 키)
+    const result = await analyzeContract(text, { apiKey, useRealClaude, fallbackApiKey: getAnthropicApiKey() ?? undefined }, contractType);
     return NextResponse.json(result satisfies ContractAnalysisResult, {
       headers: {
         "x-request-id": requestId
