@@ -32,7 +32,7 @@ public enum BUExpertCheckpoints {
             expertKo: "행정사·관할기관",
             whensKo: ["건축물대장에 위반건축물 표시가 있거나 용도변경이 필요할 때", "소방·위생 등 인허가 요건 해당 여부가 애매할 때"],
             channels: [
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
                 .init(key: "nearbyAdmin", nameKo: "내 주변 행정사", free: false, phone: nil, url: nil, nearbyQuery: "행정사"),
             ]
         ),
@@ -42,7 +42,7 @@ public enum BUExpertCheckpoints {
             whensKo: ["보증금·권리금 규모가 커서 특약을 꼼꼼히 봐야 할 때", "원상복구 범위·렌트프리 조건이 애매하게 적혀 있을 때"],
             channels: [
                 .init(key: "klac132", nameKo: "대한법률구조공단", free: true, phone: "132", url: "https://www.klac.or.kr/legalstruct/telephoneConsultation.do", nearbyQuery: nil),
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
                 .init(key: "nearbyLaw", nameKo: "내 주변 법률사무소", free: false, phone: nil, url: nil, nearbyQuery: "변호사"),
             ]
         ),
@@ -52,7 +52,7 @@ public enum BUExpertCheckpoints {
             whensKo: ["견적 편차가 크거나 선금 비중이 과도하게 요구될 때", "공사 지연·하자 발생 시 계약서상 책임이 불분명할 때"],
             channels: [
                 .init(key: "klac132", nameKo: "대한법률구조공단", free: true, phone: "132", url: "https://www.klac.or.kr/legalstruct/telephoneConsultation.do", nearbyQuery: nil),
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
                 .init(key: "nearbyLaw", nameKo: "내 주변 법률사무소", free: false, phone: nil, url: nil, nearbyQuery: "변호사"),
             ]
         ),
@@ -71,7 +71,7 @@ public enum BUExpertCheckpoints {
             expertKo: "세무사·변리사",
             whensKo: ["법인 과세유형·창업감면 해당 여부 판단이 필요할 때", "상표·특허를 직접 출원할지 위임할지 정할 때"],
             channels: [
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
                 .init(key: "nts126", nameKo: "국세청 국세상담센터", free: true, phone: "126", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=6694&cntntsId=8104", nearbyQuery: nil),
                 .init(key: "nearbyTax", nameKo: "내 주변 세무사무소", free: false, phone: nil, url: nil, nearbyQuery: "세무사"),
             ]
@@ -113,7 +113,7 @@ public enum BUExpertCheckpoints {
             channels: [
                 .init(key: "moel1350", nameKo: "고용노동부 상담센터", free: true, phone: "1350", url: "https://1350.moel.go.kr/home/", nearbyQuery: nil),
                 .init(key: "nts126", nameKo: "국세청 국세상담센터", free: true, phone: "126", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=6694&cntntsId=8104", nearbyQuery: nil),
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
             ]
         ),
         .init(
@@ -123,7 +123,7 @@ public enum BUExpertCheckpoints {
             channels: [
                 .init(key: "ftcFranchise", nameKo: "공정위 정보공개서 열람", free: true, phone: nil, url: "https://franchise.ftc.go.kr", nearbyQuery: nil),
                 .init(key: "klac132", nameKo: "대한법률구조공단", free: true, phone: "132", url: "https://www.klac.or.kr/legalstruct/telephoneConsultation.do", nearbyQuery: nil),
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
             ]
         ),
         .init(
@@ -131,7 +131,7 @@ public enum BUExpertCheckpoints {
             expertKo: "변호사(지분·계약)",
             whensKo: ["공동창업 지분·베스팅·주주간계약(SHA)을 정할 때"],
             channels: [
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
                 .init(key: "nearbyLaw", nameKo: "내 주변 법률사무소", free: false, phone: nil, url: nil, nearbyQuery: "변호사"),
             ]
         ),
@@ -140,7 +140,7 @@ public enum BUExpertCheckpoints {
             expertKo: "변호사(투자계약)",
             whensKo: ["텀시트·투자계약서를 받았을 때 (서명 전 검토)"],
             channels: [
-                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", free: true, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
+                .init(key: "bizlink", nameKo: "중기부 비즈니스지원단", free: false, phone: nil, url: "https://www.smes.go.kr/bizlink/", nearbyQuery: nil),
                 .init(key: "nearbyLaw", nameKo: "내 주변 법률사무소", free: false, phone: nil, url: nil, nearbyQuery: "변호사"),
             ]
         ),

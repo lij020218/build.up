@@ -58,8 +58,10 @@ export const EXPERT_CHANNELS = {
     url: "https://www.klac.or.kr/legalstruct/telephoneConsultation.do",
   },
   bizlink: {
-    key: "bizlink", nameKo: "중기부 비즈니스지원단 무료 자문", nameEn: "SMEs expert advisory (free)",
-    free: true,
+    // ⚠️ 무료 배지 금지 (2026-07-27 냉정리뷰 정정): 온라인 애로상담은 무료로 알려져 있으나
+    //    공식 페이지에 명시 확인 못 함 + 현장클리닉은 기업부담금(자부담) 존재 확인.
+    //    변호사·세무사·노무사·회계사·변리사 자문 연결 창구라는 사실만 표기.
+    key: "bizlink", nameKo: "중기부 비즈니스지원단", nameEn: "SMEs expert advisory",
     url: "https://www.smes.go.kr/bizlink/",
   },
   ftcFranchise: {
