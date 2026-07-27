@@ -5,7 +5,7 @@ import { systemWithCache } from "../utils/client";
 import { QUICK_QUERY_SYSTEM_PROMPT, buildQuickQueryUserPrompt } from "./prompt";
 import type { QuickQueryContext, QuickQueryResult } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gpt-5.6-luna"; // 2026-07-27 luna 전환 — 인터랙티브 질의, effort none(중앙 가드)
 // 컨텍스트가 풍부해진 만큼 답변에도 약간 여유 (2~4 문장 + nextAction + referencedCase)
 const DEFAULT_MAX_TOKENS = 768;
 

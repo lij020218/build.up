@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   try {
     const client = createAiClient(apiKey);
     const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "gpt-5.6-luna", // 2026-07-27 luna — 파싱 전용(CSV·엑셀 임포트 포함)
       max_tokens: 8192,
       system: ko
         ? `엑셀/CSV/텍스트에서 추출한 제품 데이터를 JSON 배열로 정리하는 파서입니다.

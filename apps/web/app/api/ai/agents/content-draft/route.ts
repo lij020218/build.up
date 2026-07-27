@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   try {
     const client = createAiClient(apiKey);
     const res = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "gpt-5.6-luna", // 2026-07-27 luna — 짧은 초안 생성
       max_tokens: 600,
       system: [
         {

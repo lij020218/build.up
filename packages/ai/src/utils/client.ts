@@ -73,6 +73,8 @@ type AMessagesCreateRequest = {
   tool_choice?: AToolChoice;
   temperature?: number;
   top_p?: number;
+  /** GPT-5.6 계열 추론 강도 — 5.6 모델일 때만 사용(기본 "none"). 판단형 라우트는 "low"+ 명시. */
+  reasoning_effort?: "none" | "low" | "medium" | "high";
   metadata?: unknown;
 };
 type AMessagesCreateResponse = {
@@ -252,8 +254,18 @@ class LlmClient {
         max_completion_tokens: req.max_tokens,
         messages: oaiMessages,
       };
-      if (req.temperature !== undefined) baseParams.temperature = req.temperature;
-      if (req.top_p !== undefined) baseParams.top_p = req.top_p;
+      // ── GPT-5.6 계열 중앙 가드 (2026-07-27) ──
+      //  5.6(Sol/Terra/Luna)은 reasoning 모델: temperature/top_p 전달 시 400 (기본값 1만 허용, 실측).
+      //  라우트별로 하나씩 고치다 놓치는 사고를 막기 위해 여기서 일괄 드롭.
+      //  reasoning_effort 는 호출처가 명시하면 그 값, 아니면 "none"(파서·짧은 생성 경유가 다수 — 속도 우선).
+      //  판단형 라우트(사업계획서·재무해석 등)를 5.6으로 올릴 땐 req.reasoning_effort 를 명시할 것.
+      const isGpt56 = mappedModel.startsWith("gpt-5.6");
+      if (isGpt56) {
+        baseParams.reasoning_effort = req.reasoning_effort ?? "none";
+      } else {
+        if (req.temperature !== undefined) baseParams.temperature = req.temperature;
+        if (req.top_p !== undefined) baseParams.top_p = req.top_p;
+      }
 
       // Anthropic tools / tool_choice → OpenAI function calling 변환.
       //  로드맵 생성처럼 schema-strict 출력을 강제하는 호출처는 이 경로를 거쳐
