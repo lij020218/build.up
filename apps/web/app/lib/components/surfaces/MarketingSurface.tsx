@@ -696,7 +696,7 @@ function MarketingFocus({
 
       {loading && !hero && (
         <div style={{ padding: "28px 16px", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>
-          {ko ? "내 업종 성공사례를 조사하고 있어요… (최대 20초)" : "Researching cases in your industry…"}
+          {ko ? "내 업종 성공사례를 조사하고 실행물을 만들고 있어요… (최대 1분, 주 1회)" : "Researching cases and drafting your materials… (up to 1 min, once a week)"}
         </div>
       )}
       {!loading && error && !hero && (

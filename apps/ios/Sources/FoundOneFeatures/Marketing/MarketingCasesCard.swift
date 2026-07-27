@@ -155,7 +155,7 @@ struct MarketingCasesCard: View {
     }
 
     private var loadingBlock: some View {
-        Text("내 업종 성공사례를 조사하고 있어요… (최대 20초)")
+        Text("내 업종 성공사례를 조사하고 실행물을 만들고 있어요… (최대 1분, 주 1회)")
             .font(.system(size: 12.5, weight: .medium))
             .foregroundStyle(BUColor.inkMuted)
             .multilineTextAlignment(.center)
