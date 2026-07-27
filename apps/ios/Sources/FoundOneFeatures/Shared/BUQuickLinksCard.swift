@@ -68,11 +68,12 @@ public struct BUQuickLinksCard: View {
     }
 }
 
-/// 링크 pill 을 줄바꿈 배치 — LazyVGrid(adaptive) 로 충분한 소규모 flow.
+/// 링크 pill 줄바꿈 배치 — 자연 폭 + 한 줄 고정 (2026-07-27 사장님 피드백:
+/// LazyVGrid 균등 폭이 라벨·배지를 여러 줄로 꺾던 문제 → BUWrapLayout, 웹 flex-wrap 정합).
 private struct FlowChips: View {
     let links: [BUQuickLink]
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8, alignment: .leading)], alignment: .leading, spacing: 8) {
+        BUWrapLayout(spacing: 8) {
             ForEach(links) { l in
                 if let url = URL(string: l.url) {
                     Link(destination: url) { chip(l) }
@@ -83,13 +84,15 @@ private struct FlowChips: View {
 
     @ViewBuilder
     private func chip(_ l: BUQuickLink) -> some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Text(l.label)
                 .font(.system(size: l.isPrimary ? 13.5 : 13, weight: l.isPrimary ? .bold : .semibold))
+                .lineLimit(1)
             if let badge = l.badge {
                 Text(badge)
                     .font(.system(size: 9.5, weight: .heavy))
-                    .padding(.horizontal, 6).padding(.vertical, 1)
+                    .lineLimit(1)
+                    .padding(.horizontal, 6).padding(.vertical, 1.5)
                     .background(
                         (l.isPrimary ? Color.white.opacity(0.18) : BUColor.midnight.opacity(0.08)),
                         in: Capsule()
@@ -100,7 +103,7 @@ private struct FlowChips: View {
         }
         .foregroundStyle(l.isPrimary ? Color.white : BUColor.ink)
         .padding(.horizontal, l.isPrimary ? 15 : 13).padding(.vertical, 9)
-        .frame(maxWidth: .infinity)
+        .fixedSize()
         .background(
             l.isPrimary ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.04)),
             in: RoundedRectangle(cornerRadius: 12, style: .continuous)

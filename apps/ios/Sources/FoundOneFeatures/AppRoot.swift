@@ -118,6 +118,7 @@ public struct AppRoot: View {
             case "reports":       self._selectedTab = State(initialValue: .reports)
             case "finance":       self._selectedTab = State(initialValue: .finance)
             case "offerings", "inventory": self._selectedTab = State(initialValue: .offerings)
+            case "team", "staff":  self._selectedTab = State(initialValue: .team)
             case "analytics", "store": self._selectedTab = State(initialValue: .analytics)
             case "profile", "settings": self._selectedTab = State(initialValue: .profile)
             default: break
