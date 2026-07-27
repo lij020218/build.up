@@ -31,6 +31,11 @@ public struct OfferingsView: View {
     @State private var newName = ""
     @State private var newPrice = ""
     @State private var newCategory = ""
+    // 메뉴 카드 인라인 등록 폼 (2026-07-27 사장님 지시 — 메뉴 등록도 메뉴 카드에서)
+    @State private var showMenuAddForm = false
+    @State private var newMenuName = ""
+    @State private var newMenuPrice = ""
+    @State private var newMenuCategory = ""
 
     public init(storeInfoStore: StoreInfoStore, fallbackCategoryId: String?) {
         self.storeInfoStore = storeInfoStore
@@ -157,17 +162,35 @@ public struct OfferingsView: View {
                         .foregroundStyle(BUColor.ink)
                 }
                 Spacer(minLength: 0)
-                Button("관리하기 →") { showRecipeSheet = true }
+                // 등록은 여기서 바로 (사장님 지시), 판매±·레시피·수정은 관리 시트에서
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { showMenuAddForm.toggle() }
+                } label: {
+                    Text(showMenuAddForm ? "닫기" : "\(menuNoun) 추가")
+                        .font(.system(size: 12, weight: .heavy))
+                        .foregroundStyle(showMenuAddForm ? BUColor.midnight : .white)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(
+                            showMenuAddForm ? AnyShapeStyle(BUColor.midnight.opacity(0.06)) : AnyShapeStyle(BUColor.midnight),
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        )
+                }
+                .buttonStyle(.plain)
+                Button("관리 →") { showRecipeSheet = true }
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(BUColor.midnight)
                     .buttonStyle(.plain)
             }
 
+            if showMenuAddForm { menuAddForm }
+
             if products.isEmpty {
-                Text("[관리하기]에서 \(menuNoun)을 등록하면 가격·원가율·판매 기록이 여기서 보여요.")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
-                    .fixedSize(horizontal: false, vertical: true)
+                if !showMenuAddForm {
+                    Text("[\(menuNoun) 추가]로 등록하면 가격·원가율·판매 기록이 여기서 보여요.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             } else {
                 VStack(spacing: 6) {
                     ForEach(products.prefix(5)) { m in
@@ -213,6 +236,53 @@ public struct OfferingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous).fill(Color.white.opacity(0.85)))
         .overlay(RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+    }
+
+    /// 메뉴 인라인 등록 폼 — 이름·가격·분류만 빠르게. 레시피(원가율)는 [관리 →]에서 연결.
+    private var menuAddForm: some View {
+        VStack(spacing: 8) {
+            TextField("\(menuNoun) 이름 (예: 제육 도시락)", text: $newMenuName)
+                .textFieldStyle(.roundedBorder)
+            HStack(spacing: 8) {
+                TextField("판매가 (원)", text: $newMenuPrice)
+                    #if os(iOS)
+                    .keyboardType(.numberPad)
+                    #endif
+                    .textFieldStyle(.roundedBorder)
+                TextField(kind == "service-menu" ? "분류 (예: 시술·케어)" : "분류 (예: 메인·사이드)", text: $newMenuCategory)
+                    .textFieldStyle(.roundedBorder)
+            }
+            Button {
+                let name = newMenuName.trimmingCharacters(in: .whitespaces)
+                guard !name.isEmpty else { return }
+                let price = Double(newMenuPrice.filter(\.isNumber)) ?? 0
+                let cat = newMenuCategory.trimmingCharacters(in: .whitespaces)
+                storeInfoStore.commit { s in
+                    s.inventory.append(BUInventoryItem(
+                        name: name, itemType: "product",
+                        displayCategory: cat.isEmpty ? nil : cat,
+                        sellingPrice: price
+                    ))
+                }
+                newMenuName = ""; newMenuPrice = ""; newMenuCategory = ""
+                showMenuAddForm = false
+            } label: {
+                Text("추가")
+                    .font(.system(size: 13, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        newMenuName.trimmingCharacters(in: .whitespaces).isEmpty ? AnyShapeStyle(BUColor.inkMuted.opacity(0.3)) : AnyShapeStyle(BUColor.midnight),
+                        in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(newMenuName.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .padding(12)
+        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1))
     }
 
     // MARK: - 권종 카탈로그 (membership 계열 — 재고·원가 어휘 없음, 웹 OfferingCatalogCard 미러)
