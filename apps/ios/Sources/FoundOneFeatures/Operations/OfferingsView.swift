@@ -46,6 +46,9 @@ public struct OfferingsView: View {
         kind == "menu-bom" || kind == "stocked-goods" || kind == "service-menu"
     }
     private var isMenuKind: Bool { kind == "menu-bom" }
+    /// 메뉴/시술 카드와 재고 카드를 분리 렌더하는 유형 (2026-07-27 사장님 지시 — 웹 section prop 미러).
+    ///  소매(stocked-goods)는 상품=재고라 분리할 두 실체가 없어 통합 유지.
+    private var isSplitKind: Bool { kind == "menu-bom" || kind == "service-menu" }
     private var goldenMax: Double { kind == "service-menu" ? 25 : 33 }
 
     private var inventory: [BUInventoryItem] {
@@ -61,13 +64,20 @@ public struct OfferingsView: View {
 
                     if kind == "hidden" {
                         EmptyView() // 탭 미노출 업종 — 방어적 (직접 진입 없음)
-                    } else if isInventoryKind {
-                        // 기존 통합 카드 재사용 — 메뉴 업종은 메뉴 섹션 동봉 (TodayView 정합)
+                    } else if isSplitKind {
+                        // 메뉴/시술 카드 ↔ 재고 카드 분리 (2026-07-27 사장님 지시 —
+                        //   통합 카드는 대시보드 몫, 전용 페이지는 명확 구분. 웹 section prop 미러)
+                        menuListCard
                         InventoryOpsCard(
-                            items: isMenuKind ? inventory.filter { $0.itemType != "product" } : inventory,
+                            items: inventory.filter { $0.itemType != "product" },
                             onManage: { showManageSheet = true },
-                            menuItems: isMenuKind ? products : [],
-                            onManageMenus: isMenuKind ? { showRecipeSheet = true } : nil
+                            titleOverride: kind == "service-menu" ? "소모품 재고" : "재료 재고"
+                        )
+                    } else if isInventoryKind {
+                        // 소매·이커머스 — 상품=재고, 통합 카드 유지
+                        InventoryOpsCard(
+                            items: inventory,
+                            onManage: { showManageSheet = true }
                         )
                     } else {
                         catalogCard
@@ -112,6 +122,97 @@ public struct OfferingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
         }
+    }
+
+    // MARK: - 메뉴/시술 카드 (분리 렌더 — 웹 InventoryOpsCard section="menu" 미러)
+
+    private var menuNoun: String { kind == "service-menu" ? "시술·서비스" : "메뉴" }
+
+    private var menuListCard: some View {
+        let materials = inventory.filter { $0.itemType == "material" }
+        let overCount = products.filter { m in
+            guard m.sellingPrice > 0 else { return false }
+            return RecipeCost.menuCostPerServing(m, materials: materials) / m.sellingPrice * 100 > goldenMax
+        }.count
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(BUColor.midnight.opacity(0.08))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: kind == "service-menu" ? "scissors" : "fork.knife")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("\(menuNoun) 관리")
+                        .font(.system(size: 11, weight: .heavy))
+                        .tracking(0.8)
+                        .foregroundStyle(BUColor.midnight)
+                        .textCase(.uppercase)
+                    Text(products.isEmpty
+                         ? "\(menuNoun) 없음"
+                         : (overCount > 0 ? "원가율 초과 \(overCount)개" : "\(products.count)개 등록"))
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(BUColor.ink)
+                }
+                Spacer(minLength: 0)
+                Button("관리하기 →") { showRecipeSheet = true }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+                    .buttonStyle(.plain)
+            }
+
+            if products.isEmpty {
+                Text("[관리하기]에서 \(menuNoun)을 등록하면 가격·원가율·판매 기록이 여기서 보여요.")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                VStack(spacing: 6) {
+                    ForEach(products.prefix(5)) { m in
+                        let cost = RecipeCost.menuCostPerServing(m, materials: materials)
+                        let ratio = m.sellingPrice > 0 ? cost / m.sellingPrice * 100 : 0
+                        let over = m.sellingPrice > 0 && ratio > goldenMax
+                        HStack(spacing: 8) {
+                            Text(m.name)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(BUColor.ink)
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                            Text(m.sellingPrice > 0 ? "\(Int(m.sellingPrice).formatted())원" : "—")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .monospacedDigit()
+                            if m.sellingPrice > 0, cost > 0 {
+                                Text("\(Int(ratio))%")
+                                    .font(.system(size: 12, weight: .heavy))
+                                    .foregroundStyle(over ? BUColor.danger : BUColor.midnight)
+                                    .monospacedDigit()
+                            }
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 9)
+                        .background(
+                            over ? BUColor.danger.opacity(0.03) : BUColor.midnight.opacity(0.02),
+                            in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                .strokeBorder(over ? BUColor.danger.opacity(0.18) : BUColor.midnight.opacity(0.08), lineWidth: 1)
+                        )
+                    }
+                    if products.count > 5 {
+                        Text("+ \(products.count - 5)개 더 — 관리하기에서")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(BUColor.inkMuted)
+                    }
+                }
+            }
+        }
+        .padding(BUSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous).fill(Color.white.opacity(0.85)))
+        .overlay(RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
     }
 
     // MARK: - 권종 카탈로그 (membership 계열 — 재고·원가 어휘 없음, 웹 OfferingCatalogCard 미러)

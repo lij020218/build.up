@@ -68,8 +68,23 @@ export function OfferingsSurface() {
       </header>
 
       {INVENTORY_KINDS.has(kind) ? (
-        // 기존 메뉴·재료 카드 전체 이관 — 대시보드에서는 요약만 남고 작업은 여기서.
-        <InventoryOpsCard ko={ko} inventory={c.inventory} lowStockItems={c.lowStockItems} d={d} />
+        kind === "stocked-goods" ? (
+          // 소매·이커머스 — 상품이 곧 재고라 분리할 두 실체가 없음: 통합 카드 유지.
+          <InventoryOpsCard ko={ko} inventory={c.inventory} lowStockItems={c.lowStockItems} d={d} />
+        ) : (
+          // 메뉴/시술 업종 (2026-07-27 사장님 지시): 통합 카드는 대시보드 몫,
+          //   전용 페이지에선 메뉴 카드와 재고 카드를 명확히 분리.
+          <>
+            <InventoryOpsCard ko={ko} inventory={c.inventory} lowStockItems={c.lowStockItems} d={d} section="menu" />
+            <InventoryOpsCard
+              ko={ko}
+              inventory={c.inventory.filter((i) => i.itemType !== "product")}
+              lowStockItems={c.lowStockItems.filter((i) => i.itemType !== "product")}
+              d={d}
+              section="stock"
+            />
+          </>
+        )
       ) : (
         <OfferingCatalogCard d={d} ko={ko} unitLabel={ko ? meta.unitLabel.ko : meta.unitLabel.en} kind={kind} />
       )}

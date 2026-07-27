@@ -30,13 +30,18 @@ public struct InventoryOpsCard: View {
     /// 메뉴 관리(MenuRecipeSheet) 진입 — 전달되면 통합 카드 모드(제목·메뉴 섹션 활성).
     let onManageMenus: (() -> Void)?
 
+    /// 헤더 eyebrow 오버라이드 — 오퍼링 페이지 분리 카드("재료 재고"/"소모품 재고")용 (2026-07-27)
+    let titleOverride: String?
+
     public init(items: [BUInventoryItem], onManage: (() -> Void)? = nil, ko: Bool = true,
-                menuItems: [BUInventoryItem] = [], onManageMenus: (() -> Void)? = nil) {
+                menuItems: [BUInventoryItem] = [], onManageMenus: (() -> Void)? = nil,
+                titleOverride: String? = nil) {
         self.items = items
         self.onManage = onManage
         self.ko = ko
         self.menuItems = menuItems
         self.onManageMenus = onManageMenus
+        self.titleOverride = titleOverride
     }
 
     private var alertItems: [BUInventoryItem] { items.filter { $0.isLowStock } }
@@ -91,9 +96,10 @@ public struct InventoryOpsCard: View {
                     .foregroundStyle(alertCount > 0 ? BUColor.warn : BUColor.midnight)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(onManageMenus != nil
-                     ? (ko ? "메뉴·재료 관리" : "Menu & Ingredients")
-                     : (ko ? "재고 관리" : "Inventory"))
+                Text(titleOverride
+                     ?? (onManageMenus != nil
+                         ? (ko ? "메뉴·재료 관리" : "Menu & Ingredients")
+                         : (ko ? "재고 관리" : "Inventory")))
                     .buSectionEyebrowStyle()
                 Text(items.isEmpty
                      ? (ko ? "항목 없음" : "No items")

@@ -409,6 +409,7 @@ export function InventoryOpsCard({
   lowStockItems,
   d,
   detailHref,
+  section = "all",
 }: {
   ko: boolean;
   inventory: InventoryEntry[];
@@ -416,6 +417,13 @@ export function InventoryOpsCard({
   d: DashboardHook;
   /** "자세히 →" 진입 링크 (대시보드에서 /offerings 로) — 오퍼링 페이지 자체에선 생략 */
   detailHref?: string;
+  /**
+   * 렌더 범위 (2026-07-27 사장님 지시 — 오퍼링 페이지는 메뉴/재고 카드 분리):
+   *  "all"  = 통합 카드 (대시보드 기본 — 메뉴+재고 한 카드)
+   *  "menu" = 메뉴·서비스 섹션만 (원가율·판매±·레시피)
+   *  "stock"= 재고 섹션만 (수량·발주·과주문·CSV)
+   */
+  section?: "all" | "menu" | "stock";
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const invForm = d.invForm;
@@ -497,6 +505,9 @@ export function InventoryOpsCard({
   //  걸러져(메뉴 수익성 카드로) 관리 진입점이 없었다 → 이 카드에 메뉴 섹션을 직접 통합.
   //  메뉴 행 = 판매가·원가율(레시피 자동) + 판매 −/＋(재고 자동차감) + [재료](레시피 편집).
   const isMenuMode = mode === "separate" || mode === "service";
+  // 분리 렌더 게이트 — menu 카드엔 재고 UI, stock 카드엔 메뉴 UI 가 나오지 않게.
+  const showMenuSection = isMenuMode && section !== "stock";
+  const showStockSection = section !== "menu";
   const fullInventory = d.inventory as InventoryItem[];
   const menus = isMenuMode ? fullInventory.filter((i) => i.itemType === "product") : [];
   const recipeMaterials = fullInventory.filter((i) => i.itemType === "material");
@@ -585,38 +596,55 @@ export function InventoryOpsCard({
       <div style={opsHeader}>
         <div>
           <div style={sectionEyebrow}>
-            {isMenuMode
-              ? (mode === "separate" ? (ko ? "메뉴 · 식재료" : "Menu · Ingredients") : (ko ? "서비스 · 소모품" : "Services · Supplies"))
-              : ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory")}
+            {section === "menu"
+              ? (mode === "service" ? (ko ? "시술·서비스" : "Services") : (ko ? "메뉴" : "Menu"))
+              : section === "stock"
+                ? (mode === "service" ? (ko ? "소모품" : "Supplies") : (ko ? "재료" : "Ingredients"))
+                : isMenuMode
+                  ? (mode === "separate" ? (ko ? "메뉴 · 식재료" : "Menu · Ingredients") : (ko ? "서비스 · 소모품" : "Services · Supplies"))
+                  : ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory")}
           </div>
           <div style={opsTitle}>
-            {d.businessCtx.inventoryMode === "unified"
-              ? (ko ? "제품·재고 통합 관리" : "Product & inventory")
-              : mode === "separate"
-                ? (ko ? "메뉴·재료 관리" : "Menu & ingredients")
-                : mode === "service"
-                  ? (ko ? "서비스·소모품 관리" : "Services & supplies")
-                  : d.businessCtx.categoryId === "startup-tech"
-                    ? (ko ? "자산·도구 관리" : "Assets and tools")
-                    : (ko ? "재고 관리" : "Inventory management")}
+            {section === "menu"
+              ? (mode === "service" ? (ko ? "시술·서비스 관리" : "Services") : (ko ? "메뉴 관리" : "Menu"))
+              : section === "stock"
+                ? (mode === "service" ? (ko ? "소모품 재고" : "Supplies stock") : (ko ? "재료 재고" : "Ingredient stock"))
+                : d.businessCtx.inventoryMode === "unified"
+                  ? (ko ? "제품·재고 통합 관리" : "Product & inventory")
+                  : mode === "separate"
+                    ? (ko ? "메뉴·재료 관리" : "Menu & ingredients")
+                    : mode === "service"
+                      ? (ko ? "서비스·소모품 관리" : "Services & supplies")
+                      : d.businessCtx.categoryId === "startup-tech"
+                        ? (ko ? "자산·도구 관리" : "Assets and tools")
+                        : (ko ? "재고 관리" : "Inventory management")}
           </div>
         </div>
         <div style={opsActionRow}>
           <button
             type="button"
-            onClick={() => d.setInvForm({ ...d.emptyInvForm, open: true })}
+            onClick={() => d.setInvForm({
+              ...d.emptyInvForm,
+              open: true,
+              // 분리 카드는 유형 고정 — 메뉴 카드=product, 재고 카드=material (2026-07-27)
+              itemType: section === "menu" ? "product" : d.emptyInvForm.itemType,
+            })}
             style={opsActionPrimary}
           >
             {ko
-              ? (mode === "separate" ? "메뉴·재료 추가"
+              ? (section === "menu" ? (mode === "service" ? "서비스 추가" : "메뉴 추가")
+                : section === "stock" ? (mode === "service" ? "소모품 추가" : "재료 추가")
+                : mode === "separate" ? "메뉴·재료 추가"
                 : mode === "service" ? "서비스·소모품 추가"
                 : d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가"
                 : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가")
               : "Add item"}
           </button>
-          <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
-            CSV·Excel
-          </button>
+          {section !== "menu" && (
+            <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
+              CSV·Excel
+            </button>
+          )}
           {/* 자세히 — 오퍼링 페이지(/offerings) 진입 (2026-07-25 사장님 지시:
               대시보드 카드 기능은 그대로, 더 깊은 관리는 전용 페이지에서) */}
           {detailHref && (
@@ -682,7 +710,7 @@ export function InventoryOpsCard({
       )}
 
       {/* ── 메뉴·서비스 섹션 (2026-07-22 통합) — 원가율·판매(재고 자동차감)·레시피 ── */}
-      {isMenuMode && (
+      {showMenuSection && (
         <div style={{ marginBottom: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
             <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
@@ -781,12 +809,13 @@ export function InventoryOpsCard({
               })}
             </div>
           )}
-          <div style={{ height: "1px", background: "rgba(25,25,112,0.07)", margin: "12px 0 0" }} />
+          {section === "all" && <div style={{ height: "1px", background: "rgba(25,25,112,0.07)", margin: "12px 0 0" }} />}
         </div>
       )}
 
-      {/* 재료(식자재·소모품) 섹션 라벨 — 메뉴 섹션과 구분 */}
-      {isMenuMode && (
+      {showStockSection && (<>
+      {/* 재료(식자재·소모품) 섹션 라벨 — 통합 카드에서만 (분리 카드는 카드 제목이 대신) */}
+      {section === "all" && isMenuMode && (
         <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
           {mode === "service" ? (ko ? "소모품 재고" : "Supplies") : (ko ? "재료 재고" : "Ingredients")}
         </div>
@@ -882,6 +911,7 @@ export function InventoryOpsCard({
           </button>
         )}
       </div>
+      </>)}
 
       {/* 전체 재고 팝업 — Portal로 body에 직접 렌더링하여 부모 리렌더링 격리 */}
       {showAllInventory && typeof document !== "undefined" && createPortal(
@@ -979,7 +1009,8 @@ export function InventoryOpsCard({
         document.body
       )}
 
-      {invForm.open ? (
+      {/* 폼 — 분리 카드에선 자기 유형의 폼만 렌더 (메뉴 카드=product, 재고 카드=material) */}
+      {invForm.open && (section === "all" || (invForm.itemType === "product") === (section === "menu")) ? (
         <div style={inlineEditor}>
           <div style={inlineEditorTitle}>
             {isMenuMode
@@ -988,7 +1019,8 @@ export function InventoryOpsCard({
                 : (isEditing ? (ko ? "재료 수정" : "Edit ingredient") : (ko ? "재료 추가" : "Add ingredient")))
               : isEditing ? (ko ? "재고 수정" : "Edit inventory") : (ko ? "재고 추가" : "Add inventory")}
           </div>
-          {/* 유형 선택 — 업종별 라벨 (2026-07-22 통합: 메뉴도 이 카드에서 추가·관리) */}
+          {/* 유형 선택 — 통합 카드에서만 (분리 카드는 유형 고정, 2026-07-27) */}
+          {section === "all" && (
           <div style={{ display: "flex", gap: "4px", padding: "3px", borderRadius: "10px", background: "rgba(25,25,112,0.04)", marginBottom: "10px" }}>
             {([
               { value: "material" as const, label: ko ? (mode === "service" ? "소모품" : "원재료") : "Material" },
@@ -1011,6 +1043,7 @@ export function InventoryOpsCard({
               </button>
             ))}
           </div>
+          )}
           <div style={formGridTwo}>
             <input
               type="text"
