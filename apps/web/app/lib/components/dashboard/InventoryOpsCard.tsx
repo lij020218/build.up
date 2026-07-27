@@ -408,11 +408,14 @@ export function InventoryOpsCard({
   inventory,
   lowStockItems,
   d,
+  detailHref,
 }: {
   ko: boolean;
   inventory: InventoryEntry[];
   lowStockItems: InventoryEntry[];
   d: DashboardHook;
+  /** "자세히 →" 진입 링크 (대시보드에서 /offerings 로) — 오퍼링 페이지 자체에선 생략 */
+  detailHref?: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const invForm = d.invForm;
@@ -614,6 +617,13 @@ export function InventoryOpsCard({
           <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
             CSV·Excel
           </button>
+          {/* 자세히 — 오퍼링 페이지(/offerings) 진입 (2026-07-25 사장님 지시:
+              대시보드 카드 기능은 그대로, 더 깊은 관리는 전용 페이지에서) */}
+          {detailHref && (
+            <a href={detailHref} style={{ ...opsActionSecondary, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              {ko ? "자세히 →" : "Details →"}
+            </a>
+          )}
           <input
             ref={fileInputRef}
             type="file"
