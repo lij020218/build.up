@@ -23,15 +23,22 @@ export async function GET(request: Request) {
   const admin = getSupabaseAdmin();
   if (!admin) return NextResponse.json({ ok: false, error: "서버 설정 오류" }, { status: 500 });
 
-  // 총 가입자 (user_profiles = 가입 트리거로 1인 1행)
-  const totalUsers = await safeCount(
-    admin.from("user_profiles").select("*", { count: "exact", head: true }),
-  );
-
-  // 오늘 가입 (KST 자정 이후)
-  const todayUsers = await safeCount(
-    admin.from("user_profiles").select("*", { count: "exact", head: true }).gte("created_at", kstMidnightUtcIso()),
-  );
+  // 총 가입자·오늘 가입 — auth.users 기준 (SSOT).
+  //   ⚠️ 종전엔 user_profiles 카운트였는데 가입 트리거 도입 전 가입자가 백필되지 않아
+  //     실제(auth 11명)보다 적게(7명) 표시됨 — 2026-07-28 실측으로 발견. 가짜 숫자 금지.
+  //   현재 스케일은 단일 listUsers 페이지로 충분 (_shared buildEmailMap 과 동일 전제).
+  let totalUsers: number | null = null;
+  let todayUsers: number | null = null;
+  try {
+    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (!error && data) {
+      totalUsers = data.users.length;
+      const midnight = kstMidnightUtcIso();
+      todayUsers = data.users.filter((u) => u.created_at >= midnight).length;
+    }
+  } catch {
+    /* null 유지 → "—" */
+  }
 
   // 총 피드백
   const totalFeedback = await safeCount(
