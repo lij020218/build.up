@@ -1,23 +1,27 @@
 //
-//  ExistingStoreRegistrationView.swift — 이미 운영 중인 가게 등록 (7단계)
+//  ExistingStoreRegistrationView.swift — 이미 운영 중인 가게 등록 (5화면 + 첫 진단, 2026-07-28 개편)
 //
-//  웹 ExistingBusinessOnboarding.tsx 와 데이터 동치 (data parity).
-//  수집 데이터:
-//    Step 1 업종      — category, industryOptionId
-//    Step 2 가게 정보 — storeName, startupType, preferredRegion,
-//                       businessOpenTime/CloseTime, weeklyHolidays
-//    Step 3 세무·행정 — vatType, hasEmployees, cpaDecision, launchDate,
-//                       bizRegistrationNumber (optional)
-//    Step 4 월 비용   — monthlyCosts (ingredients/labor/rent/utilities/other),
-//                       capital (optional)
-//    Step 5 운영 채널 — deliveryPlatforms, snsChannels, posId
-//    Step 6 주소·인허가 — addressRoad (optional), obtainedPermits
-//    Step 7 등록 완료 — summary review → onComplete 호출
+//  웹 미러: apps/web/app/lib/components/ExistingBusinessOnboarding.tsx (동일 화면·동일 분기)
+//
+//  화면 구성 (7단계 → 5화면):
+//    ① 업종        — 검색 + 카테고리/세부업종, 선택 즉시 "열리는 도구" 미리보기
+//    ② 가게 한 장  — 상호·사업자번호(국세청 자동조회)·운영형태·개업연월·주소·영업시간
+//    ③ 가게 스냅샷 — 운영 방식·월매출 구간(스킵 가능)·함께 일하는 사람
+//    ④ 채널        — 배달/마켓/툴스택·SNS·POS (업종 분기)
+//    ⑤ 첫 진단     — 벤치마크(공식 출처)·이번 주 미션(프리페치)·세금 D-day·연동 안내
+//
+//  업종 분기 SSOT: BUOnboardingRegistry (OnboardingRegistry.swift — 웹 codegen 자동 생성).
+//  "SaaS 에 프랜차이즈·쿠팡이츠 질문 금지" — 질문 자체를 업종이 결정 (2026-07-28 사장님 지시).
+//
+//  정직성: 벤치마크는 평균 3단 비교(위/겹침/아래)만 · 국세청 배지는 실반환값만 ·
+//  미션 미완이면 "마케팅 탭에서 준비" 폴백. 고정비·투자금·세무방식은 온보딩에서 묻지 않음
+//  (대시보드 세팅 미션 이관), 보유 인허가 수집 삭제(소비처 0곳).
 //
 
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneCore
+import FoundOneData
 
 // MARK: - Payload
 
@@ -28,34 +32,32 @@ public struct ObtainedPermit: Sendable, Hashable, Codable {
 }
 
 public struct StoreRegistration: Sendable, Hashable {
-    // Step 1
     public let category: IndustryCategory
     public let industryCategoryId: String     // StarterIndustryData category id
     public let industryOptionId: String       // StarterIndustryOption id
-    // Step 2
     public let storeName: String
     public let startupType: String            // "independent" | "franchise"
     public let preferredRegion: String
-    public let businessOpenTime: String       // "HH:MM"
-    public let businessCloseTime: String      // "HH:MM"
-    public let weeklyHolidays: [String]       // ["mon","tue",...]
-    // Step 3
+    public let businessOpenTime: String       // "HH:MM" ("" = 미노출 업종)
+    public let businessCloseTime: String
+    public let weeklyHolidays: [String]
     public let vatType: String                // "general" | "simplified"
     public let hasEmployees: Bool
-    public let cpaDecision: String            // "cpa" | "self"
-    public let launchDate: String             // "YYYY-MM-DD"
+    public let cpaDecision: String            // 온보딩에서 미수집 — "self" 기본 (세금 탭에서 변경)
+    public let launchDate: String             // "YYYY-MM-01" (연·월 선택)
     public let daysSinceLaunch: Int
     public let bizRegistrationNumber: String
-    // Step 4
-    public let monthlyCosts: MonthlyCosts
-    public let capital: Double
-    // Step 5
+    public let monthlyCosts: MonthlyCosts     // 온보딩 미수집 — 0 (대시보드 세팅 미션 이관)
+    public let capital: Double                // 온보딩 미수집 — 0
     public let deliveryPlatforms: [String]
     public let snsChannels: [String]
     public let posId: String
-    // Step 6
     public let addressRoad: String
-    public let obtainedPermits: [ObtainedPermit]
+    public let obtainedPermits: [ObtainedPermit] // 삭제된 수집 — 항상 [] (소비처 0곳)
+    // (2026-07-28 신설) — 웹 OnboardingResult 미러
+    public let businessModelId: String        // 운영 방식 (BUOnboardingRegistry.businessModelOptions)
+    public let revenueBandId: String?         // 월매출 구간 — 벤치마크 비교 전용
+    public let employeesBand: String?         // solo | family | staff1_2 | staff3plus
 
     public init(
         category: IndustryCategory,
@@ -79,7 +81,10 @@ public struct StoreRegistration: Sendable, Hashable {
         snsChannels: [String],
         posId: String,
         addressRoad: String,
-        obtainedPermits: [ObtainedPermit]
+        obtainedPermits: [ObtainedPermit],
+        businessModelId: String = "",
+        revenueBandId: String? = nil,
+        employeesBand: String? = nil
     ) {
         self.category = category
         self.industryCategoryId = industryCategoryId
@@ -103,12 +108,15 @@ public struct StoreRegistration: Sendable, Hashable {
         self.posId = posId
         self.addressRoad = addressRoad
         self.obtainedPermits = obtainedPermits
+        self.businessModelId = businessModelId
+        self.revenueBandId = revenueBandId
+        self.employeesBand = employeesBand
     }
 }
 
 // MARK: - View
 
-private let TOTAL_STEPS = 7
+private let TOTAL_STEPS = 5
 
 public struct ExistingStoreRegistrationView: View {
 
@@ -117,45 +125,52 @@ public struct ExistingStoreRegistrationView: View {
 
     @State private var step: Int = 1
 
-    // Step 1
+    // ① 업종
     @State private var selectedCategoryId: String = "food"
     @State private var selectedOptionId: String = ""
+    @State private var industryQuery: String = ""
 
-    // Step 2
+    // ② 가게 한 장
     @State private var storeName: String = ""
-    @State private var startupType: String = "independent"  // "independent" | "franchise"
-    @State private var preferredRegion: String = ""
+    @State private var bizRegistrationNumber: String = ""
+    @State private var bizLookupState: BizLookupState = .idle
+    @State private var startupType: String = "independent"
+    @State private var vatType: String = "general"
+    @State private var vatKnown: Bool = false
+    @State private var launchYear: Int = 0     // 0 = 미선택
+    @State private var launchMonth: Int = 0
+    @State private var addressRoad: String = ""
     @State private var businessOpenTime: String = "09:00"
     @State private var businessCloseTime: String = "21:00"
     @State private var weeklyHolidays: [String] = []
 
-    // Step 3
-    @State private var vatType: String = "general"
-    @State private var hasEmployees: Bool = false
-    @State private var cpaDecision: String = "self"
-    @State private var launchDate: String = Self.todayString()
-    @State private var bizRegistrationNumber: String = ""
+    // ③ 가게 스냅샷
+    @State private var businessModelId: String = ""
+    @State private var revenueBandId: String? = nil
+    @State private var employeesBand: String? = nil
 
-    // Step 4
-    @State private var costIngredients: String = ""
-    @State private var costLabor: String = ""
-    @State private var costRent: String = ""
-    @State private var costUtilities: String = ""
-    @State private var costOther: String = ""
-    @State private var capitalText: String = ""
-
-    // Step 5
+    // ④ 채널
     @State private var deliveryPlatforms: [String] = []
+    @State private var launchChannels: [String] = []   // 스타트업 영업·배포 채널 (웹과 동일하게 표시용)
     @State private var snsChannels: [String] = []
     @State private var posId: String = ""
 
-    // Step 6
-    @State private var addressRoad: String = ""
-    @State private var obtainedPermits: [ObtainedPermit] = []
+    // ⑤ 진단 — 미션 프리페치 (생성 ~40초라 ③ 진입 시 시작)
+    @State private var missionState: MissionState = .idle
+    @State private var missionFired: Bool = false
 
     // UI
     @State private var showValidation: Bool = false
     @FocusState private var storeNameFocused: Bool
+
+    enum BizLookupState: Equatable {
+        case idle, loading, error
+        case done(taxTypeLabel: String, isActive: Bool)
+    }
+    enum MissionState: Equatable {
+        case idle, loading, error
+        case ready(mission: String, timeLabel: String?)
+    }
 
     public init(
         onComplete: @escaping (StoreRegistration) -> Void,
@@ -165,38 +180,34 @@ public struct ExistingStoreRegistrationView: View {
         self.onBack = onBack
     }
 
-    // MARK: - Helpers
+    // MARK: - Derived
 
-    private static func todayString() -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: Date())
-    }
-
-    private func parseManwon(_ text: String) -> Double {
-        let t = text.trimmingCharacters(in: .whitespaces)
-        if t.isEmpty { return 0 }
-        if let v = Double(t.filter { $0.isNumber || $0 == "." }) { return v * 10_000 }
-        return 0
-    }
-
-    private var canNext: Bool {
-        switch step {
-        case 1: return !selectedOptionId.isEmpty
-        case 2: return !storeName.trimmingCharacters(in: .whitespaces).isEmpty
-        case 3: return !launchDate.isEmpty
-        default: return true
-        }
-    }
+    private var profile: BUOnboardingProfile { BUOnboardingRegistry.profile(for: selectedCategoryId) }
+    private var isDelivery: Bool { selectedCategoryId == "food" || selectedCategoryId == "cafe-dessert" }
+    private var isOnline: Bool { selectedCategoryId == "online-digital" }
+    private var isStartup: Bool { selectedCategoryId == "startup-tech" }
 
     private var selectedOption: StarterIndustryOption? {
         StarterIndustryData.options.first { $0.id == selectedOptionId }
     }
 
-    private var isDelivery: Bool { selectedCategoryId == "food" || selectedCategoryId == "cafe-dessert" }
-    private var isOnline: Bool { selectedCategoryId == "online-digital" }
-    private var isStartup: Bool { selectedCategoryId == "startup-tech" }
-    private var isOffline: Bool { !isOnline && !isStartup }
+    private var launchDateString: String {
+        guard launchYear > 0, launchMonth > 0 else { return "" }
+        return String(format: "%04d-%02d-01", launchYear, launchMonth)
+    }
+
+    private var canNext: Bool {
+        switch step {
+        case 1: return !selectedOptionId.isEmpty
+        case 2:
+            if storeName.trimmingCharacters(in: .whitespaces).isEmpty { return false }
+            if launchYear == 0 || launchMonth == 0 { return false }
+            if profile.addressAsk == "required" && addressRoad.trimmingCharacters(in: .whitespaces).isEmpty { return false }
+            return true
+        case 3: return !businessModelId.isEmpty && employeesBand != nil
+        default: return true
+        }
+    }
 
     private func categoryToIndustry(_ catId: String) -> IndustryCategory {
         switch catId {
@@ -215,67 +226,131 @@ public struct ExistingStoreRegistrationView: View {
         }
     }
 
-    private var permitOptions: [ObtainedPermit] {
-        let base = [
-            ObtainedPermit(id: "biz-reg",         name: "사업자등록증"),
-            ObtainedPermit(id: "operating-permit", name: "영업신고증 / 허가증"),
+    /// 주소 앞 2~3토큰 = 지역 요약 (웹 regionFromAddress 미러)
+    private func regionFromAddress(_ addr: String) -> String {
+        addr.trimmingCharacters(in: .whitespaces)
+            .split(separator: " ").prefix(3).joined(separator: " ")
+    }
+
+    /// 업종 선택 미리보기 — 실제로 열리는 것만 (과장 금지, 웹 previewTools 미러)
+    private var previewToolsText: String {
+        var tools: [String] = []
+        switch profile.revenueSyncCta {
+        case "pos": tools.append("매출 자동 연동")
+        case "ecommerce-csv": tools.append("판매내역 업로드 분석")
+        default: tools.append("지표(GA4·웹훅) 연동")
+        }
+        if BUOnboardingRegistry.benchmark(for: selectedCategoryId) != nil { tools.append("업종 벤치마크") }
+        if isDelivery { tools.append("배달 수수료 분석") }
+        return tools.joined(separator: " · ")
+    }
+
+    // MARK: - 국세청 상태조회 (웹 서버 라우트 경유 — NTS 키는 서버 전용)
+
+    private func lookupBizStatus() async {
+        let num = bizRegistrationNumber.filter(\.isNumber)
+        guard num.count == 10, bizLookupState != .loading else { return }
+        bizLookupState = .loading
+        guard let token = await BUSupabase.shared.currentSession?.accessToken else {
+            bizLookupState = .error; return
+        }
+        var req = URLRequest(url: BUSupabase.shared.env.webAppURL.appendingPathComponent("api/data/business/status"))
+        req.httpMethod = "POST"
+        req.timeoutInterval = 12
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: ["businessNumbers": [num]])
+        struct Item: Decodable { let taxType: String?; let operatingStatus: String? }
+        struct Resp: Decodable { let data: [Item]? }
+        do {
+            let (data, response) = try await URLSession.shared.data(for: req)
+            guard (response as? HTTPURLResponse)?.statusCode == 200,
+                  let decoded = try? JSONDecoder().decode(Resp.self, from: data),
+                  let item = decoded.data?.first, let rawType = item.taxType, !rawType.isEmpty else {
+                bizLookupState = .error; return
+            }
+            // tax_type 예: "부가가치세 일반과세자" / "부가가치세 간이과세자" / "면세사업자"
+            if rawType.contains("간이") { vatType = "simplified"; vatKnown = true }
+            else if rawType.contains("일반") { vatType = "general"; vatKnown = true }
+            bizLookupState = .done(
+                taxTypeLabel: rawType.replacingOccurrences(of: "부가가치세 ", with: ""),
+                isActive: (item.operatingStatus ?? "active") == "active"
+            )
+        } catch {
+            bizLookupState = .error
+        }
+    }
+
+    // MARK: - 미션 프리페치 (③ 진입 시 1회 — cases 생성 ~40초 흡수, 웹 미러)
+
+    private func prefetchMission() async {
+        guard !missionFired, !selectedOptionId.isEmpty else { return }
+        missionFired = true
+        missionState = .loading
+        guard let token = await BUSupabase.shared.currentSession?.accessToken else {
+            missionState = .error; return
+        }
+        var req = URLRequest(url: BUSupabase.shared.env.webAppURL.appendingPathComponent("api/ai/marketing/cases"))
+        req.httpMethod = "POST"
+        req.timeoutInterval = 75
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var body: [String: Any] = [
+            "industryCategoryId": selectedCategoryId,
+            "subIndustryId": selectedOptionId,
+            "language": "ko",
         ]
-        switch selectedCategoryId {
-        case "food", "cafe-dessert":
-            return base + [
-                ObtainedPermit(id: "food-hygiene",  name: "식품위생교육 이수증"),
-                ObtainedPermit(id: "health-cert",   name: "보건증 (영업주)"),
-                ObtainedPermit(id: "fire-cert",     name: "소방안전관리 선임"),
-                ObtainedPermit(id: "liquor-permit", name: "주류판매업 신고"),
-            ]
-        case "online-digital":
-            return base + [
-                ObtainedPermit(id: "mail-order",    name: "통신판매업 신고"),
-                ObtainedPermit(id: "privacy-policy",name: "개인정보처리방침 게시"),
-            ]
-        case "retail", "pet", "living-service":
-            return base + [
-                ObtainedPermit(id: "mail-order",    name: "통신판매업 신고"),
-                ObtainedPermit(id: "fire-cert",     name: "소방안전관리 선임"),
-            ]
-        case "beauty":
-            return base + [
-                ObtainedPermit(id: "beauty-permit", name: "미용업 신고증"),
-                ObtainedPermit(id: "health-cert",   name: "보건증 (영업주)"),
-                ObtainedPermit(id: "fire-cert",     name: "소방안전관리 선임"),
-            ]
-        case "healthcare":
-            return base + [
-                ObtainedPermit(id: "medical-device",name: "의료기기 판매업 신고"),
-                ObtainedPermit(id: "health-cert",   name: "보건증 (영업주)"),
-            ]
-        default:
-            return base
+        let name = storeName.trimmingCharacters(in: .whitespaces)
+        if !name.isEmpty { body["storeName"] = name }
+        let region = regionFromAddress(addressRoad)
+        if !region.isEmpty { body["region"] = region }
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        struct Play: Decodable { let title: String?; let mission: String?; let timeLabel: String? }
+        struct Resp: Decodable { let plays: [Play]? }
+        do {
+            let (data, response) = try await URLSession.shared.data(for: req)
+            guard (response as? HTTPURLResponse)?.statusCode == 200,
+                  let decoded = try? JSONDecoder().decode(Resp.self, from: data),
+                  let first = decoded.plays?.first,
+                  let mission = first.mission ?? first.title else {
+                missionState = .error; return
+            }
+            missionState = .ready(mission: mission, timeLabel: first.timeLabel)
+        } catch {
+            missionState = .error
         }
     }
 
-    private func toggleDelivery(_ id: String) {
-        if deliveryPlatforms.contains(id) {
-            deliveryPlatforms.removeAll { $0 == id }
-        } else {
-            deliveryPlatforms.append(id)
+    // MARK: - 다음 세금 일정 (TaxDataRegistry SSOT — TaxView upcomingEvents 와 동일 규칙)
+
+    private var nextTaxSummary: (summary: String, dDay: String)? {
+        let cal = Calendar(identifier: .gregorian)
+        let today = cal.startOfDay(for: Date())
+        let year = cal.component(.year, from: today)
+        let simplified = vatType == "simplified"
+        let employed = employeesBand == "staff1_2" || employeesBand == "staff3plus"
+        var best: (name: String, days: Int)? = nil
+        for e in TaxDataRegistry.events {
+            if simplified && !e.appliesToSimplified { continue }
+            if e.requiresEmployees && !employed { continue }
+            for y in [year, year + 1] {
+                if let date = cal.date(from: DateComponents(year: y, month: e.month, day: e.day)) {
+                    let days = cal.dateComponents([.day], from: today, to: cal.startOfDay(for: date)).day ?? 0
+                    if days >= 0 {
+                        if best == nil || days < best!.days { best = (e.title, days) }
+                        break
+                    }
+                }
+            }
         }
+        guard let best else { return nil }
+        return (best.name, best.days == 0 ? "오늘" : "D-\(best.days)")
     }
 
-    private func toggleSNS(_ id: String) {
-        if snsChannels.contains(id) {
-            snsChannels.removeAll { $0 == id }
-        } else {
-            snsChannels.append(id)
-        }
-    }
+    // MARK: - Toggle helpers
 
-    private func togglePermit(_ permit: ObtainedPermit) {
-        if obtainedPermits.contains(where: { $0.id == permit.id }) {
-            obtainedPermits.removeAll { $0.id == permit.id }
-        } else {
-            obtainedPermits.append(permit)
-        }
+    private func toggleIn(_ list: inout [String], _ id: String) {
+        if list.contains(id) { list.removeAll { $0 == id } } else { list.append(id) }
     }
 
     private func advance() {
@@ -284,6 +359,7 @@ public struct ExistingStoreRegistrationView: View {
         withAnimation(.easeInOut(duration: 0.2)) {
             if step < TOTAL_STEPS { step += 1 }
         }
+        if step >= 3 { Task { await prefetchMission() } }
     }
 
     private func goBack() {
@@ -296,37 +372,35 @@ public struct ExistingStoreRegistrationView: View {
     }
 
     private func complete() {
-        let launchD = ISO8601DateFormatter().date(from: launchDate + "T00:00:00Z")
+        let launchD = ISO8601DateFormatter().date(from: launchDateString + "T00:00:00Z")
         let days = launchD.map { max(0, Int(Date().timeIntervalSince($0) / 86400)) } ?? 0
+        let hoursShown = profile.asksBusinessHours
         onComplete(StoreRegistration(
             category: categoryToIndustry(selectedCategoryId),
             industryCategoryId: selectedCategoryId,
             industryOptionId: selectedOptionId,
             storeName: storeName.trimmingCharacters(in: .whitespaces),
-            startupType: startupType,
-            preferredRegion: preferredRegion.trimmingCharacters(in: .whitespaces),
-            businessOpenTime: businessOpenTime,
-            businessCloseTime: businessCloseTime,
-            weeklyHolidays: weeklyHolidays,
+            startupType: profile.asksFranchise ? startupType : "independent",
+            preferredRegion: regionFromAddress(addressRoad),
+            businessOpenTime: hoursShown ? businessOpenTime : "",
+            businessCloseTime: hoursShown ? businessCloseTime : "",
+            weeklyHolidays: hoursShown ? weeklyHolidays : [],
             vatType: vatType,
-            hasEmployees: hasEmployees,
-            cpaDecision: cpaDecision,
-            launchDate: launchDate,
+            hasEmployees: employeesBand == "staff1_2" || employeesBand == "staff3plus",
+            cpaDecision: "self",
+            launchDate: launchDateString,
             daysSinceLaunch: days,
             bizRegistrationNumber: bizRegistrationNumber.trimmingCharacters(in: .whitespaces),
-            monthlyCosts: MonthlyCosts(
-                ingredients: parseManwon(costIngredients),
-                labor: parseManwon(costLabor),
-                rent: parseManwon(costRent),
-                utilities: parseManwon(costUtilities),
-                other: parseManwon(costOther)
-            ),
-            capital: parseManwon(capitalText),
+            monthlyCosts: MonthlyCosts(ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0),
+            capital: 0,
             deliveryPlatforms: deliveryPlatforms,
             snsChannels: snsChannels,
             posId: posId,
             addressRoad: addressRoad.trimmingCharacters(in: .whitespaces),
-            obtainedPermits: obtainedPermits
+            obtainedPermits: [],
+            businessModelId: businessModelId,
+            revenueBandId: revenueBandId,
+            employeesBand: employeesBand
         ))
     }
 
@@ -356,7 +430,7 @@ public struct ExistingStoreRegistrationView: View {
         }
     }
 
-    // MARK: - Top Bar
+    // MARK: - Top / Progress
 
     private var topBar: some View {
         HStack {
@@ -369,16 +443,18 @@ public struct ExistingStoreRegistrationView: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            Text("\(step)/\(TOTAL_STEPS)")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(BUColor.inkMuted)
+            // "N/5 · 약 3분" — 남은 부담을 알려주는 정보형 (웹 미러)
+            Text(step >= TOTAL_STEPS ? "완료" : "\(step)/\(TOTAL_STEPS) · 약 3분")
+                .font(.system(size: 12, weight: .heavy))
+                .foregroundStyle(BUColor.midnight)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(BUColor.midnight.opacity(0.07), in: Capsule())
         }
         .padding(.horizontal, BUSpacing.md)
         .padding(.top, 10)
         .padding(.bottom, 4)
     }
-
-    // MARK: - Progress Bar
 
     private var progressBar: some View {
         GeometryReader { geo in
@@ -404,36 +480,69 @@ public struct ExistingStoreRegistrationView: View {
         case 2: step2
         case 3: step3
         case 4: step4
-        case 5: step5
-        case 6: step6
-        default: step7
+        default: step5Diagnosis
         }
     }
 
-    // MARK: - Step 1: 업종 선택
+    // MARK: - ① 업종
+
+    private var searchedOptions: [StarterIndustryOption]? {
+        let q = industryQuery.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return nil }
+        return StarterIndustryData.options.filter { $0.titleKo.localizedCaseInsensitiveContains(q) }
+    }
 
     private var step1: some View {
         VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "1단계 · 업종", title: "어떤 사업을 운영하고 계신가요?", subtitle: "업종에 맞는 지표와 도구가 활성화됩니다.")
+            stepHeader(eyebrow: "1단계 · 업종", title: "어떤 사업을 운영하세요?", subtitle: "업종에 맞는 관리 도구가 준비됩니다.")
 
-            // 카테고리 칩
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(StarterIndustryData.categories) { cat in
-                        categoryChip(cat)
+            BUTextField(text: $industryQuery, placeholder: "🔍 업종 검색 (예: 미용실, 빨래방, SaaS)")
+
+            if let results = searchedOptions {
+                if results.isEmpty {
+                    Text("검색 결과가 없어요 — 아래 카테고리에서 골라주세요.")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    spacing: 10
+                ) {
+                    ForEach(results.prefix(12)) { opt in
+                        industryOptionCard(opt, onSelect: {
+                            selectedOptionId = opt.id
+                            selectedCategoryId = opt.categoryId
+                        })
                     }
                 }
-                .padding(.horizontal, 1)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(StarterIndustryData.categories) { cat in
+                            categoryChip(cat)
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                }
+
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    spacing: 10
+                ) {
+                    ForEach(StarterIndustryData.options(for: selectedCategoryId)) { opt in
+                        industryOptionCard(opt, onSelect: { selectedOptionId = opt.id })
+                    }
+                }
             }
 
-            // 세부 업종 그리드
-            LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
-                spacing: 10
-            ) {
-                ForEach(StarterIndustryData.options(for: selectedCategoryId)) { opt in
-                    industryOptionCard(opt)
-                }
+            if !selectedOptionId.isEmpty {
+                Text("선택하면 열려요 — \(previewToolsText)")
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+                    .lineSpacing(2)
+                    .padding(13)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.midnightDeep.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
 
             if showValidation && selectedOptionId.isEmpty {
@@ -461,13 +570,13 @@ public struct ExistingStoreRegistrationView: View {
         .buttonStyle(.plain)
     }
 
-    private func industryOptionCard(_ opt: StarterIndustryOption) -> some View {
+    private func industryOptionCard(_ opt: StarterIndustryOption, onSelect: @escaping () -> Void) -> some View {
         let sel = opt.id == selectedOptionId
         return Button {
             #if canImport(UIKit)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
-            selectedOptionId = opt.id
+            onSelect()
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: opt.iconSF)
@@ -503,36 +612,96 @@ public struct ExistingStoreRegistrationView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Step 2: 가게 정보
+    // MARK: - ② 가게 한 장
 
     private var step2: some View {
         VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "2단계 · 가게 정보", title: "가게 정보를 알려주세요", subtitle: "홈 대시보드에 표시됩니다.")
+            stepHeader(
+                eyebrow: "2단계 · \(profile.placeNoun) 정보",
+                title: "\(profile.placeNoun) 정보를 알려주세요",
+                subtitle: "사업자번호를 넣으면 세무 정보는 자동으로 채워요."
+            )
 
-            // 상호명
-            fieldGroup(label: "상호명") {
-                BUTextField(text: $storeName, placeholder: "예: 성수 커피랩")
+            // 사업자번호 + 국세청 조회
+            fieldGroup(label: "사업자등록번호 (선택)") {
+                HStack(spacing: 8) {
+                    BUTextField(text: $bizRegistrationNumber, placeholder: "123-45-67890")
+                    Button {
+                        Task { await lookupBizStatus() }
+                    } label: {
+                        Text(bizLookupState == .loading ? "조회 중..." : "국세청 조회")
+                            .font(.system(size: 12.5, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 13)
+                            .padding(.vertical, 13)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .opacity(bizRegistrationNumber.filter(\.isNumber).count == 10 ? 1 : 0.4)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(bizLookupState == .loading)
+                }
+                switch bizLookupState {
+                case .done(let label, let active):
+                    verifiedBadge("\(label) · \(active ? "계속사업자" : "휴·폐업 상태") — 국세청 확인")
+                case .error:
+                    helperText("조회에 실패했어요 — 아래에서 과세유형만 직접 선택하면 됩니다.")
+                default:
+                    helperText("안 넣어도 계속할 수 있어요 — 과세유형만 직접 선택하면 됩니다.")
+                }
+            }
+
+            // 과세유형 — 조회 성공 시 자동, 아니면 직접 (모르겠어요 허용)
+            if case .done = bizLookupState {} else {
+                fieldGroup(label: "부가세 유형") {
+                    HStack(spacing: 8) {
+                        toggleChip("일반과세자", selected: vatKnown && vatType == "general") { vatType = "general"; vatKnown = true }
+                        toggleChip("간이과세자", selected: vatKnown && vatType == "simplified") { vatType = "simplified"; vatKnown = true }
+                        toggleChip("모르겠어요", selected: !vatKnown) { vatType = "general"; vatKnown = false }
+                    }
+                    if !vatKnown {
+                        helperText("일단 일반과세 기준으로 안내하고, 세금 탭에서 확인 후 바꿀 수 있어요.")
+                    }
+                }
+            }
+
+            fieldGroup(label: "\(profile.placeNoun) 이름") {
+                BUTextField(text: $storeName, placeholder: isStartup ? "예: 파운드원" : "예: 성수 한잔")
                     .focused($storeNameFocused)
                 if showValidation && storeName.trimmingCharacters(in: .whitespaces).isEmpty {
-                    validationText("가게 이름을 입력해 주세요")
+                    validationText("이름을 입력해 주세요")
                 }
             }
 
-            // 사업 유형
-            fieldGroup(label: "사업 유형") {
-                HStack(spacing: 8) {
-                    toggleChip("독립 창업",   selected: startupType == "independent") { startupType = "independent" }
-                    toggleChip("프랜차이즈",  selected: startupType == "franchise")   { startupType = "franchise" }
+            // 운영 형태 — 가맹 모델이 실존하는 업종만 (SaaS·온라인엔 질문 자체가 없음)
+            if profile.asksFranchise {
+                fieldGroup(label: "운영 형태") {
+                    HStack(spacing: 8) {
+                        toggleChip("독립 매장", selected: startupType == "independent") { startupType = "independent" }
+                        toggleChip("프랜차이즈 가맹점", selected: startupType == "franchise") { startupType = "franchise" }
+                    }
                 }
             }
 
-            // 위치
-            fieldGroup(label: "가게 위치 (상권·지역)") {
-                BUTextField(text: $preferredRegion, placeholder: "예: 서울 성수동, 부산 전포동")
+            fieldGroup(label: "개업 시기") {
+                HStack(spacing: 10) {
+                    yearMonthPicker("연도", value: $launchYear, range: Array((1997...Calendar.current.component(.year, from: Date())).reversed()), suffix: "년")
+                    yearMonthPicker("월", value: $launchMonth, range: Array(1...12), suffix: "월")
+                }
+                helperText("국세청 조회는 과세유형·영업상태만 제공해요 — 개업 시기는 직접 선택합니다.")
+                if showValidation && (launchYear == 0 || launchMonth == 0) {
+                    validationText("개업 연·월을 선택해 주세요")
+                }
             }
 
-            // 영업 시간 (오프라인만)
-            if isOffline {
+            fieldGroup(label: profile.addressAsk == "optional" ? "주소 (선택 — 지역 혜택·지원사업 안내용)" : "주소") {
+                BUTextField(text: $addressRoad, placeholder: "도로명 주소 (예: 서울 성동구 연무장길 00)")
+                if showValidation && profile.addressAsk == "required" && addressRoad.trimmingCharacters(in: .whitespaces).isEmpty {
+                    validationText("주소를 입력해 주세요 — 상권·지역 맞춤에 쓰여요")
+                }
+            }
+
+            // 영업시간·휴무 — 물리 영업장 업종만
+            if profile.asksBusinessHours {
                 fieldGroup(label: "영업 시간") {
                     HStack(spacing: 10) {
                         timeField("오픈", time: $businessOpenTime)
@@ -542,14 +711,37 @@ public struct ExistingStoreRegistrationView: View {
                         timeField("마감", time: $businessCloseTime)
                     }
                 }
-
-                // 정기 휴무일
                 fieldGroup(label: "정기 휴무일 (복수 선택 가능)") {
                     holidayChips
                 }
             }
         }
-        .onAppear { storeNameFocused = true }
+        .onAppear { storeNameFocused = false }
+    }
+
+    private func yearMonthPicker(_ label: String, value: Binding<Int>, range: [Int], suffix: String) -> some View {
+        Menu {
+            ForEach(range, id: \.self) { v in
+                Button("\(String(v))\(suffix)") { value.wrappedValue = v }
+            }
+        } label: {
+            HStack {
+                Text(value.wrappedValue == 0 ? label : "\(String(value.wrappedValue))\(suffix)")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(value.wrappedValue == 0 ? BUColor.inkMuted : BUColor.midnightInk)
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 13)
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(BUColor.midnight.opacity(0.10), lineWidth: 0.8)
+            )
+        }
     }
 
     private static let weekDays: [(id: String, label: String)] = [
@@ -561,133 +753,101 @@ public struct ExistingStoreRegistrationView: View {
         HStack(spacing: 6) {
             ForEach(Self.weekDays, id: \.id) { day in
                 toggleChip(day.label, selected: weeklyHolidays.contains(day.id)) {
-                    if weeklyHolidays.contains(day.id) {
-                        weeklyHolidays.removeAll { $0 == day.id }
-                    } else {
-                        weeklyHolidays.append(day.id)
-                    }
+                    toggleIn(&weeklyHolidays, day.id)
                 }
             }
         }
     }
 
-    // MARK: - Step 3: 세무·행정
+    // MARK: - ③ 가게 스냅샷
+
+    private var operatingMonths: Int? {
+        guard launchYear > 0, launchMonth > 0 else { return nil }
+        let cal = Calendar.current
+        let now = Date()
+        let months = (cal.component(.year, from: now) - launchYear) * 12
+            + (cal.component(.month, from: now) - launchMonth)
+        return max(0, months)
+    }
 
     private var step3: some View {
         VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "3단계 · 세무·행정", title: "세무·행정 설정", subtitle: "세금 달력과 알림이 이 정보를 기반으로 작동합니다.")
+            stepHeader(
+                eyebrow: "3단계 · \(profile.placeNoun) 스냅샷",
+                title: "\(profile.placeNoun)를 조금 더 알려주세요",
+                subtitle: "매출은 업종 평균 비교에만 쓰여요 · 언제든 수정할 수 있어요"
+            )
 
-            fieldGroup(label: "부가세 유형") {
-                HStack(spacing: 8) {
-                    toggleChip("일반과세자", selected: vatType == "general")    { vatType = "general" }
-                    toggleChip("간이과세자", selected: vatType == "simplified") { vatType = "simplified" }
+            fieldGroup(label: "운영 방식") {
+                BUWrapLayout(spacing: 8) {
+                    ForEach(BUOnboardingRegistry.businessModelOptions(for: selectedCategoryId)) { opt in
+                        toggleChip(opt.titleKo, selected: businessModelId == opt.optionId) {
+                            businessModelId = opt.optionId
+                        }
+                    }
+                }
+                if showValidation && businessModelId.isEmpty {
+                    validationText("운영 방식을 선택해 주세요")
                 }
             }
 
-            fieldGroup(label: "직원 유무") {
-                HStack(spacing: 8) {
-                    toggleChip("있음", selected:  hasEmployees) { hasEmployees = true  }
-                    toggleChip("없음", selected: !hasEmployees) { hasEmployees = false }
+            fieldGroup(label: "\(profile.revenueLabel) (대략적인 구간이면 충분해요)") {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                    ForEach(BUOnboardingRegistry.revenueBands) { band in
+                        bandCard(band)
+                    }
+                }
+                helperText("업종 평균과 비교하는 데만 쓰여요 · 건너뛰어도 됩니다")
+            }
+
+            fieldGroup(label: profile.teamLabel) {
+                BUWrapLayout(spacing: 8) {
+                    toggleChip("혼자", selected: employeesBand == "solo") { employeesBand = "solo" }
+                    toggleChip(profile.secondBandLabel, selected: employeesBand == "family") { employeesBand = "family" }
+                    toggleChip("직원 1~2명", selected: employeesBand == "staff1_2") { employeesBand = "staff1_2" }
+                    toggleChip("직원 3명 이상", selected: employeesBand == "staff3plus") { employeesBand = "staff3plus" }
+                }
+                if showValidation && employeesBand == nil {
+                    validationText("선택해 주세요 — 세금 일정 안내에 쓰여요")
                 }
             }
 
-            fieldGroup(label: "세무 처리 방식") {
-                HStack(spacing: 8) {
-                    toggleChip("세무사 위임", selected: cpaDecision == "cpa")  { cpaDecision = "cpa"  }
-                    toggleChip("직접 처리",  selected: cpaDecision == "self") { cpaDecision = "self" }
+            if let months = operatingMonths {
+                fieldGroup(label: "운영 기간") {
+                    verifiedBadge("\(months / 12 > 0 ? "\(months / 12)년 " : "")\(months % 12)개월 — 개업 시기 기준 자동 계산")
                 }
-            }
-
-            fieldGroup(label: "개업일") {
-                dateField(date: $launchDate)
-            }
-
-            fieldGroup(label: "사업자등록번호 (선택)") {
-                BUTextField(text: $bizRegistrationNumber, placeholder: "예: 123-45-67890")
             }
         }
     }
 
-    // MARK: - Step 4: 월 비용
-
-    private var step4TotalCost: Double {
-        [costIngredients, costLabor, costRent, costUtilities, costOther]
-            .map { parseManwon($0) }.reduce(0, +)
+    private func bandCard(_ band: BURevenueBand) -> some View {
+        let sel = revenueBandId == band.bandId
+        return Button {
+            revenueBandId = sel ? nil : band.bandId
+        } label: {
+            Text(band.labelKo)
+                .font(.system(size: 13.5, weight: sel ? .heavy : .semibold))
+                .foregroundStyle(sel ? BUColor.midnight : BUColor.midnightInk)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity)
+                .background(
+                    sel ? BUColor.midnight.opacity(0.06) : Color.white.opacity(0.7),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(sel ? BUColor.midnight.opacity(0.3) : BUColor.midnight.opacity(0.08), lineWidth: sel ? 1.5 : 0.8)
+                )
+        }
+        .buttonStyle(.plain)
     }
+
+    // MARK: - ④ 채널
 
     private var step4: some View {
         VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "4단계 · 월 비용", title: "매달 비용 구조", subtitle: "대략적인 금액이면 충분합니다. 나중에 수정할 수 있어요.")
-            costGrid
-            step4Summary
-        }
-    }
+            stepHeader(eyebrow: "4단계 · 채널", title: "지금 쓰는 채널을 알려주세요", subtitle: "수수료 분석과 마케팅 미션이 채널에 맞춰집니다.")
 
-    private var costGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            costCell(label: "재료비 (만원)",      binding: $costIngredients, placeholder: "150")
-            costCell(label: "인건비 (만원)",      binding: $costLabor,       placeholder: "200")
-            costCell(label: "월세 (만원)",        binding: $costRent,        placeholder: "120")
-            costCell(label: "공과금 (만원)",      binding: $costUtilities,   placeholder: "30")
-            costCell(label: "기타 (만원)",        binding: $costOther,       placeholder: "20")
-            costCell(label: "초기 자본금 (만원)", binding: $capitalText,     placeholder: "5000")
-        }
-    }
-
-    private func costCell(label: String, binding: Binding<String>, placeholder: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            fieldLabel(label)
-            TextField(placeholder, text: binding)
-                .keyboardType(.numberPad)
-                .font(.system(size: 15, weight: .semibold))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 11)
-                .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(BUColor.midnight.opacity(0.1), lineWidth: 0.8)
-                )
-        }
-    }
-
-    @ViewBuilder
-    private var step4Summary: some View {
-        let totalCost = step4TotalCost
-        if totalCost > 0 {
-            let ingRatio = parseManwon(costIngredients) / totalCost
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("월 고정비")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(BUColor.inkMuted)
-                    Text("\(Int(totalCost / 10000).formatted())만원")
-                        .font(.system(size: 17, weight: .heavy))
-                        .foregroundStyle(BUColor.midnightDeep)
-                }
-                if ingRatio > 0 {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("재료비 비중")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(BUColor.inkMuted)
-                        Text("\(Int(ingRatio * 100))%")
-                            .font(.system(size: 17, weight: .heavy))
-                            .foregroundStyle(ingRatio > 0.4 ? BUColor.danger : ingRatio > 0.35 ? BUColor.warn : BUColor.success)
-                    }
-                }
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-    }
-
-    // MARK: - Step 5: 운영 채널
-
-    private var step5: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "5단계 · 운영 채널", title: "운영 채널", subtitle: "현재 사용 중인 플랫폼을 선택하세요.")
-
-            // 배달 플랫폼 (외식·카페)
             if isDelivery {
                 fieldGroup(label: "배달 플랫폼") {
                     chipGrid([
@@ -696,11 +856,10 @@ public struct ExistingStoreRegistrationView: View {
                         ("yogiyo",      "요기요"),
                         ("ddangyo",     "땡겨요"),
                         ("naver-order", "네이버 주문"),
-                    ], selected: deliveryPlatforms, toggle: toggleDelivery)
+                    ], selected: deliveryPlatforms) { toggleIn(&deliveryPlatforms, $0) }
                 }
             }
 
-            // 온라인 판매 플랫폼
             if isOnline {
                 fieldGroup(label: "판매 플랫폼") {
                     chipGrid([
@@ -709,174 +868,200 @@ public struct ExistingStoreRegistrationView: View {
                         ("gmarket",     "G마켓"),
                         ("29cm",        "29CM"),
                         ("kakao",       "카카오쇼핑"),
-                    ], selected: deliveryPlatforms, toggle: toggleDelivery)
+                    ], selected: deliveryPlatforms) { toggleIn(&deliveryPlatforms, $0) }
                 }
             }
 
-            // SNS
-            fieldGroup(label: "SNS 채널") {
-                chipGrid([
-                    ("instagram",       "인스타그램"),
-                    ("naver-place",     "네이버 플레이스"),
-                    ("kakao-channel",   "카카오채널"),
-                    ("google-business", "구글 비즈니스"),
-                ], selected: snsChannels, toggle: toggleSNS)
+            if isStartup {
+                fieldGroup(label: "핵심 운영 도구") {
+                    chipGrid([
+                        ("stripe",   "Stripe"),
+                        ("hubspot",  "HubSpot"),
+                        ("mixpanel", "Mixpanel"),
+                        ("sentry",   "Sentry"),
+                        ("linear",   "Linear"),
+                    ], selected: deliveryPlatforms) { toggleIn(&deliveryPlatforms, $0) }
+                }
+                fieldGroup(label: "영업·배포 채널") {
+                    chipGrid([
+                        ("producthunt",      "Product Hunt"),
+                        ("linkedin",         "LinkedIn"),
+                        ("github",           "GitHub"),
+                        ("communities",      "커뮤니티"),
+                        ("founder-outbound", "창업자 아웃바운드"),
+                    ], selected: launchChannels) { toggleIn(&launchChannels, $0) }
+                }
             }
 
-            // POS (오프라인만)
-            if isOffline {
-                fieldGroup(label: "POS / 결제 시스템") {
+            fieldGroup(label: "SNS · 온라인 채널") {
+                if isStartup {
                     chipGrid([
-                        ("tossplace", "토스플레이스"),
-                        ("kis",       "KIS정보통신"),
-                        ("smartro",   "스마트로"),
+                        ("linkedin-co", "링크드인"),
+                        ("twitter",     "X (Twitter)"),
+                        ("blog",        "기술 블로그"),
+                        ("youtube",     "유튜브"),
+                    ], selected: snsChannels) { toggleIn(&snsChannels, $0) }
+                } else {
+                    chipGrid([
+                        ("instagram",   "인스타그램"),
+                        ("naver-place", "네이버 플레이스"),
+                        ("youtube",     "유튜브"),
+                        ("blog",        "블로그"),
+                        ("tiktok",      "틱톡"),
+                    ], selected: snsChannels) { toggleIn(&snsChannels, $0) }
+                }
+            }
+
+            // POS — 매출 연동 CTA 가 POS 인 업종만
+            if profile.revenueSyncCta == "pos" {
+                fieldGroup(label: "POS") {
+                    chipGrid([
+                        ("tossplace", "토스 플레이스"),
                         ("posbank",   "포스뱅크"),
                         ("other",     "기타"),
-                        ("none",      "없음"),
+                        ("none",      "POS 없음"),
                     ], selected: posId.isEmpty ? [] : [posId]) { id in
                         posId = (posId == id) ? "" : id
                     }
-                }
-            }
-        }
-    }
-
-    // MARK: - Step 6: 주소·인허가
-
-    private var step6: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "6단계 · 주소·인허가", title: "주소 및 인허가 현황", subtitle: "모두 선택 사항입니다. 설정에서 언제든 수정할 수 있어요.")
-
-            fieldGroup(label: "도로명 주소 (선택)") {
-                BUTextField(text: $addressRoad, placeholder: "예: 서울특별시 성동구 성수이로 78")
-            }
-
-            fieldGroup(label: "이미 취득한 인허가 (해당하는 것 모두 선택)") {
-                VStack(spacing: 8) {
-                    ForEach(permitOptions, id: \.id) { permit in
-                        permitRow(permit)
+                    if posId == "tossplace" {
+                        Text("토스 플레이스를 쓰시네요 — 다음 화면에서 매출을 자동으로 불러올 수 있어요")
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .foregroundStyle(BUColor.midnight)
+                            .padding(13)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(BUColor.midnightDeep.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                 }
             }
         }
     }
 
-    private func permitRow(_ permit: ObtainedPermit) -> some View {
-        let sel = obtainedPermits.contains(where: { $0.id == permit.id })
-        return Button { togglePermit(permit) } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(sel ? BUColor.midnight : Color.white)
-                        .frame(width: 22, height: 22)
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(sel ? Color.clear : BUColor.midnight.opacity(0.2), lineWidth: 1)
-                        .frame(width: 22, height: 22)
-                    if sel {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 11, weight: .heavy))
-                            .foregroundStyle(.white)
-                    }
-                }
-                Text(permit.name)
-                    .font(.system(size: 15, weight: sel ? .semibold : .regular))
-                    .foregroundStyle(BUColor.midnightInk)
-                Spacer()
+    // MARK: - ⑤ 첫 진단
+
+    private var step5Diagnosis: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            stepHeader(
+                eyebrow: "첫 진단",
+                title: "\(storeName.trimmingCharacters(in: .whitespaces).isEmpty ? profile.placeNoun : storeName) \(profile.ownerTitle), 첫 진단이 나왔어요",
+                subtitle: "방금 입력하신 정보만으로 만든 리포트입니다."
+            )
+
+            // 벤치마크 — 데이터 있는 업종 + 구간 입력 시에만 (빈 카드·위조 금지)
+            if let result = BUOnboardingRegistry.comparePosition(categoryId: selectedCategoryId, bandId: revenueBandId),
+               let band = BUOnboardingRegistry.revenueBands.first(where: { $0.bandId == revenueBandId }) {
+                diagCard(
+                    k: "\(result.benchmark.kstatIndustry) 벤치마크",
+                    v: result.position == "above" ? "업종 평균보다 높은 구간이에요"
+                        : result.position == "below" ? "업종 평균보다 낮은 구간이에요"
+                        : "업종 평균과 겹치는 구간이에요",
+                    fine: "\(profile.ownerTitle) 구간 \(band.labelKo) vs 업종 평균 월 약 \(result.benchmark.monthlyRevenueManwon.formatted())만원 (연매출 기준 환산) · 출처: \(BUOnboardingRegistry.benchmarkSourceKo) · 매출을 연동하면 실측 비교로 바뀝니다"
+                )
+            } else if BUOnboardingRegistry.benchmark(for: selectedCategoryId) != nil {
+                diagCard(
+                    k: "업종 벤치마크",
+                    v: "매출 구간을 입력하면 업종 평균과 비교해 드려요",
+                    fine: "이전 화면에서 10초면 입력할 수 있어요"
+                )
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                sel ? BUColor.midnight.opacity(0.05) : Color.white.opacity(0.7),
-                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(sel ? BUColor.midnight.opacity(0.2) : BUColor.midnight.opacity(0.07), lineWidth: sel ? 1.2 : 0.8)
-            )
+
+            // 이번 주 미션 — 프리페치 상태 정직 표기
+            switch missionState {
+            case .ready(let mission, let timeLabel):
+                diagCard(
+                    k: "이번 주 마케팅 미션",
+                    v: mission,
+                    fine: "\(timeLabel.map { "\($0) · " } ?? "")마케팅 탭에서 실제 사례·실행물과 함께 확인하세요"
+                )
+            case .loading:
+                diagCard(
+                    k: "이번 주 마케팅 미션",
+                    v: "\(profile.ownerTitle) 업종의 실제 사례를 찾는 중이에요...",
+                    fine: "약 40초 걸려요 — 먼저 아래를 둘러보셔도 됩니다. 완성되면 마케팅 탭에 있어요."
+                )
+            default:
+                diagCard(
+                    k: "이번 주 마케팅 미션",
+                    v: "이번 주 미션은 대시보드의 마케팅 탭에서 준비돼요",
+                    fine: nil
+                )
+            }
+
+            // 다가오는 세금 — TaxDataRegistry SSOT
+            if let tax = nextTaxSummary {
+                diagCard(
+                    k: "다가오는 세금",
+                    v: "\(tax.summary) — \(tax.dDay)",
+                    fine: !vatKnown ? "일반과세 기준 안내 — 세금 탭에서 과세유형 확인 후 정확해집니다"
+                                    : "세금 탭에서 전체 일정·예상 세액을 확인하세요"
+                )
+            }
+
+            // 매출 연동 안내 — 업종별 CTA (유일한 네이비 강조 카드)
+            accentSyncCard
         }
-        .buttonStyle(.plain)
     }
 
-    // MARK: - Step 7: 등록 완료
-
-    private var step7SummaryRows: [(String, String)] {
-        let totalCost = step4TotalCost
-        let catName = StarterIndustryData.categories.first { $0.id == selectedCategoryId }?.titleKo ?? selectedCategoryId
-        let optName = selectedOption?.titleKo ?? ""
-        return [
-            ("가게",      storeName.isEmpty ? "—" : storeName),
-            ("업종",      "\(catName) · \(optName)"),
-            ("유형",      startupType == "franchise" ? "프랜차이즈" : "독립 창업"),
-            ("부가세",    vatType == "general" ? "일반과세자" : "간이과세자"),
-            ("세무 처리", cpaDecision == "cpa" ? "세무사 위임" : "직접 처리"),
-            ("월 고정비", totalCost > 0 ? "\(Int(totalCost / 10000).formatted())만원" : "—"),
-            ("영업 시간", isOffline ? "\(businessOpenTime) ~ \(businessCloseTime)" : "—"),
-            ("POS",       posId.isEmpty || posId == "none" ? "—" : posId),
-        ]
-    }
-
-    private var step7: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            stepHeader(eyebrow: "준비 완료", title: "대시보드가 준비되었습니다", subtitle: "매일 매출을 입력하면 더 정확한 분석을 받을 수 있어요.")
-
-            // 요약 카드
-            VStack(spacing: 0) {
-                ForEach(Array(step7SummaryRows.enumerated()), id: \.offset) { i, row in
-                    HStack {
-                        Text(row.0)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(BUColor.inkMuted)
-                        Spacer()
-                        Text(row.1)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(BUColor.midnightDeep)
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
-                    if i < step7SummaryRows.count - 1 {
-                        Divider().opacity(0.4).padding(.horizontal, 16)
-                    }
-                }
-
-                if !obtainedPermits.isEmpty {
-                    Divider().opacity(0.4).padding(.horizontal, 16)
-                    HStack(alignment: .top) {
-                        Text("보유 인허가")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(BUColor.inkMuted)
-                        Spacer()
-                        Text(obtainedPermits.map { $0.name }.joined(separator: " · "))
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(BUColor.midnightDeep)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
-                }
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.9))
-                    .shadow(color: .black.opacity(0.04), radius: 12, x: 0, y: 4)
-            )
-
-            // 활성화 설명
-            HStack(spacing: 8) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(BUColor.midnight)
-                Text("세금 달력 · 알림 · P&L 분석 · 원가율 진단 · 생존 진단 · 지원사업 매칭이 활성화됩니다.")
-                    .font(.system(size: 13, weight: .medium))
+    private func diagCard(k: String, v: String, fine: String?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(k.uppercased())
+                .font(.system(size: 10, weight: .heavy))
+                .tracking(0.8)
+                .foregroundStyle(BUColor.inkMuted)
+            Text(v)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(BUColor.midnightDeep)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+            if let fine {
+                Text(fine)
+                    .font(.system(size: 11.5, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
                     .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(14)
-            .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.9))
+                .shadow(color: .black.opacity(0.04), radius: 10, x: 0, y: 4)
+        )
+    }
+
+    private var accentSyncCard: some View {
+        let (k, v): (String, String) = {
+            switch profile.revenueSyncCta {
+            case "pos":
+                return ("매출 자동 연동", "\(posId == "tossplace" ? "토스 플레이스" : "POS") 매출을 자동으로 불러올 수 있어요")
+            case "ecommerce-csv":
+                return ("판매내역 분석", "판매내역 파일을 올리면 매출 분석이 시작돼요")
+            default:
+                return ("지표 연동", "GA4·웹훅으로 지표를 자동 수집할 수 있어요")
+            }
+        }()
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(k.uppercased())
+                .font(.system(size: 10, weight: .heavy))
+                .tracking(0.8)
+                .foregroundStyle(.white.opacity(0.6))
+            Text(v)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("대시보드 → 내 정보 → 데이터 연결에서 1분이면 됩니다. 연동하면 위 진단이 실측으로 바뀝니다.")
+                .font(.system(size: 11.5, weight: .medium))
+                .foregroundStyle(.white.opacity(0.6))
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     // MARK: - CTA Bar
-
-    private var ctaNextEnabled: Bool { canNext || step >= 4 }
 
     private var ctaBar: some View {
         VStack(spacing: 0) {
@@ -905,8 +1090,10 @@ public struct ExistingStoreRegistrationView: View {
         .buttonStyle(.plain)
     }
 
+    private var ctaNextEnabled: Bool { canNext }
+
     private var nextBtn: some View {
-        let label = step < TOTAL_STEPS ? "다음" : "등록하고 대시보드로"
+        let label = step < TOTAL_STEPS ? "다음" : "대시보드로 시작하기 →"
         let action: () -> Void = step < TOTAL_STEPS ? advance : complete
         return Button(action: action) {
             Text(label)
@@ -996,21 +1183,10 @@ public struct ExistingStoreRegistrationView: View {
         selected: [String],
         toggle: @escaping (String) -> Void
     ) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)], spacing: 8) {
+        // 자연 폭 flow — 균등폭 그리드는 긴 라벨을 꺾음 (BUWrapLayout 원칙)
+        BUWrapLayout(spacing: 8) {
             ForEach(items, id: \.0) { (id, label) in
-                let sel = selected.contains(id)
-                Button { toggle(id) } label: {
-                    Text(label)
-                        .font(.system(size: 13, weight: sel ? .heavy : .semibold))
-                        .foregroundStyle(sel ? .white : BUColor.midnightInk)
-                        .padding(.vertical, 9)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            sel ? BUColor.midnight : BUColor.midnight.opacity(0.06),
-                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        )
-                }
-                .buttonStyle(.plain)
+                toggleChip(label, selected: selected.contains(id)) { toggle(id) }
             }
         }
     }
@@ -1033,17 +1209,24 @@ public struct ExistingStoreRegistrationView: View {
         }
     }
 
-    private func dateField(date: Binding<String>) -> some View {
-        TextField("YYYY-MM-DD", text: date)
-            .keyboardType(.numbersAndPunctuation)
-            .font(.system(size: 15, weight: .semibold))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
-            .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(BUColor.midnight.opacity(0.1), lineWidth: 0.8)
-            )
+    private func verifiedBadge(_ text: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: "checkmark")
+                .font(.system(size: 10, weight: .heavy))
+            Text(text)
+                .font(.system(size: 11.5, weight: .heavy))
+        }
+        .foregroundStyle(BUColor.midnight)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(BUColor.midnight.opacity(0.08), in: Capsule())
+    }
+
+    private func helperText(_ msg: String) -> some View {
+        Text(msg)
+            .font(.system(size: 11.5, weight: .medium))
+            .foregroundStyle(BUColor.inkMuted)
+            .lineSpacing(2)
     }
 
     private func validationText(_ msg: String) -> some View {
@@ -1082,7 +1265,7 @@ private struct BUTextField: View {
 #if DEBUG
 #Preview("ExistingStoreRegistration") {
     ExistingStoreRegistrationView(
-        onComplete: { reg in print("등록: \(reg.storeName) / \(reg.industryCategoryId)") },
+        onComplete: { reg in print("등록: \(reg.storeName) / \(reg.industryCategoryId) / \(reg.businessModelId)") },
         onBack: { print("뒤로") }
     )
 }

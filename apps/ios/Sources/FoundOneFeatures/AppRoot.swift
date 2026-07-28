@@ -797,6 +797,10 @@ private struct OnboardingFlow: View {
                         if !reg.posId.isEmpty && reg.posId != "none" {
                             ud.set(reg.posId, forKey: "ops.pos.selected")
                         }
+                        // 운영 방식 (2026-07-28 온보딩 개편 — BusinessModelStage AppStorage 키와 동일)
+                        if !reg.businessModelId.isEmpty {
+                            ud.set(reg.businessModelId, forKey: "stage.bizModel.selected")
+                        }
                         // 배달 플랫폼
                         for pid in reg.deliveryPlatforms {
                             ud.set(true, forKey: "ops.delivery.\(pid)")
