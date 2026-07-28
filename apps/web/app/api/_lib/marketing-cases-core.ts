@@ -281,6 +281,9 @@ Mark kind "case" ONLY when a named brand + source url exist in [RESEARCH]; other
     ],
   });
 
+  // [ai-cost] 비용 관측 — 1인 월 ₩6,000 예산 검사용 (2026-07-27 사장님 지시). prod 로그에서 grep "[ai-cost]"
+  console.info("[ai-cost] marketing-cases", JSON.stringify({ model: "gpt-5.6-terra", in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
+
   const content = r.choices[0]?.message?.content ?? "{}";
   let parsed: { plays?: unknown[] };
   try {

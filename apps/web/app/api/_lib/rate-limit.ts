@@ -8,6 +8,7 @@
  */
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
+import { featureCostWon, MONTHLY_AI_BUDGET_WON, kstMonthKey } from "./ai-cost";
 
 // ──────────────────────────────────────────────
 // Upstash 초기화
@@ -140,8 +141,124 @@ async function getDailyQuotaAdmin() {
   }
 }
 
+/** 다음 KST 월초(1일 00:00)의 epoch(ms). 월간 예산 resetAt 표시용. */
+function nextKstMonthStartMs(): number {
+  const kst = new Date(Date.now() + 9 * 3_600_000);
+  return Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth() + 1, 1) - 9 * 3_600_000;
+}
+
 /**
- * 아이디(uid)·기능별 일일 한도. 우선순위:
+ * 1인당 월간 AI 비용 예산(₩6,000) 미터 — 2026-07-28 사장님 지시.
+ *
+ * 회당 "상한 원가"(ai-cost.ts SSOT)를 승인 시점에 선차감한다. 차감액 ≥ 실비용이므로
+ * 월 합계가 예산에서 차단되면 실지출은 반드시 예산 이하다. 일일 쿼터만으로는 상한 보장이
+ * 안 됨(예: 파서 10회/일 상한가 ₩130 → 월 최대 ₩39,000·기능 2개면 ₩78,000).
+ *
+ * 반환: null = 통과(차감 완료), RateLimitResult(ok:false) = 월 예산 초과 차단.
+ * 우선순위는 일일 쿼터와 동일: Upstash 카운터 → Supabase RPC → in-memory(로컬 dev).
+ */
+export async function consumeMonthlyAiBudget(userId: string, feature: string): Promise<RateLimitResult | null> {
+  const costWon = featureCostWon(feature);
+  if (costWon <= 0) return null; // LLM 미사용 기능 — 차감 없음
+
+  const monthKey = kstMonthKey();
+  const budget = MONTHLY_AI_BUDGET_WON;
+  const rejected = (): RateLimitResult => ({
+    ok: false,
+    status: 429,
+    error: "이번 달 AI 사용 한도에 도달했습니다. 다음 달 1일(KST)에 초기화됩니다.",
+    remaining: 0,
+    limit: budget,
+    resetAt: nextKstMonthStartMs(),
+  });
+
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const key = `@buildup/aicost:${monthKey}:${userId}`;
+      const total = await redis.incrby(key, costWon);
+      if (total === costWon) await redis.expire(key, 45 * 86_400); // 월 경과 후 자동 소멸
+      if (total > budget) {
+        await redis.decrby(key, costWon); // 차단된 호출은 미과금이므로 되돌림
+        return rejected();
+      }
+      // 집행은 Redis, 원장은 Supabase — 운영 집계(/admin/usage)용. 실패해도 집행에 영향 없음.
+      await recordMonthlySpendLedger(userId, monthKey, costWon);
+      return null;
+    } catch {
+      // fall through to Supabase
+    }
+  }
+
+  const sb = await getDailyQuotaAdmin();
+  if (sb) {
+    try {
+      const { data, error } = await sb.rpc("consume_ai_monthly_budget", {
+        p_user_id: userId,
+        p_month: monthKey,
+        p_cost_won: costWon,
+        p_budget_won: budget,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!error && row && typeof row.allowed === "boolean") {
+        return row.allowed ? null : rejected();
+      }
+      // RPC 부재/에러는 아래 in-memory로 폴백 — 단 prod에서는 경고 (RPC 컬럼 의존 교훈)
+      if (error && process.env.NODE_ENV === "production") {
+        console.warn("[ai-cost] consume_ai_monthly_budget RPC error — monthly budget not enforced:", error.message);
+      }
+    } catch {
+      // fall through to in-memory
+    }
+  }
+
+  // in-memory (로컬 dev 전용)
+  const cur = _monthlySpendMem.get(userId);
+  const entry = cur && cur.monthKey === monthKey ? cur : { monthKey, spentWon: 0 };
+  if (entry.spentWon + costWon > budget) {
+    _monthlySpendMem.set(userId, entry);
+    return rejected();
+  }
+  entry.spentWon += costWon;
+  _monthlySpendMem.set(userId, entry);
+  return null;
+}
+
+const _monthlySpendMem = new Map<string, { monthKey: string; spentWon: number }>();
+
+/**
+ * 운영 원장 기록 (집행과 분리) — Upstash 가 집행할 때도 Supabase 테이블에 사용·비용을 남겨
+ * /admin/usage 집계가 어느 모드에서든 실데이터를 갖게 한다. 거대 한도 = 카운터 전용(차단 안 함).
+ * best-effort: 실패는 무시(집행 결과에 영향 없음).
+ */
+async function recordDailyUsageLedger(userId: string, feature: string): Promise<void> {
+  try {
+    const sb = await getDailyQuotaAdmin();
+    if (!sb) return;
+    await sb.rpc("consume_ai_daily_quota", { p_user_id: userId, p_feature: feature, p_limit: 1_000_000_000 });
+  } catch {
+    /* 원장 실패 무시 */
+  }
+}
+
+async function recordMonthlySpendLedger(userId: string, monthKey: string, costWon: number): Promise<void> {
+  try {
+    const sb = await getDailyQuotaAdmin();
+    if (!sb) return;
+    await sb.rpc("consume_ai_monthly_budget", {
+      p_user_id: userId,
+      p_month: monthKey,
+      p_cost_won: costWon,
+      p_budget_won: 1_000_000_000,
+    });
+  } catch {
+    /* 원장 실패 무시 */
+  }
+}
+
+/**
+ * 아이디(uid)·기능별 일일 한도 + 월간 비용 예산(₩6,000) 동시 검사.
+ * 일일 한도 우선순위:
  *  1) Upstash 설정 시 슬라이딩 24h 윈도우 (가장 정확).
  *  2) 미설정 시 Supabase 원자적 카운터(consume_ai_daily_quota) — 서버리스 cross-instance 안전, KST 자정 리셋.
  *  3) 둘 다 불가 시 in-memory(로컬 dev 전용; prod 서버리스에선 2)가 잡음).
@@ -152,14 +269,29 @@ export async function checkDailyRateLimit(params: {
   limit: number;
   message?: string;
 }): Promise<RateLimitResult> {
+  const daily = await checkDailyCallCount(params);
+  if (!daily.ok) return daily;
+  const monthly = await consumeMonthlyAiBudget(params.userId, params.feature);
+  return monthly ?? daily;
+}
+
+async function checkDailyCallCount(params: {
+  userId: string;
+  feature: string;
+  limit: number;
+  message?: string;
+}): Promise<RateLimitResult> {
   const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
   if (hasUpstash) {
-    return await checkSimpleRateLimit({
+    const res = await checkSimpleRateLimit({
       key: `daily:${params.feature}:${params.userId}`,
       limit: params.limit,
       windowMs: 24 * 60 * 60 * 1000,
       message: params.message,
     });
+    // 집행은 Redis, 원장은 Supabase — /admin/usage 기능 사용량 집계용 (통과한 호출만 기록)
+    if (res.ok) await recordDailyUsageLedger(params.userId, params.feature);
+    return res;
   }
 
   const sb = await getDailyQuotaAdmin();

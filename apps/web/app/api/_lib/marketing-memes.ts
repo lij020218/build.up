@@ -211,6 +211,8 @@ ${corpus}
     ],
   });
 
+  console.info("[ai-cost] meme-pack", JSON.stringify({ model: "gpt-5.6-terra", in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
+
   let parsed: { items?: unknown[] };
   try {
     parsed = JSON.parse(r.choices[0]?.message?.content ?? "{}");

@@ -247,6 +247,7 @@ ${storeFacts}
       ],
     });
 
+    console.info("[ai-cost] cardnews", JSON.stringify({ model: "gpt-5.6-luna", in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
     const content = r.choices[0]?.message?.content ?? "{}";
     let parsed: unknown = null;
     try {
