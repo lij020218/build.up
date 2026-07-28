@@ -18,6 +18,8 @@ export * from "./finance/tax-estimate";
 export * from "./team/job-duties";
 export * from "./team/hiring-channels";
 export * from "./offering-kinds";
+export * from "./onboarding-profile";
+export * from "./industry-revenue-benchmark";
 export * from "./expert-checkpoints";
 export * from "./finance/tax-faq";
 export * from "./finance/loan-faq";

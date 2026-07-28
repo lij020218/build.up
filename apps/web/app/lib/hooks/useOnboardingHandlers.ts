@@ -114,6 +114,10 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     posId: string;
     addressRoad: string;
     obtainedPermits: Array<{ id: string; name: string }>;
+    /** (2026-07-28) 월매출 구간 — 벤치마크 비교 전용. 정밀 계산 사용 금지 */
+    revenueBandId?: string | null;
+    /** (2026-07-28) 함께 일하는 사람 구간 */
+    employeesBand?: string | null;
   }) => {
     // ── decisions에 데이터 기록 (Supabase autosave + 새로고침 복원) ──
     const now = new Date().toISOString();
@@ -143,6 +147,11 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     nextDecisions = upsertStageDecision(nextDecisions, "business-model", {
       stageId: "business-model",
       selectedPrimaryOptionId: result.businessModelId,
+      // (2026-07-28) 스냅샷 구간 — jsonb 자유 키라 forward-compatible (iOS projector 는 미지 키 무시)
+      inputs: {
+        ...(result.revenueBandId ? { revenueBandId: result.revenueBandId } : {}),
+        ...(result.employeesBand ? { employeesBand: result.employeesBand } : {}),
+      },
       completedAt: now,
     });
     nextDecisions = upsertStageDecision(nextDecisions, "budget-setup", {
