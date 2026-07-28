@@ -59,6 +59,9 @@ public struct ProfileView: View {
     @State private var resetting: Bool = false
     @State private var storeBusinessOpen: String? = nil
     @State private var storeBusinessClose: String? = nil
+    /// 운영자 여부 — allowlist 는 서버 전용이라 /api/admin/me 200 으로만 판정 (웹 ProfileView 미러).
+    @State private var isAdminUser: Bool = false
+    @Environment(\.openURL) private var openURL
 
     public var body: some View {
         ScrollView {
@@ -108,6 +111,7 @@ public struct ProfileView: View {
         .task {
             await refreshConnectionCount()
             await loadStoreHours()
+            await probeAdminRole()
         }
         .alert("계정을 삭제하시겠어요?", isPresented: $showDeleteConfirm) {
             Button("취소", role: .cancel) {}
@@ -472,6 +476,22 @@ public struct ProfileView: View {
     }
 
     @MainActor
+    /// 운영자 프로브 — 웹 /api/admin/me (200=운영자). 실패·403 = 미노출 (웹 ProfileView 미러).
+    private func probeAdminRole() async {
+        guard let token = await BUSupabase.shared.currentSession?.accessToken else { return }
+        var request = URLRequest(url: BUSupabase.shared.env.webAppURL.appendingPathComponent("api/admin/me"))
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if (response as? HTTPURLResponse)?.statusCode == 200 {
+                isAdminUser = true
+            }
+        } catch {
+            // 네트워크 실패 = 미노출 (조용히 무시)
+        }
+    }
+
     private func refreshConnectionCount() async {
         // 로그인 안 됐을 땐 조회 skip — 0 표시.
         guard BUSupabase.shared.currentSession != nil else {
@@ -597,6 +617,42 @@ public struct ProfileView: View {
 
     private var accountActionsCard: some View {
         VStack(spacing: BUSpacing.sm) {
+            // 운영자 모드 — /api/admin/me 200 인 계정에만 노출. 콘솔은 웹 전용이라 Safari 로 연다.
+            if isAdminUser {
+                Button {
+                    openURL(BUSupabase.shared.env.webAppURL.appendingPathComponent("admin"))
+                } label: {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("운영자 모드")
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(BUColor.ink)
+                            Text("가입·기능 사용량·피드백 관리 (운영자 전용, 웹으로 열림)")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .lineLimit(2)
+                        }
+                        Spacer(minLength: 8)
+                        Text("콘솔 열기")
+                            .font(.system(size: 12, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .background(BUColor.midnight, in: Capsule())
+                    }
+                    .padding(BUSpacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.white.opacity(0.72))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
             // 진행 초기화 — 모든 사장님에게 노출 (anon 도 자기 데이터 지울 수 있음)
             Button {
                 showResetConfirm = true

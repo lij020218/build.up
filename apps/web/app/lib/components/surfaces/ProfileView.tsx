@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
@@ -64,6 +64,25 @@ export function ProfileView() {
 
   const ko = language === "ko";
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  // ── 운영자 여부 프로브 — allowlist 는 서버에만 있으므로 /api/admin/me 200 으로만 판정.
+  //    비관리자(403)·미로그인·실패 = 버튼 미노출 (일반 사용자에겐 운영자 모드 존재 자체를 안 보임)
+  const [isAdminUser, setIsAdminUser] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+        const res = await fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } });
+        if (!cancelled && res.ok) setIsAdminUser(true);
+      } catch {
+        /* 프로브 실패 = 미노출 */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // ── 계정 정보 파싱 ──
   // authLabel 형식: "email · userId8자리" 또는 "로그인 필요"
@@ -354,6 +373,30 @@ export function ProfileView() {
               }}
             >
               {ko ? "시작하기 →" : "Get started →"}
+            </button>
+          </div>
+        )}
+
+        {isAdminUser && (
+          <div style={row}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>
+                {ko ? "운영자 모드" : "Operator console"}
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--muted)" }}>
+                {ko ? "가입·기능 사용량·피드백 관리 (운영자 전용)" : "Signups, usage & feedback (operators only)"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push("/admin")}
+              style={{
+                fontSize: "12px", fontWeight: 600, color: "#fff",
+                background: "#1d3557", border: "none", borderRadius: "10px",
+                padding: "8px 16px", cursor: "pointer", flexShrink: 0,
+              }}
+            >
+              {ko ? "콘솔 열기 →" : "Open →"}
             </button>
           </div>
         )}
