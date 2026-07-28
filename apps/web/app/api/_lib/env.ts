@@ -117,13 +117,17 @@ export function getCronSecret(): string | undefined {
  * 관리자 콘솔(/admin) 접근 허용 이메일 목록 — 콤마 구분, 소문자 정규화.
  *
  *   서버 전용 allowlist 이므로 사용자가 변조 불가(앱 user_metadata 와 무관).
- *   미설정 시 빈 배열 → 아무도 관리자가 아님(안전한 기본값).
+ *   미설정 시 대표 계정만 관리자(DEFAULT_ADMIN_EMAILS) — env 없이도 운영자 모드 접근 가능
+ *   (2026-07-28 사장님 지시). ADMIN_EMAILS 를 설정하면 그 목록이 기본값을 대체한다.
+ *   ⚠️ 이메일 인증(email_confirmed) 게이트는 admin-auth 에 별도로 있음 — 사칭 차단.
  *   다관리자/세분권한이 필요해지면 app_metadata.is_admin(service-role 만 수정) 으로 승급.
  *   예: ADMIN_EMAILS=lij020218@naver.com,ops@foundone.dev
  */
+const DEFAULT_ADMIN_EMAILS = ["lij020218@naver.com"]; // 대표(사장님) 계정
+
 export function getAdminEmails(): string[] {
   const raw = getEnvVar("ADMIN_EMAILS");
-  if (!raw) return [];
+  if (!raw) return DEFAULT_ADMIN_EMAILS;
   return raw
     .split(",")
     .map((e) => e.trim().toLowerCase())
