@@ -147,10 +147,13 @@ public final class AuthCoordinator {
                 metadata["birth_year"] = .string(String(year))
             }
 
+            // redirectTo — 인증 메일 링크가 웹 콜백(flow=confirm)으로 가도록. 미지정 시 Site URL
+            //   루트로 떨어져 "인증 완료" 안내 없이 랜딩만 보인다 (웹 emailRedirectTo 미러).
             let response = try await supabase.auth.signUp(
                 email: email,
                 password: password,
-                data: metadata
+                data: metadata,
+                redirectTo: URL(string: "\(BUSupabase.shared.env.webAppURL.absoluteString)/auth/callback?flow=confirm")
             )
 
             guard let session = response.session else {

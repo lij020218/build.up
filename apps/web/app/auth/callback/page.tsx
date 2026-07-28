@@ -33,7 +33,7 @@ export default function AuthCallbackPage() {
 function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"verifying" | "success" | "error" | "recovery-form">("verifying");
+  const [status, setStatus] = useState<"verifying" | "success" | "confirmed" | "error" | "recovery-form">("verifying");
   const [errorMsg, setErrorMsg] = useState("");
   const [newPw, setNewPw] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -77,9 +77,20 @@ function AuthCallbackInner() {
     //   여기서는 세션이 잡히는지 폴링으로 확인 후 홈으로 보낸다.
     const oauthCode = searchParams.get("code");
     const oauthError = searchParams.get("error") || searchParams.get("error_description");
+    // flow=confirm — 이메일 인증 링크에서 온 콜백 (shared signUpWithEmail/resend 가 emailRedirectTo 에 명시).
+    //   Supabase 는 서버에서 인증을 마친 뒤에만 ?code= 로 돌려보내므로, code 가 왔다 = 이메일 인증 성공.
+    //   code→세션 교환(자동 로그인)은 PKCE 특성상 "가입한 그 브라우저"에서만 가능 — 메일앱 내장
+    //   브라우저/다른 기기에서 열면 실패가 정상이며, 이때 "인증 실패"라고 말하면 거짓말이 된다
+    //   (2026-07-28 사장님 실사용에서 발견: confirmed_at 찍혔는데 "인증 실패" 표시).
+    const isConfirmFlow = searchParams.get("flow") === "confirm";
+
     if (oauthError) {
       setStatus("error");
-      setErrorMsg("로그인이 취소되었거나 실패했습니다. 다시 시도해 주세요.");
+      setErrorMsg(
+        isConfirmFlow
+          ? "인증 링크가 만료되었거나 이미 사용되었습니다. 로그인을 먼저 시도해 보시고, 안 되면 이메일 재발송을 요청해 주세요."
+          : "로그인이 취소되었거나 실패했습니다. 다시 시도해 주세요.",
+      );
       return () => authSub.subscription.unsubscribe();
     }
     if (oauthCode) {
@@ -93,6 +104,11 @@ function AuthCallbackInner() {
             return;
           }
           await new Promise((r) => setTimeout(r, 400));
+        }
+        if (isConfirmFlow) {
+          // 인증은 완료 — 자동 로그인만 불가(다른 브라우저). 성공으로 안내하고 로그인 유도.
+          setStatus("confirmed");
+          return;
         }
         setStatus("error");
         setErrorMsg("로그인 처리에 실패했습니다. 다시 시도해 주세요.");
@@ -209,6 +225,36 @@ function AuthCallbackInner() {
           </div>
           <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>이메일 인증 완료!</h2>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px" }}>잠시 후 서비스로 이동합니다...</p>
+        </div>
+      )}
+
+      {/* 인증 성공 + 자동 로그인 불가(다른 브라우저에서 링크 오픈) — 성공으로 안내하고 로그인 유도 */}
+      {status === "confirmed" && (
+        <div>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "rgba(104,211,145,0.15)", margin: "0 auto 20px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#68d391" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>이메일 인증 완료!</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
+            계정 인증이 끝났습니다.<br />가입하신 이메일과 비밀번호로 로그인해 주세요.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/auth")}
+            style={{
+              padding: "13px 32px", borderRadius: "980px",
+              background: "#3b5c8c", border: "none",
+              color: "#fff", fontSize: "15px", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            로그인하러 가기 →
+          </button>
         </div>
       )}
 

@@ -97,7 +97,10 @@ export async function signUpWithEmail(
         name: displayName,
         ...(params.birthYear ? { birth_year: String(params.birthYear) } : {}),
       },
-      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+      // flow=confirm — 콜백이 "이메일 인증 도착"임을 알고, 자동로그인(PKCE 교환) 실패 시에도
+      //   "인증 실패"가 아니라 "인증 완료 — 로그인해 주세요"를 보여주기 위한 마커.
+      //   (다른 브라우저/메일앱 내장 브라우저에서 링크를 열면 code_verifier 부재로 교환 실패가 정상)
+      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?flow=confirm`,
     }
   });
 
@@ -119,7 +122,7 @@ export async function resendConfirmationEmail(
     type: "signup",
     email,
     options: {
-      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?flow=confirm`,
     },
   });
   if (error) throw error;
