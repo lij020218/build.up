@@ -87,6 +87,7 @@ import {
 import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { recordSurfaceVisit } from "./lib/surface-visit";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import { FoundOneSpiralLogo } from "./lib/components/ui/FoundOneSpiralLogo";
@@ -264,6 +265,11 @@ export default function StarterStageDemo({
   // Cashflow 알림 자동 발송 — 위기 감지 + 매일 아침 8~11시 요약
   // (cashflow-store 의 notifyOnCrisis / dailyMorningBriefing 토글이 ON 일 때만 동작)
   useCashflowNotifications();
+
+  // 화면 방문 계측 — 로그인 세션 있을 때만, KST 하루 1회 데둡 (/admin/usage 집계용)
+  useEffect(() => {
+    void recordSurfaceVisit(surface);
+  }, [surface]);
 
   // ─── AI 코치 → 기능 navigate 이벤트 listener ─────────────────────────
   // AiCoachCard 의 feature CTA 클릭 시 dispatch 되는 'bup:navigate-feature' 이벤트를

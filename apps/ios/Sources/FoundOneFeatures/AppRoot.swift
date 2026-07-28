@@ -172,7 +172,12 @@ public struct AppRoot: View {
                             selectedTab: $selectedTab
                         )
                         .transition(.opacity)
+                        // 화면 방문 계측 — Tab case 이름 = 웹 DashboardSurface 슬러그 1:1 (13종 동일)
+                        .onChange(of: selectedTab) { _, newTab in
+                            SurfaceVisitRecorder.record(String(describing: newTab))
+                        }
                         .task {
+                            SurfaceVisitRecorder.record(String(describing: selectedTab)) // 첫 진입 탭
                             await notificationFlow.refresh()
                             #if DEBUG
                             // 디자인 검증 모드 (BU_DEMO_TAB 또는 BU_DEMO_STAGE) 에서는 sheet skip.

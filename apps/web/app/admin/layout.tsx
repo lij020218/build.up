@@ -15,6 +15,7 @@ const NAV = [
   { href: "/admin/feedback", label: "피드백" },
   { href: "/admin/applications", label: "지원사업 신청" },
   { href: "/admin/users", label: "사용자" },
+  { href: "/admin/usage", label: "기능 사용량" },
   { href: "/admin/revenue", label: "매출·구독" },
 ];
 
