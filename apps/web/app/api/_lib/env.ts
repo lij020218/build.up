@@ -117,19 +117,21 @@ export function getCronSecret(): string | undefined {
  * 관리자 콘솔(/admin) 접근 허용 이메일 목록 — 콤마 구분, 소문자 정규화.
  *
  *   서버 전용 allowlist 이므로 사용자가 변조 불가(앱 user_metadata 와 무관).
- *   미설정 시 대표 계정만 관리자(DEFAULT_ADMIN_EMAILS) — env 없이도 운영자 모드 접근 가능
- *   (2026-07-28 사장님 지시). ADMIN_EMAILS 를 설정하면 그 목록이 기본값을 대체한다.
+ *   대표 계정(DEFAULT_ADMIN_EMAILS)은 env 와 무관하게 **항상** 관리자 — env 미설정·오타·
+ *   따옴표 혼입 등 설정 실수로 사장님이 잠기는 사고 차단 (2026-07-28 지시). ADMIN_EMAILS 는
+ *   추가 관리자를 더하는 용도(합집합)이며 대표 계정을 제거할 수 없다.
  *   ⚠️ 이메일 인증(email_confirmed) 게이트는 admin-auth 에 별도로 있음 — 사칭 차단.
  *   다관리자/세분권한이 필요해지면 app_metadata.is_admin(service-role 만 수정) 으로 승급.
- *   예: ADMIN_EMAILS=lij020218@naver.com,ops@foundone.dev
+ *   예: ADMIN_EMAILS=ops@foundone.dev
  */
-const DEFAULT_ADMIN_EMAILS = ["lij020218@naver.com"]; // 대표(사장님) 계정
+const DEFAULT_ADMIN_EMAILS = ["lij020218@naver.com"]; // 대표(사장님) 계정 — 항상 포함
 
 export function getAdminEmails(): string[] {
-  const raw = getEnvVar("ADMIN_EMAILS");
-  if (!raw) return DEFAULT_ADMIN_EMAILS;
-  return raw
+  const raw = getEnvVar("ADMIN_EMAILS") ?? "";
+  const fromEnv = raw
     .split(",")
-    .map((e) => e.trim().toLowerCase())
+    // 대시보드에서 따옴표까지 붙여 넣는 실수 방어: 양끝 "/' 제거 후 정규화
+    .map((e) => e.trim().replace(/^["']+|["']+$/g, "").trim().toLowerCase())
     .filter((e) => e.length > 0);
+  return [...new Set([...DEFAULT_ADMIN_EMAILS, ...fromEnv])];
 }

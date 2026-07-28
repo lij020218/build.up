@@ -19,8 +19,13 @@ describe("getAdminEmails", () => {
     expect(getAdminEmails()).toEqual(["lij020218@naver.com"]);
   });
 
-  it("env 설정 → 그 목록이 기본값을 대체 (소문자 정규화)", () => {
+  it("env 설정 → 대표 계정 + env 합집합 (대표 계정은 절대 안 빠짐)", () => {
     process.env.ADMIN_EMAILS = "A@x.com, b@y.com";
-    expect(getAdminEmails()).toEqual(["a@x.com", "b@y.com"]);
+    expect(getAdminEmails()).toEqual(["lij020218@naver.com", "a@x.com", "b@y.com"]);
+  });
+
+  it("따옴표 혼입·중복도 정규화된다 (대시보드 입력 실수 방어)", () => {
+    process.env.ADMIN_EMAILS = "\"LIJ020218@naver.com\", 'ops@x.com'";
+    expect(getAdminEmails()).toEqual(["lij020218@naver.com", "ops@x.com"]);
   });
 });
