@@ -63,6 +63,8 @@ public struct TodayView: View {
     @State private var showBasisSheet = false
     /// 인앱 알림함 (출근·초대·연차·수당) — 헤더 벨. 데모/비로그인은 자동 비활성(빈 목록). 2026-07-14
     @StateObject private var notifStore = NotificationsStore(client: BUSupabase.shared.client)
+    /// 가게 세팅 미션 카드 — 기존 등록 판정 휴리스틱에 decisions 필요
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var showNotifications = false
     /// 초대된 직원(store_members) — 팀카드 인원·명단. 종전 팀카드는 수동 급여명단만 세어 초대직원 누락 (2026-07-14)
     @State private var invitedStaff: [TeamMember] = []
@@ -116,6 +118,18 @@ public struct TodayView: View {
                 // Header (사장님 추가 — 카드 아님) + 알림 벨 (2026-07-14)
                 StoreStatusHeader(mock: mock, notifUnread: notifStore.unreadCount, onBell: { showNotifications = true })
                 HomeRitualBanner()
+
+                // 가게 세팅 미션 — 기존 가게 등록자만 (로드맵·AI 로드맵 유저 미노출, 완료 시 자동 소멸)
+                if let storeInfo {
+                    BUStoreSetupMissionsCard(
+                        storeInfo: storeInfo,
+                        decisions: roadmapStore.decisions,
+                        entriesCount: mock.entries.count,
+                        costsTotal: dashboardStore?.costs.total ?? 0,
+                        categoryId: Self.starterCategoryId(for: mock.category),
+                        subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId")
+                    )
+                }
 
                 // ─ 모바일 홈 = 공통 6장 + 업종 핵심 (2026-06-04 사장님 결정) ─
                 //   원칙: 홈은 가장 중요한 카드만. 강등(KPI 스트립·고객·운영의식)은 "더 알아보기 > 오늘 상세"
@@ -565,6 +579,24 @@ public struct TodayView: View {
     private var realInventoryItems: [BUInventoryItem] {
         guard let si = storeInfo, si.isLoaded else { return [] }
         return si.state.inventory
+    }
+
+    /// IndustryCategory → 웹 starter category id (세팅 미션 오퍼링 kind 해석용 — categoryToIndustry 역방향)
+    static func starterCategoryId(for category: IndustryCategory) -> String? {
+        switch category {
+        case .restaurant:    return "food"
+        case .cafe:          return "cafe-dessert"
+        case .retail:        return "retail"
+        case .beauty:        return "beauty"
+        case .fitness:       return "fitness"
+        case .education:     return "education"
+        case .pet:           return "pet"
+        case .livingService: return "living-service"
+        case .space:         return "space"
+        case .ecommerce:     return "online-digital"
+        case .startupTech:   return "startup-tech"
+        default:             return nil
+        }
     }
 
     /// 메뉴 수익성 카드 노출 업종 — 음식·카페·서비스(메뉴/서비스 라인업 입력 업종).

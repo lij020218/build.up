@@ -42,6 +42,7 @@ hooks/
 | 위치 | 카드 / 영역 | 파일 | 분기 |
 |---|---|---|---|
 | 헤더 | 상호명 + LIVE 배지 | `Tier0Header.tsx` | 모두 |
+| 헤더 직후 | 가게 세팅 미션 (진행률+보상 체크리스트) | `StoreSetupMissionsCard.tsx` | **기존 가게 등록자만** (setup-missions.ts 마커+휴리스틱 — 로드맵·AI 위저드 유저 미노출) && !isStaff && 미완료 항목 존재 && !dismissed |
 | 0단계 | 경영 리추얼 배너 (주간/월간) | `Tier0Header.tsx` | !isStaff && !hide("ritual-banner") |
 
 ## 오늘의 요약 (2026-07-21 밀도 재설계 신설)

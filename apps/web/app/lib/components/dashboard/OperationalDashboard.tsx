@@ -6,6 +6,7 @@ import { useDashboardComputed } from "../../hooks/useDashboardComputed";
 
 // ── Tier sections (분기 표 → sections/DASHBOARD_MAP.md) ──
 import { Tier0Header } from "./sections/Tier0Header";
+import { StoreSetupMissionsCard } from "./StoreSetupMissionsCard";
 import { Tier1Hero } from "./sections/Tier1Hero";
 import { FeatureNudgeSection } from "./FeatureNudgeCard";
 import { TodaySummarySection } from "./sections/TodaySummarySection";
@@ -130,6 +131,19 @@ export default function OperationalDashboard({ d }: Props) {
 
       {/* ━━━ Tier 0 — 상호명 + 리추얼 배너 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
       <Tier0Header d={d} ko={ko} isStaff={isStaff} nextStaggerStyle={nextStaggerStyle} />
+
+      {/* ━━━ 가게 세팅 미션 — 기존 가게 등록자만 (로드맵·AI 로드맵 유저 미노출, 완료 시 자동 소멸) ━━━ */}
+      {!isStaff && (
+        <StoreSetupMissionsCard
+          ko={ko}
+          decisions={d.decisions}
+          categoryId={d.selectedIndustryCategoryId ?? null}
+          subIndustryId={d.selectedIndustryId ?? null}
+          entriesCount={allEntries.length}
+          monthlyCostsTotal={totalCosts}
+          inventoryCount={inventory.length}
+        />
+      )}
 
       {/* ━━━ 오늘의 요약 — 타일(매출·고객) + AI 코칭 + 추이 차트 2개 (2026-07-21 사장님 목업 참고) ━━━ */}
       {!isStaff && (

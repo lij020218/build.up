@@ -449,6 +449,11 @@ public struct AppRoot: View {
         // 기존 가게 등록 경로 — 등록 시 수집한 StoreInfo 필드 적용 (Supabase 아직 없는 경우)
         if let reg = pendingRegistration {
             storeInfo.commit { s in
+                // 가게 세팅 미션 마커 — "기존 가게 등록" 경로 식별 (로드맵·AI 위저드 유저 카드 오노출 금지)
+                s.industrySpecifics["__setupMeta"] = AnyCodableValue(AnyCodable(.object([
+                    "path": AnyCodable(.string("existing")),
+                    "registeredAt": AnyCodable(.string(ISO8601DateFormatter().string(from: Date()))),
+                ])))
                 if !reg.weeklyHolidays.isEmpty   { s.weeklyHolidays = reg.weeklyHolidays }
                 if !reg.addressRoad.isEmpty       { s.addressRoad = reg.addressRoad }
                 if !reg.bizRegistrationNumber.isEmpty { s.bizRegistrationNumber = reg.bizRegistrationNumber }

@@ -231,6 +231,8 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
 
     // Store info fields
     const si = useStoreInfoStore.getState();
+    // 가게 세팅 미션 마커 — "기존 가게 등록" 경로 식별 (로드맵·AI 위저드 유저에게 카드 오노출 금지)
+    si.setIndustrySpecific("__setupMeta", { path: "existing", registeredAt: now });
     if (result.weeklyHolidays.length > 0) si.setField("weeklyHolidays", result.weeklyHolidays);
     if (result.addressRoad) si.setField("addressRoad", result.addressRoad);
     if (result.bizRegistrationNumber) si.setField("bizRegistrationNumber", result.bizRegistrationNumber);
