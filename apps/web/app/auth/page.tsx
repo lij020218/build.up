@@ -5,6 +5,7 @@ import {
   //   auth page 와 home page 양쪽에서 호출하면 race condition 으로 "로그인 2번" 버그.
   getAuthErrorMessage,
   getUiCopy,
+  ALREADY_REGISTERED_MESSAGE,
   resendConfirmationEmail,
   sendPasswordReset,
   signInWithEmail,
@@ -66,6 +67,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  // 가입 완료(자동 인증 모드) — 명시적 완료 화면을 보여준 뒤 홈으로 이동 (2026-07-28 사장님 지시)
+  const [signupComplete, setSignupComplete] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   // 인증메일 재발송 쿨다운(초) — Supabase 가 ~60초 throttle 하므로 스팸·throttle 에러 방지.
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -161,6 +164,17 @@ export default function AuthPage() {
     }
   };
 
+  /** 이메일 도메인 → 메일함 바로가기 (인증 대기 화면의 1차 행동. 미지 도메인은 버튼 미노출) */
+  const mailboxShortcut = (addr: string): { label: string; url: string } | null => {
+    const domain = addr.split("@")[1]?.toLowerCase() ?? "";
+    if (domain === "naver.com") return { label: "네이버 메일 열기", url: "https://mail.naver.com" };
+    if (domain === "gmail.com") return { label: "Gmail 열기", url: "https://mail.google.com" };
+    if (domain === "daum.net" || domain === "hanmail.net") return { label: "다음 메일 열기", url: "https://mail.daum.net" };
+    if (domain === "kakao.com") return { label: "카카오 메일 열기", url: "https://mail.kakao.com" };
+    if (domain === "nate.com") return { label: "네이트 메일 열기", url: "https://mail.nate.com" };
+    return null;
+  };
+
   const handleSignup = () =>
     run(async () => {
       if (!agreedRequired) {
@@ -187,8 +201,12 @@ export default function AuthPage() {
         }
         return;
       }
-      setMessage(copy.auth.accountCreatedNew);
-      navigateToHomeHard();
+      // 자동 인증 모드 — 하단 텍스트만으론 완료 여부가 안 보인다는 피드백(2026-07-28):
+      //   명시적 완료 화면을 띄우고 잠시 후 홈으로.
+      setSignupComplete(true);
+      if (typeof window !== "undefined") {
+        window.setTimeout(navigateToHomeHard, 1800);
+      }
     });
 
   // 쿨다운 1초 틱다운
@@ -222,7 +240,22 @@ export default function AuthPage() {
 
   const handleLogin = () =>
     run(async () => {
-      await signInWithEmail(supabase, { email, password });
+      try {
+        await signInWithEmail(supabase, { email, password });
+      } catch (err) {
+        // 미인증 계정 로그인 → 하단 텍스트가 아니라 인증 대기 전체 화면(재발송·메일함 바로가기)으로.
+        //   (2026-07-28 사장님 피드백: "텍스트 한 줄로는 인증하라는 건지 알 수가 없다")
+        const raw = err instanceof Error
+          ? err.message
+          : String((err as { message?: unknown })?.message ?? "");
+        if (raw.toLowerCase().includes("not confirmed")) {
+          setPendingEmail(email);
+          setShowConfirmation(true);
+          setMessage("");
+          return;
+        }
+        throw err;
+      }
       setMessage(copy.auth.loggedIn);
       navigateToHomeHard();
     });
@@ -326,10 +359,12 @@ export default function AuthPage() {
         </div>
       </nav>
 
-      {/* ━━━ 이메일 인증 대기 화면 ━━━ */}
+      {/* ━━━ 이메일 인증 대기 화면 ━━━
+          ⚠️ zIndex 230 필수 — 로그인 모달(200)이 DOM 순서상 나중이라 200으로는 항상 가려져
+             이 화면이 "존재하는데 영원히 안 보이는" 버그가 있었음 (2026-07-28 실렌더로 발견). */}
       {showConfirmation && (
         <div style={{
-          position: "fixed", inset: 0, zIndex: 200,
+          position: "fixed", inset: 0, zIndex: 230,
           background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: "24px",
         }}>
@@ -353,9 +388,31 @@ export default function AuthPage() {
             <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "0 0 8px" }}>
               <strong style={{ color: "rgba(255,255,255,0.8)" }}>{pendingEmail}</strong>로
             </p>
-            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "0 0 28px" }}>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "0 0 8px" }}>
               인증 링크를 발송했습니다. 링크를 클릭하면 바로 서비스를 이용할 수 있습니다.
             </p>
+            <p style={{ fontSize: "12.5px", color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: "0 0 24px" }}>
+              메일이 안 보이면 스팸함도 확인해 주세요.
+            </p>
+            {(() => {
+              const shortcut = mailboxShortcut(pendingEmail);
+              return shortcut ? (
+                <a
+                  href={shortcut.url}
+                  target="_blank"
+                  rel="noopener"
+                  style={{
+                    display: "block", width: "100%", padding: "13px 0", borderRadius: "12px",
+                    border: "none", background: "#3b5c8c", color: "#fff",
+                    fontSize: "14px", fontWeight: 600, cursor: "pointer",
+                    textDecoration: "none", textAlign: "center", boxSizing: "border-box",
+                    marginBottom: "10px",
+                  }}
+                >
+                  {shortcut.label} →
+                </a>
+              ) : null;
+            })()}
             <button
               type="button"
               onClick={handleResendEmail}
@@ -385,6 +442,48 @@ export default function AuthPage() {
             {message && message !== copy.auth.initialMessage && (
               <p style={{ fontSize: "13px", color: "#63b3ed", marginTop: "14px" }}>{message}</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ━━━ 가입 완료 화면 (자동 인증 모드) ━━━ (zIndex 230 — 로그인 모달 200 위) */}
+      {signupComplete && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 230,
+          background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "24px",
+        }}>
+          <div style={{
+            background: "#1a1a1a", borderRadius: "24px", padding: "40px 32px",
+            maxWidth: "400px", width: "100%", textAlign: "center",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "50%",
+              background: "rgba(104,211,145,0.15)", margin: "0 auto 20px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="#68d391" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>
+              가입이 완료되었습니다
+            </h2>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "0 0 28px" }}>
+              환영합니다! 잠시 후 홈으로 이동합니다.
+            </p>
+            <button
+              type="button"
+              onClick={navigateToHomeHard}
+              style={{
+                width: "100%", padding: "13px 0", borderRadius: "12px",
+                border: "none", background: "#3b5c8c", color: "#fff",
+                fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              바로 시작하기 →
+            </button>
           </div>
         </div>
       )}
@@ -730,6 +829,32 @@ export default function AuthPage() {
                 }}
               >
                 {message}
+                {/* 이미 가입된 이메일 → 다음 행동을 버튼으로 (탭 전환, 입력한 이메일 유지) */}
+                {message === ALREADY_REGISTERED_MESSAGE && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setMode("login"); setMessage(""); }}
+                      style={{
+                        flex: 1, padding: "9px 0", borderRadius: 9, border: "none",
+                        background: "#3b5c8c", color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                      }}
+                    >
+                      이 이메일로 로그인
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMode("reset"); setMessage(""); }}
+                      style={{
+                        flex: 1, padding: "9px 0", borderRadius: 9,
+                        border: "1px solid rgba(255,255,255,0.15)", background: "transparent",
+                        color: "rgba(255,255,255,0.75)", fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                      }}
+                    >
+                      비밀번호 재설정
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

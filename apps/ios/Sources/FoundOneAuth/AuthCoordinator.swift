@@ -117,6 +117,13 @@ public final class AuthCoordinator {
                 provider: .email
             ))
         } catch {
+            // 미인증 계정 로그인 → 에러 텍스트가 아니라 인증 대기 화면(재발송 포함)으로.
+            //   (2026-07-28 사장님 피드백, 웹 handleLogin 미러)
+            let raw = String(describing: error).lowercased()
+            if raw.contains("not confirmed") || raw.contains("email_not_confirmed") {
+                state = .needsEmailConfirmation(email)
+                return
+            }
             state = .failed(Self.authErrorMessage(error))
         }
     }
@@ -307,6 +314,9 @@ public final class AuthCoordinator {
         }
         if raw.lowercased().contains("already registered") || raw.lowercased().contains("already exists") {
             return "이미 가입된 이메일입니다. 로그인으로 전환해 주세요."
+        }
+        if raw.lowercased().contains("not confirmed") {
+            return "이메일 인증이 필요합니다. 받은 편지함을 확인해 주세요."
         }
         if raw.lowercased().contains("network") || raw.lowercased().contains("fetch") {
             return "네트워크 연결을 확인해 주세요."

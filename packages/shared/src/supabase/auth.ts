@@ -33,23 +33,49 @@ export type SignInWithEmailParams = {
   password: string;
 };
 
+/** "이미 가입된 이메일" 안내 문구 — UI 가 이 문구로 로그인/재설정 CTA 를 띄운다 (웹·iOS 동일 판정). */
+export const ALREADY_REGISTERED_MESSAGE =
+  "이미 가입된 이메일이에요. 아래에서 로그인하거나 비밀번호를 재설정해 주세요.";
+
+/**
+ * Supabase 인증 에러 → 한국어 안내.
+ *   ⚠️ 종전에는 "Email not confirmed" 만 번역하고 나머지는 영어 원문 노출
+ *   ("User already registered" 등) — 사장님이 중복 기준을 오해한 원인 (2026-07-28).
+ *   미지의 에러도 한국어 기본문 + 원문 병기로 통일.
+ */
 export function getAuthErrorMessage(error: unknown) {
-  if (error instanceof Error && error.message) {
-    if (error.message === "Email not confirmed") {
-      return "이메일 인증이 필요합니다. 받은 편지함을 확인해 주세요.";
-    }
-    return error.message;
+  let raw = "";
+  if (error instanceof Error && error.message) raw = error.message;
+  else if (error && typeof error === "object" && "message" in error) {
+    raw = String((error as { message?: unknown }).message ?? "");
   }
+  if (!raw) return "인증에 실패했습니다. 다시 시도해 주세요.";
 
-  if (error && typeof error === "object" && "message" in error) {
-    const message = String((error as { message?: unknown }).message ?? "");
-    if (message === "Email not confirmed") {
-      return "이메일 인증이 필요합니다. 받은 편지함을 확인해 주세요.";
-    }
-    if (message) return message;
+  const m = raw.toLowerCase();
+  if (m.includes("already registered") || m.includes("already exists")) {
+    return ALREADY_REGISTERED_MESSAGE;
   }
-
-  return "인증에 실패했습니다. 다시 시도해 주세요.";
+  if (m.includes("not confirmed")) {
+    return "이메일 인증이 필요합니다. 받은 편지함을 확인해 주세요.";
+  }
+  if (m.includes("invalid login credentials")) {
+    return "이메일 또는 비밀번호가 올바르지 않습니다.";
+  }
+  if (m.includes("validate email") || m.includes("invalid format")) {
+    return "이메일 주소 형식이 올바르지 않습니다.";
+  }
+  if (m.includes("password should be") || m.includes("weak password")) {
+    return "비밀번호가 너무 약합니다. 8자 이상, 영문과 숫자를 포함해 주세요.";
+  }
+  const sec = raw.match(/after (\d+) seconds?/i);
+  if (sec) return `요청이 너무 잦아요. ${sec[1]}초 후 다시 시도해 주세요.`;
+  if (m.includes("rate limit") || m.includes("too many requests")) {
+    return "요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.";
+  }
+  if (m.includes("network") || m.includes("failed to fetch")) {
+    return "네트워크 오류가 발생했어요. 연결을 확인하고 다시 시도해 주세요.";
+  }
+  return `인증에 실패했습니다. 다시 시도해 주세요. (${raw})`;
 }
 
 export type SignUpResult =

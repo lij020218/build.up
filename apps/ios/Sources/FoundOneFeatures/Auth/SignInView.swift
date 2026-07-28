@@ -183,17 +183,36 @@ private struct EmailAuthSheet: View {
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
 
+                    Text("메일이 안 보이면 스팸함도 확인해 주세요.")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(BUColor.inkSubtle)
+                        .padding(.top, 8)
+
                     Spacer()
 
                     VStack(spacing: 10) {
+                        // 메일 앱 바로 열기 — 인증 대기 화면의 1차 행동 (웹 메일함 바로가기 미러)
+                        if let mailURL = URL(string: "message://") {
+                            Link(destination: mailURL) {
+                                Text("메일 앱 열기")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity, minHeight: 52)
+                                    .background(BUColor.auroraNavy, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                            }
+                        }
+
                         Button {
                             Task { await coordinator.resendEmailConfirmation(email: pendingEmail) }
                         } label: {
                             Text("인증 이메일 재발송")
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(BUColor.auroraNavy)
                                 .frame(maxWidth: .infinity, minHeight: 52)
-                                .background(BUColor.auroraNavy, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                                .background(
+                                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                        .strokeBorder(BUColor.auroraNavy.opacity(0.45), lineWidth: 1)
+                                )
                         }
                         .buttonStyle(PressableButtonStyle())
 
