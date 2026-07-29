@@ -105,6 +105,9 @@ public struct TeamManagementView: View {
                                 if !leavers.isEmpty { offboardingCard }
                                 if !pendingLeaves.isEmpty { leaveApprovalCard }
                                 if !pendingAllowances.isEmpty { allowanceApprovalCard }
+                                // 근무 캘린더 — 어느 날 누가 나오는지 (웹 TeamSurface 미러).
+                                //   배정 편집보다 앞 — 현황 파악이 편집보다 먼저.
+                                OwnerShiftCalendarCard(members: activeMembers, rules: rules, repo: repo)
                                 memberScheduleList(activeMembers)
                             }
                         } else if loadFailed {

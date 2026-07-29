@@ -23,7 +23,7 @@ import {
   LogOut, Store, CalendarDays, LogIn, Timer, ChevronLeft, ChevronRight,
   Plus, CheckCircle2, Clock3, X, Moon, Hourglass, UserRound,
 } from "lucide-react";
-import { signOutUser, employmentTypeLabel, jobDutyLabel } from "@foundone/shared";
+import { signOutUser, employmentTypeLabel, jobDutyLabel, resolveShiftForDate, expandLeaveDates } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 import { FoundOneLogo } from "../ui/FoundOneLogo";
 import { StaffProfileView } from "./StaffProfileView";
@@ -65,16 +65,9 @@ type Schedule = { work_date: string; start_time: string | null; end_time: string
 type Rule = { weekday: number; start_time: string; end_time: string };
 type Shift = { start_time: string; end_time: string; note: string | null };
 
-// 특정 날짜의 실제 근무 = 예외행 우선(휴무/다른시간), 없으면 그 요일 반복 규칙
-function resolveShift(dateStr: string, weekday: number, rules: Rule[], exceptions: Schedule[]): Shift | null {
-  const ex = exceptions.find((e) => e.work_date === dateStr);
-  if (ex) {
-    if (ex.is_off) return null;
-    if (ex.start_time && ex.end_time) return { start_time: ex.start_time, end_time: ex.end_time, note: ex.note };
-  }
-  const r = rules.find((rr) => rr.weekday === weekday);
-  return r ? { start_time: r.start_time, end_time: r.end_time, note: null } : null;
-}
+// 근무 해석은 shared SSOT 사용 — 사장 캘린더와 같은 규칙 (packages/shared/team/work-schedule.ts)
+const resolveShift = (dateStr: string, weekday: number, rules: Rule[], exceptions: Schedule[]): Shift | null =>
+  resolveShiftForDate(dateStr, weekday, rules, exceptions);
 type LeaveType = "annual" | "half" | "sick" | "other";
 type LeaveStatus = "pending" | "approved" | "rejected";
 type Leave = { id: string; leave_type: LeaveType; start_date: string; end_date: string; reason: string | null; status: LeaveStatus };
@@ -648,15 +641,7 @@ function CalendarCard({ ko, y, m, isCurrentMonth, att, rules, exceptions, leaves
     }
     return s;
   }, [y, m, rules, exceptions]);
-  const leaveSet = useMemo(() => {
-    const s = new Set<string>();
-    for (const l of leaves) {
-      if (l.status === "rejected") continue;
-      const d = new Date(l.start_date); const end = new Date(l.end_date);
-      while (d <= end) { s.add(ymd(d)); d.setDate(d.getDate() + 1); }
-    }
-    return s;
-  }, [leaves]);
+  const leaveSet = useMemo(() => expandLeaveDates(leaves), [leaves]);
 
   const firstDow = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();

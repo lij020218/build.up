@@ -17,6 +17,7 @@ export * from "./finance/tax-credits";
 export * from "./finance/tax-estimate";
 export * from "./team/job-duties";
 export * from "./team/hiring-channels";
+export * from "./team/work-schedule";
 export * from "./offering-kinds";
 export * from "./onboarding-profile";
 export * from "./industry-revenue-benchmark";

@@ -21,6 +21,7 @@ import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
 import { DaangnHiringGuideModal } from "../DaangnHiringGuideModal";
 import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
+import { OwnerScheduleCalendar } from "../team/OwnerScheduleCalendar";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -465,6 +466,24 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
               <div style={{ fontSize: 11, color: MIDNIGHT_MUTED, marginTop: 12, lineHeight: 1.55 }}>
                 {ko ? "연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과분 시급 지급." : "50% premium at workplaces with 5+ staff (LSA §56)."}
               </div>
+            </section>
+
+            {/* 근무 캘린더 — 어느 날 누가 나오는지 한눈에 (2026-07-28 사장님 요청).
+                배정 편집(아래 섹션)보다 먼저 — 현황 파악이 편집보다 앞선다. */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "근무 캘린더" : "Shift calendar"}</div>
+              </div>
+              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
+                {ko ? "날짜를 누르면 그날 출근하는 직원과 시간을 볼 수 있어요." : "Tap a date to see who works that day."}
+              </p>
+              <OwnerScheduleCalendar
+                ko={ko}
+                ownerId={ownerId}
+                members={activeMembers.map((m) => ({ member_user_id: m.member_user_id, name: m.name }))}
+                rules={rules}
+              />
             </section>
 
             {/* 직원별 근무표 */}

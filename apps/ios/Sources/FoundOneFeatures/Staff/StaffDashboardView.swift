@@ -18,6 +18,9 @@ import FoundOneDesignSystem
 import FoundOneData
 
 private let LEAVE_COLOR = Color(red: 139 / 255, green: 127 / 255, blue: 212 / 255) // #8b7fd4
+
+// 근무 해석 SSOT 에 Repository 타입 연결 (로직 중복 0)
+extension StaffScheduleException: BUWorkException {}
 private let WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
 
 private func ymd(_ d: Date) -> String {
@@ -25,13 +28,10 @@ private func ymd(_ d: Date) -> String {
 }
 
 /// 특정 날짜의 실제 근무 = 예외행 우선(휴무/다른시간), 없으면 그 요일 반복 규칙 (웹 resolveShift 미러)
+// 근무 해석은 BUWorkSchedule SSOT 사용 — 사장 캘린더와 같은 규칙 (FoundOneCore/WorkScheduleResolver)
 private func resolveShift(dateStr: String, weekday: Int, rules: [TeamScheduleRule], exceptions: [StaffScheduleException]) -> (start: String, end: String, note: String?)? {
-    if let ex = exceptions.first(where: { $0.workDate == dateStr }) {
-        if ex.isOff == true { return nil }
-        if let s = ex.startTime, let e = ex.endTime { return (s, e, ex.note) }
-    }
-    guard let r = rules.first(where: { $0.weekday == weekday }) else { return nil }
-    return (r.startTime, r.endTime, nil)
+    guard let shift = BUWorkSchedule.resolve(dateStr: dateStr, weekday: weekday, rules: rules, exceptions: exceptions) else { return nil }
+    return (shift.startTime, shift.endTime, shift.note)
 }
 
 public struct StaffDashboardView: View {

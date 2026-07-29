@@ -331,6 +331,29 @@ public actor TeamRepository {
             .execute().value
     }
 
+    // ── 사장 근무 캘린더용 월별 조회 (2026-07-28) — 전 직원 예외·출퇴근 ──
+    //    사장 화면은 예외를 "오늘 이후"만 들고 있어 지난달 캘린더가 부정확해진다 → 월 범위 전용 조회.
+
+    public func ownerMonthExceptions(monthStart: String, monthEnd: String) async throws -> [OwnerScheduleException] {
+        try await client
+            .from("staff_schedules")
+            .select("member_user_id, work_date, start_time, end_time, is_off, note")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .gte("work_date", value: monthStart)
+            .lte("work_date", value: monthEnd)
+            .execute().value
+    }
+
+    public func ownerMonthAttendance(monthStart: String, monthEnd: String) async throws -> [OwnerMonthAttendance] {
+        try await client
+            .from("attendance_records")
+            .select("member_user_id, work_date, clock_in_at")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .gte("work_date", value: monthStart)
+            .lte("work_date", value: monthEnd)
+            .execute().value
+    }
+
     /// KST 기준 오늘 (YYYY-MM-DD) — work_date 는 KST 자정 기준으로 저장/조회
     static func kstToday() -> String {
         var cal = Calendar(identifier: .gregorian)
@@ -515,6 +538,38 @@ public struct OwnerTodayAttendance: Decodable, Sendable, Equatable {
 }
 
 /// 날짜별 예외(override) — is_off 면 그 날 휴무, 아니면 그 날만 다른 시간 (웹 Schedule 미러)
+/// 사장 캘린더용 — 직원 id 를 포함한 근무 예외 (staff_schedules)
+public struct OwnerScheduleException: Decodable, Sendable, Equatable {
+    public let memberUserId: UUID
+    public let workDate: String
+    public let startTime: String?
+    public let endTime: String?
+    public let isOff: Bool?
+    public let note: String?
+
+    enum CodingKeys: String, CodingKey {
+        case memberUserId = "member_user_id"
+        case workDate = "work_date"
+        case startTime = "start_time"
+        case endTime = "end_time"
+        case isOff = "is_off"
+        case note
+    }
+}
+
+/// 사장 캘린더용 — 월별 전 직원 출근 기록
+public struct OwnerMonthAttendance: Decodable, Sendable, Equatable {
+    public let memberUserId: UUID
+    public let workDate: String
+    public let clockInAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case memberUserId = "member_user_id"
+        case workDate = "work_date"
+        case clockInAt = "clock_in_at"
+    }
+}
+
 public struct StaffScheduleException: Decodable, Sendable, Equatable {
     public let workDate: String
     public let startTime: String?
