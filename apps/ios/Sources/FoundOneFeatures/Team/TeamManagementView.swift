@@ -32,7 +32,11 @@ public struct TeamManagementView: View {
 
     // ── 데이터 상태 ──
     @State private var members: [TeamMember]? = nil     // nil = 로딩 전
+    /// 연차 부여 기준 (2026-07-28) — 사장이 버튼 선택. 일수는 근로기준법 제60조 계산
+    @State private var leaveBasis: BULeaveBasis = .hireDate
     @State private var leaves: [TeamLeaveRequest] = []
+    /// 연차 잔여 계산 전용 — 승인된 연차·반차 원장 (목록과 달리 limit 로 잘리지 않는다)
+    @State private var leaveLedger: [TeamLeaveRequest] = []
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var todayAtt: [OwnerTodayAttendance] = []     // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
     @State private var rules: [TeamScheduleRule] = []
@@ -105,6 +109,20 @@ public struct TeamManagementView: View {
                                 if !leavers.isEmpty { offboardingCard }
                                 if !pendingLeaves.isEmpty { leaveApprovalCard }
                                 if !pendingAllowances.isEmpty { allowanceApprovalCard }
+                                // 연차 관리 — 법정 일수(제60조) + 직원별 잔여 (웹 TeamSurface 미러)
+                                AnnualLeaveCard(
+                                    members: activeMembers,
+                                    leaves: leaveLedger,
+                                    basis: leaveBasis,
+                                    onChangeBasis: { b in
+                                        let prev = leaveBasis
+                                        leaveBasis = b
+                                        Task {
+                                            do { try await repo.setLeaveBasis(b.rawValue) }
+                                            catch { leaveBasis = prev }   // 실패 시 되돌림
+                                        }
+                                    }
+                                )
                                 // 근무 캘린더 — 어느 날 누가 나오는지 (웹 TeamSurface 미러).
                                 //   배정 편집보다 앞 — 현황 파악이 편집보다 먼저.
                                 OwnerShiftCalendarCard(members: activeMembers, rules: rules, repo: repo)
@@ -180,6 +198,10 @@ public struct TeamManagementView: View {
             todayAtt = (try? await at) ?? []   // 출근 조회 실패는 핵심 로드 무영향 (배지만 미표시)
             // 급여일 — 마이그레이션 미적용/미설정이면 nil (카드가 '설정' 상태로 뜬다). 실패해도 핵심 로드 무영향.
             paydayDay = (try? await repo.payday()) ?? nil
+            // 연차 기준 — 미설정/마이그레이션 미적용이면 법 원칙(입사일 기준) 유지
+            if let raw = (try? await repo.leaveBasis()) ?? nil, let b = BULeaveBasis(rawValue: raw) { leaveBasis = b }
+            // 잔여 계산은 잘리지 않은 원장으로 — 목록(leaves, limit 30)으로 세면 잔여가 부풀려진다
+            leaveLedger = (try? await repo.leaveLedger()) ?? []
             paidThisMonth = (try? await repo.payrollPaid(period: currentPeriod)) ?? nil
             loadFailed = false
             // 직무 목록 업종 분기용 — 사장 본인 category (실패 시 공통 직무만 노출)

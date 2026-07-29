@@ -49,6 +49,8 @@ public struct StaffDashboardView: View {
     @State private var exceptions: [StaffScheduleException] = []
     @State private var monthAtt: [StaffAttendance] = []
     @State private var leaves: [TeamLeaveRequest] = []
+    /// 잔여 계산 전용 — 승인된 연차·반차 원장 (표시 목록 myLeaves 는 limit 12 라 세면 안 됨)
+    @State private var leaveLedger: [TeamLeaveRequest] = []
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var showAllowanceSheet = false
     @State private var busy = false
@@ -227,6 +229,8 @@ public struct StaffDashboardView: View {
             async let al = repo.myAllowances()
             let (rr, ee, aa, ll, alw) = try await (r, e, a, l, al)
             rules = rr; exceptions = ee; monthAtt = aa; leaves = ll; allowances = alw
+            // 잔여 계산은 잘리지 않은 원장으로 (실패해도 화면은 살아 있어야 하므로 try?)
+            leaveLedger = (try? await repo.myLeaveLedger()) ?? []
             loading = false
         } catch {
             // staffContext() RPC 실패 = 일시 오류일 수 있음 → "미연결"이 아니라 재시도 상태로.
@@ -456,6 +460,10 @@ public struct StaffDashboardView: View {
                             .background(LEAVE_COLOR, in: RoundedRectangle(cornerRadius: 9))
                     }
                 }
+
+                // 잔여 요약 — 신청 목록보다 먼저 (직원이 가장 궁금한 것). 웹 LeaveCard 미러.
+                myLeaveSummary
+
                 if leaves.isEmpty {
                     Text("신청 내역이 없어요. 연차·반차·병가를 신청하면 사장님이 승인합니다.")
                         .font(.system(size: 12.5))
@@ -497,6 +505,57 @@ public struct StaffDashboardView: View {
                 }
             }
         }
+    }
+
+    /// 내 연차 잔여 — 근로기준법 제60조 계산(BUAnnualLeave SSOT).
+    /// 5인 미만은 법정 의무가 없어 숫자를 만들지 않고 안내만 한다 (제11조).
+    @ViewBuilder
+    private var myLeaveSummary: some View {
+        let basis = BULeaveBasis(rawValue: ctx?.leaveBasis ?? "") ?? .hireDate
+        let head = ctx?.staffHeadcount ?? 0
+        let calc = BUAnnualLeave.calc(hireDate: ctx?.hireDate, basis: basis, headcount: head)
+        let range = BUAnnualLeave.yearRange(basis: basis, hireDate: ctx?.hireDate)
+        let used = BUAnnualLeave.usedDays(
+            leaveLedger.map { (leaveType: $0.leaveType, startDate: $0.startDate, endDate: $0.endDate, status: $0.status) },
+            yearStart: range.start, yearEnd: range.end
+        )
+        let left = BUAnnualLeave.remaining(granted: calc.days, used: used)
+
+        VStack(alignment: .leading, spacing: 6) {
+            if calc.statutory && calc.days > 0 {
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
+                    Text(leaveNum(left) + "일")
+                        .font(.system(size: 20, weight: .heavy))
+                        .foregroundStyle(LEAVE_COLOR)
+                        .monospacedDigit()
+                    Text("남았어요")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(BUColor.ink)
+                    Text("올해 \(calc.days)일 중 \(leaveNum(used))일 사용")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .monospacedDigit()
+                    Text("예상")
+                        .font(.system(size: 10, weight: .heavy))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Color.black.opacity(0.06), in: Capsule())
+                    Spacer(minLength: 0)
+                }
+            }
+            Text(calc.basisNoteKo)
+                .font(.system(size: 11))
+                .foregroundStyle(BUColor.inkSecondary)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(LEAVE_COLOR.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func leaveNum(_ v: Double) -> String {
+        v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v)
     }
 
     private func leaveLabel(_ t: String) -> String {

@@ -16,7 +16,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins, Wallet, UserMinus } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
-import { HIRING_QUICK_CHANNELS } from "@foundone/shared";
+import {
+  HIRING_QUICK_CHANNELS,
+  calcAnnualLeave, usedLeaveDays, remainingLeaveDays, leaveYearRange,
+  LEAVE_BASIS_LABEL, type LeaveBasis,
+} from "@foundone/shared";
 import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
 import { DaangnHiringGuideModal } from "../DaangnHiringGuideModal";
@@ -58,7 +62,7 @@ type AllowanceType = "overtime" | "night" | "holiday" | "other";
 type Allowance = { id: string; member_user_id: string; work_date: string; allowance_type: AllowanceType; minutes: number; reason: string | null; status: LeaveStatus };
 const ALLOWANCE_LABEL: Record<AllowanceType, string> = { overtime: "연장근로", night: "야간근로", holiday: "휴일근로", other: "기타" };
 const fmtMinKo = (min: number) => { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`; };
-const ymdLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const ymdLocal = (base?: Date) => { const d = base ?? new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 // 급여 기간 키 'YYYY-MM' — DB payroll_confirmations.period 와 동일 형식(cron 도 같은 키를 쓴다).
 const ymLocal = () => ymdLocal().slice(0, 7);
 /** 이번 달 실제 급여일 — payday_day=31 인데 2월이면 28일로 보정(cron 의 LEAST 와 동일 규칙). */
@@ -83,6 +87,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   const [rules, setRules] = useState<Rule[]>([]);
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  /** 연차 잔여 계산 전용 원장 — 승인된 연차·반차 전부 (표시 목록과 달리 잘리지 않는다) */
+  const [leaveLedger, setLeaveLedger] = useState<Leave[]>([]);
   const [allowances, setAllowances] = useState<Allowance[]>([]); // 추가 수당 신청 (2026-07-13)
   const [todayAtt, setTodayAtt] = useState<Att[]>([]); // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
   const [loading, setLoading] = useState(true);
@@ -91,6 +97,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   // 급여일 (2026-07-15) — paidThisMonth: true=보냄 / false=아직 / null=무응답(=cron 이 3일 간격 재알림)
   const [paydayDay, setPaydayDay] = useState<number | null>(null);
   const [paidThisMonth, setPaidThisMonth] = useState<boolean | null>(null);
+  // 연차 부여 기준 (2026-07-28) — 사장이 버튼으로 선택. 일수는 근로기준법 제60조로 계산(저장 안 함)
+  const [leaveBasis, setLeaveBasis] = useState<LeaveBasis>("hire_date");
   const [savingPayroll, setSavingPayroll] = useState(false);
   // 직원 상세 팝업 (시급·근태·연차 — 2026-07-13)
   const [detailMember, setDetailMember] = useState<Member | null>(null);
@@ -100,7 +108,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     if (!user) { setLoading(false); return; }
     setOwnerId(user.id);
     const period = ymLocal();
-    const [mRes, rRes, exRes, lRes, aRes, atRes, psRes, pcRes] = await Promise.all([
+    const ledgerCutoff = ymdLocal(new Date(Date.now() - 400 * 86400_000));
+    const [mRes, rRes, exRes, lRes, aRes, atRes, psRes, pcRes, ledRes] = await Promise.all([
       supabase.rpc("get_store_members" as never),
       supabase.from("staff_schedule_rules" as never).select("id, member_user_id, weekday, start_time, end_time, active").eq("owner_user_id", user.id),
       supabase.from("staff_schedules" as never).select("id, member_user_id, work_date, start_time, end_time, is_off").eq("owner_user_id", user.id).gte("work_date", ymdLocal()).order("work_date"),
@@ -109,8 +118,14 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
       // 오늘 출퇴근 — 직원별 "출근함/미출근" 배지용 (owner RLS att_owner_read)
       supabase.from("attendance_records" as never).select("member_user_id, clock_in_at, clock_out_at").eq("owner_user_id", user.id).eq("work_date", ymdLocal()),
       // 급여일 설정 + 이번 달 지급 확인 (2026-07-15)
-      supabase.from("payroll_settings" as never).select("payday_day").eq("owner_user_id", user.id).maybeSingle(),
+      supabase.from("payroll_settings" as never).select("payday_day, leave_basis").eq("owner_user_id", user.id).maybeSingle(),
       supabase.from("payroll_confirmations" as never).select("paid").eq("owner_user_id", user.id).eq("period", period).maybeSingle(),
+      // 연차 잔여 계산용 원장 — 위 목록(limit 40, 최근 생성순)으로 사용일수를 세면
+      // 직원이 여럿일 때 오래된 승인 건이 잘려 나가 **잔여가 부풀려진다**(가짜 숫자). 별도 조회.
+      supabase.from("leave_requests" as never)
+        .select("id, member_user_id, leave_type, start_date, end_date, reason, status")
+        .eq("owner_user_id", user.id).eq("status", "approved").in("leave_type", ["annual", "half"])
+        .gte("end_date", ledgerCutoff).limit(1000),
     ]);
     // RPC 에러(마이그레이션 누락·서버 장애)를 "직원 없음"으로 오인하지 않도록 구분 (2026-07-13).
     const mErr = (mRes as { error?: unknown }).error;
@@ -120,9 +135,12 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setRules(((rRes.data ?? []) as Rule[]));
     setExceptions(((exRes.data ?? []) as Exception[]));
     setLeaves(((lRes.data ?? []) as Leave[]));
+    setLeaveLedger(((ledRes.data ?? []) as Leave[]));
     setAllowances(((aRes.data ?? []) as Allowance[]));
     setTodayAtt(((atRes.data ?? []) as Att[]));
     setPaydayDay(((psRes.data as { payday_day?: number } | null)?.payday_day) ?? null);
+    const savedBasis = (psRes.data as { leave_basis?: string } | null)?.leave_basis;
+    if (savedBasis === "hire_date" || savedBasis === "fiscal_year") setLeaveBasis(savedBasis);
     setPaidThisMonth(((pcRes.data as { paid?: boolean } | null)?.paid) ?? null);  // null = 무응답
     setLoading(false);
   }, []);
@@ -206,6 +224,17 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setSavingPayroll(false);
     if (error) { console.error("[payroll] payday save failed:", error); return; }
     setPaydayDay(day);
+  };
+
+  /** 연차 부여 기준 저장 — payday 와 같은 행(payroll_settings). 일수는 계산이라 저장하지 않는다. */
+  const saveLeaveBasis = async (basis: LeaveBasis) => {
+    if (!ownerId) return;
+    const prev = leaveBasis;
+    setLeaveBasis(basis); // 낙관적 반영
+    const { error } = await supabase.from("payroll_settings" as never)
+      .upsert({ owner_user_id: ownerId, leave_basis: basis, updated_at: new Date().toISOString() } as never,
+        { onConflict: "owner_user_id" } as never);
+    if (error) { console.error("[payroll] leave_basis save failed:", error); setLeaveBasis(prev); }
   };
 
   /** "월급 보내셨습니까?" 응답. true=보냄(재알림 중단) / false=아직(3일 간격 재알림 계속). */
@@ -466,6 +495,21 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
               <div style={{ fontSize: 11, color: MIDNIGHT_MUTED, marginTop: 12, lineHeight: 1.55 }}>
                 {ko ? "연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과분 시급 지급." : "50% premium at workplaces with 5+ staff (LSA §56)."}
               </div>
+            </section>
+
+            {/* 연차 관리 — 법정 일수(근로기준법 제60조) + 직원별 잔여 (2026-07-28) */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "연차 관리" : "Annual leave"}</div>
+              </div>
+              <AnnualLeaveSection
+                ko={ko}
+                members={activeMembers}
+                leaves={leaveLedger}
+                basis={leaveBasis}
+                onChangeBasis={(b) => void saveLeaveBasis(b)}
+              />
             </section>
 
             {/* 근무 캘린더 — 어느 날 누가 나오는지 한눈에 (2026-07-28 사장님 요청).
@@ -841,6 +885,125 @@ const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpac
  * 급여일 — 읽기 default + 「수정」 + 저장 (사장님 데이터 카드 표준 패턴, feedback_edit_save_pattern).
  *   1~31일. 31=말일 의도(그 달 말일로 자동 보정).
  */
+/**
+ * AnnualLeaveSection — 연차 부여 기준 선택 + 직원별 발생·사용·잔여 (2026-07-28)
+ *
+ *  일수는 근로기준법 제60조 계산(shared SSOT). 5인 미만이면 법정 의무가 없으므로
+ *  숫자를 만들어내지 않고 안내만 한다 — 없는 의무를 있다고 하면 안 됨(제11조).
+ *  출근율 80%·상시인원 특칙은 앱이 모르므로 항상 "예상"으로 표기한다.
+ */
+function AnnualLeaveSection({ ko, members, leaves, basis, onChangeBasis }: {
+  ko: boolean;
+  members: Member[];
+  leaves: Leave[];
+  basis: LeaveBasis;
+  onChangeBasis: (b: LeaveBasis) => void;
+}) {
+  const headcount = members.length;
+  const statutory = headcount >= 5;
+
+  return (
+    <div>
+      {/* 5인 기준선 안내 — 사장님 질문의 핵심 */}
+      <div style={{
+        padding: "10px 12px", borderRadius: 10, marginBottom: 14,
+        background: statutory ? MIDNIGHT_SOFT : "rgba(15,23,42,0.04)",
+        fontSize: 12, lineHeight: 1.6, color: statutory ? MIDNIGHT : MUTED,
+      }}>
+        {statutory
+          ? (ko
+              ? `등록 직원 ${headcount}명 — 상시 5인 이상이라 법정 연차(근로기준법 제60조)가 적용돼요. 1년 미만은 개근 1개월당 1일, 1년부터 15일, 3년째부터 2년마다 1일씩 늘어 최대 25일이에요.`
+              : `${headcount} staff — statutory leave applies (LSA §60).`)
+          : (ko
+              ? `등록 직원 ${headcount}명 — 5인 미만은 법정 연차 의무가 없어요 (근로기준법 제11조·제60조). 근로계약서·취업규칙에 연차를 정했다면 그 약속은 지켜야 해요.`
+              : `${headcount} staff — under 5, no statutory leave (LSA §11, §60). Contractual leave still applies.`)}
+      </div>
+
+      {/* 부여 기준 — 사장이 선택 */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: MUTED, marginBottom: 7 }}>
+          {ko ? "연차 부여 기준" : "Accrual basis"}
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {(["hire_date", "fiscal_year"] as const).map((b) => {
+            const on = basis === b;
+            const label = LEAVE_BASIS_LABEL[b];
+            return (
+              <button
+                key={b}
+                type="button"
+                onClick={() => !on && onChangeBasis(b)}
+                style={{
+                  flex: "1 1 160px", textAlign: "left", padding: "10px 12px", borderRadius: 11,
+                  border: on ? `1.5px solid ${MIDNIGHT}` : `1px solid ${MIDNIGHT_BORDER}`,
+                  background: on ? MIDNIGHT_SOFT : "white",
+                  cursor: on ? "default" : "pointer",
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 750, color: on ? MIDNIGHT : INK }}>
+                  {ko ? label.ko : label.en}
+                </div>
+                <div style={{ fontSize: 11, color: MUTED, marginTop: 2, lineHeight: 1.45 }}>
+                  {ko ? label.desc.ko : label.desc.en}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 직원별 연차 */}
+      {members.length === 0 ? (
+        <div style={{ fontSize: 12.5, color: MUTED }}>{ko ? "등록된 직원이 없어요." : "No staff yet."}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {members.map((m) => {
+            const result = calcAnnualLeave(m.hire_date, { basis, headcount });
+            const range = leaveYearRange(basis, m.hire_date);
+            const used = usedLeaveDays(
+              leaves.filter((l) => l.member_user_id === m.member_user_id),
+              { yearStart: range.start, yearEnd: range.end },
+            );
+            const left = remainingLeaveDays(result.days, used);
+            return (
+              <div key={m.member_user_id} style={{ padding: "11px 13px", borderRadius: 11, border: `1px solid ${MIDNIGHT_BORDER}`, background: "rgba(255,255,255,0.7)" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 750, color: INK }}>{m.name}</span>
+                  {result.statutory && result.days > 0 ? (
+                    <>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: MIDNIGHT, fontVariantNumeric: "tabular-nums" }}>
+                        {ko ? `잔여 ${left}일` : `${left}d left`}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
+                        {ko ? `(발생 ${result.days}일 · 사용 ${used}일)` : `(${result.days} granted · ${used} used)`}
+                      </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, background: "rgba(15,23,42,0.05)", borderRadius: 999, padding: "2px 7px" }}>
+                        {ko ? "예상" : "est."}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: 12.5, color: MUTED }}>
+                      {ko ? (m.hire_date ? "법정 의무 없음" : "입사일 미입력") : (m.hire_date ? "Not statutory" : "No hire date")}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: MUTED, marginTop: 5, lineHeight: 1.5 }}>
+                  {ko ? result.basisNote.ko : result.basisNote.en}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div style={{ fontSize: 11, color: MIDNIGHT_MUTED, marginTop: 12, lineHeight: 1.55 }}>
+        {ko
+          ? "표시된 일수는 입사일 기준 예상치예요. 실제 일수는 직전 1년 출근율(80%)과 상시 근로자 수 산정에 따라 달라질 수 있어요 — 확정이 필요하면 노무사(1350)에게 확인하세요."
+          : "Estimates based on hire date. Actual entitlement depends on 80% attendance and headcount rules."}
+      </div>
+    </div>
+  );
+}
+
 function PaydayPicker({ ko, value, saving, onSave }: { ko: boolean; value: number | null; saving: boolean; onSave: (d: number) => void }) {
   const [editing, setEditing] = useState(value == null);   // 미설정이면 바로 입력 상태
   const [day, setDay] = useState<string>(value != null ? String(value) : "25");

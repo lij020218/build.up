@@ -227,6 +227,24 @@ public actor TeamRepository {
             .execute().value
     }
 
+    /// 연차 잔여 계산용 원장 — 승인된 연차·반차만, 최근 1년+ 전부 (2026-07-28).
+    ///  ⚠️ 목록 표시용 leaveRequests(limit:)·myLeaves(limit:) 로 사용일수를 세면 안 된다.
+    ///     limit 로 잘린 목록으로 세면 사용일수가 적게 나와 **잔여가 부풀려진다**(가짜 숫자).
+    ///     연차 산정 구간은 최대 1년 전부터라 400일 컷오프면 입사일·회계연도 기준 모두 덮는다.
+    public func leaveLedger(memberUserId: UUID? = nil) async throws -> [TeamLeaveRequest] {
+        let cutoff = Self.kstDay(offsetDays: -400)
+        var q = client
+            .from("leave_requests")
+            .select("id, member_user_id, leave_type, start_date, end_date, reason, status")
+            .eq("status", value: "approved")
+            .in("leave_type", values: ["annual", "half"])
+            .gte("end_date", value: cutoff)
+        if let memberUserId {
+            q = q.eq("member_user_id", value: memberUserId.uuidString)
+        }
+        return try await q.order("start_date", ascending: false).limit(1000).execute().value
+    }
+
     // ── 연차 승인/반려 (사장) ──
     public func decideLeave(id: UUID, approved: Bool) async throws {
         struct Patch: Encodable {
@@ -367,10 +385,14 @@ public actor TeamRepository {
     }
 
     /// KST 기준 오늘 (YYYY-MM-DD) — work_date 는 KST 자정 기준으로 저장/조회
-    static func kstToday() -> String {
+    static func kstToday() -> String { kstDay(offsetDays: 0) }
+
+    /// KST 기준 오늘 ± n일 (YYYY-MM-DD)
+    static func kstDay(offsetDays: Int) -> String {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
-        let c = cal.dateComponents([.year, .month, .day], from: Date())
+        let base = cal.date(byAdding: .day, value: offsetDays, to: Date()) ?? Date()
+        let c = cal.dateComponents([.year, .month, .day], from: base)
         return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
     }
 
@@ -388,6 +410,28 @@ public actor TeamRepository {
     // ── 급여일·퇴사 정산 (2026-07-15, 마이그레이션 20260715_000002) — 웹 TeamSurface 와 동일 계약 ──
 
     /// 급여일 조회 — 미설정이면 nil (그 경우 급여일 카드를 숨긴다).
+    // ── 연차 부여 기준 (2026-07-28) — 일수는 근로기준법 제60조 계산이라 저장하지 않는다 ──
+    public func leaveBasis() async throws -> String? {
+        struct Row: Decodable { let leave_basis: String? }
+        let rows: [Row] = try await client
+            .from("payroll_settings")
+            .select("leave_basis")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .limit(1)
+            .execute().value
+        return rows.first?.leave_basis
+    }
+
+    public func setLeaveBasis(_ basis: String) async throws {
+        struct Row: Encodable { let owner_user_id: String; let leave_basis: String; let updated_at: String }
+        try await client
+            .from("payroll_settings")
+            .upsert(Row(owner_user_id: try await uid().uuidString, leave_basis: basis,
+                        updated_at: ISO8601DateFormatter().string(from: Date())),
+                    onConflict: "owner_user_id")
+            .execute()
+    }
+
     public func payday() async throws -> Int? {
         struct Row: Decodable { let payday_day: Int }
         let rows: [Row] = try await client
@@ -490,6 +534,10 @@ public struct StaffStoreContext: Decodable, Sendable {
     public let paydayDay: Int?            // (2026-07-15, 20260715_000002)
     /// 내 퇴사일. nil = 재직 중.
     public let leftAt: String?
+    /// 연차 부여 기준 (사장 설정) — 없으면 입사일 기준 (2026-07-28, 20260728_000003)
+    public let leaveBasis: String?
+    /// 재직 인원 — 연차 5인 기준선 판정용
+    public let staffHeadcount: Int?
 
     enum CodingKeys: String, CodingKey {
         case connected
@@ -502,6 +550,8 @@ public struct StaffStoreContext: Decodable, Sendable {
         case employmentType = "employment_type"
         case jobDuties = "job_duties"
         case paydayDay = "payday_day"
+        case leaveBasis = "leave_basis"
+        case staffHeadcount = "staff_headcount"
         case leftAt = "left_at"
     }
 
@@ -519,6 +569,9 @@ public struct StaffStoreContext: Decodable, Sendable {
         jobDuties = (try? c.decodeIfPresent([String].self, forKey: .jobDuties)) ?? []
         paydayDay = try c.decodeIfPresent(Int.self, forKey: .paydayDay)
         leftAt = try c.decodeIfPresent(String.self, forKey: .leftAt)
+        // 20260728_000003 미적용 환경에서는 키가 없다 → nil 로 두고 화면이 스스로 숨긴다
+        leaveBasis = try c.decodeIfPresent(String.self, forKey: .leaveBasis)
+        staffHeadcount = try c.decodeIfPresent(Int.self, forKey: .staffHeadcount)
     }
 }
 
@@ -650,6 +703,12 @@ public extension TeamRepository {
             .order("start_date", ascending: false)
             .limit(limit)
             .execute().value
+    }
+
+    /// 내 연차 잔여 계산용 원장 — 승인된 연차·반차만 (myLeaves 는 표시용이라 limit 로 잘린다)
+    func myLeaveLedger() async throws -> [TeamLeaveRequest] {
+        let uid = try await client.auth.session.user.id
+        return try await leaveLedger(memberUserId: uid)
     }
 
     /// 출근 — clock_in_at 은 DB default now() (웹 미러)
