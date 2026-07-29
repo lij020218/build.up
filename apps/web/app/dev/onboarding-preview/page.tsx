@@ -11,7 +11,8 @@ import { ExistingBusinessOnboarding } from "../../lib/components/ExistingBusines
 export default function OnboardingPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f2fa" }}>
+    // 배경은 body var(--bg) 그대로 — 프리뷰가 실서비스와 다른 색을 깔면 검증이 왜곡됨
+    <div style={{ minHeight: "100vh" }}>
       <ExistingBusinessOnboarding
         language="ko"
         onComplete={(r) => console.log("[onboarding-preview] complete:", r)}

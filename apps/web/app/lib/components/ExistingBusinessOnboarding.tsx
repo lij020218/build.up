@@ -295,9 +295,11 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   };
   const prev = () => { setShowValidation(false); setStep((s) => Math.max(s - 1, 1)); };
 
-  // ── 공용 스타일 (기존 유지) ──
+  // ── 공용 스타일 ──
+  //   배경 = OnboardingChoiceScreen 과 동일한 앰비언트 글로우 (같은 흐름의 연속 화면 —
+  //   선택 화면에서 넘어올 때 배경이 뚝 바뀌면 안 됨. DESIGN_LANGUAGE.md 캔버스 규격)
   const pageStyle: React.CSSProperties = {
-    minHeight: "100vh", background: "transparent",
+    minHeight: "100vh", background: "transparent", position: "relative" as const,
     display: "flex", flexDirection: "column", alignItems: "center", padding: "0 24px",
   };
   const containerStyle: React.CSSProperties = {
@@ -388,12 +390,25 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   // === RENDER ===
   return (
     <div style={pageStyle}>
+      {/* Ambient depth — OnboardingChoiceScreen 과 동일한 미드나잇 hue */}
+      <div aria-hidden style={{
+        position: "absolute" as const, top: "-20%", left: "50%", transform: "translateX(-50%)",
+        width: "min(90%, 1200px)", height: "60vh",
+        background: "radial-gradient(ellipse at center, rgba(91,107,255,0.08) 0%, rgba(91,107,255,0) 60%)",
+        pointerEvents: "none" as const,
+      }} />
+      <div aria-hidden style={{
+        position: "absolute" as const, bottom: "-30%", right: "-10%",
+        width: "60vh", height: "60vh",
+        background: "radial-gradient(circle, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0) 60%)",
+        pointerEvents: "none" as const,
+      }} />
       <DaumPostcodeModal
         open={showPostcode}
         onClose={() => setShowPostcode(false)}
         onSelect={(addr) => setAddressRoad(addr)}
       />
-      <div style={containerStyle}>
+      <div style={{ ...containerStyle, position: "relative" as const, zIndex: 1 }}>
         {/* 진행 표시 — "N/5 · 약 3분": 점 대신 남은 부담을 알려주는 정보형 (목업 확정안) */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
           <button type="button" onClick={step === 1 ? onBack : prev} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "14px", cursor: "pointer", padding: 0 }}>
