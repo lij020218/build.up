@@ -304,21 +304,23 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
     maxWidth: "560px", width: "100%",
     marginTop: "clamp(40px, 8vh, 96px)", marginBottom: "80px",
   };
+  // ── 디자인 언어 정합 (DESIGN_LANGUAGE.md — 4-surface 헤더·대시보드 카드 셸 실측 규격) ──
   const eyebrowStyle: React.CSSProperties = {
-    fontSize: "13px", fontWeight: 600, letterSpacing: "0.12em",
-    textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "12px",
+    fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em",
+    textTransform: "uppercase" as const, color: "#191970", opacity: 0.65, marginBottom: "8px",
   };
   const titleStyle: React.CSSProperties = {
-    fontSize: "clamp(26px, 5vw, 36px)", fontWeight: 700, letterSpacing: "-0.03em",
-    lineHeight: 1.15, color: "var(--text)", marginBottom: "10px",
+    fontSize: "26px", fontWeight: 750, letterSpacing: "-0.025em",
+    lineHeight: 1.25, color: "#0f172a", marginBottom: "8px",
   };
   const subtitleStyle: React.CSSProperties = {
-    fontSize: "16px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "30px",
+    fontSize: "14px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "28px",
   };
   const cardStyle: React.CSSProperties = {
-    borderRadius: "24px", border: "1px solid rgba(255,255,255,0.78)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.8) 100%)",
-    boxShadow: "0 12px 28px rgba(17,17,17,0.05)", backdropFilter: "blur(16px)", padding: "24px",
+    borderRadius: "20px", border: "1px solid rgba(25,25,112,0.10)",
+    background: "rgba(255,255,255,0.9)",
+    boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 32px rgba(25,25,112,0.06)",
+    padding: "20px",
   };
   const labelStyle: React.CSSProperties = {
     fontSize: "13px", fontWeight: 600, color: "var(--muted)", marginBottom: "8px", letterSpacing: "0.02em",
@@ -338,15 +340,13 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
     boxShadow: selected ? "0 2px 8px rgba(17,17,17,0.06)" : "none",
   });
   const choiceCardStyle = (selected: boolean): React.CSSProperties => ({
-    borderRadius: "20px",
-    border: selected ? "1px solid rgba(29,53,87,0.22)" : "1px solid rgba(17,17,17,0.06)",
-    background: selected
-      ? "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)"
-      : "rgba(255,255,255,0.7)",
+    borderRadius: "16px",
+    border: selected ? "1.5px solid rgba(29,53,87,0.30)" : "1px solid rgba(25,25,112,0.10)",
+    background: selected ? "rgba(29,53,87,0.06)" : "rgba(255,255,255,0.9)",
     boxShadow: selected
-      ? "0 0 0 4px rgba(29,53,87,0.07), 0 12px 24px rgba(17,17,17,0.05)"
-      : "0 4px 12px rgba(17,17,17,0.03)",
-    padding: "16px 18px", cursor: "pointer", transition: "all 0.2s ease", textAlign: "left" as const,
+      ? "0 0 0 4px rgba(29,53,87,0.07)"
+      : "0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 14px rgba(25,25,112,0.05)",
+    padding: "14px 16px", cursor: "pointer", transition: "all 0.15s ease", textAlign: "left" as const,
   });
   const footerStyle: React.CSSProperties = {
     display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "32px", gap: "12px",
@@ -410,7 +410,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
         {/* ① 업종 */}
         {step === 1 && (
           <>
-            <div style={eyebrowStyle}>{ko ? "1단계" : "Step 1"}</div>
+            <div style={eyebrowStyle}>STEP 1 / 5</div>
             <div style={titleStyle}>{ko ? "어떤 사업을 운영하세요?" : "What business do you run?"}</div>
             <div style={subtitleStyle}>
               {ko ? "업종에 맞는 관리 도구가 준비됩니다." : "We prepare tools that fit your industry."}
@@ -495,7 +495,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
         {/* ② 가게 한 장 */}
         {step === 2 && (
           <>
-            <div style={eyebrowStyle}>{ko ? "2단계" : "Step 2"}</div>
+            <div style={eyebrowStyle}>STEP 2 / 5</div>
             <div style={titleStyle}>{ko ? `${place} 정보를 알려주세요` : `Tell us about your ${place}`}</div>
             <div style={subtitleStyle}>
               {ko ? "사업자번호를 넣으면 세무 정보는 자동으로 채워요." : "Enter your business number and we auto-fill tax info."}
@@ -702,7 +702,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
         {/* ③ 가게 스냅샷 */}
         {step === 3 && (
           <>
-            <div style={eyebrowStyle}>{ko ? "3단계" : "Step 3"}</div>
+            <div style={eyebrowStyle}>STEP 3 / 5</div>
             <div style={titleStyle}>{ko ? `${place}를 조금 더 알려주세요` : "A bit more detail"}</div>
             <div style={subtitleStyle}>
               {ko ? "매출은 업종 평균 비교에만 쓰여요 · 언제든 수정할 수 있어요" : "Revenue is used only for benchmarks · editable anytime"}
@@ -781,7 +781,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
         {/* ④ 채널 (기존 업종 분기 유지) */}
         {step === 4 && (
           <>
-            <div style={eyebrowStyle}>{ko ? "4단계" : "Step 4"}</div>
+            <div style={eyebrowStyle}>STEP 4 / 5</div>
             <div style={titleStyle}>{ko ? "지금 쓰는 채널을 알려주세요" : "Which channels do you use?"}</div>
             <div style={subtitleStyle}>
               {ko ? "수수료 분석과 마케팅 미션이 채널에 맞춰집니다." : "Fee analysis and marketing missions adapt to your channels."}
@@ -937,7 +937,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
         hasEmployees: employeesBand === "staff1_2" || employeesBand === "staff3plus",
           });
           const diagCard: React.CSSProperties = { ...cardStyle, borderRadius: "18px", padding: "18px 20px", marginBottom: "12px" };
-          const diagK: React.CSSProperties = { fontSize: "11px", fontWeight: 800, letterSpacing: "0.05em", color: "var(--muted)", textTransform: "uppercase", marginBottom: "6px" };
+          const diagK: React.CSSProperties = { fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em", color: "#191970", opacity: 0.65, textTransform: "uppercase", marginBottom: "6px" };
           const diagV: React.CSSProperties = { fontSize: "15px", fontWeight: 700, lineHeight: 1.5, color: "var(--text)" };
           const diagFine: React.CSSProperties = { fontSize: "11.5px", color: "var(--muted)", marginTop: "6px", lineHeight: 1.5 };
           const positionText = benchmarkResult
@@ -949,7 +949,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
             : null;
           return (
             <>
-              <div style={eyebrowStyle}>{ko ? "첫 진단" : "First diagnosis"}</div>
+              <div style={eyebrowStyle}>FIRST REPORT</div>
               <div style={titleStyle}>
                 {ko ? `${storeName.trim() || place} ${profile.ownerTitle.ko}, 첫 진단이 나왔어요` : "Your first diagnosis is ready"}
               </div>
@@ -1015,7 +1015,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
               )}
 
               {/* 매출 연동 안내 — 업종별 CTA (이 화면의 유일한 강조 카드) */}
-              <div style={{ ...diagCard, background: "var(--primary)", border: "none" }}>
+              <div style={{ ...diagCard, background: "linear-gradient(180deg, #1d2b7a 0%, #0d0d4d 100%)", border: "none", boxShadow: "0 6px 18px rgba(25,25,112,0.28), 0 1px 0 rgba(255,255,255,0.12) inset" }}>
                 <div style={{ ...diagK, color: "rgba(255,255,255,0.6)" }}>
                   {profile.revenueSyncCta === "pos" ? (ko ? "매출 자동 연동" : "Revenue sync")
                     : profile.revenueSyncCta === "ecommerce-csv" ? (ko ? "판매내역 분석" : "Sales analysis")
