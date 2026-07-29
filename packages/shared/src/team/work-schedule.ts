@@ -100,6 +100,32 @@ export function expandLeaveDates(
   return out;
 }
 
+/**
+ * 연차 기간을 날짜 → 상태 맵으로 전개 (반려 제외).
+ *  ⚠️ 사장 화면은 "승인된 연차"와 "승인 대기 신청"을 반드시 구분해야 한다 —
+ *  대기 건을 확정 연차처럼 보여주면 사장이 그날 인력이 빠진다고 착각한다
+ *  (승인하지 않으면 그 직원은 출근한다). 2026-07-28 냉정 리뷰에서 발견.
+ */
+export function expandLeaveDatesWithStatus(
+  leaves: Array<{ start_date: string; end_date: string; status?: string | null }>,
+): Map<string, "approved" | "pending"> {
+  const out = new Map<string, "approved" | "pending">();
+  for (const l of leaves) {
+    if (l.status === "rejected") continue;
+    const state: "approved" | "pending" = l.status === "approved" ? "approved" : "pending";
+    const cur = new Date(l.start_date);
+    const end = new Date(l.end_date);
+    if (Number.isNaN(cur.getTime()) || Number.isNaN(end.getTime()) || cur > end) continue;
+    while (cur <= end) {
+      const key = toDateKey(cur);
+      // 같은 날 승인·대기가 겹치면 승인이 우선 (확정 정보가 더 강함)
+      if (out.get(key) !== "approved") out.set(key, state);
+      cur.setDate(cur.getDate() + 1);
+    }
+  }
+  return out;
+}
+
 /** "HH:MM[:SS]" → "HH:MM" (표시용) */
 export function shortTime(t: string): string {
   return t.slice(0, 5);

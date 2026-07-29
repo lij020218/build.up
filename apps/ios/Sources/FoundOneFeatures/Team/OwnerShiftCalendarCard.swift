@@ -54,9 +54,11 @@ struct OwnerShiftCalendarCard: View {
     }
     private var monthEnd: String { String(format: "%04d-%02d-%02d", viewMonth.y, viewMonth.m, daysInMonth) }
 
-    /// 날짜 → (근무 명단, 연차 명단)
-    private var byDate: [String: (work: [(name: String, time: String, worked: Bool)], leave: [String])] {
-        var map: [String: (work: [(name: String, time: String, worked: Bool)], leave: [String])] = [:]
+    /// 날짜 → (근무 명단, 연차 명단[승인여부 포함])
+    ///  ⚠️ computed 라 매 렌더 재계산된다 — body 에서 1회만 호출해 grid·detail 로 넘긴다
+    ///     (종전엔 grid·detail 이 각각 호출해 렌더당 2회 전체 순회. 2026-07-28 냉정 리뷰)
+    private func computeByDate() -> [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])] {
+        var map: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])] = [:]
         let workedKeys = Set(atts.compactMap { $0.clockInAt != nil ? "\($0.memberUserId.uuidString)|\($0.workDate)" : nil })
         let cal = Calendar.current
 
@@ -66,21 +68,27 @@ struct OwnerShiftCalendarCard: View {
             let memberLeaves = leaves
                 .filter { $0.memberUserId == m.memberUserId }
                 .map { (startDate: $0.startDate, endDate: $0.endDate, status: $0.status) }
-            let leaveSet = BUWorkSchedule.expandLeaveDates(memberLeaves)
+            let leaveMap = BUWorkSchedule.expandLeaveDatesWithStatus(memberLeaves)
 
             for day in 1...daysInMonth {
                 let key = String(format: "%04d-%02d-%02d", viewMonth.y, viewMonth.m, day)
                 guard let date = DateComponents(calendar: cal, year: viewMonth.y, month: viewMonth.m, day: day).date else { continue }
                 let weekday = cal.component(.weekday, from: date) - 1
                 var slot = map[key] ?? (work: [], leave: [])
-                if leaveSet.contains(key) {
-                    slot.leave.append(m.name)
+                let leaveState = leaveMap[key]   // nil=없음, false=승인, true=대기
+                if leaveState == false {
+                    // 승인된 연차만 근무에서 제외 — 확정된 사실
+                    slot.leave.append((name: m.name, pending: false))
                 } else if let shift = BUWorkSchedule.resolve(dateStr: key, weekday: weekday, rules: memberRules, exceptions: memberEx) {
+                    // 승인 대기 연차는 근무 유지 — 승인 전까지 출근 예정 (냉정 리뷰 2026-07-28)
                     slot.work.append((
                         name: m.name,
                         time: "\(BUWorkSchedule.shortTime(shift.startTime))–\(BUWorkSchedule.shortTime(shift.endTime))",
-                        worked: workedKeys.contains("\(m.memberUserId.uuidString)|\(key)")
+                        worked: workedKeys.contains("\(m.memberUserId.uuidString)|\(key)"),
+                        leavePending: leaveState == true
                     ))
+                } else if leaveState == true {
+                    slot.leave.append((name: m.name, pending: true))
                 }
                 if !slot.work.isEmpty || !slot.leave.isEmpty { map[key] = slot }
             }
@@ -89,11 +97,12 @@ struct OwnerShiftCalendarCard: View {
     }
 
     var body: some View {
-        BUCard(.outer) {
+        let data = computeByDate()   // 렌더당 1회만 (grid·detail 공용)
+        return BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
                 header
-                grid
-                if let selected { detail(for: selected) }
+                grid(data)
+                if let selected { detail(for: selected, data: data) }
                 legendRow
             }
         }
@@ -127,11 +136,10 @@ struct OwnerShiftCalendarCard: View {
         }
     }
 
-    private var grid: some View {
+    private func grid(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])]) -> some View {
         let cal = Calendar.current
         let first = DateComponents(calendar: cal, year: viewMonth.y, month: viewMonth.m, day: 1).date ?? Date()
         let firstWeekday = cal.component(.weekday, from: first) - 1
-        let data = byDate
 
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7), spacing: 4) {
             ForEach(0..<7, id: \.self) { wd in
@@ -144,7 +152,9 @@ struct OwnerShiftCalendarCard: View {
                 let key = String(format: "%04d-%02d-%02d", viewMonth.y, viewMonth.m, day)
                 let slot = data[key]
                 let count = slot?.work.count ?? 0
-                let hasLeave = !(slot?.leave.isEmpty ?? true)
+                let approvedLeave = (slot?.leave ?? []).contains { !$0.pending }
+                let pendingLeave = (slot?.leave ?? []).contains { $0.pending }
+                    || (slot?.work ?? []).contains { $0.leavePending }
                 Button {
                     selected = (selected == key) ? nil : key
                 } label: {
@@ -160,8 +170,10 @@ struct OwnerShiftCalendarCard: View {
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        if hasLeave {
+                        if approvedLeave {
                             Circle().fill(LEAVE_COLOR).frame(width: 5, height: 5).padding(.top, 3).padding(.trailing, 4)
+                        } else if pendingLeave {
+                            Circle().strokeBorder(LEAVE_COLOR, lineWidth: 1.5).frame(width: 5, height: 5).padding(.top, 3).padding(.trailing, 4)
                         }
                     }
                     .frame(height: 42)
@@ -183,8 +195,8 @@ struct OwnerShiftCalendarCard: View {
     }
 
     @ViewBuilder
-    private func detail(for key: String) -> some View {
-        let slot = byDate[key]
+    private func detail(for key: String, data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])]) -> some View {
+        let slot = data[key]
         let month = Int(key.dropFirst(5).prefix(2)) ?? 0
         let day = Int(key.suffix(2)) ?? 0
         VStack(alignment: .leading, spacing: 7) {
@@ -208,17 +220,29 @@ struct OwnerShiftCalendarCard: View {
                                 .padding(.horizontal, 7).padding(.vertical, 2)
                                 .background(BUColor.midnight.opacity(0.08), in: Capsule())
                         }
+                        if e.leavePending {
+                            Text("연차 신청 중")
+                                .font(.system(size: 10, weight: .heavy))
+                                .foregroundStyle(LEAVE_COLOR)
+                                .padding(.horizontal, 7).padding(.vertical, 2)
+                                .background(Capsule().strokeBorder(LEAVE_COLOR, lineWidth: 1))
+                        }
                         Spacer(minLength: 0)
                     }
                 }
-                ForEach(Array((slot?.leave ?? []).enumerated()), id: \.offset) { _, name in
+                ForEach(Array((slot?.leave ?? []).enumerated()), id: \.offset) { _, lv in
                     HStack(spacing: 8) {
-                        Text(name).font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
-                        Text("연차")
+                        Text(lv.name).font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
+                        // 승인 대기를 확정 연차처럼 보이면 인력 배치를 그르친다 — 반드시 구분
+                        Text(lv.pending ? "연차 승인 대기" : "연차")
                             .font(.system(size: 10, weight: .heavy))
                             .foregroundStyle(LEAVE_COLOR)
                             .padding(.horizontal, 7).padding(.vertical, 2)
-                            .background(LEAVE_COLOR.opacity(0.12), in: Capsule())
+                            .background(
+                                Capsule()
+                                    .fill(lv.pending ? Color.clear : LEAVE_COLOR.opacity(0.12))
+                                    .overlay(lv.pending ? Capsule().strokeBorder(LEAVE_COLOR, lineWidth: 1) : nil)
+                            )
                         Spacer(minLength: 0)
                     }
                 }
@@ -243,7 +267,11 @@ struct OwnerShiftCalendarCard: View {
             }
             HStack(spacing: 5) {
                 Circle().fill(LEAVE_COLOR).frame(width: 6, height: 6)
-                Text("연차").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+                Text("연차(승인)").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+            }
+            HStack(spacing: 5) {
+                Circle().strokeBorder(LEAVE_COLOR, lineWidth: 1.5).frame(width: 6, height: 6)
+                Text("승인 대기").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
             }
             Spacer(minLength: 0)
         }
@@ -263,7 +291,7 @@ struct OwnerShiftCalendarCard: View {
         defer { loading = false }
         async let ex = try? repo.ownerMonthExceptions(monthStart: monthStart, monthEnd: monthEnd)
         async let at = try? repo.ownerMonthAttendance(monthStart: monthStart, monthEnd: monthEnd)
-        async let lv = try? repo.leaveRequests(limit: 200)
+        async let lv = try? repo.ownerMonthLeaves(monthStart: monthStart, monthEnd: monthEnd)
         exceptions = await ex ?? []
         atts = await at ?? []
         leaves = await lv ?? []

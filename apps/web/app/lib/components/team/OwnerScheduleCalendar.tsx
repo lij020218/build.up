@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
-import { resolveShiftForDate, expandLeaveDates, shortTime } from "@foundone/shared";
+import { resolveShiftForDate, expandLeaveDatesWithStatus, shortTime } from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -41,22 +41,24 @@ type LeaveRow = { member_user_id: string; start_date: string; end_date: string; 
 type AttRow = { member_user_id: string; work_date: string; clock_in_at: string | null };
 
 /** 하루치 출근 명단 */
-type DayEntry = { memberId: string; name: string; time: string; worked: boolean };
+type DayEntry = { memberId: string; name: string; time: string; worked: boolean; leavePending: boolean };
 
 export function OwnerScheduleCalendar({
-  ko, ownerId, members, rules,
+  ko, ownerId, members, rules, previewLeaves,
 }: {
   ko: boolean;
   ownerId: string | null;
   members: CalMember[];
   rules: CalRule[];
+  /** dev 프리뷰 전용 — ownerId 없이 연차 표시(승인/대기)를 검증하기 위한 주입구. prod 경로 미사용 */
+  previewLeaves?: LeaveRow[];
 }) {
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
   const [cursor, setCursor] = useState({ y: today.getFullYear(), m: today.getMonth() });
   const [selected, setSelected] = useState<string | null>(todayKey);
   const [exceptions, setExceptions] = useState<ExceptionRow[]>([]);
-  const [leaves, setLeaves] = useState<LeaveRow[]>([]);
+  const [leaves, setLeaves] = useState<LeaveRow[]>(previewLeaves ?? []);
   const [atts, setAtts] = useState<AttRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -103,21 +105,26 @@ export function OwnerScheduleCalendar({
 
   /** 날짜 → 그날 출근자 목록 / 연차자 목록 */
   const byDate = useMemo(() => {
-    const map = new Map<string, { work: DayEntry[]; leave: string[] }>();
+    const map = new Map<string, { work: DayEntry[]; leave: Array<{ name: string; pending: boolean }> }>();
     const workedSet = new Set(atts.filter((a) => a.clock_in_at).map((a) => `${a.member_user_id}|${a.work_date}`));
 
     for (const m of members) {
       const memberRules = rules.filter((r) => r.member_user_id === m.member_user_id);
       const memberEx = exceptions.filter((e) => e.member_user_id === m.member_user_id);
-      const memberLeaveSet = expandLeaveDates(
+      const memberLeaveMap = expandLeaveDatesWithStatus(
         leaves.filter((l) => l.member_user_id === m.member_user_id),
       );
       for (let d = 1; d <= daysInMonth; d++) {
         const key = `${cursor.y}-${pad(cursor.m + 1)}-${pad(d)}`;
         const slot = map.get(key) ?? { work: [], leave: [] };
-        if (memberLeaveSet.has(key)) {
-          slot.leave.push(m.name);
+        const leaveState = memberLeaveMap.get(key);
+        if (leaveState === "approved") {
+          // 승인된 연차만 근무에서 제외 — 확정된 사실
+          slot.leave.push({ name: m.name, pending: false });
         } else {
+          // 승인 대기 연차는 **근무 유지** — 승인 전까지 그 직원은 출근 예정이다.
+          //   대기 건을 인원에서 빼면 사장이 "이날 아무도 안 나온다"고 착각한다
+          //   (2026-07-28 냉정 리뷰 실렌더에서 발견).
           const shift = resolveShiftForDate(key, new Date(cursor.y, cursor.m, d).getDay(), memberRules, memberEx);
           if (shift) {
             slot.work.push({
@@ -125,7 +132,11 @@ export function OwnerScheduleCalendar({
               name: m.name,
               time: `${shortTime(shift.start_time)}–${shortTime(shift.end_time)}`,
               worked: workedSet.has(`${m.member_user_id}|${key}`),
+              leavePending: leaveState === "pending",
             });
+          } else if (leaveState === "pending") {
+            // 근무일이 아닌데 연차 신청 — 명단에만 대기로 표기
+            slot.leave.push({ name: m.name, pending: true });
           }
         }
         if (slot.work.length || slot.leave.length) map.set(key, slot);
@@ -182,7 +193,9 @@ export function OwnerScheduleCalendar({
           const key = `${cursor.y}-${pad(cursor.m + 1)}-${pad(day)}`;
           const slot = byDate.get(key);
           const count = slot?.work.length ?? 0;
-          const hasLeave = (slot?.leave.length ?? 0) > 0;
+          const approvedLeave = (slot?.leave ?? []).some((l) => !l.pending);
+          const pendingLeave = (slot?.leave ?? []).some((l) => l.pending)
+            || (slot?.work ?? []).some((w) => w.leavePending);
           const isToday = key === todayKey;
           const isSelected = key === selected;
           return (
@@ -208,8 +221,11 @@ export function OwnerScheduleCalendar({
                   {count}{ko ? "명" : ""}
                 </span>
               )}
-              {hasLeave && (
+              {approvedLeave && (
                 <span aria-hidden style={{ position: "absolute", top: 4, right: 5, width: 5, height: 5, borderRadius: "50%", background: LEAVE }} />
+              )}
+              {!approvedLeave && pendingLeave && (
+                <span aria-hidden style={{ position: "absolute", top: 4, right: 5, width: 5, height: 5, borderRadius: "50%", border: `1.5px solid ${LEAVE}` }} />
               )}
             </button>
           );
@@ -237,13 +253,25 @@ export function OwnerScheduleCalendar({
                       {ko ? "출근함" : "clocked in"}
                     </span>
                   )}
+                  {e.leavePending && (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: LEAVE, border: `1px solid ${LEAVE}`, borderRadius: 999, padding: "2px 7px" }}>
+                      {ko ? "연차 신청 중" : "leave requested"}
+                    </span>
+                  )}
                 </div>
               ))}
-              {selectedSlot.leave.map((name) => (
-                <div key={`lv-${name}`} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 650, color: MUTED }}>{name}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: LEAVE, background: "rgba(139,127,212,0.12)", borderRadius: 999, padding: "2px 7px" }}>
-                    {ko ? "연차" : "leave"}
+              {selectedSlot.leave.map((l) => (
+                <div key={`lv-${l.name}`} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 650, color: MUTED }}>{l.name}</span>
+                  {/* 승인 대기를 확정 연차처럼 보이면 인력 배치를 그르친다 — 반드시 구분 */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    color: LEAVE,
+                    background: l.pending ? "transparent" : "rgba(139,127,212,0.12)",
+                    border: l.pending ? `1px solid ${LEAVE}` : "none",
+                    borderRadius: 999, padding: "2px 7px",
+                  }}>
+                    {l.pending ? (ko ? "연차 승인 대기" : "leave pending") : (ko ? "연차" : "leave")}
                   </span>
                 </div>
               ))}
@@ -254,16 +282,19 @@ export function OwnerScheduleCalendar({
 
       <div style={{ display: "flex", gap: 14, marginTop: 12, flexWrap: "wrap" }}>
         <Legend color={MIDNIGHT_SOFT} border={MIDNIGHT_BORDER} label={ko ? "근무 있는 날" : "Scheduled"} />
-        <Legend dot={LEAVE} label={ko ? "연차" : "Leave"} />
+        <Legend dot={LEAVE} label={ko ? "연차(승인)" : "Leave"} />
+        <Legend ring={LEAVE} label={ko ? "승인 대기" : "Pending"} />
       </div>
     </div>
   );
 }
 
-function Legend({ color, border, dot, label }: { color?: string; border?: string; dot?: string; label: string }) {
+function Legend({ color, border, dot, ring, label }: { color?: string; border?: string; dot?: string; ring?: string; label: string }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: MUTED }}>
-      {dot ? (
+      {ring ? (
+        <span style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${ring}` }} />
+      ) : dot ? (
         <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot }} />
       ) : (
         <span style={{ width: 14, height: 14, borderRadius: 4, background: color, border: `1px solid ${border}` }} />

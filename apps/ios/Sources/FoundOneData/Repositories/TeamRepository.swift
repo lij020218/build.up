@@ -344,6 +344,18 @@ public actor TeamRepository {
             .execute().value
     }
 
+    /// 캘린더용 — 그 달과 **기간이 겹치는** 연차만 (웹 OwnerScheduleCalendar 와 동일 범위).
+    ///   종전엔 최근 200건을 가져와 오래된 달의 연차를 놓칠 수 있었다 (2026-07-28 냉정 리뷰).
+    public func ownerMonthLeaves(monthStart: String, monthEnd: String) async throws -> [TeamLeaveRequest] {
+        try await client
+            .from("leave_requests")
+            .select("id, member_user_id, leave_type, start_date, end_date, reason, status")
+            .eq("owner_user_id", value: try await uid().uuidString)
+            .lte("start_date", value: monthEnd)
+            .gte("end_date", value: monthStart)
+            .execute().value
+    }
+
     public func ownerMonthAttendance(monthStart: String, monthEnd: String) async throws -> [OwnerMonthAttendance] {
         try await client
             .from("attendance_records")

@@ -82,6 +82,31 @@ public enum BUWorkSchedule {
         return out
     }
 
+    /// 연차 기간을 날짜 → 상태 맵으로 전개 (반려 제외).
+    ///  ⚠️ 사장 화면은 "승인된 연차"와 "승인 대기"를 구분해야 한다 — 대기 건을 확정처럼
+    ///  보여주면 사장이 그날 인력이 빠진다고 착각한다 (2026-07-28 냉정 리뷰).
+    public static func expandLeaveDatesWithStatus(
+        _ leaves: [(startDate: String, endDate: String, status: String)]
+    ) -> [String: Bool] {   // value = isPending
+        var out: [String: Bool] = [:]
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        let cal = Calendar(identifier: .gregorian)
+        for l in leaves where l.status != "rejected" {
+            let pending = l.status != "approved"
+            guard var d = f.date(from: l.startDate), let end = f.date(from: l.endDate), d <= end else { continue }
+            while d <= end {
+                let key = f.string(from: d)
+                // 같은 날 승인·대기가 겹치면 승인이 우선
+                if out[key] != false { out[key] = pending }
+                guard let next = cal.date(byAdding: .day, value: 1, to: d) else { break }
+                d = next
+            }
+        }
+        return out
+    }
+
     /// "HH:MM:SS" → "HH:MM" (표시용)
     public static func shortTime(_ t: String) -> String {
         String(t.prefix(5))

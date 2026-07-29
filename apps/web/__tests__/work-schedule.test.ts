@@ -3,6 +3,7 @@ import {
   resolveShiftForDate,
   resolveMonthShifts,
   expandLeaveDates,
+  expandLeaveDatesWithStatus,
 } from "../../../packages/shared/src/team/work-schedule";
 
 /**
@@ -74,5 +75,36 @@ describe("expandLeaveDates", () => {
       { start_date: "bad-date", end_date: "2026-07-05", status: "approved" },
     ]);
     expect(set.size).toBe(0);
+  });
+});
+
+describe("expandLeaveDatesWithStatus (2026-07-28 냉정 리뷰 — 승인 대기 구분)", () => {
+  it("승인 건은 approved, 대기 건은 pending 으로 구분한다", () => {
+    const map = expandLeaveDatesWithStatus([
+      { start_date: "2026-07-06", end_date: "2026-07-06", status: "approved" },
+      { start_date: "2026-07-10", end_date: "2026-07-10", status: "pending" },
+    ]);
+    expect(map.get("2026-07-06")).toBe("approved");
+    expect(map.get("2026-07-10")).toBe("pending");
+  });
+
+  it("반려 건은 아예 없다", () => {
+    const map = expandLeaveDatesWithStatus([
+      { start_date: "2026-07-15", end_date: "2026-07-15", status: "rejected" },
+    ]);
+    expect(map.size).toBe(0);
+  });
+
+  it("같은 날 승인+대기가 겹치면 승인이 이긴다 (확정 정보 우선)", () => {
+    const map = expandLeaveDatesWithStatus([
+      { start_date: "2026-07-20", end_date: "2026-07-20", status: "pending" },
+      { start_date: "2026-07-20", end_date: "2026-07-20", status: "approved" },
+    ]);
+    expect(map.get("2026-07-20")).toBe("approved");
+  });
+
+  it("status 미지정은 보수적으로 pending 취급 (확정으로 단정 금지)", () => {
+    const map = expandLeaveDatesWithStatus([{ start_date: "2026-07-22", end_date: "2026-07-22" }]);
+    expect(map.get("2026-07-22")).toBe("pending");
   });
 });

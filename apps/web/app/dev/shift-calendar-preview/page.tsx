@@ -38,7 +38,17 @@ export default function ShiftCalendarPreviewPage() {
         alignSelf: "flex-start",
       }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: "#0f172a", marginBottom: 12 }}>근무 캘린더 (미리보기)</div>
-        <OwnerScheduleCalendar ko ownerId={null} members={MEMBERS} rules={RULES} />
+        <OwnerScheduleCalendar
+          ko
+          ownerId={null}
+          members={MEMBERS}
+          rules={RULES}
+          previewLeaves={[
+            // 승인 연차(김서연 7/13) vs 승인 대기(박준호 7/14) — 구분 표시 검증용
+            { member_user_id: "m1", start_date: "2026-07-13", end_date: "2026-07-13", status: "approved" },
+            { member_user_id: "m2", start_date: "2026-07-14", end_date: "2026-07-14", status: "pending" },
+          ]}
+        />
       </div>
     </div>
   );
