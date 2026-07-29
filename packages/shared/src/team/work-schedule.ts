@@ -130,3 +130,63 @@ export function expandLeaveDatesWithStatus(
 export function shortTime(t: string): string {
   return t.slice(0, 5);
 }
+
+// ── 교대 타임라인 (2026-07-28 사장님 요청) ───────────────────────────────
+//   "A가 12–3시, B가 3–8시면 잘 구분되게" — 이름·시간 텍스트 나열로는 교대가 이어지는지
+//   겹치는지 비는지 알 수 없다. 분 단위로 환산해 가로 타임라인으로 그린다.
+
+/** "HH:MM[:SS]" → 자정 기준 분. 파싱 실패 시 null */
+export function timeToMinutes(t: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
+  return h * 60 + min;
+}
+
+export type ShiftSpan = {
+  /** 시작 (자정 기준 분) */
+  startMin: number;
+  /** 종료 (자정 기준 분). 야간 근무로 자정을 넘기면 1440 초과 값 (예: 익일 02:00 = 1560) */
+  endMin: number;
+};
+
+/**
+ * 근무 시간 → 분 구간. 종료가 시작보다 이르면 **자정을 넘긴 야간 근무**로 보고 +24h.
+ * (22:00–02:00 을 "4시간"이 아니라 음수로 계산하면 타임라인이 깨진다)
+ */
+export function toShiftSpan(startTime: string, endTime: string): ShiftSpan | null {
+  const s = timeToMinutes(startTime);
+  const e = timeToMinutes(endTime);
+  if (s === null || e === null) return null;
+  return { startMin: s, endMin: e <= s ? e + 24 * 60 : e };
+}
+
+/** 분 → "H:MM" 표시. 24시 넘으면 "익일 H:MM" (ko) / "+1d H:MM" (en) */
+export function formatSpanTime(min: number, ko = true): string {
+  const nextDay = min >= 24 * 60;
+  const m = min % (24 * 60);
+  const label = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  if (!nextDay) return label;
+  return ko ? `익일 ${label}` : `+1d ${label}`;
+}
+
+/**
+ * 여러 근무 구간에서 **아무도 없는 시간대**를 찾는다 (교대 공백).
+ *  범위는 그날 근무의 최소 시작 ~ 최대 종료 — 영업시간을 모르는 상태에서
+ *  "영업 중인데 사람이 없다"고 단정하지 않기 위해, 근무가 실제로 있는 구간 안의
+ *  틈만 본다. 근무가 1개 이하면 공백 개념이 없으므로 빈 배열.
+ */
+export function findCoverageGaps(spans: ShiftSpan[]): ShiftSpan[] {
+  if (spans.length < 2) return [];
+  const sorted = [...spans].sort((a, b) => a.startMin - b.startMin);
+  const gaps: ShiftSpan[] = [];
+  let cursor = sorted[0].endMin;
+  for (let i = 1; i < sorted.length; i++) {
+    const s = sorted[i];
+    if (s.startMin > cursor) gaps.push({ startMin: cursor, endMin: s.startMin });
+    cursor = Math.max(cursor, s.endMin);
+  }
+  return gaps;
+}

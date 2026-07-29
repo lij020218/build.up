@@ -107,6 +107,43 @@ public enum BUWorkSchedule {
         return out
     }
 
+    // ── 교대 타임라인 (2026-07-28) ──────────────────────────────────
+    //   "A 12–3시 / B 3–8시" 가 이어지는지·겹치는지·비는지는 텍스트로 안 보인다.
+
+    /// "HH:MM[:SS]" → 자정 기준 분. 실패 시 nil
+    public static func timeToMinutes(_ t: String) -> Int? {
+        let parts = t.split(separator: ":")
+        guard parts.count >= 2, let h = Int(parts[0]), let m = Int(parts[1]) else { return nil }
+        return h * 60 + m
+    }
+
+    /// 근무 시간 → 분 구간. 종료가 시작보다 이르면 자정 넘긴 야간 근무로 +24h
+    public static func shiftSpan(start: String, end: String) -> (startMin: Int, endMin: Int)? {
+        guard let s = timeToMinutes(start), let e = timeToMinutes(end) else { return nil }
+        return (s, e <= s ? e + 24 * 60 : e)
+    }
+
+    /// 분 → "HH:mm" (24시 넘으면 "익일 HH:mm")
+    public static func formatSpanTime(_ min: Int) -> String {
+        let nextDay = min >= 24 * 60
+        let m = min % (24 * 60)
+        let label = String(format: "%02d:%02d", m / 60, m % 60)
+        return nextDay ? "익일 \(label)" : label
+    }
+
+    /// 교대 사이 아무도 없는 구간. 근무 1개 이하면 빈 배열(영업시간 모르므로 단정 금지)
+    public static func coverageGaps(_ spans: [(startMin: Int, endMin: Int)]) -> [(startMin: Int, endMin: Int)] {
+        guard spans.count >= 2 else { return [] }
+        let sorted = spans.sorted { $0.startMin < $1.startMin }
+        var gaps: [(startMin: Int, endMin: Int)] = []
+        var cursor = sorted[0].endMin
+        for s in sorted.dropFirst() {
+            if s.startMin > cursor { gaps.append((cursor, s.startMin)) }
+            cursor = max(cursor, s.endMin)
+        }
+        return gaps
+    }
+
     /// "HH:MM:SS" → "HH:MM" (표시용)
     public static func shortTime(_ t: String) -> String {
         String(t.prefix(5))

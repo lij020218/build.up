@@ -19,9 +19,14 @@ const RULES = [
   { member_user_id: "m1", weekday: 1, start_time: "09:00", end_time: "18:00", active: true },
   { member_user_id: "m1", weekday: 3, start_time: "09:00", end_time: "18:00", active: true },
   { member_user_id: "m1", weekday: 5, start_time: "09:00", end_time: "18:00", active: true },
-  { member_user_id: "m2", weekday: 2, start_time: "13:00", end_time: "22:00", active: true },
-  { member_user_id: "m2", weekday: 4, start_time: "13:00", end_time: "22:00", active: true },
-  { member_user_id: "m2", weekday: 6, start_time: "13:00", end_time: "22:00", active: true },
+  // 화요일 = 이어지는 교대 (12–15 김서연 / 15–20 박준호)
+  { member_user_id: "m1", weekday: 2, start_time: "12:00", end_time: "15:00", active: true },
+  { member_user_id: "m2", weekday: 2, start_time: "15:00", end_time: "20:00", active: true },
+  // 목요일 = 공백 있는 교대 (12–15 김서연 / 17–20 박준호 → 15–17 공백)
+  { member_user_id: "m1", weekday: 4, start_time: "12:00", end_time: "15:00", active: true },
+  { member_user_id: "m2", weekday: 4, start_time: "17:00", end_time: "20:00", active: true },
+  // 토요일 = 자정 넘는 야간 (22–02)
+  { member_user_id: "m2", weekday: 6, start_time: "22:00", end_time: "02:00", active: true },
   { member_user_id: "m3", weekday: 5, start_time: "17:00", end_time: "23:00", active: true },
   { member_user_id: "m3", weekday: 6, start_time: "17:00", end_time: "23:00", active: true },
   { member_user_id: "m3", weekday: 0, start_time: "10:00", end_time: "16:00", active: false }, // 비활성 — 일요일 표시 금지

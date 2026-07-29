@@ -57,8 +57,8 @@ struct OwnerShiftCalendarCard: View {
     /// 날짜 → (근무 명단, 연차 명단[승인여부 포함])
     ///  ⚠️ computed 라 매 렌더 재계산된다 — body 에서 1회만 호출해 grid·detail 로 넘긴다
     ///     (종전엔 grid·detail 이 각각 호출해 렌더당 2회 전체 순회. 2026-07-28 냉정 리뷰)
-    private func computeByDate() -> [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])] {
-        var map: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])] = [:]
+    private func computeByDate() -> [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])] {
+        var map: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])] = [:]
         let workedKeys = Set(atts.compactMap { $0.clockInAt != nil ? "\($0.memberUserId.uuidString)|\($0.workDate)" : nil })
         let cal = Calendar.current
 
@@ -85,7 +85,8 @@ struct OwnerShiftCalendarCard: View {
                         name: m.name,
                         time: "\(BUWorkSchedule.shortTime(shift.startTime))–\(BUWorkSchedule.shortTime(shift.endTime))",
                         worked: workedKeys.contains("\(m.memberUserId.uuidString)|\(key)"),
-                        leavePending: leaveState == true
+                        leavePending: leaveState == true,
+                        span: BUWorkSchedule.shiftSpan(start: shift.startTime, end: shift.endTime)
                     ))
                 } else if leaveState == true {
                     slot.leave.append((name: m.name, pending: true))
@@ -136,7 +137,7 @@ struct OwnerShiftCalendarCard: View {
         }
     }
 
-    private func grid(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])]) -> some View {
+    private func grid(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])]) -> some View {
         let cal = Calendar.current
         let first = DateComponents(calendar: cal, year: viewMonth.y, month: viewMonth.m, day: 1).date ?? Date()
         let firstWeekday = cal.component(.weekday, from: first) - 1
@@ -195,7 +196,7 @@ struct OwnerShiftCalendarCard: View {
     }
 
     @ViewBuilder
-    private func detail(for key: String, data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool)], leave: [(name: String, pending: Bool)])]) -> some View {
+    private func detail(for key: String, data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])]) -> some View {
         let slot = data[key]
         let month = Int(key.dropFirst(5).prefix(2)) ?? 0
         let day = Int(key.suffix(2)) ?? 0
@@ -208,8 +209,11 @@ struct OwnerShiftCalendarCard: View {
                     .font(.system(size: 12.5, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
             } else {
-                ForEach(Array((slot?.work ?? []).enumerated()), id: \.offset) { _, e in
+                // 교대 타임라인 — 누가 언제 겹치고 언제 비는지 (텍스트 나열로는 안 보임)
+                shiftTimeline(slot?.work ?? [])
+                ForEach(Array((slot?.work ?? []).enumerated()), id: \.offset) { i, e in
                     HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 2).fill(Self.shiftColor(i)).frame(width: 8, height: 8)
                         Text(e.name).font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.ink)
                         Text(e.time).font(.system(size: 12, weight: .medium)).foregroundStyle(BUColor.inkMuted)
                             .monospacedDigit()
@@ -255,6 +259,87 @@ struct OwnerShiftCalendarCard: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(BUColor.midnight.opacity(0.16), lineWidth: 1)
         )
+    }
+
+    /// 교대 구분색 — 미드나잇 계열 명도 단계 (신호등 컬러 금지)
+    static func shiftColor(_ i: Int) -> Color {
+        let palette: [Color] = [
+            Color(red: 29 / 255, green: 53 / 255, blue: 87 / 255),
+            Color(red: 59 / 255, green: 92 / 255, blue: 140 / 255),
+            Color(red: 107 / 255, green: 131 / 255, blue: 181 / 255),
+            Color(red: 154 / 255, green: 171 / 255, blue: 208 / 255),
+        ]
+        return palette[i % palette.count]
+    }
+
+    /// 하루 교대를 가로 막대로 — 축 = 최소 시작 ~ 최대 종료. 공백은 빗금 + 문구.
+    @ViewBuilder
+    private func shiftTimeline(_ entries: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)]) -> some View {
+        let spans = entries.compactMap(\.span)
+        if !spans.isEmpty {
+            let minStart = spans.map(\.startMin).min() ?? 0
+            let maxEnd = spans.map(\.endMin).max() ?? 1
+            let total = max(1, maxEnd - minStart)
+            let gaps = BUWorkSchedule.coverageGaps(spans)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(BUWorkSchedule.formatSpanTime(minStart))
+                    Spacer()
+                    Text(BUWorkSchedule.formatSpanTime(maxEnd))
+                }
+                .font(.system(size: 10.5, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+                .monospacedDigit()
+
+                GeometryReader { geo in
+                    let w = geo.size.width
+                    ZStack(alignment: .topLeading) {
+                        VStack(spacing: 4) {
+                            ForEach(Array(entries.enumerated()), id: \.offset) { i, e in
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 5).fill(BUColor.midnight.opacity(0.05))
+                                        .frame(height: 18)
+                                    if let sp = e.span {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .fill(Self.shiftColor(i))
+                                            .frame(width: max(2, w * CGFloat(sp.endMin - sp.startMin) / CGFloat(total)), height: 18)
+                                            .offset(x: w * CGFloat(sp.startMin - minStart) / CGFloat(total))
+                                            .overlay(alignment: .leading) {
+                                                Text(e.name)
+                                                    .font(.system(size: 10, weight: .heavy))
+                                                    .foregroundStyle(.white)
+                                                    .padding(.leading, 6)
+                                                    .offset(x: w * CGFloat(sp.startMin - minStart) / CGFloat(total))
+                                                    .lineLimit(1)
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                        // 공백 구간 — 근무 사이가 비어 있음
+                        ForEach(Array(gaps.enumerated()), id: \.offset) { _, g in
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(BUColor.danger.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                                .background(RoundedRectangle(cornerRadius: 4).fill(BUColor.danger.opacity(0.07)))
+                                .frame(width: max(2, w * CGFloat(g.endMin - g.startMin) / CGFloat(total)),
+                                       height: CGFloat(entries.count) * 22)
+                                .offset(x: w * CGFloat(g.startMin - minStart) / CGFloat(total))
+                        }
+                    }
+                }
+                .frame(height: CGFloat(entries.count) * 22)
+
+                if !gaps.isEmpty {
+                    Text("교대 사이 빈 시간 " + gaps.map {
+                        "\(BUWorkSchedule.formatSpanTime($0.startMin))–\(BUWorkSchedule.formatSpanTime($0.endMin))"
+                    }.joined(separator: ", "))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(BUColor.danger)
+                }
+            }
+            .padding(.bottom, 2)
+        }
     }
 
     private var legendRow: some View {

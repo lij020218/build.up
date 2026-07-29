@@ -20,7 +20,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
-import { resolveShiftForDate, expandLeaveDatesWithStatus, shortTime } from "@foundone/shared";
+import {
+  resolveShiftForDate, expandLeaveDatesWithStatus, shortTime,
+  toShiftSpan, findCoverageGaps, formatSpanTime, type ShiftSpan,
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -41,7 +44,7 @@ type LeaveRow = { member_user_id: string; start_date: string; end_date: string; 
 type AttRow = { member_user_id: string; work_date: string; clock_in_at: string | null };
 
 /** 하루치 출근 명단 */
-type DayEntry = { memberId: string; name: string; time: string; worked: boolean; leavePending: boolean };
+type DayEntry = { memberId: string; name: string; time: string; worked: boolean; leavePending: boolean; span: ShiftSpan | null };
 
 export function OwnerScheduleCalendar({
   ko, ownerId, members, rules, previewLeaves,
@@ -133,6 +136,7 @@ export function OwnerScheduleCalendar({
               time: `${shortTime(shift.start_time)}–${shortTime(shift.end_time)}`,
               worked: workedSet.has(`${m.member_user_id}|${key}`),
               leavePending: leaveState === "pending",
+              span: toShiftSpan(shift.start_time, shift.end_time),
             });
           } else if (leaveState === "pending") {
             // 근무일이 아닌데 연차 신청 — 명단에만 대기로 표기
@@ -244,8 +248,11 @@ export function OwnerScheduleCalendar({
             <div style={{ fontSize: 12.5, color: MUTED }}>{ko ? "이날은 근무가 없어요." : "No one scheduled."}</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {/* 교대 타임라인 — 누가 언제 겹치고 언제 비는지 (텍스트 나열로는 안 보임) */}
+              <ShiftTimeline ko={ko} entries={selectedSlot.work} />
               {selectedSlot.work.map((e) => (
                 <div key={e.memberId} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: shiftColor(selectedSlot.work.findIndex((w) => w.memberId === e.memberId)), flexShrink: 0 }} />
                   <span style={{ fontSize: 13, fontWeight: 650, color: INK }}>{e.name}</span>
                   <span style={{ fontSize: 12, color: MUTED, fontVariantNumeric: "tabular-nums" }}>{e.time}</span>
                   {e.worked && (
@@ -285,6 +292,82 @@ export function OwnerScheduleCalendar({
         <Legend dot={LEAVE} label={ko ? "연차(승인)" : "Leave"} />
         <Legend ring={LEAVE} label={ko ? "승인 대기" : "Pending"} />
       </div>
+    </div>
+  );
+}
+
+/** 교대 구분색 — 미드나잇 계열 명도 단계 (신호등 컬러 금지 원칙) */
+const SHIFT_COLORS = ["#1d3557", "#3b5c8c", "#6b83b5", "#9aabd0"];
+function shiftColor(i: number): string {
+  return SHIFT_COLORS[i % SHIFT_COLORS.length];
+}
+
+/**
+ * ShiftTimeline — 하루 교대를 가로 막대로. 12–3시 A / 3–8시 B 가 이어지는지 한눈에.
+ *   축 = 그날 최소 시작 ~ 최대 종료. 공백(아무도 없는 구간)은 빗금으로 표시하고
+ *   "영업 중인데 비었다"고 단정하지 않는다 (영업시간을 모르므로).
+ */
+function ShiftTimeline({ ko, entries }: { ko: boolean; entries: DayEntry[] }) {
+  const spans = entries.map((e) => e.span).filter((s): s is ShiftSpan => s !== null);
+  if (spans.length === 0) return null;
+
+  const min = Math.min(...spans.map((s) => s.startMin));
+  const max = Math.max(...spans.map((s) => s.endMin));
+  const total = Math.max(1, max - min);
+  const gaps = findCoverageGaps(spans);
+  const pct = (v: number) => `${((v - min) / total) * 100}%`;
+
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10.5, color: MUTED, fontVariantNumeric: "tabular-nums", marginBottom: 4 }}>
+        <span>{formatSpanTime(min, ko)}</span>
+        <span>{formatSpanTime(max, ko)}</span>
+      </div>
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 4 }}>
+        {entries.map((e, i) => (
+          e.span && (
+            <div key={e.memberId} style={{ position: "relative", height: 18, background: "rgba(25,25,112,0.05)", borderRadius: 5 }}>
+              <div
+                title={`${e.name} ${e.time}`}
+                style={{
+                  position: "absolute",
+                  left: pct(e.span.startMin),
+                  width: `${((e.span.endMin - e.span.startMin) / total) * 100}%`,
+                  top: 0, bottom: 0,
+                  background: shiftColor(i),
+                  borderRadius: 5,
+                  display: "flex", alignItems: "center", paddingLeft: 6,
+                  overflow: "hidden",
+                }}
+              >
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>{e.name}</span>
+              </div>
+            </div>
+          )
+        ))}
+        {/* 공백 구간 — 근무 사이가 비어 있음 */}
+        {gaps.map((g, i) => (
+          <div
+            key={`gap-${i}`}
+            style={{
+              position: "absolute", top: 0, bottom: 0,
+              left: pct(g.startMin),
+              width: `${((g.endMin - g.startMin) / total) * 100}%`,
+              background: "repeating-linear-gradient(45deg, rgba(182,76,76,0.10) 0 5px, transparent 5px 10px)",
+              border: "1px dashed rgba(182,76,76,0.45)",
+              borderRadius: 4,
+              pointerEvents: "none",
+            }}
+          />
+        ))}
+      </div>
+      {gaps.length > 0 && (
+        <div style={{ fontSize: 11, color: "#b64c4c", marginTop: 6, lineHeight: 1.5 }}>
+          {ko
+            ? `교대 사이 빈 시간 ${gaps.map((g) => `${formatSpanTime(g.startMin, ko)}–${formatSpanTime(g.endMin, ko)}`).join(", ")}`
+            : `Gap between shifts: ${gaps.map((g) => `${formatSpanTime(g.startMin, ko)}–${formatSpanTime(g.endMin, ko)}`).join(", ")}`}
+        </div>
+      )}
     </div>
   );
 }

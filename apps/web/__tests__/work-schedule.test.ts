@@ -4,6 +4,9 @@ import {
   resolveMonthShifts,
   expandLeaveDates,
   expandLeaveDatesWithStatus,
+  toShiftSpan,
+  findCoverageGaps,
+  formatSpanTime,
 } from "../../../packages/shared/src/team/work-schedule";
 
 /**
@@ -106,5 +109,46 @@ describe("expandLeaveDatesWithStatus (2026-07-28 냉정 리뷰 — 승인 대기
   it("status 미지정은 보수적으로 pending 취급 (확정으로 단정 금지)", () => {
     const map = expandLeaveDatesWithStatus([{ start_date: "2026-07-22", end_date: "2026-07-22" }]);
     expect(map.get("2026-07-22")).toBe("pending");
+  });
+});
+
+describe("교대 타임라인 (2026-07-28 — A 12-3시 / B 3-8시 구분)", () => {
+  it("자정 넘는 야간 근무를 +24h 로 편다 (음수 방지)", () => {
+    expect(toShiftSpan("22:00", "02:00")).toEqual({ startMin: 1320, endMin: 1560 });
+    expect(toShiftSpan("12:00", "15:00")).toEqual({ startMin: 720, endMin: 900 });
+  });
+
+  it("이어지는 교대(12–3, 3–8)는 공백이 없다", () => {
+    const gaps = findCoverageGaps([
+      toShiftSpan("12:00", "15:00")!,
+      toShiftSpan("15:00", "20:00")!,
+    ]);
+    expect(gaps).toEqual([]);
+  });
+
+  it("떨어진 교대(12–3, 5–8)는 3–5시 공백을 잡는다", () => {
+    const gaps = findCoverageGaps([
+      toShiftSpan("12:00", "15:00")!,
+      toShiftSpan("17:00", "20:00")!,
+    ]);
+    expect(gaps).toEqual([{ startMin: 900, endMin: 1020 }]);
+  });
+
+  it("겹치는 교대는 공백이 아니다", () => {
+    const gaps = findCoverageGaps([
+      toShiftSpan("12:00", "18:00")!,
+      toShiftSpan("15:00", "20:00")!,
+    ]);
+    expect(gaps).toEqual([]);
+  });
+
+  it("근무 1개 이하면 공백 개념 없음 (영업시간 모르는데 단정 금지)", () => {
+    expect(findCoverageGaps([toShiftSpan("12:00", "15:00")!])).toEqual([]);
+    expect(findCoverageGaps([])).toEqual([]);
+  });
+
+  it("익일 표기 — 24시 넘는 종료", () => {
+    expect(formatSpanTime(1560)).toBe("익일 02:00");
+    expect(formatSpanTime(900)).toBe("15:00");
   });
 });
