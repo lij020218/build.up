@@ -53,6 +53,10 @@ export function middleware(request: NextRequest) {
       //   경유. 나머지는 SDK: Supabase(REST+realtime wss)·Sentry(telemetry)·PortOne(결제)·Kakao(지도).
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.portone.io https://dapi.kakao.com https://*.daumcdn.net https://t1.daumcdn.net",
       "media-src 'self'",
+      // 다음(카카오) 우편번호 위젯 iframe (온보딩 주소 검색, 2026-07-28).
+      //   실측: 위젯이 postcode.map.kakao.com 을 로드 (구 daum.net 도 병행 허용).
+      //   http 항목은 로컬 dev(http 페이지) 전용 — https 페이지에선 브라우저가 어차피 http 프레임 차단.
+      "frame-src 'self' https://postcode.map.kakao.com http://postcode.map.kakao.com https://postcode.map.daum.net https://t1.daumcdn.net",
       "object-src 'none'",
       "worker-src 'self' blob:",
       "frame-ancestors 'none'",

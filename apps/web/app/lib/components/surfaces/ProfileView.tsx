@@ -222,7 +222,10 @@ export function ProfileView() {
 
       {/* ── 카드 1.5: 가게 연결 (직원용) — 받은 초대·초대 코드 입력 (2026-07-12) ── */}
       <div style={{ marginTop: "12px" }}>
-        <StoreConnectCard ko={ko} />
+        {/* id — 온보딩 진단 "지금 연동하러 가기" 스크롤 타깃 (bup:navigate-feature) */}
+        <div id="store-connect-card">
+          <StoreConnectCard ko={ko} />
+        </div>
       </div>
 
       {/* ── 카드 2: 내 여정 진행 상황 ── */}

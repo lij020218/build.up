@@ -55,6 +55,8 @@ public struct TodayView: View {
     let saas: SaasMetricsStore?
     /// 구독 운영 store (웹과 동일 Supabase). nil = 데모/프리뷰.
     let subscription: SubscriptionStore?
+    /// 탭 전환 (세팅 미션 딥링크 — 비용=내 가게, 오퍼링) — MainTabs 가 주입
+    let onSwitchTab: ((AppRoot.Tab) -> Void)?
     @State private var showInputSheet = false
     @State private var showInventorySheet = false
     @State private var showTeamSheet = false
@@ -84,7 +86,8 @@ public struct TodayView: View {
         cashflowStore: CashflowStore? = nil,
         coaching: CoachingHistoryStore? = nil,
         saas: SaasMetricsStore? = nil,
-        subscription: SubscriptionStore? = nil
+        subscription: SubscriptionStore? = nil,
+        onSwitchTab: ((AppRoot.Tab) -> Void)? = nil
     ) {
         self.mock = mock
         self.healthResult = HealthScore.calculate(
@@ -101,6 +104,7 @@ public struct TodayView: View {
         self.coaching = coaching
         self.saas = saas
         self.subscription = subscription
+        self.onSwitchTab = onSwitchTab
     }
 
     /// hero → 코칭 신호 종류 (웹 CEOMorningHero 매핑: crisis→critical, warning→important, 그 외 drucker=good/나머지 notable).
@@ -127,7 +131,10 @@ public struct TodayView: View {
                         entriesCount: mock.entries.count,
                         costsTotal: dashboardStore?.costs.total ?? 0,
                         categoryId: Self.starterCategoryId(for: mock.category),
-                        subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId")
+                        subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"),
+                        onRevenue: { showInputSheet = true },
+                        onCosts: { onSwitchTab?(.analytics) },
+                        onOfferings: { onSwitchTab?(.offerings) }
                     )
                 }
 

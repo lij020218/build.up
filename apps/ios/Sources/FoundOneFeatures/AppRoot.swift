@@ -818,7 +818,13 @@ private struct OnboardingFlow: View {
                         // StoreInfo / 비용 — loadDashboardIfNeeded 이후에 적용
                         pendingRegistration = reg
 
-                        selectedTab = .home  // 운영 대시보드로
+                        if reg.wantsDataConnect {
+                            // 진단 "지금 연동하러 가기" — 내 정보 탭 + 데이터 연결 시트 자동 오픈 (ProfileView 가 소비)
+                            ud.set(true, forKey: "bu.openDataConnect")
+                            selectedTab = .profile
+                        } else {
+                            selectedTab = .home  // 운영 대시보드로
+                        }
                     },
                     onBack: { path = nil }
                 )
@@ -1076,7 +1082,7 @@ private struct MainTabs: View {
             switch selectedTab {
             case .home:
                 if store.businessLaunched {
-                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow, coaching: coaching, saas: saas, subscription: subscription)
+                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow, coaching: coaching, saas: saas, subscription: subscription, onSwitchTab: { selectedTab = $0 })
                 } else {
                     PreLaunchHomeView(
                         store: store,

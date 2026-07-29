@@ -41,6 +41,7 @@ import {
 } from "@foundone/shared";
 import { supabase } from "../../../lib/supabase";
 import { styles } from "../styles";
+import { DaumPostcodeModal } from "./onboarding/DaumPostcodeModal";
 
 export type OnboardingResult = {
   industryId: string;
@@ -142,6 +143,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   const [launchYear, setLaunchYear] = useState<number | null>(null);
   const [launchMonth, setLaunchMonth] = useState<number | null>(null);
   const [addressRoad, setAddressRoad] = useState("");
+  const [showPostcode, setShowPostcode] = useState(false);
   const [businessOpenTime, setBusinessOpenTime] = useState("09:00");
   const [businessCloseTime, setBusinessCloseTime] = useState("21:00");
   const [weeklyHolidays, setWeeklyHolidays] = useState<string[]>([]);
@@ -386,6 +388,11 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   // === RENDER ===
   return (
     <div style={pageStyle}>
+      <DaumPostcodeModal
+        open={showPostcode}
+        onClose={() => setShowPostcode(false)}
+        onSelect={(addr) => setAddressRoad(addr)}
+      />
       <div style={containerStyle}>
         {/* 진행 표시 — "N/5 · 약 3분": 점 대신 남은 부담을 알려주는 정보형 (목업 확정안) */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
@@ -640,12 +647,21 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                   {ko ? "주소" : "Address"}
                   {profile.asks.address === "optional" && <span style={{ fontWeight: 500, opacity: 0.7 }}> {ko ? "(선택 — 지역 혜택·지원사업 안내용)" : "(optional)"}</span>}
                 </div>
-                <input
-                  style={{ ...inputStyle, ...(showValidation && profile.asks.address === "required" && !addressRoad.trim() ? { borderColor: "#b64c4c", boxShadow: "0 0 0 3px rgba(182,76,76,0.1)" } : {}) }}
-                  value={addressRoad}
-                  onChange={(e) => setAddressRoad(e.target.value)}
-                  placeholder={ko ? "도로명 주소 (예: 서울 성동구 연무장길 00)" : "Street address"}
-                />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    style={{ ...inputStyle, flex: 1, ...(showValidation && profile.asks.address === "required" && !addressRoad.trim() ? { borderColor: "#b64c4c", boxShadow: "0 0 0 3px rgba(182,76,76,0.1)" } : {}) }}
+                    value={addressRoad}
+                    onChange={(e) => setAddressRoad(e.target.value)}
+                    placeholder={ko ? "도로명 주소 (예: 서울 성동구 연무장길 00)" : "Street address"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPostcode(true)}
+                    style={{ ...styles.primaryButton, padding: "0 16px", fontSize: "13.5px", whiteSpace: "nowrap" }}
+                  >
+                    {ko ? "주소 검색" : "Search"}
+                  </button>
+                </div>
                 {showValidation && profile.asks.address === "required" && !addressRoad.trim() && (
                   <div style={{ fontSize: "12px", color: "#b64c4c", marginTop: "6px" }}>
                     {ko ? "주소를 입력해주세요 — 상권·지역 맞춤에 쓰여요" : "Please enter an address"}
@@ -1013,8 +1029,23 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                       : (ko ? "GA4·웹훅으로 지표를 자동 수집할 수 있어요" : "Auto-collect metrics via GA4 & webhooks")}
                 </div>
                 <div style={{ ...diagFine, color: "rgba(255,255,255,0.6)" }}>
-                  {ko ? "대시보드 → 내 정보 → 데이터 연결에서 1분이면 됩니다. 연동하면 위 진단이 실측으로 바뀝니다." : "Dashboard → Profile → Data connections (1 min)."}
+                  {ko ? "1분이면 됩니다 — 연동하면 위 진단이 실측으로 바뀝니다." : "Takes 1 min — diagnostics switch to real data."}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // 완료 후 홈 마운트 시 내 정보 → 데이터 연결 카드로 자동 이동 (starter-stage-demo 가 소비)
+                    try { window.sessionStorage.setItem("buildup:open-data-connect", "1"); } catch { /* storage 불가 시 안내 문구로 충분 */ }
+                    handleComplete();
+                  }}
+                  style={{
+                    marginTop: "12px", width: "100%", padding: "12px 0", borderRadius: "11px",
+                    border: "none", background: "#fff", color: "var(--primary)",
+                    fontSize: "13.5px", fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  {ko ? "지금 연동하러 가기 →" : "Connect now →"}
+                </button>
               </div>
             </>
           );

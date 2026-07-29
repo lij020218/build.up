@@ -142,6 +142,9 @@ export default function OperationalDashboard({ d }: Props) {
           entriesCount={allEntries.length}
           monthlyCostsTotal={totalCosts}
           inventoryCount={inventory.length}
+          onRevenue={() => setShowCalendar(true)}
+          onCosts={() => d.navigateToSurface("analytics")}
+          onOfferings={() => d.navigateToSurface("offerings")}
         />
       )}
 

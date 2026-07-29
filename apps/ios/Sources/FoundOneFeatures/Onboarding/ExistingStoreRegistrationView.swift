@@ -58,6 +58,8 @@ public struct StoreRegistration: Sendable, Hashable {
     public let businessModelId: String        // 운영 방식 (BUOnboardingRegistry.businessModelOptions)
     public let revenueBandId: String?         // 월매출 구간 — 벤치마크 비교 전용
     public let employeesBand: String?         // solo | family | staff1_2 | staff3plus
+    /// 진단 화면 "지금 연동하러 가기" — 완료 후 내 정보 탭 + 데이터 연결 시트 자동 오픈
+    public let wantsDataConnect: Bool
 
     public init(
         category: IndustryCategory,
@@ -84,7 +86,8 @@ public struct StoreRegistration: Sendable, Hashable {
         obtainedPermits: [ObtainedPermit],
         businessModelId: String = "",
         revenueBandId: String? = nil,
-        employeesBand: String? = nil
+        employeesBand: String? = nil,
+        wantsDataConnect: Bool = false
     ) {
         self.category = category
         self.industryCategoryId = industryCategoryId
@@ -111,6 +114,7 @@ public struct StoreRegistration: Sendable, Hashable {
         self.businessModelId = businessModelId
         self.revenueBandId = revenueBandId
         self.employeesBand = employeesBand
+        self.wantsDataConnect = wantsDataConnect
     }
 }
 
@@ -140,6 +144,7 @@ public struct ExistingStoreRegistrationView: View {
     @State private var launchYear: Int = 0     // 0 = 미선택
     @State private var launchMonth: Int = 0
     @State private var addressRoad: String = ""
+    @State private var showPostcodeSheet: Bool = false
     @State private var businessOpenTime: String = "09:00"
     @State private var businessCloseTime: String = "21:00"
     @State private var weeklyHolidays: [String] = []
@@ -371,7 +376,7 @@ public struct ExistingStoreRegistrationView: View {
         }
     }
 
-    private func complete() {
+    private func complete(wantsDataConnect: Bool = false) {
         let launchD = ISO8601DateFormatter().date(from: launchDateString + "T00:00:00Z")
         let days = launchD.map { max(0, Int(Date().timeIntervalSince($0) / 86400)) } ?? 0
         let hoursShown = profile.asksBusinessHours
@@ -400,7 +405,8 @@ public struct ExistingStoreRegistrationView: View {
             obtainedPermits: [],
             businessModelId: businessModelId,
             revenueBandId: revenueBandId,
-            employeesBand: employeesBand
+            employeesBand: employeesBand,
+            wantsDataConnect: wantsDataConnect
         ))
     }
 
@@ -427,6 +433,13 @@ public struct ExistingStoreRegistrationView: View {
 
                 ctaBar
             }
+        }
+        .sheet(isPresented: $showPostcodeSheet) {
+            PostcodeSearchSheet { addr in
+                addressRoad = addr
+                showPostcodeSheet = false
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
     }
 
@@ -694,7 +707,20 @@ public struct ExistingStoreRegistrationView: View {
             }
 
             fieldGroup(label: profile.addressAsk == "optional" ? "주소 (선택 — 지역 혜택·지원사업 안내용)" : "주소") {
-                BUTextField(text: $addressRoad, placeholder: "도로명 주소 (예: 서울 성동구 연무장길 00)")
+                HStack(spacing: 8) {
+                    BUTextField(text: $addressRoad, placeholder: "도로명 주소 (예: 서울 성동구 연무장길 00)")
+                    Button {
+                        showPostcodeSheet = true
+                    } label: {
+                        Text("주소 검색")
+                            .font(.system(size: 12.5, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 13)
+                            .padding(.vertical, 13)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
                 if showValidation && profile.addressAsk == "required" && addressRoad.trimmingCharacters(in: .whitespaces).isEmpty {
                     validationText("주소를 입력해 주세요 — 상권·지역 맞춤에 쓰여요")
                 }
@@ -1050,11 +1076,22 @@ public struct ExistingStoreRegistrationView: View {
                 .foregroundStyle(.white)
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("대시보드 → 내 정보 → 데이터 연결에서 1분이면 됩니다. 연동하면 위 진단이 실측으로 바뀝니다.")
+            Text("1분이면 됩니다 — 연동하면 위 진단이 실측으로 바뀝니다.")
                 .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(.white.opacity(0.6))
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
+            Button {
+                complete(wantsDataConnect: true)
+            } label: {
+                Text("지금 연동하러 가기 →")
+                    .font(.system(size: 13.5, weight: .heavy))
+                    .foregroundStyle(BUColor.midnight)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 6)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1094,7 +1131,7 @@ public struct ExistingStoreRegistrationView: View {
 
     private var nextBtn: some View {
         let label = step < TOTAL_STEPS ? "다음" : "대시보드로 시작하기 →"
-        let action: () -> Void = step < TOTAL_STEPS ? advance : complete
+        let action: () -> Void = step < TOTAL_STEPS ? advance : { complete() }
         return Button(action: action) {
             Text(label)
                 .font(.system(size: 15, weight: .heavy))

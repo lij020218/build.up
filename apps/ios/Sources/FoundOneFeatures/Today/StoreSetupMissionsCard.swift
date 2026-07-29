@@ -22,6 +22,10 @@ struct BUStoreSetupMissionsCard: View {
     let costsTotal: Double
     let categoryId: String?
     let subIndustryId: String?
+    /// 행선지 — 전부 기존 패턴 재사용 (매출=빠른입력 시트, 고정비=내 가게 탭, 오퍼링=오퍼링 탭)
+    let onRevenue: () -> Void
+    let onCosts: () -> Void
+    let onOfferings: () -> Void
 
     private static let identicalCompletionThreshold = 15 // 웹 IDENTICAL_COMPLETION_THRESHOLD 미러
 
@@ -122,35 +126,53 @@ struct BUStoreSetupMissionsCard: View {
 
                 VStack(spacing: 0) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { i, m in
-                        HStack(spacing: 10) {
-                            ZStack {
-                                Circle()
-                                    .fill(m.done ? BUColor.midnight : Color.clear)
-                                    .frame(width: 18, height: 18)
-                                Circle()
-                                    .strokeBorder(m.done ? Color.clear : BUColor.midnight.opacity(0.35), lineWidth: 1.5)
-                                    .frame(width: 18, height: 18)
-                                if m.done {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 9, weight: .heavy))
-                                        .foregroundStyle(.white)
+                        Button {
+                            guard !m.done else { return }
+                            switch m.id {
+                            case "revenue":   onRevenue()
+                            case "costs":     onCosts()
+                            case "offerings": onOfferings()
+                            default: break
+                            }
+                        } label: {
+                            HStack(spacing: 10) {
+                                ZStack {
+                                    Circle()
+                                        .fill(m.done ? BUColor.midnight : Color.clear)
+                                        .frame(width: 18, height: 18)
+                                    Circle()
+                                        .strokeBorder(m.done ? Color.clear : BUColor.midnight.opacity(0.35), lineWidth: 1.5)
+                                        .frame(width: 18, height: 18)
+                                    if m.done {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 9, weight: .heavy))
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                                Text(m.label)
+                                    .font(.system(size: 13.5, weight: .semibold))
+                                    .foregroundStyle(m.done ? BUColor.inkMuted : BUColor.midnightInk)
+                                    .strikethrough(m.done)
+                                Spacer(minLength: 8)
+                                if !m.done && !m.reward.isEmpty {
+                                    Text(m.reward)
+                                        .font(.system(size: 10.5, weight: .heavy))
+                                        .foregroundStyle(BUColor.midnight)
+                                        .padding(.horizontal, 9)
+                                        .padding(.vertical, 3)
+                                        .background(BUColor.midnight.opacity(0.07), in: Capsule())
+                                }
+                                if !m.done && ["revenue", "costs", "offerings"].contains(m.id) {
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(BUColor.inkSubtle)
                                 }
                             }
-                            Text(m.label)
-                                .font(.system(size: 13.5, weight: .semibold))
-                                .foregroundStyle(m.done ? BUColor.inkMuted : BUColor.midnightInk)
-                                .strikethrough(m.done)
-                            Spacer(minLength: 8)
-                            if !m.done && !m.reward.isEmpty {
-                                Text(m.reward)
-                                    .font(.system(size: 10.5, weight: .heavy))
-                                    .foregroundStyle(BUColor.midnight)
-                                    .padding(.horizontal, 9)
-                                    .padding(.vertical, 3)
-                                    .background(BUColor.midnight.opacity(0.07), in: Capsule())
-                            }
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
                         }
-                        .padding(.vertical, 8)
+                        .buttonStyle(.plain)
+                        .disabled(m.done)
                         if i < items.count - 1 {
                             Divider().opacity(0.35)
                         }

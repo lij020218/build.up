@@ -271,6 +271,21 @@ export default function StarterStageDemo({
     void recordSurfaceVisit(surface);
   }, [surface]);
 
+  // 온보딩 진단의 "지금 연동하러 가기" 소비 — 홈 마운트 후 내 정보 → 데이터 연결 카드로 이동+강조.
+  //   기존 bup:navigate-feature 리스너(아래) 재사용. 1회성 플래그라 즉시 제거.
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem("buildup:open-data-connect") !== "1") return;
+      window.sessionStorage.removeItem("buildup:open-data-connect");
+      window.setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
+          detail: { surface: "profile", scrollTargetId: "store-connect-card" },
+        }));
+      }, 600);
+    } catch { /* storage 접근 불가 무시 */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ─── AI 코치 → 기능 navigate 이벤트 listener ─────────────────────────
   // AiCoachCard 의 feature CTA 클릭 시 dispatch 되는 'bup:navigate-feature' 이벤트를
   // 받아 surface 전환 + (옵션) 카드 ID 로 부드럽게 scroll + 청록 halo 강조.

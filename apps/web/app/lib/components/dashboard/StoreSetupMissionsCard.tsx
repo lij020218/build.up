@@ -27,6 +27,10 @@ type Props = {
   entriesCount: number;
   monthlyCostsTotal: number;
   inventoryCount: number;
+  /** 행선지 — 전부 기존 패턴 재사용 (매출=캘린더 모달, 고정비=내 가게, 오퍼링=/offerings) */
+  onRevenue: () => void;
+  onCosts: () => void;
+  onOfferings: () => void;
 };
 
 const OFFERING_MISSION_LABEL: Record<string, { ko: string; en: string }> = {
@@ -40,6 +44,7 @@ const OFFERING_MISSION_LABEL: Record<string, { ko: string; en: string }> = {
 export function StoreSetupMissionsCard({
   ko, decisions, categoryId, subIndustryId,
   entriesCount, monthlyCostsTotal, inventoryCount,
+  onRevenue, onCosts, onOfferings,
 }: Props) {
   const industrySpecifics = useStoreInfoStore((s) => s.industrySpecifics);
   const setIndustrySpecific = useStoreInfoStore((s) => s.setIndustrySpecific);
@@ -81,6 +86,13 @@ export function StoreSetupMissionsCard({
   const doneCount = missions.filter((m) => m.done).length;
   if (doneCount === missions.length) return null; // 전 항목 완료 → 자동 소멸
 
+  const actionFor = (id: string): (() => void) | null => {
+    if (id === "revenue") return onRevenue;
+    if (id === "costs") return onCosts;
+    if (id === "offerings") return onOfferings;
+    return null;
+  };
+
   return (
     <section
       style={{
@@ -117,12 +129,16 @@ export function StoreSetupMissionsCard({
 
       <div>
         {missions.map((m, i) => (
-          <div
+          <button
             key={m.id}
+            type="button"
+            onClick={() => { if (!m.done) actionFor(m.id)?.(); }}
+            disabled={m.done || !actionFor(m.id)}
             style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 2px",
+              display: "flex", alignItems: "center", gap: 10, width: "100%",
+              padding: "9px 2px", background: "none", border: "none", textAlign: "left",
               borderBottom: i < missions.length - 1 ? "1px solid rgba(17,17,17,0.05)" : "none",
+              cursor: m.done || !actionFor(m.id) ? "default" : "pointer",
             }}
           >
             <span
@@ -147,7 +163,10 @@ export function StoreSetupMissionsCard({
                 {m.reward}
               </span>
             )}
-          </div>
+            {!m.done && actionFor(m.id) && (
+              <span style={{ color: "var(--muted)", fontSize: 13, marginLeft: m.reward ? 4 : "auto" }}>›</span>
+            )}
+          </button>
         ))}
       </div>
     </section>

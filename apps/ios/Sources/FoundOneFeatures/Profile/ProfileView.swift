@@ -109,6 +109,11 @@ public struct ProfileView: View {
             }
         }
         .task {
+            // 온보딩 진단 "지금 연동하러 가기" 소비 — 데이터 연결 시트 자동 오픈 (1회성)
+            if UserDefaults.standard.bool(forKey: "bu.openDataConnect") {
+                UserDefaults.standard.removeObject(forKey: "bu.openDataConnect")
+                showDataConnections = true
+            }
             await refreshConnectionCount()
             await loadStoreHours()
             await probeAdminRole()
