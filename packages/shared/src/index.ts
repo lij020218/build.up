@@ -19,6 +19,7 @@ export * from "./team/job-duties";
 export * from "./team/hiring-channels";
 export * from "./team/work-schedule";
 export * from "./team/annual-leave";
+export * from "./team/shift-availability";
 export * from "./offering-kinds";
 export * from "./onboarding-profile";
 export * from "./industry-revenue-benchmark";

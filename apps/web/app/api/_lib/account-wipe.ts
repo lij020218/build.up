@@ -68,7 +68,12 @@ export const USER_TABLES = [
 //   payroll_settings = 급여일 설정(가게 운영 설정) → 초기화 대상.
 //   ※ payroll_confirmations·payroll_inquiries 는 임금 지급/분쟁 기록이라 보존
 //     (account-wipe-coverage.test.ts 의 INTENTIONALLY_RETAINED 에 사유와 함께 선언).
-export const OWNER_TABLES = ["store_invites", "store_members", "payroll_settings"] as const;
+// shift_availability* = **미래 희망 신청**(확정 근로기록 아님) → 초기화 대상.
+//   근무표(staff_schedules)·근태는 법정 보존이라 남기지만, 아직 확정되지 않은 희망은 남길 이유가 없다.
+export const OWNER_TABLES = [
+  "store_invites", "store_members", "payroll_settings",
+  "shift_availability", "shift_availability_submissions",
+] as const;
 
 // recipient_user_id 컬럼 테이블 — 알림함은 user_id 가 아니라 수신자 기준.
 export const RECIPIENT_TABLES = ["notifications"] as const;

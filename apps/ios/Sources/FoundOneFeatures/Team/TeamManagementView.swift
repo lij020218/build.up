@@ -37,6 +37,8 @@ public struct TeamManagementView: View {
     @State private var leaves: [TeamLeaveRequest] = []
     /// 연차 잔여 계산 전용 — 승인된 연차·반차 원장 (목록과 달리 limit 로 잘리지 않는다)
     @State private var leaveLedger: [TeamLeaveRequest] = []
+    /// 로그인한 사장 자신의 id — 희망 근무 취합이 owner_user_id 로 쓴다
+    @State private var ownerId: UUID? = nil
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var todayAtt: [OwnerTodayAttendance] = []     // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
     @State private var rules: [TeamScheduleRule] = []
@@ -126,6 +128,9 @@ public struct TeamManagementView: View {
                                 // 근무 캘린더 — 어느 날 누가 나오는지 (웹 TeamSurface 미러).
                                 //   배정 편집보다 앞 — 현황 파악이 편집보다 먼저.
                                 OwnerShiftCalendarCard(members: activeMembers, rules: rules, repo: repo)
+
+                                // 희망 근무 취합 — 확정 캘린더 뒤, 배정 편집 앞 (웹 TeamSurface 와 같은 순서)
+                                ShiftAvailabilityCard(mode: .owner, ownerUserId: ownerId, repo: repo)
                                 memberScheduleList(activeMembers)
                             }
                         } else if loadFailed {
@@ -202,6 +207,7 @@ public struct TeamManagementView: View {
             if let raw = (try? await repo.leaveBasis()) ?? nil, let b = BULeaveBasis(rawValue: raw) { leaveBasis = b }
             // 잔여 계산은 잘리지 않은 원장으로 — 목록(leaves, limit 30)으로 세면 잔여가 부풀려진다
             leaveLedger = (try? await repo.leaveLedger()) ?? []
+            ownerId = try? await repo.currentUserId()
             paidThisMonth = (try? await repo.payrollPaid(period: currentPeriod)) ?? nil
             loadFailed = false
             // 직무 목록 업종 분기용 — 사장 본인 category (실패 시 공통 직무만 노출)

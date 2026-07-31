@@ -32,6 +32,7 @@ import { FoundOneLogo } from "../ui/FoundOneLogo";
 import { StaffProfileView } from "./StaffProfileView";
 import { StaffRightsCard } from "./StaffRightsCard";
 import { StaffAllowanceCard, type AllowanceReq, type AllowanceType, type OvertimeCandidate } from "./StaffAllowanceCard";
+import { ShiftAvailabilityCalendar } from "../team/ShiftAvailabilityCalendar";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -446,6 +447,15 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
           onPrev={() => setViewMonth((v) => { const d = new Date(v.y, v.m - 1, 1); return { y: d.getFullYear(), m: d.getMonth() }; })}
           onNext={() => setViewMonth((v) => { const d = new Date(v.y, v.m + 1, 1); return { y: d.getFullYear(), m: d.getMonth() }; })}
         />
+
+        {/* ③-b 다음 달 희망 근무 신청 (2026-07-30 사장님 요청) — 캘린더 바로 뒤.
+            "이미 신청한 동료 시간을 보면서 조정" 이 핵심이라 같은 화면 안에서 붙여 둔다. */}
+        <section style={cardStyle}>
+          <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em", marginBottom: 10 }}>
+            {ko ? "근무 희망 신청" : "Shift requests"}
+          </div>
+          <ShiftAvailabilityCalendar ko={ko} ownerId={ctx.ownerUserId} myUserId={ctx.userId} mode="staff" />
+        </section>
 
         {/* ④ 연차·휴가 — 잔여 요약(근로기준법 제60조) + 신청 목록 */}
         <LeaveCard ko={ko} leaves={leaves} ledger={leaveLedger} onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave}

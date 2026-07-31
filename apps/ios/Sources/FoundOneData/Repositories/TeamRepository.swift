@@ -18,6 +18,7 @@
 
 import Foundation
 import Supabase
+import FoundOneCore   // BUShiftSlot — 근무 시간대 저장 (2026-07-30)
 
 // ─── DTO ─────────────────────────────────────────────────────────────
 
@@ -165,6 +166,11 @@ public actor TeamRepository {
         try await client.auth.session.user.id
     }
 
+    /// 로그인한 사장 자신의 id — 사장 화면이 owner_user_id 로 써야 할 값
+    public func currentUserId() async throws -> UUID {
+        try await uid()
+    }
+
     // ── 직원 목록 (사장) ──
     public func members() async throws -> [TeamMember] {
         try await client.rpc("get_store_members").execute().value
@@ -243,6 +249,165 @@ public actor TeamRepository {
             q = q.eq("member_user_id", value: memberUserId.uuidString)
         }
         return try await q.order("start_date", ascending: false).limit(1000).execute().value
+    }
+
+    // ══ 희망 근무 신청 (2026-07-30) ══════════════════════════════════
+    //   웹 미러: apps/web/app/lib/components/team/ShiftAvailabilityCalendar.tsx
+    //   조회는 RPC 하나로 (동료 이름을 RLS 로 직접 못 읽는다 — RPC 가 근무 필드만 내려준다).
+
+    public struct ShiftAvailabilityPayload: Decodable, Sendable {
+        public let ok: Bool?
+        public let period: String?
+        public let deadlineDay: Int?
+        public let rows: [Row]?
+        public let submissions: [Sub]?
+        /// 사장이 정한 근무 시간대 — 직원 신청 버튼이 이걸로 그려진다
+        public let slots: [Slot]?
+
+        public struct Slot: Decodable, Sendable {
+            public let label: String?
+            public let start: String?
+            public let end: String?
+        }
+
+        public struct Row: Decodable, Sendable {
+            public let memberUserId: String
+            public let name: String
+            public let workDate: String
+            public let startTime: String?
+            public let endTime: String?
+            public let note: String?
+            public let mine: Bool?
+            enum CodingKeys: String, CodingKey {
+                case memberUserId = "member_user_id"
+                case name
+                case workDate = "work_date"
+                case startTime = "start_time"
+                case endTime = "end_time"
+                case note, mine
+            }
+        }
+        public struct Sub: Decodable, Sendable {
+            public let memberUserId: String
+            public let name: String
+            public let submittedAt: String?
+            public let dayCount: Int?
+            public let mine: Bool?
+            enum CodingKeys: String, CodingKey {
+                case memberUserId = "member_user_id"
+                case name
+                case submittedAt = "submitted_at"
+                case dayCount = "day_count"
+                case mine
+            }
+        }
+        enum CodingKeys: String, CodingKey {
+            case ok, period, rows, submissions, slots
+            case deadlineDay = "deadline_day"
+        }
+    }
+
+    /// 희망 근무 취합 — 사장·직원 공용. 권한은 RPC 안에서 검사한다.
+    public func shiftAvailability(ownerUserId: UUID, period: String) async throws -> ShiftAvailabilityPayload {
+        struct Params: Encodable { let p_owner: String; let p_period: String }
+        return try await client
+            .rpc("get_shift_availability", params: Params(p_owner: ownerUserId.uuidString, p_period: period))
+            .execute().value
+    }
+
+    /// 내 희망 저장 (1일 1구간). start/end 가 nil 이면 "시간 무관".
+    public func upsertMyAvailability(
+        ownerUserId: UUID, workDate: String, startTime: String?, endTime: String?
+    ) async throws {
+        let uid = try await client.auth.session.user.id
+        struct Row: Encodable {
+            let owner_user_id: String
+            let member_user_id: String
+            let work_date: String
+            let start_time: String?
+            let end_time: String?
+            let updated_at: String
+        }
+        try await client.from("shift_availability")
+            .upsert(Row(
+                owner_user_id: ownerUserId.uuidString,
+                member_user_id: uid.uuidString,
+                work_date: workDate,
+                start_time: startTime,
+                end_time: endTime,
+                updated_at: ISO8601DateFormatter().string(from: Date())
+            ), onConflict: "member_user_id,work_date")
+            .execute()
+    }
+
+    public func deleteMyAvailability(workDate: String) async throws {
+        let uid = try await client.auth.session.user.id
+        try await client.from("shift_availability")
+            .delete()
+            .eq("member_user_id", value: uid.uuidString)
+            .eq("work_date", value: workDate)
+            .execute()
+    }
+
+    /// 제출 표시 — 희망 0건과 "아직 안 냄"을 구분하기 위한 별도 기록
+    public func submitAvailability(ownerUserId: UUID, period: String) async throws {
+        let uid = try await client.auth.session.user.id
+        struct Row: Encodable {
+            let owner_user_id: String
+            let member_user_id: String
+            let period: String
+            let submitted_at: String
+        }
+        try await client.from("shift_availability_submissions")
+            .upsert(Row(
+                owner_user_id: ownerUserId.uuidString,
+                member_user_id: uid.uuidString,
+                period: period,
+                submitted_at: ISO8601DateFormatter().string(from: Date())
+            ), onConflict: "member_user_id,period")
+            .execute()
+    }
+
+    /// 사장 확정 — 희망을 근무표(staff_schedules)로. 시간이 있는 희망만 넣는다.
+    public func confirmAvailability(
+        ownerUserId: UUID, workDate: String,
+        entries: [(memberUserId: String, startTime: String, endTime: String)]
+    ) async throws {
+        guard !entries.isEmpty else { return }
+        struct Row: Encodable {
+            let owner_user_id: String
+            let member_user_id: String
+            let work_date: String
+            let start_time: String
+            let end_time: String
+            let is_off: Bool
+        }
+        let rows = entries.map {
+            Row(owner_user_id: ownerUserId.uuidString, member_user_id: $0.memberUserId,
+                work_date: workDate, start_time: $0.startTime, end_time: $0.endTime, is_off: false)
+        }
+        try await client.from("staff_schedules")
+            .upsert(rows, onConflict: "owner_user_id,member_user_id,work_date")
+            .execute()
+    }
+
+    /// 근무 시간대 저장 (사장) — 업장마다 운영 시간이 달라 사장이 정한다 (2026-07-30)
+    public func setShiftSlots(_ slots: [BUShiftSlot]) async throws {
+        let uid = try await client.auth.session.user.id
+        struct Row: Encodable { let owner_user_id: String; let shift_slots: [BUShiftSlot] }
+        try await client.from("payroll_settings")
+            .upsert(Row(owner_user_id: uid.uuidString, shift_slots: buNormalizeShiftSlots(slots)),
+                    onConflict: "owner_user_id")
+            .execute()
+    }
+
+    /// 희망 신청 마감일 (사장)
+    public func setShiftDeadline(_ day: Int) async throws {
+        let uid = try await client.auth.session.user.id
+        struct Row: Encodable { let owner_user_id: String; let shift_request_deadline_day: Int }
+        try await client.from("payroll_settings")
+            .upsert(Row(owner_user_id: uid.uuidString, shift_request_deadline_day: day), onConflict: "owner_user_id")
+            .execute()
     }
 
     // ── 연차 승인/반려 (사장) ──

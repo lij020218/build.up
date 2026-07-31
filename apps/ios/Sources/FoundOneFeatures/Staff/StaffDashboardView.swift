@@ -127,6 +127,9 @@ public struct StaffDashboardView: View {
                             onClockOut: { Task { await clockOut() } }
                         )
                         calendarCard
+                        // 다음 달 희망 근무 신청 — 캘린더 바로 뒤 (웹 StaffDashboard 와 같은 순서).
+                        //   "동료가 이미 낸 시간을 보면서 조정" 이 핵심이라 같은 화면에 붙여 둔다.
+                        ShiftAvailabilityCard(mode: .staff, ownerUserId: ctx.ownerUserId, repo: repo)
                         leaveCard
                         // 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장 판정과 동일 SSOT, 2026-07-13)
                         StaffRightsCard(hourlyWage: ctx.hourlyWage, hireDate: ctx.hireDate, joinedAt: ctx.joinedAt, weeklyMinutes: weeklyMinutes)

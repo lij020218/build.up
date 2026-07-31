@@ -14,7 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Users, CalendarClock, Check, X, Clock3, UserPlus, CheckCircle2, Coins, Wallet, UserMinus } from "lucide-react";
+import { Users, CalendarClock, CalendarPlus, Check, X, Clock3, UserPlus, CheckCircle2, Coins, Wallet, UserMinus } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import {
   HIRING_QUICK_CHANNELS,
@@ -26,6 +26,7 @@ import { StaffDetailModal } from "./StaffDetailModal";
 import { DaangnHiringGuideModal } from "../DaangnHiringGuideModal";
 import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
 import { OwnerScheduleCalendar } from "../team/OwnerScheduleCalendar";
+import { ShiftAvailabilityCalendar } from "../team/ShiftAvailabilityCalendar";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -528,6 +529,21 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                 members={activeMembers.map((m) => ({ member_user_id: m.member_user_id, name: m.name }))}
                 rules={rules}
               />
+            </section>
+
+            {/* 희망 근무 취합 — 직원이 낸 다음 달 희망 (2026-07-30 사장님 요청).
+                근무 캘린더(확정) 바로 뒤 — "확정 현황 → 다음 달 희망 → 배정 편집" 순서. */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <CalendarPlus size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "희망 근무 취합" : "Shift requests"}</div>
+              </div>
+              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
+                {ko
+                  ? "직원이 낸 다음 달 희망을 모아서 보여줘요. 마음에 들면 그대로 근무표에 넣을 수 있어요."
+                  : "Next month's requests from your staff — add them straight to the roster."}
+              </p>
+              <ShiftAvailabilityCalendar ko={ko} ownerId={ownerId} myUserId={ownerId} mode="owner" />
             </section>
 
             {/* 직원별 근무표 */}
