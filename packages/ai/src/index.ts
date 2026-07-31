@@ -7,6 +7,7 @@ export * from "./market/interpret";
 export * from "./stage/brief";
 export * from "./dashboard/actions";
 export type { DashboardContext } from "./dashboard/prompt";
+export { INDUSTRY_KPI_GUIDANCE, SPECIALTY_KPI_PROFILE, resolveKpiGuidance } from "./industry-kpi-guide";
 export { enrichDashboardContext, enrichDashboardContextAsync } from "./dashboard/enrich-context";
 export type { ContractClause, ContractAnalysisResult, ContractType } from "./contract/prompt";
 export { getSystemPromptForType } from "./contract/prompt";

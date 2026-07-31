@@ -4,18 +4,56 @@
 // 임계값(프라임코스트 65%, 런웨이 3개월 등) 은 모두 SSOT(`@foundone/shared`/unified-health.ts)
 // 의 COMMON_THRESHOLDS / COST_RATIO_THRESHOLDS 에서 가져와 한 곳에서 관리됩니다.
 
-import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, getFeatureCatalogPromptText, calculateCostRatios } from "@foundone/shared";
+import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, mapIndustryToGroup, getFeatureCatalogPromptText, calculateCostRatios, type IndustryGroup } from "@foundone/shared";
+import { resolveKpiGuidance } from "../industry-kpi-guide";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
-// 위기 자동 감지에 사용하는 컷오프 — 모든 시스템과 동일한 값
-const CRISIS_THR = {
-  // 프라임코스트 — caution 임계값을 위기 진단 컷오프로 사용 (외식 70% / 65% 의 사이)
-  primeCostCritical: COST_RATIO_THRESHOLDS.restaurant.primeCost!.healthy, // 65
-  laborCritical:     COST_RATIO_THRESHOLDS.restaurant.labor!.caution,     // 33
-  rentCritical:      COST_RATIO_THRESHOLDS.restaurant.rent!.caution,      // 12
-  runwayCritical:    COMMON_THRESHOLDS.runwayMonths.warning,              // 6 — "긴급" 진입 컷
-  weeklyDeclineCrit: COMMON_THRESHOLDS.salesGrowthMoM.warning,            // -15
-} as const;
+// 위기 자동 감지 컷오프 — 🔴 업종별로 다르다.
+//  종전엔 restaurant 값을 전 업종에 하드코딩해, SSOT 가 "건강"이라 판정한
+//  인건비 45% 뷰티샵이 브리핑에서 "33% 초과 위기"로 오탐됐다 (2026-07-31 냉정 리뷰).
+//  이제 mapIndustryToGroup(ctx.industryCategoryId) 로 그 업종의 임계값을 조회한다 —
+//  PLHeroCard·CostCompositionDonutCard 와 같은 판정.
+export type CrisisThresholds = {
+  /** 프라임코스트 위험선. undefined = 이 업종엔 프라임코스트 개념 부적합(SaaS 등) → 판정·표시 생략 */
+  primeCostCritical?: number;
+  laborCritical: number;
+  rentCritical: number;
+  runwayCritical: number;
+  weeklyDeclineCrit: number;
+  /** 임계값 출처 업종 그룹 (프롬프트 표기·테스트용) */
+  group: IndustryGroup;
+};
+
+export function crisisThresholdsFor(industryCategoryId?: string): CrisisThresholds {
+  const group = mapIndustryToGroup(industryCategoryId);
+  const t = COST_RATIO_THRESHOLDS[group];
+  const fallback = COST_RATIO_THRESHOLDS.general;
+  return {
+    // 프라임코스트는 폴백 금지 — 업종에 정의된 경우에만 판정 (없는 지표를 지어내지 않는다)
+    primeCostCritical: t.primeCost?.healthy,
+    laborCritical: (t.labor ?? fallback.labor)!.caution,
+    rentCritical: (t.rent ?? fallback.rent)!.caution,
+    runwayCritical: COMMON_THRESHOLDS.runwayMonths.warning,
+    weeklyDeclineCrit: COMMON_THRESHOLDS.salesGrowthMoM.warning,
+    group,
+  };
+}
+
+/** 매출 하락 원인 분해 프레임 — 업종 모델에 맞는 축으로 (객수/객단가는 오프라인 프레임) */
+export function declineDecompositionFrame(group: IndustryGroup): string {
+  switch (group) {
+    case "saas":
+      return "신규 가입 감소인지, 이탈(churn) 증가인지, 활성화 저하인지 분해하세요. 객수·객단가는 이 업종 프레임이 아닙니다.";
+    case "ecommerce":
+      return "트래픽 감소인지, 전환율(CVR) 하락인지, 재구매 감소인지 분해하세요.";
+    case "service":
+      return "신규 등록 감소인지, 갱신(재등록) 이탈인지, 이용 빈도 저하인지 분해하세요.";
+    case "beauty":
+      return "신규 예약 감소인지, 재방문(rebook) 이탈인지, 시술 단가 구성 변화인지 분해하세요.";
+    default:
+      return "객수 감소인지 객단가 감소인지, 특정 요일 집중인지, 배달 vs 매장 어느 쪽인지 분해하세요.";
+  }
+}
 
 export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국 소규모 사업체를 직접 코칭해 흑자 전환시킨 경험이 있는 수석 경영 컨설턴트입니다.
 당신의 이름은 "Found.One AI"이며, 사장님의 오른팔이자 전략 파트너 역할을 합니다.
@@ -201,10 +239,11 @@ confidence 기준:
 
 ## 위기 진단 기준
 - 현금 런웨이 3개월 미만: 즉시 현금 방어 모드
-- 매출 3주 연속 하락: 원인 진단 (객수 vs 객단가 분해)
-- 프라임코스트 65% 초과: 비용 구조 재편 필요
-- 인건비 비율 30% 초과: 스케줄 최적화 + 키오스크 검토
-- 임대료 비율 15% 초과: 임대료 협상 또는 이전 검토
+- 매출 3주 연속 하락: 원인 분해 (분해 축은 컨텍스트의 "하락 분해 프레임"을 따를 것 — 업종마다 다름)
+- 비용 비율 위험선: ⚠️ 업종마다 다르다 — 컨텍스트에 수치로 제공된 "이 업종 위험선"만 사용.
+  (예: 인건비는 외식 33%가 주의선이지만 미용은 커미션 구조라 45~55%가 정상 —
+   컨텍스트에 없는 임계값을 기억으로 지어내 판정하지 마라)
+- 프라임코스트: 컨텍스트에 "부적합한 지표"로 표시된 업종(SaaS·구독 등)에서는 절대 언급 금지
 
 ## 성장 단계별 코칭 포인트
 - 0-90일(생존기): 손익분기 달성이 유일한 목표. 고정비 최소화, 단골 50명 만들기
@@ -349,11 +388,10 @@ ${ANTI_HALLUCINATION_DIRECTIVE}
 
 ─── 이상 감지 규칙 ───
 
-주간 변동(weeklyChange)이 -15% 이하면 반드시 원인 분해를 제시하세요:
-- 객수 감소인지 객단가 감소인지
-- 특정 요일에 집중되었는지
-- 배달 vs 매장 중 어느 쪽인지
-- 계절/날씨 요인인지 구조적 하락인지
+주간 변동(weeklyChange)이 -15% 이하면 반드시 원인 분해를 제시하세요.
+분해 축은 컨텍스트의 "하락 분해 프레임"을 따르세요 — 업종마다 다릅니다
+(오프라인: 객수/객단가/요일/배달·매장, SaaS: 신규/이탈/활성화, 회원제: 신규/갱신/빈도).
+계절·구조적 요인 구분은 전 업종 공통.
 
 ─── 프랜차이즈 코칭 프레임워크 ───
 
@@ -638,18 +676,20 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
 
   // 위기 진단 — SSOT(unified-health) 의 임계값 사용
   // → 같은 65% 가 PLHeroCard / CostCompositionDonutCard / 본 프롬프트 모두에서 동일 판정
+  const thr = crisisThresholdsFor(ctx.industryCategoryId);
   const crisisSignals: string[] = [];
   if (ctx.runway >= 0 && ctx.runway <= 3)
     crisisSignals.push(`현금 런웨이 ${ctx.runway}개월 — 즉시 현금 방어 필요`);
-  if (ctx.weeklyChange < CRISIS_THR.weeklyDeclineCrit)
+  if (ctx.weeklyChange < thr.weeklyDeclineCrit)
     crisisSignals.push(`주간 매출 ${ctx.weeklyChange}% 하락 — 원인 진단 필요`);
   // 비율 기반 위기 진단 — ratiosReady 일 때만. 미준비 시 거짓 폭주 알림 차단.
-  if (ratiosReady && ctx.primeRate > CRISIS_THR.primeCostCritical)
-    crisisSignals.push(`프라임코스트 ${ctx.primeRate}% — ${CRISIS_THR.primeCostCritical}% 위험선 초과`);
-  if (ratiosReady && (ctx.monthlyCosts.labor / ctx.monthlySales * 100) > CRISIS_THR.laborCritical)
-    crisisSignals.push(`인건비 비율 ${labRatio}% — ${CRISIS_THR.laborCritical}% 초과`);
-  if (ratiosReady && (ctx.monthlyCosts.rent / ctx.monthlySales * 100) > CRISIS_THR.rentCritical)
-    crisisSignals.push(`임대료 비율 ${rentRatio}% — ${CRISIS_THR.rentCritical}% 초과`);
+  //  🔴 임계값은 업종별(thr.group) — 뷰티 인건비 45% 는 정상이지 위기가 아니다.
+  if (ratiosReady && thr.primeCostCritical !== undefined && ctx.primeRate > thr.primeCostCritical)
+    crisisSignals.push(`프라임코스트 ${ctx.primeRate}% — ${thr.primeCostCritical}% 위험선 초과 (${thr.group} 기준)`);
+  if (ratiosReady && (ctx.monthlyCosts.labor / ctx.monthlySales * 100) > thr.laborCritical)
+    crisisSignals.push(`인건비 비율 ${labRatio}% — 이 업종(${thr.group}) 주의선 ${thr.laborCritical}% 초과`);
+  if (ratiosReady && (ctx.monthlyCosts.rent / ctx.monthlySales * 100) > thr.rentCritical)
+    crisisSignals.push(`임대료 비율 ${rentRatio}% — 이 업종(${thr.group}) 주의선 ${thr.rentCritical}% 초과`);
 
   // 업종별 필수 운영 갭 감지
   const operationalGaps: string[] = [];
@@ -708,9 +748,14 @@ ${ctx.productCount !== undefined && ctx.productCount === 0 ? "   · 제품·메�
   - 기타: ${fmtW(ctx.monthlyCosts.other)}
 - 매출총이익: ${fmtW(ctx.monthlySales - ctx.monthlyCosts.ingredients)} (매출 - 매출원가)
 - 영업이익: ${fmtW(monthlyNet)} (${monthlyNet >= 0 ? "흑자" : "적자"})
-- 프라임코스트: ${ctx.primeRate.toFixed(1)}% (업계 위험선: ${CRISIS_THR.primeCostCritical}%)
+${thr.primeCostCritical !== undefined ? `- 프라임코스트: ${ctx.primeRate.toFixed(1)}% (이 업종 위험선: ${thr.primeCostCritical}%)` : `- 프라임코스트: 이 업종(${thr.group})에는 부적합한 지표 — 코칭에 사용 금지`}
 - 주간 매출 변화: ${ctx.weeklyChange >= 0 ? "+" : ""}${ctx.weeklyChange}%
 - 현금 런웨이: ${ctx.runway < 0 ? "흑자 (무한)" : `${ctx.runway}개월`}
+
+### 이 업종의 핵심 지표 원칙 (industry-daily 와 동일 SSOT — 반드시 반영)
+${resolveKpiGuidance(ctx.industryCategoryId, ctx.industrySubIndustryId)}
+- 하락 분해 프레임: ${declineDecompositionFrame(thr.group)}
+- ⚠️ 컨텍스트에 수치로 없는 업종 평균(특히 객단가 평균)을 지어내 비교하지 마라.
 
 ### 운영 현황
 - 직원: ${ctx.hasEmployees ? `${ctx.employeeCount}명 (4대보험 사업주 부담 월 약 ${fmtW(ctx.employeeCount * 2156880 * 0.09945)})` : "1인 운영"}
