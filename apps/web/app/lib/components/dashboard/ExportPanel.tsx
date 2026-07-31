@@ -125,9 +125,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
           <div style={eyebrow}>{ko ? "데이터 내보내기" : "Export Data"}</div>
           <div style={title}>{ko ? "세무사·은행·투자자용" : "For CPA, Banks, Investors"}</div>
           <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>
-            {ko
-              ? "버튼 한 번으로 경영 데이터를 내려받으세요. 한글 CSV 호환."
-              : "One-click download. Korean CSV compatible."}
+            {ko ? "한글(엑셀) CSV 호환" : "Korean-Excel CSV compatible"}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

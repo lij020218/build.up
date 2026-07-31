@@ -281,12 +281,7 @@ export default function OperationalDashboard({ d }: Props) {
           }}>
             {ko ? "필요할 때만 여는 입력·편집" : "Detailed controls"}
           </h2>
-          <p style={{
-            margin: "4px 0 0", fontSize: "13px", color: "var(--muted)",
-            lineHeight: 1.5, letterSpacing: "-0.005em",
-          }}>
-            {ko ? "비용 · 재고 · 직원 · 배달 · 메뉴 · 회원 · 세금 — 탭으로 전환" : "Costs · Inventory · Staff · Delivery · Menu · Members · Tax"}
-          </p>
+          {/* 탭 목록 부제 삭제 — 실제 탭이 바로 아래 보여 완전 중복 (2026-07-31) */}
         </div>
         <DetailTabs d={d} fmt={fmt} />
       </section>}

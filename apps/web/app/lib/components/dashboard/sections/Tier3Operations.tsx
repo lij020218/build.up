@@ -588,12 +588,9 @@ function PopularProductsAndActivity({
       <div style={opsCard} className="bento-card">
         <div style={opsHeader}>
           <div>
-            <div style={sectionEyebrow}>{ko ? "최근" : "Recent"}</div>
+            {/* eyebrow "최근"·부제 "대시보드 최근 이벤트"는 제목과 삼중 중복이라 삭제 (2026-07-31 군더더기 정리) */}
             <div style={{ fontSize: "17px", fontWeight: 650, letterSpacing: "-0.02em", color: "#0f172a" }}>
               {ko ? "최근 활동" : "Recent Activity"}
-            </div>
-            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
-              {ko ? "대시보드 최근 이벤트" : "Latest events and updates"}
             </div>
           </div>
         </div>

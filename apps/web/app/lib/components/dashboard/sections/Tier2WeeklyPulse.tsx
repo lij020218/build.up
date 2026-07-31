@@ -39,7 +39,7 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
       title={ko ? "이번 주 점검" : "Weekly Pulse"}
       subtitle={
         ko
-          ? "생존 지표 · 비용 구조 · 매출 분해 · 월간 진행 · 벤치마크 — 주 1회 점검"
+          ? "코칭 일지 · 비용 구조 · 매출 분해 · 벤치마크 — 주 1회 점검"
           : "Survival · Cost · Sales breakdown · Monthly · Benchmark — review weekly"
       }
       defaultOpen={false}

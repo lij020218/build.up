@@ -47,11 +47,12 @@ public struct CoachingHistoryCard: View {
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text("코칭 누적 일지 (14일)").buSectionEyebrowStyle()
-                Text(entries.isEmpty
-                     ? "매일 받는 신호와 대응을 누적합니다"
-                     : "\(stats.totalDays)일 누적 · 액션 \(stats.takenRate)% · critical \(stats.criticalSignals)회")
-                    .font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+                // 빈 상태 부제는 아래 설명 박스와 이중 전달이라 아예 안 그린다 (2026-07-31, 웹 미러)
+                if !entries.isEmpty {
+                    Text("\(stats.totalDays)일 누적 · 액션 \(stats.takenRate)% · critical \(stats.criticalSignals)회")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             Spacer(minLength: 0)
         }

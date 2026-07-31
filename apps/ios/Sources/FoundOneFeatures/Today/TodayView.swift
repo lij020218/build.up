@@ -1223,7 +1223,8 @@ private struct AIActionsSheet: View {
                         }
 
                         // 안내 footer
-                        Text("이 추천은 매일 아침 자동 갱신됩니다. 행동을 완료하시면 매출 입력 후 다음 추천으로 업데이트돼요.")
+                        // "자동 갱신 + 업데이트돼요" 두 문장이 같은 뜻 — 한 문장으로 (2026-07-31)
+                        Text("매일 아침 자동 갱신됩니다.")
                             .font(.system(size: 11))
                             .foregroundStyle(BUColor.inkMuted)
                             .lineSpacing(2)
@@ -1373,7 +1374,7 @@ private struct QuickInputButton: View {
                     Text("매출 기록·수정")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(BUColor.ink)
-                    Text("날짜 선택 · 고객수 · 5초면 됩니다")
+                    Text("지난 날짜 선택 · 고객수 입력")
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(BUColor.inkMuted)
                 }

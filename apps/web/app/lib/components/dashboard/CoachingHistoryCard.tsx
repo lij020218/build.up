@@ -102,9 +102,7 @@ export function CoachingHistoryCard({ ko }: Props) {
               {ko ? "코칭 누적 일지 (14일)" : "Coaching History (14d)"}
             </div>
           </div>
-          <div style={titleStyle}>
-            {ko ? "매일 받는 신호와 사장님 대응을 누적합니다" : "Track daily signals and your responses"}
-          </div>
+          {/* 부제 삭제 — 바로 아래 설명 박스와 이중 전달 (2026-07-31) */}
         </header>
         <div style={{
           padding: "14px 16px", borderRadius: 12,

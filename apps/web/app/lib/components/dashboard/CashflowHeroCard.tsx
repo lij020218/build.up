@@ -118,11 +118,9 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
               <Wallet size={20} color="#191970" strokeWidth={1.8} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ ...eyebrow, color: "#191970", opacity: 0.7 }}>
+              {/* 수사의문 부제 삭제 — 아래 3 bullets·인사이트 줄과 삼중 전달 (2026-07-31) */}
+              <div style={{ ...title, fontSize: "18px", color: "#0f0f4a" }}>
                 {ko ? "현금흐름 레이더" : "Cash-flow Radar"}
-              </div>
-              <div style={{ ...title, fontSize: "18px", color: "#0f0f4a", marginTop: "2px" }}>
-                {ko ? "오늘 통장에 얼마, 내일 얼마?" : "Today's & tomorrow's cash?"}
               </div>
             </div>
           </div>

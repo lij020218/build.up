@@ -163,10 +163,9 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
               {checkedCount} / {total}
             </span>
           </div>
+          {/* 항목 예시 나열(체크리스트가 바로 아래 보임)·완료 치어리딩(배지가 이미 표시) 삭제 (2026-07-31) */}
           <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.5)", marginTop: "2px" }}>
-            {allDone
-              ? (ko ? "✓ 오늘 운영 점검 완료 — 수고하셨어요" : "✓ Today's ops ritual done — well done")
-              : (ko ? "재고·청결·어제 리뷰 등 — 자정에 자동 리셋" : "Inventory · cleanliness · yesterday's reviews — resets at midnight")}
+            {ko ? "자정에 자동 리셋" : "Resets at midnight"}
           </div>
         </div>
         {checkedCount > 0 && (

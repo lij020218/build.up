@@ -269,29 +269,23 @@ export function ProgressMilestonesCard({
         })}
       </div>
 
-      {/* 하단 메시지 */}
-      <div
-        style={{
-          marginTop: "12px",
-          fontSize: "11px",
-          color: "var(--muted)",
-          lineHeight: 1.5,
-          textAlign: "center" as const,
-          fontWeight: 500,
-        }}
-      >
-        {completedCount === 0
-          ? (ko
-              ? "첫 매출을 기록하면 이 지도가 채워집니다."
-              : "Log your first sale to start filling this map.")
-          : completedCount < 3
-            ? (ko
-                ? "한 걸음씩 꾸준히. 다음 목표도 곧 달성하실 거예요."
-                : "Step by step. You'll reach the next one soon.")
-            : (ko
-                ? "정말 잘 가고 있어요. 이 페이스를 유지하세요."
-                : "You're doing great. Keep this pace.")}
-      </div>
+      {/* 하단 메시지 — 진행 중 치어리딩은 정보가 0이라 삭제, 시작 전 안내만 (2026-07-31) */}
+      {completedCount === 0 && (
+        <div
+          style={{
+            marginTop: "12px",
+            fontSize: "11px",
+            color: "var(--muted)",
+            lineHeight: 1.5,
+            textAlign: "center" as const,
+            fontWeight: 500,
+          }}
+        >
+          {ko
+            ? "첫 매출을 기록하면 이 지도가 채워집니다."
+            : "Log your first sale to start filling this map."}
+        </div>
+      )}
 
       {/* 총 기록 일수 */}
       {totalEntries > 0 && (
