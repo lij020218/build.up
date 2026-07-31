@@ -586,9 +586,9 @@ public struct TeamManagementView: View {
                     member: member,
                     attToday: todayAtt.first { $0.memberUserId == member.memberUserId },
                     rules: rules.filter { $0.memberUserId == member.memberUserId },
-                    onSave: { weekdays, start, end in
+                    onSave: { weekdays, start, end, until in
                         do {
-                            try await repo.saveRules(memberId: member.memberUserId, weekdays: weekdays, start: start, end: end)
+                            try await repo.saveRules(memberId: member.memberUserId, weekdays: weekdays, start: start, end: end, effectiveUntil: until)
                             await load()
                             return true
                         } catch {
@@ -806,7 +806,7 @@ private struct MemberScheduleCard: View {
     let attToday: OwnerTodayAttendance?   // 오늘 출퇴근 — nil=미출근 (2026-07-14)
     let rules: [TeamScheduleRule]
     /// 저장 결과를 반환 — saved/error 상태를 실제 결과로 표시 (optimistic 금지)
-    var onSave: (Set<Int>, String, String) async -> Bool
+    var onSave: (Set<Int>, String, String, String?) async -> Bool
     var onSetHireDate: (String) -> Void
     var onOpenDetail: () -> Void
 
@@ -818,6 +818,8 @@ private struct MemberScheduleCard: View {
     @State private var startTime: Date = Self.time(17, 0)
     @State private var endTime: Date = Self.time(23, 0)
     @State private var hireDatePick = Date()
+    /// 적용 종료일 (2026-07-31). nil = 계속
+    @State private var untilDraft: String? = nil
     @State private var saveStatus: SaveStatus = .idle
 
     private enum SaveStatus { case idle, saving, saved, error }
@@ -837,6 +839,39 @@ private struct MemberScheduleCard: View {
 
     /// 웹 WEEK_KO 미러 — index = weekday (0=일)
     private static let weekKo = ["일", "월", "화", "수", "목", "금", "토"]
+
+    // ── 적용 기간 헬퍼 (웹 endOfMonthLocal/plusOneYearLocal 미러) ──
+    private static let ymdFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f
+    }()
+    static func todayYmd() -> String { ymdFmt.string(from: Date()) }
+    static func formatYmd(_ d: Date) -> String { ymdFmt.string(from: d) }
+    static func parseYmd(_ s: String) -> Date? { ymdFmt.date(from: s) }
+    static func endOfMonthYmd() -> String {
+        let cal = Calendar.current
+        let start = cal.date(from: cal.dateComponents([.year, .month], from: Date())) ?? Date()
+        let next = cal.date(byAdding: .month, value: 1, to: start) ?? Date()
+        return formatYmd(cal.date(byAdding: .day, value: -1, to: next) ?? Date())
+    }
+    static func plusOneYearYmd() -> String {
+        formatYmd(Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date())
+    }
+
+    @ViewBuilder
+    private func periodChip(_ label: String, value: String?) -> some View {
+        let on = untilDraft == value
+        Button {
+            untilDraft = value
+        } label: {
+            Text(label)
+                .font(.system(size: 12, weight: .heavy))
+                .foregroundStyle(on ? BUColor.midnight : BUColor.inkSecondary)
+                .padding(.horizontal, 11).padding(.vertical, 7)
+                .background(on ? BUColor.midnight.opacity(0.06) : Color.white, in: RoundedRectangle(cornerRadius: 9))
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(on ? BUColor.midnight : BUColor.midnight.opacity(0.14), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
 
     /// 오늘 출근여부 배지 — 신호등 색 대신 채움 강조: 근무중=채운 네이비 · 완료=소프트 · 미출근=아웃라인 (웹 미러)
     @ViewBuilder private var attendanceBadge: some View {
@@ -944,9 +979,13 @@ private struct MemberScheduleCard: View {
                         }
                     }
                     if let first = rules.first {
-                        Text("\(readTimeLabel(first.startTime)) – \(readTimeLabel(first.endTime))\(member.hireDate.map { " · 입사일 \($0)" } ?? "")")
+                        let untilSuffix: String = {
+                            guard let u = first.effectiveUntil else { return "" }
+                            return u < Self.todayYmd() ? " · 기간 만료 (\(u))" : " · ~\(u)까지"
+                        }()
+                        Text("\(readTimeLabel(first.startTime)) – \(readTimeLabel(first.endTime))\(member.hireDate.map { " · 입사일 \($0)" } ?? "")\(untilSuffix)")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(BUColor.ink)
+                            .foregroundStyle((first.effectiveUntil.map { $0 < Self.todayYmd() } ?? false) ? BUColor.danger : BUColor.ink)
                     } else {
                         Text("근무표 미설정 — 「수정」을 눌러 요일과 시간을 배정하세요.")
                             .font(.system(size: 12.5))
@@ -996,6 +1035,29 @@ private struct MemberScheduleCard: View {
                         Spacer(minLength: 0)
                     }
 
+                    // 적용 기간 (2026-07-31 사장님 요청) — 계속 기본, 단기 알바만 기간 지정 (웹 미러)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("적용 기간").font(.system(size: 11.5, weight: .heavy)).foregroundStyle(BUColor.inkMuted)
+                        HStack(spacing: 6) {
+                            periodChip("계속", value: nil)
+                            periodChip("이번 달까지", value: Self.endOfMonthYmd())
+                            periodChip("1년간", value: Self.plusOneYearYmd())
+                            Spacer(minLength: 0)
+                        }
+                        if untilDraft != nil {
+                            DatePicker("종료일", selection: Binding(
+                                get: { Self.parseYmd(untilDraft ?? "") ?? Date() },
+                                set: { untilDraft = Self.formatYmd($0) }
+                            ), displayedComponents: .date)
+                                .datePickerStyle(.compact)
+                                .environment(\.locale, Locale(identifier: "ko_KR"))
+                                .font(.system(size: 12))
+                        }
+                        Text(untilDraft.map { "\($0)까지 근무표에 표시되고, 그 뒤로는 자동으로 사라져요." } ?? "기간 없이 계속 적용돼요.")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(BUColor.inkSecondary)
+                    }
+
                     if saveStatus == .error {
                         Text("저장에 실패했어요. 네트워크 확인 후 다시 시도해 주세요.")
                             .font(.system(size: 12))
@@ -1035,6 +1097,7 @@ private struct MemberScheduleCard: View {
 
     private func startEdit() {
         days = Set(rules.map(\.weekday))
+        untilDraft = rules.first?.effectiveUntil
         if let first = rules.first {
             if let s = Self.parseTime(first.startTime) { startTime = s }
             if let e = Self.parseTime(first.endTime) { endTime = e }
@@ -1047,7 +1110,7 @@ private struct MemberScheduleCard: View {
 
     private func commit() async {
         saveStatus = .saving
-        let ok = await onSave(days, Self.formatTime(startTime), Self.formatTime(endTime))
+        let ok = await onSave(days, Self.formatTime(startTime), Self.formatTime(endTime), untilDraft)
         if ok {
             let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
             let hire = f.string(from: hireDatePick)

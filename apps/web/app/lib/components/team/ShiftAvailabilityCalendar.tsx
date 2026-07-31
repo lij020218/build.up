@@ -218,7 +218,7 @@ export function ShiftAvailabilityCalendar({
       );
       setConfirmed(error
         ? (ko ? "근무표 저장에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed to save schedule.")
-        : (ko ? `${withTime.length}명을 ${Number(date.slice(8, 10))}일 근무표에 넣었어요.` : `Added ${withTime.length} to the schedule.`));
+        : (ko ? `${withTime.length}명을 ${Number(date.slice(8, 10))}일 근무표에 넣었어요. 위 근무 캘린더에 바로 반영돼요.` : `Added ${withTime.length} to the roster — see the shift calendar above.`));
     } finally { setBusy(false); }
   };
 
@@ -262,6 +262,12 @@ export function ShiftAvailabilityCalendar({
   const selectedDay = selected ? byDate.get(selected) : undefined;
   const mine = selected ? rows.find((r) => r.mine && r.work_date === selected) : undefined;
 
+  // 마감이 임박했을 때만 스스로 펼친다 — 평소엔 접힌 채 자리만 차지하지 않는다
+  useEffect(() => {
+    if (openTouched) return;
+    if (reqWindow.urgent && period === reqWindow.period) setOpen(true);
+  }, [openTouched, reqWindow.urgent, reqWindow.period, period]);
+
   if (failed) {
     return (
       <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.6 }}>
@@ -274,12 +280,6 @@ export function ShiftAvailabilityCalendar({
       </div>
     );
   }
-
-  // 마감이 임박했을 때만 스스로 펼친다 — 평소엔 접힌 채 자리만 차지하지 않는다
-  useEffect(() => {
-    if (openTouched) return;
-    if (reqWindow.urgent && period === reqWindow.period) setOpen(true);
-  }, [openTouched, reqWindow.urgent, reqWindow.period, period]);
 
   const toggle = () => { setOpenTouched(true); setOpen((v) => !v); };
 

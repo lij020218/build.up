@@ -19,7 +19,16 @@ export type WorkRule = {
   start_time: string;       // "HH:MM[:SS]"
   end_time: string;
   active?: boolean;         // 미지정 = 활성 (직원 화면은 쿼리에서 이미 필터)
+  /** 적용 종료일 "YYYY-MM-DD" (포함). null/미지정 = 계속 (2026-07-31 기간 옵션) */
+  effective_until?: string | null;
 };
+
+/** 규칙이 이 날짜에 유효한가 — 기간 밖이면 근무 아님 ("무한 근무표" 방지) */
+export function ruleActiveOn(rule: WorkRule, dateStr: string): boolean {
+  if (rule.active === false) return false;
+  if (rule.effective_until && dateStr > rule.effective_until) return false;
+  return true;
+}
 
 export type WorkException = {
   work_date: string;        // "YYYY-MM-DD"
@@ -49,7 +58,7 @@ export function resolveShiftForDate(
       return { start_time: ex.start_time, end_time: ex.end_time, note: ex.note ?? null };
     }
   }
-  const r = rules.find((rr) => rr.weekday === weekday && rr.active !== false);
+  const r = rules.find((rr) => rr.weekday === weekday && ruleActiveOn(rr, dateStr));
   return r ? { start_time: r.start_time, end_time: r.end_time, note: null } : null;
 }
 

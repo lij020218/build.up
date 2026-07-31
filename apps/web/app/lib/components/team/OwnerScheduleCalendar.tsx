@@ -42,6 +42,7 @@ export type CalRule = { member_user_id: string; weekday: number; start_time: str
 type ExceptionRow = { member_user_id: string; work_date: string; start_time: string | null; end_time: string | null; is_off: boolean };
 type LeaveRow = { member_user_id: string; start_date: string; end_date: string; status: string };
 type AttRow = { member_user_id: string; work_date: string; clock_in_at: string | null };
+type WishRow = { member_user_id: string; work_date: string };
 
 /** 하루치 출근 명단 */
 type DayEntry = { memberId: string; name: string; time: string; worked: boolean; leavePending: boolean; span: ShiftSpan | null };
@@ -63,6 +64,8 @@ export function OwnerScheduleCalendar({
   const [exceptions, setExceptions] = useState<ExceptionRow[]>([]);
   const [leaves, setLeaves] = useState<LeaveRow[]>(previewLeaves ?? []);
   const [atts, setAtts] = useState<AttRow[]>([]);
+  /** 이 달의 희망 신청 (미확정) — 셀에 힌트 점만. 확정과 절대 섞지 않는다 (2026-07-31) */
+  const [wishes, setWishes] = useState<WishRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   const monthStart = `${cursor.y}-${pad(cursor.m + 1)}-01`;
@@ -74,7 +77,7 @@ export function OwnerScheduleCalendar({
     if (!ownerId) return;
     setLoading(true);
     try {
-      const [ex, lv, at] = await Promise.all([
+      const [ex, lv, at, wi] = await Promise.all([
         supabase.from("staff_schedules" as never)
           .select("member_user_id, work_date, start_time, end_time, is_off")
           .eq("owner_user_id", ownerId).gte("work_date", monthStart).lte("work_date", monthEnd),
@@ -84,10 +87,15 @@ export function OwnerScheduleCalendar({
         supabase.from("attendance_records" as never)
           .select("member_user_id, work_date, clock_in_at")
           .eq("owner_user_id", ownerId).gte("work_date", monthStart).lte("work_date", monthEnd),
+        // 희망 신청 — 마이그레이션(20260730_000001) 미적용이면 에러가 나도 힌트만 생략 (아래 ?? [])
+        supabase.from("shift_availability" as never)
+          .select("member_user_id, work_date")
+          .eq("owner_user_id", ownerId).gte("work_date", monthStart).lte("work_date", monthEnd),
       ]);
       setExceptions((ex.data as ExceptionRow[] | null) ?? []);
       setLeaves((lv.data as LeaveRow[] | null) ?? []);
       setAtts((at.data as AttRow[] | null) ?? []);
+      setWishes((wi.data as WishRow[] | null) ?? []);
     } finally {
       setLoading(false);
     }
@@ -148,6 +156,17 @@ export function OwnerScheduleCalendar({
     }
     return map;
   }, [members, rules, exceptions, leaves, atts, cursor, daysInMonth]);
+
+  /** 날짜 → 아직 확정 안 된 희망 수 (그날 이미 확정 근무가 있는 사람의 희망은 제외 — 이중 카운트 방지) */
+  const wishCountByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const w of wishes) {
+      const slot = byDate.get(w.work_date);
+      const alreadyScheduled = slot?.work.some((e) => e.memberId === w.member_user_id) ?? false;
+      if (!alreadyScheduled) map.set(w.work_date, (map.get(w.work_date) ?? 0) + 1);
+    }
+    return map;
+  }, [wishes, byDate]);
 
   const firstDow = new Date(cursor.y, cursor.m, 1).getDay();
   const cells: (number | null)[] = [
@@ -231,6 +250,10 @@ export function OwnerScheduleCalendar({
               {!approvedLeave && pendingLeave && (
                 <span aria-hidden style={{ position: "absolute", top: 4, right: 5, width: 5, height: 5, borderRadius: "50%", border: `1.5px solid ${LEAVE}` }} />
               )}
+              {(wishCountByDate.get(key) ?? 0) > 0 && (
+                <span aria-hidden title={ko ? "희망 근무 신청 있음 (미확정)" : "Shift requests pending"}
+                  style={{ position: "absolute", top: 4, left: 5, width: 5, height: 5, borderRadius: 2, border: `1.5px solid ${LEAVE}`, opacity: 0.9 }} />
+              )}
             </button>
           );
         })}
@@ -244,6 +267,13 @@ export function OwnerScheduleCalendar({
               ? `${Number(selected.slice(5, 7))}월 ${Number(selected.slice(8, 10))}일 (${WEEKDAYS_KO[new Date(selected).getDay()]})`
               : new Date(selected).toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" })}
           </div>
+          {(wishCountByDate.get(selected) ?? 0) > 0 && (
+            <div style={{ fontSize: 11.5, color: LEAVE, fontWeight: 700, marginBottom: 8 }}>
+              {ko
+                ? `희망 근무 신청 ${wishCountByDate.get(selected)}명 — 아직 근무표 아님, 「희망 근무 취합」에서 확정하세요.`
+                : `${wishCountByDate.get(selected)} shift request(s) — confirm in Shift requests.`}
+            </div>
+          )}
           {!selectedSlot || (selectedSlot.work.length === 0 && selectedSlot.leave.length === 0) ? (
             <div style={{ fontSize: 12.5, color: MUTED }}>{ko ? "이날은 근무가 없어요." : "No one scheduled."}</div>
           ) : (
@@ -291,6 +321,7 @@ export function OwnerScheduleCalendar({
         <Legend color={MIDNIGHT_SOFT} border={MIDNIGHT_BORDER} label={ko ? "근무 있는 날" : "Scheduled"} />
         <Legend dot={LEAVE} label={ko ? "연차(승인)" : "Leave"} />
         <Legend ring={LEAVE} label={ko ? "승인 대기" : "Pending"} />
+        <Legend square={LEAVE} label={ko ? "희망 신청 (미확정)" : "Requests"} />
       </div>
     </div>
   );
@@ -372,10 +403,12 @@ function ShiftTimeline({ ko, entries }: { ko: boolean; entries: DayEntry[] }) {
   );
 }
 
-function Legend({ color, border, dot, ring, label }: { color?: string; border?: string; dot?: string; ring?: string; label: string }) {
+function Legend({ color, border, dot, ring, square, label }: { color?: string; border?: string; dot?: string; ring?: string; square?: string; label: string }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: MUTED }}>
-      {ring ? (
+      {square ? (
+        <span style={{ width: 6, height: 6, borderRadius: 2, border: `1.5px solid ${square}` }} />
+      ) : ring ? (
         <span style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${ring}` }} />
       ) : dot ? (
         <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot }} />

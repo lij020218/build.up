@@ -155,7 +155,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
         .select("work_date, start_time, end_time, note, is_off")
         .eq("member_user_id", user.id).gte("work_date", monthStart).lte("work_date", monthEnd),
       supabase.from("staff_schedule_rules" as never)
-        .select("weekday, start_time, end_time")
+        .select("weekday, start_time, end_time, effective_until")
         .eq("member_user_id", user.id).eq("active", true),
       supabase.from("leave_requests" as never)
         .select("id, leave_type, start_date, end_date, reason, status")

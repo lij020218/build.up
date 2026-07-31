@@ -33,6 +33,20 @@ public protocol BUWorkRule {
     var startTime: String { get }
     var endTime: String { get }
     var active: Bool { get }
+    /// 적용 종료일 "YYYY-MM-DD" (포함). nil = 계속 (2026-07-31 기간 옵션, 웹 effective_until 미러)
+    var effectiveUntil: String? { get }
+}
+
+public extension BUWorkRule {
+    /// 마이그레이션 전 코드·구형 타입 호환 — 기본은 "계속"
+    var effectiveUntil: String? { nil }
+}
+
+/// 규칙이 이 날짜에 유효한가 — 기간 밖이면 근무 아님 ("무한 근무표" 방지, 웹 ruleActiveOn 미러)
+public func buRuleActiveOn(_ rule: any BUWorkRule, dateStr: String) -> Bool {
+    if !rule.active { return false }
+    if let until = rule.effectiveUntil, dateStr > until { return false }
+    return true
 }
 
 public protocol BUWorkException {
@@ -58,7 +72,7 @@ public enum BUWorkSchedule {
                 return BUResolvedShift(startTime: s, endTime: e, note: ex.note)
             }
         }
-        guard let r = rules.first(where: { $0.weekday == weekday && $0.active }) else { return nil }
+        guard let r = rules.first(where: { $0.weekday == weekday && buRuleActiveOn($0, dateStr: dateStr) }) else { return nil }
         return BUResolvedShift(startTime: r.startTime, endTime: r.endTime, note: nil)
     }
 

@@ -34,6 +34,8 @@ struct OwnerShiftCalendarCard: View {
     }()
     @State private var exceptions: [OwnerScheduleException] = []
     @State private var leaves: [TeamLeaveRequest] = []
+    /// 이 달의 희망 신청 (미확정) — 셀 힌트 점만. 확정과 절대 섞지 않는다 (2026-07-31)
+    @State private var wishes: [TeamRepository.WishHint] = []
     @State private var atts: [OwnerMonthAttendance] = []
     @State private var selected: String?
     @State private var loading = false
@@ -97,13 +99,26 @@ struct OwnerShiftCalendarCard: View {
         return map
     }
 
+    /// 날짜 → 미확정 희망 수 (그날 이미 확정 근무가 있는 사람의 희망은 제외 — 이중 카운트 방지, 웹 미러)
+    private func wishCountByDate(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])]) -> [String: Int] {
+        var map: [String: Int] = [:]
+        let nameById = Dictionary(uniqueKeysWithValues: members.map { ($0.memberUserId, $0.name) })
+        for w in wishes {
+            guard let name = nameById[w.memberUserId] else { continue }
+            let scheduled = data[w.workDate]?.work.contains { $0.name == name } ?? false
+            if !scheduled { map[w.workDate, default: 0] += 1 }
+        }
+        return map
+    }
+
     var body: some View {
         let data = computeByDate()   // 렌더당 1회만 (grid·detail 공용)
+        let wishCounts = wishCountByDate(data)
         return BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
                 header
-                grid(data)
-                if let selected { detail(for: selected, data: data) }
+                grid(data, wishCounts: wishCounts)
+                if let selected { detail(for: selected, data: data, wishCount: wishCounts[selected] ?? 0) }
                 legendRow
             }
         }
@@ -137,7 +152,7 @@ struct OwnerShiftCalendarCard: View {
         }
     }
 
-    private func grid(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])]) -> some View {
+    private func grid(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])], wishCounts: [String: Int]) -> some View {
         let cal = Calendar.current
         let first = DateComponents(calendar: cal, year: viewMonth.y, month: viewMonth.m, day: 1).date ?? Date()
         let firstWeekday = cal.component(.weekday, from: first) - 1
@@ -176,6 +191,13 @@ struct OwnerShiftCalendarCard: View {
                         } else if pendingLeave {
                             Circle().strokeBorder(LEAVE_COLOR, lineWidth: 1.5).frame(width: 5, height: 5).padding(.top, 3).padding(.trailing, 4)
                         }
+                        if (wishCounts[key] ?? 0) > 0 {
+                            RoundedRectangle(cornerRadius: 2)
+                                .strokeBorder(LEAVE_COLOR.opacity(0.9), lineWidth: 1.5)
+                                .frame(width: 5, height: 5)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                .padding(.top, 3).padding(.leading, 4)
+                        }
                     }
                     .frame(height: 42)
                     .background(
@@ -196,7 +218,7 @@ struct OwnerShiftCalendarCard: View {
     }
 
     @ViewBuilder
-    private func detail(for key: String, data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])]) -> some View {
+    private func detail(for key: String, data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])], wishCount: Int) -> some View {
         let slot = data[key]
         let month = Int(key.dropFirst(5).prefix(2)) ?? 0
         let day = Int(key.suffix(2)) ?? 0
@@ -204,6 +226,12 @@ struct OwnerShiftCalendarCard: View {
             Text("\(month)월 \(day)일")
                 .font(.system(size: 12.5, weight: .heavy))
                 .foregroundStyle(BUColor.ink)
+            if wishCount > 0 {
+                Text("희망 근무 신청 \(wishCount)명 — 아직 근무표 아님, 「희망 근무 취합」에서 확정하세요.")
+                    .font(.system(size: 11.5, weight: .heavy))
+                    .foregroundStyle(LEAVE_COLOR)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if slot == nil || ((slot?.work.isEmpty ?? true) && (slot?.leave.isEmpty ?? true)) {
                 Text("이날은 근무가 없어요.")
                     .font(.system(size: 12.5, weight: .medium))
@@ -358,6 +386,10 @@ struct OwnerShiftCalendarCard: View {
                 Circle().strokeBorder(LEAVE_COLOR, lineWidth: 1.5).frame(width: 6, height: 6)
                 Text("승인 대기").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
             }
+            HStack(spacing: 5) {
+                RoundedRectangle(cornerRadius: 2).strokeBorder(LEAVE_COLOR, lineWidth: 1.5).frame(width: 6, height: 6)
+                Text("희망 신청").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+            }
             Spacer(minLength: 0)
         }
     }
@@ -377,8 +409,11 @@ struct OwnerShiftCalendarCard: View {
         async let ex = try? repo.ownerMonthExceptions(monthStart: monthStart, monthEnd: monthEnd)
         async let at = try? repo.ownerMonthAttendance(monthStart: monthStart, monthEnd: monthEnd)
         async let lv = try? repo.ownerMonthLeaves(monthStart: monthStart, monthEnd: monthEnd)
+        // 희망 신청 힌트 — 실패(마이그레이션 미적용)면 힌트만 생략, 캘린더는 정상 (웹 미러)
+        async let wi = try? repo.ownerMonthWishes(monthStart: monthStart, monthEnd: monthEnd)
         exceptions = await ex ?? []
         atts = await at ?? []
         leaves = await lv ?? []
+        wishes = await wi ?? []
     }
 }

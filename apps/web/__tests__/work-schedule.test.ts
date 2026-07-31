@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   resolveShiftForDate,
+  ruleActiveOn,
   resolveMonthShifts,
   expandLeaveDates,
   expandLeaveDatesWithStatus,
@@ -150,5 +151,36 @@ describe("교대 타임라인 (2026-07-28 — A 12-3시 / B 3-8시 구분)", () 
   it("익일 표기 — 24시 넘는 종료", () => {
     expect(formatSpanTime(1560)).toBe("익일 02:00");
     expect(formatSpanTime(900)).toBe("15:00");
+  });
+});
+
+describe("규칙 적용 기간 — effective_until (2026-07-31 사장님 요청)", () => {
+  const rule = { weekday: 1, start_time: "09:00", end_time: "18:00", active: true, effective_until: "2026-08-31" };
+
+  it("기간 안은 근무, 종료일 당일 포함", () => {
+    expect(ruleActiveOn(rule, "2026-08-15")).toBe(true);
+    expect(ruleActiveOn(rule, "2026-08-31")).toBe(true);   // 포함
+  });
+
+  it("🔴 종료일 다음 날부터 근무 아님 — '무한 근무표' 방지가 이 기능의 존재 이유", () => {
+    expect(ruleActiveOn(rule, "2026-09-01")).toBe(false);
+    // resolveShiftForDate 도 같은 판정 (SSOT 한 곳)
+    expect(resolveShiftForDate("2026-09-07", 1, [rule], [])).toBeNull();
+    expect(resolveShiftForDate("2026-08-31", 1, [rule], [])).not.toBeNull();
+  });
+
+  it("미지정(null/undefined) = 계속 — 기존 데이터 동작 불변", () => {
+    expect(ruleActiveOn({ ...rule, effective_until: null }, "2030-01-01")).toBe(true);
+    const legacy = { weekday: 1, start_time: "09:00", end_time: "18:00", active: true };
+    expect(ruleActiveOn(legacy, "2030-01-01")).toBe(true);
+  });
+
+  it("비활성 규칙은 기간과 무관하게 근무 아님 (기존 active 방어 유지)", () => {
+    expect(ruleActiveOn({ ...rule, active: false }, "2026-08-15")).toBe(false);
+  });
+
+  it("기간이 지나도 날짜 예외(대타)는 그대로 — 예외가 규칙보다 우선", () => {
+    const ex = [{ work_date: "2026-09-07", start_time: "10:00", end_time: "14:00", is_off: false }];
+    expect(resolveShiftForDate("2026-09-07", 1, [rule], ex)?.start_time).toBe("10:00");
   });
 });

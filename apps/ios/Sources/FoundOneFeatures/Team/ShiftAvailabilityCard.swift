@@ -868,7 +868,7 @@ struct ShiftAvailabilityCard: View {
         defer { busy = false }
         do {
             try await repo.confirmAvailability(ownerUserId: owner, workDate: date, entries: timed)
-            toast = "\(timed.count)명을 \(Int(date.suffix(2)) ?? 0)일 근무표에 넣었어요."
+            toast = "\(timed.count)명을 \(Int(date.suffix(2)) ?? 0)일 근무표에 넣었어요. 위 근무 캘린더에 바로 반영돼요."
         } catch {
             toast = "근무표 저장에 실패했어요. 잠시 후 다시 시도해 주세요."
         }

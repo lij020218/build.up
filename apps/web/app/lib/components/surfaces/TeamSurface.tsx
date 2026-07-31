@@ -51,7 +51,7 @@ function tenureDays(hireDate: string | null, joinedAt: string | null): number | 
   const now = new Date(); now.setHours(0, 0, 0, 0);
   return Math.floor((now.getTime() - start) / 86400000) + 1; // 입사일 = 1일차
 }
-type Rule = { id?: string; member_user_id: string; weekday: number; start_time: string; end_time: string; active: boolean };
+type Rule = { id?: string; member_user_id: string; weekday: number; start_time: string; end_time: string; active: boolean; effective_until?: string | null };
 type LeaveType = "annual" | "half" | "sick" | "other";
 type LeaveStatus = "pending" | "approved" | "rejected";
 type Leave = { id: string; member_user_id: string; leave_type: LeaveType; start_date: string; end_date: string; reason: string | null; status: LeaveStatus };
@@ -66,6 +66,10 @@ const fmtMinKo = (min: number) => { const h = Math.floor(min / 60), m = min % 60
 const ymdLocal = (base?: Date) => { const d = base ?? new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 // 급여 기간 키 'YYYY-MM' — DB payroll_confirmations.period 와 동일 형식(cron 도 같은 키를 쓴다).
 const ymLocal = () => ymdLocal().slice(0, 7);
+/** 이번 달 말일 (로컬) — 근무 규칙 "이번 달까지" 프리셋 */
+const endOfMonthLocal = () => { const d = new Date(); return ymdLocal(new Date(d.getFullYear(), d.getMonth() + 1, 0)); };
+/** 오늘 + 1년 — "1년간" 프리셋 */
+const plusOneYearLocal = () => { const d = new Date(); return ymdLocal(new Date(d.getFullYear() + 1, d.getMonth(), d.getDate())); };
 /** 이번 달 실제 급여일 — payday_day=31 인데 2월이면 28일로 보정(cron 의 LEAST 와 동일 규칙). */
 function effectivePayday(day: number): number {
   const d = new Date();
@@ -112,7 +116,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     const ledgerCutoff = ymdLocal(new Date(Date.now() - 400 * 86400_000));
     const [mRes, rRes, exRes, lRes, aRes, atRes, psRes, pcRes, ledRes] = await Promise.all([
       supabase.rpc("get_store_members" as never),
-      supabase.from("staff_schedule_rules" as never).select("id, member_user_id, weekday, start_time, end_time, active").eq("owner_user_id", user.id),
+      supabase.from("staff_schedule_rules" as never).select("id, member_user_id, weekday, start_time, end_time, active, effective_until").eq("owner_user_id", user.id),
       supabase.from("staff_schedules" as never).select("id, member_user_id, work_date, start_time, end_time, is_off").eq("owner_user_id", user.id).gte("work_date", ymdLocal()).order("work_date"),
       supabase.from("leave_requests" as never).select("id, member_user_id, leave_type, start_date, end_date, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
       supabase.from("allowance_requests" as never).select("id, member_user_id, work_date, allowance_type, minutes, reason, status").eq("owner_user_id", user.id).order("created_at", { ascending: false }).limit(40),
@@ -177,10 +181,10 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setAllowances((p) => p.map((a) => (a.id === id ? { ...a, status } : a)));
   };
 
-  const saveRules = async (memberId: string, workdays: Set<number>, start: string, end: string): Promise<boolean> => {
+  const saveRules = async (memberId: string, workdays: Set<number>, start: string, end: string, effectiveUntil: string | null): Promise<boolean> => {
     if (!ownerId) return false;
     await supabase.from("staff_schedule_rules" as never).delete().eq("owner_user_id", ownerId).eq("member_user_id", memberId);
-    const rows: Rule[] = [...workdays].sort().map((w) => ({ owner_user_id: ownerId, member_user_id: memberId, weekday: w, start_time: start, end_time: end, active: true } as Rule & { owner_user_id: string }));
+    const rows: Rule[] = [...workdays].sort().map((w) => ({ owner_user_id: ownerId, member_user_id: memberId, weekday: w, start_time: start, end_time: end, active: true, effective_until: effectiveUntil } as Rule & { owner_user_id: string }));
     if (rows.length) {
       const { error } = await supabase.from("staff_schedule_rules" as never).insert(rows as never);
       if (error) { console.error("[team] saveRules failed:", error); return false; }
@@ -563,7 +567,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                     attToday={todayAtt.find((a) => a.member_user_id === m.member_user_id) ?? null}
                     memberRules={rules.filter((r) => r.member_user_id === m.member_user_id && r.active)}
                     memberExceptions={exceptions.filter((e) => e.member_user_id === m.member_user_id)}
-                    onSave={(wd, s, e) => saveRules(m.member_user_id, wd, s, e)}
+                    onSave={(wd, s, e, until) => saveRules(m.member_user_id, wd, s, e, until)}
                     onSaveException={(date, isOff, s, e) => saveException(m.member_user_id, date, isOff, s, e)}
                     onDeleteException={deleteException}
                     onSetHireDate={(date) => setHireDate(m.member_user_id, date)}
@@ -615,7 +619,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
 
 function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExceptions, onSave, onSaveException, onDeleteException, onSetHireDate, onOpenDetail }: {
   ko: boolean; member: Member; attToday: Att | null; memberRules: Rule[]; memberExceptions: Exception[];
-  onSave: (workdays: Set<number>, start: string, end: string) => Promise<boolean>;
+  onSave: (workdays: Set<number>, start: string, end: string, effectiveUntil: string | null) => Promise<boolean>;
   onSaveException: (date: string, isOff: boolean, start: string, end: string) => Promise<boolean>;
   onDeleteException: (id: string) => void;
   onSetHireDate: (date: string) => void;
@@ -627,6 +631,8 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
   const savedDays = new Set(memberRules.map((r) => r.weekday));
   const savedStart = memberRules[0]?.start_time?.slice(0, 5) ?? "17:00";
   const savedEnd = memberRules[0]?.end_time?.slice(0, 5) ?? "23:00";
+  /** 적용 기간 (2026-07-31) — null = 계속. 프리셋은 저장 시 날짜로 변환해 이 값 하나로 수렴 */
+  const savedUntil = memberRules[0]?.effective_until ?? null;
 
   // ── 수정/저장 모드 (사장님 데이터 카드 표준 패턴, 2026-07-13 재작성) ──
   //   기본 = 읽기 전용. 「수정」 클릭 시에만 draft 편집 → 「저장」으로 서버 반영.
@@ -636,6 +642,7 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
   const [start, setStart] = useState(savedStart);
   const [end, setEnd] = useState(savedEnd);
   const [hireDraft, setHireDraft] = useState(hireVal);
+  const [untilDraft, setUntilDraft] = useState<string | null>(savedUntil);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const handleEdit = () => {
@@ -643,13 +650,14 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
     setStart(savedStart);
     setEnd(savedEnd);
     setHireDraft(hireVal);
+    setUntilDraft(savedUntil);
     setSaveStatus("idle");
     setEditing(true);
   };
   const handleCancel = () => { setEditing(false); setSaveStatus("idle"); };
   const handleSave = async () => {
     setSaveStatus("saving");
-    const ok = await onSave(days, start, end);
+    const ok = await onSave(days, start, end, untilDraft);
     if (ok && hireDraft && hireDraft !== hireVal) onSetHireDate(hireDraft);
     if (ok) {
       setSaveStatus("saved");
@@ -761,6 +769,11 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
                 ? `${timeLabel(savedStart, true)} – ${timeLabel(savedEnd, true)} · ${durLabel}`
                 : `${savedStart} – ${savedEnd} · ${durLabel}`}
               {hireVal && <span style={{ color: MUTED, fontWeight: 500 }}> · {ko ? "입사일" : "Hired"} {hireVal}</span>}
+              {savedUntil && (
+                savedUntil < ymdLocal()
+                  ? <span style={{ color: "#b64c4c", fontWeight: 700 }}> · {ko ? `기간 만료 (${savedUntil})` : `Expired ${savedUntil}`}</span>
+                  : <span style={{ color: MUTED, fontWeight: 500 }}> · {ko ? `~${savedUntil}까지` : `until ${savedUntil}`}</span>
+              )}
             </div>
           ) : (
             <div style={{ fontSize: 12.5, color: MUTED }}>
@@ -799,6 +812,39 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
             <div style={{ flex: 1 }}>
               <label style={fieldLabel}>{ko ? "퇴근" : "End"}</label>
               <TimeSelect value={end} onChange={setEnd} ko={ko} ariaLabel={ko ? "퇴근 시간" : "End time"} />
+            </div>
+          </div>
+
+          {/* 적용 기간 (2026-07-31 사장님 요청) — 계속이 기본. 단기 알바만 기간 지정 */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={fieldLabel}>{ko ? "적용 기간" : "Valid until"}</label>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+              {([
+                { key: "forever", label: ko ? "계속" : "Ongoing", value: null },
+                { key: "month", label: ko ? "이번 달까지" : "This month", value: endOfMonthLocal() },
+                { key: "year", label: ko ? "1년간" : "1 year", value: plusOneYearLocal() },
+              ] as const).map((p) => {
+                const on = untilDraft === p.value;
+                return (
+                  <button key={p.key} type="button" onClick={() => setUntilDraft(p.value)} style={{
+                    padding: "8px 12px", borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                    border: `1px solid ${on ? MIDNIGHT : MIDNIGHT_BORDER}`,
+                    background: on ? MIDNIGHT_SOFT : "white", color: on ? MIDNIGHT : MIDNIGHT_MUTED,
+                  }}>{p.label}</button>
+                );
+              })}
+              <input
+                type="date" min={ymdLocal()}
+                value={untilDraft && untilDraft !== endOfMonthLocal() && untilDraft !== plusOneYearLocal() ? untilDraft : (untilDraft ?? "")}
+                onChange={(e) => setUntilDraft(e.target.value || null)}
+                aria-label={ko ? "적용 종료일 직접 지정" : "Custom end date"}
+                style={{ ...timeInput, maxWidth: 158, padding: "8px 10px" }}
+              />
+            </div>
+            <div style={{ fontSize: 11, color: MUTED, marginTop: 5 }}>
+              {untilDraft
+                ? (ko ? `${untilDraft}까지 근무표에 표시되고, 그 뒤로는 자동으로 사라져요.` : `Shown until ${untilDraft}, then removed automatically.`)
+                : (ko ? "기간 없이 계속 적용돼요." : "Applies indefinitely.")}
             </div>
           </div>
 

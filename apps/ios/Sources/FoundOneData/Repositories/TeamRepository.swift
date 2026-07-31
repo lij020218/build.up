@@ -120,6 +120,8 @@ public struct TeamScheduleRule: Decodable, Sendable, Identifiable, Equatable {
     public let startTime: String   // "09:00:00"
     public let endTime: String
     public let active: Bool
+    /// 적용 종료일. nil = 계속 (2026-07-31, 마이그레이션 20260731_000001 미적용 환경에서도 안전)
+    public let effectiveUntil: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -128,6 +130,18 @@ public struct TeamScheduleRule: Decodable, Sendable, Identifiable, Equatable {
         case startTime = "start_time"
         case endTime = "end_time"
         case active
+        case effectiveUntil = "effective_until"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        memberUserId = try c.decode(UUID.self, forKey: .memberUserId)
+        weekday = try c.decode(Int.self, forKey: .weekday)
+        startTime = try c.decode(String.self, forKey: .startTime)
+        endTime = try c.decode(String.self, forKey: .endTime)
+        active = try c.decode(Bool.self, forKey: .active)
+        effectiveUntil = try c.decodeIfPresent(String.self, forKey: .effectiveUntil)
     }
 }
 
@@ -401,6 +415,28 @@ public actor TeamRepository {
             .execute()
     }
 
+    /// 사장 근무 캘린더 힌트용 — 보는 달의 희망 신청 (member, date 만).
+    ///  마이그레이션(20260730_000001) 미적용이면 throw → 호출측이 빈 배열 폴백(힌트만 생략).
+    public struct WishHint: Decodable, Sendable {
+        public let memberUserId: UUID
+        public let workDate: String
+        enum CodingKeys: String, CodingKey {
+            case memberUserId = "member_user_id"
+            case workDate = "work_date"
+        }
+    }
+
+    public func ownerMonthWishes(monthStart: String, monthEnd: String) async throws -> [WishHint] {
+        let owner = try await uid()
+        return try await client
+            .from("shift_availability")
+            .select("member_user_id, work_date")
+            .eq("owner_user_id", value: owner.uuidString)
+            .gte("work_date", value: monthStart)
+            .lte("work_date", value: monthEnd)
+            .execute().value
+    }
+
     /// 희망 신청 마감일 (사장)
     public func setShiftDeadline(_ day: Int) async throws {
         let uid = try await client.auth.session.user.id
@@ -452,14 +488,14 @@ public actor TeamRepository {
     public func scheduleRules() async throws -> [TeamScheduleRule] {
         try await client
             .from("staff_schedule_rules")
-            .select("id, member_user_id, weekday, start_time, end_time, active")
+            .select("id, member_user_id, weekday, start_time, end_time, active, effective_until")
             .eq("active", value: true)
             .execute().value
     }
 
     // 웹 saveRules 미러: 해당 직원의 기존 규칙 전체 삭제 → 새 요일 세트 insert.
     //   (웹 후속과제와 동일하게 비원자적 — RPC 화는 웹과 함께 진행.)
-    public func saveRules(memberId: UUID, weekdays: Set<Int>, start: String, end: String) async throws {
+    public func saveRules(memberId: UUID, weekdays: Set<Int>, start: String, end: String, effectiveUntil: String? = nil) async throws {
         struct RuleInsert: Encodable {
             let owner_user_id: UUID
             let member_user_id: UUID
@@ -467,6 +503,7 @@ public actor TeamRepository {
             let start_time: String
             let end_time: String
             let active: Bool
+            let effective_until: String?
         }
         let owner = try await uid()
         try await client
@@ -477,7 +514,8 @@ public actor TeamRepository {
         guard !weekdays.isEmpty else { return }
         let rows = weekdays.sorted().map {
             RuleInsert(owner_user_id: owner, member_user_id: memberId,
-                       weekday: $0, start_time: start, end_time: end, active: true)
+                       weekday: $0, start_time: start, end_time: end, active: true,
+                       effective_until: effectiveUntil)
         }
         try await client.from("staff_schedule_rules").insert(rows).execute()
     }
@@ -828,7 +866,7 @@ public extension TeamRepository {
         let uid = try await client.auth.session.user.id
         return try await client
             .from("staff_schedule_rules")
-            .select("id, member_user_id, weekday, start_time, end_time, active")
+            .select("id, member_user_id, weekday, start_time, end_time, active, effective_until")
             .eq("member_user_id", value: uid.uuidString)
             .eq("active", value: true)
             .execute().value
