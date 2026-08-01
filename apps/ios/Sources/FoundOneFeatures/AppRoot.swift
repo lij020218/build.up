@@ -65,6 +65,8 @@ public struct AppRoot: View {
     /// 계정 역할 (business_profiles.user_role) — nil=미확정(스켈레톤), "staff"/"manager"=직원 대시보드,
     ///   그 외("owner"·행 없음·조회 실패)=사장 화면. 웹 fast-gate(roleResolved) 미러 (2026-07-12).
     @State private var userRole: String? = nil
+    /// 역할 조회 실패 (재시도 1회 포함) — fail-open 금지: owner 로 가정하지 않고 재시도 화면 (2026-08-01)
+    @State private var roleResolveFailed = false
     /// 받은 채용 초대장 — owner 역할 확정 시 my_pending_invites 체크 → 자동 표시 (웹 InviteOfferModal 미러).
     @State private var offeredInvite: TeamPendingInvite? = nil
     /// 프로필 세부업종(business_profiles.subIndustryId) — 오퍼링 탭 라벨의 세부업종 정밀 해석용
@@ -140,8 +142,17 @@ public struct AppRoot: View {
                     //   business_profiles.user_role 확정 전엔 스켈레톤(사장 화면 flash 방지),
                     //   staff/manager 면 직원 대시보드만 노출 (웹 starter-stage-demo staff routing 미러).
                     if userRole == nil {
-                        AuthenticatedLoadingView()
-                            .task { await resolveUserRole() }
+                        if roleResolveFailed {
+                            // 🔴 fail-open 수정 (2026-08-01): 종전엔 조회 실패 시 "owner" 가정 —
+                            //   직원 계정이 일시 오류로 사장 셸(빈 가게)을 보게 되는 방향성 결함.
+                            //   실패는 실패라고 말하고 재시도한다 (거짓 실패 화면 금지의 역방향 동일 원칙).
+                            RoleResolveRetryView {
+                                roleResolveFailed = false   // nil 게이트로 복귀 → .task 재실행
+                            }
+                        } else {
+                            AuthenticatedLoadingView()
+                                .task { await resolveUserRole() }
+                        }
                     } else if userRole == "staff" || userRole == "manager" {
                         StaffDashboardView(onSignOut: {
                             Task { await coordinator.signOut() }
@@ -317,16 +328,28 @@ public struct AppRoot: View {
     private func resolveUserRole() async {
         guard let uid = BUSupabase.shared.currentUser?.id else { return }
         struct Row: Decodable { let user_role: String? }
-        do {
+        func fetchRole() async throws -> String {
             let rows: [Row] = try await BUSupabase.shared.client
                 .from("business_profiles")
                 .select("user_role")
                 .eq("user_id", value: uid.uuidString)
                 .limit(1)
                 .execute().value
-            userRole = rows.first?.user_role ?? "owner"
+            // 행 없음 = 프로필 미생성 레거시/신규 계정 → owner 가 정상 기본값 (실패가 아님)
+            return rows.first?.user_role ?? "owner"
+        }
+        do {
+            userRole = try await fetchRole()
         } catch {
-            userRole = "owner"
+            // 일시 오류 가능성 → 1회 재시도 후에도 실패면 owner 가정 대신 재시도 화면.
+            //   (2026-07-13 hire_date 사고 교훈: 에러 ≠ 기본값 — 에러는 재시도 상태로)
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            do {
+                userRole = try await fetchRole()
+            } catch {
+                roleResolveFailed = true
+                return   // 초대 확인도 역할 확정 후에만
+            }
         }
         // 지정 초대가 와 있으면 초대장 자동 표시 — 역할 무관.
         //   종전엔 사장(미지정)만 체크해, 이미 staff 인 계정이 (연결이 끊긴 뒤) 새 초대를 받아도
@@ -993,7 +1016,37 @@ private struct OnboardingFlow: View {
 
 }
 
-private struct AuthenticatedLoadingView: View {
+private /// 역할 조회 실패 시 재시도 화면 — owner 로 가정하지 않는다 (fail-open 금지, 2026-08-01)
+struct RoleResolveRetryView: View {
+    let onRetry: () -> Void
+    var body: some View {
+        ZStack {
+            BUBackgroundSurface()
+            VStack(spacing: 14) {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(BUColor.inkSecondary)
+                Text("계정 정보를 불러오지 못했어요")
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(BUColor.ink)
+                Text("네트워크 상태를 확인하고 다시 시도해 주세요.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(BUColor.inkSecondary)
+                Button(action: onRetry) {
+                    Text("다시 시도")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 26).padding(.vertical, 12)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(24)
+        }
+    }
+}
+
+struct AuthenticatedLoadingView: View {
     var body: some View {
         ZStack {
             BUBackgroundSurface()
