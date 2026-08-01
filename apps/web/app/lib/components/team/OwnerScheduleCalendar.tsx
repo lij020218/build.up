@@ -67,6 +67,8 @@ export function OwnerScheduleCalendar({
   /** 이 달의 희망 신청 (미확정) — 셀에 힌트 점만. 확정과 절대 섞지 않는다 (2026-07-31) */
   const [wishes, setWishes] = useState<WishRow[]>([]);
   const [loading, setLoading] = useState(false);
+  /** 🔴 조회 실패 — 빈 배열로 뭉개면 "승인된 연차자가 근무 중"으로 보인다 (2026-08-01 감사) */
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const monthStart = `${cursor.y}-${pad(cursor.m + 1)}-01`;
   const daysInMonth = new Date(cursor.y, cursor.m + 1, 0).getDate();
@@ -92,6 +94,16 @@ export function OwnerScheduleCalendar({
           .select("member_user_id, work_date")
           .eq("owner_user_id", ownerId).gte("work_date", monthStart).lte("work_date", monthEnd),
       ]);
+      // 실패를 빈 배열로 삼키면 확정 사실을 거짓으로 그린다:
+      //   staff_schedules 실패 → 휴무 처리한 날이 근무로 / leave_requests 실패 → 승인 연차자가 근무로.
+      //   희망(wi)만 예외 — 힌트라서 없으면 안 그리면 된다(마이그레이션 미적용 대비).
+      const failed: string[] = [];
+      if ((ex as { error?: unknown }).error) failed.push(ko ? "근무 예외" : "exceptions");
+      if ((lv as { error?: unknown }).error) failed.push(ko ? "연차" : "leave");
+      if ((at as { error?: unknown }).error) failed.push(ko ? "출퇴근" : "attendance");
+      setLoadError(failed.length ? failed.join(" · ") : null);
+      if (failed.length) console.error("[owner-cal] load failed:", { ex, lv, at });
+
       setExceptions((ex.data as ExceptionRow[] | null) ?? []);
       setLeaves((lv.data as LeaveRow[] | null) ?? []);
       setAtts((at.data as AttRow[] | null) ?? []);
@@ -99,7 +111,7 @@ export function OwnerScheduleCalendar({
     } finally {
       setLoading(false);
     }
-  }, [ownerId, monthStart, monthEnd]);
+  }, [ownerId, monthStart, monthEnd, ko]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -203,6 +215,17 @@ export function OwnerScheduleCalendar({
           </button>
         </div>
       </div>
+
+      {loadError && (
+        <div style={{
+          fontSize: 11.5, color: "#7a2e2e", background: "rgba(122,46,46,0.06)",
+          borderRadius: 10, padding: "9px 11px", marginBottom: 10, lineHeight: 1.5,
+        }}>
+          {ko
+            ? `${loadError} 정보를 불러오지 못했어요. 아래 캘린더가 실제와 다를 수 있습니다 — 새로고침 후 확인해 주세요.`
+            : `Failed to load ${loadError}. The calendar below may be incomplete.`}
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
         {(ko ? WEEKDAYS_KO : WEEKDAYS_EN).map((w, i) => (

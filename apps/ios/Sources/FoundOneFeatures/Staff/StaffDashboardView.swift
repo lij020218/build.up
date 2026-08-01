@@ -51,6 +51,8 @@ public struct StaffDashboardView: View {
     @State private var leaves: [TeamLeaveRequest] = []
     /// 잔여 계산 전용 — 승인된 연차·반차 원장 (표시 목록 myLeaves 는 limit 12 라 세면 안 됨)
     @State private var leaveLedger: [TeamLeaveRequest] = []
+    /// 쓰기 실패 안내 (2026-08-01) — 조용한 실패는 결근·중복신청으로 이어진다
+    @State private var actionError: String? = nil
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var showAllowanceSheet = false
     @State private var busy = false
@@ -120,6 +122,14 @@ public struct StaffDashboardView: View {
                     } else if loadFailed {
                         loadFailedCard
                     } else if let ctx, ctx.connected {
+                        if let actionError {
+                            Text(actionError)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(BUColor.danger)
+                                .padding(11)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                        }
                         headerCard(ctx)
                         StaffTodayCard(
                             shift: todayShift, att: todayAtt, busy: busy,
@@ -169,7 +179,12 @@ public struct StaffDashboardView: View {
         .sheet(isPresented: $showLeaveSheet) {
             StaffLeaveSheet { type, start, end, reason in
                 guard let owner = ctx?.ownerUserId else { return }
-                try? await repo.submitLeave(ownerUserId: owner, type: type, startDate: start, endDate: end, reason: reason)
+                do {
+                    try await repo.submitLeave(ownerUserId: owner, type: type, startDate: start, endDate: end, reason: reason)
+                } catch {
+                    // 실패를 삼키면 시트가 닫히고 목록이 비어 "신청됐다"고 믿은 채 결근한다
+                    actionError = "연차 신청에 실패했어요. 잠시 후 다시 시도해 주세요."
+                }
                 await load()
             }
         }
@@ -247,9 +262,14 @@ public struct StaffDashboardView: View {
         guard let owner = ctx?.ownerUserId, !busy else { return }
         busy = true
         defer { busy = false }
-        if let rec = try? await repo.clockIn(ownerUserId: owner, workDate: today) {
+        do {
+            let rec = try await repo.clockIn(ownerUserId: owner, workDate: today)
             monthAtt.removeAll { $0.workDate == today }
             monthAtt.append(rec)
+            actionError = nil
+        } catch {
+            // 출퇴근은 급여·연장수당 산정의 원천 — 실패를 숨기면 사장 화면엔 "미출근"으로 남는다
+            actionError = "출근 기록에 실패했어요. 네트워크 확인 후 다시 눌러주세요."
         }
     }
 
@@ -257,21 +277,34 @@ public struct StaffDashboardView: View {
         guard let att = todayAtt, !busy else { return }
         busy = true
         defer { busy = false }
-        try? await repo.clockOut(attendanceId: att.id)
+        do {
+            try await repo.clockOut(attendanceId: att.id)
+            actionError = nil
+        } catch {
+            actionError = "퇴근 기록에 실패했어요. 네트워크 확인 후 다시 눌러주세요."
+        }
         await load()
     }
 
     // ── 추가 수당 (2026-07-13) ──
     private func submitAllowance(workDate: String, type: String, minutes: Int, reason: String) async {
         guard let owner = ctx?.ownerUserId else { return }
-        if let rec = try? await repo.submitAllowance(ownerUserId: owner, workDate: workDate, type: type, minutes: minutes, reason: reason) {
+        do {
+            let rec = try await repo.submitAllowance(ownerUserId: owner, workDate: workDate, type: type, minutes: minutes, reason: reason)
             allowances.insert(rec, at: 0)
+        } catch {
+            actionError = "수당 신청에 실패했어요. 잠시 후 다시 시도해 주세요."
         }
     }
 
     private func cancelAllowance(id: UUID) async {
-        try? await repo.cancelAllowance(id: id)
-        allowances.removeAll { $0.id == id }
+        // 🔴 실패해도 제거하면 "취소됨"으로 보이지만 서버엔 남아 승인·급여 반영된다 (2026-08-01)
+        do {
+            try await repo.cancelAllowance(id: id)
+            allowances.removeAll { $0.id == id }
+        } catch {
+            actionError = "취소에 실패했어요. 잠시 후 다시 시도해 주세요."
+        }
     }
 
     /// "급여가 안 들어왔어요" — DEFINER RPC 경유(직접 INSERT 정책 없음 = 위조 방지). RPC 가
@@ -515,8 +548,9 @@ public struct StaffDashboardView: View {
     @ViewBuilder
     private var myLeaveSummary: some View {
         let basis = BULeaveBasis(rawValue: ctx?.leaveBasis ?? "") ?? .hireDate
-        let head = ctx?.staffHeadcount ?? 0
-        let calc = BUAnnualLeave.calc(hireDate: ctx?.hireDate, basis: basis, headcount: head)
+        // 🔴 미상을 0 으로 강등하지 않는다 — "5인 미만 = 연차 없음"이라는 법적 단정이 된다 (2026-08-01)
+        let head = ctx?.staffHeadcount
+        let calc = BUAnnualLeave.calc(hireDate: ctx?.hireDate, basis: basis, headcount: head ?? 0)
         let range = BUAnnualLeave.yearRange(basis: basis, hireDate: ctx?.hireDate)
         let used = BUAnnualLeave.usedDays(
             leaveLedger.map { (leaveType: $0.leaveType, startDate: $0.startDate, endDate: $0.endDate, status: $0.status) },
@@ -525,7 +559,13 @@ public struct StaffDashboardView: View {
         let left = BUAnnualLeave.remaining(granted: calc.days, used: used)
 
         VStack(alignment: .leading, spacing: 6) {
-            if calc.statutory && calc.days > 0 {
+            if head == nil {
+                Text("직원 수를 불러오지 못해 연차 일수를 계산할 수 없어요. 잠시 후 다시 열어보시거나 사장님께 문의해 주세요.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if calc.statutory && calc.days > 0 {
                 HStack(alignment: .firstTextBaseline, spacing: 7) {
                     Text(leaveNum(left) + "일")
                         .font(.system(size: 20, weight: .heavy))

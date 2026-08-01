@@ -326,7 +326,26 @@ public struct AppRoot: View {
     /// business_profiles.user_role 1행 조회 — 역할 게이트 해제.
     ///   실패·행 없음은 "owner"(기존 iOS 동작 유지 — 웹은 역할선택 화면이 backstop, iOS 신규가입은 웹에서 처리).
     private func resolveUserRole() async {
-        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        // 진입 시 실패 상태를 리셋 — 안 하면 과거 실패가 남아, 이후 계정 전환으로 게이트가
+        //   열릴 때 조회를 시도조차 않고 "불러오지 못했어요" 화면에 갇힌다 (2026-08-01 감사)
+        roleResolveFailed = false
+        guard let uid = BUSupabase.shared.currentUser?.id else {
+            // 세션 복원 타이밍에 currentUser 가 아직 비어 있을 수 있다. 조용히 빠져나가면
+            //   .task 가 재실행되지 않아 스켈레톤에 영구히 갇힌다(= fail-open 을 fail-hang 으로 바꾼 셈).
+            //   짧게 기다렸다 한 번 더 보고, 그래도 없으면 재시도 화면으로.
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            guard let retryUid = BUSupabase.shared.currentUser?.id else {
+                roleResolveFailed = true
+                return
+            }
+            await resolveRole(for: retryUid)
+            return
+        }
+        await resolveRole(for: uid)
+    }
+
+    @MainActor
+    private func resolveRole(for uid: UUID) async {
         struct Row: Decodable { let user_role: String? }
         func fetchRole() async throws -> String {
             let rows: [Row] = try await BUSupabase.shared.client

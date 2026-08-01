@@ -85,7 +85,10 @@ struct ShiftAvailabilityCard: View {
             }
             }
         }
-        .task(id: period) { await load() }
+        // 🔴 ownerId 도 트리거에 포함 (2026-08-01): 부모가 members 를 먼저 세팅하고 ownerId 를
+        //   나중에 채우는데, period 만 보면 그 사이 렌더의 .task 가 빈손으로 끝나고 재실행되지 않아
+        //   카드가 "등록된 직원이 없어요"로 굳었다.
+        .task(id: "\(ownerUserId?.uuidString ?? "-")|\(period)") { await load() }
         .onChange(of: reqWindow.urgent) { _, urgent in autoOpenIfUrgent(urgent) }
         .onAppear { autoOpenIfUrgent(reqWindow.urgent) }
     }
@@ -112,7 +115,7 @@ struct ShiftAvailabilityCard: View {
     }
 
     private var collapsedBar: some View {
-        Button(action: toggle) {
+        Button(action: { if failed { Task { await load() } } else { toggle() } }) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("\(BUShiftRequest.periodLabel(reqWindow.period)) 희망 근무")
@@ -722,8 +725,10 @@ struct ShiftAvailabilityCard: View {
         busy = true
         defer { busy = false }
         do {
-            try await repo.setShiftSlots(slotDraft)
-            slots = buNormalizeShiftSlots(slotDraft)
+            // 웹과 동일하게 정규화 후 저장 — 빈 행이 payroll_settings 에 쌓이지 않게
+            let clean = buNormalizeShiftSlots(slotDraft)
+            try await repo.setShiftSlots(clean)
+            slots = clean
             editingSlots = false
             toast = "근무 시간대를 저장했어요. 직원 신청 화면에 바로 반영돼요."
         } catch {
@@ -830,11 +835,11 @@ struct ShiftAvailabilityCard: View {
     }
 
     private func clearMyDay(_ date: String) async {
-        guard !busy else { return }
+        guard let owner = ownerUserId, !busy else { return }
         busy = true
         defer { busy = false }
         do {
-            try await repo.deleteMyAvailability(workDate: date)
+            try await repo.deleteMyAvailability(ownerUserId: owner, workDate: date)
             await load()
         } catch {
             toast = "취소에 실패했어요. 잠시 후 다시 시도해 주세요."

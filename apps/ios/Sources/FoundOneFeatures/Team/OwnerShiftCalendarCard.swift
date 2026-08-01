@@ -16,6 +16,23 @@ import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneData
 
+
+/// 하루치 근무·연차 슬롯 — 긴 튜플을 시그니처마다 반복하면 Swift 타입체커가 폭발한다 (2026-08-01)
+private struct DayWorkEntry {
+    let memberId: UUID
+    let name: String
+    let time: String
+    let worked: Bool
+    let leavePending: Bool
+    let span: (startMin: Int, endMin: Int)?
+}
+private struct DayLeaveEntry {
+    let name: String
+    let pending: Bool
+}
+private typealias DaySlot = (work: [DayWorkEntry], leave: [DayLeaveEntry])
+private typealias DayMap = [String: DaySlot]
+
 private let LEAVE_COLOR = Color(red: 139 / 255, green: 127 / 255, blue: 212 / 255) // #8b7fd4
 private let WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
 
@@ -36,6 +53,8 @@ struct OwnerShiftCalendarCard: View {
     @State private var leaves: [TeamLeaveRequest] = []
     /// 이 달의 희망 신청 (미확정) — 셀 힌트 점만. 확정과 절대 섞지 않는다 (2026-07-31)
     @State private var wishes: [TeamRepository.WishHint] = []
+    /// 🔴 조회 실패 — 빈 배열로 뭉개면 "승인된 연차자가 근무 중"으로 보인다 (2026-08-01 감사)
+    @State private var loadError: String? = nil
     @State private var atts: [OwnerMonthAttendance] = []
     @State private var selected: String?
     @State private var loading = false
@@ -59,8 +78,8 @@ struct OwnerShiftCalendarCard: View {
     /// 날짜 → (근무 명단, 연차 명단[승인여부 포함])
     ///  ⚠️ computed 라 매 렌더 재계산된다 — body 에서 1회만 호출해 grid·detail 로 넘긴다
     ///     (종전엔 grid·detail 이 각각 호출해 렌더당 2회 전체 순회. 2026-07-28 냉정 리뷰)
-    private func computeByDate() -> [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])] {
-        var map: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])] = [:]
+    private func computeByDate() -> DayMap {
+        var map: DayMap = [:]
         let workedKeys = Set(atts.compactMap { $0.clockInAt != nil ? "\($0.memberUserId.uuidString)|\($0.workDate)" : nil })
         let cal = Calendar.current
 
@@ -76,14 +95,15 @@ struct OwnerShiftCalendarCard: View {
                 let key = String(format: "%04d-%02d-%02d", viewMonth.y, viewMonth.m, day)
                 guard let date = DateComponents(calendar: cal, year: viewMonth.y, month: viewMonth.m, day: day).date else { continue }
                 let weekday = cal.component(.weekday, from: date) - 1
-                var slot = map[key] ?? (work: [], leave: [])
+                var slot: DaySlot = map[key] ?? (work: [], leave: [])
                 let leaveState = leaveMap[key]   // nil=없음, false=승인, true=대기
                 if leaveState == false {
                     // 승인된 연차만 근무에서 제외 — 확정된 사실
-                    slot.leave.append((name: m.name, pending: false))
+                    slot.leave.append(DayLeaveEntry(name: m.name, pending: false))
                 } else if let shift = BUWorkSchedule.resolve(dateStr: key, weekday: weekday, rules: memberRules, exceptions: memberEx) {
                     // 승인 대기 연차는 근무 유지 — 승인 전까지 출근 예정 (냉정 리뷰 2026-07-28)
-                    slot.work.append((
+                    slot.work.append(DayWorkEntry(
+                        memberId: m.memberUserId,
                         name: m.name,
                         time: "\(BUWorkSchedule.shortTime(shift.startTime))–\(BUWorkSchedule.shortTime(shift.endTime))",
                         worked: workedKeys.contains("\(m.memberUserId.uuidString)|\(key)"),
@@ -91,7 +111,7 @@ struct OwnerShiftCalendarCard: View {
                         span: BUWorkSchedule.shiftSpan(start: shift.startTime, end: shift.endTime)
                     ))
                 } else if leaveState == true {
-                    slot.leave.append((name: m.name, pending: true))
+                    slot.leave.append(DayLeaveEntry(name: m.name, pending: true))
                 }
                 if !slot.work.isEmpty || !slot.leave.isEmpty { map[key] = slot }
             }
@@ -100,12 +120,12 @@ struct OwnerShiftCalendarCard: View {
     }
 
     /// 날짜 → 미확정 희망 수 (그날 이미 확정 근무가 있는 사람의 희망은 제외 — 이중 카운트 방지, 웹 미러)
-    private func wishCountByDate(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])]) -> [String: Int] {
+    private func wishCountByDate(_ data: DayMap) -> [String: Int] {
         var map: [String: Int] = [:]
-        let nameById = Dictionary(uniqueKeysWithValues: members.map { ($0.memberUserId, $0.name) })
+        // 🔴 이름이 아니라 id 로 매칭 (2026-08-01): 동명이인이면 다른 사람의 희망이
+        //   "이미 확정"으로 잘못 제외돼 사장이 미확정 희망을 놓친다. 웹은 처음부터 id 매칭.
         for w in wishes {
-            guard let name = nameById[w.memberUserId] else { continue }
-            let scheduled = data[w.workDate]?.work.contains { $0.name == name } ?? false
+            let scheduled = data[w.workDate]?.work.contains { $0.memberId == w.memberUserId } ?? false
             if !scheduled { map[w.workDate, default: 0] += 1 }
         }
         return map
@@ -117,6 +137,16 @@ struct OwnerShiftCalendarCard: View {
         return BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
                 header
+                if let loadError {
+                    Text("\(loadError) 정보를 불러오지 못했어요. 아래 캘린더가 실제와 다를 수 있습니다 — 새로고침 후 확인해 주세요.")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.danger)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(9)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
                 grid(data, wishCounts: wishCounts)
                 if let selected { detail(for: selected, data: data, wishCount: wishCounts[selected] ?? 0) }
                 legendRow
@@ -152,7 +182,7 @@ struct OwnerShiftCalendarCard: View {
         }
     }
 
-    private func grid(_ data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])], wishCounts: [String: Int]) -> some View {
+    private func grid(_ data: DayMap, wishCounts: [String: Int]) -> some View {
         let cal = Calendar.current
         let first = DateComponents(calendar: cal, year: viewMonth.y, month: viewMonth.m, day: 1).date ?? Date()
         let firstWeekday = cal.component(.weekday, from: first) - 1
@@ -218,7 +248,7 @@ struct OwnerShiftCalendarCard: View {
     }
 
     @ViewBuilder
-    private func detail(for key: String, data: [String: (work: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)], leave: [(name: String, pending: Bool)])], wishCount: Int) -> some View {
+    private func detail(for key: String, data: DayMap, wishCount: Int) -> some View {
         let slot = data[key]
         let month = Int(key.dropFirst(5).prefix(2)) ?? 0
         let day = Int(key.suffix(2)) ?? 0
@@ -302,7 +332,7 @@ struct OwnerShiftCalendarCard: View {
 
     /// 하루 교대를 가로 막대로 — 축 = 최소 시작 ~ 최대 종료. 공백은 빗금 + 문구.
     @ViewBuilder
-    private func shiftTimeline(_ entries: [(name: String, time: String, worked: Bool, leavePending: Bool, span: (startMin: Int, endMin: Int)?)]) -> some View {
+    private func shiftTimeline(_ entries: [DayWorkEntry]) -> some View {
         let spans = entries.compactMap(\.span)
         if !spans.isEmpty {
             let minStart = spans.map(\.startMin).min() ?? 0
@@ -411,9 +441,19 @@ struct OwnerShiftCalendarCard: View {
         async let lv = try? repo.ownerMonthLeaves(monthStart: monthStart, monthEnd: monthEnd)
         // 희망 신청 힌트 — 실패(마이그레이션 미적용)면 힌트만 생략, 캘린더는 정상 (웹 미러)
         async let wi = try? repo.ownerMonthWishes(monthStart: monthStart, monthEnd: monthEnd)
-        exceptions = await ex ?? []
-        atts = await at ?? []
-        leaves = await lv ?? []
-        wishes = await wi ?? []
+        let exVal = await ex, atVal = await at, lvVal = await lv, wiVal = await wi
+
+        // 실패를 빈 배열로 삼키면 확정 사실을 거짓으로 그린다 (웹 미러):
+        //   근무 예외 실패 → 휴무일이 근무로 / 연차 실패 → 승인 연차자가 근무로.
+        var failed: [String] = []
+        if exVal == nil { failed.append("근무 예외") }
+        if lvVal == nil { failed.append("연차") }
+        if atVal == nil { failed.append("출퇴근") }
+        loadError = failed.isEmpty ? nil : failed.joined(separator: " · ")
+
+        exceptions = exVal ?? []
+        atts = atVal ?? []
+        leaves = lvVal ?? []
+        wishes = wiVal ?? []
     }
 }

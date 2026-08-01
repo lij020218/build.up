@@ -39,6 +39,8 @@ public struct TeamManagementView: View {
     @State private var leaveLedger: [TeamLeaveRequest] = []
     /// 로그인한 사장 자신의 id — 희망 근무 취합이 owner_user_id 로 쓴다
     @State private var ownerId: UUID? = nil
+    /// 승인·설정 실패 안내 (2026-08-01 감사) — try? 로 삼키면 눌러도 그대로라 이유를 알 수 없다
+    @State private var actionError: String? = nil
     @State private var allowances: [TeamAllowanceRequest] = []   // 추가 수당 신청 (2026-07-13)
     @State private var todayAtt: [OwnerTodayAttendance] = []     // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
     @State private var rules: [TeamScheduleRule] = []
@@ -101,6 +103,15 @@ public struct TeamManagementView: View {
                             actionLabel: "당근으로 구하는 법 →",
                             onAction: { showDaangnGuide = true }
                         )
+
+                        if let actionError {
+                            Text(actionError)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(BUColor.danger)
+                                .padding(11)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                        }
 
                         if let members {
                             if members.isEmpty {
@@ -186,6 +197,18 @@ public struct TeamManagementView: View {
                 Task { await load() }
             }
         }
+    }
+
+    /// 사장 액션 공통 실행기 — 실패를 삼키지 않고 이유를 말한다 (2026-08-01 감사)
+    @MainActor
+    private func runOwnerAction(_ label: String, _ body: () async throws -> Void) async {
+        do {
+            try await body()
+            actionError = nil
+        } catch {
+            actionError = "\(label)에 실패했어요. 네트워크 확인 후 다시 시도해 주세요."
+        }
+        await load()
     }
 
     private func load() async {
@@ -412,7 +435,7 @@ public struct TeamManagementView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 ForEach(leavers) { m in
                     LeaverRowView(member: m) { amount in
-                        Task { try? await repo.markSettled(memberId: m.memberUserId, severance: amount); await load() }
+                        Task { await runOwnerAction("정산 처리") { try await repo.markSettled(memberId: m.memberUserId, severance: amount) } }
                     }
                 }
             }
@@ -451,7 +474,7 @@ public struct TeamManagementView: View {
                         }
                         Spacer(minLength: 0)
                         Button {
-                            Task { try? await repo.decideLeave(id: leave.id, approved: true); await load() }
+                            Task { await runOwnerAction("연차 승인") { try await repo.decideLeave(id: leave.id, approved: true) } }
                         } label: {
                             Label("승인", systemImage: "checkmark")
                                 .font(.system(size: 12.5, weight: .heavy))
@@ -460,7 +483,7 @@ public struct TeamManagementView: View {
                                 .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
                         }
                         Button {
-                            Task { try? await repo.decideLeave(id: leave.id, approved: false); await load() }
+                            Task { await runOwnerAction("연차 반려") { try await repo.decideLeave(id: leave.id, approved: false) } }
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 12.5, weight: .heavy))
@@ -543,7 +566,7 @@ public struct TeamManagementView: View {
                         }
                         Spacer(minLength: 0)
                         Button {
-                            Task { try? await repo.decideAllowance(id: a.id, approved: true); await load() }
+                            Task { await runOwnerAction("수당 승인") { try await repo.decideAllowance(id: a.id, approved: true) } }
                         } label: {
                             Label("승인", systemImage: "checkmark")
                                 .font(.system(size: 12.5, weight: .heavy))
@@ -552,7 +575,7 @@ public struct TeamManagementView: View {
                                 .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
                         }
                         Button {
-                            Task { try? await repo.decideAllowance(id: a.id, approved: false); await load() }
+                            Task { await runOwnerAction("수당 반려") { try await repo.decideAllowance(id: a.id, approved: false) } }
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 12.5, weight: .heavy))
@@ -596,7 +619,7 @@ public struct TeamManagementView: View {
                         }
                     },
                     onSetHireDate: { date in
-                        Task { try? await repo.setHireDate(memberId: member.memberUserId, date: date); await load() }
+                        Task { await runOwnerAction("입사일 저장") { try await repo.setHireDate(memberId: member.memberUserId, date: date) } }
                     },
                     onOpenDetail: { detailMember = member }
                 )
@@ -1088,7 +1111,9 @@ private struct MemberScheduleCard: View {
                                 .background(BUColor.midnight.opacity(saveStatus == .saving ? 0.6 : 1), in: RoundedRectangle(cornerRadius: 10))
                         }
                         .buttonStyle(.plain)
-                        .disabled(saveStatus == .saving || days.isEmpty)
+                        // days.isEmpty 도 허용 — 휴직·퇴사 예정 직원의 반복 근무를 해제하는 정상 경로
+                        //   (웹은 처음부터 가능했다. Repository 도 빈 세트를 정상 처리)
+                        .disabled(saveStatus == .saving)
                     }
                 }
             }

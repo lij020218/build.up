@@ -94,6 +94,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   const [leaves, setLeaves] = useState<Leave[]>([]);
   /** 연차 잔여 계산 전용 원장 — 승인된 연차·반차 전부 (표시 목록과 달리 잘리지 않는다) */
   const [leaveLedger, setLeaveLedger] = useState<Leave[]>([]);
+  /** 원장 조회 실패 — 잔여를 계산하면 "사용 0일 → 잔여 전량"이라는 가짜 숫자가 된다 (2026-08-01) */
+  const [ledgerFailed, setLedgerFailed] = useState(false);
   const [allowances, setAllowances] = useState<Allowance[]>([]); // 추가 수당 신청 (2026-07-13)
   const [todayAtt, setTodayAtt] = useState<Att[]>([]); // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
   const [loading, setLoading] = useState(true);
@@ -140,6 +142,9 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
     setRules(((rRes.data ?? []) as Rule[]));
     setExceptions(((exRes.data ?? []) as Exception[]));
     setLeaves(((lRes.data ?? []) as Leave[]));
+    const ledErr = (ledRes as { error?: unknown }).error;
+    setLedgerFailed(!!ledErr);
+    if (ledErr) console.error("[team] leave ledger failed:", ledErr);
     setLeaveLedger(((ledRes.data ?? []) as Leave[]));
     setAllowances(((aRes.data ?? []) as Allowance[]));
     setTodayAtt(((atRes.data ?? []) as Att[]));
@@ -183,11 +188,35 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
 
   const saveRules = async (memberId: string, workdays: Set<number>, start: string, end: string, effectiveUntil: string | null): Promise<boolean> => {
     if (!ownerId) return false;
-    await supabase.from("staff_schedule_rules" as never).delete().eq("owner_user_id", ownerId).eq("member_user_id", memberId);
+    // 🔴 delete → insert 는 트랜잭션이 아니다 (2026-08-01 감사).
+    //   insert 가 실패하면 근무표가 통째로 사라진 채로 남는다 — 사장은 "저장 실패" 문구만 보고
+    //   서버엔 규칙 0개. 그래서 ① 이전 상태를 먼저 보관하고 ② delete 실패는 즉시 중단
+    //   ③ insert 실패 시 이전 규칙을 되돌린다(best-effort).
+    const prevRows = rules.filter((r) => r.member_user_id === memberId);
+    const { error: delErr } = await supabase.from("staff_schedule_rules" as never)
+      .delete().eq("owner_user_id", ownerId).eq("member_user_id", memberId);
+    if (delErr) { console.error("[team] saveRules delete failed:", delErr); return false; }
+
     const rows: Rule[] = [...workdays].sort().map((w) => ({ owner_user_id: ownerId, member_user_id: memberId, weekday: w, start_time: start, end_time: end, active: true, effective_until: effectiveUntil } as Rule & { owner_user_id: string }));
     if (rows.length) {
       const { error } = await supabase.from("staff_schedule_rules" as never).insert(rows as never);
-      if (error) { console.error("[team] saveRules failed:", error); return false; }
+      if (error) {
+        console.error("[team] saveRules insert failed:", error);
+        // 복구: 방금 지운 규칙을 되돌린다. 이것마저 실패하면 화면을 서버 상태(비어 있음)와 맞춘다.
+        if (prevRows.length) {
+          const restore = prevRows.map((r) => ({
+            owner_user_id: ownerId, member_user_id: r.member_user_id, weekday: r.weekday,
+            start_time: r.start_time, end_time: r.end_time, active: r.active,
+            effective_until: r.effective_until ?? null,
+          }));
+          const { error: restoreErr } = await supabase.from("staff_schedule_rules" as never).insert(restore as never);
+          if (restoreErr) {
+            console.error("[team] saveRules restore failed — 근무표가 비었습니다:", restoreErr);
+            setRules((p) => p.filter((r) => r.member_user_id !== memberId));
+          }
+        }
+        return false;
+      }
     }
     setRules((p) => [...p.filter((r) => r.member_user_id !== memberId), ...rows]);
     return true;
@@ -512,6 +541,7 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
                 ko={ko}
                 members={activeMembers}
                 leaves={leaveLedger}
+                ledgerFailed={ledgerFailed}
                 basis={leaveBasis}
                 onChangeBasis={(b) => void saveLeaveBasis(b)}
               />
@@ -835,7 +865,7 @@ function MemberScheduleEditor({ ko, member, attToday, memberRules, memberExcepti
               })}
               <input
                 type="date" min={ymdLocal()}
-                value={untilDraft && untilDraft !== endOfMonthLocal() && untilDraft !== plusOneYearLocal() ? untilDraft : (untilDraft ?? "")}
+                value={untilDraft ?? ""}
                 onChange={(e) => setUntilDraft(e.target.value || null)}
                 aria-label={ko ? "적용 종료일 직접 지정" : "Custom end date"}
                 style={{ ...timeInput, maxWidth: 158, padding: "8px 10px" }}
@@ -954,10 +984,12 @@ const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpac
  *  숫자를 만들어내지 않고 안내만 한다 — 없는 의무를 있다고 하면 안 됨(제11조).
  *  출근율 80%·상시인원 특칙은 앱이 모르므로 항상 "예상"으로 표기한다.
  */
-function AnnualLeaveSection({ ko, members, leaves, basis, onChangeBasis }: {
+function AnnualLeaveSection({ ko, members, leaves, ledgerFailed, basis, onChangeBasis }: {
   ko: boolean;
   members: Member[];
   leaves: Leave[];
+  /** 원장 조회 실패 — 잔여 대신 "집계 불가"를 말한다 (사용 0일로 계산하면 잔여가 부풀려진 가짜 숫자) */
+  ledgerFailed: boolean;
   basis: LeaveBasis;
   onChangeBasis: (b: LeaveBasis) => void;
 }) {
@@ -1031,7 +1063,13 @@ function AnnualLeaveSection({ ko, members, leaves, basis, onChangeBasis }: {
               <div key={m.member_user_id} style={{ padding: "11px 13px", borderRadius: 11, border: `1px solid ${MIDNIGHT_BORDER}`, background: "rgba(255,255,255,0.7)" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 13.5, fontWeight: 750, color: INK }}>{m.name}</span>
-                  {result.statutory && result.days > 0 ? (
+                  {result.statutory && result.days > 0 && ledgerFailed ? (
+                    <span style={{ fontSize: 12.5, color: "#b64c4c", fontWeight: 650 }}>
+                      {ko
+                        ? `발생 ${result.days}일 · 사용 일수를 불러오지 못해 잔여를 계산할 수 없어요`
+                        : `${result.days} granted · usage unavailable`}
+                    </span>
+                  ) : result.statutory && result.days > 0 ? (
                     <>
                       <span style={{ fontSize: 13, fontWeight: 800, color: MIDNIGHT, fontVariantNumeric: "tabular-nums" }}>
                         {ko ? `잔여 ${left}일` : `${left}d left`}

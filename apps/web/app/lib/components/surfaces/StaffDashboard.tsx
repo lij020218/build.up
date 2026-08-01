@@ -50,7 +50,7 @@ function effectivePaydayLocal(day: number): number {
 const INK = "#0f172a";
 const MUTED = "rgba(15,23,42,0.55)";
 
-type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null; employmentType: string | null; jobDuties: string[]; leaveBasis: LeaveBasis; staffHeadcount: number;
+type Ctx = { userId: string; ownerUserId: string; storeName: string; role: "staff" | "manager"; joinedAt: string | null; hireDate: string | null; hourlyWage: number | null; employmentType: string | null; jobDuties: string[]; leaveBasis: LeaveBasis; staffHeadcount: number | null;
   /** 사장이 정한 급여일(1~31). 없으면 null — 급여일 카드 자체를 숨긴다(가짜 정보 금지). */
   paydayDay: number | null };
 
@@ -99,6 +99,8 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   /** 잔여 계산 전용 원장 — 승인된 연차·반차 전부 (표시 목록과 달리 잘리지 않는다) */
   const [leaveLedger, setLeaveLedger] = useState<Leave[]>([]);
+  /** 원장 조회 실패 — 잔여 히어로 대신 정직한 안내 (2026-08-01) */
+  const [ledgerFailed, setLedgerFailed] = useState(false);
   const [allowances, setAllowances] = useState<AllowanceReq[]>([]); // 추가 수당 신청 (2026-07-13)
 
   const [busy, setBusy] = useState(false);
@@ -138,7 +140,9 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       paydayDay: c.payday_day ?? null,
       // 연차 계산용 (2026-07-28) — 기준은 사장 설정, 인원은 5인 기준선 판정
       leaveBasis: c.leave_basis === "fiscal_year" ? "fiscal_year" : "hire_date",
-      staffHeadcount: c.staff_headcount ?? 0,
+      // 🔴 미상을 0 으로 강등하지 않는다 (2026-08-01): 0 이면 "5인 미만 = 법정 연차 없음"이라는
+      //   법적 단정이 되어, 실제로는 앱이 인원을 못 받아온 상황에서 직원에게 거짓을 말한다.
+      staffHeadcount: typeof c.staff_headcount === "number" ? c.staff_headcount : null,
     };
     setCtx(context);
     setConnected(true);
@@ -178,6 +182,9 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     setMonthSched(exceptions);
     setRules(ruleList);
     setLeaves((leaveRes.data ?? []) as Leave[]);
+    const ledErr = (ledgerRes as { error?: unknown }).error;
+    setLedgerFailed(!!ledErr);
+    if (ledErr) console.error("[staff] leave ledger failed:", ledErr);
     setLeaveLedger((ledgerRes.data ?? []) as Leave[]);
     setAllowances((allowRes.data ?? []) as AllowanceReq[]);
     setTodayAtt(att.find((a) => a.work_date === td) ?? null);
@@ -458,7 +465,8 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
         </section>
 
         {/* ④ 연차·휴가 — 잔여 요약(근로기준법 제60조) + 신청 목록 */}
-        <LeaveCard ko={ko} leaves={leaves} ledger={leaveLedger} onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave}
+        <LeaveCard ko={ko} leaves={leaves} ledger={leaveLedger} ledgerFailed={ledgerFailed}
+          onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave}
           hireDate={ctx.hireDate} leaveBasis={ctx.leaveBasis} headcount={ctx.staffHeadcount} />
 
         {/* ④-b 추가 수당 신청 (연장·야간·휴일근로, 2026-07-13) */}
@@ -795,15 +803,19 @@ function StaffPaydayCard({ ko, paydayDay, onReportUnpaid }: {
   );
 }
 
-function LeaveCard({ ko, leaves, ledger, onOpen, onCancel, hireDate, leaveBasis, headcount }: {
+function LeaveCard({ ko, leaves, ledger, ledgerFailed, onOpen, onCancel, hireDate, leaveBasis, headcount }: {
   hireDate: string | null;
   leaveBasis: LeaveBasis;
   /** 잔여 계산용 원장 — leaves(표시용 12건)로 세면 잔여가 부풀려진다 */
   ledger: Leave[];
-  headcount: number; ko: boolean; leaves: Leave[]; onOpen: () => void; onCancel: (id: string) => void }) {
+  ledgerFailed: boolean;
+  /** null = 인원 미상 (RPC 구버전·마이그레이션 미적용) — 0 으로 강등하면 "연차 의무 없음" 거짓말이 된다 */
+  headcount: number | null;
+  ko: boolean; leaves: Leave[]; onOpen: () => void; onCancel: (id: string) => void }) {
   const md = (d: string) => { const x = new Date(d); return ko ? `${x.getMonth() + 1}.${x.getDate()}` : `${x.getMonth() + 1}/${x.getDate()}`; };
   // 내 연차 — 근로기준법 제60조 계산(shared SSOT). 5인 미만이면 법정 의무가 없어 숫자를 만들지 않는다.
-  const leaveCalc = calcAnnualLeave(hireDate, { basis: leaveBasis, headcount });
+  const headcountKnown = headcount !== null;
+  const leaveCalc = calcAnnualLeave(hireDate, { basis: leaveBasis, headcount: headcount ?? 0 });
   const range = leaveYearRange(leaveBasis, hireDate);
   const usedDays = usedLeaveDays(ledger, { yearStart: range.start, yearEnd: range.end });
   const leftDays = remainingLeaveDays(leaveCalc.days, usedDays);
@@ -816,7 +828,19 @@ function LeaveCard({ ko, leaves, ledger, onOpen, onCancel, hireDate, leaveBasis,
 
       {/* 잔여 요약 — 신청 목록보다 먼저 (직원이 가장 궁금한 것) */}
       <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(139,127,212,0.08)", marginBottom: 12 }}>
-        {leaveCalc.statutory && leaveCalc.days > 0 ? (
+        {!headcountKnown ? (
+          <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55 }}>
+            {ko
+              ? "직원 수를 불러오지 못해 연차 일수를 계산할 수 없어요. 잠시 후 다시 열어보시거나 사장님께 문의해 주세요."
+              : "Can't compute leave — staff count unavailable."}
+          </div>
+        ) : ledgerFailed && leaveCalc.statutory && leaveCalc.days > 0 ? (
+          <div style={{ fontSize: 12, color: "#b64c4c", lineHeight: 1.55 }}>
+            {ko
+              ? `올해 ${leaveCalc.days}일 발생 — 사용 일수를 불러오지 못해 잔여를 계산할 수 없어요.`
+              : `${leaveCalc.days} granted — usage unavailable.`}
+          </div>
+        ) : leaveCalc.statutory && leaveCalc.days > 0 ? (
           <>
             <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap" }}>
               <span style={{ fontSize: 20, fontWeight: 800, color: LEAVE, fontVariantNumeric: "tabular-nums" }}>

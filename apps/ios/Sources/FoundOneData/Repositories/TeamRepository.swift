@@ -350,14 +350,16 @@ public actor TeamRepository {
                 start_time: startTime,
                 end_time: endTime,
                 updated_at: ISO8601DateFormatter().string(from: Date())
-            ), onConflict: "member_user_id,work_date")
+            ), onConflict: "owner_user_id,member_user_id,work_date")
             .execute()
     }
 
-    public func deleteMyAvailability(workDate: String) async throws {
+    /// 내 희망 삭제 — owner 범위 필수 (투잡 직원이 다른 가게 희망까지 지우지 않도록)
+    public func deleteMyAvailability(ownerUserId: UUID, workDate: String) async throws {
         let uid = try await client.auth.session.user.id
         try await client.from("shift_availability")
             .delete()
+            .eq("owner_user_id", value: ownerUserId.uuidString)
             .eq("member_user_id", value: uid.uuidString)
             .eq("work_date", value: workDate)
             .execute()
@@ -378,7 +380,7 @@ public actor TeamRepository {
                 member_user_id: uid.uuidString,
                 period: period,
                 submitted_at: ISO8601DateFormatter().string(from: Date())
-            ), onConflict: "member_user_id,period")
+            ), onConflict: "owner_user_id,member_user_id,period")
             .execute()
     }
 

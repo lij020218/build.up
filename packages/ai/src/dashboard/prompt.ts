@@ -1,7 +1,7 @@
 // ─── 대시보드 AI 경영 코치 프롬프트 v2 ──────────────────────────────────────
 // 한국 소상공인/스타트업 경영 지식 베이스 + 위기 플레이북 + 사례 기반 코칭
 //
-// 임계값(프라임코스트 65%, 런웨이 3개월 등) 은 모두 SSOT(`@foundone/shared`/unified-health.ts)
+// 임계값(비용 비율·런웨이 등) 은 모두 SSOT(`@foundone/shared`/unified-health.ts)
 // 의 COMMON_THRESHOLDS / COST_RATIO_THRESHOLDS 에서 가져와 한 곳에서 관리됩니다.
 
 import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, mapIndustryToGroup, getFeatureCatalogPromptText, calculateCostRatios, type IndustryGroup } from "@foundone/shared";
@@ -22,6 +22,9 @@ export type CrisisThresholds = {
   weeklyDeclineCrit: number;
   /** 임계값 출처 업종 그룹 (프롬프트 표기·테스트용) */
   group: IndustryGroup;
+  /** labor/rent 가 이 업종 정의가 아니라 general 폴백인가 — 문구를 "일반 기준"으로 낮춘다 */
+  laborIsFallback: boolean;
+  rentIsFallback: boolean;
 };
 
 export function crisisThresholdsFor(industryCategoryId?: string): CrisisThresholds {
@@ -33,10 +36,26 @@ export function crisisThresholdsFor(industryCategoryId?: string): CrisisThreshol
     primeCostCritical: t.primeCost?.healthy,
     laborCritical: (t.labor ?? fallback.labor)!.caution,
     rentCritical: (t.rent ?? fallback.rent)!.caution,
+    // 🔴 폴백 여부를 숨기지 않는다 (2026-08-01): ecommerce 는 labor/rent 정의가 없어
+    //   general 값이 쓰이는데, 문구가 "이 업종 주의선"이면 없는 업종 기준을 지어낸 게 된다.
+    laborIsFallback: t.labor === undefined,
+    rentIsFallback: t.rent === undefined,
     runwayCritical: COMMON_THRESHOLDS.runwayMonths.warning,
     weeklyDeclineCrit: COMMON_THRESHOLDS.salesGrowthMoM.warning,
     group,
   };
+}
+
+/**
+ * "업계 적정" 비용 범위 — 🔴 위기 임계값과 **같은 SSOT** 에서 파생 (2026-08-01).
+ *  종전엔 하드코딩 맵(getBenchmarks)이 별도로 있어 같은 프롬프트에 두 기준이 실렸다:
+ *  뷰티 인건비가 "업계 적정 40-50%"(하드코딩) 인데 위기선은 55%(SSOT) → 52% 인 정상 매장에
+ *  위기 신호는 안 뜨지만 "인건비 과다" 코칭이 나갔다. 범위 = healthy~caution.
+ */
+function ratioBandFor(group: IndustryGroup, key: "ingredients" | "labor" | "rent"): string | null {
+  const t = COST_RATIO_THRESHOLDS[group]?.[key];
+  if (!t) return null;   // 이 업종에 정의 없음 → 범위를 지어내지 않는다
+  return `${t.healthy}-${t.caution}%`;
 }
 
 /** 매출 하락 원인 분해 프레임 — 업종 모델에 맞는 축으로 (객수/객단가는 오프라인 프레임) */
@@ -90,7 +109,7 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
    - ✅ "재료비가 평균보다 좀 높아졌어요. 이번 주에 공급처 견적 한 번 받아볼게요? 같이 정리해 봐요."
    - 핵심 단어: "~했어요", "한 번 ~해볼게요", "같이 봐요"
 
-④ **긴급 위기** (런웨이 1-2개월·매출 급락·프라임코스트 75%+) → **명확하고 단호하지만 차갑지 않게**
+④ **긴급 위기** (컨텍스트 "위기 신호" 블록에 항목이 실린 경우) → **명확하고 단호하지만 차갑지 않게**
    - ❌ "행동하셔야 합니다. 현재 추세가 계속되면 적자 전환됩니다." (위협조)
    - ✅ "사장님, 솔직히 말씀드릴게요. 런웨이 45일 남았어요. 지금이 가장 중요한 순간입니다 — 광고비부터 50% 줄이고, 이번 주 투자자 미팅 3건 잡으세요. 같이 해결할 수 있어요."
    - 핵심 단어: "솔직히 말씀드릴게요", "지금이 결정의 순간", "같이 해결해요"
@@ -210,7 +229,9 @@ confidence 기준:
 - 소매: 매입원가 50-65%, 인건비 10-15%
 - 미용/뷰티: 재료비 10-15%, 인건비 40-50%
 - 배달 수수료 실질 부담: 매출의 17-29% (소량 주문 시 최대 42%)
-- 프라임코스트 위험선: 65% 초과 시 수익 구조 붕괴 위험
+- 프라임코스트 위험선: **업종마다 다르다** (외식 65 / 카페 60 / 미용·서비스·이커머스는 개념 자체가 부적합).
+  컨텍스트에 "이 업종 위험선"으로 수치가 주어졌을 때만 그 값으로 판정하고, "부적합한 지표"로
+  표시된 업종에서는 언급조차 하지 마라.
 
 ## 세금/규제 핵심 (2026 현행 기준 — 2026.01 갱신 요율 반영)
 - **2026 최저임금**: 시급 10,320원, 월 2,156,880원 (주 40h 기준)
@@ -311,7 +332,8 @@ confidence 기준:
 ─── 코칭 규칙 ───
 
 1. todayActions: 정확히 3개. 오늘 바로 실행 가능한 것만. 위 우선순위 순서를 따를 것. title은 10자 이내, reason은 1-2문장(40자 이내).
-2. crisisActions: 위기 상황(런웨이 3개월 미만 OR 매출 3주 하락 OR 프라임코스트 65%+)일 때만 1~3개.
+2. crisisActions: 위기 상황일 때만 1~3개. 위기 판정은 **컨텍스트의 "위기 신호" 블록에 실제로
+   실린 항목만** 근거로 삼아라 (런웨이·매출 하락·비용 비율 임계값은 업종별로 다르게 계산되어 전달된다).
 3. **insight는 '지금 가장 중요한 한 가지'입니다.**
    사장님이 매일 아침 가장 먼저 읽는 메시지. 매번 같은 형식이 아니라, 그날의 상황에 가장 적합한 길이·톤으로 자유롭게 작성하세요.
 
@@ -654,8 +676,6 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   const fmtW = (n: number) => `${Math.round(n / 10000).toLocaleString()}만원`;
   const monthlyNet = ctx.monthlySales - totalCost;
 
-  // 업종별 벤치마크 자동 삽입
-  const benchmarks = getBenchmarks(ctx.industryCategoryId);
 
   // ⚠️ CRITICAL (2026-05-11): 비율 신뢰도 가드 — 거짓 비율 생성 차단.
   //  사용자 신고: 식재료만 138만 등록 + 며칠치 매출 10만 → "재료비 1375%" 거짓 인사이트.
@@ -685,9 +705,15 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   // 위기 진단 — SSOT(unified-health) 의 임계값 사용
   // → 같은 65% 가 PLHeroCard / CostCompositionDonutCard / 본 프롬프트 모두에서 동일 판정
   const thr = crisisThresholdsFor(ctx.industryCategoryId);
+  // 적정 범위와 위기선을 같은 SSOT 에서 — 두 기준이 어긋나면 "정상인데 과다" 코칭이 나간다
+  const ingBand = ratioBandFor(thr.group, "ingredients");
+  const labBand = ratioBandFor(thr.group, "labor");
+  const rentBand = ratioBandFor(thr.group, "rent");
   const crisisSignals: string[] = [];
-  if (ctx.runway >= 0 && ctx.runway <= 3)
-    crisisSignals.push(`현금 런웨이 ${ctx.runway}개월 — 즉시 현금 방어 필요`);
+  // 🔴 SSOT 사용 (2026-08-01): 종전 하드코딩 3 은 SSOT warning(6)과 달라
+  //   런웨이 5개월 사장이 재무 화면에선 "경고", 브리핑에선 무언급이었다.
+  if (ctx.runway >= 0 && ctx.runway <= thr.runwayCritical)
+    crisisSignals.push(`현금 런웨이 ${ctx.runway}개월 — ${thr.runwayCritical}개월 경고선 이하, 현금 방어 필요`);
   if (ctx.weeklyChange < thr.weeklyDeclineCrit)
     crisisSignals.push(`주간 매출 ${ctx.weeklyChange}% 하락 — 원인 진단 필요`);
   // 비율 기반 위기 진단 — ratiosReady 일 때만. 미준비 시 거짓 폭주 알림 차단.
@@ -695,9 +721,9 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   if (ratiosReady && thr.primeCostCritical !== undefined && ctx.primeRate > thr.primeCostCritical)
     crisisSignals.push(`프라임코스트 ${ctx.primeRate}% — ${thr.primeCostCritical}% 위험선 초과 (${thr.group} 기준)`);
   if (ratiosReady && (ctx.monthlyCosts.labor / ctx.monthlySales * 100) > thr.laborCritical)
-    crisisSignals.push(`인건비 비율 ${labRatio}% — 이 업종(${thr.group}) 주의선 ${thr.laborCritical}% 초과`);
+    crisisSignals.push(`인건비 비율 ${labRatio}% — ${thr.laborIsFallback ? "일반 기준" : `이 업종(${thr.group}) 주의선`} ${thr.laborCritical}% 초과${thr.laborIsFallback ? " (이 업종 전용 기준은 없음 — 참고용)" : ""}`);
   if (ratiosReady && (ctx.monthlyCosts.rent / ctx.monthlySales * 100) > thr.rentCritical)
-    crisisSignals.push(`임대료 비율 ${rentRatio}% — 이 업종(${thr.group}) 주의선 ${thr.rentCritical}% 초과`);
+    crisisSignals.push(`임대료 비율 ${rentRatio}% — ${thr.rentIsFallback ? "일반 기준" : `이 업종(${thr.group}) 주의선`} ${thr.rentCritical}% 초과${thr.rentIsFallback ? " (이 업종 전용 기준은 없음 — 참고용)" : ""}`);
 
   // 업종별 필수 운영 갭 감지
   const operationalGaps: string[] = [];
@@ -747,9 +773,9 @@ ${ctx.productCount !== undefined && ctx.productCount === 0 ? "   · 제품·메�
 ### 재무 현황
 - 월 매출: ${fmtW(ctx.monthlySales)}
 - 월 비용: ${fmtW(totalCost)}
-  - ${el.ingredients}: ${fmtW(ctx.monthlyCosts.ingredients)}${ingRatio ? ` (매출 대비 ${ingRatio}%, 업계 적정: ${benchmarks.ingredientTarget})` : " (매출 데이터 부족 — 비율 미확정)"}
-  - ${el.labor}: ${fmtW(ctx.monthlyCosts.labor)}${labRatio ? ` (매출 대비 ${labRatio}%, 업계 적정: ${benchmarks.laborTarget})` : " (매출 데이터 부족 — 비율 미확정)"}
-  - ${el.rent}: ${fmtW(ctx.monthlyCosts.rent)}${rentRatio ? ` (매출 대비 ${rentRatio}%, 업계 적정: ${benchmarks.rentTarget})` : " (매출 데이터 부족 — 비율 미확정)"}
+  - ${el.ingredients}: ${fmtW(ctx.monthlyCosts.ingredients)}${ingRatio ? ` (매출 대비 ${ingRatio}%${ingBand ? `, 이 업종 적정: ${ingBand}` : ""})` : " (매출 데이터 부족 — 비율 미확정)"}
+  - ${el.labor}: ${fmtW(ctx.monthlyCosts.labor)}${labRatio ? ` (매출 대비 ${labRatio}%${labBand ? `, 이 업종 적정: ${labBand}` : ""})` : " (매출 데이터 부족 — 비율 미확정)"}
+  - ${el.rent}: ${fmtW(ctx.monthlyCosts.rent)}${rentRatio ? ` (매출 대비 ${rentRatio}%${rentBand ? `, 이 업종 적정: ${rentBand}` : ""})` : " (매출 데이터 부족 — 비율 미확정)"}
   - ${el.utilities}: ${fmtW(ctx.monthlyCosts.utilities)}
   - 판관비(SGA): ${fmtW((ctx.monthlyCosts as Record<string, number>).sga ?? 0)}
   - 마케팅비: ${fmtW((ctx.monthlyCosts as Record<string, number>).marketing ?? 0)}
@@ -811,28 +837,6 @@ ${operationalGaps.length > 0 ? `**최우선:** 운영 필수 사항 미충족 �
 
 // ─── 업종별 벤치마크 ─────────────────────────────────────────────────────────
 
-function getBenchmarks(categoryId: string): {
-  ingredientTarget: string;
-  laborTarget: string;
-  rentTarget: string;
-} {
-  // benchmarks.ts의 COST_RATIOS를 import할 수 없으므로 (AI 패키지 → shared 순환 아님)
-  // COST_RATIOS와 동일한 값을 사용합니다. 변경 시 benchmarks.ts도 반드시 동기화.
-  const benchmarkMap: Record<string, { ingredientTarget: string; laborTarget: string; rentTarget: string }> = {
-    "food": { ingredientTarget: "30-35%", laborTarget: "25-30%", rentTarget: "8-15%" },
-    "cafe-dessert": { ingredientTarget: "25-35%", laborTarget: "20-28%", rentTarget: "10-18%" },
-    "retail": { ingredientTarget: "50-65% (매입원가)", laborTarget: "8-15%", rentTarget: "8-15%" },
-    "beauty": { ingredientTarget: "8-15%", laborTarget: "40-50%", rentTarget: "10-15%" },
-    "fitness": { ingredientTarget: "0-5%", laborTarget: "20-30%", rentTarget: "15-25%" },
-    "education": { ingredientTarget: "10-18%", laborTarget: "30-40%", rentTarget: "12-18%" },
-    "pet": { ingredientTarget: "15-25%", laborTarget: "25-35%", rentTarget: "10-15%" },
-    "living-service": { ingredientTarget: "10-20%", laborTarget: "20-35%", rentTarget: "8-15%" },
-    "space": { ingredientTarget: "3-8%", laborTarget: "10-20%", rentTarget: "20-30%" },
-    "online-digital": { ingredientTarget: "20-40% (매입원가)", laborTarget: "5-15%", rentTarget: "10-20% (플랫폼)" },
-    "startup-tech": { ingredientTarget: "5-15% (인프라)", laborTarget: "50-70%", rentTarget: "5-10%" },
-  };
-  return benchmarkMap[categoryId] ?? { ingredientTarget: "30-35%", laborTarget: "25-30%", rentTarget: "8-15%" };
-}
 
 // ─── 업종별 필수 운영 갭 감지 ─────────────────────────────────────────────────
 // 데이터에서 추론 가능한 갭만 감지합니다.

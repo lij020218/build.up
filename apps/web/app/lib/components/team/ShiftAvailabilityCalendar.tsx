@@ -132,7 +132,7 @@ export function ShiftAvailabilityCalendar({
 
   useEffect(() => {
     if (mode !== "staff") return;
-    const onFocus = () => { void load(); };
+    const onFocus = () => { if (!document.hidden) void load(); };   // 떠날 때는 조회 안 함
     document.addEventListener("visibilitychange", onFocus);
     return () => { document.removeEventListener("visibilitychange", onFocus); };
   }, [mode, load]);
@@ -170,17 +170,32 @@ export function ShiftAvailabilityCalendar({
       const { error } = await supabase.from("shift_availability" as never).upsert({
         owner_user_id: ownerId, member_user_id: myUserId, work_date: date,
         start_time: start, end_time: end, updated_at: new Date().toISOString(),
-      } as never, { onConflict: "member_user_id,work_date" } as never);
-      if (!error) await load();
+      } as never, { onConflict: "owner_user_id,member_user_id,work_date" } as never);
+      // 실패를 침묵하지 않는다 — 종전엔 칩이 안 켜지고 안내도 없어 "탭이 안 먹는다"로 보였고,
+      //   그대로 마감되면 미신청 처리됐다 (2026-08-01 감사). iOS 와 동일 문구.
+      if (error) {
+        console.error("[shift-availability] setMyDay failed:", error);
+        setConfirmed(ko ? "저장에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed to save.");
+        return;
+      }
+      setConfirmed(null);
+      await load();
     } finally { setBusy(false); }
   };
 
   const clearMyDay = async (date: string) => {
-    if (!myUserId || busy) return;
+    if (!ownerId || !myUserId || busy) return;
     setBusy(true);
     try {
-      await supabase.from("shift_availability" as never).delete()
-        .eq("member_user_id", myUserId).eq("work_date", date);
+      // owner 범위 필수 — 투잡 직원이 다른 가게의 같은 날짜 희망까지 지우지 않도록
+      const { error } = await supabase.from("shift_availability" as never).delete()
+        .eq("owner_user_id", ownerId).eq("member_user_id", myUserId).eq("work_date", date);
+      if (error) {
+        console.error("[shift-availability] clearMyDay failed:", error);
+        setConfirmed(ko ? "취소에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed to remove.");
+        return;
+      }
+      setConfirmed(null);
       await load();
     } finally { setBusy(false); }
   };
@@ -192,8 +207,14 @@ export function ShiftAvailabilityCalendar({
       const { error } = await supabase.from("shift_availability_submissions" as never).upsert({
         owner_user_id: ownerId, member_user_id: myUserId, period,
         submitted_at: new Date().toISOString(),
-      } as never, { onConflict: "member_user_id,period" } as never);
-      if (!error) { await load(); setConfirmed(ko ? "사장님께 제출했어요." : "Submitted."); }
+      } as never, { onConflict: "owner_user_id,member_user_id,period" } as never);
+      if (error) {
+        console.error("[shift-availability] submit failed:", error);
+        setConfirmed(ko ? "제출에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed to submit.");
+        return;
+      }
+      await load();
+      setConfirmed(ko ? "사장님께 제출했어요." : "Submitted.");
     } finally { setBusy(false); }
   };
 
@@ -236,13 +257,24 @@ export function ShiftAvailabilityCalendar({
   };
 
   const saveDeadline = async (day: number) => {
-    if (!ownerId) return;
+    if (!ownerId || busy) return;
+    const prev = deadlineDay;
+    setBusy(true);
     setDeadlineDay(day);
     onDeadlineChange?.(day);
-    await supabase.from("payroll_settings" as never).upsert(
-      { owner_user_id: ownerId, shift_request_deadline_day: day } as never,
-      { onConflict: "owner_user_id" } as never,
-    );
+    try {
+      const { error } = await supabase.from("payroll_settings" as never).upsert(
+        { owner_user_id: ownerId, shift_request_deadline_day: day } as never,
+        { onConflict: "owner_user_id" } as never,
+      );
+      // 실패를 삼키면 사장 화면만 새 마감일로 보이고 직원 화면은 옛 값 — 서로 다른 마감을 믿게 된다
+      if (error) {
+        console.error("[shift-availability] saveDeadline failed:", error);
+        setDeadlineDay(prev);
+        onDeadlineChange?.(prev);
+        setConfirmed(ko ? "마감일 저장에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed to save deadline.");
+      }
+    } finally { setBusy(false); }
   };
 
   /**

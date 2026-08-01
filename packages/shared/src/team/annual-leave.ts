@@ -52,6 +52,19 @@ export type AnnualLeaveResult = {
   basisNote: { ko: string; en: string };
 };
 
+/**
+ * "YYYY-MM-DD" → 로컬 자정 Date.
+ *  🔴 new Date("2026-08-02") 는 **UTC 자정**(= KST 09:00)이라 입사 당일 오전에
+ *  hire <= today 가 거짓이 되어 "입사일을 입력하면…"이 뜬다 (iOS 는 로컬 파싱이라 정상 —
+ *  같은 날 아침 웹·iOS 가 다른 말을 했다. 2026-08-01 감사)
+ */
+function parseLocalDate(ymd: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd);
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 /** 두 날짜 사이 개월 수 (일자 미도달이면 -1) */
 function monthsBetween(from: Date, to: Date): number {
   let months = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
@@ -84,8 +97,8 @@ export function calcAnnualLeave(
   const today = opts.today ?? new Date();
   const statutory = opts.headcount >= 5;
 
-  const hire = hireDate ? new Date(hireDate) : null;
-  const valid = hire && !Number.isNaN(hire.getTime()) && hire <= today;
+  const hire = hireDate ? parseLocalDate(hireDate) : null;
+  const valid = hire !== null && hire <= today;
 
   if (!valid) {
     return {
@@ -199,8 +212,8 @@ export function leaveYearRange(
   if (basis === "fiscal_year" || !hireDate) {
     return { start: `${today.getFullYear()}-01-01`, end: `${today.getFullYear()}-12-31` };
   }
-  const hire = new Date(hireDate);
-  if (Number.isNaN(hire.getTime())) {
+  const hire = parseLocalDate(hireDate);
+  if (hire === null) {
     return { start: `${today.getFullYear()}-01-01`, end: `${today.getFullYear()}-12-31` };
   }
   // 입사 기념일 기준 — 올해 기념일이 지났으면 그날부터, 아니면 작년 기념일부터 1년
