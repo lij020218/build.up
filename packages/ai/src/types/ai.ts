@@ -24,6 +24,8 @@ export type AiCallOptions = {
   maxTokens?: number;     // 기본값: 1024
   /** 자가개선: 사장님이 "안 맞아요"로 표시한 최근 코칭 블록 — user prompt 끝에 append 해 회피 유도. */
   negativeFeedbackBlock?: string;
+  /** 행동 루프(2026-08-01): 코칭 일지 실행/무시 패턴 블록 — 실행한 유형 지속, 무시된 유형 반복 금지. */
+  behaviorBlock?: string;
 };
 
 // ─── 파싱 에러 ────────────────────────────────────────────────────────────────

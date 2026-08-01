@@ -255,7 +255,7 @@ export async function generateDashboardActions(
     system: systemWithCache(DASHBOARD_ACTION_SYSTEM_PROMPT),
     messages: [
       // 자가개선: 최근 "안 맞아요" 블록을 user prompt 끝에 붙여 비슷한 코칭 회피.
-      { role: "user", content: buildDashboardActionPrompt(ctx) + (options.negativeFeedbackBlock ?? "") },
+      { role: "user", content: buildDashboardActionPrompt(ctx) + (options.negativeFeedbackBlock ?? "") + (options.behaviorBlock ?? "") },
     ],
   });
 

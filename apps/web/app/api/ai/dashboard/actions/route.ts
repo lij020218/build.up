@@ -5,6 +5,7 @@ import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { fetchRecentNegativeFeedbackLines, buildNegativeFeedbackBlock } from "../../../_lib/coaching-feedback";
+import { fetchBehaviorBlock } from "../../../_lib/coaching-behavior";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout
@@ -57,7 +58,9 @@ export async function POST(request: Request) {
     const negativeFeedbackBlock = buildNegativeFeedbackBlock(
       await fetchRecentNegativeFeedbackLines(auth.userId, { source: "dashboard-actions" }),
     );
-    const result = await generateDashboardActions(enrichedCtx, { apiKey, negativeFeedbackBlock });
+    // 행동 루프(2026-08-01): 코칭 일지 실행/무시 패턴 — 실행 유형 심화, 무시 유형 반복 금지
+    const behaviorBlock = await fetchBehaviorBlock(auth.userId);
+    const result = await generateDashboardActions(enrichedCtx, { apiKey, negativeFeedbackBlock, behaviorBlock });
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to generate actions.";
