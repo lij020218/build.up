@@ -13,6 +13,7 @@
 		81645B87CB682409EF6B9AA0 /* FoundOneAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 89E44E7398BE894CFE1BF4E8 /* FoundOneAuth */; };
 		8C76A7C896F824B92F880B66 /* FoundOneNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = 20BAB2C0864B03932D03F285 /* FoundOneNotifications */; };
 		8EF5EC0AA1FDAC0FA53600A7 /* FoundOneDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = BA2819368D98A197D143715D /* FoundOneDesignSystem */; };
+		B2A2F712A8D540F17A7D6BC7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CDB4CF3B177BD479E53F33CE /* Assets.xcassets */; };
 		DFC0DB79A771FB9E105FFCA9 /* FoundOneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25AFE09C41264330A2956447 /* FoundOneApp.swift */; };
 		F2EA06CB85C3889857D30C7A /* FoundOneCore in Frameworks */ = {isa = PBXBuildFile; productRef = 092ED2CD8BA10953F70FBBCF /* FoundOneCore */; };
 		FE5B495AB1C1F4523314F7AA /* FoundOneComponents in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED5C84A98450FED6F6E804B /* FoundOneComponents */; };
@@ -22,6 +23,7 @@
 		25AFE09C41264330A2956447 /* FoundOneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundOneApp.swift; sourceTree = "<group>"; };
 		3E56630AB0C860C959557C43 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = .; sourceTree = SOURCE_ROOT; };
 		9B759E63D689CD78BB9C658B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CDB4CF3B177BD479E53F33CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DFB19677D47C4027234F1466 /* FoundOne.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FoundOne.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -81,6 +83,7 @@
 		972883F22EEFC4C4F64778A9 /* FoundOne */ = {
 			isa = PBXGroup;
 			children = (
+				CDB4CF3B177BD479E53F33CE /* Assets.xcassets */,
 				25AFE09C41264330A2956447 /* FoundOneApp.swift */,
 				9B759E63D689CD78BB9C658B /* PrivacyInfo.xcprivacy */,
 			);
@@ -166,6 +169,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2A2F712A8D540F17A7D6BC7 /* Assets.xcassets in Resources */,
 				20AF6A0DE8FE22F823A180DC /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -253,7 +257,10 @@
 			baseConfigurationReference = FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_ENTITLEMENTS = App/FoundOne/FoundOne.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -330,7 +337,10 @@
 			baseConfigurationReference = FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_ENTITLEMENTS = App/FoundOne/FoundOne.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;

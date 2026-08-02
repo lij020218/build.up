@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  FoundOne.entitlements — 앱이 요구하는 Apple 권한 선언.
+
+  ⚠️ 여기 선언한 항목은 **Apple Developer 포털의 App ID(com.foundone.mobile)에서도
+     같은 Capability 가 켜져 있어야** 서명이 통과한다. 한쪽만 있으면:
+       · 포털만 켜짐  → 앱에서 기능 자체가 동작 안 함
+       · 여기만 있음  → "Provisioning profile doesn't include entitlement" 로 아카이브 실패
+
+  항목별 근거:
+   · applesignin  — SignInView 의 "Apple로 시작하기". 이게 없으면 실기기에서
+                    ASAuthorizationError 1000 으로 **가입 자체가 불가**했다(2026-06-08 감사).
+                    3rd-party 로그인을 제공하는 앱은 Apple 로그인도 제공해야 한다(심사 4.8).
+   · aps-environment — 원격 푸시(PushAppDelegate.registerForRemoteNotifications).
+                    development 로 두면 TestFlight·App Store 배포 시 Xcode 가 자동으로
+                    production 으로 치환한다(Automatic signing 기준).
+
+  App Groups 는 위젯/Live Activity extension 을 실제로 추가할 때 함께 켠다.
+  지금 선언하면 쓰지도 않는 Capability 로 프로비저닝만 복잡해진다.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.developer.applesignin</key>
+    <array>
+        <string>Default</string>
+    </array>
+
+    <key>aps-environment</key>
+    <string>development</string>
+</dict>
+</plist>

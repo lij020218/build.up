@@ -39,6 +39,19 @@ KAKAO_JS_KEY=$(get_env "NEXT_PUBLIC_KAKAO_JS_KEY")
 #   없으면 빈값 → Xcode 에서 수동 선택 필요. 설정해두면 재생성해도 유지됨.
 APPLE_TEAM_ID=$(get_env "APPLE_TEAM_ID")
 
+# 버전 — .env.local 우선, 없으면 **기존 xcconfig 값을 보존**, 그것도 없으면 기본값.
+#   ⚠️ 보존이 중요한 이유: App Store Connect 는 같은 빌드 번호를 두 번 받지 않는다.
+#      재생성이 조용히 1 로 되돌리면, 다음 업로드가 "이미 존재하는 빌드" 로 거절된다.
+prev_value() { [ -f "$OUTPUT" ] && grep -E "^$1[[:space:]]*=" "$OUTPUT" | sed -E "s/^$1[[:space:]]*=[[:space:]]*//" | tr -d ' ' | head -1; }
+
+MARKETING_VERSION=$(get_env "IOS_MARKETING_VERSION")
+[ -z "$MARKETING_VERSION" ] && MARKETING_VERSION=$(prev_value "MARKETING_VERSION")
+[ -z "$MARKETING_VERSION" ] && MARKETING_VERSION="1.0.0"
+
+BUILD_NUMBER=$(get_env "IOS_BUILD_NUMBER")
+[ -z "$BUILD_NUMBER" ] && BUILD_NUMBER=$(prev_value "CURRENT_PROJECT_VERSION")
+[ -z "$BUILD_NUMBER" ] && BUILD_NUMBER="1"
+
 # Kakao Native App Key — 별도 키. .env.local 에 KAKAO_NATIVE_APP_KEY 가 없으면 placeholder.
 KAKAO_NATIVE_KEY=$(get_env "KAKAO_NATIVE_APP_KEY")
 if [ -z "$KAKAO_NATIVE_KEY" ]; then
@@ -85,8 +98,8 @@ BU_ENVIRONMENT = production
 
 // Build settings
 PRODUCT_BUNDLE_IDENTIFIER = com.foundone.mobile
-MARKETING_VERSION = 1.0.0
-CURRENT_PROJECT_VERSION = 1
+MARKETING_VERSION = ${MARKETING_VERSION}
+CURRENT_PROJECT_VERSION = ${BUILD_NUMBER}
 DEVELOPMENT_TEAM = ${APPLE_TEAM_ID}
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
 
