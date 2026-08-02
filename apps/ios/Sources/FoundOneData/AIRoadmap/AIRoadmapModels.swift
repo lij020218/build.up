@@ -96,6 +96,9 @@ public struct AIRoadmapResult: Decodable, Sendable {
 
     public struct Recommendations: Decodable, Sendable {
         public let suppliers: [Supplier]
+        /// 분업 선언(AI가 끝낸 것) 집계용 — 구버전 응답 호환 optional
+        public let interiorVendors: [InteriorVendor]?
+        public let operationalChannels: [OperationalChannel]?
 
         public struct Supplier: Decodable, Sendable {
             public let id: String?
@@ -103,6 +106,66 @@ public struct AIRoadmapResult: Decodable, Sendable {
             public let category: String
             public let reason: String
             public let priceRange: String
+        }
+
+        public struct InteriorVendor: Decodable, Sendable {
+            public let id: String
+            public let title: String
+        }
+
+        public struct OperationalChannel: Decodable, Sendable {
+            public let id: String
+            public let nameKo: String
+        }
+    }
+
+    // ── 분업 선언(역할 분담) 섹션용 — 웹 DivisionOfLabor 와 동일 데이터 (전부 optional: 구버전 호환) ──
+
+    public let legal: Legal?
+    public let moneyInfra: MoneyInfra?
+    public let insurance: [InsuranceItem]?
+    public let industrySpecific: IndustrySpecific?
+
+    public struct Legal: Decodable, Sendable {
+        public let taxType: String?
+        public let permitsDetailed: [Permit]?
+
+        public struct Permit: Decodable, Sendable {
+            public let name: String
+            public let kind: String
+            public let whereTo: String   // JSON 키 "where" — Swift 예약어라 개명
+            public let cost: String
+            public let duration: String
+            public let required: Bool
+
+            private enum CodingKeys: String, CodingKey {
+                case name, kind, cost, duration, required
+                case whereTo = "where"
+            }
+        }
+    }
+
+    public struct MoneyInfra: Decodable, Sendable {
+        public let recommendedBank: String?
+    }
+
+    public struct InsuranceItem: Decodable, Sendable {
+        public let name: String
+    }
+
+    public struct IndustrySpecific: Decodable, Sendable {
+        public let menu: [NamedItem]?
+        public let services: [NamedItem]?
+        public let memberships: [NamedItem]?
+        public let products: [NamedItem]?
+
+        public struct NamedItem: Decodable, Sendable {
+            public let name: String
+        }
+
+        public var hasAny: Bool {
+            !(menu ?? []).isEmpty || !(services ?? []).isEmpty
+                || !(memberships ?? []).isEmpty || !(products ?? []).isEmpty
         }
     }
 }

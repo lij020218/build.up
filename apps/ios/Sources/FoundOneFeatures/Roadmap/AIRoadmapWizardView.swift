@@ -11,6 +11,7 @@ import SwiftUI
 #if canImport(UIKit)
 import UIKit
 #endif
+import FoundOneCore
 import FoundOneDesignSystem
 import FoundOneData
 
@@ -708,6 +709,9 @@ private struct ReviewStepView: View {
                     .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(midnight.opacity(0.08), lineWidth: 1))
                 }
 
+                // ⭐ 분업 선언 — "AI가 해결한 것 vs 사장님이 하실 일" (웹 DivisionOfLabor 미러, 2026-08-03)
+                DivisionOfLaborSection(result: result)
+
                 // 업종 매칭 카드
                 matchCard
 
@@ -854,6 +858,135 @@ private struct ReviewStepView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(color.opacity(0.08), in: Capsule())
+    }
+}
+
+// MARK: - DivisionOfLaborSection
+
+/// 분업 선언 — 웹 AIRoadmapWizard.tsx DivisionOfLabor 와 문구 1:1.
+///  목록은 OwnerActionsRegistry(FoundOneCore, 결정론 SSOT 미러)에서. LLM 산출물 아님.
+private struct DivisionOfLaborSection: View {
+    let result: AIRoadmapResult
+
+    private var taxLabel: String? {
+        switch result.legal?.taxType {
+        case "simplified": return "간이과세"
+        case "standard": return "일반과세"
+        case "corporation": return "법인"
+        default: return nil
+        }
+    }
+
+    private var ownerActions: [BUOwnerAction] {
+        BUOwnerActions.build(
+            track: BUOwnerActions.track(for: result.parsed.industryCategoryId),
+            startupType: result.parsed.startupType,
+            permits: (result.legal?.permitsDetailed ?? []).map {
+                BUOwnerPermitInput(name: $0.name, kind: $0.kind, whereTo: $0.whereTo,
+                                   cost: $0.cost, duration: $0.duration, required: $0.required)
+            },
+            recommendedBankLabel: BUOwnerActions.bankLabel(result.moneyInfra?.recommendedBank),
+            taxTypeLabel: taxLabel
+        )
+    }
+
+    private var aiDone: [String] {
+        BUOwnerActions.aiDoneList(
+            hasIndustryMatch: true,
+            budgetAllocated: result.budgetAllocation.displayTotal > 0,
+            permitCount: result.legal?.permitsDetailed?.count ?? 0,
+            supplierCount: result.recommendations.suppliers.count
+                + (result.recommendations.interiorVendors?.count ?? 0),
+            channelCount: result.recommendations.operationalChannels?.count ?? 0,
+            hasTaxType: result.legal?.taxType != nil,
+            hasInsurance: !(result.insurance ?? []).isEmpty,
+            hasMenuOrProducts: result.industrySpecific?.hasAny ?? false
+        )
+    }
+
+    var body: some View {
+        let actions = ownerActions
+        if !actions.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                // 히어로 — 분업 선언 한 문장
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("역할 분담")
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(1.0)
+                        .foregroundStyle(.white.opacity(0.55))
+                    Text("복잡한 정리는 AI가 끝냈어요.\n사장님이 직접 하실 일은 \(actions.count)가지뿐이에요.")
+                        .font(.system(size: 16.5, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineSpacing(3)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
+                .background(LinearGradient(colors: [midnight, Color(red: 0.059, green: 0.059, blue: 0.29)],
+                                           startPoint: .topLeading, endPoint: .bottomTrailing))
+
+                // AI가 끝낸 것
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("AI가 끝낸 것")
+                        .font(.system(size: 10.5, weight: .heavy))
+                        .tracking(0.7)
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45))
+                    ForEach(aiDone, id: \.self) { d in
+                        HStack(alignment: .top, spacing: 7) {
+                            Text("✓").font(.system(size: 12, weight: .bold)).foregroundStyle(midnight)
+                            Text(d)
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.72))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(Color.white)
+
+                Divider().overlay(midnight.opacity(0.08))
+
+                // 사장님만 할 수 있는 일
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("사장님만 할 수 있는 일")
+                        .font(.system(size: 10.5, weight: .heavy))
+                        .tracking(0.7)
+                        .foregroundStyle(midnight)
+                    ForEach(Array(actions.enumerated()), id: \.element.id) { i, a in
+                        HStack(alignment: .top, spacing: 10) {
+                            Text("\(i + 1)")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(midnight)
+                                .frame(width: 20, height: 20)
+                                .background(midnight.opacity(0.08), in: Circle())
+                            VStack(alignment: .leading, spacing: 3) {
+                                (Text(a.title).font(.system(size: 13.5, weight: .semibold))
+                                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                                 + Text([a.estimate, a.cost].compactMap { $0 }.isEmpty
+                                        ? ""
+                                        : "  \([a.estimate, a.cost].compactMap { $0 }.joined(separator: " · "))")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45)))
+                                    .lineSpacing(2)
+                                (Text("준비됨: ").font(.system(size: 12, weight: .semibold)).foregroundStyle(midnight)
+                                 + Text(a.aiPrepared).font(.system(size: 12, weight: .regular))
+                                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55)))
+                                    .lineSpacing(2)
+                            }
+                        }
+                    }
+                    Text("각 항목은 로드맵의 해당 단계에서 자세히 안내돼요. 소요·비용은 관공서 고지 기준의 대략치입니다.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45))
+                        .lineSpacing(2)
+                        .padding(.top, 2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(Color.white)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(midnight.opacity(0.14), lineWidth: 1))
+        }
     }
 }
 

@@ -7,6 +7,13 @@ import {
   Home, Clock, Users, Umbrella, Stamp, Landmark, Lightbulb, Target,
 } from "lucide-react";
 import type { RoadmapGenerationResult } from "@foundone/ai";
+import {
+  buildOwnerActions,
+  buildAiDoneList,
+  bankLabel,
+  ownerActionTrackFor,
+  type OwnerAction,
+} from "@foundone/shared";
 import { FloatingInspiration } from "./FloatingInspiration";
 
 // ── 미드나이트 톤 일관 — 로드맵 단계 카드 디자인과 통일 ──
@@ -44,6 +51,103 @@ const STAGE_SUB: React.CSSProperties = {
   fontWeight: 500,
   lineHeight: 1.5,
 };
+
+/**
+ * 분업 선언 — "AI가 어려운 건 해결했고, 사장님이 직접 하실 일은 이것뿐" (2026-08-03).
+ *  사용자 요구 원문이 이 컴포넌트의 스펙이다: "AI가 어려운 건 해결해주고
+ *  내가 해야 할 부분만 남겨주면 좋겠다." 목록은 owner-actions SSOT(결정론)에서.
+ */
+export function DivisionOfLabor({ result, ko }: { result: RoadmapGenerationResult; ko: boolean }) {
+  const track = ownerActionTrackFor(result.parsed.industryCategoryId);
+  const taxLabel = result.legal?.taxType === "simplified" ? "간이과세"
+    : result.legal?.taxType === "standard" ? "일반과세"
+    : result.legal?.taxType === "corporation" ? "법인" : undefined;
+  const ownerActions: OwnerAction[] = buildOwnerActions({
+    track,
+    startupType: result.parsed.startupType,
+    permitsDetailed: result.legal?.permitsDetailed,
+    recommendedBankLabel: bankLabel(result.moneyInfra?.recommendedBank),
+    taxTypeLabel: taxLabel,
+  });
+  const aiDone = buildAiDoneList({
+    hasIndustryMatch: true,
+    budgetAllocated: (result.budgetAllocation?.total ?? 0) > 0,
+    permitCount: (result.legal?.permitsDetailed ?? result.recommendations.permits ?? []).length,
+    supplierCount: (result.recommendations.suppliers ?? []).length + (result.recommendations.interiorVendors ?? []).length,
+    channelCount: (result.recommendations.operationalChannels ?? []).length,
+    hasTaxType: !!result.legal?.taxType,
+    hasInsurance: (result.insurance ?? []).length > 0,
+    hasMenuOrProducts: !!(result.industrySpecific && (
+      (result.industrySpecific.menu ?? []).length > 0 ||
+      (result.industrySpecific.services ?? []).length > 0 ||
+      (result.industrySpecific.products ?? []).length > 0 ||
+      (result.industrySpecific.memberships ?? []).length > 0
+    )),
+  });
+  if (ownerActions.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 18, borderRadius: 18, border: "1px solid rgba(25,25,112,0.14)", overflow: "hidden" }}>
+      {/* 히어로 — 분업 선언 한 문장 */}
+      <div style={{ padding: "20px 24px", background: "linear-gradient(135deg, #191970 0%, #0f0f4a 100%)" }}>
+        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.55)", marginBottom: 8 }}>
+          {ko ? "역할 분담" : "Division of labor"}
+        </div>
+        <div style={{ fontSize: 17, fontWeight: 700, color: "white", letterSpacing: "-0.015em", lineHeight: 1.45 }}>
+          {ko
+            ? <>복잡한 정리는 AI가 끝냈어요. 사장님이 직접 하실 일은 <span style={{ borderBottom: "2px solid rgba(255,255,255,0.45)" }}>{ownerActions.length}가지</span>뿐이에요.</>
+            : <>The AI handled the complex part. Only {ownerActions.length} things need you in person.</>}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.35fr", background: "white" }}>
+        {/* 왼쪽 — AI가 끝낸 것 */}
+        <div style={{ padding: "18px 20px", borderRight: "1px solid rgba(25,25,112,0.08)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.45)", marginBottom: 10 }}>
+            {ko ? "AI가 끝낸 것" : "Done by AI"}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 7 }}>
+            {aiDone.map((d) => (
+              <div key={d} style={{ display: "flex", gap: 7, alignItems: "flex-start", fontSize: 12.5, color: "rgba(15,23,42,0.72)", lineHeight: 1.5 }}>
+                <span style={{ color: "#191970", fontWeight: 700, flexShrink: 0 }}>✓</span>{d}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 오른쪽 — 사장님만 할 수 있는 일 */}
+        <div style={{ padding: "18px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: "#191970", marginBottom: 10 }}>
+            {ko ? "사장님만 할 수 있는 일" : "Only you can do"}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
+            {ownerActions.map((a, i) => (
+              <div key={a.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ width: 20, height: 20, borderRadius: 999, background: "rgba(25,25,112,0.08)", color: "#191970", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 650, color: "#0f172a", lineHeight: 1.4 }}>
+                    {a.title}
+                    {(a.estimate || a.cost) && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(15,23,42,0.45)", marginLeft: 6 }}>
+                        {[a.estimate, a.cost].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)", lineHeight: 1.5, marginTop: 2 }}>
+                    <span style={{ color: "#191970", fontWeight: 600 }}>{ko ? "준비됨: " : "Ready: "}</span>{a.aiPrepared}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 14, fontSize: 11.5, color: "rgba(15,23,42,0.45)", lineHeight: 1.5 }}>
+            {ko ? "각 항목은 로드맵의 해당 단계에서 자세히 안내돼요. 소요·비용은 관공서 고지 기준의 대략치입니다." : "Each item is guided in its roadmap stage."}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── 리뷰 카드 빌딩 블록 (main 컴포넌트보다 먼저 정의 — Fast Refresh 안전) ───
 type StageCardProps = {
@@ -611,6 +715,9 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               </div>
             </div>
           )}
+
+          {/* ⭐ 분업 선언 — "AI가 해결한 것 vs 사장님이 하실 일" (2026-08-03 핵심 약속) */}
+          <DivisionOfLabor result={result} ko={ko} />
 
           {/* ⭐ 업종 매칭 검증 카드 — AI 가 어떤 업종으로 매칭했는지 + 신뢰도 + 차선책 */}
           {(() => {

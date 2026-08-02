@@ -387,10 +387,13 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
       completedAt: now,
     });
     if (result.parsed.preferredRegion) {
+      // ⚠️ completedAt 을 찍지 않는다 (2026-08-03 감사 P1).
+      //   지역명 문자열 하나로 입지 단계를 완료 처리하면, 사업 생사를 가르는 결정이
+      //   가장 얇은 데이터로 자동 통과된다. 지역은 채워두되(발품 준비) 완료는
+      //   사장님이 후보지를 직접 보고 결정한다 — "사장님만 할 수 있는 일" 1번.
       nextDecisions = upsertStageDecision(nextDecisions, "location-candidates", {
         stageId: "location-candidates",
         inputs: { preferredRegion: result.parsed.preferredRegion, selectionMode: "direct" },
-        completedAt: now,
       });
     }
 
