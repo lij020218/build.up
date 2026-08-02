@@ -13,11 +13,13 @@
  *    계측(record_surface_visit)은 2026-07-28 부터, 그 이전 활동은 기록이 없다.
  *  · 화면 방문은 "탭 진입" 이지 체류·완료가 아니다. 횟수는 하루 1,000 상한(스팸 가드).
  *  · 이메일은 마스킹해서 내려준다 (운영자도 원문을 볼 이유가 없다).
+ *  · **운영자 계정은 집계에서 제외** (2026-08-01 사장님 지시) — 테스트 사용이 실사용자
+ *    통계를 부풀린다. 제외 인원 수는 응답에 실어 화면이 명시한다(조용한 제외 금지).
  */
 import { NextResponse } from "next/server";
 import { requireAdmin, maskEmail } from "../../_lib/admin-auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { adminRateLimit, buildEmailMap, kstRecentDateStrings } from "../_shared";
+import { adminRateLimit, buildEmailMap, buildAdminUserIdSet, kstRecentDateStrings } from "../_shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,9 +57,14 @@ export async function GET(request: Request) {
   const dateSet = kstRecentDateStrings(days);
   const since = [...dateSet].sort()[0];
 
+  // 운영자 계정 — 집계 진입 전에 걸러낸다 (사장님 지시 2026-08-01)
+  const adminIds = await buildAdminUserIdSet(admin);
+  const excludedAdminIds = new Set<string>();
+
   // 유저×날짜 → 활동 누적. 블록별 독립 실패 (한쪽이 죽어도 나머지는 보여준다)
   const byUser = new Map<string, Map<string, DayActivity>>();
-  const touch = (userId: string, date: string): DayActivity => {
+  const touch = (userId: string, date: string): DayActivity | null => {
+    if (adminIds.has(userId)) { excludedAdminIds.add(userId); return null; }
     let dayMap = byUser.get(userId);
     if (!dayMap) { dayMap = new Map(); byUser.set(userId, dayMap); }
     let day = dayMap.get(date);
@@ -83,7 +90,7 @@ export async function GET(request: Request) {
         const date = typeof r.visit_date === "string" ? r.visit_date.slice(0, 10) : "";
         const count = Number(r.count ?? 0);
         if (!userId || !surface || !dateSet.has(date) || !Number.isFinite(count) || count <= 0) continue;
-        touch(userId, date).surfaces.push({ surface, count });
+        touch(userId, date)?.surfaces.push({ surface, count });
       }
     }
   } catch {
@@ -108,7 +115,7 @@ export async function GET(request: Request) {
         const date = typeof r.usage_date === "string" ? r.usage_date.slice(0, 10) : "";
         const count = Number(r.count ?? 0);
         if (!userId || !feature || !dateSet.has(date) || !Number.isFinite(count) || count <= 0) continue;
-        touch(userId, date).aiFeatures.push({ feature, count });
+        touch(userId, date)?.aiFeatures.push({ feature, count });
       }
     }
   } catch {
@@ -158,6 +165,8 @@ export async function GET(request: Request) {
     aiFailed,
     // 계측 시작일 — 이전 활동은 기록 자체가 없다는 사실을 화면이 말할 수 있게
     trackingSince: "2026-07-28",
+    // 조용히 빼지 않는다 — 화면이 "운영자 N명 제외" 를 말한다
+    excludedAdmins: excludedAdminIds.size,
     daily,
     users,
   });

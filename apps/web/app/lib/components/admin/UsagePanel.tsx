@@ -16,6 +16,8 @@ type EngagementRow = { event: string; count30d: number; users30d: number };
 type SurfaceVisitRow = { surface: string; visitDays30d: number; visitDays7d: number; users30d: number };
 type UsageResp = {
   ok: boolean;
+  /** 집계에서 제외한 운영자 계정 수 (조용한 제외 금지 — 화면이 명시) */
+  excludedAdmins?: number;
   aiUsage: { features: FeatureUsageRow[]; totalCalls30d: number; aiUsers30d: number } | null;
   spend: {
     monthKey: string;
@@ -53,6 +55,12 @@ export function UsagePanel() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {error && <Card style={{ padding: 16, color: "#b64c4c", fontSize: 13.5 }}>{error}</Card>}
+
+      {(data?.excludedAdmins ?? 0) > 0 && (
+        <div style={{ fontSize: 11.5, color: MUTED }}>
+          운영자 계정 {data?.excludedAdmins}개는 아래 모든 집계에서 제외했습니다 (테스트 사용이 실사용자 통계를 부풀리지 않도록).
+        </div>
+      )}
 
       <MetricGrid>
         <MetricCard label="AI 호출 (30일)" value={usage?.totalCalls30d ?? null} unit="회" accent hint="ai_daily_usage 원장 합계" />

@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../../_lib/admin-auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { adminRateLimit, kstMidnightUtcIso, kstRecentDateStrings } from "../_shared";
+import { adminRateLimit, kstMidnightUtcIso, kstRecentDateStrings, buildAdminUserIdSet } from "../_shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,14 +27,17 @@ export async function GET(request: Request) {
   //   ⚠️ 종전엔 user_profiles 카운트였는데 가입 트리거 도입 전 가입자가 백필되지 않아
   //     실제(auth 11명)보다 적게(7명) 표시됨 — 2026-07-28 실측으로 발견. 가짜 숫자 금지.
   //   현재 스케일은 단일 listUsers 페이지로 충분 (_shared buildEmailMap 과 동일 전제).
+  //   운영자 계정 제외 (2026-08-01 사장님 지시) — 운영 계정이 가입자 수를 부풀린다.
+  const adminIds = await buildAdminUserIdSet(admin);
   let totalUsers: number | null = null;
   let todayUsers: number | null = null;
   try {
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (!error && data) {
-      totalUsers = data.users.length;
+      const real = data.users.filter((u) => !adminIds.has(u.id));
+      totalUsers = real.length;
       const midnight = kstMidnightUtcIso();
-      todayUsers = data.users.filter((u) => u.created_at >= midnight).length;
+      todayUsers = real.filter((u) => u.created_at >= midnight).length;
     }
   } catch {
     /* null 유지 → "—" */
@@ -55,6 +58,8 @@ export async function GET(request: Request) {
       .limit(5000);
     if (!error && data) {
       activeUsers7d = data.filter((row) => {
+        const uid = (row as { user_id?: unknown }).user_id;
+        if (typeof uid === "string" && adminIds.has(uid)) return false;   // 운영자 제외
         const entries = (row as { daily_entries?: unknown }).daily_entries;
         if (!Array.isArray(entries)) return false;
         return entries.some((e) => {

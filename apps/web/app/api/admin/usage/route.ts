@@ -8,11 +8,13 @@
  *  · marketing_engagement_events — 마케팅 실행 신호 (복사 클릭·밈 원본 클릭)
  *
  * 정직성 원칙: 블록별 독립 실패 → null → UI 에서 "—" + 사유. 0 은 쿼리 성공 시에만.
+ * 운영자 계정 제외 (2026-08-01 사장님 지시): 운영자의 테스트 호출·비용이 실사용자
+ *   통계에 섞이면 사용량·비용·인원이 부풀려진다. /admin/activity 와 같은 기준(getAdminEmails).
  */
 import { NextResponse } from "next/server";
 import { requireAdmin, maskEmail } from "../../_lib/admin-auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { adminRateLimit, buildEmailMap, kstRecentDateStrings } from "../_shared";
+import { adminRateLimit, buildEmailMap, buildAdminUserIdSet, kstRecentDateStrings } from "../_shared";
 import { kstMonthKey, MONTHLY_AI_BUDGET_WON } from "../../_lib/ai-cost";
 
 export const runtime = "nodejs";
@@ -32,6 +34,10 @@ export async function GET(request: Request) {
 
   const admin = getSupabaseAdmin();
   if (!admin) return NextResponse.json({ ok: false, error: "서버 설정 오류" }, { status: 500 });
+
+  // 운영자 계정 — 모든 집계에서 제외 (사장님 지시 2026-08-01)
+  const adminIds = await buildAdminUserIdSet(admin);
+  const isAdminUser = (id: unknown): boolean => typeof id === "string" && adminIds.has(id);
 
   // ── ① 기능별 AI 사용량 (최근 30일 / 7일) ──
   let aiUsage: { features: FeatureUsageRow[]; totalCalls30d: number; aiUsers30d: number } | null = null;
@@ -54,6 +60,7 @@ export async function GET(request: Request) {
         const date = typeof r.usage_date === "string" ? r.usage_date.slice(0, 10) : "";
         const count = Number(r.count ?? 0);
         if (!feature || !days30.has(date) || !Number.isFinite(count) || count <= 0) continue;
+        if (isAdminUser(r.user_id)) continue;   // 운영자 테스트 호출 제외
         const agg = byFeature.get(feature) ?? { calls7d: 0, calls30d: 0, users: new Set<string>() };
         agg.calls30d += count;
         if (days7.has(date)) agg.calls7d += count;
@@ -98,7 +105,8 @@ export async function GET(request: Request) {
           const r = row as { user_id?: unknown; spent_won?: unknown };
           return { userId: typeof r.user_id === "string" ? r.user_id : "", spentWon: Number(r.spent_won ?? 0) };
         })
-        .filter((r) => r.userId && Number.isFinite(r.spentWon) && r.spentWon > 0);
+        .filter((r) => r.userId && Number.isFinite(r.spentWon) && r.spentWon > 0)
+        .filter((r) => !adminIds.has(r.userId));   // 운영자 테스트 비용 제외
       const emailMap = await buildEmailMap(admin);
       spend = {
         monthKey,
@@ -130,6 +138,7 @@ export async function GET(request: Request) {
       for (const row of data) {
         const r = row as { event?: unknown; user_id?: unknown };
         if (typeof r.event !== "string") continue;
+        if (isAdminUser(r.user_id)) continue;   // 운영자 제외
         const agg = byEvent.get(r.event) ?? { count: 0, users: new Set<string>() };
         agg.count += 1;
         if (typeof r.user_id === "string") agg.users.add(r.user_id);
@@ -161,6 +170,7 @@ export async function GET(request: Request) {
         const surface = typeof r.surface === "string" ? r.surface : "";
         const date = typeof r.visit_date === "string" ? r.visit_date.slice(0, 10) : "";
         if (!surface || !days30.has(date)) continue;
+        if (isAdminUser(r.user_id)) continue;   // 운영자 제외
         const agg = bySurface.get(surface) ?? { d30: 0, d7: 0, users: new Set<string>() };
         agg.d30 += 1; // 행 = 유저×화면×일 → 방문일 수
         if (days7.has(date)) agg.d7 += 1;
@@ -229,5 +239,6 @@ export async function GET(request: Request) {
     derived = { salesEntryUsers30d, roadmapActiveUsers30d, attendanceStores30d };
   }
 
-  return NextResponse.json({ ok: true, aiUsage, spend, engagement, surfaceVisits, derived });
+  // 조용히 빼지 않는다 — 화면이 "운영자 N명 제외"를 명시한다
+  return NextResponse.json({ ok: true, aiUsage, spend, engagement, surfaceVisits, derived, excludedAdmins: adminIds.size });
 }
