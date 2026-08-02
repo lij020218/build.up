@@ -8,6 +8,7 @@
 import { useAdminFetch } from "./useAdminFetch";
 import { MetricCard, MetricGrid } from "./MetricCard";
 import { Card, EmptyState, tableStyles, MUTED, NAVY, fmtNum } from "./ui";
+import { SURFACE_LABELS, AI_FEATURE_LABELS as FEATURE_LABELS } from "./activity-labels";
 
 type FeatureUsageRow = { feature: string; calls7d: number; calls30d: number; users30d: number };
 type SpendRow = { email: string; spentWon: number };
@@ -33,52 +34,8 @@ type UsageResp = {
   } | null;
 };
 
-/** surface 슬러그 → 한글 라벨 (앱 탭 이름과 동일) */
-const SURFACE_LABELS: Record<string, string> = {
-  home: "홈",
-  current: "현재 단계",
-  roadmap: "로드맵",
-  guides: "가이드",
-  franchise: "프랜차이즈",
-  profile: "내 정보",
-  analytics: "내 가게",
-  marketing: "마케팅",
-  reports: "보고서",
-  finance: "재무",
-  team: "직원",
-  tax: "세금",
-  offerings: "메뉴·재고 (오퍼링)",
-};
 
 /** feature 키 → 한글 라벨 (없는 키는 원문 표기 — 라벨 누락이 데이터를 숨기면 안 됨) */
-const FEATURE_LABELS: Record<string, string> = {
-  "quick-query": "AI 채팅",
-  "marketing-cases": "마케팅 사례·미션",
-  "marketing-cardnews": "카드뉴스 스튜디오",
-  "marketing-coach": "마케팅 코치",
-  "marketing-trends": "마케팅 트렌드",
-  "insights-industry-daily": "업종 데일리 코칭",
-  "contract-analyze": "계약서 분석",
-  "health-diagnose": "사업 건강 진단",
-  "finance-interpret": "재무 해석",
-  "report-insight": "리포트 인사이트",
-  "market-narrative": "시장 분석 내러티브",
-  "business-plan-generate": "사업계획서 생성",
-  "roadmap-generate": "로드맵 생성",
-  "funding-score": "펀딩 점수",
-  "programs-match": "지원사업 매칭",
-  "stage-brief": "단계 브리핑",
-  "interview": "AI 인터뷰",
-  "interview-analyze": "인터뷰 분석",
-  "members-parse": "회원 임포트",
-  "products-parse": "상품 임포트",
-  "agents-content-draft": "콘텐츠 초안",
-  "agents-coupon-copy": "쿠폰 문구",
-  "agents-feedback-form": "피드백 폼",
-  "guides-ask": "가이드 질문",
-  "dashboard-actions": "대시보드 AI 액션",
-  "market-recommend": "상권 추천 (비 LLM)",
-};
 
 const ENGAGEMENT_LABELS: Record<string, string> = {
   copy_click: "실행물 [복사] 클릭",
