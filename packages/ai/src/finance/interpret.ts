@@ -7,7 +7,7 @@ import { FINANCE_SYSTEM_PROMPT, buildFinanceUserPrompt } from "./prompt";
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 const DEFAULT_MAX_TOKENS = 1024;
 
 // ─── 응답 파싱 & 검증 ─────────────────────────────────────────────────────────

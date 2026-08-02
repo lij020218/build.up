@@ -69,7 +69,7 @@ export const FEATURE_COST_SPEC: Record<string, FeatureCostSpec | null> = {
 
   // ── 판단형·생성형 (5.4-mini) ──
   "business-plan-generate": { model: "gpt-5.4-mini", inCap: 5_000, outCap: 12_288 },
-  "roadmap-generate": { model: "gpt-5.4-mini", inCap: 6_000, outCap: 16_384 },
+  "roadmap-generate": { model: "gpt-5.6-terra", inCap: 6_000, outCap: 16_384, extraWon: 30, note: "Pass1 terra(effort medium) + Pass2 luna 선택호출 상한 30원 (2026-08-03 전환)" },
   "interview": { model: "gpt-5.4-mini", inCap: 3_000, outCap: 8_192 },
   "interview-analyze": { model: "gpt-5.4-mini", inCap: 4_000, outCap: 4_096 },
   "health-diagnose": { model: "gpt-5.4-mini", inCap: 3_000, outCap: 2_400 },

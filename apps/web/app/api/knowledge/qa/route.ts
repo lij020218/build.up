@@ -160,7 +160,7 @@ export async function POST(request: Request) {
       async start(controller) {
         try {
           const stream = client.messages.stream({
-            model: "claude-haiku-4-5-20251001",
+            model: "gpt-5.4-mini",
             max_tokens: 1024,
             system: SYSTEM_PROMPT,
             messages: [{ role: "user", content: userPrompt }],

@@ -9,7 +9,8 @@ import { createAiClient } from "../utils/client";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+// 2026-08-03 gpt-5.6-luna 전환 — 검증 풀에서 고르는 선택형(실패해도 결정론 폴백 존재). effort 는 중앙 가드 none.
+const DEFAULT_MODEL = "gpt-5.6-luna";
 const DEFAULT_MAX_TOKENS = 2048;
 
 export type PoolVendor = {

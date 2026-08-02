@@ -250,7 +250,7 @@ Respond with ONLY the JSON array:
   try {
     const client = createAiClient(apiKey);
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "gpt-5.4-mini",
       max_tokens: 4096,
       tools: [
         {

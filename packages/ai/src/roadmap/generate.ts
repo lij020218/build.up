@@ -8,7 +8,11 @@ import {
 } from "./prompt";
 import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+// 2026-08-03 gpt-5.6-terra 전환 (사장님 결정 — Luna vs Terra 판단):
+//  Pass 1 은 71개 세부업종 분류 + 예산 배분 + 인허가 구성의 "판단형" 호출이고,
+//  오분류가 로드맵 전체를 틀리게 만드는 유일 지점 + 계정당 사실상 1회라 상위 티어가 맞다.
+//  (선택형인 Pass 2 는 luna — select-from-pool.ts)
+const DEFAULT_MODEL = "gpt-5.6-terra";
 // 스키마 확장 (identity + team + legal.permitsDetailed + insurance + moneyInfra
 // + fundingPrograms + industrySpecific + recommendations.suppliers/interior 등)
 // 으로 응답이 길어졌으므로 최소 16384 필요. 8192 에서도 stop_reason="max_tokens" 잘림 발생.
@@ -671,6 +675,8 @@ export async function generateRoadmap(
   const rawResponse = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+    // 판단형 — 중앙 가드 기본(none)을 명시로 올린다 (client.ts 가이드라인)
+    reasoning_effort: "medium",
     // ✦ Prompt Caching (1h TTL) — system prompt 1700+ tokens 가 시간대별 안정 재사용
     system: systemWithCache(ROADMAP_GENERATION_SYSTEM_PROMPT, "1h"),
     // ✦ Tool Use — 99.8% schema 준수율 (vs JSON parsing의 환각·필드 누락 risk)

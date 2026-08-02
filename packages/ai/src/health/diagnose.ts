@@ -9,7 +9,7 @@ import {
 } from "./prompt";
 import type { HealthDiagnosisContext, HealthDiagnosisResult } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 const DEFAULT_MAX_TOKENS = 800;
 
 // ─── 응답 파싱 ──────────────────────────────────────────────────────────────

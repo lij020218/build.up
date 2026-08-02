@@ -10,7 +10,7 @@ import { systemWithCache } from "../utils/client";
 import { GUIDE_QA_SYSTEM_PROMPT, buildGuideQaUserPrompt } from "./prompt";
 import type { Language } from "@foundone/shared";
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 const DEFAULT_MAX_TOKENS = 1200;
 
 function parseGuideAiResponse(raw: string): GuideAiStructuredResponse {

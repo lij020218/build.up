@@ -6,7 +6,7 @@ import { systemWithCache } from "../utils/client";
 import { DASHBOARD_ACTION_SYSTEM_PROMPT, buildDashboardActionPrompt } from "./prompt";
 import type { DashboardContext } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 // 1024 → 1536 → 2048: insight 4단계 서사 + 액션별 정량 ROI(estimatedImpactWon) +
 //   전일 제안 후속(previousAction follow-up) 으로 출력이 늘어 토큰 여유 확대.
 const DEFAULT_MAX_TOKENS = 2048;

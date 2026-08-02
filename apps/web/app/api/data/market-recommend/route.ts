@@ -507,7 +507,7 @@ ${candidateLines}
 
   const client = createAiClient(apiKey);
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "gpt-5.4-mini",
     max_tokens: 2048,
     // ⚡ system 을 array 로 두고 마지막 블록에 cache_control — 5분 TTL 기본
     //    static 도메인 지식 (~2-3K 토큰) 이 매 호출마다 캐시에서 재사용됨.

@@ -16,7 +16,7 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const LONG_TIMEOUT_MS = 60_000;
 
 // 기존 코드의 model 이름을 OpenAI 로 매핑.
-// 새 호출처는 직접 "gpt-5.4-mini" 등을 써도 됨.
+// 2026-08-03: 모든 호출처가 실제 모델명을 쓰도록 정직화 완료 — 이 맵은 놓친 호출·구버전 안전망으로만 유지.
 const MODEL_MAP: Record<string, string> = {
   "claude-sonnet-4-6":            "gpt-5.4-mini",
   "claude-sonnet-4-5-20250929":   "gpt-5.4-mini",

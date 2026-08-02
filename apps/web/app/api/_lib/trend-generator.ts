@@ -304,7 +304,7 @@ JSON 배열만 응답:
   // max_tokens 3072→4096 (lesson + brandName + campaignName 추가 필드 수용).
   const client = createAiClient(anthropicApiKey);
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "gpt-5.4-mini",
     max_tokens: 4096,
     tools: [
       {
