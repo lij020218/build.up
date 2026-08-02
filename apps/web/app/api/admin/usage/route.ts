@@ -14,7 +14,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, maskEmail } from "../../_lib/admin-auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { adminRateLimit, buildEmailMap, buildAdminUserIdSet, kstRecentDateStrings } from "../_shared";
+import { adminRateLimit, buildEmailMap, buildExcludedUserIdSet, kstRecentDateStrings } from "../_shared";
+import { internalExclusionRules } from "../../_lib/internal-accounts";
 import { kstMonthKey, MONTHLY_AI_BUDGET_WON } from "../../_lib/ai-cost";
 
 export const runtime = "nodejs";
@@ -36,8 +37,8 @@ export async function GET(request: Request) {
   if (!admin) return NextResponse.json({ ok: false, error: "서버 설정 오류" }, { status: 500 });
 
   // 운영자 계정 — 모든 집계에서 제외 (사장님 지시 2026-08-01)
-  const adminIds = await buildAdminUserIdSet(admin);
-  const isAdminUser = (id: unknown): boolean => typeof id === "string" && adminIds.has(id);
+  const excludedIds = await buildExcludedUserIdSet(admin);
+  const isAdminUser = (id: unknown): boolean => typeof id === "string" && excludedIds.has(id);
 
   // ── ① 기능별 AI 사용량 (최근 30일 / 7일) ──
   let aiUsage: { features: FeatureUsageRow[]; totalCalls30d: number; aiUsers30d: number } | null = null;
@@ -106,7 +107,7 @@ export async function GET(request: Request) {
           return { userId: typeof r.user_id === "string" ? r.user_id : "", spentWon: Number(r.spent_won ?? 0) };
         })
         .filter((r) => r.userId && Number.isFinite(r.spentWon) && r.spentWon > 0)
-        .filter((r) => !adminIds.has(r.userId));   // 운영자 테스트 비용 제외
+        .filter((r) => !excludedIds.has(r.userId));   // 내부 계정 테스트 비용 제외
       const emailMap = await buildEmailMap(admin);
       spend = {
         monthKey,
@@ -240,5 +241,5 @@ export async function GET(request: Request) {
   }
 
   // 조용히 빼지 않는다 — 화면이 "운영자 N명 제외"를 명시한다
-  return NextResponse.json({ ok: true, aiUsage, spend, engagement, surfaceVisits, derived, excludedAdmins: adminIds.size });
+  return NextResponse.json({ ok: true, aiUsage, spend, engagement, surfaceVisits, derived, excludedAccounts: excludedIds.size, excludedRules: internalExclusionRules() });
 }

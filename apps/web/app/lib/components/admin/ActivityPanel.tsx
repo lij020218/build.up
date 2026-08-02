@@ -36,7 +36,8 @@ type ActivityResp = {
   visitsFailed: boolean;
   aiFailed: boolean;
   trackingSince: string;
-  excludedAdmins: number;
+  excludedAccounts: number;
+  excludedRules?: string[];
   daily: Array<{ date: string; users: number }>;
   users: UserActivity[];
 };
@@ -253,8 +254,8 @@ export function ActivityPanel() {
           화면 방문은 탭 진입 기준이라 체류·완료를 뜻하지 않습니다. 목록에 없는 사용자는
           “안 썼다”가 아니라 <strong>계측된 활동이 없다</strong>는 뜻이며,
           {data?.trackingSince ?? "계측 시작일"} 이전 활동은 기록이 없습니다.
-          {(data?.excludedAdmins ?? 0) > 0 && (
-            <> 운영자 계정 {data?.excludedAdmins}개는 집계에서 제외했습니다.</>
+          {(data?.excludedAccounts ?? 0) > 0 && (
+            <> 내부 계정(운영자·사장님 본인·직원·테스트) {data?.excludedAccounts}개는 집계에서 제외했습니다.</>
           )}
         </div>
       </Card>

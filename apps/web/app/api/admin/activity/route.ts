@@ -13,13 +13,14 @@
  *    계측(record_surface_visit)은 2026-07-28 부터, 그 이전 활동은 기록이 없다.
  *  · 화면 방문은 "탭 진입" 이지 체류·완료가 아니다. 횟수는 하루 1,000 상한(스팸 가드).
  *  · 이메일은 마스킹해서 내려준다 (운영자도 원문을 볼 이유가 없다).
- *  · **운영자 계정은 집계에서 제외** (2026-08-01 사장님 지시) — 테스트 사용이 실사용자
- *    통계를 부풀린다. 제외 인원 수는 응답에 실어 화면이 명시한다(조용한 제외 금지).
+ *  · **내부 계정은 집계에서 제외** (운영자·사장님 본인·직원·테스트 — internal-accounts.ts).
+ *    테스트 사용이 실사용자 통계를 부풀린다. 제외 계정 수·기준은 응답에 실어 화면이 명시한다.
  */
 import { NextResponse } from "next/server";
 import { requireAdmin, maskEmail } from "../../_lib/admin-auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { adminRateLimit, buildEmailMap, buildAdminUserIdSet, kstRecentDateStrings } from "../_shared";
+import { adminRateLimit, buildEmailMap, buildExcludedUserIdSet, kstRecentDateStrings } from "../_shared";
+import { internalExclusionRules } from "../../_lib/internal-accounts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,14 +58,13 @@ export async function GET(request: Request) {
   const dateSet = kstRecentDateStrings(days);
   const since = [...dateSet].sort()[0];
 
-  // 운영자 계정 — 집계 진입 전에 걸러낸다 (사장님 지시 2026-08-01)
-  const adminIds = await buildAdminUserIdSet(admin);
-  const excludedAdminIds = new Set<string>();
+  // 내부 계정(운영자·사장님 본인·직원·테스트) — 집계 진입 전에 걸러낸다
+  const excludedIds = await buildExcludedUserIdSet(admin);
 
   // 유저×날짜 → 활동 누적. 블록별 독립 실패 (한쪽이 죽어도 나머지는 보여준다)
   const byUser = new Map<string, Map<string, DayActivity>>();
   const touch = (userId: string, date: string): DayActivity | null => {
-    if (adminIds.has(userId)) { excludedAdminIds.add(userId); return null; }
+    if (excludedIds.has(userId)) return null;
     let dayMap = byUser.get(userId);
     if (!dayMap) { dayMap = new Map(); byUser.set(userId, dayMap); }
     let day = dayMap.get(date);
@@ -166,7 +166,8 @@ export async function GET(request: Request) {
     // 계측 시작일 — 이전 활동은 기록 자체가 없다는 사실을 화면이 말할 수 있게
     trackingSince: "2026-07-28",
     // 조용히 빼지 않는다 — 화면이 "운영자 N명 제외" 를 말한다
-    excludedAdmins: excludedAdminIds.size,
+    excludedAccounts: excludedIds.size,
+    excludedRules: internalExclusionRules(),
     daily,
     users,
   });

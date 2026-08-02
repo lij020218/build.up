@@ -4,6 +4,7 @@
 import { useAdminFetch } from "../lib/components/admin/useAdminFetch";
 import { MetricCard, MetricGrid } from "../lib/components/admin/MetricCard";
 import { Card, PageHeader, EmptyState, MUTED, NAVY, fmtNum } from "../lib/components/admin/ui";
+import { ExclusionNote } from "../lib/components/admin/ExclusionNote";
 
 type StageBucket = { stage: string; count: number };
 type Overview = {
@@ -15,6 +16,9 @@ type Overview = {
     totalFeedback: number | null;
     stageDistribution: StageBucket[] | null;
   };
+  /** 집계에서 제외한 내부 계정 수·기준 (조용한 제외 금지) */
+  excludedAccounts?: number;
+  excludedRules?: string[];
 };
 
 export default function AdminOverviewPage() {
@@ -26,6 +30,10 @@ export default function AdminOverviewPage() {
       <PageHeader title="개요" subtitle="가입·활성·피드백 한눈에 보기 (KST 기준)" />
 
       {error && <Card style={{ padding: 16, color: "#b64c4c", fontSize: 13.5, marginBottom: 16 }}>{error}</Card>}
+
+      <div style={{ marginBottom: 14 }}>
+        <ExclusionNote count={data?.excludedAccounts} rules={data?.excludedRules} />
+      </div>
 
       <MetricGrid>
         <MetricCard label="총 가입자" value={m?.totalUsers ?? null} unit="명" accent />

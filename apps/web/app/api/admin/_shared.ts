@@ -6,7 +6,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { checkSimpleRateLimit, type RateLimitResult } from "../_lib/rate-limit";
-import { getAdminEmails } from "../_lib/env";
+import { isInternalEmail } from "../_lib/internal-accounts";
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -55,27 +55,26 @@ export async function adminRateLimit(userId: string): Promise<RateLimitResult> {
 }
 
 /**
- * 운영자 계정 userId 집합 (2026-08-01 사장님 지시: "운영자로 등록된 계정은 합산 안되게").
+ * 통계에서 제외할 내부 계정 userId 집합
+ *  (2026-08-01 "운영자로 등록된 계정은 합산 안되게" → 2026-08-03 직원·본인 계정까지 확대).
  *
- *  운영자는 테스트로 화면을 열고 AI 를 돌린다 — 그게 실사용자 통계에 섞이면
+ *  운영자·사장님·직원은 테스트로 화면을 열고 AI 를 돌린다 — 그게 실사용자 통계에 섞이면
  *  사용자 수·사용량·비용이 전부 부풀려져 판단을 그르친다.
- *  판정 기준은 인증과 동일한 SSOT(getAdminEmails) — 인증되는 계정이 곧 제외 대상.
+ *  판정은 isInternalEmail 하나 (관리자 allowlist ∪ 내부 명단) — 권한과는 무관하다.
  *
- *  ⚠️ 조용히 빼지 말 것. 호출처는 제외한 인원 수를 응답에 실어 화면이 명시하게 한다
+ *  ⚠️ 조용히 빼지 말 것. 호출처는 제외한 계정 수를 응답에 실어 화면이 명시하게 한다
  *     (숫자가 안 맞을 때 "왜 적지?" 를 만들지 않기 위해).
  */
-export async function buildAdminUserIdSet(admin: SupabaseClient, cap = 1000): Promise<Set<string>> {
+export async function buildExcludedUserIdSet(admin: SupabaseClient, cap = 1000): Promise<Set<string>> {
   const set = new Set<string>();
-  const adminEmails = new Set(getAdminEmails().map((e) => e.toLowerCase()));
-  if (adminEmails.size === 0) return set;
   try {
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: cap });
     if (error || !data) return set;
     for (const u of data.users) {
-      if (u.email && adminEmails.has(u.email.toLowerCase())) set.add(u.id);
+      if (isInternalEmail(u.email)) set.add(u.id);
     }
   } catch {
-    /* 실패 시 빈 집합 — 제외를 못 했다는 뜻이므로 호출처가 excludedAdmins=0 으로 보고한다 */
+    /* 실패 시 빈 집합 — 제외를 못 했다는 뜻이므로 호출처가 excludedAccounts=0 으로 보고한다 */
   }
   return set;
 }
