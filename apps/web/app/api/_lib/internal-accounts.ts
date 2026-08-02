@@ -19,12 +19,13 @@ import { getAdminEmails } from "./env";
 /** 도메인 무관 — 이 local part 를 쓰는 계정은 전부 사장님 본인 (@naver/@cau/@daum …) */
 const INTERNAL_LOCAL_PARTS = ["lij020218"];
 
-/** 개별 지정 계정 (사장님이 이름으로 지목한 직원 계정) */
+/** 개별 지정 계정 — 사장님이 직접 지목 (직원 + local part 규칙에 안 걸리는 본인 계정) */
 const INTERNAL_EMAILS = [
-  "yeoumyejun@gmail.com",
-  "yeoumyejun@naver.com",
-  "kim@naver.com",
-  "kim2@naver.com",
+  "yeoumyejun@gmail.com",  // 직원
+  "yeoumyejun@naver.com",  // 직원
+  "kim@naver.com",         // 직원
+  "kim2@naver.com",        // 직원
+  "lki720412@gmail.com",   // 사장님 본인 (local part 가 lij020218 이 아니라 개별 지정)
 ];
 
 /**
@@ -76,7 +77,7 @@ export function internalExclusionRules(): string[] {
   return [
     `관리자 계정 (${getAdminEmails().length}개)`,
     `사장님 본인 계정 (${INTERNAL_LOCAL_PARTS.join(", ")}@* — 도메인 무관)`,
-    `직원 계정 (${INTERNAL_EMAILS.length}개)`,
+    `개별 지정 계정 (직원·본인 ${INTERNAL_EMAILS.length}개)`,
     "테스트 도메인 (example.com 등 RFC 2606 예약)",
   ];
 }

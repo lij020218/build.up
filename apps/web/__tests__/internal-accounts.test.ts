@@ -25,8 +25,14 @@ describe("내부 계정 — 통계 제외 대상", () => {
     }
   });
 
-  it("지목된 직원 계정 (yeom·kim)", () => {
-    for (const e of ["yeoumyejun@gmail.com", "yeoumyejun@naver.com", "kim@naver.com", "kim2@naver.com"]) {
+  it("개별 지목 계정 — 직원(yeom·kim) + local part 규칙에 안 걸리는 본인 계정", () => {
+    for (const e of [
+      "yeoumyejun@gmail.com",
+      "yeoumyejun@naver.com",
+      "kim@naver.com",
+      "kim2@naver.com",
+      "lki720412@gmail.com",   // 사장님 본인 (2026-08-03 추가 지시)
+    ]) {
       expect(isInternalEmail(e), e).toBe(true);
     }
   });
