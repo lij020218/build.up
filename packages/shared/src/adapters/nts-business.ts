@@ -25,7 +25,15 @@ export type NtsBusinessStatus = {
   businessNumber: string;
   taxType: string;                // 과세유형 (일반/간이/면세 등)
   taxTypeCode: string;
-  operatingStatus: "active" | "suspended" | "closed";
+  /**
+   * 상태 판정 — 국세청 코드 명시값만 단정한다 (2026-08-03 정직성 감사):
+   *  · active/suspended/closed = 국세청이 01/02/03 으로 명시한 경우만
+   *  · unregistered = 국세청 DB 에 없는 번호 (오타 또는 **갓 발급되어 전산 반영 전**).
+   *    ⚠️ 종전엔 이걸 "closed(폐업)" 로 뭉갰다 — 방금 사업자등록을 마친 사장님에게
+   *    "휴·폐업 상태" 를 보여주는 거짓. 미등록 ≠ 폐업.
+   *  · unknown = 코드가 비었거나 스펙 밖 — 아무것도 단정하지 않는다 (기본값 03 주입 금지)
+   */
+  operatingStatus: "active" | "suspended" | "closed" | "unregistered" | "unknown";
   operatingStatusCode: string;
   closureDate?: string;
   fetchedAt: string;
@@ -34,10 +42,20 @@ export type NtsBusinessStatus = {
 const DEFAULT_BASE_URL = "https://api.odcloud.kr/api/nts-businessman/v1";
 const DEFAULT_TIMEOUT = 10_000;
 
-function mapOperatingStatus(code: string): "active" | "suspended" | "closed" {
+/** 미등록 응답 감지 — 국세청은 미등록 번호에 tax_type 필드로 이 안내문을 실어 보낸다 */
+export function isNtsUnregisteredMessage(taxType: string): boolean {
+  return taxType.includes("등록되지 않은");
+}
+
+export function mapOperatingStatus(
+  code: string,
+  taxType: string,
+): "active" | "suspended" | "closed" | "unregistered" | "unknown" {
+  if (isNtsUnregisteredMessage(taxType)) return "unregistered";
   if (code === "01") return "active";
   if (code === "02") return "suspended";
-  return "closed";
+  if (code === "03") return "closed";
+  return "unknown";
 }
 
 /** 사업자등록 진위확인 (최대 100건) */
@@ -118,15 +136,19 @@ export async function checkBusinessStatus(
     const items = json?.data ?? [];
     const now = new Date().toISOString();
 
-    const data: NtsBusinessStatus[] = items.map((item: Record<string, unknown>) => ({
-      businessNumber: String(item.b_no ?? ""),
-      taxType: String(item.tax_type ?? ""),
-      taxTypeCode: String(item.tax_type_cd ?? ""),
-      operatingStatus: mapOperatingStatus(String(item.b_stt_cd ?? "03")),
-      operatingStatusCode: String(item.b_stt_cd ?? ""),
-      closureDate: item.end_dt ? String(item.end_dt) : undefined,
-      fetchedAt: now,
-    }));
+    const data: NtsBusinessStatus[] = items.map((item: Record<string, unknown>) => {
+      const taxType = String(item.tax_type ?? "");
+      const statusCode = String(item.b_stt_cd ?? "");   // 기본값 "03" 주입 금지 — 없는 건 없는 것
+      return {
+        businessNumber: String(item.b_no ?? ""),
+        taxType,
+        taxTypeCode: String(item.tax_type_cd ?? ""),
+        operatingStatus: mapOperatingStatus(statusCode, taxType),
+        operatingStatusCode: statusCode,
+        closureDate: item.end_dt ? String(item.end_dt) : undefined,
+        fetchedAt: now,
+      };
+    });
 
     return {
       data,

@@ -18,7 +18,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const result = await checkBusinessStatus({ apiKey, baseUrl: "" }, body.businessNumbers ?? []);
+    // 입력 검증 — 비배열이면 .map 크래시(502 위장), 무제한 배열이면 임의번호 대량조회 통로
+    const nums = Array.isArray(body?.businessNumbers)
+      ? body.businessNumbers.filter((n: unknown): n is string => typeof n === "string").slice(0, 10)
+      : [];
+    if (nums.length === 0) {
+      return NextResponse.json({ error: "businessNumbers 배열이 필요합니다." }, { status: 400 });
+    }
+    const result = await checkBusinessStatus({ apiKey, baseUrl: "" }, nums);
     return NextResponse.json(result, { headers: { "x-request-id": requestId } });
   } catch (error) {
     logApiError(route, "fetch_failed", error, { requestId, userId: auth.userId, status: 502 });

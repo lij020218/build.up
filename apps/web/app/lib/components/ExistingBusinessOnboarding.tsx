@@ -91,7 +91,10 @@ type MissionPrefetch =
 type BizLookup =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "done"; taxTypeLabel: string; isActive: boolean; isSimplified: boolean | null }
+  // isActive: true=계속사업자, false=휴·폐업 명시, null=국세청이 상태를 안 줌 → 상태 단정 안 함
+  | { status: "done"; taxTypeLabel: string; isActive: boolean | null; isSimplified: boolean | null }
+  // 국세청 DB 에 없는 번호 — 오타 또는 갓 발급되어 전산 반영 전. "폐업"이 아니다 (2026-08-03 감사)
+  | { status: "notfound" }
   | { status: "error" };
 
 const EMPLOYEES_BANDS = [
@@ -222,6 +225,9 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
       const json = await res.json();
       const item = json?.data?.[0];
       if (!item || !item.taxType) { setBizLookup({ status: "error" }); return; }
+      // 미등록 — 종전엔 이 안내문("국세청에 등록되지 않은…")이 과세유형 라벨로 흘러들어
+      //   "✓ 국세청에 등록되지 않은… · 휴·폐업 상태 — 국세청 확인" 이라는 모순 배지가 떴다.
+      if (item.operatingStatus === "unregistered") { setBizLookup({ status: "notfound" }); return; }
       // tax_type 예: "부가가치세 일반과세자" / "부가가치세 간이과세자" / "면세사업자"
       const label: string = item.taxType;
       const simplified = label.includes("간이") ? true : label.includes("일반") ? false : null;
@@ -229,7 +235,10 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
       setBizLookup({
         status: "done",
         taxTypeLabel: label.replace("부가가치세 ", ""),
-        isActive: item.operatingStatus ? item.operatingStatus === "active" : true,
+        // 국세청이 상태 코드를 명시한 경우만 단정 — 없으면 null (종전 기본값 true = 위조)
+        isActive: item.operatingStatus === "active" ? true
+          : item.operatingStatus === "suspended" || item.operatingStatus === "closed" ? false
+          : null,
         isSimplified: simplified,
       });
     } catch {
@@ -543,7 +552,18 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                 </div>
                 {bizLookup.status === "done" && (
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px", flexWrap: "wrap" }}>
-                    <span style={verifiedBadge}>✓ {bizLookup.taxTypeLabel} · {bizLookup.isActive ? (ko ? "계속사업자" : "Active") : (ko ? "휴·폐업 상태" : "Inactive")} — {ko ? "국세청 확인" : "NTS verified"}</span>
+                    <span style={verifiedBadge}>
+                      ✓ {bizLookup.taxTypeLabel}
+                      {bizLookup.isActive !== null && <> · {bizLookup.isActive ? (ko ? "계속사업자" : "Active") : (ko ? "휴·폐업 상태" : "Inactive")}</>}
+                      {" — "}{ko ? "국세청 확인" : "NTS verified"}
+                    </span>
+                  </div>
+                )}
+                {bizLookup.status === "notfound" && (
+                  <div style={helperStyle}>
+                    {ko
+                      ? "국세청에서 찾을 수 없는 번호예요. 방금 등록하셨다면 전산 반영 전일 수 있어요 — 번호를 확인하거나, 아래에서 과세유형만 직접 선택하면 됩니다."
+                      : "Not found in NTS records. If you just registered, it may not be reflected yet — check the number or pick your VAT type below."}
                   </div>
                 )}
                 {bizLookup.status === "error" && (
