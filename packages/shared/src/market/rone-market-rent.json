@@ -1,0 +1,4914 @@
+{
+ "_source": "한국부동산원 상업용부동산 임대동향조사 (R-ONE Open API, 국가승인통계)",
+ "_sourceUrl": "https://www.reb.or.kr/r-one/",
+ "_quarter": "202602",
+ "_quarterLabel": "2026년 2분기",
+ "_fetchedAt": "2026-08-02",
+ "_unitNote": "임대료=천원/㎡(월세 환산·1층 기준 평균), 공실률=%. 보증금·권리금 미포함.",
+ "districts": [
+  {
+   "fullName": "강원>강릉교동",
+   "sido": "강원",
+   "district": "강릉교동",
+   "rentThousandWonPerM2": {
+    "small": 18.4,
+    "medium": 20.1
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 11.1
+   }
+  },
+  {
+   "fullName": "강원>강릉중부",
+   "sido": "강원",
+   "district": "강릉중부",
+   "rentThousandWonPerM2": {
+    "small": 9.8,
+    "medium": 15.1,
+    "aggregate": 13.1
+   },
+   "vacancyPct": {
+    "small": 9.8,
+    "medium": 16.7,
+    "aggregate": 18.7
+   }
+  },
+  {
+   "fullName": "강원>동해천곡",
+   "sido": "강원",
+   "district": "동해천곡",
+   "rentThousandWonPerM2": {
+    "aggregate": 24.8
+   },
+   "vacancyPct": {
+    "aggregate": 13.8
+   }
+  },
+  {
+   "fullName": "강원>묵호항",
+   "sido": "강원",
+   "district": "묵호항",
+   "rentThousandWonPerM2": {
+    "small": 11.1,
+    "medium": 8.7
+   },
+   "vacancyPct": {
+    "small": 5.9,
+    "medium": 18
+   }
+  },
+  {
+   "fullName": "강원>삼척중앙시장",
+   "sido": "강원",
+   "district": "삼척중앙시장",
+   "rentThousandWonPerM2": {
+    "small": 9.8,
+    "medium": 17.2,
+    "aggregate": 15.8
+   },
+   "vacancyPct": {
+    "small": 2.4,
+    "medium": 12.9,
+    "aggregate": 28.4
+   }
+  },
+  {
+   "fullName": "강원>속초중앙시장",
+   "sido": "강원",
+   "district": "속초중앙시장",
+   "rentThousandWonPerM2": {
+    "small": 18.3,
+    "medium": 16.9,
+    "aggregate": 17.1
+   },
+   "vacancyPct": {
+    "small": 13.1,
+    "medium": 24.8,
+    "aggregate": 4.7
+   }
+  },
+  {
+   "fullName": "강원>영월경찰서",
+   "sido": "강원",
+   "district": "영월경찰서",
+   "rentThousandWonPerM2": {
+    "small": 10.6,
+    "medium": 7.5,
+    "aggregate": 9.3
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.3,
+    "aggregate": 0
+   }
+  },
+  {
+   "fullName": "강원>원주무실지구",
+   "sido": "강원",
+   "district": "원주무실지구",
+   "rentThousandWonPerM2": {
+    "aggregate": 19.8
+   },
+   "vacancyPct": {
+    "aggregate": 17.6
+   }
+  },
+  {
+   "fullName": "강원>원주중앙/일산",
+   "sido": "강원",
+   "district": "원주중앙/일산",
+   "rentThousandWonPerM2": {
+    "small": 16.2,
+    "medium": 17.8,
+    "aggregate": 34.4
+   },
+   "vacancyPct": {
+    "small": 7.6,
+    "medium": 36.2,
+    "aggregate": 40.8
+   }
+  },
+  {
+   "fullName": "강원>원주터미널",
+   "sido": "강원",
+   "district": "원주터미널",
+   "rentThousandWonPerM2": {
+    "medium": 18.8
+   },
+   "vacancyPct": {
+    "medium": 10.9
+   }
+  },
+  {
+   "fullName": "강원>원주혁신도시",
+   "sido": "강원",
+   "district": "원주혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 17.3
+   },
+   "vacancyPct": {
+    "aggregate": 15.9
+   }
+  },
+  {
+   "fullName": "강원>주문진항",
+   "sido": "강원",
+   "district": "주문진항",
+   "rentThousandWonPerM2": {
+    "small": 10.6,
+    "medium": 8.5
+   },
+   "vacancyPct": {
+    "small": 9.9,
+    "medium": 16.2
+   }
+  },
+  {
+   "fullName": "강원>춘천명동",
+   "sido": "강원",
+   "district": "춘천명동",
+   "rentThousandWonPerM2": {
+    "small": 14,
+    "medium": 19.5,
+    "aggregate": 22.3
+   },
+   "vacancyPct": {
+    "small": 11,
+    "medium": 27,
+    "aggregate": 15.9
+   }
+  },
+  {
+   "fullName": "강원>태백중앙시장",
+   "sido": "강원",
+   "district": "태백중앙시장",
+   "rentThousandWonPerM2": {
+    "small": 10.6,
+    "medium": 9.2,
+    "aggregate": 18.1
+   },
+   "vacancyPct": {
+    "small": 4.7,
+    "medium": 10.6,
+    "aggregate": 43.1
+   }
+  },
+  {
+   "fullName": "경기>고양시청",
+   "sido": "경기",
+   "district": "고양시청",
+   "rentThousandWonPerM2": {
+    "small": 20.7,
+    "medium": 25.6,
+    "aggregate": 31.6
+   },
+   "vacancyPct": {
+    "small": 4.9,
+    "medium": 11.9,
+    "aggregate": 2.4
+   }
+  },
+  {
+   "fullName": "경기>고잔신도시",
+   "sido": "경기",
+   "district": "고잔신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 22
+   },
+   "vacancyPct": {
+    "aggregate": 1.3
+   }
+  },
+  {
+   "fullName": "경기>광교중앙역",
+   "sido": "경기",
+   "district": "광교중앙역",
+   "rentThousandWonPerM2": {
+    "aggregate": 20.1
+   },
+   "vacancyPct": {
+    "aggregate": 9
+   }
+  },
+  {
+   "fullName": "경기>광명철산",
+   "sido": "경기",
+   "district": "광명철산",
+   "rentThousandWonPerM2": {
+    "small": 37.8,
+    "medium": 36.5,
+    "aggregate": 45.4
+   },
+   "vacancyPct": {
+    "small": 3.6,
+    "medium": 10.2,
+    "aggregate": 6.2
+   }
+  },
+  {
+   "fullName": "경기>광주광남동",
+   "sido": "경기",
+   "district": "광주광남동",
+   "rentThousandWonPerM2": {
+    "medium": 28
+   },
+   "vacancyPct": {
+    "medium": 5.6
+   }
+  },
+  {
+   "fullName": "경기>광주시가지",
+   "sido": "경기",
+   "district": "광주시가지",
+   "rentThousandWonPerM2": {
+    "small": 23.9,
+    "medium": 24
+   },
+   "vacancyPct": {
+    "small": 3.2,
+    "medium": 3.8
+   }
+  },
+  {
+   "fullName": "경기>구리역",
+   "sido": "경기",
+   "district": "구리역",
+   "rentThousandWonPerM2": {
+    "small": 35,
+    "medium": 24.9
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 28.2
+   }
+  },
+  {
+   "fullName": "경기>금릉역",
+   "sido": "경기",
+   "district": "금릉역",
+   "rentThousandWonPerM2": {
+    "aggregate": 30.3
+   },
+   "vacancyPct": {
+    "aggregate": 20.3
+   }
+  },
+  {
+   "fullName": "경기>기흥역",
+   "sido": "경기",
+   "district": "기흥역",
+   "rentThousandWonPerM2": {
+    "small": 29.8,
+    "medium": 25.4
+   },
+   "vacancyPct": {
+    "small": 7.2,
+    "medium": 17.2
+   }
+  },
+  {
+   "fullName": "경기>김량장동",
+   "sido": "경기",
+   "district": "김량장동",
+   "rentThousandWonPerM2": {
+    "small": 21.7,
+    "medium": 27.4
+   },
+   "vacancyPct": {
+    "small": 5.8,
+    "medium": 9.2
+   }
+  },
+  {
+   "fullName": "경기>김포운양역",
+   "sido": "경기",
+   "district": "김포운양역",
+   "rentThousandWonPerM2": {
+    "aggregate": 32.6
+   },
+   "vacancyPct": {
+    "aggregate": 0.6
+   }
+  },
+  {
+   "fullName": "경기>김포장기역",
+   "sido": "경기",
+   "district": "김포장기역",
+   "rentThousandWonPerM2": {
+    "aggregate": 31.7
+   },
+   "vacancyPct": {
+    "aggregate": 7.1
+   }
+  },
+  {
+   "fullName": "경기>김포한강구래",
+   "sido": "경기",
+   "district": "김포한강구래",
+   "rentThousandWonPerM2": {
+    "aggregate": 34.1
+   },
+   "vacancyPct": {
+    "aggregate": 11.5
+   }
+  },
+  {
+   "fullName": "경기>남양주다산",
+   "sido": "경기",
+   "district": "남양주다산",
+   "rentThousandWonPerM2": {
+    "aggregate": 29.2
+   },
+   "vacancyPct": {
+    "aggregate": 14.2
+   }
+  },
+  {
+   "fullName": "경기>남양주별내",
+   "sido": "경기",
+   "district": "남양주별내",
+   "rentThousandWonPerM2": {
+    "aggregate": 32.1
+   },
+   "vacancyPct": {
+    "aggregate": 8.8
+   }
+  },
+  {
+   "fullName": "경기>단대오거리역",
+   "sido": "경기",
+   "district": "단대오거리역",
+   "rentThousandWonPerM2": {
+    "medium": 33.6
+   },
+   "vacancyPct": {
+    "medium": 7.3
+   }
+  },
+  {
+   "fullName": "경기>동두천중앙로",
+   "sido": "경기",
+   "district": "동두천중앙로",
+   "rentThousandWonPerM2": {
+    "small": 14.1,
+    "medium": 16
+   },
+   "vacancyPct": {
+    "small": 17.4,
+    "medium": 19.5
+   }
+  },
+  {
+   "fullName": "경기>동백지구",
+   "sido": "경기",
+   "district": "동백지구",
+   "rentThousandWonPerM2": {
+    "aggregate": 29.1
+   },
+   "vacancyPct": {
+    "aggregate": 0.8
+   }
+  },
+  {
+   "fullName": "경기>동탄2신도시",
+   "sido": "경기",
+   "district": "동탄2신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 35.3
+   },
+   "vacancyPct": {
+    "aggregate": 3.1
+   }
+  },
+  {
+   "fullName": "경기>동탄센트럴파크",
+   "sido": "경기",
+   "district": "동탄센트럴파크",
+   "rentThousandWonPerM2": {
+    "aggregate": 33.2
+   },
+   "vacancyPct": {
+    "aggregate": 6.4
+   }
+  },
+  {
+   "fullName": "경기>모란",
+   "sido": "경기",
+   "district": "모란",
+   "rentThousandWonPerM2": {
+    "small": 45.7,
+    "medium": 41.2,
+    "aggregate": 33.2
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 6.1,
+    "aggregate": 2.2
+   }
+  },
+  {
+   "fullName": "경기>미사지구",
+   "sido": "경기",
+   "district": "미사지구",
+   "rentThousandWonPerM2": {
+    "aggregate": 37.1
+   },
+   "vacancyPct": {
+    "aggregate": 6.9
+   }
+  },
+  {
+   "fullName": "경기>배곧신도시",
+   "sido": "경기",
+   "district": "배곧신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 19.6
+   },
+   "vacancyPct": {
+    "aggregate": 8.7
+   }
+  },
+  {
+   "fullName": "경기>범계학원가",
+   "sido": "경기",
+   "district": "범계학원가",
+   "rentThousandWonPerM2": {
+    "aggregate": 25
+   },
+   "vacancyPct": {
+    "aggregate": 0.1
+   }
+  },
+  {
+   "fullName": "경기>병점역",
+   "sido": "경기",
+   "district": "병점역",
+   "rentThousandWonPerM2": {
+    "small": 24.7,
+    "medium": 21.8,
+    "aggregate": 20.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 13.1,
+    "aggregate": 3.1
+   }
+  },
+  {
+   "fullName": "경기>부천역",
+   "sido": "경기",
+   "district": "부천역",
+   "rentThousandWonPerM2": {
+    "small": 28.5,
+    "medium": 26.9,
+    "aggregate": 35
+   },
+   "vacancyPct": {
+    "small": 2.1,
+    "medium": 17.3,
+    "aggregate": 2.2
+   }
+  },
+  {
+   "fullName": "경기>분당역세권",
+   "sido": "경기",
+   "district": "분당역세권",
+   "rentThousandWonPerM2": {
+    "medium": 41.2,
+    "aggregate": 50
+   },
+   "vacancyPct": {
+    "medium": 1.4,
+    "aggregate": 0.5
+   }
+  },
+  {
+   "fullName": "경기>산본역",
+   "sido": "경기",
+   "district": "산본역",
+   "rentThousandWonPerM2": {
+    "aggregate": 45
+   },
+   "vacancyPct": {
+    "aggregate": 0
+   }
+  },
+  {
+   "fullName": "경기>상록수역",
+   "sido": "경기",
+   "district": "상록수역",
+   "rentThousandWonPerM2": {
+    "aggregate": 31.2
+   },
+   "vacancyPct": {
+    "aggregate": 5.9
+   }
+  },
+  {
+   "fullName": "경기>상중동",
+   "sido": "경기",
+   "district": "상중동",
+   "rentThousandWonPerM2": {
+    "aggregate": 34.9
+   },
+   "vacancyPct": {
+    "aggregate": 3.5
+   }
+  },
+  {
+   "fullName": "경기>상현역",
+   "sido": "경기",
+   "district": "상현역",
+   "rentThousandWonPerM2": {
+    "aggregate": 32.6
+   },
+   "vacancyPct": {
+    "aggregate": 2.1
+   }
+  },
+  {
+   "fullName": "경기>서판교",
+   "sido": "경기",
+   "district": "서판교",
+   "rentThousandWonPerM2": {
+    "aggregate": 31.6
+   },
+   "vacancyPct": {
+    "aggregate": 0.9
+   }
+  },
+  {
+   "fullName": "경기>선부다이아몬드",
+   "sido": "경기",
+   "district": "선부다이아몬드",
+   "rentThousandWonPerM2": {
+    "aggregate": 23.8
+   },
+   "vacancyPct": {
+    "aggregate": 3.5
+   }
+  },
+  {
+   "fullName": "경기>성남구시가지",
+   "sido": "경기",
+   "district": "성남구시가지",
+   "rentThousandWonPerM2": {
+    "small": 27.9,
+    "medium": 29.5,
+    "aggregate": 26.4
+   },
+   "vacancyPct": {
+    "small": 11.4,
+    "medium": 12.1,
+    "aggregate": 5.5
+   }
+  },
+  {
+   "fullName": "경기>송내역",
+   "sido": "경기",
+   "district": "송내역",
+   "rentThousandWonPerM2": {
+    "aggregate": 24.9
+   },
+   "vacancyPct": {
+    "aggregate": 6
+   }
+  },
+  {
+   "fullName": "경기>수원역",
+   "sido": "경기",
+   "district": "수원역",
+   "rentThousandWonPerM2": {
+    "small": 51,
+    "medium": 47.9,
+    "aggregate": 30
+   },
+   "vacancyPct": {
+    "small": 10.6,
+    "medium": 13.4,
+    "aggregate": 8.7
+   }
+  },
+  {
+   "fullName": "경기>수원파장동",
+   "sido": "경기",
+   "district": "수원파장동",
+   "rentThousandWonPerM2": {
+    "small": 19.9,
+    "medium": 39.3
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 19
+   }
+  },
+  {
+   "fullName": "경기>시흥시립도서관",
+   "sido": "경기",
+   "district": "시흥시립도서관",
+   "rentThousandWonPerM2": {
+    "aggregate": 16.7
+   },
+   "vacancyPct": {
+    "aggregate": 0.3
+   }
+  },
+  {
+   "fullName": "경기>신장/지산/서정",
+   "sido": "경기",
+   "district": "신장/지산/서정",
+   "rentThousandWonPerM2": {
+    "small": 16.6,
+    "medium": 17.8
+   },
+   "vacancyPct": {
+    "small": 3.9,
+    "medium": 11.8
+   }
+  },
+  {
+   "fullName": "경기>신천역",
+   "sido": "경기",
+   "district": "신천역",
+   "rentThousandWonPerM2": {
+    "small": 20.4,
+    "medium": 19.1
+   },
+   "vacancyPct": {
+    "small": 15.9,
+    "medium": 12.4
+   }
+  },
+  {
+   "fullName": "경기>아주대삼거리",
+   "sido": "경기",
+   "district": "아주대삼거리",
+   "rentThousandWonPerM2": {
+    "medium": 29.1
+   },
+   "vacancyPct": {
+    "medium": 12
+   }
+  },
+  {
+   "fullName": "경기>안산중앙역",
+   "sido": "경기",
+   "district": "안산중앙역",
+   "rentThousandWonPerM2": {
+    "aggregate": 41.3
+   },
+   "vacancyPct": {
+    "aggregate": 6.5
+   }
+  },
+  {
+   "fullName": "경기>안성 서인사거리",
+   "sido": "경기",
+   "district": "안성 서인사거리",
+   "rentThousandWonPerM2": {
+    "small": 12.8,
+    "medium": 11.3,
+    "aggregate": 22.1
+   },
+   "vacancyPct": {
+    "small": 18.2,
+    "medium": 23.1,
+    "aggregate": 12.3
+   }
+  },
+  {
+   "fullName": "경기>안양역",
+   "sido": "경기",
+   "district": "안양역",
+   "rentThousandWonPerM2": {
+    "small": 32.5,
+    "medium": 38.2,
+    "aggregate": 41.8
+   },
+   "vacancyPct": {
+    "small": 7.8,
+    "medium": 18.3,
+    "aggregate": 21.5
+   }
+  },
+  {
+   "fullName": "경기>야탑역",
+   "sido": "경기",
+   "district": "야탑역",
+   "rentThousandWonPerM2": {
+    "aggregate": 33.6
+   },
+   "vacancyPct": {
+    "aggregate": 3.4
+   }
+  },
+  {
+   "fullName": "경기>양주덕정역",
+   "sido": "경기",
+   "district": "양주덕정역",
+   "rentThousandWonPerM2": {
+    "small": 22.3,
+    "medium": 19.9
+   },
+   "vacancyPct": {
+    "small": 14.8,
+    "medium": 12.3
+   }
+  },
+  {
+   "fullName": "경기>여주시청",
+   "sido": "경기",
+   "district": "여주시청",
+   "rentThousandWonPerM2": {
+    "small": 17.4,
+    "medium": 10.6
+   },
+   "vacancyPct": {
+    "small": 23.5,
+    "medium": 6.9
+   }
+  },
+  {
+   "fullName": "경기>역곡역",
+   "sido": "경기",
+   "district": "역곡역",
+   "rentThousandWonPerM2": {
+    "aggregate": 23.1
+   },
+   "vacancyPct": {
+    "aggregate": 0
+   }
+  },
+  {
+   "fullName": "경기>영통역",
+   "sido": "경기",
+   "district": "영통역",
+   "rentThousandWonPerM2": {
+    "medium": 25.3
+   },
+   "vacancyPct": {
+    "medium": 9.4
+   }
+  },
+  {
+   "fullName": "경기>오산시청",
+   "sido": "경기",
+   "district": "오산시청",
+   "rentThousandWonPerM2": {
+    "small": 19.2,
+    "medium": 18.3,
+    "aggregate": 25.5
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 4.1,
+    "aggregate": 8.7
+   }
+  },
+  {
+   "fullName": "경기>용인수지",
+   "sido": "경기",
+   "district": "용인수지",
+   "rentThousandWonPerM2": {
+    "small": 25.3,
+    "medium": 31.3,
+    "aggregate": 28.5
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 5.1,
+    "aggregate": 1.4
+   }
+  },
+  {
+   "fullName": "경기>월피다이아몬드",
+   "sido": "경기",
+   "district": "월피다이아몬드",
+   "rentThousandWonPerM2": {
+    "aggregate": 22
+   },
+   "vacancyPct": {
+    "aggregate": 6.1
+   }
+  },
+  {
+   "fullName": "경기>위례신도시",
+   "sido": "경기",
+   "district": "위례신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 26.5
+   },
+   "vacancyPct": {
+    "aggregate": 4
+   }
+  },
+  {
+   "fullName": "경기>의정부민락",
+   "sido": "경기",
+   "district": "의정부민락",
+   "rentThousandWonPerM2": {
+    "aggregate": 28.4
+   },
+   "vacancyPct": {
+    "aggregate": 7.6
+   }
+  },
+  {
+   "fullName": "경기>의정부역",
+   "sido": "경기",
+   "district": "의정부역",
+   "rentThousandWonPerM2": {
+    "small": 34.4,
+    "medium": 39.3,
+    "aggregate": 32
+   },
+   "vacancyPct": {
+    "small": 11.9,
+    "medium": 12.5,
+    "aggregate": 5.7
+   }
+  },
+  {
+   "fullName": "경기>이천종합터미널",
+   "sido": "경기",
+   "district": "이천종합터미널",
+   "rentThousandWonPerM2": {
+    "small": 17.1,
+    "medium": 17,
+    "aggregate": 22.2
+   },
+   "vacancyPct": {
+    "small": 1.4,
+    "medium": 12.4,
+    "aggregate": 11.4
+   }
+  },
+  {
+   "fullName": "경기>인계동",
+   "sido": "경기",
+   "district": "인계동",
+   "rentThousandWonPerM2": {
+    "small": 25.7,
+    "medium": 25.3,
+    "aggregate": 25.8
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 13.5,
+    "aggregate": 0
+   }
+  },
+  {
+   "fullName": "경기>인덕원",
+   "sido": "경기",
+   "district": "인덕원",
+   "rentThousandWonPerM2": {
+    "small": 31.7,
+    "medium": 31
+   },
+   "vacancyPct": {
+    "small": 9.7,
+    "medium": 5.4
+   }
+  },
+  {
+   "fullName": "경기>일산라페스타",
+   "sido": "경기",
+   "district": "일산라페스타",
+   "rentThousandWonPerM2": {
+    "aggregate": 25.5
+   },
+   "vacancyPct": {
+    "aggregate": 7
+   }
+  },
+  {
+   "fullName": "경기>죽전카페거리",
+   "sido": "경기",
+   "district": "죽전카페거리",
+   "rentThousandWonPerM2": {
+    "aggregate": 43.7
+   },
+   "vacancyPct": {
+    "aggregate": 0.5
+   }
+  },
+  {
+   "fullName": "경기>탄현역",
+   "sido": "경기",
+   "district": "탄현역",
+   "rentThousandWonPerM2": {
+    "small": 20.1,
+    "medium": 26.1,
+    "aggregate": 17.6
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 20.6,
+    "aggregate": 0.8
+   }
+  },
+  {
+   "fullName": "경기>파주시청",
+   "sido": "경기",
+   "district": "파주시청",
+   "rentThousandWonPerM2": {
+    "small": 23.5,
+    "medium": 24.8,
+    "aggregate": 15.3
+   },
+   "vacancyPct": {
+    "small": 4.9,
+    "medium": 18.3,
+    "aggregate": 5.2
+   }
+  },
+  {
+   "fullName": "경기>파주야당역",
+   "sido": "경기",
+   "district": "파주야당역",
+   "rentThousandWonPerM2": {
+    "aggregate": 36.2
+   },
+   "vacancyPct": {
+    "aggregate": 2.7
+   }
+  },
+  {
+   "fullName": "경기>파주운정호수",
+   "sido": "경기",
+   "district": "파주운정호수",
+   "rentThousandWonPerM2": {
+    "aggregate": 33.2
+   },
+   "vacancyPct": {
+    "aggregate": 4.8
+   }
+  },
+  {
+   "fullName": "경기>팔달문로터리",
+   "sido": "경기",
+   "district": "팔달문로터리",
+   "rentThousandWonPerM2": {
+    "small": 30.4,
+    "medium": 32.7,
+    "aggregate": 25.3
+   },
+   "vacancyPct": {
+    "small": 17.1,
+    "medium": 24.5,
+    "aggregate": 13.4
+   }
+  },
+  {
+   "fullName": "경기>평촌범계",
+   "sido": "경기",
+   "district": "평촌범계",
+   "rentThousandWonPerM2": {
+    "aggregate": 57.4
+   },
+   "vacancyPct": {
+    "aggregate": 2.5
+   }
+  },
+  {
+   "fullName": "경기>평택시청",
+   "sido": "경기",
+   "district": "평택시청",
+   "rentThousandWonPerM2": {
+    "medium": 16.4
+   },
+   "vacancyPct": {
+    "medium": 13.6
+   }
+  },
+  {
+   "fullName": "경기>평택역",
+   "sido": "경기",
+   "district": "평택역",
+   "rentThousandWonPerM2": {
+    "small": 20,
+    "medium": 34,
+    "aggregate": 24
+   },
+   "vacancyPct": {
+    "small": 15.9,
+    "medium": 10.9,
+    "aggregate": 15.1
+   }
+  },
+  {
+   "fullName": "경기>포천소흘읍",
+   "sido": "경기",
+   "district": "포천소흘읍",
+   "rentThousandWonPerM2": {
+    "small": 17.6,
+    "medium": 20.4
+   },
+   "vacancyPct": {
+    "small": 11.9,
+    "medium": 10
+   }
+  },
+  {
+   "fullName": "경기>포천시외버스터미널",
+   "sido": "경기",
+   "district": "포천시외버스터미널",
+   "rentThousandWonPerM2": {
+    "small": 13.7,
+    "medium": 14.3
+   },
+   "vacancyPct": {
+    "small": 14.6,
+    "medium": 13
+   }
+  },
+  {
+   "fullName": "경기>하남원도심",
+   "sido": "경기",
+   "district": "하남원도심",
+   "rentThousandWonPerM2": {
+    "small": 39,
+    "medium": 35.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.8
+   }
+  },
+  {
+   "fullName": "경기>한대앞역",
+   "sido": "경기",
+   "district": "한대앞역",
+   "rentThousandWonPerM2": {
+    "aggregate": 23.9
+   },
+   "vacancyPct": {
+    "aggregate": 1.3
+   }
+  },
+  {
+   "fullName": "경기>행신역",
+   "sido": "경기",
+   "district": "행신역",
+   "rentThousandWonPerM2": {
+    "aggregate": 20.6
+   },
+   "vacancyPct": {
+    "aggregate": 5.7
+   }
+  },
+  {
+   "fullName": "경기>화성남양읍",
+   "sido": "경기",
+   "district": "화성남양읍",
+   "rentThousandWonPerM2": {
+    "small": 18.2,
+    "medium": 21.7
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 17.1
+   }
+  },
+  {
+   "fullName": "경기>화성봉담읍",
+   "sido": "경기",
+   "district": "화성봉담읍",
+   "rentThousandWonPerM2": {
+    "small": 24.7,
+    "medium": 21.7
+   },
+   "vacancyPct": {
+    "small": 1.4,
+    "medium": 9.8
+   }
+  },
+  {
+   "fullName": "경기>화정역",
+   "sido": "경기",
+   "district": "화정역",
+   "rentThousandWonPerM2": {
+    "aggregate": 40.5
+   },
+   "vacancyPct": {
+    "aggregate": 4.6
+   }
+  },
+  {
+   "fullName": "경남>거제고현",
+   "sido": "경남",
+   "district": "거제고현",
+   "rentThousandWonPerM2": {
+    "small": 14.4,
+    "medium": 18.6,
+    "aggregate": 27.9
+   },
+   "vacancyPct": {
+    "small": 13.4,
+    "medium": 16.1,
+    "aggregate": 14.2
+   }
+  },
+  {
+   "fullName": "경남>거제옥포",
+   "sido": "경남",
+   "district": "거제옥포",
+   "rentThousandWonPerM2": {
+    "small": 11.9,
+    "medium": 14.1,
+    "aggregate": 13.4
+   },
+   "vacancyPct": {
+    "small": 16.1,
+    "medium": 33.3,
+    "aggregate": 25
+   }
+  },
+  {
+   "fullName": "경남>김해수리공원",
+   "sido": "경남",
+   "district": "김해수리공원",
+   "rentThousandWonPerM2": {
+    "aggregate": 28.3
+   },
+   "vacancyPct": {
+    "aggregate": 4.5
+   }
+  },
+  {
+   "fullName": "경남>김해시 내외동",
+   "sido": "경남",
+   "district": "김해시 내외동",
+   "rentThousandWonPerM2": {
+    "aggregate": 32.2
+   },
+   "vacancyPct": {
+    "aggregate": 18.1
+   }
+  },
+  {
+   "fullName": "경남>김해시청/동상시장",
+   "sido": "경남",
+   "district": "김해시청/동상시장",
+   "rentThousandWonPerM2": {
+    "small": 12.2,
+    "medium": 13.2,
+    "aggregate": 12.6
+   },
+   "vacancyPct": {
+    "small": 13.7,
+    "medium": 14.1,
+    "aggregate": 14.9
+   }
+  },
+  {
+   "fullName": "경남>김해장유",
+   "sido": "경남",
+   "district": "김해장유",
+   "rentThousandWonPerM2": {
+    "aggregate": 15.9
+   },
+   "vacancyPct": {
+    "aggregate": 7.2
+   }
+  },
+  {
+   "fullName": "경남>마산동서동",
+   "sido": "경남",
+   "district": "마산동서동",
+   "rentThousandWonPerM2": {
+    "small": 14.5,
+    "medium": 18.1,
+    "aggregate": 13.8
+   },
+   "vacancyPct": {
+    "small": 9.4,
+    "medium": 14.8,
+    "aggregate": 33.6
+   }
+  },
+  {
+   "fullName": "경남>마산역버스터미널",
+   "sido": "경남",
+   "district": "마산역버스터미널",
+   "rentThousandWonPerM2": {
+    "small": 15.9,
+    "medium": 23.3,
+    "aggregate": 18.5
+   },
+   "vacancyPct": {
+    "small": 7.7,
+    "medium": 18.1,
+    "aggregate": 26.5
+   }
+  },
+  {
+   "fullName": "경남>물금지구",
+   "sido": "경남",
+   "district": "물금지구",
+   "rentThousandWonPerM2": {
+    "aggregate": 16.7
+   },
+   "vacancyPct": {
+    "aggregate": 14.3
+   }
+  },
+  {
+   "fullName": "경남>밀양원도심/삼문동",
+   "sido": "경남",
+   "district": "밀양원도심/삼문동",
+   "rentThousandWonPerM2": {
+    "small": 11.3,
+    "medium": 11
+   },
+   "vacancyPct": {
+    "small": 20.2,
+    "medium": 7.2
+   }
+  },
+  {
+   "fullName": "경남>양산구도심",
+   "sido": "경남",
+   "district": "양산구도심",
+   "rentThousandWonPerM2": {
+    "small": 9.8,
+    "medium": 11.5,
+    "aggregate": 10.6
+   },
+   "vacancyPct": {
+    "small": 11.1,
+    "medium": 27.3,
+    "aggregate": 10.2
+   }
+  },
+  {
+   "fullName": "경남>양산역",
+   "sido": "경남",
+   "district": "양산역",
+   "rentThousandWonPerM2": {
+    "aggregate": 22.8
+   },
+   "vacancyPct": {
+    "aggregate": 14.4
+   }
+  },
+  {
+   "fullName": "경남>용원동",
+   "sido": "경남",
+   "district": "용원동",
+   "rentThousandWonPerM2": {
+    "small": 12,
+    "medium": 18.2
+   },
+   "vacancyPct": {
+    "small": 3.1,
+    "medium": 12.7
+   }
+  },
+  {
+   "fullName": "경남>진주중앙시장",
+   "sido": "경남",
+   "district": "진주중앙시장",
+   "rentThousandWonPerM2": {
+    "small": 14.2,
+    "medium": 14.1
+   },
+   "vacancyPct": {
+    "small": 25.3,
+    "medium": 29.6
+   }
+  },
+  {
+   "fullName": "경남>진주하대동",
+   "sido": "경남",
+   "district": "진주하대동",
+   "rentThousandWonPerM2": {
+    "small": 13.6,
+    "medium": 15.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 3.3
+   }
+  },
+  {
+   "fullName": "경남>진주혁신도시",
+   "sido": "경남",
+   "district": "진주혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 21.6
+   },
+   "vacancyPct": {
+    "aggregate": 3.8
+   }
+  },
+  {
+   "fullName": "경남>진해석동",
+   "sido": "경남",
+   "district": "진해석동",
+   "rentThousandWonPerM2": {
+    "small": 18.8,
+    "medium": 18.6,
+    "aggregate": 15.9
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 12.7,
+    "aggregate": 11.3
+   }
+  },
+  {
+   "fullName": "경남>창원명곡동",
+   "sido": "경남",
+   "district": "창원명곡동",
+   "rentThousandWonPerM2": {
+    "aggregate": 15.7
+   },
+   "vacancyPct": {
+    "aggregate": 8.6
+   }
+  },
+  {
+   "fullName": "경남>창원시청",
+   "sido": "경남",
+   "district": "창원시청",
+   "rentThousandWonPerM2": {
+    "small": 10.7,
+    "medium": 19.1,
+    "aggregate": 21.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 6.7,
+    "aggregate": 7.6
+   }
+  },
+  {
+   "fullName": "경남>창원역",
+   "sido": "경남",
+   "district": "창원역",
+   "rentThousandWonPerM2": {
+    "small": 16.5,
+    "medium": 12.2,
+    "aggregate": 12.3
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 15.8,
+    "aggregate": 9.5
+   }
+  },
+  {
+   "fullName": "경남>창원월영동",
+   "sido": "경남",
+   "district": "창원월영동",
+   "rentThousandWonPerM2": {
+    "small": 22.4,
+    "medium": 14.1,
+    "aggregate": 31.7
+   },
+   "vacancyPct": {
+    "small": 12.4,
+    "medium": 13,
+    "aggregate": 21.2
+   }
+  },
+  {
+   "fullName": "경남>창원의창구청",
+   "sido": "경남",
+   "district": "창원의창구청",
+   "rentThousandWonPerM2": {
+    "small": 9.4,
+    "medium": 11.4,
+    "aggregate": 9.2
+   },
+   "vacancyPct": {
+    "small": 5.9,
+    "medium": 16.6,
+    "aggregate": 38.1
+   }
+  },
+  {
+   "fullName": "경남>통영 강구안",
+   "sido": "경남",
+   "district": "통영 강구안",
+   "rentThousandWonPerM2": {
+    "small": 19.4,
+    "medium": 13.8
+   },
+   "vacancyPct": {
+    "small": 11.8,
+    "medium": 29.4
+   }
+  },
+  {
+   "fullName": "경남>통영시청",
+   "sido": "경남",
+   "district": "통영시청",
+   "rentThousandWonPerM2": {
+    "small": 17.2,
+    "medium": 13.9
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 12.8
+   }
+  },
+  {
+   "fullName": "경남>평거동",
+   "sido": "경남",
+   "district": "평거동",
+   "rentThousandWonPerM2": {
+    "small": 12.4,
+    "medium": 30
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 8.3
+   }
+  },
+  {
+   "fullName": "경남>활천동",
+   "sido": "경남",
+   "district": "활천동",
+   "rentThousandWonPerM2": {
+    "small": 10.9,
+    "medium": 10,
+    "aggregate": 11
+   },
+   "vacancyPct": {
+    "small": 1.8,
+    "medium": 9.1,
+    "aggregate": 2.7
+   }
+  },
+  {
+   "fullName": "경북>가흥택지개발지구",
+   "sido": "경북",
+   "district": "가흥택지개발지구",
+   "rentThousandWonPerM2": {
+    "small": 12.3,
+    "medium": 9.9
+   },
+   "vacancyPct": {
+    "small": 6.3,
+    "medium": 0
+   }
+  },
+  {
+   "fullName": "경북>경북김천혁신도시",
+   "sido": "경북",
+   "district": "경북김천혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 13.7
+   },
+   "vacancyPct": {
+    "aggregate": 44
+   }
+  },
+  {
+   "fullName": "경북>경북도청신도시",
+   "sido": "경북",
+   "district": "경북도청신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 13.6
+   },
+   "vacancyPct": {
+    "aggregate": 30.7
+   }
+  },
+  {
+   "fullName": "경북>경산시청",
+   "sido": "경북",
+   "district": "경산시청",
+   "rentThousandWonPerM2": {
+    "small": 14.4,
+    "medium": 10.6
+   },
+   "vacancyPct": {
+    "small": 5.6,
+    "medium": 8.8
+   }
+  },
+  {
+   "fullName": "경북>경주도심",
+   "sido": "경북",
+   "district": "경주도심",
+   "rentThousandWonPerM2": {
+    "small": 20.9,
+    "medium": 16.1
+   },
+   "vacancyPct": {
+    "small": 22.2,
+    "medium": 17
+   }
+  },
+  {
+   "fullName": "경북>구미산업단지",
+   "sido": "경북",
+   "district": "구미산업단지",
+   "rentThousandWonPerM2": {
+    "small": 16,
+    "medium": 13.4,
+    "aggregate": 21.2
+   },
+   "vacancyPct": {
+    "small": 18.8,
+    "medium": 26.2,
+    "aggregate": 17.3
+   }
+  },
+  {
+   "fullName": "경북>구미선주원남동",
+   "sido": "경북",
+   "district": "구미선주원남동",
+   "rentThousandWonPerM2": {
+    "small": 11.9,
+    "medium": 9.8
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.1
+   }
+  },
+  {
+   "fullName": "경북>구미역",
+   "sido": "경북",
+   "district": "구미역",
+   "rentThousandWonPerM2": {
+    "small": 14.2,
+    "medium": 18,
+    "aggregate": 22.5
+   },
+   "vacancyPct": {
+    "small": 6.8,
+    "medium": 26.9,
+    "aggregate": 26.2
+   }
+  },
+  {
+   "fullName": "경북>문경점촌흥덕",
+   "sido": "경북",
+   "district": "문경점촌흥덕",
+   "rentThousandWonPerM2": {
+    "small": 9.5,
+    "medium": 12.3,
+    "aggregate": 14.5
+   },
+   "vacancyPct": {
+    "small": 18.5,
+    "medium": 16.1,
+    "aggregate": 5.1
+   }
+  },
+  {
+   "fullName": "경북>상주동문동",
+   "sido": "경북",
+   "district": "상주동문동",
+   "rentThousandWonPerM2": {
+    "small": 10.1,
+    "medium": 12.4
+   },
+   "vacancyPct": {
+    "small": 29.7,
+    "medium": 30.7
+   }
+  },
+  {
+   "fullName": "경북>안동구도심",
+   "sido": "경북",
+   "district": "안동구도심",
+   "rentThousandWonPerM2": {
+    "small": 12.5,
+    "medium": 9.6,
+    "aggregate": 14.9
+   },
+   "vacancyPct": {
+    "small": 7.6,
+    "medium": 19.2,
+    "aggregate": 37.2
+   }
+  },
+  {
+   "fullName": "경북>양덕동",
+   "sido": "경북",
+   "district": "양덕동",
+   "rentThousandWonPerM2": {
+    "small": 9.8,
+    "medium": 11.2
+   },
+   "vacancyPct": {
+    "small": 9.1,
+    "medium": 23.1
+   }
+  },
+  {
+   "fullName": "경북>영일대해수욕장",
+   "sido": "경북",
+   "district": "영일대해수욕장",
+   "rentThousandWonPerM2": {
+    "small": 17.8,
+    "medium": 16.8
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 19.4
+   }
+  },
+  {
+   "fullName": "경북>영주중앙",
+   "sido": "경북",
+   "district": "영주중앙",
+   "rentThousandWonPerM2": {
+    "small": 8.5,
+    "medium": 10.9,
+    "aggregate": 7.3
+   },
+   "vacancyPct": {
+    "small": 19.8,
+    "medium": 34.4,
+    "aggregate": 10.6
+   }
+  },
+  {
+   "fullName": "경북>옥동사거리",
+   "sido": "경북",
+   "district": "옥동사거리",
+   "rentThousandWonPerM2": {
+    "small": 11.2,
+    "medium": 13.9,
+    "aggregate": 14.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 11.5,
+    "aggregate": 18.3
+   }
+  },
+  {
+   "fullName": "경북>포항원도심",
+   "sido": "경북",
+   "district": "포항원도심",
+   "rentThousandWonPerM2": {
+    "small": 10.9,
+    "medium": 13.3,
+    "aggregate": 13.9
+   },
+   "vacancyPct": {
+    "small": 3.5,
+    "medium": 15.3,
+    "aggregate": 24.8
+   }
+  },
+  {
+   "fullName": "경북>포항중앙",
+   "sido": "경북",
+   "district": "포항중앙",
+   "rentThousandWonPerM2": {
+    "small": 11.9,
+    "medium": 16.2,
+    "aggregate": 15.5
+   },
+   "vacancyPct": {
+    "small": 20.8,
+    "medium": 33.7,
+    "aggregate": 38.2
+   }
+  },
+  {
+   "fullName": "경북>포항효자동",
+   "sido": "경북",
+   "district": "포항효자동",
+   "rentThousandWonPerM2": {
+    "small": 17.4,
+    "medium": 15.3
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 3.5
+   }
+  },
+  {
+   "fullName": "경북>황리단길",
+   "sido": "경북",
+   "district": "황리단길",
+   "rentThousandWonPerM2": {
+    "small": 39.1
+   },
+   "vacancyPct": {
+    "small": 0
+   }
+  },
+  {
+   "fullName": "광주>금남로/충장로",
+   "sido": "광주",
+   "district": "금남로/충장로",
+   "rentThousandWonPerM2": {
+    "small": 19.1,
+    "medium": 30.3,
+    "aggregate": 20.9
+   },
+   "vacancyPct": {
+    "small": 15,
+    "medium": 26.5,
+    "aggregate": 24.5
+   }
+  },
+  {
+   "fullName": "광주>금호지구",
+   "sido": "광주",
+   "district": "금호지구",
+   "rentThousandWonPerM2": {
+    "small": 27.6,
+    "medium": 20.6
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 13.8
+   }
+  },
+  {
+   "fullName": "광주>봉선동",
+   "sido": "광주",
+   "district": "봉선동",
+   "rentThousandWonPerM2": {
+    "small": 11.2,
+    "medium": 20,
+    "aggregate": 18.6
+   },
+   "vacancyPct": {
+    "small": 7.9,
+    "medium": 9.4,
+    "aggregate": 1.5
+   }
+  },
+  {
+   "fullName": "광주>상무지구",
+   "sido": "광주",
+   "district": "상무지구",
+   "rentThousandWonPerM2": {
+    "small": 19,
+    "medium": 22.2,
+    "aggregate": 26.2
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 17.8,
+    "aggregate": 7.5
+   }
+  },
+  {
+   "fullName": "광주>송정동지구",
+   "sido": "광주",
+   "district": "송정동지구",
+   "rentThousandWonPerM2": {
+    "small": 19.3,
+    "medium": 16.3,
+    "aggregate": 20.4
+   },
+   "vacancyPct": {
+    "small": 18.1,
+    "medium": 4.1,
+    "aggregate": 10.8
+   }
+  },
+  {
+   "fullName": "광주>수완지구",
+   "sido": "광주",
+   "district": "수완지구",
+   "rentThousandWonPerM2": {
+    "aggregate": 26.8
+   },
+   "vacancyPct": {
+    "aggregate": 9
+   }
+  },
+  {
+   "fullName": "광주>양산지구",
+   "sido": "광주",
+   "district": "양산지구",
+   "rentThousandWonPerM2": {
+    "small": 14.5,
+    "medium": 17.2
+   },
+   "vacancyPct": {
+    "small": 5.6,
+    "medium": 2.5
+   }
+  },
+  {
+   "fullName": "광주>어룡동",
+   "sido": "광주",
+   "district": "어룡동",
+   "rentThousandWonPerM2": {
+    "medium": 20.1
+   },
+   "vacancyPct": {
+    "medium": 24.8
+   }
+  },
+  {
+   "fullName": "광주>용봉동",
+   "sido": "광주",
+   "district": "용봉동",
+   "rentThousandWonPerM2": {
+    "small": 13,
+    "medium": 17.2
+   },
+   "vacancyPct": {
+    "small": 3.5,
+    "medium": 12.3
+   }
+  },
+  {
+   "fullName": "광주>우산동",
+   "sido": "광주",
+   "district": "우산동",
+   "rentThousandWonPerM2": {
+    "medium": 25
+   },
+   "vacancyPct": {
+    "medium": 4
+   }
+  },
+  {
+   "fullName": "광주>월산동지구",
+   "sido": "광주",
+   "district": "월산동지구",
+   "rentThousandWonPerM2": {
+    "small": 15.8,
+    "medium": 15.3
+   },
+   "vacancyPct": {
+    "small": 4.7,
+    "medium": 25.8
+   }
+  },
+  {
+   "fullName": "광주>일곡동",
+   "sido": "광주",
+   "district": "일곡동",
+   "rentThousandWonPerM2": {
+    "medium": 29.8
+   },
+   "vacancyPct": {
+    "medium": 3.3
+   }
+  },
+  {
+   "fullName": "광주>전남대",
+   "sido": "광주",
+   "district": "전남대",
+   "rentThousandWonPerM2": {
+    "small": 21.9,
+    "medium": 26.8
+   },
+   "vacancyPct": {
+    "small": 30.1,
+    "medium": 39.5
+   }
+  },
+  {
+   "fullName": "광주>첨단1지구",
+   "sido": "광주",
+   "district": "첨단1지구",
+   "rentThousandWonPerM2": {
+    "small": 21,
+    "medium": 21.2,
+    "aggregate": 19.8
+   },
+   "vacancyPct": {
+    "small": 6,
+    "medium": 11.1,
+    "aggregate": 4.2
+   }
+  },
+  {
+   "fullName": "광주>첨단2지구",
+   "sido": "광주",
+   "district": "첨단2지구",
+   "rentThousandWonPerM2": {
+    "aggregate": 18.3
+   },
+   "vacancyPct": {
+    "aggregate": 11.6
+   }
+  },
+  {
+   "fullName": "대구>경북대북문",
+   "sido": "대구",
+   "district": "경북대북문",
+   "rentThousandWonPerM2": {
+    "small": 17.5,
+    "medium": 24.2
+   },
+   "vacancyPct": {
+    "small": 5.8,
+    "medium": 19.3
+   }
+  },
+  {
+   "fullName": "대구>계명대",
+   "sido": "대구",
+   "district": "계명대",
+   "rentThousandWonPerM2": {
+    "medium": 14.8,
+    "aggregate": 23.9
+   },
+   "vacancyPct": {
+    "medium": 23.3,
+    "aggregate": 12.1
+   }
+  },
+  {
+   "fullName": "대구>대구혁신도시",
+   "sido": "대구",
+   "district": "대구혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 19
+   },
+   "vacancyPct": {
+    "aggregate": 31.9
+   }
+  },
+  {
+   "fullName": "대구>동대구",
+   "sido": "대구",
+   "district": "동대구",
+   "rentThousandWonPerM2": {
+    "small": 11.3,
+    "medium": 17
+   },
+   "vacancyPct": {
+    "small": 8,
+    "medium": 17.2
+   }
+  },
+  {
+   "fullName": "대구>동성로중심",
+   "sido": "대구",
+   "district": "동성로중심",
+   "rentThousandWonPerM2": {
+    "small": 26.8,
+    "medium": 35.9,
+    "aggregate": 28.5
+   },
+   "vacancyPct": {
+    "small": 12.8,
+    "medium": 25.8,
+    "aggregate": 12.8
+   }
+  },
+  {
+   "fullName": "대구>동호지구",
+   "sido": "대구",
+   "district": "동호지구",
+   "rentThousandWonPerM2": {
+    "medium": 12.8
+   },
+   "vacancyPct": {
+    "medium": 4.2
+   }
+  },
+  {
+   "fullName": "대구>두류감삼역",
+   "sido": "대구",
+   "district": "두류감삼역",
+   "rentThousandWonPerM2": {
+    "small": 19.8,
+    "medium": 24.9,
+    "aggregate": 22.1
+   },
+   "vacancyPct": {
+    "small": 3.7,
+    "medium": 18.3,
+    "aggregate": 13.2
+   }
+  },
+  {
+   "fullName": "대구>들안길",
+   "sido": "대구",
+   "district": "들안길",
+   "rentThousandWonPerM2": {
+    "small": 18.5,
+    "medium": 19.4
+   },
+   "vacancyPct": {
+    "small": 17,
+    "medium": 5.2
+   }
+  },
+  {
+   "fullName": "대구>삼덕/대봉",
+   "sido": "대구",
+   "district": "삼덕/대봉",
+   "rentThousandWonPerM2": {
+    "small": 27.2,
+    "medium": 21
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 14.3
+   }
+  },
+  {
+   "fullName": "대구>상인/월배",
+   "sido": "대구",
+   "district": "상인/월배",
+   "rentThousandWonPerM2": {
+    "small": 28.6,
+    "medium": 28.9,
+    "aggregate": 23.7
+   },
+   "vacancyPct": {
+    "small": 6.6,
+    "medium": 22.7,
+    "aggregate": 13.7
+   }
+  },
+  {
+   "fullName": "대구>서문시장/청라언덕",
+   "sido": "대구",
+   "district": "서문시장/청라언덕",
+   "rentThousandWonPerM2": {
+    "small": 17.3,
+    "medium": 13.6,
+    "aggregate": 25.9
+   },
+   "vacancyPct": {
+    "small": 10.1,
+    "medium": 38.3,
+    "aggregate": 2.3
+   }
+  },
+  {
+   "fullName": "대구>수성범어",
+   "sido": "대구",
+   "district": "수성범어",
+   "rentThousandWonPerM2": {
+    "small": 24.6,
+    "medium": 23.2,
+    "aggregate": 20
+   },
+   "vacancyPct": {
+    "small": 19.4,
+    "medium": 13.8,
+    "aggregate": 6.6
+   }
+  },
+  {
+   "fullName": "대구>시지지구",
+   "sido": "대구",
+   "district": "시지지구",
+   "rentThousandWonPerM2": {
+    "small": 21.7,
+    "medium": 24.5,
+    "aggregate": 20.1
+   },
+   "vacancyPct": {
+    "small": 8.2,
+    "medium": 20.7,
+    "aggregate": 15.3
+   }
+  },
+  {
+   "fullName": "대구>월촌/안지랑",
+   "sido": "대구",
+   "district": "월촌/안지랑",
+   "rentThousandWonPerM2": {
+    "small": 16.5,
+    "medium": 18.4
+   },
+   "vacancyPct": {
+    "small": 13.7,
+    "medium": 18.4
+   }
+  },
+  {
+   "fullName": "대구>이시아폴리스",
+   "sido": "대구",
+   "district": "이시아폴리스",
+   "rentThousandWonPerM2": {
+    "aggregate": 18.3
+   },
+   "vacancyPct": {
+    "aggregate": 12.5
+   }
+  },
+  {
+   "fullName": "대구>죽전역",
+   "sido": "대구",
+   "district": "죽전역",
+   "rentThousandWonPerM2": {
+    "small": 18.3,
+    "medium": 19.9,
+    "aggregate": 19.4
+   },
+   "vacancyPct": {
+    "small": 14.9,
+    "medium": 20,
+    "aggregate": 5.5
+   }
+  },
+  {
+   "fullName": "대구>칠곡",
+   "sido": "대구",
+   "district": "칠곡",
+   "rentThousandWonPerM2": {
+    "small": 22.2,
+    "medium": 17.5,
+    "aggregate": 32.2
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 14.2,
+    "aggregate": 5.3
+   }
+  },
+  {
+   "fullName": "대구>현풍테크노폴리스",
+   "sido": "대구",
+   "district": "현풍테크노폴리스",
+   "rentThousandWonPerM2": {
+    "aggregate": 20.5
+   },
+   "vacancyPct": {
+    "aggregate": 17.4
+   }
+  },
+  {
+   "fullName": "대전>가수원",
+   "sido": "대전",
+   "district": "가수원",
+   "rentThousandWonPerM2": {
+    "aggregate": 18.3
+   },
+   "vacancyPct": {
+    "aggregate": 11.1
+   }
+  },
+  {
+   "fullName": "대전>관평동",
+   "sido": "대전",
+   "district": "관평동",
+   "rentThousandWonPerM2": {
+    "medium": 16.6
+   },
+   "vacancyPct": {
+    "medium": 17.8
+   }
+  },
+  {
+   "fullName": "대전>노은",
+   "sido": "대전",
+   "district": "노은",
+   "rentThousandWonPerM2": {
+    "small": 17.9,
+    "medium": 14.8,
+    "aggregate": 23.9
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 16.3,
+    "aggregate": 6.2
+   }
+  },
+  {
+   "fullName": "대전>대전동구청",
+   "sido": "대전",
+   "district": "대전동구청",
+   "rentThousandWonPerM2": {
+    "aggregate": 28.7
+   },
+   "vacancyPct": {
+    "aggregate": 5.9
+   }
+  },
+  {
+   "fullName": "대전>대전원도심",
+   "sido": "대전",
+   "district": "대전원도심",
+   "rentThousandWonPerM2": {
+    "small": 15.7,
+    "medium": 16
+   },
+   "vacancyPct": {
+    "small": 9.8,
+    "medium": 17.3
+   }
+  },
+  {
+   "fullName": "대전>동춘당공원",
+   "sido": "대전",
+   "district": "동춘당공원",
+   "rentThousandWonPerM2": {
+    "aggregate": 20.6
+   },
+   "vacancyPct": {
+    "aggregate": 9.1
+   }
+  },
+  {
+   "fullName": "대전>둔산",
+   "sido": "대전",
+   "district": "둔산",
+   "rentThousandWonPerM2": {
+    "medium": 28.2,
+    "aggregate": 22.5
+   },
+   "vacancyPct": {
+    "medium": 9.5,
+    "aggregate": 12.7
+   }
+  },
+  {
+   "fullName": "대전>목원대",
+   "sido": "대전",
+   "district": "목원대",
+   "rentThousandWonPerM2": {
+    "aggregate": 17.2
+   },
+   "vacancyPct": {
+    "aggregate": 6.9
+   }
+  },
+  {
+   "fullName": "대전>복합터미널",
+   "sido": "대전",
+   "district": "복합터미널",
+   "rentThousandWonPerM2": {
+    "small": 11.3,
+    "medium": 19.8
+   },
+   "vacancyPct": {
+    "small": 14.5,
+    "medium": 19.6
+   }
+  },
+  {
+   "fullName": "대전>서대전네거리",
+   "sido": "대전",
+   "district": "서대전네거리",
+   "rentThousandWonPerM2": {
+    "small": 20.5,
+    "medium": 16.1
+   },
+   "vacancyPct": {
+    "small": 6.5,
+    "medium": 9.2
+   }
+  },
+  {
+   "fullName": "대전>용문/한민시장",
+   "sido": "대전",
+   "district": "용문/한민시장",
+   "rentThousandWonPerM2": {
+    "small": 14.6,
+    "medium": 16
+   },
+   "vacancyPct": {
+    "small": 4.4,
+    "medium": 11.4
+   }
+  },
+  {
+   "fullName": "대전>유성온천역",
+   "sido": "대전",
+   "district": "유성온천역",
+   "rentThousandWonPerM2": {
+    "small": 10.7,
+    "medium": 16.8,
+    "aggregate": 28.7
+   },
+   "vacancyPct": {
+    "small": 17.4,
+    "medium": 13.4,
+    "aggregate": 7.7
+   }
+  },
+  {
+   "fullName": "부산>개금역",
+   "sido": "부산",
+   "district": "개금역",
+   "rentThousandWonPerM2": {
+    "small": 19.7,
+    "medium": 23.6
+   },
+   "vacancyPct": {
+    "small": 6.2,
+    "medium": 19.8
+   }
+  },
+  {
+   "fullName": "부산>경성대/부경대",
+   "sido": "부산",
+   "district": "경성대/부경대",
+   "rentThousandWonPerM2": {
+    "small": 32.9,
+    "medium": 37.6
+   },
+   "vacancyPct": {
+    "small": 4.1,
+    "medium": 12.1
+   }
+  },
+  {
+   "fullName": "부산>광안리",
+   "sido": "부산",
+   "district": "광안리",
+   "rentThousandWonPerM2": {
+    "small": 32.2,
+    "medium": 42.5,
+    "aggregate": 41.8
+   },
+   "vacancyPct": {
+    "small": 10.4,
+    "medium": 7.9,
+    "aggregate": 15.9
+   }
+  },
+  {
+   "fullName": "부산>구서동/금정구청",
+   "sido": "부산",
+   "district": "구서동/금정구청",
+   "rentThousandWonPerM2": {
+    "small": 31.9,
+    "medium": 25.5
+   },
+   "vacancyPct": {
+    "small": 10,
+    "medium": 12.7
+   }
+  },
+  {
+   "fullName": "부산>남포동",
+   "sido": "부산",
+   "district": "남포동",
+   "rentThousandWonPerM2": {
+    "small": 43.1,
+    "medium": 54.7,
+    "aggregate": 41.1
+   },
+   "vacancyPct": {
+    "small": 15.5,
+    "medium": 23.6,
+    "aggregate": 12
+   }
+  },
+  {
+   "fullName": "부산>남항동",
+   "sido": "부산",
+   "district": "남항동",
+   "rentThousandWonPerM2": {
+    "small": 12.7,
+    "medium": 14
+   },
+   "vacancyPct": {
+    "small": 9.7,
+    "medium": 16.3
+   }
+  },
+  {
+   "fullName": "부산>덕천역",
+   "sido": "부산",
+   "district": "덕천역",
+   "rentThousandWonPerM2": {
+    "small": 30.4,
+    "medium": 47.1
+   },
+   "vacancyPct": {
+    "small": 23.9,
+    "medium": 10.9
+   }
+  },
+  {
+   "fullName": "부산>동래역",
+   "sido": "부산",
+   "district": "동래역",
+   "rentThousandWonPerM2": {
+    "small": 25.5,
+    "medium": 22.4,
+    "aggregate": 27.3
+   },
+   "vacancyPct": {
+    "small": 9.4,
+    "medium": 6.7,
+    "aggregate": 5.9
+   }
+  },
+  {
+   "fullName": "부산>명지국제도시",
+   "sido": "부산",
+   "district": "명지국제도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 20.6
+   },
+   "vacancyPct": {
+    "aggregate": 22.5
+   }
+  },
+  {
+   "fullName": "부산>명지오션시티",
+   "sido": "부산",
+   "district": "명지오션시티",
+   "rentThousandWonPerM2": {
+    "aggregate": 27.9
+   },
+   "vacancyPct": {
+    "aggregate": 13.2
+   }
+  },
+  {
+   "fullName": "부산>민락공원",
+   "sido": "부산",
+   "district": "민락공원",
+   "rentThousandWonPerM2": {
+    "aggregate": 21.9
+   },
+   "vacancyPct": {
+    "aggregate": 9.1
+   }
+  },
+  {
+   "fullName": "부산>부산대학앞",
+   "sido": "부산",
+   "district": "부산대학앞",
+   "rentThousandWonPerM2": {
+    "small": 33.5,
+    "medium": 43.7
+   },
+   "vacancyPct": {
+    "small": 20.9,
+    "medium": 22.6
+   }
+  },
+  {
+   "fullName": "부산>부산역",
+   "sido": "부산",
+   "district": "부산역",
+   "rentThousandWonPerM2": {
+    "small": 25,
+    "medium": 18.5
+   },
+   "vacancyPct": {
+    "small": 2.3,
+    "medium": 12.5
+   }
+  },
+  {
+   "fullName": "부산>부전시장",
+   "sido": "부산",
+   "district": "부전시장",
+   "rentThousandWonPerM2": {
+    "small": 37.4,
+    "medium": 32.5,
+    "aggregate": 52.3
+   },
+   "vacancyPct": {
+    "small": 17.1,
+    "medium": 15.3,
+    "aggregate": 5.4
+   }
+  },
+  {
+   "fullName": "부산>사상역",
+   "sido": "부산",
+   "district": "사상역",
+   "rentThousandWonPerM2": {
+    "small": 23.6,
+    "medium": 17.7,
+    "aggregate": 9.8
+   },
+   "vacancyPct": {
+    "small": 5.9,
+    "medium": 14.8,
+    "aggregate": 5.3
+   }
+  },
+  {
+   "fullName": "부산>사직야구장",
+   "sido": "부산",
+   "district": "사직야구장",
+   "rentThousandWonPerM2": {
+    "small": 26.3,
+    "medium": 29.5
+   },
+   "vacancyPct": {
+    "small": 4.9,
+    "medium": 10.9
+   }
+  },
+  {
+   "fullName": "부산>서면/전포",
+   "sido": "부산",
+   "district": "서면/전포",
+   "rentThousandWonPerM2": {
+    "small": 29.2,
+    "medium": 50,
+    "aggregate": 35.2
+   },
+   "vacancyPct": {
+    "small": 4.1,
+    "medium": 11.7,
+    "aggregate": 17.1
+   }
+  },
+  {
+   "fullName": "부산>센텀마린시티",
+   "sido": "부산",
+   "district": "센텀마린시티",
+   "rentThousandWonPerM2": {
+    "aggregate": 34.7
+   },
+   "vacancyPct": {
+    "aggregate": 3.2
+   }
+  },
+  {
+   "fullName": "부산>송정해수욕장",
+   "sido": "부산",
+   "district": "송정해수욕장",
+   "rentThousandWonPerM2": {
+    "small": 20.8,
+    "medium": 18.2
+   },
+   "vacancyPct": {
+    "small": 3.2,
+    "medium": 20.1
+   }
+  },
+  {
+   "fullName": "부산>수영역",
+   "sido": "부산",
+   "district": "수영역",
+   "rentThousandWonPerM2": {
+    "small": 26.7,
+    "medium": 29.5
+   },
+   "vacancyPct": {
+    "small": 5.1,
+    "medium": 6.8
+   }
+  },
+  {
+   "fullName": "부산>연산로터리",
+   "sido": "부산",
+   "district": "연산로터리",
+   "rentThousandWonPerM2": {
+    "small": 21.8,
+    "medium": 23,
+    "aggregate": 22.8
+   },
+   "vacancyPct": {
+    "small": 3,
+    "medium": 22.9,
+    "aggregate": 13.2
+   }
+  },
+  {
+   "fullName": "부산>온천장",
+   "sido": "부산",
+   "district": "온천장",
+   "rentThousandWonPerM2": {
+    "small": 19.7,
+    "medium": 22.1,
+    "aggregate": 12.1
+   },
+   "vacancyPct": {
+    "small": 10.4,
+    "medium": 22,
+    "aggregate": 18.8
+   }
+  },
+  {
+   "fullName": "부산>정관신도시",
+   "sido": "부산",
+   "district": "정관신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 24.8
+   },
+   "vacancyPct": {
+    "aggregate": 13.2
+   }
+  },
+  {
+   "fullName": "부산>하단역",
+   "sido": "부산",
+   "district": "하단역",
+   "rentThousandWonPerM2": {
+    "small": 25.9,
+    "medium": 26.1
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 19.8
+   }
+  },
+  {
+   "fullName": "부산>해운대",
+   "sido": "부산",
+   "district": "해운대",
+   "rentThousandWonPerM2": {
+    "small": 41.9,
+    "medium": 34.1,
+    "aggregate": 38.2
+   },
+   "vacancyPct": {
+    "small": 4.8,
+    "medium": 18.4,
+    "aggregate": 5.2
+   }
+  },
+  {
+   "fullName": "부산>현대백화점주변",
+   "sido": "부산",
+   "district": "현대백화점주변",
+   "rentThousandWonPerM2": {
+    "small": 19.5,
+    "medium": 18.5,
+    "aggregate": 25.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 10.2,
+    "aggregate": 2.6
+   }
+  },
+  {
+   "fullName": "부산>화명역",
+   "sido": "부산",
+   "district": "화명역",
+   "rentThousandWonPerM2": {
+    "aggregate": 39.5
+   },
+   "vacancyPct": {
+    "aggregate": 4.1
+   }
+  },
+  {
+   "fullName": "서울>강남",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 64.6,
+    "medium": 65.5,
+    "aggregate": 56.7
+   },
+   "vacancyPct": {
+    "small": 2.8,
+    "medium": 11.1,
+    "aggregate": 5.6
+   }
+  },
+  {
+   "fullName": "서울>강남>강남대로",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 85.5,
+    "medium": 129.3,
+    "aggregate": 86
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 6.9,
+    "aggregate": 8.8
+   }
+  },
+  {
+   "fullName": "서울>강남>교대역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 46.4,
+    "medium": 35.9,
+    "aggregate": 43.1
+   },
+   "vacancyPct": {
+    "small": 0.5,
+    "medium": 3.7,
+    "aggregate": 1.2
+   }
+  },
+  {
+   "fullName": "서울>강남>남부터미널",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 44.3,
+    "medium": 38,
+    "aggregate": 32.5
+   },
+   "vacancyPct": {
+    "small": 4.9,
+    "medium": 7.8,
+    "aggregate": 6
+   }
+  },
+  {
+   "fullName": "서울>강남>논현역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 70.4,
+    "medium": 55,
+    "aggregate": 56.1
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 17.3,
+    "aggregate": 8.8
+   }
+  },
+  {
+   "fullName": "서울>강남>도산대로",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 55.9,
+    "medium": 56.4,
+    "aggregate": 63.9
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.6,
+    "aggregate": 13.4
+   }
+  },
+  {
+   "fullName": "서울>강남>방배역/내방역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "medium": 44
+   },
+   "vacancyPct": {
+    "medium": 9.6
+   }
+  },
+  {
+   "fullName": "서울>강남>서래마을",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "medium": 46.5
+   },
+   "vacancyPct": {
+    "medium": 9.1
+   }
+  },
+  {
+   "fullName": "서울>강남>신사역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 74.6,
+    "medium": 94.1,
+    "aggregate": 69.1
+   },
+   "vacancyPct": {
+    "small": 14.9,
+    "medium": 18.2,
+    "aggregate": 7.9
+   }
+  },
+  {
+   "fullName": "서울>강남>압구정",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 61.9,
+    "medium": 57.4,
+    "aggregate": 64.8
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 7.9,
+    "aggregate": 2.8
+   }
+  },
+  {
+   "fullName": "서울>강남>양재말죽거리",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "medium": 43.1
+   },
+   "vacancyPct": {
+    "medium": 7.2
+   }
+  },
+  {
+   "fullName": "서울>강남>양재역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "medium": 43
+   },
+   "vacancyPct": {
+    "medium": 13.3
+   }
+  },
+  {
+   "fullName": "서울>강남>청담",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 68.9,
+    "medium": 65.5,
+    "aggregate": 72.7
+   },
+   "vacancyPct": {
+    "small": 2,
+    "medium": 27,
+    "aggregate": 10.7
+   }
+  },
+  {
+   "fullName": "서울>강남>테헤란로",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "small": 73,
+    "medium": 52.5,
+    "aggregate": 74.6
+   },
+   "vacancyPct": {
+    "small": 1,
+    "medium": 9,
+    "aggregate": 6.7
+   }
+  },
+  {
+   "fullName": "서울>강남>학동/강남구청역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "medium": 54.5
+   },
+   "vacancyPct": {
+    "medium": 10.2
+   }
+  },
+  {
+   "fullName": "서울>강남>한티역",
+   "sido": "서울",
+   "district": "강남",
+   "rentThousandWonPerM2": {
+    "aggregate": 71.5
+   },
+   "vacancyPct": {
+    "aggregate": 4.8
+   }
+  },
+  {
+   "fullName": "서울>기타",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 45.1,
+    "medium": 49.3,
+    "aggregate": 45.4
+   },
+   "vacancyPct": {
+    "small": 7.2,
+    "medium": 8.7,
+    "aggregate": 12.1
+   }
+  },
+  {
+   "fullName": "서울>기타>가락시장",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 31.6,
+    "medium": 38.8,
+    "aggregate": 30.7
+   },
+   "vacancyPct": {
+    "small": 4.9,
+    "medium": 11.2,
+    "aggregate": 15.9
+   }
+  },
+  {
+   "fullName": "서울>기타>건대입구",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 51.5,
+    "medium": 65.2,
+    "aggregate": 68.1
+   },
+   "vacancyPct": {
+    "small": 11.2,
+    "medium": 9.5,
+    "aggregate": 8.7
+   }
+  },
+  {
+   "fullName": "서울>기타>경희대",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 50.4,
+    "medium": 48.2
+   },
+   "vacancyPct": {
+    "small": 4.3,
+    "medium": 5.2
+   }
+  },
+  {
+   "fullName": "서울>기타>구로디지털단지역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "medium": 47.5
+   },
+   "vacancyPct": {
+    "medium": 5.3
+   }
+  },
+  {
+   "fullName": "서울>기타>구의역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "medium": 39.4
+   },
+   "vacancyPct": {
+    "medium": 5
+   }
+  },
+  {
+   "fullName": "서울>기타>군자",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 36.6,
+    "medium": 40.1
+   },
+   "vacancyPct": {
+    "small": 6.8,
+    "medium": 7.7
+   }
+  },
+  {
+   "fullName": "서울>기타>까치산역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 31.8,
+    "medium": 56
+   },
+   "vacancyPct": {
+    "small": 3.8,
+    "medium": 7.7
+   }
+  },
+  {
+   "fullName": "서울>기타>낙성대",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "medium": 47.1
+   },
+   "vacancyPct": {
+    "medium": 0.5
+   }
+  },
+  {
+   "fullName": "서울>기타>노량진",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 30.5,
+    "medium": 46.4
+   },
+   "vacancyPct": {
+    "small": 1.7,
+    "medium": 8.9
+   }
+  },
+  {
+   "fullName": "서울>기타>노원역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "aggregate": 86.2
+   },
+   "vacancyPct": {
+    "aggregate": 3.9
+   }
+  },
+  {
+   "fullName": "서울>기타>독산/시흥",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 31.8,
+    "medium": 30.3
+   },
+   "vacancyPct": {
+    "small": 15.4,
+    "medium": 14.7
+   }
+  },
+  {
+   "fullName": "서울>기타>뚝섬",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 65,
+    "medium": 65.4
+   },
+   "vacancyPct": {
+    "small": 8,
+    "medium": 1.3
+   }
+  },
+  {
+   "fullName": "서울>기타>명일역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "aggregate": 35.5
+   },
+   "vacancyPct": {
+    "aggregate": 7.4
+   }
+  },
+  {
+   "fullName": "서울>기타>목동",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 41.9,
+    "medium": 36.5,
+    "aggregate": 54.4
+   },
+   "vacancyPct": {
+    "small": 1.6,
+    "medium": 10,
+    "aggregate": 0
+   }
+  },
+  {
+   "fullName": "서울>기타>미아사거리",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 40.5,
+    "medium": 39.2
+   },
+   "vacancyPct": {
+    "small": 9,
+    "medium": 6.8
+   }
+  },
+  {
+   "fullName": "서울>기타>불광역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 38,
+    "medium": 48.2,
+    "aggregate": 41.4
+   },
+   "vacancyPct": {
+    "small": 7.1,
+    "medium": 14.1,
+    "aggregate": 11.5
+   }
+  },
+  {
+   "fullName": "서울>기타>사당",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 48.1,
+    "medium": 65.1,
+    "aggregate": 68.6
+   },
+   "vacancyPct": {
+    "small": 3.4,
+    "medium": 8.5,
+    "aggregate": 3.8
+   }
+  },
+  {
+   "fullName": "서울>기타>상계역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 24.4,
+    "medium": 30.2
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 8
+   }
+  },
+  {
+   "fullName": "서울>기타>상봉역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 45.9,
+    "medium": 39.4
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.1
+   }
+  },
+  {
+   "fullName": "서울>기타>서울대입구역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 68.8,
+    "medium": 80.6,
+    "aggregate": 53.3
+   },
+   "vacancyPct": {
+    "small": 10.4,
+    "medium": 2.9,
+    "aggregate": 32.4
+   }
+  },
+  {
+   "fullName": "서울>기타>성신여대",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 58.4,
+    "medium": 53.2,
+    "aggregate": 42.5
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 12.8,
+    "aggregate": 0
+   }
+  },
+  {
+   "fullName": "서울>기타>수유",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 39.6,
+    "medium": 51.9,
+    "aggregate": 45.3
+   },
+   "vacancyPct": {
+    "small": 14.2,
+    "medium": 8,
+    "aggregate": 6.5
+   }
+  },
+  {
+   "fullName": "서울>기타>숙명여대",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 45,
+    "medium": 36,
+    "aggregate": 31.9
+   },
+   "vacancyPct": {
+    "small": 8,
+    "medium": 4.9,
+    "aggregate": 7.3
+   }
+  },
+  {
+   "fullName": "서울>기타>신림역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 67.9,
+    "medium": 65.7,
+    "aggregate": 42.6
+   },
+   "vacancyPct": {
+    "small": 2.7,
+    "medium": 7.3,
+    "aggregate": 9.6
+   }
+  },
+  {
+   "fullName": "서울>기타>쌍문역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "medium": 46.6
+   },
+   "vacancyPct": {
+    "medium": 15.9
+   }
+  },
+  {
+   "fullName": "서울>기타>약수역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 75.1,
+    "medium": 43.7
+   },
+   "vacancyPct": {
+    "small": 8,
+    "medium": 4.7
+   }
+  },
+  {
+   "fullName": "서울>기타>연신내",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 44.8,
+    "medium": 49.7
+   },
+   "vacancyPct": {
+    "small": 3,
+    "medium": 13.3
+   }
+  },
+  {
+   "fullName": "서울>기타>오류동역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 55.7,
+    "medium": 45,
+    "aggregate": 44.3
+   },
+   "vacancyPct": {
+    "small": 10.5,
+    "medium": 1.5,
+    "aggregate": 0.8
+   }
+  },
+  {
+   "fullName": "서울>기타>왕십리",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 43.9,
+    "medium": 46.3
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 1.8
+   }
+  },
+  {
+   "fullName": "서울>기타>용산역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 40.3,
+    "medium": 38,
+    "aggregate": 28.3
+   },
+   "vacancyPct": {
+    "small": 12,
+    "medium": 14.2,
+    "aggregate": 38.8
+   }
+  },
+  {
+   "fullName": "서울>기타>이태원",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 69.2,
+    "medium": 59.9
+   },
+   "vacancyPct": {
+    "small": 3.9,
+    "medium": 14.3
+   }
+  },
+  {
+   "fullName": "서울>기타>잠실/송파",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 36,
+    "medium": 51,
+    "aggregate": 35.7
+   },
+   "vacancyPct": {
+    "small": 6.6,
+    "medium": 17.4,
+    "aggregate": 13.3
+   }
+  },
+  {
+   "fullName": "서울>기타>잠실새내역",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 34.3,
+    "medium": 38.5,
+    "aggregate": 63.7
+   },
+   "vacancyPct": {
+    "small": 19.1,
+    "medium": 4.2,
+    "aggregate": 2.7
+   }
+  },
+  {
+   "fullName": "서울>기타>장안동",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 34.5,
+    "medium": 37.1,
+    "aggregate": 39.7
+   },
+   "vacancyPct": {
+    "small": 12.6,
+    "medium": 11.5,
+    "aggregate": 10.8
+   }
+  },
+  {
+   "fullName": "서울>기타>천호",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 57.6,
+    "medium": 47.6,
+    "aggregate": 50.5
+   },
+   "vacancyPct": {
+    "small": 5,
+    "medium": 8.6,
+    "aggregate": 9
+   }
+  },
+  {
+   "fullName": "서울>기타>청량리",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 40.6,
+    "medium": 46.1,
+    "aggregate": 45.3
+   },
+   "vacancyPct": {
+    "small": 7,
+    "medium": 12.3,
+    "aggregate": 23.6
+   }
+  },
+  {
+   "fullName": "서울>기타>혜화동",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 60,
+    "medium": 68.3,
+    "aggregate": 37.3
+   },
+   "vacancyPct": {
+    "small": 2.1,
+    "medium": 3.3,
+    "aggregate": 5
+   }
+  },
+  {
+   "fullName": "서울>기타>화곡",
+   "sido": "서울",
+   "district": "기타",
+   "rentThousandWonPerM2": {
+    "small": 30.1,
+    "medium": 35.5,
+    "aggregate": 34.8
+   },
+   "vacancyPct": {
+    "small": 9.2,
+    "medium": 15.9,
+    "aggregate": 9.2
+   }
+  },
+  {
+   "fullName": "서울>도심",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 74.1,
+    "medium": 90.4,
+    "aggregate": 82.8
+   },
+   "vacancyPct": {
+    "small": 4.6,
+    "medium": 11.2,
+    "aggregate": 10.4
+   }
+  },
+  {
+   "fullName": "서울>도심>광화문",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 92.4,
+    "medium": 87.3
+   },
+   "vacancyPct": {
+    "small": 0.9,
+    "medium": 5.2
+   }
+  },
+  {
+   "fullName": "서울>도심>남대문",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 77.4,
+    "medium": 91.5,
+    "aggregate": 190.9
+   },
+   "vacancyPct": {
+    "small": 6.1,
+    "medium": 13.9,
+    "aggregate": 2.4
+   }
+  },
+  {
+   "fullName": "서울>도심>동대문",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 52.8,
+    "medium": 49.6,
+    "aggregate": 95.6
+   },
+   "vacancyPct": {
+    "small": 9.8,
+    "medium": 17.4,
+    "aggregate": 12.8
+   }
+  },
+  {
+   "fullName": "서울>도심>명동",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 152.2,
+    "medium": 222.1
+   },
+   "vacancyPct": {
+    "small": 5.3,
+    "medium": 6.5
+   }
+  },
+  {
+   "fullName": "서울>도심>방산시장",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 71.2,
+    "medium": 50.7,
+    "aggregate": 57.3
+   },
+   "vacancyPct": {
+    "small": 9.9,
+    "medium": 32.4,
+    "aggregate": 8.6
+   }
+  },
+  {
+   "fullName": "서울>도심>북촌",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 100.9,
+    "medium": 63
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 1.9
+   }
+  },
+  {
+   "fullName": "서울>도심>서촌",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 45.1,
+    "medium": 54.7
+   },
+   "vacancyPct": {
+    "small": 8.6,
+    "medium": 10.1
+   }
+  },
+  {
+   "fullName": "서울>도심>시청",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 97.1,
+    "medium": 68.3
+   },
+   "vacancyPct": {
+    "small": 8.1,
+    "medium": 11.7
+   }
+  },
+  {
+   "fullName": "서울>도심>을지로",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 68.8,
+    "medium": 65.7
+   },
+   "vacancyPct": {
+    "small": 2.6,
+    "medium": 12.3
+   }
+  },
+  {
+   "fullName": "서울>도심>종로",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 71.8,
+    "medium": 81.8,
+    "aggregate": 48.1
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.2,
+    "aggregate": 9.1
+   }
+  },
+  {
+   "fullName": "서울>도심>충무로",
+   "sido": "서울",
+   "district": "도심",
+   "rentThousandWonPerM2": {
+    "small": 51.7,
+    "medium": 48.7
+   },
+   "vacancyPct": {
+    "small": 1,
+    "medium": 3
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 48.5,
+    "medium": 49.2,
+    "aggregate": 40
+   },
+   "vacancyPct": {
+    "small": 7,
+    "medium": 9,
+    "aggregate": 11.7
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>공덕역",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 59.8,
+    "medium": 40.7
+   },
+   "vacancyPct": {
+    "small": 4.5,
+    "medium": 3.7
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>당산역",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 41.8,
+    "medium": 32.9,
+    "aggregate": 31.8
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 7.3,
+    "aggregate": 0.3
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>동교/연남",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 56.6,
+    "medium": 47.7
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 5
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>망원역",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 41.3,
+    "medium": 35.3
+   },
+   "vacancyPct": {
+    "small": 1,
+    "medium": 1.8
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>신촌/이대",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 40.8,
+    "medium": 58,
+    "aggregate": 74.8
+   },
+   "vacancyPct": {
+    "small": 19.5,
+    "medium": 11.7,
+    "aggregate": 11.3
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>여의도",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "aggregate": 58.7
+   },
+   "vacancyPct": {
+    "aggregate": 5.4
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>영등포역",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 38.5,
+    "medium": 44,
+    "aggregate": 30.8
+   },
+   "vacancyPct": {
+    "small": 3.1,
+    "medium": 15.9,
+    "aggregate": 16.5
+   }
+  },
+  {
+   "fullName": "서울>영등포신촌>홍대/합정",
+   "sido": "서울",
+   "district": "영등포신촌",
+   "rentThousandWonPerM2": {
+    "small": 63.6,
+    "medium": 71,
+    "aggregate": 37.8
+   },
+   "vacancyPct": {
+    "small": 14.9,
+    "medium": 8.1,
+    "aggregate": 12
+   }
+  },
+  {
+   "fullName": "세종>나성한솔동",
+   "sido": "세종",
+   "district": "나성한솔동",
+   "rentThousandWonPerM2": {
+    "aggregate": 13.3
+   },
+   "vacancyPct": {
+    "aggregate": 10.4
+   }
+  },
+  {
+   "fullName": "세종>세종정부청사",
+   "sido": "세종",
+   "district": "세종정부청사",
+   "rentThousandWonPerM2": {
+    "aggregate": 29.4
+   },
+   "vacancyPct": {
+    "aggregate": 12.1
+   }
+  },
+  {
+   "fullName": "세종>조치원",
+   "sido": "세종",
+   "district": "조치원",
+   "rentThousandWonPerM2": {
+    "small": 13,
+    "medium": 16.2
+   },
+   "vacancyPct": {
+    "small": 4.1,
+    "medium": 29.3
+   }
+  },
+  {
+   "fullName": "울산>삼산동",
+   "sido": "울산",
+   "district": "삼산동",
+   "rentThousandWonPerM2": {
+    "small": 14.1,
+    "medium": 17.9,
+    "aggregate": 24.7
+   },
+   "vacancyPct": {
+    "small": 1.8,
+    "medium": 13.2,
+    "aggregate": 8.5
+   }
+  },
+  {
+   "fullName": "울산>성남옥교동",
+   "sido": "울산",
+   "district": "성남옥교동",
+   "rentThousandWonPerM2": {
+    "small": 12.3,
+    "medium": 18.4,
+    "aggregate": 20.2
+   },
+   "vacancyPct": {
+    "small": 6.6,
+    "medium": 28.9,
+    "aggregate": 26.7
+   }
+  },
+  {
+   "fullName": "울산>신정동",
+   "sido": "울산",
+   "district": "신정동",
+   "rentThousandWonPerM2": {
+    "small": 14,
+    "medium": 15.6,
+    "aggregate": 19.1
+   },
+   "vacancyPct": {
+    "small": 1.9,
+    "medium": 20.3,
+    "aggregate": 6.8
+   }
+  },
+  {
+   "fullName": "울산>울산농소",
+   "sido": "울산",
+   "district": "울산농소",
+   "rentThousandWonPerM2": {
+    "small": 15.9,
+    "medium": 11.8,
+    "aggregate": 17.5
+   },
+   "vacancyPct": {
+    "small": 20.1,
+    "medium": 11.5,
+    "aggregate": 37.9
+   }
+  },
+  {
+   "fullName": "울산>울산대",
+   "sido": "울산",
+   "district": "울산대",
+   "rentThousandWonPerM2": {
+    "small": 16.7,
+    "medium": 19
+   },
+   "vacancyPct": {
+    "small": 23.8,
+    "medium": 20.6
+   }
+  },
+  {
+   "fullName": "울산>전하동",
+   "sido": "울산",
+   "district": "전하동",
+   "rentThousandWonPerM2": {
+    "small": 15.5,
+    "medium": 16.1,
+    "aggregate": 20.5
+   },
+   "vacancyPct": {
+    "small": 10.6,
+    "medium": 17.6,
+    "aggregate": 21
+   }
+  },
+  {
+   "fullName": "인천>간석오거리",
+   "sido": "인천",
+   "district": "간석오거리",
+   "rentThousandWonPerM2": {
+    "small": 19,
+    "medium": 21.7,
+    "aggregate": 21.8
+   },
+   "vacancyPct": {
+    "small": 5.5,
+    "medium": 16.4,
+    "aggregate": 23.4
+   }
+  },
+  {
+   "fullName": "인천>검단사거리완정역",
+   "sido": "인천",
+   "district": "검단사거리완정역",
+   "rentThousandWonPerM2": {
+    "small": 23.7,
+    "medium": 24.2
+   },
+   "vacancyPct": {
+    "small": 15.2,
+    "medium": 0.6
+   }
+  },
+  {
+   "fullName": "인천>계양계산",
+   "sido": "인천",
+   "district": "계양계산",
+   "rentThousandWonPerM2": {
+    "small": 24.3,
+    "medium": 23,
+    "aggregate": 23.9
+   },
+   "vacancyPct": {
+    "small": 3.7,
+    "medium": 8.2,
+    "aggregate": 2.8
+   }
+  },
+  {
+   "fullName": "인천>구월",
+   "sido": "인천",
+   "district": "구월",
+   "rentThousandWonPerM2": {
+    "small": 20.1,
+    "medium": 33.8,
+    "aggregate": 34.3
+   },
+   "vacancyPct": {
+    "small": 15.1,
+    "medium": 12.1,
+    "aggregate": 12.6
+   }
+  },
+  {
+   "fullName": "인천>부평",
+   "sido": "인천",
+   "district": "부평",
+   "rentThousandWonPerM2": {
+    "small": 35.4,
+    "medium": 37.8,
+    "aggregate": 29.8
+   },
+   "vacancyPct": {
+    "small": 6.5,
+    "medium": 22.9,
+    "aggregate": 9
+   }
+  },
+  {
+   "fullName": "인천>석남/가정중앙시장",
+   "sido": "인천",
+   "district": "석남/가정중앙시장",
+   "rentThousandWonPerM2": {
+    "small": 17,
+    "medium": 17.7
+   },
+   "vacancyPct": {
+    "small": 7.8,
+    "medium": 7
+   }
+  },
+  {
+   "fullName": "인천>소래포구역",
+   "sido": "인천",
+   "district": "소래포구역",
+   "rentThousandWonPerM2": {
+    "medium": 24.2
+   },
+   "vacancyPct": {
+    "medium": 24
+   }
+  },
+  {
+   "fullName": "인천>송도",
+   "sido": "인천",
+   "district": "송도",
+   "rentThousandWonPerM2": {
+    "aggregate": 31.4
+   },
+   "vacancyPct": {
+    "aggregate": 4.4
+   }
+  },
+  {
+   "fullName": "인천>신포동",
+   "sido": "인천",
+   "district": "신포동",
+   "rentThousandWonPerM2": {
+    "small": 17.9,
+    "medium": 18.6,
+    "aggregate": 9.2
+   },
+   "vacancyPct": {
+    "small": 18.1,
+    "medium": 32.6,
+    "aggregate": 11.8
+   }
+  },
+  {
+   "fullName": "인천>연수역",
+   "sido": "인천",
+   "district": "연수역",
+   "rentThousandWonPerM2": {
+    "medium": 23.1
+   },
+   "vacancyPct": {
+    "medium": 12.1
+   }
+  },
+  {
+   "fullName": "인천>영종",
+   "sido": "인천",
+   "district": "영종",
+   "rentThousandWonPerM2": {
+    "aggregate": 33.5
+   },
+   "vacancyPct": {
+    "aggregate": 29.5
+   }
+  },
+  {
+   "fullName": "인천>인천논현역",
+   "sido": "인천",
+   "district": "인천논현역",
+   "rentThousandWonPerM2": {
+    "aggregate": 36.3
+   },
+   "vacancyPct": {
+    "aggregate": 1.8
+   }
+  },
+  {
+   "fullName": "인천>인천서구청",
+   "sido": "인천",
+   "district": "인천서구청",
+   "rentThousandWonPerM2": {
+    "small": 17.7,
+    "medium": 22.3
+   },
+   "vacancyPct": {
+    "small": 14.7,
+    "medium": 8.7
+   }
+  },
+  {
+   "fullName": "인천>인하대앞",
+   "sido": "인천",
+   "district": "인하대앞",
+   "rentThousandWonPerM2": {
+    "medium": 30.9
+   },
+   "vacancyPct": {
+    "medium": 17
+   }
+  },
+  {
+   "fullName": "인천>주안",
+   "sido": "인천",
+   "district": "주안",
+   "rentThousandWonPerM2": {
+    "small": 17.6,
+    "medium": 20.5,
+    "aggregate": 19.7
+   },
+   "vacancyPct": {
+    "small": 15.5,
+    "medium": 13.1,
+    "aggregate": 11.9
+   }
+  },
+  {
+   "fullName": "인천>청라국제도시",
+   "sido": "인천",
+   "district": "청라국제도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 27.6
+   },
+   "vacancyPct": {
+    "aggregate": 7.2
+   }
+  },
+  {
+   "fullName": "전남>광양읍",
+   "sido": "전남",
+   "district": "광양읍",
+   "rentThousandWonPerM2": {
+    "small": 7.3,
+    "medium": 7.8
+   },
+   "vacancyPct": {
+    "small": 11.6,
+    "medium": 9.9
+   }
+  },
+  {
+   "fullName": "전남>광양중동",
+   "sido": "전남",
+   "district": "광양중동",
+   "rentThousandWonPerM2": {
+    "small": 9.8,
+    "medium": 12.6,
+    "aggregate": 11.5
+   },
+   "vacancyPct": {
+    "small": 5.2,
+    "medium": 12,
+    "aggregate": 35.8
+   }
+  },
+  {
+   "fullName": "전남>광주전남혁신도시",
+   "sido": "전남",
+   "district": "광주전남혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 10.9
+   },
+   "vacancyPct": {
+    "aggregate": 36.2
+   }
+  },
+  {
+   "fullName": "전남>나주구시가지",
+   "sido": "전남",
+   "district": "나주구시가지",
+   "rentThousandWonPerM2": {
+    "small": 8.5,
+    "medium": 8.7
+   },
+   "vacancyPct": {
+    "small": 0.6,
+    "medium": 5.9
+   }
+  },
+  {
+   "fullName": "전남>목포구도심",
+   "sido": "전남",
+   "district": "목포구도심",
+   "rentThousandWonPerM2": {
+    "small": 7.6,
+    "medium": 8
+   },
+   "vacancyPct": {
+    "small": 14,
+    "medium": 19.9
+   }
+  },
+  {
+   "fullName": "전남>무선지구",
+   "sido": "전남",
+   "district": "무선지구",
+   "rentThousandWonPerM2": {
+    "small": 9.1,
+    "medium": 13.7
+   },
+   "vacancyPct": {
+    "small": 3.7,
+    "medium": 3.3
+   }
+  },
+  {
+   "fullName": "전남>순천법원",
+   "sido": "전남",
+   "district": "순천법원",
+   "rentThousandWonPerM2": {
+    "small": 12.4,
+    "medium": 17.3
+   },
+   "vacancyPct": {
+    "small": 15.4,
+    "medium": 11.1
+   }
+  },
+  {
+   "fullName": "전남>순천원도심",
+   "sido": "전남",
+   "district": "순천원도심",
+   "rentThousandWonPerM2": {
+    "small": 11.6,
+    "medium": 12.2,
+    "aggregate": 12.3
+   },
+   "vacancyPct": {
+    "small": 10.5,
+    "medium": 28,
+    "aggregate": 28.4
+   }
+  },
+  {
+   "fullName": "전남>순천해룡면",
+   "sido": "전남",
+   "district": "순천해룡면",
+   "rentThousandWonPerM2": {
+    "medium": 19.1
+   },
+   "vacancyPct": {
+    "medium": 3.2
+   }
+  },
+  {
+   "fullName": "전남>여수여문",
+   "sido": "전남",
+   "district": "여수여문",
+   "rentThousandWonPerM2": {
+    "small": 9.8,
+    "medium": 14.6
+   },
+   "vacancyPct": {
+    "small": 12.9,
+    "medium": 14.7
+   }
+  },
+  {
+   "fullName": "전남>여수원도심",
+   "sido": "전남",
+   "district": "여수원도심",
+   "rentThousandWonPerM2": {
+    "small": 18.8,
+    "medium": 19.8
+   },
+   "vacancyPct": {
+    "small": 24.2,
+    "medium": 30.8
+   }
+  },
+  {
+   "fullName": "전남>여수학동",
+   "sido": "전남",
+   "district": "여수학동",
+   "rentThousandWonPerM2": {
+    "small": 10.1,
+    "medium": 14.3,
+    "aggregate": 19.5
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 17.4,
+    "aggregate": 20.9
+   }
+  },
+  {
+   "fullName": "전남>전남도청",
+   "sido": "전남",
+   "district": "전남도청",
+   "rentThousandWonPerM2": {
+    "aggregate": 19.8
+   },
+   "vacancyPct": {
+    "aggregate": 17.5
+   }
+  },
+  {
+   "fullName": "전남>조례",
+   "sido": "전남",
+   "district": "조례",
+   "rentThousandWonPerM2": {
+    "small": 15,
+    "medium": 15.7,
+    "aggregate": 24.3
+   },
+   "vacancyPct": {
+    "small": 7.1,
+    "medium": 15.1,
+    "aggregate": 26.3
+   }
+  },
+  {
+   "fullName": "전남>하당신도심",
+   "sido": "전남",
+   "district": "하당신도심",
+   "rentThousandWonPerM2": {
+    "small": 10.3,
+    "medium": 13.4,
+    "aggregate": 9.1
+   },
+   "vacancyPct": {
+    "small": 22.5,
+    "medium": 14.5,
+    "aggregate": 8.3
+   }
+  },
+  {
+   "fullName": "전북>군산수송동조촌동",
+   "sido": "전북",
+   "district": "군산수송동조촌동",
+   "rentThousandWonPerM2": {
+    "small": 8.9,
+    "medium": 21.4,
+    "aggregate": 25.3
+   },
+   "vacancyPct": {
+    "small": 1.5,
+    "medium": 19.3,
+    "aggregate": 22
+   }
+  },
+  {
+   "fullName": "전북>군산원도심",
+   "sido": "전북",
+   "district": "군산원도심",
+   "rentThousandWonPerM2": {
+    "small": 6.8,
+    "medium": 7.9,
+    "aggregate": 8.4
+   },
+   "vacancyPct": {
+    "small": 14.3,
+    "medium": 14,
+    "aggregate": 16.6
+   }
+  },
+  {
+   "fullName": "전북>김제시장",
+   "sido": "전북",
+   "district": "김제시장",
+   "rentThousandWonPerM2": {
+    "small": 7.8,
+    "medium": 6.8
+   },
+   "vacancyPct": {
+    "small": 10.9,
+    "medium": 23.8
+   }
+  },
+  {
+   "fullName": "전북>남원광한루",
+   "sido": "전북",
+   "district": "남원광한루",
+   "rentThousandWonPerM2": {
+    "small": 8.8,
+    "medium": 10
+   },
+   "vacancyPct": {
+    "small": 4.9,
+    "medium": 12.4
+   }
+  },
+  {
+   "fullName": "전북>송천동",
+   "sido": "전북",
+   "district": "송천동",
+   "rentThousandWonPerM2": {
+    "small": 12.8,
+    "medium": 17.8
+   },
+   "vacancyPct": {
+    "small": 16.3,
+    "medium": 18
+   }
+  },
+  {
+   "fullName": "전북>영등부송",
+   "sido": "전북",
+   "district": "영등부송",
+   "rentThousandWonPerM2": {
+    "small": 9.4,
+    "medium": 20.5
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 9.7
+   }
+  },
+  {
+   "fullName": "전북>익산역",
+   "sido": "전북",
+   "district": "익산역",
+   "rentThousandWonPerM2": {
+    "small": 8.3,
+    "medium": 8.8,
+    "aggregate": 7
+   },
+   "vacancyPct": {
+    "small": 18.1,
+    "medium": 28.7,
+    "aggregate": 21.7
+   }
+  },
+  {
+   "fullName": "전북>전북혁신도시",
+   "sido": "전북",
+   "district": "전북혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 17.1
+   },
+   "vacancyPct": {
+    "aggregate": 28.2
+   }
+  },
+  {
+   "fullName": "전북>전주동부",
+   "sido": "전북",
+   "district": "전주동부",
+   "rentThousandWonPerM2": {
+    "small": 12.9,
+    "medium": 18.7,
+    "aggregate": 27.7
+   },
+   "vacancyPct": {
+    "small": 6.1,
+    "medium": 28,
+    "aggregate": 22.1
+   }
+  },
+  {
+   "fullName": "전북>전주서부",
+   "sido": "전북",
+   "district": "전주서부",
+   "rentThousandWonPerM2": {
+    "small": 13.6,
+    "medium": 13.2,
+    "aggregate": 18
+   },
+   "vacancyPct": {
+    "small": 7,
+    "medium": 3.1,
+    "aggregate": 15.7
+   }
+  },
+  {
+   "fullName": "전북>전주서부신시가지",
+   "sido": "전북",
+   "district": "전주서부신시가지",
+   "rentThousandWonPerM2": {
+    "medium": 16.4,
+    "aggregate": 23.8
+   },
+   "vacancyPct": {
+    "medium": 17,
+    "aggregate": 17.1
+   }
+  },
+  {
+   "fullName": "전북>전주한옥마을",
+   "sido": "전북",
+   "district": "전주한옥마을",
+   "rentThousandWonPerM2": {
+    "small": 39.7,
+    "medium": 16.6
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 31.2
+   }
+  },
+  {
+   "fullName": "전북>정읍중심",
+   "sido": "전북",
+   "district": "정읍중심",
+   "rentThousandWonPerM2": {
+    "small": 12.3,
+    "medium": 10.8
+   },
+   "vacancyPct": {
+    "small": 13.3,
+    "medium": 27.4
+   }
+  },
+  {
+   "fullName": "제주>광양사거리",
+   "sido": "제주",
+   "district": "광양사거리",
+   "rentThousandWonPerM2": {
+    "small": 11.9,
+    "medium": 12.6,
+    "aggregate": 14.2
+   },
+   "vacancyPct": {
+    "small": 3.9,
+    "medium": 11.7,
+    "aggregate": 5.9
+   }
+  },
+  {
+   "fullName": "제주>노형오거리",
+   "sido": "제주",
+   "district": "노형오거리",
+   "rentThousandWonPerM2": {
+    "small": 19.9,
+    "medium": 20.6,
+    "aggregate": 19
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 8.9,
+    "aggregate": 32
+   }
+  },
+  {
+   "fullName": "제주>서귀포도심",
+   "sido": "제주",
+   "district": "서귀포도심",
+   "rentThousandWonPerM2": {
+    "small": 16.4,
+    "medium": 12.6
+   },
+   "vacancyPct": {
+    "small": 1.9,
+    "medium": 13.6
+   }
+  },
+  {
+   "fullName": "제주>중앙사거리",
+   "sido": "제주",
+   "district": "중앙사거리",
+   "rentThousandWonPerM2": {
+    "small": 11.8,
+    "medium": 10.6
+   },
+   "vacancyPct": {
+    "small": 5.9,
+    "medium": 20.2
+   }
+  },
+  {
+   "fullName": "충남>공주대",
+   "sido": "충남",
+   "district": "공주대",
+   "rentThousandWonPerM2": {
+    "small": 12.9,
+    "medium": 14.7
+   },
+   "vacancyPct": {
+    "small": 11.1,
+    "medium": 12
+   }
+  },
+  {
+   "fullName": "충남>공주웅진동",
+   "sido": "충남",
+   "district": "공주웅진동",
+   "rentThousandWonPerM2": {
+    "small": 14.6,
+    "medium": 9.9
+   },
+   "vacancyPct": {
+    "small": 6.2,
+    "medium": 18.2
+   }
+  },
+  {
+   "fullName": "충남>금산인삼국제시장",
+   "sido": "충남",
+   "district": "금산인삼국제시장",
+   "rentThousandWonPerM2": {
+    "aggregate": 12.5
+   },
+   "vacancyPct": {
+    "aggregate": 3.5
+   }
+  },
+  {
+   "fullName": "충남>논산시외버스터미널",
+   "sido": "충남",
+   "district": "논산시외버스터미널",
+   "rentThousandWonPerM2": {
+    "small": 13.4,
+    "medium": 12,
+    "aggregate": 10.6
+   },
+   "vacancyPct": {
+    "small": 6.1,
+    "medium": 16.5,
+    "aggregate": 20
+   }
+  },
+  {
+   "fullName": "충남>당진시청",
+   "sido": "충남",
+   "district": "당진시청",
+   "rentThousandWonPerM2": {
+    "small": 16,
+    "medium": 27.2,
+    "aggregate": 21.9
+   },
+   "vacancyPct": {
+    "small": 3.7,
+    "medium": 8.3,
+    "aggregate": 11.1
+   }
+  },
+  {
+   "fullName": "충남>두정",
+   "sido": "충남",
+   "district": "두정",
+   "rentThousandWonPerM2": {
+    "small": 14.4,
+    "medium": 15.1,
+    "aggregate": 16.9
+   },
+   "vacancyPct": {
+    "small": 0,
+    "medium": 23.3,
+    "aggregate": 27.7
+   }
+  },
+  {
+   "fullName": "충남>배방읍",
+   "sido": "충남",
+   "district": "배방읍",
+   "rentThousandWonPerM2": {
+    "small": 16.9,
+    "medium": 16.3
+   },
+   "vacancyPct": {
+    "small": 9.9,
+    "medium": 9.1
+   }
+  },
+  {
+   "fullName": "충남>백석",
+   "sido": "충남",
+   "district": "백석",
+   "rentThousandWonPerM2": {
+    "aggregate": 8.2
+   },
+   "vacancyPct": {
+    "aggregate": 5.9
+   }
+  },
+  {
+   "fullName": "충남>보령문화의전당",
+   "sido": "충남",
+   "district": "보령문화의전당",
+   "rentThousandWonPerM2": {
+    "small": 11.9,
+    "medium": 17.2
+   },
+   "vacancyPct": {
+    "small": 9.9,
+    "medium": 13.4
+   }
+  },
+  {
+   "fullName": "충남>서산터미널",
+   "sido": "충남",
+   "district": "서산터미널",
+   "rentThousandWonPerM2": {
+    "small": 14.8,
+    "medium": 14.9,
+    "aggregate": 11.5
+   },
+   "vacancyPct": {
+    "small": 9.1,
+    "medium": 26.5,
+    "aggregate": 14.8
+   }
+  },
+  {
+   "fullName": "충남>아산온양",
+   "sido": "충남",
+   "district": "아산온양",
+   "rentThousandWonPerM2": {
+    "small": 12.9,
+    "medium": 13.2,
+    "aggregate": 17.3
+   },
+   "vacancyPct": {
+    "small": 4.6,
+    "medium": 16,
+    "aggregate": 16.4
+   }
+  },
+  {
+   "fullName": "충남>예산시장",
+   "sido": "충남",
+   "district": "예산시장",
+   "rentThousandWonPerM2": {
+    "small": 7.9,
+    "medium": 8.1
+   },
+   "vacancyPct": {
+    "small": 20.6,
+    "medium": 15.8
+   }
+  },
+  {
+   "fullName": "충남>천안시청",
+   "sido": "충남",
+   "district": "천안시청",
+   "rentThousandWonPerM2": {
+    "aggregate": 19.8
+   },
+   "vacancyPct": {
+    "aggregate": 7.5
+   }
+  },
+  {
+   "fullName": "충남>천안역",
+   "sido": "충남",
+   "district": "천안역",
+   "rentThousandWonPerM2": {
+    "small": 15.2,
+    "medium": 13.3,
+    "aggregate": 9.3
+   },
+   "vacancyPct": {
+    "small": 9.5,
+    "medium": 17.3,
+    "aggregate": 7.2
+   }
+  },
+  {
+   "fullName": "충남>천안종합버스터미널",
+   "sido": "충남",
+   "district": "천안종합버스터미널",
+   "rentThousandWonPerM2": {
+    "small": 22.2,
+    "medium": 22.9,
+    "aggregate": 54.1
+   },
+   "vacancyPct": {
+    "small": 7.1,
+    "medium": 19.2,
+    "aggregate": 7.9
+   }
+  },
+  {
+   "fullName": "충남>청당행정타운",
+   "sido": "충남",
+   "district": "청당행정타운",
+   "rentThousandWonPerM2": {
+    "medium": 18.4
+   },
+   "vacancyPct": {
+    "medium": 3.8
+   }
+  },
+  {
+   "fullName": "충남>태안터미널",
+   "sido": "충남",
+   "district": "태안터미널",
+   "rentThousandWonPerM2": {
+    "small": 10.4,
+    "medium": 10.7,
+    "aggregate": 13.9
+   },
+   "vacancyPct": {
+    "small": 7.8,
+    "medium": 8.1,
+    "aggregate": 4
+   }
+  },
+  {
+   "fullName": "충남>합덕버스터미널",
+   "sido": "충남",
+   "district": "합덕버스터미널",
+   "rentThousandWonPerM2": {
+    "small": 8.8,
+    "medium": 8.1
+   },
+   "vacancyPct": {
+    "small": 2.8,
+    "medium": 22.8
+   }
+  },
+  {
+   "fullName": "충북>봉명사거리",
+   "sido": "충북",
+   "district": "봉명사거리",
+   "rentThousandWonPerM2": {
+    "small": 14.7,
+    "medium": 12.8
+   },
+   "vacancyPct": {
+    "small": 20.3,
+    "medium": 3
+   }
+  },
+  {
+   "fullName": "충북>오창호수공원",
+   "sido": "충북",
+   "district": "오창호수공원",
+   "rentThousandWonPerM2": {
+    "aggregate": 10.2
+   },
+   "vacancyPct": {
+    "aggregate": 11.4
+   }
+  },
+  {
+   "fullName": "충북>용담동우체국",
+   "sido": "충북",
+   "district": "용담동우체국",
+   "rentThousandWonPerM2": {
+    "aggregate": 22.1
+   },
+   "vacancyPct": {
+    "aggregate": 8.8
+   }
+  },
+  {
+   "fullName": "충북>제천역",
+   "sido": "충북",
+   "district": "제천역",
+   "rentThousandWonPerM2": {
+    "small": 6.2,
+    "medium": 6.1,
+    "aggregate": 5.1
+   },
+   "vacancyPct": {
+    "small": 4.5,
+    "medium": 15.9,
+    "aggregate": 3.5
+   }
+  },
+  {
+   "fullName": "충북>제천중앙",
+   "sido": "충북",
+   "district": "제천중앙",
+   "rentThousandWonPerM2": {
+    "small": 13.2,
+    "medium": 14.4,
+    "aggregate": 13
+   },
+   "vacancyPct": {
+    "small": 10.8,
+    "medium": 34.7,
+    "aggregate": 33.1
+   }
+  },
+  {
+   "fullName": "충북>증평광장로",
+   "sido": "충북",
+   "district": "증평광장로",
+   "rentThousandWonPerM2": {
+    "small": 12.6,
+    "medium": 8.5
+   },
+   "vacancyPct": {
+    "small": 19.8,
+    "medium": 16.8
+   }
+  },
+  {
+   "fullName": "충북>청주고속버스터미널",
+   "sido": "충북",
+   "district": "청주고속버스터미널",
+   "rentThousandWonPerM2": {
+    "aggregate": 23.7
+   },
+   "vacancyPct": {
+    "aggregate": 9
+   }
+  },
+  {
+   "fullName": "충북>청주성안길",
+   "sido": "충북",
+   "district": "청주성안길",
+   "rentThousandWonPerM2": {
+    "small": 19.4,
+    "medium": 29.2
+   },
+   "vacancyPct": {
+    "small": 11.9,
+    "medium": 28.3
+   }
+  },
+  {
+   "fullName": "충북>청주율량동",
+   "sido": "충북",
+   "district": "청주율량동",
+   "rentThousandWonPerM2": {
+    "medium": 25.5
+   },
+   "vacancyPct": {
+    "medium": 21.4
+   }
+  },
+  {
+   "fullName": "충북>청주지방법원",
+   "sido": "충북",
+   "district": "청주지방법원",
+   "rentThousandWonPerM2": {
+    "aggregate": 20.2
+   },
+   "vacancyPct": {
+    "aggregate": 6.7
+   }
+  },
+  {
+   "fullName": "충북>충북대학교",
+   "sido": "충북",
+   "district": "충북대학교",
+   "rentThousandWonPerM2": {
+    "small": 15.7,
+    "medium": 24.2
+   },
+   "vacancyPct": {
+    "small": 12.6,
+    "medium": 27.8
+   }
+  },
+  {
+   "fullName": "충북>충북혁신도시",
+   "sido": "충북",
+   "district": "충북혁신도시",
+   "rentThousandWonPerM2": {
+    "aggregate": 15.4
+   },
+   "vacancyPct": {
+    "aggregate": 23.1
+   }
+  },
+  {
+   "fullName": "충북>충주연수칠금",
+   "sido": "충북",
+   "district": "충주연수칠금",
+   "rentThousandWonPerM2": {
+    "small": 11,
+    "medium": 14.7,
+    "aggregate": 13.8
+   },
+   "vacancyPct": {
+    "small": 15.7,
+    "medium": 19.9,
+    "aggregate": 7.8
+   }
+  },
+  {
+   "fullName": "충북>충주자유시장",
+   "sido": "충북",
+   "district": "충주자유시장",
+   "rentThousandWonPerM2": {
+    "small": 8.3,
+    "medium": 8.6,
+    "aggregate": 16.6
+   },
+   "vacancyPct": {
+    "small": 16.8,
+    "medium": 34.6,
+    "aggregate": 23.7
+   }
+  }
+ ]
+}
