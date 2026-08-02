@@ -17,6 +17,10 @@ import {
   getVendorTypeLabel,
   getPlatformsForCategory,
   getLogisticsTypeLabel,
+  findMarketRentDistricts,
+  formatRentLine,
+  MARKET_RENT_QUARTER_LABEL,
+  getMatchedProgramsV2,
 } from "@foundone/shared";
 import {
   getUniversalVendorFallback,
@@ -534,6 +538,56 @@ export async function POST(request: Request) {
 
   // ⭐ mergePoolSelections — picks 가 빈 경우에도 풀에서 결정론적으로 채움 (이미 구현)
   const enriched = mergePoolSelections(result, pool, picks);
+
+  // ── 지원사업 — LLM 산출을 버리고 SSOT 매칭으로 결정론 대체 (2026-08-03 감사 P2) ──
+  //   종전엔 프롬프트에 7개 프로그램이 하드코딩("2026 기준" — 해 지나면 낡음)돼 있었고
+  //   fitScore 를 LLM 이 지어냈다. 이제 startup-programs SSOT + getMatchedProgramsV2
+  //   (대상자 게이트·세부업종 화이트리스트 포함)가 유일한 출처다.
+  {
+    const matched = getMatchedProgramsV2({
+      startupType: result.parsed.startupType,
+      industryCategoryId: result.parsed.industryCategoryId,
+      subIndustryId: result.parsed.subIndustryId,
+      region: result.parsed.preferredRegion || undefined,
+      capital: body.budget,
+      businessStage: "pre-startup",          // AI 로드맵 = 예비 창업자 경로
+    });
+    enriched.fundingPrograms = matched
+      .filter((m) => m.eligible)
+      .slice(0, 5)
+      .map((m) => ({
+        name: m.name.ko,
+        kind: "other" as const,              // kind 세분류는 SSOT category 가 대체 (표시엔 미사용)
+        eligibility: m.target.ko,
+        amount: m.amount ?? m.benefit.ko,
+        ...(m.daysUntilDeadline != null ? { deadline: `D-${m.daysUntilDeadline}` } : {}),
+        fitScore: Math.max(0, Math.min(100, m.personalFitScore)),   // 결정론 — 매칭 규칙 점수
+      }));
+  }
+
+  // ── 상권 분석 — LLM 산출을 버리고 실측으로 결정론 대체 (2026-08-03 정직성 감사 P0) ──
+  //   종전엔 프롬프트가 서울 8개 상권 하드코딩을 근거로 전국 점수·유동인구를 지어내게 했다.
+  //   지금 실측 가능한 축은 임대료(한국부동산원 372개 조사상권)뿐 → 그것만 말하고,
+  //   점수·등급·유동인구·경쟁밀도는 데이터가 생길 때까지 **표시하지 않는다** (N/A).
+  {
+    const region = result.parsed.preferredRegion ?? "";
+    const matches = region ? findMarketRentDistricts(region, 1) : [];
+    const top = matches[0];
+    const rentLine = top ? formatRentLine(top.entry) : null;
+    enriched.marketAnalysis = {
+      score: 0,
+      grade: "N/A",                                     // 점수 체계는 실측 3축(경쟁·활성도·임대료) 완성 후
+      footTraffic: "",                                  // 전국 무료 공공 데이터 부재 — 위조 대신 미표시
+      competition: "",                                  // 상가정보 API 연동 후 실측 예정
+      rentLevel: rentLine ?? "",
+      targetFit: "",
+      summary: top && rentLine
+        ? `임대료는 ${MARKET_RENT_QUARTER_LABEL} 실측 기준입니다. 유동인구·경쟁 밀도는 공공 실측 데이터가 확보되는 대로 제공할 예정이며, 그 전까지는 소상공인 상권정보시스템(sbiz.or.kr)에서 직접 확인하시길 권합니다.`
+        : region
+          ? `"${region}"은(는) 한국부동산원 조사 상권(전국 372개) 밖이라 실측 임대료가 없습니다. 상권 분석은 소상공인 상권정보시스템(sbiz.or.kr)에서 확인하세요 — 추정치를 지어내지 않습니다.`
+          : "지역이 정해지면 실측 상권 데이터를 보여드립니다.",
+    };
+  }
 
   // 풀 데이터 자체도 보존 (UI 가 "어떤 풀에서 골랐는지" 표시 가능)
   enriched.serviceRecommendations = {

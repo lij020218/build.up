@@ -868,23 +868,35 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               </StageCard>
             )}
 
-            {/* 상권 분석 — marketAnalysis */}
+            {/* 상권 분석 — marketAnalysis
+                grade "N/A" = 실측 전용 모드 (2026-08-03): 점수·등급·게이지를 그리지 않는다.
+                종전엔 LLM 이 서울 8개 하드코딩을 근거로 전국 점수를 지어냈다 — 서버가 이제
+                한국부동산원 실측(임대료)만 내려주고 나머지 축은 빈 값이다. */}
             <StageCard icon={MapPin} label={ko ? "상권 분석" : "Market Analysis"}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div style={STAGE_VALUE}>{result.parsed.preferredRegion || "—"}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    fontSize: 13, fontWeight: 800, lineHeight: 1, padding: "5px 12px", borderRadius: 10,
-                    background: "rgba(25,25,112,0.08)", color: "#191970",
-                  }}>{result.marketAnalysis.grade}</div>
-                  <span style={{ fontSize: 18, fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>
-                    {result.marketAnalysis.score}<span style={{ fontSize: 11, fontWeight: 500, color: "var(--muted)" }}>/100</span>
+                {result.marketAnalysis.grade !== "N/A" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      fontSize: 13, fontWeight: 800, lineHeight: 1, padding: "5px 12px", borderRadius: 10,
+                      background: "rgba(25,25,112,0.08)", color: "#191970",
+                    }}>{result.marketAnalysis.grade}</div>
+                    <span style={{ fontSize: 18, fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>
+                      {result.marketAnalysis.score}<span style={{ fontSize: 11, fontWeight: 500, color: "var(--muted)" }}>/100</span>
+                    </span>
+                  </div>
+                )}
+                {result.marketAnalysis.grade === "N/A" && (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(25,25,112,0.06)", color: "#191970", letterSpacing: "0.03em" }}>
+                    {ko ? "실측 기준 · 한국부동산원" : "Measured · REB"}
                   </span>
+                )}
+              </div>
+              {result.marketAnalysis.grade !== "N/A" && (
+                <div style={{ height: 5, borderRadius: 3, background: "rgba(25,25,112,0.06)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 3, width: `${result.marketAnalysis.score}%`, background: "linear-gradient(90deg, #191970 0%, #5b6bff 100%)", transition: "width 0.4s ease" }} />
                 </div>
-              </div>
-              <div style={{ height: 5, borderRadius: 3, background: "rgba(25,25,112,0.06)", overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 3, width: `${result.marketAnalysis.score}%`, background: "linear-gradient(90deg, #191970 0%, #5b6bff 100%)", transition: "width 0.4s ease" }} />
-              </div>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
                 {[
                   { label: ko ? "유동인구" : "Traffic", value: result.marketAnalysis.footTraffic },

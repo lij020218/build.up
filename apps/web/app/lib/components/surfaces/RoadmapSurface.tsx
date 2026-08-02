@@ -29,6 +29,20 @@ export function RoadmapSurface() {
 
   const ko = language === "ko";
 
+  // 목표 오픈 D-day — budget-setup 결정의 targetOpenDate (AI 위저드가 채움, 웹·iOS stage_decisions 동기).
+  //   과거 날짜(이미 지났거나 오픈함)는 카운트다운이 무의미 → 미표시. 파싱은 로컬(UTC 함정 회피).
+  const openDday = (() => {
+    const raw = (d.decisions["budget-setup"]?.inputs as Record<string, unknown> | undefined)?.targetOpenDate;
+    if (typeof raw !== "string") return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+    if (!m) return null;
+    const target = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+    if (Number.isNaN(diff) || diff < 0 || diff > 730) return null;
+    return { diff, label: `${Number(m[2])}월 ${Number(m[3])}일` };
+  })();
+
   const tagMap: Record<string, Array<{ label: string; color: string }>> = {
     "budget_setup": [{ label: ko ? "재무 시뮬레이션" : "Finance Sim", color: "#7c3aed" }],
     "franchise_application": [{ label: ko ? "가맹 절차" : "Franchise", color: "#0891b2" }],
@@ -56,6 +70,13 @@ export function RoadmapSurface() {
             <div style={{ fontSize: "28px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a", lineHeight: 1.1 }}>
               {copy.home.starterFlow}
             </div>
+            {openDday && (
+              <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 11px", borderRadius: 999, background: "rgba(25,25,112,0.07)", border: "1px solid rgba(25,25,112,0.14)", fontSize: 12, fontWeight: 700, color: "#191970" }}>
+                {ko
+                  ? (openDday.diff === 0 ? `오늘이 목표 오픈일 (${openDday.label})` : `목표 오픈 D-${openDday.diff} · ${openDday.label}`)
+                  : `Open target D-${openDday.diff}`}
+              </div>
+            )}
           </div>
           <div style={{ textAlign: "right" as const }}>
             <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.05em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>

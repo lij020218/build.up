@@ -137,7 +137,10 @@ public struct BizRegistrationStageView: View {
 
                 Group {
                     switch page {
-                    case 0: previousDecisions
+                    case 0:
+                        previousDecisions
+                        // 국세청 실확인 — "완료 체크"(자기신고) 옆에 증거 (웹 NtsBizVerifyCard 미러)
+                        NtsBizVerifySection()
                     case 1: storeNameSection
                     default: bankSection
                     }
@@ -287,6 +290,106 @@ public struct BizRegistrationStageView: View {
                 Toggle(isOn: $bankDone) {
                     Text("사업용 통장 개설 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                 }.tint(BUColor.midnight)
+            }
+        }
+    }
+}
+
+
+// MARK: - 국세청 실확인 (웹 NtsBizVerifyCard 미러 — 정직성 규칙 1:1)
+//  · 미등록 ≠ 폐업·실패 (전산 반영 전일 수 있음 — 완료를 막지 않는다)
+//  · 오류 ≠ 미등록 (국세청 점검 시 503 — 재시도 안내만)
+//  · "확인됨" 배지는 세션 한정 (조회 시점의 사실만 — 오래된 확인을 영구 배지로 굳히지 않음)
+
+private struct NtsBizVerifySection: View {
+    @AppStorage("biz.registrationNumber") private var bizNo = ""
+    @State private var phase: Phase = .idle
+
+    private enum Phase: Equatable {
+        case idle, loading
+        case confirmed(taxLabel: String, isActive: Bool?)
+        case notfound
+        case error
+    }
+
+    private var digits: String { bizNo.filter(\.isNumber) }
+
+    var body: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.shield")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                    Text("국세청으로 등록 확인").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    Text("선택 — 체크 대신 증거").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                }
+                Text("발급받은 사업자등록번호를 넣으면 국세청 상태조회로 등록·과세유형을 확인해드려요.")
+                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+
+                HStack(spacing: 8) {
+                    TextField("사업자등록번호 10자리", text: $bizNo)
+                        .font(BUFont.body)
+                        .keyboardType(.numberPad)
+                        .padding(.horizontal, 10).padding(.vertical, 10)
+                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .onChange(of: bizNo) { _, _ in if phase != .idle { phase = .idle } }
+                    Button {
+                        check()
+                    } label: {
+                        Text(phase == .loading ? "확인 중..." : "확인")
+                            .font(BUFont.bodySmall.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 10)
+                            .background(BUColor.midnight.opacity(digits.count == 10 && phase != .loading ? 1 : 0.4),
+                                        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(digits.count != 10 || phase == .loading)
+                }
+
+                switch phase {
+                case .confirmed(let taxLabel, let isActive):
+                    HStack(spacing: 4) {
+                        Text("✓ \(taxLabel)")
+                        if let isActive { Text("· \(isActive ? "계속사업자" : "휴·폐업 상태")") }
+                        Text("— 국세청 확인 (방금 조회)")
+                    }
+                    .font(BUFont.bodyCaption.weight(.bold))
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(BUColor.midnight.opacity(0.07), in: Capsule())
+                case .notfound:
+                    Text("국세청에서 찾을 수 없는 번호예요. 방금 등록하셨다면 전산 반영 전일 수 있어요 — 등록 자체가 잘못된 건 아니니, 하루 이틀 뒤 다시 확인해보세요.")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                case .error:
+                    Text("조회에 실패했어요 (국세청 서버 점검 중일 수 있어요). 미등록이라는 뜻이 아니니 잠시 후 다시 시도해주세요.")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                case .idle, .loading:
+                    EmptyView()
+                }
+            }
+        }
+    }
+
+    private func check() {
+        guard digits.count == 10, phase != .loading else { return }
+        phase = .loading
+        let number = digits
+        Task { @MainActor in
+            do {
+                let repo = NtsBizRepository(supabase: BUSupabase.shared.client)
+                let r = try await repo.checkStatus(businessNumber: number)
+                if r.operatingStatus == "unregistered" { phase = .notfound; return }
+                let isActive: Bool? = r.operatingStatus == "active" ? true
+                    : (r.operatingStatus == "suspended" || r.operatingStatus == "closed") ? false
+                    : nil
+                phase = .confirmed(
+                    taxLabel: r.taxType.replacingOccurrences(of: "부가가치세 ", with: ""),
+                    isActive: isActive
+                )
+            } catch {
+                phase = .error   // 오류는 오류로 — 미등록으로 뭉개지 않는다
             }
         }
     }

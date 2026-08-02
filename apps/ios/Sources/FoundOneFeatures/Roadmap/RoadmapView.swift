@@ -209,8 +209,33 @@ public struct RoadmapView: View {
                 Text("\(completedCount) / \(totalCount) 완료")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted.opacity(0.7))
+                // 목표 오픈 D-day — budget-setup 결정 inputs.targetOpenDate (웹 RoadmapSurface 미러).
+                //   과거·비정상 날짜는 미표시 (카운트다운 위조 금지).
+                if let dday = openDday {
+                    Text(dday.diff == 0 ? "오늘이 목표 오픈일" : "목표 오픈 D-\(dday.diff) · \(dday.label)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 9).padding(.vertical, 3)
+                        .background(BUColor.midnight.opacity(0.07), in: Capsule())
+                        .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.14), lineWidth: 1))
+                        .padding(.top, 2)
+                }
             }
         }
+    }
+
+    /// 웹 RoadmapSurface openDday 와 동일 규칙: 로컬 파싱, 0~730일 범위만.
+    private var openDday: (diff: Int, label: String)? {
+        guard let raw = store.decisions["budget-setup"]?.inputs["targetOpenDate"] else { return nil }
+        let parts = raw.prefix(10).split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        var comps = DateComponents(); comps.year = parts[0]; comps.month = parts[1]; comps.day = parts[2]
+        let cal = Calendar.current
+        guard let target = cal.date(from: comps) else { return nil }
+        let today = cal.startOfDay(for: Date())
+        let diff = cal.dateComponents([.day], from: today, to: cal.startOfDay(for: target)).day ?? -1
+        guard diff >= 0, diff <= 730 else { return nil }
+        return (diff, "\(parts[1])월 \(parts[2])일")
     }
 
     // MARK: - Segmented progress bar

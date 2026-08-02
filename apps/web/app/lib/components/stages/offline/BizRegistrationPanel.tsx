@@ -6,6 +6,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { StoreNameInput } from "../shared/StoreNameInput";
+import { NtsBizVerifyCard } from "../shared/NtsBizVerifyCard";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
 
@@ -182,6 +183,11 @@ export function BizRegistrationPanel() {
               {i === arr.length - 1 && null}
             </div>
           ))}
+        </div>
+
+        {/* 국세청 실확인 — "완료 체크"(자기신고) 옆에 증거를 놓는다 (2026-08-03 감사 P1-2) */}
+        <div style={{ marginTop: 10 }}>
+          <NtsBizVerifyCard language={language} />
         </div>
       </div>
 
