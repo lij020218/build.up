@@ -225,7 +225,7 @@ public struct MarketingView: View {
                     HStack(spacing: 6) {
                         Text(t.label)
                             .font(.system(size: 13.5, weight: .bold))
-                            .foregroundStyle(tab == t ? BUColor.ink : BUColor.inkMuted)
+                            .foregroundStyle(tab == t ? Color.white : BUColor.inkMuted)
                         // 저지출 경고 점 — 장부 탭에 안 들어와도 경고가 보이게 (웹 패리티)
                         if t == .ledger, let check = spendCheck, check.band == .below {
                             Circle().fill(BUColor.danger).frame(width: 6, height: 6)
@@ -234,8 +234,9 @@ public struct MarketingView: View {
                     .padding(.horizontal, 18)
                     .padding(.vertical, 8)
                     .background(
+                        // 선택 = 브랜드 미드나잇 네이비 (2026-08-03 사장님 지시 — 종전 흰 배경, 웹 패리티)
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .fill(tab == t ? Color.white : Color.clear)
+                            .fill(tab == t ? BUColor.midnight : Color.clear)
                     )
                     .buShadow(tab == t ? .card : .none)
                 }

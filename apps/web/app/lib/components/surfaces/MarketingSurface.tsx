@@ -445,9 +445,10 @@ export function MarketingSurface() {
             style={{
               padding: "8px 18px", borderRadius: 11, fontSize: 13.5, fontWeight: 700, fontFamily: "inherit",
               cursor: "pointer", border: "none", transition: "background 0.15s, color 0.15s",
-              background: tab === t.key ? "#fff" : "transparent",
-              color: tab === t.key ? "#0f172a" : "var(--muted)",
-              boxShadow: tab === t.key ? "0 1px 4px rgba(17,17,17,0.08)" : "none",
+              // 선택 = 브랜드 미드나잇 네이비 (2026-08-03 사장님 지시 — 종전 흰 배경)
+              background: tab === t.key ? "#191970" : "transparent",
+              color: tab === t.key ? "#fff" : "var(--muted)",
+              boxShadow: tab === t.key ? "0 2px 8px rgba(25,25,112,0.25)" : "none",
               display: "inline-flex", alignItems: "center", gap: 6,
             }}
           >
