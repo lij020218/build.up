@@ -18,7 +18,7 @@ import FoundOneData
 // MARK: - Step
 
 private enum WizardStep {
-    case idea, budget, region, storeName, generating, review
+    case idea, industry, budget, region, storeName, generating, review
 }
 
 // MARK: - ViewModel
@@ -29,6 +29,11 @@ private final class AIRoadmapViewModel {
 
     var step: WizardStep = .idea
     var ideaText: String = ""
+    // 업종 확인 (2026-08-03 분류 분리) — LLM 은 후보만, 확정은 사용자
+    var industryCandidates: [IndustryCandidateItem] = []
+    var confirmedIndustry: IndustryCandidateItem? = nil
+    var classifying = false
+    var classifyFailed = false
     var budget: Int? = nil
     var region: String = ""
     var storeName: String = ""
@@ -66,6 +71,27 @@ private final class AIRoadmapViewModel {
         self.service = service
     }
 
+    func classify() {
+        guard !classifying else { return }
+        classifying = true
+        classifyFailed = false
+        Task { @MainActor in
+            defer { classifying = false }
+            do {
+                let candidates = try await service.classify(ideaText: ideaText)
+                industryCandidates = candidates
+                confirmedIndustry = candidates.first
+                step = .industry
+            } catch {
+                // 분류 실패해도 막지 않는다 — 생성 중 AI 판단 경로로 진행 가능 (거짓 실패 금지)
+                industryCandidates = []
+                confirmedIndustry = nil
+                classifyFailed = true
+                step = .industry
+            }
+        }
+    }
+
     func generate() {
         step = .generating
         genProgress = 0
@@ -86,6 +112,8 @@ private final class AIRoadmapViewModel {
             do {
                 let input = AIRoadmapInput(
                     ideaText: ideaText,
+                    confirmedSubIndustryId: confirmedIndustry?.subIndustryId,
+                    confirmedCategoryId: confirmedIndustry?.categoryId,
                     budget: budget,
                     region: region.isEmpty ? nil : region,
                     storeName: storeName.isEmpty ? nil : storeName,
@@ -137,6 +165,7 @@ public struct AIRoadmapWizardView: View {
                 // 카드 버튼에서만 hit-test → 빈 영역 탭은 입력으로 통과.
                 IdeaStepView(vm: vm, onBack: onBack)
                 FloatingInspirationView()
+            case .industry:   IndustryStepView(vm: vm)
             case .budget:     BudgetStepView(vm: vm)
             case .region:     RegionStepView(vm: vm)
             case .storeName:  StoreNameStepView(vm: vm)
@@ -347,8 +376,9 @@ private struct IdeaStepView: View {
                 .padding(.top, 14)
             }
 
-                    primaryButton(label: "다음", disabled: vm.ideaText.trimmingCharacters(in: .whitespaces).count < 5) {
-                        vm.step = .budget
+                    primaryButton(label: vm.classifying ? "업종 분석 중... (몇 초)" : "다음",
+                                  disabled: vm.ideaText.trimmingCharacters(in: .whitespaces).count < 5 || vm.classifying) {
+                        vm.classify()
                     }
                     .padding(.top, 20)
 
@@ -375,6 +405,97 @@ private struct IdeaStepView: View {
             }
             #endif
         }
+    }
+}
+
+// MARK: - Step 1.5: 업종 확인 (2026-08-03 분류 분리 — 웹 industry 스텝 미러)
+
+private struct IndustryStepView: View {
+    @Bindable var vm: AIRoadmapViewModel
+
+    var body: some View {
+        StepShell {
+            VStack(alignment: .leading, spacing: 0) {
+                Button { vm.step = .idea } label: {
+                    Label("뒤로", systemImage: "arrow.left")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(midnight.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 18)
+
+                Text("업종 확인")
+                    .font(.system(size: 10.5, weight: .heavy)).tracking(0.8)
+                    .foregroundStyle(midnight)
+                    .padding(.bottom, 6)
+                Text("어떤 업종이 맞나요?")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color(red: 0.118, green: 0.102, blue: 0.243))
+                    .padding(.bottom, 4)
+                Text("업종이 로드맵 전체(인허가·예산·공급업체)의 기준이 됩니다. AI 추천 중에서 사장님이 확정해주세요.")
+                    .font(.system(size: 13.5)).foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+                    .lineSpacing(3)
+                    .padding(.bottom, 18)
+
+                if vm.industryCandidates.isEmpty {
+                    Text("업종 분석에 실패했어요. 그대로 진행하면 생성 단계에서 AI가 업종을 판단합니다 — 리뷰 화면에서 꼭 확인해주세요.")
+                        .font(.system(size: 13)).foregroundStyle(BUColor.danger)
+                        .lineSpacing(3)
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(BUColor.danger.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(Array(vm.industryCandidates.enumerated()), id: \.element.subIndustryId) { i, c in
+                            candidateCard(c, isTop: i == 0)
+                        }
+                    }
+                    Text("맞는 업종이 없으면 「뒤로」에서 아이디어를 더 구체적으로 적어주세요 — 업종 분석은 생성 횟수를 쓰지 않습니다.")
+                        .font(.system(size: 11.5)).foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45))
+                        .lineSpacing(2)
+                        .padding(.top, 10)
+                }
+
+                primaryButton(label: vm.confirmedIndustry.map { "「\($0.label)」(으)로 진행" } ?? "업종 미정으로 진행") {
+                    vm.step = .budget
+                }
+                .padding(.top, 20)
+                Spacer(minLength: 28)
+            }
+        }
+    }
+
+    private func candidateCard(_ c: IndustryCandidateItem, isTop: Bool) -> some View {
+        let selected = vm.confirmedIndustry?.subIndustryId == c.subIndustryId
+        return Button { vm.confirmedIndustry = c } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(c.label).font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                    if isTop {
+                        Text("AI 추천 1순위")
+                            .font(.system(size: 10, weight: .heavy))
+                            .foregroundStyle(midnight)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(midnight.opacity(0.08), in: Capsule())
+                    }
+                    Spacer()
+                    if selected {
+                        Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(midnight)
+                    }
+                }
+                Text(c.reason)
+                    .font(.system(size: 12.5)).foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.6))
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(selected ? midnight.opacity(0.05) : Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(selected ? midnight : midnight.opacity(0.12), lineWidth: selected ? 2 : 1))
+        }
+        .buttonStyle(.plain)
     }
 }
 

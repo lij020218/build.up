@@ -1,9 +1,143 @@
 // ─── AI 자동 로드맵 생성 프롬프트 ─────────────────────────────────────────────
 // 사용자의 사업 아이디어 텍스트를 분석하여 전체 창업 로드맵을 자동 생성합니다.
 
+/**
+ * 업종 택소노미 + 매칭 규칙 — Pass 1 과 분류 전용 호출(classify.ts)이 공유하는 SSOT.
+ *  여기만 고치면 두 프롬프트가 함께 갱신된다 (이중 관리 금지).
+ */
+export const SUB_INDUSTRY_TAXONOMY_BLOCK = `## 업종별 카테고리 ID (정확히 이 값만 사용)
+- food: 음식점
+- cafe-dessert: 카페/디저트
+- retail: 소매
+- online-digital: 온라인/이커머스
+- beauty: 뷰티
+- fitness: 피트니스
+- education: 교육
+- pet: 반려동물
+- living-service: 생활서비스
+- startup-tech: 스타트업/테크
+- space: 공간/숙박
+
+## 세부 업종 ID (subIndustryId) — 반드시 71개 목록 안에서만 선택. 임의 ID 절대 금지.
+
+⚠️ **매칭 우선순위** — 사용자 텍스트 → 가장 가까운 sub-industry:
+1. **명시 키워드** (예: "필라테스" → pilates-studio) 가 있으면 직접 매칭
+2. **컨셉 유사성** (예: "건강 도시락" → salad-healthy) 으로 추론
+3. **운영 모델** (예: "무인 24시간" → unmanned-* 우선)
+4. **커머스 채널** (예: "온라인 + 오프라인 병행" → 메인 채널 우선, 오프라인 매장이 핵심이면 오프라인 카테고리)
+5. **모르겠으면** 카테고리의 가장 일반적인 옵션 (food=korean-casual, retail=lifestyle-goods)
+
+### food (음식점) — 6개
+- **korean-casual**: 한식 일반 (국밥·김밥·백반·분식·고깃집·찌개·한정식)
+- **delivery-meals**: 배달 전문 (공유주방·소형 매장, 도시락·1인분 식사 배달)
+- **salad-healthy**: 샐러드·헬시푸드·포케·아사이볼·다이어트식·저칼로리 식단
+- **ramen-noodle**: 라멘·우동·국수·쌀국수·짬뽕·면류 전문
+- **chicken-burger**: 치킨·버거·피자·핫도그·간편 fast food
+- **western-pasta-brunch**: 양식·파스타·브런치·스테이크·이탈리안·프렌치
+
+### cafe-dessert (카페·디저트) — 6개
+- **takeout-coffee**: 테이크아웃 커피 (소형, 카운터 위주, 좌석 최소)
+- **specialty-coffee**: 스페셜티 커피 (로스팅·핸드드립·원두 강조)
+- **dessert-cafe**: 디저트 카페 (케이크·마카롱·푸딩·크로플)
+- **bakery-studio**: 베이커리 스튜디오 (제과·제빵·식빵·페이스트리)
+- **icecream-bingsu**: 아이스크림·빙수·젤라또·프로즌요거트 (계절성)
+- **self-serve-cafe**: 무인 셀프서브 카페 (24시간·키오스크 주문)
+
+### retail (소매) — 6개
+- **convenience-small**: 동네 편의점·소형 마트·식품점
+- **lifestyle-goods**: 라이프스타일 잡화 (홈데코·문구·생활용품·디자인 소품)
+- **beauty-supplies**: 화장품·뷰티 용품 판매 (드럭스토어 X, 멀티숍·브랜드 매장)
+- **fashion-accessories**: 패션·액세서리 (의류·신발·가방·주얼리·양말)
+- **health-food-store**: 건강기능식품·영양제·자연식품 판매
+- **unmanned-retail**: 무인 매장 (밀키트·아이스크림·과일·라면 등 무인 판매)
+
+### beauty (뷰티) — 6개
+- **hair-salon**: 헤어 미용실 (컷·펌·염색)
+- **nail-studio**: 네일 스튜디오 (네일아트·페디큐어)
+- **skin-care-room**: 피부관리실 (얼굴 관리·관리실·에스테틱)
+- **waxing-studio**: 왁싱 전문
+- **eyelash-brow**: 속눈썹·눈썹 (반영구·연장)
+- **makeup-bridal**: 메이크업 (출장·웨딩·셀프스튜디오)
+
+### fitness (피트니스·운동) — 6개
+- **pilates-studio**: 필라테스 스튜디오 (리포머·매트)
+- **pt-gym**: PT 짐 (1:1 트레이닝·소규모 헬스)
+- **yoga-studio**: 요가 스튜디오 (하타·빈야사·핫요가)
+- **crossfit-box**: 크로스핏 박스 (대형 기구·박스 운영)
+- **golf-studio**: 골프 (스크린·시뮬레이터·레슨)
+- **unmanned-fitness**: 무인 24시간 헬스 (출입통제·CCTV)
+
+### education (교육·학원) — 6개
+- **study-room**: 독서실·스터디카페 (자습 공간 임대 위주)
+- **kids-academy**: 어린이·청소년 학원 (영어·수학·논술·미술 등 종합)
+- **adult-class**: 성인 클래스 (와인·요리·플라워·DIY 평생교육)
+- **language-academy**: 어학원 (영어·중국어·일본어·스페인어 등)
+- **coding-class**: 코딩 학원 (어린이·성인 프로그래밍)
+- **small-study-room**: 소형 스터디룸 임대 (시간제·1-4인용)
+
+### pet (반려동물) — 6개
+- **pet-grooming**: 펫 미용 (강아지·고양이 미용)
+- **pet-supplies**: 펫 용품 판매 (사료·간식·장난감·목줄)
+- **pet-hotel**: 펫 호텔 (24h 숙박·돌봄)
+- **pet-cafe**: 펫 카페 (음료 + 동물 동반)
+- **pet-training-school**: 펫 훈련소 (훈련사 자격)
+- **pet-walking-visit**: 펫 산책·방문 케어 (출장형, 보호자 부재 시)
+
+### living-service (생활서비스) — 6개
+- **laundry-service**: 세탁·드라이클리닝 (사장 + 직원 운영)
+- **cleaning-service**: 청소·정리 (출장형 — 가정·사무실 청소)
+- **repair-service**: 수리 (가전·가구·잡화 수리)
+- **self-laundry**: 무인 빨래방 (24h 셀프 세탁)
+- **print-copy**: 인쇄·복사 (소량 인쇄·출력·바인딩)
+- **device-repair**: 전자기기 수리 (휴대폰·태블릿·노트북 수리)
+
+### space (공간 임대·숙박) — 6개
+- **guesthouse**: 게스트하우스·민박 (외국인 + 국내 여행자 숙박)
+- **rental-studio**: 촬영 스튜디오 (사진·영상 촬영용 공간)
+- **party-room**: 파티룸 (생일·모임 시간제 임대)
+- **study-cafe-space**: 스터디카페 (좌석 시간제 + 음료 판매 결합)
+- **shared-office**: 공유 오피스 (1인 사무실·핫데스크·회의실 임대)
+- **practice-room**: 연습실 (악기·댄스·합주실 — 방음 시설)
+
+### online-digital (온라인·디지털) — 6개
+- **smart-store**: 스마트스토어·쿠팡 등 오픈마켓 셀러 (제품 도매 + 온라인 판매)
+- **digital-products**: 디지털 상품 (강의·이북·템플릿·플러그인)
+- **creator-service**: 크리에이터 서비스 (유튜브·인스타·블로그 콘텐츠 제작·1인 미디어)
+- **consignment-commerce**: 위탁판매 / 셀렉트샵 (디자이너·소형 브랜드 큐레이션)
+- **newsletter-membership**: 뉴스레터·멤버십 구독 (Stibee·Substack 형태)
+- **global-buying**: 구매대행·해외직구 (직구·통관·배송 대행)
+
+### startup-tech (스타트업·테크) — 11개 (반드시 모두 사용 가능)
+- **ai-application**: AI 앱·서비스 (LLM 활용·생성형 AI·AI 챗봇 등)
+- **developer-tools**: 개발자 도구 (라이브러리·CLI·IDE 플러그인·DevTools)
+- **b2b-saas**: B2B SaaS (기업 대상 클라우드 소프트웨어 — CRM·ERP 등)
+- **fintech-startup**: 핀테크 (결제·송금·자산관리·증권·뱅킹)
+- **healthtech-startup**: 헬스테크 (의료·헬스케어·웰니스 — 의료기기 인증 가능성)
+- **security-startup**: 보안 (사이버보안·정보보안·ISMS 등)
+- **hardware-iot**: 하드웨어·IoT (커넥티드 디바이스·센서·웨어러블 — KC 인증 필수)
+- **robotics-physical-ai**: 로보틱스·Physical AI (산업용·서비스 로봇·자율주행)
+- **semiconductor**: 반도체 (Fab·MPW·Tape-out·EDA — 매우 자본집약적)
+- **biotech-medtech**: 바이오·의료기기 (식약처 IND·임상시험)
+- **climate-energy**: 기후·에너지 (탄소·재생에너지·환경 기술)
+
+### 매칭 disambiguation (모호한 경우)
+- "치킨집 + 호프" → chicken-burger (주류는 별도 면허로 처리)
+- "1인 디저트 카페" → dessert-cafe (1인 ≠ takeout-coffee)
+- "스마트스토어로 옷 판매" → smart-store (online-digital 카테고리, fashion-accessories 가 아님)
+- "오프라인 매장 + 스마트스토어 병행" → 매장이 메인이면 오프라인 카테고리, 스마트스토어 메인이면 smart-store
+- "AI SaaS 스타트업" → b2b-saas (B2B 명시) / ai-application (B2C 또는 일반)
+- "온라인 강의" → digital-products / creator-service (강의 본인이 만들면 creator, 외부 강사 + 플랫폼이면 b2b-saas)
+- "직접 출장 청소" → cleaning-service (living-service 카테고리)
+- "어린이집" → 의료·복지 시설은 본 서비스 미지원, 가장 가까운 kids-academy 로 매핑하되 매칭 사유에 명시
+- **"스터디카페"(무인·키오스크·시간권·24시간) → study-cafe-space (space 카테고리)**. 스터디카페는 공간임대업이다.
+  study-room (education) 은 **독서실**(총무 상주·월정액 지정석·학원법 등록 대상) 전용 — 법적 인허가 체계가 다르므로 절대 혼동 금지 (2026-08-03 평가에서 오분류 실측)`;
+
 export type RoadmapGenerationInput = {
   /** 사용자가 입력한 사업 아이디어 (자유 텍스트, 제한 없음) */
   ideaText: string;
+  /** 사용자가 확정한 업종 (2026-08-03 분류 분리) — 있으면 Pass 1 은 재분류하지 않는다 */
+  confirmedSubIndustryId?: string;
+  confirmedCategoryId?: string;
   /** Step 2에서 추가 수집한 정보 (AI가 추출 못 한 것만) */
   budget?: number;
   region?: string;
@@ -279,132 +413,7 @@ conceptSummary 필드는 사용자 입력을 정제한 사업 핵심 정의입�
 
 <knowledge_base>
 
-## 업종별 카테고리 ID (정확히 이 값만 사용)
-- food: 음식점
-- cafe-dessert: 카페/디저트
-- retail: 소매
-- online-digital: 온라인/이커머스
-- beauty: 뷰티
-- fitness: 피트니스
-- education: 교육
-- pet: 반려동물
-- living-service: 생활서비스
-- startup-tech: 스타트업/테크
-- space: 공간/숙박
-
-## 세부 업종 ID (subIndustryId) — 반드시 71개 목록 안에서만 선택. 임의 ID 절대 금지.
-
-⚠️ **매칭 우선순위** — 사용자 텍스트 → 가장 가까운 sub-industry:
-1. **명시 키워드** (예: "필라테스" → pilates-studio) 가 있으면 직접 매칭
-2. **컨셉 유사성** (예: "건강 도시락" → salad-healthy) 으로 추론
-3. **운영 모델** (예: "무인 24시간" → unmanned-* 우선)
-4. **커머스 채널** (예: "온라인 + 오프라인 병행" → 메인 채널 우선, 오프라인 매장이 핵심이면 오프라인 카테고리)
-5. **모르겠으면** 카테고리의 가장 일반적인 옵션 (food=korean-casual, retail=lifestyle-goods)
-
-### food (음식점) — 6개
-- **korean-casual**: 한식 일반 (국밥·김밥·백반·분식·고깃집·찌개·한정식)
-- **delivery-meals**: 배달 전문 (공유주방·소형 매장, 도시락·1인분 식사 배달)
-- **salad-healthy**: 샐러드·헬시푸드·포케·아사이볼·다이어트식·저칼로리 식단
-- **ramen-noodle**: 라멘·우동·국수·쌀국수·짬뽕·면류 전문
-- **chicken-burger**: 치킨·버거·피자·핫도그·간편 fast food
-- **western-pasta-brunch**: 양식·파스타·브런치·스테이크·이탈리안·프렌치
-
-### cafe-dessert (카페·디저트) — 6개
-- **takeout-coffee**: 테이크아웃 커피 (소형, 카운터 위주, 좌석 최소)
-- **specialty-coffee**: 스페셜티 커피 (로스팅·핸드드립·원두 강조)
-- **dessert-cafe**: 디저트 카페 (케이크·마카롱·푸딩·크로플)
-- **bakery-studio**: 베이커리 스튜디오 (제과·제빵·식빵·페이스트리)
-- **icecream-bingsu**: 아이스크림·빙수·젤라또·프로즌요거트 (계절성)
-- **self-serve-cafe**: 무인 셀프서브 카페 (24시간·키오스크 주문)
-
-### retail (소매) — 6개
-- **convenience-small**: 동네 편의점·소형 마트·식품점
-- **lifestyle-goods**: 라이프스타일 잡화 (홈데코·문구·생활용품·디자인 소품)
-- **beauty-supplies**: 화장품·뷰티 용품 판매 (드럭스토어 X, 멀티숍·브랜드 매장)
-- **fashion-accessories**: 패션·액세서리 (의류·신발·가방·주얼리·양말)
-- **health-food-store**: 건강기능식품·영양제·자연식품 판매
-- **unmanned-retail**: 무인 매장 (밀키트·아이스크림·과일·라면 등 무인 판매)
-
-### beauty (뷰티) — 6개
-- **hair-salon**: 헤어 미용실 (컷·펌·염색)
-- **nail-studio**: 네일 스튜디오 (네일아트·페디큐어)
-- **skin-care-room**: 피부관리실 (얼굴 관리·관리실·에스테틱)
-- **waxing-studio**: 왁싱 전문
-- **eyelash-brow**: 속눈썹·눈썹 (반영구·연장)
-- **makeup-bridal**: 메이크업 (출장·웨딩·셀프스튜디오)
-
-### fitness (피트니스·운동) — 6개
-- **pilates-studio**: 필라테스 스튜디오 (리포머·매트)
-- **pt-gym**: PT 짐 (1:1 트레이닝·소규모 헬스)
-- **yoga-studio**: 요가 스튜디오 (하타·빈야사·핫요가)
-- **crossfit-box**: 크로스핏 박스 (대형 기구·박스 운영)
-- **golf-studio**: 골프 (스크린·시뮬레이터·레슨)
-- **unmanned-fitness**: 무인 24시간 헬스 (출입통제·CCTV)
-
-### education (교육·학원) — 6개
-- **study-room**: 독서실·스터디카페 (자습 공간 임대 위주)
-- **kids-academy**: 어린이·청소년 학원 (영어·수학·논술·미술 등 종합)
-- **adult-class**: 성인 클래스 (와인·요리·플라워·DIY 평생교육)
-- **language-academy**: 어학원 (영어·중국어·일본어·스페인어 등)
-- **coding-class**: 코딩 학원 (어린이·성인 프로그래밍)
-- **small-study-room**: 소형 스터디룸 임대 (시간제·1-4인용)
-
-### pet (반려동물) — 6개
-- **pet-grooming**: 펫 미용 (강아지·고양이 미용)
-- **pet-supplies**: 펫 용품 판매 (사료·간식·장난감·목줄)
-- **pet-hotel**: 펫 호텔 (24h 숙박·돌봄)
-- **pet-cafe**: 펫 카페 (음료 + 동물 동반)
-- **pet-training-school**: 펫 훈련소 (훈련사 자격)
-- **pet-walking-visit**: 펫 산책·방문 케어 (출장형, 보호자 부재 시)
-
-### living-service (생활서비스) — 6개
-- **laundry-service**: 세탁·드라이클리닝 (사장 + 직원 운영)
-- **cleaning-service**: 청소·정리 (출장형 — 가정·사무실 청소)
-- **repair-service**: 수리 (가전·가구·잡화 수리)
-- **self-laundry**: 무인 빨래방 (24h 셀프 세탁)
-- **print-copy**: 인쇄·복사 (소량 인쇄·출력·바인딩)
-- **device-repair**: 전자기기 수리 (휴대폰·태블릿·노트북 수리)
-
-### space (공간 임대·숙박) — 6개
-- **guesthouse**: 게스트하우스·민박 (외국인 + 국내 여행자 숙박)
-- **rental-studio**: 촬영 스튜디오 (사진·영상 촬영용 공간)
-- **party-room**: 파티룸 (생일·모임 시간제 임대)
-- **study-cafe-space**: 스터디카페 (좌석 시간제 + 음료 판매 결합)
-- **shared-office**: 공유 오피스 (1인 사무실·핫데스크·회의실 임대)
-- **practice-room**: 연습실 (악기·댄스·합주실 — 방음 시설)
-
-### online-digital (온라인·디지털) — 6개
-- **smart-store**: 스마트스토어·쿠팡 등 오픈마켓 셀러 (제품 도매 + 온라인 판매)
-- **digital-products**: 디지털 상품 (강의·이북·템플릿·플러그인)
-- **creator-service**: 크리에이터 서비스 (유튜브·인스타·블로그 콘텐츠 제작·1인 미디어)
-- **consignment-commerce**: 위탁판매 / 셀렉트샵 (디자이너·소형 브랜드 큐레이션)
-- **newsletter-membership**: 뉴스레터·멤버십 구독 (Stibee·Substack 형태)
-- **global-buying**: 구매대행·해외직구 (직구·통관·배송 대행)
-
-### startup-tech (스타트업·테크) — 11개 (반드시 모두 사용 가능)
-- **ai-application**: AI 앱·서비스 (LLM 활용·생성형 AI·AI 챗봇 등)
-- **developer-tools**: 개발자 도구 (라이브러리·CLI·IDE 플러그인·DevTools)
-- **b2b-saas**: B2B SaaS (기업 대상 클라우드 소프트웨어 — CRM·ERP 등)
-- **fintech-startup**: 핀테크 (결제·송금·자산관리·증권·뱅킹)
-- **healthtech-startup**: 헬스테크 (의료·헬스케어·웰니스 — 의료기기 인증 가능성)
-- **security-startup**: 보안 (사이버보안·정보보안·ISMS 등)
-- **hardware-iot**: 하드웨어·IoT (커넥티드 디바이스·센서·웨어러블 — KC 인증 필수)
-- **robotics-physical-ai**: 로보틱스·Physical AI (산업용·서비스 로봇·자율주행)
-- **semiconductor**: 반도체 (Fab·MPW·Tape-out·EDA — 매우 자본집약적)
-- **biotech-medtech**: 바이오·의료기기 (식약처 IND·임상시험)
-- **climate-energy**: 기후·에너지 (탄소·재생에너지·환경 기술)
-
-### 매칭 disambiguation (모호한 경우)
-- "치킨집 + 호프" → chicken-burger (주류는 별도 면허로 처리)
-- "1인 디저트 카페" → dessert-cafe (1인 ≠ takeout-coffee)
-- "스마트스토어로 옷 판매" → smart-store (online-digital 카테고리, fashion-accessories 가 아님)
-- "오프라인 매장 + 스마트스토어 병행" → 매장이 메인이면 오프라인 카테고리, 스마트스토어 메인이면 smart-store
-- "AI SaaS 스타트업" → b2b-saas (B2B 명시) / ai-application (B2C 또는 일반)
-- "온라인 강의" → digital-products / creator-service (강의 본인이 만들면 creator, 외부 강사 + 플랫폼이면 b2b-saas)
-- "직접 출장 청소" → cleaning-service (living-service 카테고리)
-- "어린이집" → 의료·복지 시설은 본 서비스 미지원, 가장 가까운 kids-academy 로 매핑하되 매칭 사유에 명시
-- **"스터디카페"(무인·키오스크·시간권·24시간) → study-cafe-space (space 카테고리)**. 스터디카페는 공간임대업이다.
-  study-room (education) 은 **독서실**(총무 상주·월정액 지정석·학원법 등록 대상) 전용 — 법적 인허가 체계가 다르므로 절대 혼동 금지 (2026-08-03 평가에서 오분류 실측)
+${SUB_INDUSTRY_TAXONOMY_BLOCK}
 
 ## 상권 분석 (marketAnalysis) — 서버가 실측으로 대체
 marketAnalysis 필드는 스키마 유지를 위해서만 채우세요: score 0, grade "C", 나머지 필드는 빈 문자열("").
@@ -655,6 +664,14 @@ export function buildRoadmapGenerationPrompt(input: RoadmapGenerationInput): str
 
   lines.push(`## 사업 아이디어`);
   lines.push(`<user_input>${input.ideaText}</user_input>`);
+  if (input.confirmedSubIndustryId) {
+    // 분류 분리 (2026-08-03): 사용자가 이미 업종을 확정 — 재분류 금지, 계획만.
+    lines.push(
+      `<confirmed_industry>업종은 사용자가 확정했습니다: subIndustryId="${input.confirmedSubIndustryId}"` +
+      `${input.confirmedCategoryId ? ` (categoryId="${input.confirmedCategoryId}")` : ""}. ` +
+      `재분류하지 말고 이 업종 기준으로만 계획하세요. parsed.subIndustryId 에 이 값을 그대로, matchingConfidence=100.</confirmed_industry>`,
+    );
+  }
   lines.push("");
 
   if (input.budget || input.region || input.teamSize || input.storeName) {

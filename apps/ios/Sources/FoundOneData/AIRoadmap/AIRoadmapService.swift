@@ -19,6 +19,27 @@ public actor AIRoadmapService {
         self.supabaseClient = supabaseClient
     }
 
+    /// 업종 분류 후보 (2026-08-03 분류 분리) — 생성 쿼터를 쓰지 않는 경량 호출
+    public func classify(ideaText: String) async throws -> [IndustryCandidateItem] {
+        let endpoint = webAppURL.appendingPathComponent("/api/ai/roadmap/classify")
+        var request = URLRequest(url: endpoint, timeoutInterval: 30)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token = supabaseClient.auth.currentSession?.accessToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = try JSONEncoder().encode(["ideaText": ideaText])
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            struct Err: Decodable { let error: String? }
+            let msg = (try? JSONDecoder().decode(Err.self, from: data))?.error
+            throw AIRoadmapError.apiError(msg ?? "업종 분석 실패")
+        }
+        struct Payload: Decodable { let candidates: [IndustryCandidateItem] }
+        return try JSONDecoder().decode(Payload.self, from: data).candidates
+    }
+
     public func generate(input: AIRoadmapInput) async throws -> AIRoadmapResult {
         let endpoint = webAppURL.appendingPathComponent("/api/ai/roadmap/generate")
 

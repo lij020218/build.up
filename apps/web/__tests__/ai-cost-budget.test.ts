@@ -111,6 +111,7 @@ describe("ai-cost-budget: 헤비 실사용 프로파일 ≤ 월 ₩6,000", () =>
     "agents-feedback-form": 4,
     "business-plan-generate": 1,
     "roadmap-generate": 1,
+    "roadmap-classify": 6, // 업종 확인 스텝 — 재분석 부담 없는 경량 호출 (회당 ~₩2)
     "interview": 2,
     "interview-analyze": 2,
     "health-diagnose": 4,

@@ -714,11 +714,24 @@ export async function generateRoadmap(
     );
   }
 
+  // 확정 업종 강제 (2026-08-03 분류 분리) — LLM 이 <confirmed_industry> 지시를 무시해도
+  //   최종값은 사용자 확정값. 오분류 로드맵이 구조적으로 불가능해진다.
+  const enforceConfirmed = (r: RoadmapGenerationResult): RoadmapGenerationResult => {
+    if (input.confirmedSubIndustryId) {
+      r.parsed.subIndustryId = input.confirmedSubIndustryId;
+      if (input.confirmedCategoryId) r.parsed.industryCategoryId = input.confirmedCategoryId;
+      r.parsed.matchingConfidence = 100;
+      r.parsed._needsCategoryConfirm = false;
+      r.parsed.alternativeSubIndustries = [];
+    }
+    return r;
+  };
+
   // Tool Use 응답 우선 처리 (강제됐으니 항상 존재)
   const toolUse = response.content.find((c) => c.type === "tool_use");
   if (toolUse && toolUse.type === "tool_use") {
     // tool input은 schema 강제됐지만 parseResponse 의 안전장치 (subIndustryId fallback 등) 재사용
-    return parseResponse(JSON.stringify(toolUse.input));
+    return enforceConfirmed(parseResponse(JSON.stringify(toolUse.input)));
   }
 
   // Fallback: 구버전 호환 — text 블록 파싱
@@ -731,5 +744,5 @@ export async function generateRoadmap(
   }
   const tx = textBlock.text ?? "";
   console.log("[roadmap/generate] Fallback to text block, length:", tx.length);
-  return parseResponse(tx);
+  return enforceConfirmed(parseResponse(tx));
 }

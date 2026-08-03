@@ -240,6 +240,42 @@ describe("🔴 상권 단계 — 실측 연결 + 약속≤능력 (2026-08-03 상
   });
 });
 
+describe("업종 분류 분리 — 확정은 사용자, LLM 은 후보만 (2026-08-03)", () => {
+  it("택소노미 SSOT 공유 — 분류·생성 프롬프트가 같은 블록을 쓴다 (이중 관리 금지)", () => {
+    const promptSrc = readFileSync(join(HERE, "..", "..", "..", "packages", "ai", "src", "roadmap", "prompt.ts"), "utf8");
+    const classifySrc = readFileSync(join(HERE, "..", "..", "..", "packages", "ai", "src", "roadmap", "classify.ts"), "utf8");
+    expect(promptSrc).toContain("export const SUB_INDUSTRY_TAXONOMY_BLOCK");
+    expect(promptSrc).toContain("${SUB_INDUSTRY_TAXONOMY_BLOCK}");
+    expect(classifySrc).toContain("SUB_INDUSTRY_TAXONOMY_BLOCK");
+  });
+
+  it("확정 업종은 서버가 강제 — LLM 이 지시를 무시해도 최종값은 사용자 확정값", () => {
+    const gen = readFileSync(join(HERE, "..", "..", "..", "packages", "ai", "src", "roadmap", "generate.ts"), "utf8");
+    expect(gen).toContain("enforceConfirmed");
+    expect(gen).toContain("input.confirmedSubIndustryId");
+    expect(gen).toContain("matchingConfidence = 100");
+  });
+
+  it("위저드 — 웹·iOS 모두 확인 스텝 + 실패해도 막지 않음 (거짓 실패 금지)", () => {
+    const web = readFileSync(join(HERE, "..", "app", "lib", "components", "AIRoadmapWizard.tsx"), "utf8");
+    const ios = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "AIRoadmapWizardView.swift"), "utf8");
+    for (const src of [web, ios]) {
+      expect(src).toContain("confirmedIndustry");
+      expect(src).toContain("업종 분석은 생성 횟수를 쓰지 않습니다");
+      expect(src).toContain("생성 단계에서 AI가 업종을 판단합니다");   // 분류 실패 폴백
+    }
+    // 생성 요청에 확정 업종 동봉
+    expect(web).toContain("confirmedSubIndustryId: confirmedIndustry?.subIndustryId");
+    expect(ios).toContain("confirmedSubIndustryId: confirmedIndustry?.subIndustryId");
+  });
+
+  it("분류 라우트 — 생성 쿼터와 분리 (재분류에 크레딧 소모 금지)", () => {
+    const route = readFileSync(join(HERE, "..", "app", "api", "ai", "roadmap", "classify", "route.ts"), "utf8");
+    expect(route).toContain('feature: "roadmap-classify"');
+    expect(route).not.toContain("checkRoadmapGenerationQuota");
+  });
+});
+
 describe("목표 오픈 D-day — 과거 날짜 미표시 (죽은 카운트다운 금지)", () => {
   it("웹·iOS 모두 0~730일 범위 밖은 렌더하지 않는다", () => {
     const web = readFileSync(join(HERE, "..", "app", "lib", "components", "surfaces", "RoadmapSurface.tsx"), "utf8");

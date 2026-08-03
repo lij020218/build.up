@@ -15,6 +15,9 @@ import { readFileSync } from "node:fs";
 const mod = await import("../packages/ai/src/roadmap/generate.ts") as Record<string, unknown>;
 const generateRoadmap = (mod.generateRoadmap ?? (mod.default as Record<string, unknown> | undefined)?.generateRoadmap) as
   typeof import("../packages/ai/src/roadmap/generate").generateRoadmap;
+const cmod = await import("../packages/ai/src/roadmap/classify.ts") as Record<string, unknown>;
+const classifyIndustry = (cmod.classifyIndustry ?? (cmod.default as Record<string, unknown> | undefined)?.classifyIndustry) as
+  typeof import("../packages/ai/src/roadmap/classify").classifyIndustry;
 
 const env = Object.fromEntries(readFileSync(new URL("../apps/web/.env.local", import.meta.url), "utf8")
   .split("\n").filter((l) => l.includes("=") && !l.startsWith("#"))
@@ -88,13 +91,24 @@ const RUN = filter ? CASES.filter((c) => c.name.includes(filter)) : CASES;
 for (const c of RUN) {
   const t0 = Date.now();
   try {
-    const r = await generateRoadmap(c.input, { apiKey });
+    // ── ① 분류 스텝 (2026-08-03 분리): 사용자가 보게 될 후보에 기대 업종이 있는가 ──
+    const cls = await classifyIndustry(c.input.ideaText, { apiKey });
+    const classifiedIds = cls.candidates.map((x) => x.subIndustryId);
+    const errs: string[] = [];
+    if (!classifiedIds.some((id) => c.expectSub.includes(id))) {
+      errs.push(`분류 후보에 기대 업종 없음: [${classifiedIds.join(",")}] (기대: ${c.expectSub.join("|")})`);
+    }
+    // ── ② 생성 스텝: 확정 업종(1순위 매칭분)을 입력으로 — 프로덕션 흐름 그대로 ──
+    const confirmed = classifiedIds.find((id) => c.expectSub.includes(id)) ?? classifiedIds[0]!;
+    const r = await generateRoadmap(
+      { ...c.input, confirmedSubIndustryId: confirmed },
+      { apiKey },
+    );
     const secs = ((Date.now() - t0) / 1000).toFixed(1);
     const permits = (r.legal?.permitsDetailed ?? []).map((p) => p.name).join(" / ");
-    const errs: string[] = [];
 
-    if (!c.expectSub.includes(r.parsed.subIndustryId)) {
-      errs.push(`업종: ${r.parsed.subIndustryId} (기대: ${c.expectSub.join("|")})`);
+    if (r.parsed.subIndustryId !== confirmed) {
+      errs.push(`확정 강제 실패: ${r.parsed.subIndustryId} ≠ ${confirmed}`);   // enforceConfirmed 가드
     }
     if (c.expectStartupType && r.parsed.startupType !== c.expectStartupType) {
       errs.push(`창업형태: ${r.parsed.startupType} (기대: ${c.expectStartupType})`);

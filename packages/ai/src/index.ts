@@ -22,6 +22,7 @@ export type { ProgramMatchingResult, ProgramRecommendation, ProgramMatchingConte
 export { diagnoseBusinessHealth } from "./health/diagnose";
 export type { HealthDiagnosisContext, HealthDiagnosisResult } from "./health/prompt";
 export { generateRoadmap } from "./roadmap/generate";
+export { classifyIndustry, type IndustryCandidate, type IndustryClassification } from "./roadmap/classify";
 export type { RoadmapGenerationInput, RoadmapGenerationResult } from "./roadmap/prompt";
 export { selectFromPool } from "./roadmap/select-from-pool";
 export type {

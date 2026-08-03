@@ -440,8 +440,12 @@ export async function POST(request: Request) {
   const MAX_IDEA_TEXT = 2_000;
   const MAX_STORE_NAME = 100;
   const MAX_REGION = 100;
+  // 확정 업종 (2026-08-03 분류 분리) — id 형식 검증만 (실제 강제는 generateRoadmap 내부)
+  const ID_RE = /^[a-z0-9-]{2,40}$/;
   body = {
     ...body,
+    ...(body.confirmedSubIndustryId && !ID_RE.test(body.confirmedSubIndustryId) ? { confirmedSubIndustryId: undefined } : {}),
+    ...(body.confirmedCategoryId && !ID_RE.test(body.confirmedCategoryId) ? { confirmedCategoryId: undefined } : {}),
     ideaText: body.ideaText.trim().slice(0, MAX_IDEA_TEXT),
     ...(body.storeName !== undefined && { storeName: body.storeName.trim().slice(0, MAX_STORE_NAME) }),
     ...(body.region !== undefined && { region: body.region.trim().slice(0, MAX_REGION) }),

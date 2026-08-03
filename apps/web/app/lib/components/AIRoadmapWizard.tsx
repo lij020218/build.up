@@ -197,7 +197,7 @@ function InfraTile({ label, value, reason }: { label: string; value: string; rea
   );
 }
 
-type Step = "idea" | "budget" | "region" | "storeName" | "generating" | "review" | "complete";
+type Step = "idea" | "industry" | "budget" | "region" | "storeName" | "generating" | "review" | "complete";
 
 type Props = {
   language: "ko" | "en";
@@ -227,6 +227,11 @@ const fmtBudget = (manwon: number) => {
 export default function AIRoadmapWizard({ language, onComplete, onBack }: Props) {
   const ko = language === "ko";
   const [step, setStep] = useState<Step>("idea");
+  // 업종 확인 스텝 (2026-08-03 분류 분리) — LLM 은 후보 추천만, 확정은 사용자가
+  const [industryCandidates, setIndustryCandidates] = useState<Array<{ subIndustryId: string; categoryId: string; label: string; reason: string }> | null>(null);
+  const [confirmedIndustry, setConfirmedIndustry] = useState<{ subIndustryId: string; categoryId: string; label: string } | null>(null);
+  const [classifying, setClassifying] = useState(false);
+  const [classifyError, setClassifyError] = useState<string | null>(null);
   const [ideaText, setIdeaText] = useState("");
   const [budget, setBudget] = useState<number | null>(null);
   const [budgetText, setBudgetText] = useState("");
@@ -314,6 +319,40 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
         ]);
 
   // ── API 호출 ──
+  const handleClassify = async () => {
+    if (classifying) return;
+    setClassifying(true);
+    setClassifyError(null);
+    try {
+      const { supabase } = await import("../../../lib/supabase");
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/ai/roadmap/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
+        body: JSON.stringify({ ideaText }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok || !Array.isArray(json.candidates) || json.candidates.length === 0) {
+        throw new Error(json?.error ?? "업종 분석 실패");
+      }
+      setIndustryCandidates(json.candidates);
+      setConfirmedIndustry({
+        subIndustryId: json.candidates[0].subIndustryId,
+        categoryId: json.candidates[0].categoryId,
+        label: json.candidates[0].label,
+      });
+      setStep("industry");
+    } catch (e) {
+      // 분류 실패해도 막지 않는다 — 종전 경로(생성 중 판단)로 진행 가능 (거짓 실패 화면 금지)
+      setClassifyError(e instanceof Error ? e.message : String(e));
+      setIndustryCandidates(null);
+      setConfirmedIndustry(null);
+      setStep("industry");
+    } finally {
+      setClassifying(false);
+    }
+  };
+
   const handleGenerate = async () => {
     setStep("generating");
     setGenProgress(0);
@@ -343,6 +382,8 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
         body: JSON.stringify({
           ideaText,
+          confirmedSubIndustryId: confirmedIndustry?.subIndustryId,
+          confirmedCategoryId: confirmedIndustry?.categoryId,
           budget: budget ?? undefined,
           region: region || undefined,
           storeName: storeName || undefined,
@@ -449,12 +490,89 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
 
           <button
             type="button"
-            onClick={() => setStep("budget")}
-            disabled={ideaText.trim().length < 5}
-            style={{ ...primaryBtn, marginTop: "20px", opacity: ideaText.trim().length < 5 ? 0.35 : 1 }}
+            onClick={() => { void handleClassify(); }}
+            disabled={ideaText.trim().length < 5 || classifying}
+            style={{ ...primaryBtn, marginTop: "20px", opacity: ideaText.trim().length < 5 || classifying ? 0.35 : 1 }}
           >
-            {ko ? "다음" : "Continue"}
+            {classifying ? (ko ? "업종 분석 중... (몇 초)" : "Analyzing...") : (ko ? "다음" : "Continue")}
           </button>
+        </motion.div>
+      </main>
+    );
+  }
+
+  // ── Step: 업종 확인 (2026-08-03) — 확정은 사용자, LLM 은 후보만 ──
+  if (step === "industry") {
+    return (
+      <main style={shell}>
+        <FloatingInspiration />
+        <motion.div style={card}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <button type="button" onClick={() => setStep("idea")} style={backBtn}>
+            <ArrowLeft size={13} strokeWidth={1.5} /> {ko ? "뒤로" : "Back"}
+          </button>
+          <div style={header}>
+            <div style={eyebrow}>
+              <Building2 size={11} strokeWidth={1.8} />
+              {ko ? "업종 확인" : "Confirm industry"}
+            </div>
+            <h1 style={title}>{ko ? "어떤 업종이 맞나요?" : "Which industry fits?"}</h1>
+            <p style={subtitle}>
+              {ko
+                ? "업종이 로드맵 전체(인허가·예산·공급업체)의 기준이 됩니다. AI 추천 중에서 사장님이 확정해주세요."
+                : "The industry drives permits, budget, and vendors — confirm the AI suggestion."}
+            </p>
+          </div>
+
+          {industryCandidates && industryCandidates.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+              {industryCandidates.map((c, i) => {
+                const selected = confirmedIndustry?.subIndustryId === c.subIndustryId;
+                return (
+                  <button
+                    key={c.subIndustryId}
+                    type="button"
+                    onClick={() => setConfirmedIndustry({ subIndustryId: c.subIndustryId, categoryId: c.categoryId, label: c.label })}
+                    style={{
+                      textAlign: "left" as const, padding: "14px 16px", borderRadius: 14, cursor: "pointer",
+                      border: selected ? "2px solid #191970" : "1px solid rgba(25,25,112,0.12)",
+                      background: selected ? "rgba(25,25,112,0.05)" : "white",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{c.label}</span>
+                      {i === 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(25,25,112,0.08)", color: "#191970" }}>
+                          {ko ? "AI 추천 1순위" : "Top pick"}
+                        </span>
+                      )}
+                      {selected && <span style={{ marginLeft: "auto", fontSize: 13, fontWeight: 800, color: "#191970" }}>✓</span>}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.5, marginTop: 4 }}>{c.reason}</div>
+                  </button>
+                );
+              })}
+              <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.45)", lineHeight: 1.5 }}>
+                {ko ? "맞는 업종이 없으면 「뒤로」에서 아이디어를 더 구체적으로 적어주세요 — 업종 분석은 생성 횟수를 쓰지 않습니다." : "None fit? Go back and describe more specifically — analysis doesn't consume generation credits."}
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(180,35,24,0.05)", border: "1px solid rgba(180,35,24,0.1)", fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
+              {ko
+                ? `업종 분석에 실패했어요${classifyError ? ` (${classifyError})` : ""}. 그대로 진행하면 생성 단계에서 AI가 업종을 판단합니다 — 리뷰 화면에서 꼭 확인해주세요.`
+                : "Industry analysis failed — proceeding lets the AI decide during generation."}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+            <button type="button" onClick={() => setStep("budget")} style={{ ...primaryBtn, flex: 1 }}>
+              {confirmedIndustry
+                ? (ko ? `「${confirmedIndustry.label}」(으)로 진행` : `Continue as ${confirmedIndustry.label}`)
+                : (ko ? "업종 미정으로 진행" : "Continue without industry")}
+            </button>
+          </div>
         </motion.div>
       </main>
     );
@@ -469,7 +587,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          <button type="button" onClick={() => setStep("idea")} style={backBtn}>
+          <button type="button" onClick={() => setStep("industry")} style={backBtn}>
             <ArrowLeft size={13} strokeWidth={1.5} /> {ko ? "뒤로" : "Back"}
           </button>
           <div style={header}>

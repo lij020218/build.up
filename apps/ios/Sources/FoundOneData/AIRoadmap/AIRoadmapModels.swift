@@ -11,20 +11,38 @@ import Foundation
 
 public struct AIRoadmapInput: Encodable, Sendable {
     public let ideaText: String
+    /// 사용자가 확정한 업종 (2026-08-03 분류 분리) — 서버가 이 값을 강제한다
+    public let confirmedSubIndustryId: String?
+    public let confirmedCategoryId: String?
     public let budget: Int?
     public let region: String?
     public let storeName: String?
     public let teamSize: Int?
     public let language: String
 
-    public init(ideaText: String, budget: Int?, region: String?, storeName: String?, teamSize: Int?, language: String = "ko") {
+    public init(
+        ideaText: String,
+        confirmedSubIndustryId: String? = nil,
+        confirmedCategoryId: String? = nil,
+        budget: Int?, region: String?, storeName: String?, teamSize: Int?, language: String = "ko"
+    ) {
         self.ideaText = ideaText
+        self.confirmedSubIndustryId = confirmedSubIndustryId
+        self.confirmedCategoryId = confirmedCategoryId
         self.budget = budget
         self.region = region
         self.storeName = storeName
         self.teamSize = teamSize
         self.language = language
     }
+}
+
+/// 업종 분류 후보 — /api/ai/roadmap/classify (웹 IndustryCandidate 미러)
+public struct IndustryCandidateItem: Decodable, Sendable, Hashable {
+    public let subIndustryId: String
+    public let categoryId: String
+    public let label: String
+    public let reason: String
 }
 
 // MARK: - Result
