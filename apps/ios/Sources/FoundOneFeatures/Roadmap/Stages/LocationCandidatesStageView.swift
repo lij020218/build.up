@@ -90,6 +90,8 @@ public struct LocationCandidatesStageView: View {
     //   (웹 SSOT 키)로 함께 저장돼 웹 region 폼 복원·business_profiles.preferred_regions 투영에 쓰인다.
     @AppStorage("loc.region") private var aiRegion = ""
     @State private var aiItems: [MarketScoredItem] = []
+    /// 브랜드 시도 분포 (공정위 신형 가족 단일 출처) — 후보 목록 위 1회만 표시
+    @State private var aiFranchiseRegional: String?
     @State private var aiLoading = false
     @State private var aiError: String?
     @State private var aiCenter: CLLocationCoordinate2D?
@@ -104,7 +106,7 @@ public struct LocationCandidatesStageView: View {
         guard !region.isEmpty else { return }
         didSearch = true
         aiDistrictMatches = MarketDistrictRegistry.match(region)
-        aiItems = []; aiError = nil; aiPins = []; aiCenter = nil
+        aiItems = []; aiError = nil; aiPins = []; aiCenter = nil; aiFranchiseRegional = nil
         Task { await geocodeDistrictPins(aiDistrictMatches) }
     }
 
@@ -124,6 +126,7 @@ public struct LocationCandidatesStageView: View {
                 )
                 await MainActor.run {
                     aiItems = result.items
+                    aiFranchiseRegional = result.franchiseRegional
                     aiLoading = false
                     if let lat = result.centerLat, let lng = result.centerLng {
                         aiCenter = CLLocationCoordinate2D(latitude: lat, longitude: lng)
@@ -655,6 +658,13 @@ public struct LocationCandidatesStageView: View {
                     if let aiError {
                         Text("⚠ \(aiError)")
                             .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                    }
+                    if let regional = aiFranchiseRegional {
+                        Text("🏢 \(regional)")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
                     }
                     ForEach(aiItems) { item in recommendItemRow(item) }
                 }

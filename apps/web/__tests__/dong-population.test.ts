@@ -193,3 +193,62 @@ describe("배선 — 라우트 주입 + 웹 칩 + 번들 격리", () => {
     expect(stage).not.toContain('from "../../../../api/_lib/dong-population"');
   });
 });
+
+describe("프랜차이즈 시도 분포 — 신형 가족 단일 SSOT (혼동 금지, 2026-08-03)", () => {
+  it("findBrandRegional — 시도 게이트·실측 0 유지·라벨 강제", async () => {
+    const { findBrandRegional, formatBrandRegionalLine, FRANCHISE_REGIONAL_YR } = await import("../app/api/_lib/franchise-regional");
+    // 시도를 못 갈라내면 null (전국수 단독 표기 금지)
+    expect(findBrandRegional("kftc-any", "둔산동 어딘가")).toBeNull();
+    // 존재 브랜드 스모크 — JSON에서 하나 집어 실측 대조
+    const raw = (await import("../app/api/_lib/franchise-regional.json")).default as unknown as {
+      _yr: string; brands: Record<string, { total: number; areas: Record<string, number> }>;
+    };
+    expect(raw._yr).toBe(FRANCHISE_REGIONAL_YR);
+    const [id, b] = Object.entries(raw.brands)[0]!;
+    // 전국수 = 시도합 (같은 가족 내부 정합) + "전체" 행 이중계상 금지
+    expect(Object.values(b.areas).reduce((a, n) => a + n, 0)).toBe(b.total);
+    expect(b.areas["전체"]).toBeUndefined();
+    const r = findBrandRegional(id, "서울 마포구");
+    expect(r).not.toBeNull();
+    expect(r!.nationalTotal).toBe(b.total);
+    expect(r!.sidoCount).toBe(b.areas["서울"] ?? 0); // 0개 = 실측 0, null 아님
+    // 라벨 연도 = acntgYr(실제 회계연도) — jngBizCrtraYr(등록기준) 아님
+    const line = formatBrandRegionalLine("테스트", r!);
+    expect(line).toContain("공정위 정보공개서");
+    expect(line).toContain(`${r!.yr}년 기준`);
+    expect(line).toContain("가맹+직영");
+    // 메가커피 실측 대조 (원시행 검증 2026-08-03: 전국 2,709 · 대전 67 · 서울 665)
+    const mega = findBrandRegional("mega-coffee", "대전 둔산동");
+    expect(mega).not.toBeNull();
+    expect(mega!.nationalTotal).toBe(2709);
+    expect(mega!.sidoCount).toBe(67);
+    expect(mega!.yr).toBe("2023");
+  });
+
+  it("배선 — 라우트 최상위 1회 + 프롬프트 라벨 + 웹·iOS 표시 1회 (카드 중복 금지)", () => {
+    const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
+    expect(mr).toContain("findBrandRegional");
+    expect(mr).toContain("franchiseRegional: fRegionalLine");
+    expect(mr).toContain("반경 실측이 우선 신호");
+    // 시도 분포는 후보별 meta 에 붙이지 않는다 (시도 단위 수치 — 카드 5장 중복 방지)
+    expect(mr).not.toContain("meta.franchiseRegional");
+    const stage = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "LocationCandidatesStage.tsx"), "utf8");
+    expect(stage).toContain("data.franchiseRegional");
+    expect(stage).toContain("franchiseRegionalNote");
+    const iosSvc = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneData", "AIRoadmap", "MarketRecommendService.swift"), "utf8");
+    expect(iosSvc).toContain("franchiseRegional");
+    const iosView = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "Stages", "LocationCandidatesStageView.swift"), "utf8");
+    expect(iosView).toContain("aiFranchiseRegional");
+  });
+
+  it("혼동 금지 — 신형 분포 모듈이 구형 officialStats 수치를 섞지 않는다", () => {
+    const lib = readFileSync(join(HERE, "..", "app", "api", "_lib", "franchise-regional.ts"), "utf8");
+    // 구형 계보 데이터 import 금지 (주석 언급은 허용 — 코드 접근만 차단)
+    expect(lib).not.toMatch(/import[^;]*franchise-brands/);
+    expect(lib).not.toContain("getFranchiseBrandById");
+    expect(lib).toContain("병기하지 말 것");
+    // 서버 전용 — shared index 미export
+    const sharedIndex = readFileSync(join(HERE, "..", "..", "..", "packages", "shared", "src", "index.ts"), "utf8");
+    expect(sharedIndex).not.toContain("franchise-regional");
+  });
+});

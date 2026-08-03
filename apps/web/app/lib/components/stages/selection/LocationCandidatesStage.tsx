@@ -126,6 +126,9 @@ export function LocationCandidatesStage() {
   // ⚠️ 페이지네이션 — 한 화면 = 한 흐름. 사용자 피드백으로 스크롤 분량 줄임.
   const [pageIdx, setPageIdx] = useState(0);
 
+  // 브랜드 시도 분포 노트 (프랜차이즈 선택자 전용, 응답 최상위 필드)
+  const [franchiseRegionalNote, setFranchiseRegionalNote] = useState<string | null>(null);
+
   // ── AI 라이브 추천 핸들러 ────────────────────────────────────────
   //  사용자가 입력한 희망 지역 → 카카오 Local 라이브 검색 → Claude 점수화 → recommendedMarkets 갱신.
   //  결과는 LocationMapPanel 이 meta.lat/lng 를 직접 사용해 즉시 핀 표시.
@@ -168,6 +171,8 @@ export function LocationCandidatesStage() {
       // 점수 높은 순으로 정렬해 selectedLocation 자동 첫 번째 (사용자 클릭 우선)
       const items = (data.items as Array<{ score?: number }>).slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
       setRecommendedMarkets(items as never);
+      // 브랜드 시도 분포 (공정위 신형 가족 단일 출처 — 구형 수치와 병기 금지 원칙)
+      setFranchiseRegionalNote(typeof data.franchiseRegional === "string" ? data.franchiseRegional : null);
       setLocationMode("recommended");
       setLocationMapReady(true);
       setManualMarketEvaluation(null);
@@ -950,6 +955,12 @@ export function LocationCandidatesStage() {
             language={language}
             region={preferredRegionInput}
           />
+        )}
+        {/* 브랜드 시도 분포 — 신형 가족 단일 출처, 후보 카드 위 1회만 (카드마다 중복 금지) */}
+        {franchiseRegionalNote && (
+          <p style={{ margin: 0, fontSize: "12.5px", color: "var(--text-secondary)", padding: "8px 12px", borderRadius: "10px", background: "rgba(29,53,87,0.05)" }}>
+            🏢 {franchiseRegionalNote}
+          </p>
         )}
         <div ref={locationRef} style={{ display: "grid", gap: "10px", ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
           {activeLocationCandidates.map((item) => {

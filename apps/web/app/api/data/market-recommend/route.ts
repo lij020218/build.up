@@ -22,6 +22,7 @@ import {
 } from "../../_lib/sbiz-store";
 import { getFranchiseBrandById, franchiseBrandsAll } from "@foundone/shared";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
+import { findBrandRegional, formatBrandRegionalLine } from "../../_lib/franchise-regional";
 import {
   findMarketRentDistricts,
   representativeRent,
@@ -530,7 +531,7 @@ function measuredRentFor(regionText: string, districtName: string): {
 
 async function scoreWithClaude(
   candidates: SubAreaCandidate[],
-  ctx: { region: string; categoryId: string; subIndustryId?: string; capital?: number; language: "ko" | "en" },
+  ctx: { region: string; categoryId: string; subIndustryId?: string; capital?: number; language: "ko" | "en"; franchiseRegionalLine?: string | null },
   apiKey: string,
 ): Promise<{ items: ScoredItem[]; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } | null }> {
   const ko = ctx.language === "ko";
@@ -566,7 +567,7 @@ async function scoreWithClaude(
   const userPrompt = `## 사용자 컨텍스트
 - 희망 지역: "${ctx.region}"
 - 업종 카테고리: ${ctx.categoryId}${ctx.subIndustryId ? ` (세부: ${ctx.subIndustryId})` : ""}
-- 자본금: ${ctx.capital ? `${(ctx.capital / 10000).toLocaleString()}만원` : "미설정"}
+- 자본금: ${ctx.capital ? `${(ctx.capital / 10000).toLocaleString()}만원` : "미설정"}${ctx.franchiseRegionalLine ? `\n- 브랜드 시도 분포(실측): ${ctx.franchiseRegionalLine} — 시도 포화도 참고 (반경 실측이 우선 신호)` : ""}
 - 응답 언어: ${ko ? "한국어" : "English"}
 
 ## 후보 sub-area 메트릭 (Kakao Local API 라이브)
@@ -702,6 +703,9 @@ export async function POST(request: Request) {
   const sbizKey = process.env.MOIS_API_KEY;
   // 프랜차이즈 컨텍스트 (2026-08-03 사장님 스펙) — 브랜드 확정자만
   const fBrand = franchiseBrandId ? getFranchiseBrandById(franchiseBrandId) : undefined;
+  // 시도 분포 — 공정위 신형 가족 단일 SSOT (전국수=시도합, 기준년도 라벨 필수. 구형 수치와 병기 금지)
+  const fRegional = fBrand ? findBrandRegional(fBrand.id, region) : null;
+  const fRegionalLine = fBrand && fRegional ? formatBrandRegionalLine(fBrand.name.ko, fRegional) : null;
   const peerNames = fBrand
     ? franchiseBrandsAll
         .filter((b) => b.id !== fBrand.id && (b.subIndustryIds ?? []).some((sid) => (fBrand.subIndustryIds ?? []).includes(sid)))
@@ -740,7 +744,7 @@ export async function POST(request: Request) {
   const enriched = await Promise.all(targetCandidates.map((c) => gatherMetrics(c, competitionKw, kakaoKey)));
 
   // ④ Claude 점수화 (prompt caching: static system 프롬프트 = ephemeral cached)
-  const { items: scored, usage } = await scoreWithClaude(enriched, { region, categoryId, subIndustryId, capital, language }, anthropicKey);
+  const { items: scored, usage } = await scoreWithClaude(enriched, { region, categoryId, subIndustryId, capital, language, franchiseRegionalLine: fRegionalLine }, anthropicKey);
   if (scored.length === 0) {
     return NextResponse.json({
       ok: false,
@@ -795,6 +799,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    franchiseRegional: fRegionalLine,
     items,
     centerLat: center.lat,
     centerLng: center.lng,

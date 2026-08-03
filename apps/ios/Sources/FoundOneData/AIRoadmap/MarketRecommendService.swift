@@ -72,6 +72,8 @@ public actor MarketRecommendService {
         let items: [MarketScoredItem]?
         let centerLat: Double?
         let centerLng: Double?
+        /// 브랜드 시도 분포 (공정위 신형 가족 단일 출처) — 후보 목록 위 1회 표시용
+        let franchiseRegional: String?
         let error: String?
     }
 
@@ -91,7 +93,7 @@ public actor MarketRecommendService {
         }
         let decoded = try? JSONDecoder().decode(Response.self, from: data)
         if http.statusCode == 200, let decoded, decoded.ok, let items = decoded.items {
-            return MarketRecommendResult(items: items, centerLat: decoded.centerLat, centerLng: decoded.centerLng)
+            return MarketRecommendResult(items: items, centerLat: decoded.centerLat, centerLng: decoded.centerLng, franchiseRegional: decoded.franchiseRegional)
         }
         throw AIRoadmapError.apiError(decoded?.error ?? "상권 추천 오류 (\(http.statusCode))")
     }
@@ -101,4 +103,6 @@ public struct MarketRecommendResult: Sendable {
     public let items: [MarketScoredItem]
     public let centerLat: Double?
     public let centerLng: Double?
+    /// "메가MGC커피 대전 N개 · 전국 M개 — 공정위 정보공개서 YYYY 기준" (프랜차이즈 선택자만, 없으면 nil)
+    public let franchiseRegional: String?
 }
