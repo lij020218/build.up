@@ -18,9 +18,11 @@ describe("market-recommend 라우트 가드", () => {
     expect(route).toMatch(/type ScoredItem = \{[\s\S]*?meta\?: Record<string, string \| number>;[\s\S]*?\};/);
   });
 
-  it("오귀속 방지 — districtName 매칭 실패는 drop, candidates[0] 폴백 금지", () => {
+  it("오귀속 방지 — candidates[0] 폴백 금지 + 전 후보 템플릿 폴백 존재", () => {
     expect(route).not.toContain("?? candidates[0]");
-    expect(route).toContain("LLM districtName 불일치 — drop");
+    // LLM 서술 매칭 실패 후보는 자기 실측 기반 템플릿으로 — 남의 동 서술 부착 불가 구조
+    expect(route).toContain("buildTemplateNarration(f.cand.districtName, f.det)");
+    expect(route).toContain("scoreCandidateDeterministic");
   });
 
   it("쿼터 규율 — 소진공 보강은 slice(0,5) 확정 후에만", () => {

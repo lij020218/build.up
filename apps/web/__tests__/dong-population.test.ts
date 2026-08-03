@@ -96,10 +96,15 @@ describe("소진공 공식 경쟁밀도 (2026-08-03 Phase A-1)", () => {
   it("라우트 — 공식 우선·카카오 폴백·소스별 밴드·오류≠0", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
     expect(mr).toContain("sbizCountsInRadius");
-    expect(mr).toContain("동종업종 매장 [공식]");
-    expect(mr).toContain("동종업종 매장 [지도]");            // 폴백 유지
-    expect(mr).toContain("소스 태그로 밴드를 갈라 적용");     // 공식/지도 밴드 분리
     expect(mr).toContain("meta.officialCompetition");
+    // 팩트 라인(공식/지도 태그)은 내레이터로 이관 (2026-08-03 역할 분리)
+    const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
+    expect(nar).toContain("동종업종 매장 [공식]");
+    expect(nar).toContain("동종업종 매장 [지도]");            // 폴백 유지
+    // 소스별 밴드 분리는 프롬프트 지시가 아니라 결정론 코드 — market-scoring.ts
+    const ms = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-scoring.ts"), "utf8");
+    expect(ms).toContain("officialSameCount");
+    expect(ms).toContain("공식은 지도보다");
     const lib = readFileSync(join(HERE, "..", "app", "api", "_lib", "sbiz-store.ts"), "utf8");
     expect(lib).toContain("오류 ≠ 0개");
     expect(lib).toContain("부분합을 전체인 척 금지");
@@ -118,8 +123,9 @@ describe("개폐업 추이 — 자체 스냅샷 원장 (2026-08-03)", () => {
     expect(lib).toContain("60 * 86_400_000");                    // 60일 컷오프
     expect(lib).toContain('ignoreDuplicates: true');             // 첫 관측 보존
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
-    expect(mr).toContain("개폐업 추이: 관측 이력 없음 (언급 금지)");
     expect(mr).toContain("meta.areaTrend");
+    const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
+    expect(nar).toContain("개폐업 추이: 관측 이력 없음 (언급 금지)");
   });
 
   it("마이그레이션 — 전역 통계 RLS 잠금 + 하루 1스냅샷 유니크 + wipe 보존 선언", () => {
@@ -144,9 +150,13 @@ describe("개폐업 추이 — 자체 스냅샷 원장 (2026-08-03)", () => {
 describe("프랜차이즈 반경 실측 (2026-08-03 사장님 스펙)", () => {
   it("같은 브랜드 존재 = 영업지역 경고 -15점 규칙이 프롬프트에 있다", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
-    expect(mr).toContain("같은 브랜드 1개+ 존재 → 최우선 경고 + -15점");
-    expect(mr).toContain("본사 영업담당에게 출점 가능 여부 확인 필수");
-    expect(mr).toContain("실측 라인이 없으면 프랜차이즈 관련 언급 금지");
+    // -15 규칙은 프롬프트 지시가 아니라 서버 결정론 강제 (2026-08-03) — LLM 이 어겨도 무관
+    const ms = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-scoring.ts"), "utf8");
+    expect(ms).toContain("-15");
+    expect(ms).toContain("영업지역 보호");
+    expect(ms).toContain("본사 영업담당에게 출점 가능 여부 확인 필수");
+    const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
+    expect(nar).toContain("실측 라인이 없으면 프랜차이즈 관련 언급 금지");
     expect(mr).toContain("meta.franchisePresence");
     expect(mr).toContain("franchiseBrandId");
   });
@@ -175,9 +185,10 @@ describe("배선 — 라우트 주입 + 웹 칩 + 번들 격리", () => {
   it("market-recommend 가 실측 주입 + 매칭 없음 언급 금지 + meta 결정론 부착", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
     expect(mr).toContain("findDongPopulation");
-    expect(mr).toContain("배후 주거인구: 매칭 없음 (언급 금지)");
     expect(mr).toContain("meta.backPopulation");
-    expect(mr).toContain('"유동인구" 라고 부르지 마라');
+    const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
+    expect(nar).toContain("배후 주거인구: 매칭 없음 (언급 금지)");
+    expect(nar).toContain('"유동인구" 라고 부르지 마라');
   });
 
   it("웹 후보 카드가 배후인구 칩을 렌더한다", () => {
@@ -229,7 +240,8 @@ describe("프랜차이즈 시도 분포 — 신형 가족 단일 SSOT (혼동 �
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
     expect(mr).toContain("findBrandRegional");
     expect(mr).toContain("franchiseRegional: fRegionalLine");
-    expect(mr).toContain("반경 실측이 우선 신호");
+    const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
+    expect(nar).toContain("반경 실측이 우선 신호");
     // 시도 분포는 후보별 meta 에 붙이지 않는다 (시도 단위 수치 — 카드 5장 중복 방지)
     expect(mr).not.toContain("meta.franchiseRegional");
     const stage = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "LocationCandidatesStage.tsx"), "utf8");

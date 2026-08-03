@@ -2,7 +2,8 @@
  * POST /api/data/market-recommend
  *
  * 사용자가 입력한 「상권 희망 지역」 → 카카오 Local API 로 실시간 sub-area 후보 발굴 →
- *  각 후보의 경쟁/유동인구 proxy 메트릭 수집 → Claude 가 점수·이유·경고 생성.
+ *  실측(소진공·부동산원·행안부·프랜차이즈) 결정론 점수(market-scoring.ts) →
+ *  LLM 은 해설만(market-narrator.ts, 실패 시 템플릿 — 2026-08-03 역할 축소).
  *
  * Why: 기존 buildRecommendedMarkets 는 정적 서울 행정동 데이터만 다뤄, 사용자가
  *  "마포구 망원동" / "수원 영통구" / "제주 애월" 처럼 특정 동을 입력하면 매칭 실패 →
@@ -13,7 +14,8 @@
  */
 
 import { NextResponse } from "next/server";
-import { createAiClient } from "@foundone/ai/utils/client";
+import { scoreCandidateDeterministic } from "../../_lib/market-scoring";
+import { buildFactLines, narrateCandidates, buildTemplateNarration, mergeWarnings } from "../../_lib/market-narrator";
 import type { RecommendationItem } from "@foundone/shared";
 import { findDongPopulation, formatDongPopulationLine, DONG_POP_YM_LABEL } from "../../_lib/dong-population";
 import {
@@ -416,7 +418,10 @@ async function gatherMetrics(
   };
 }
 
-// ── 4. AI 점수화 (gpt-5.4-mini) ─────────────────────────────────
+// ── 4. 점수(결정론) + 해설(LLM) 조립 ─────────────────────────────
+//  점수 = market-scoring.ts (실측 결정론) / 서술 = market-narrator.ts (LLM, 실패 시 템플릿).
+//  실측 meta 는 여기서 결정론 부착 — LLM 미경유 (문구 왜곡·수치 변형 차단).
+
 type ScoredItem = {
   id: string;
   title: string;
@@ -429,87 +434,6 @@ type ScoredItem = {
    *  응답 조립부가 meta 를 새로 만들면서 실측 칩 전체가 유실됐다. */
   meta?: Record<string, string | number>;
 };
-
-/**
- * Static 한국 창업 상권 도메인 지식 — 실제 모델은 gpt-5.4-mini (createAiClient MODEL_MAP 경유).
- *  ⚡ Prompt caching:
- *    - 5분 TTL 기본 (March 2026~). 한 사용자가 여러 지역을 비교 검색할 때 90% 비용 절감.
- *    - 5-min cache write: 1.25× / cache read: 0.1× / no cache: 1.0× (대비 약 88% 절감 hit 시).
- *    - tools → system → messages 순서. 우리는 tools 없으므로 system 의 마지막 블록에 cache_control.
- *  ※ 사용자별 가변 컨텍스트 (지역/자본금/메트릭) 는 이 블록 밖 (user message) 에 둬야 캐시 깨지지 않음.
- */
-const SCORING_SYSTEM_PROMPT = `당신은 한국 창업 상권 분석 전문가입니다. 사용자의 희망 지역 주변 후보 sub-area 들을 Kakao Local API 라이브 메트릭 + 한국 창업 도메인 경험으로 0~100점 점수화합니다.
-
-## 평가 프레임워크 (5축)
-**1. 동종업종 경쟁 강도 (Competition Density)** — 500m 반경. **소스 태그로 밴드를 갈라 적용**:
-후보 라인이 [공식](소진공·사업자 등록 기준 — 지도 노출보다 1.5~2배 높게 잡힘)이면:
-- 0~5개: 시장 미성숙/부적합 → 60점 시작, 위험 시그널 · 6~30개: 적정 · 31~70개: 활성(차별화 강조)
-- 71~120개: 과밀 → -10~-15점 · 121개+: 레드오션 → -20점
-후보 라인이 [지도](카카오)이면 기존 밴드:
-- 0~3 미성숙 · 4~15 적정 · 16~35 활성 · 36~60 과밀(-10~-15) · 61+ 레드오션(-20)
-reasons 에 수치 인용 시 반드시 소스를 함께 ("공식 107개" / "지도 32개").
-
-**2. 유동인구 Proxy (CE7 카페 밀도, 500m 반경)**
-- 30개+: 강력한 유동 → +10점 (스타벅스·이디야 등 브랜드가 1차로 검증한 자리)
-- 10~29개: 양호 → +5점
-- 5~9개: 보통 → ±0
-- 0~4개: 유동 부족 → -5~-10점, "방문자가 발견하기 어려움" warning
-
-**3. 접근성 (SW8 지하철역, 500m 반경)**
-- 1개+: +5점 (역세권 효과)
-- 0개: ±0 (단 차량 접근성/주거지 입지면 OK, 따로 reason 보강)
-
-**4. 앵커 시설 (CT1 문화시설, 500m 반경)**
-- 5개+: +5점 (영화관/도서관/공연장 = 사람이 머무르는 시간 증가)
-- 1~4개: ±0
-- 0개: -3점 only if 업종이 앵커 의존적 (카페/디저트/엔터)
-
-**5. 업종-입지 적합성 — 배후 주거인구 실측이 주입된 후보는 그 연령 구성을 근거로 판단**
-- 주입된 "배후 주거인구" 라인의 20~30대/40대+ 비중을 인용해 타깃 적합도를 말하라 (구체 % 인용).
-- 주민등록 = **거주** 인구다 — "유동인구" 라고 부르지 마라. 매칭 없음인 후보는 인구 수치 언급 금지.
-- 업종별 참고 (실측 위에서만 적용):
-- 미용/뷰티: 주거지+상권 혼합 동 (망원/연남/성수) > 유흥가
-- 학원·교육: 주거지 + 학교 인접 > 유흥가/오피스가
-- 헬스/필라테스: 주거지 + 오피스 혼합 > 관광지
-- 카페·디저트: 유동 + 문화시설 가까울수록 ↑
-- 한식/국밥: 오피스가/주거지 점심 수요 > 유흥가
-- 펫: 주거지 (특히 30~40대 거주율 높은 동) > 오피스가
-- 게스트하우스/숙박: 관광지/역세권 > 주거지
-
-## 임대료·공실률 — 실측값만 (2026-08-03 정직성 수술)
-- 각 후보에 "실측 임대료" 라인이 주입된 경우에만 임대료를 근거로 쓸 수 있다 (한국부동산원 조사상권 실측).
-- 실측 라인이 "없음" 인 후보는 임대료·공실률을 reasons/warnings 에 **일절 언급 금지** — 추정 밴드를 만들지 마라.
-- 자본금 대비 임대 부담 판단도 실측이 있는 후보에서만. 실측 공실률 8%+ 는 "공실 경고" 로 반영.
-
-## 프랜차이즈 규칙 (프랜차이즈 실측 라인이 주입된 경우만)
-- **같은 브랜드 1개+ 존재 → 최우선 경고 + -15점**: 대부분의 가맹계약은 영업지역 보호로
-  같은 브랜드 인근 출점이 불가하거나 본사 승인이 필요하다. warnings 첫 항목으로
-  "같은 브랜드 N개 — 본사 영업담당에게 출점 가능 여부 확인 필수" 를 넣어라.
-- 동종 프랜차이즈 다수(합 5개+) → 브랜드 경쟁 과밀 신호(-5~-10), 발견 브랜드명을 인용.
-- 동종 주요 프랜차이즈 미발견 + 동종업종 다수 → "개인점 위주 상권, 브랜드 차별화 여지" 로 해석 가능.
-- 실측 라인이 없으면 프랜차이즈 관련 언급 금지.
-
-## 자주 발생하는 실패 시그널
-- 동종업종 60개+ + 카페 밀도 5개 미만 = "과밀 + 유동 부족" 최악 조합 (점수 50 이하)
-- 지하철역 0 + 문화시설 0 + 카페 5개 미만 = 외진 입지 (-15)
-- 한적 주거지에 "유흥/엔터" 업종 추천 = 업종 mismatch warning
-- 학원·교육 업종에 유흥가 추천 = 학부모 거부감 + 야간 안전 issue warning
-
-## 출력 형식
-JSON 배열만 출력. 점수 높은 순으로 정렬. 5개 후보 입력 시 5개 모두 평가 (3개 미만이면 입력만큼만).
-
-[
-  {
-    "districtName": "후보의 정확한 동 이름 (입력 그대로 — 매칭 키)",
-    "title": "사용자에게 보여줄 매력적 명칭 (예: '망원역 카페거리', '서교동 메인 골목')",
-    "score": 0~100 정수,
-    "summary": "한 문장 요약 — 이 sub-area 의 정체성 + 사용자 업종 적합도 (60자 내외)",
-    "reasons": ["메트릭에 근거한 강점 2~3개. 구체적 숫자 인용. 예: '카페 32개로 유동 검증된 상권', '경쟁 12개로 차별화 여지 있음'"],
-    "warnings": ["주의 0~2개. 메트릭 + 자본금 + 업종 적합성 기반. 없으면 빈 배열"]
-  }
-]
-
-JSON 외 어떤 텍스트도 출력하지 마세요. \`\`\`json 마크다운 펜스도 사용 금지. 첫 글자가 [ 로 시작.`;
 
 /**
  * 후보 동명 → 부동산원 조사상권 실측 매칭 (372개, 분기 갱신 SSOT).
@@ -533,121 +457,84 @@ function measuredRentFor(regionText: string, districtName: string): {
   };
 }
 
-async function scoreWithClaude(
+/**
+ * 후보별 실측 팩트 + 결정론 점수 + 서술을 조립.
+ *  LLM 실패 시에도 전 후보 템플릿 서술로 성공 응답 (LLM 0 의존 경로).
+ */
+async function scoreAndNarrate(
   candidates: SubAreaCandidate[],
   ctx: { region: string; categoryId: string; subIndustryId?: string; capital?: number; language: "ko" | "en"; franchiseRegionalLine?: string | null },
-  apiKey: string,
-): Promise<{ items: ScoredItem[]; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } | null }> {
-  const ko = ctx.language === "ko";
-  const candidateLines = candidates.map((c, i) => {
-    const rent = measuredRentFor(ctx.region, c.districtName);
-    const rentLine = rent
-      ? `실측 임대료(한국부동산원 ${MARKET_RENT_QUARTER_LABEL}): ${rent.district} 상권 ${rent.bldgLabel} ㎡당 월 ${rent.manwonPerM2}만원${rent.vacancyPct != null ? ` · 공실률 ${rent.vacancyPct}%` : ""}`
-      : "실측 임대료: 없음 (조사상권 밖 — 임대료·공실률 언급 금지)";
-    const pop = findDongPopulation(ctx.region, c.districtName);
-    const popLine = pop
-      ? `배후 주거인구(주민등록 ${DONG_POP_YM_LABEL}): ${pop.total.toLocaleString()}명 · 20~30대 ${pop.age2030Pct}% · 40대+ ${pop.age40PlusPct}% (거주 인구 — 유동 아님)`
-      : "배후 주거인구: 매칭 없음 (언급 금지)";
-    const trendLine = c.trend
-      ? `개폐업 추이(자체 스냅샷 실측): ${c.trend.daysAgo}일 전 대비 동종 ${c.trend.sameDelta >= 0 ? "+" : ""}${c.trend.sameDelta}곳${c.trend.totalDelta != null ? ` · 전체 ${c.trend.totalDelta >= 0 ? "+" : ""}${c.trend.totalDelta}곳` : ""}`
-      : "개폐업 추이: 관측 이력 없음 (언급 금지)";
-    const frLine = c.franchise
-      ? `프랜차이즈 실측(상호명 매칭, 500m${c.franchise.sampled ? " · 동종 300개 표본" : ""}): 같은 브랜드 ${c.franchise.sameBrand}개${c.franchise.peers.length > 0 ? ` / 동종 프랜차이즈: ${c.franchise.peers.map((x) => `${x.name} ${x.count}`).join("·")}` : " / 동종 주요 프랜차이즈 미발견"}`
-      : "";
-    const compLine = typeof c.officialSameCount === "number"
-      ? `동종업종 매장 [공식]: ${c.officialSameCount}개 (소진공·국세청 원천, 500m)${typeof c.officialTotalCount === "number" ? ` / 전체 업소 ${c.officialTotalCount}개` : ""}`
-      : `동종업종 매장 [지도]: ${c.competitionCount ?? 0}개 (카카오, 500m)`;
-    return `${i + 1}. ${c.districtName} (lat=${c.lat.toFixed(4)}, lng=${c.lng.toFixed(4)})
-   - ${compLine}
-   - 카페 밀도: ${c.cafeCount ?? 0}개 (유동인구 proxy)
-   - 지하철역: ${c.subwayCount ?? 0}개 (접근성)
-   - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)
-   - ${rentLine}
-   - ${popLine}
-   - ${trendLine}${frLine ? `\n   - ${frLine}` : ""}`;
-  }).join("\n\n");
-
-  // 사용자 메시지 — dynamic 부분만. 캐시 깨지지 않게 system 과 분리.
-  const userPrompt = `## 사용자 컨텍스트
-- 희망 지역: "${ctx.region}"
-- 업종 카테고리: ${ctx.categoryId}${ctx.subIndustryId ? ` (세부: ${ctx.subIndustryId})` : ""}
-- 자본금: ${ctx.capital ? `${(ctx.capital / 10000).toLocaleString()}만원` : "미설정"}${ctx.franchiseRegionalLine ? `\n- 브랜드 시도 분포(실측): ${ctx.franchiseRegionalLine} — 시도 포화도 참고 (반경 실측이 우선 신호)` : ""}
-- 응답 언어: ${ko ? "한국어" : "English"}
-
-## 후보 sub-area 메트릭 (Kakao Local API 라이브)
-${candidateLines}
-
-위 평가 프레임워크에 따라 ${Math.min(candidates.length, 5)}개를 점수화하세요. JSON 배열만 출력.`;
-
-  const client = createAiClient(apiKey);
-  const response = await client.messages.create({
-    model: "gpt-5.4-mini",
-    max_tokens: 2048,
-    // ⚡ system 을 array 로 두고 마지막 블록에 cache_control — 5분 TTL 기본
-    //    static 도메인 지식 (~2-3K 토큰) 이 매 호출마다 캐시에서 재사용됨.
-    system: [
-      {
-        type: "text",
-        text: SCORING_SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
-    messages: [{ role: "user", content: userPrompt }],
+  apiKey: string | null,
+): Promise<{ items: ScoredItem[]; narration: "ai" | "template"; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } | null }> {
+  // ① 후보별 실측 수집 + 결정론 점수
+  const facts = candidates.map((cand) => {
+    const rent = measuredRentFor(ctx.region, cand.districtName);
+    const pop = findDongPopulation(ctx.region, cand.districtName);
+    const det = scoreCandidateDeterministic({
+      officialSameCount: cand.officialSameCount,
+      competitionCount: cand.competitionCount,
+      cafeCount: cand.cafeCount,
+      subwayCount: cand.subwayCount,
+      cultureCount: cand.cultureCount,
+      franchise: cand.franchise ?? null,
+      vacancyPct: rent?.vacancyPct ?? null,
+      population: pop ? { age2030Pct: pop.age2030Pct, age40PlusPct: pop.age40PlusPct } : null,
+      categoryId: ctx.categoryId,
+      subIndustryId: ctx.subIndustryId,
+    });
+    const factLines = buildFactLines({
+      districtName: cand.districtName, lat: cand.lat, lng: cand.lng,
+      officialSameCount: cand.officialSameCount, officialTotalCount: cand.officialTotalCount,
+      competitionCount: cand.competitionCount,
+      cafeCount: cand.cafeCount, subwayCount: cand.subwayCount, cultureCount: cand.cultureCount,
+      rent, pop, trend: cand.trend ?? null, franchise: cand.franchise ?? null,
+    });
+    return { cand, rent, pop, det, factLines };
   });
-  const text = response.content
-    .filter((c) => c.type === "text")
-    .map((c) => (c as { type: "text"; text: string }).text)
-    .join("\n");
-  const m = text.match(/\[[\s\S]*\]/);
-  if (!m) {
-    console.warn("[market-recommend] LLM returned no JSON array | first 300:", text.slice(0, 300));
-    return { items: [], usage: response.usage };
-  }
-  let parsed: Array<{ districtName: string; title: string; score: number; summary: string; reasons?: string[]; warnings?: string[] }> = [];
-  try {
-    parsed = JSON.parse(m[0].replace(/<cite[^>]*>/g, "").replace(/<\/cite>/g, ""));
-  } catch (e) {
-    console.warn("[market-recommend] LLM json parse fail:", (e as Error).message);
-    return { items: [], usage: response.usage };
-  }
-  // candidate 와 매칭해서 id 부여 — 매칭 실패는 drop (조용한 candidates[0] 폴백은
-  //  중복 id·엉뚱한 좌표·남의 동 실측 부착을 낳는다. 남의 동 데이터 부착 금지)
-  const items: ScoredItem[] = parsed.flatMap((p) => {
-    const cand = candidates.find((c) => c.districtName === p.districtName);
-    if (!cand) {
-      console.warn(`[market-recommend] LLM districtName 불일치 — drop: "${p.districtName}"`);
-      return [];
+
+  // ② LLM 해설 (실패 = null → 템플릿)
+  const narrated = apiKey
+    ? await narrateCandidates(
+        facts.map((f) => ({ districtName: f.cand.districtName, det: f.det, factLines: f.factLines })),
+        ctx, apiKey,
+      )
+    : null;
+
+  // ③ 조립 — 점수·경고는 서버 확정, LLM 은 서술만
+  const items: ScoredItem[] = facts.map((f) => {
+    const n = narrated?.byDistrict.get(f.cand.districtName) ?? buildTemplateNarration(f.cand.districtName, f.det);
+    // 실측 meta — LLM 미경유 결정론 부착
+    const meta: Record<string, string | number> = {
+      scoreEngine: "measured-v1",
+      scoreBreakdown: f.det.breakdown,
+    };
+    if (f.rent) {
+      meta.measuredRent = `${f.rent.district} 상권 ${f.rent.bldgLabel} ㎡당 월 ${f.rent.manwonPerM2}만원 — 한국부동산원 ${MARKET_RENT_QUARTER_LABEL}`;
+      if (f.rent.vacancyPct != null) meta.vacancyPct = f.rent.vacancyPct;
     }
-    // 실측 임대료는 LLM 을 거치지 않고 결정론으로 meta 에 부착 (문구 왜곡·수치 변형 차단)
-    const rent = measuredRentFor(ctx.region, p.districtName);
-    const meta: Record<string, string | number> = {};
-    if (rent) {
-      meta.measuredRent = `${rent.district} 상권 ${rent.bldgLabel} ㎡당 월 ${rent.manwonPerM2}만원 — 한국부동산원 ${MARKET_RENT_QUARTER_LABEL}`;
-      if (rent.vacancyPct != null) meta.vacancyPct = rent.vacancyPct;
+    if (f.pop) meta.backPopulation = formatDongPopulationLine(f.pop);
+    if (typeof f.cand.officialSameCount === "number") {
+      meta.officialCompetition = `동종 ${f.cand.officialSameCount}곳${typeof f.cand.officialTotalCount === "number" ? ` · 전체 업소 ${f.cand.officialTotalCount.toLocaleString()}곳` : ""} — 소상공인시장진흥공단(국세청 원천), 500m`;
     }
-    const popMeta = findDongPopulation(ctx.region, p.districtName);
-    if (popMeta) meta.backPopulation = formatDongPopulationLine(popMeta);
-    if (typeof cand?.officialSameCount === "number") {
-      meta.officialCompetition = `동종 ${cand.officialSameCount}곳${typeof cand.officialTotalCount === "number" ? ` · 전체 업소 ${cand.officialTotalCount.toLocaleString()}곳` : ""} — 소상공인시장진흥공단(국세청 원천), 500m`;
+    if (f.cand.franchise) {
+      const fr = f.cand.franchise;
+      meta.franchisePresence = `같은 브랜드 ${fr.sameBrand}개${fr.peers.length > 0 ? ` · 동종: ${fr.peers.map((x) => `${x.name} ${x.count}`).join(", ")}` : ""} — 소진공 상호명 매칭, 500m${fr.sampled ? " (동종 300개 표본)" : ""}`;
     }
-    if (cand?.franchise) {
-      const f = cand.franchise;
-      meta.franchisePresence = `같은 브랜드 ${f.sameBrand}개${f.peers.length > 0 ? ` · 동종: ${f.peers.map((x) => `${x.name} ${x.count}`).join(", ")}` : ""} — 소진공 상호명 매칭, 500m${f.sampled ? " (동종 300개 표본)" : ""}`;
+    if (f.cand.trend) {
+      meta.areaTrend = `${f.cand.trend.daysAgo}일 전 대비 동종 ${f.cand.trend.sameDelta >= 0 ? "+" : ""}${f.cand.trend.sameDelta}곳${f.cand.trend.totalDelta != null ? ` · 전체 ${f.cand.trend.totalDelta >= 0 ? "+" : ""}${f.cand.trend.totalDelta}곳` : ""} — 자체 관측 실측`;
     }
-    if (cand?.trend) {
-      meta.areaTrend = `${cand.trend.daysAgo}일 전 대비 동종 ${cand.trend.sameDelta >= 0 ? "+" : ""}${cand.trend.sameDelta}곳${cand.trend.totalDelta != null ? ` · 전체 ${cand.trend.totalDelta >= 0 ? "+" : ""}${cand.trend.totalDelta}곳` : ""} — 자체 관측 실측`;
-    }
-    return [{
-      id: cand.id,
-      title: p.title,
-      score: Math.max(0, Math.min(100, Math.round(p.score))),
-      summary: p.summary,
-      reasons: Array.isArray(p.reasons) ? p.reasons.slice(0, 4) : [],
-      warnings: Array.isArray(p.warnings) ? p.warnings.slice(0, 3) : [],
-      ...(Object.keys(meta).length > 0 ? { meta } : {}),
-    }];
-  });
-  return { items, usage: response.usage };
+    return {
+      id: f.cand.id,
+      title: n.title,
+      score: f.det.score,
+      summary: n.summary,
+      reasons: n.reasons,
+      warnings: mergeWarnings(f.det.mandatoryWarnings, n.warnings),
+      meta,
+    };
+  }).sort((a, b) => b.score - a.score);
+
+  return { items, narration: narrated ? "ai" : "template", usage: narrated?.usage ?? null };
 }
 
 // ── 라우트 ─────────────────────────────────────────────────────
@@ -690,8 +577,8 @@ export async function POST(request: Request) {
   //    알려진 이슈가 있어 _lib/env.ts 의 getter 가 .env.local 을 fallback 으로 읽음.
   const kakaoKey = getEnvVar("KAKAO_REST_API_KEY");
   if (!kakaoKey) return NextResponse.json({ ok: false, error: "Kakao API 키가 설정되지 않았습니다." }, { status: 500 });
-  const anthropicKey = getAnthropicApiKey();
-  if (!anthropicKey) return NextResponse.json({ ok: false, error: "Anthropic API 키가 설정되지 않았습니다." }, { status: 500 });
+  // LLM 키 없어도 동작 — 점수는 결정론, 서술은 템플릿 폴백 (LLM 0 의존 경로)
+  const anthropicKey = getAnthropicApiKey() ?? null;
 
   const startedAt = Date.now();
 
@@ -755,14 +642,8 @@ export async function POST(request: Request) {
   const competitionKw = competitionKeyword(categoryId, subIndustryId);
   const enriched = await Promise.all(targetCandidates.map((c) => gatherMetrics(c, competitionKw, kakaoKey)));
 
-  // ④ AI 점수화 (gpt-5.4-mini — prompt caching: static system 프롬프트)
-  const { items: scored, usage } = await scoreWithClaude(enriched, { region, categoryId, subIndustryId, capital, language, franchiseRegionalLine: fRegionalLine }, anthropicKey);
-  if (scored.length === 0) {
-    return NextResponse.json({
-      ok: false,
-      error: "AI 분석에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-    }, { status: 502 });
-  }
+  // ④ 점수(결정론) + 해설(LLM, 실패 시 템플릿) — 항상 성공 응답
+  const { items: scored, narration, usage } = await scoreAndNarrate(enriched, { region, categoryId, subIndustryId, capital, language, franchiseRegionalLine: fRegionalLine }, anthropicKey);
 
   // ⑤ RecommendationItem 형태로 정리 (lat/lng meta 에 포함 → 지도에서 즉시 핀 가능)
   const items: RecommendationItem[] = scored.map((s) => {
@@ -789,7 +670,9 @@ export async function POST(request: Request) {
       meta,
       freshness: {
         status: "fresh",
-        label: language === "ko" ? "공공 실측 + 카카오 + AI 분석" : "Public data + Kakao + AI",
+        label: language === "ko"
+          ? (narration === "ai" ? "실측 점수 + AI 해설" : "실측 점수 + 템플릿 해설")
+          : (narration === "ai" ? "Measured score + AI narration" : "Measured score + template narration"),
         // 실측 축이 실제 붙은 원천만 인용 — 안 붙은 원천을 병기하면 그것도 위조
         sources: [
           {
@@ -834,6 +717,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    narration,
     franchiseRegional: fRegionalLine,
     items,
     centerLat: center.lat,
