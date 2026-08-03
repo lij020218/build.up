@@ -125,9 +125,9 @@ describe("iOS 미러 가드 (2026-08-03 재설계)", () => {
     expect(iosView).toContain("점수 근거:");
   });
 
-  it("게이트 = 상권 선택 (주소는 선택 입력) + 프리필 오염 제거", () => {
+  it("게이트 = 상권 선택 (주소는 선택 입력, 구완료자 백스톱 허용) + 프리필 오염 제거", () => {
     expect(iosView).toContain("!selectedMarketTitle.trimmingCharacters(in: .whitespaces).isEmpty");
-    expect(iosView).not.toContain("finalDone && !finalAddress");
+    expect(iosView).toContain("하위호환"); // 주소+토글 방식 기존 완료자 수정 저장 보장
     expect(iosView).not.toContain("finalAddress = title");
     expect(iosView).toContain("매물 계약은 다음 단계 몫");
   });

@@ -183,7 +183,9 @@ public struct LocationCandidatesStageView: View {
     // 게이트 = 상권 1곳 선택 (웹 canCompleteLocationStep 패리티). 매물 주소는 계약 단계 몫 — 선택 입력.
     //  근거: 정부 창업절차 정석 상권분석→입지선정→점포계약 (중기부 창업절차도)
     private var canCompleteStage: Bool {
+        // 하위호환: 게이트 완화 전(주소+토글 방식) 완료자도 수정 저장 가능해야 한다
         !selectedMarketTitle.trimmingCharacters(in: .whitespaces).isEmpty
+            || (finalDone && !finalAddress.trimmingCharacters(in: .whitespaces).isEmpty)
     }
 
     private var advanceHint: String {
