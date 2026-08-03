@@ -15,6 +15,7 @@
 import { NextResponse } from "next/server";
 import { createAiClient } from "@foundone/ai/utils/client";
 import type { RecommendationItem } from "@foundone/shared";
+import { findDongPopulation, formatDongPopulationLine, DONG_POP_YM_LABEL } from "../../_lib/dong-population";
 import {
   findMarketRentDistricts,
   representativeRent,
@@ -446,7 +447,10 @@ const SCORING_SYSTEM_PROMPT = `당신은 한국 창업 상권 분석 전문가�
 - 1~4개: ±0
 - 0개: -3점 only if 업종이 앵커 의존적 (카페/디저트/엔터)
 
-**5. 업종-입지 적합성 (정성 판단)**
+**5. 업종-입지 적합성 — 배후 주거인구 실측이 주입된 후보는 그 연령 구성을 근거로 판단**
+- 주입된 "배후 주거인구" 라인의 20~30대/40대+ 비중을 인용해 타깃 적합도를 말하라 (구체 % 인용).
+- 주민등록 = **거주** 인구다 — "유동인구" 라고 부르지 마라. 매칭 없음인 후보는 인구 수치 언급 금지.
+- 업종별 참고 (실측 위에서만 적용):
 - 미용/뷰티: 주거지+상권 혼합 동 (망원/연남/성수) > 유흥가
 - 학원·교육: 주거지 + 학교 인접 > 유흥가/오피스가
 - 헬스/필라테스: 주거지 + 오피스 혼합 > 관광지
@@ -515,12 +519,17 @@ async function scoreWithClaude(
     const rentLine = rent
       ? `실측 임대료(한국부동산원 ${MARKET_RENT_QUARTER_LABEL}): ${rent.district} 상권 ${rent.bldgLabel} ㎡당 월 ${rent.manwonPerM2}만원${rent.vacancyPct != null ? ` · 공실률 ${rent.vacancyPct}%` : ""}`
       : "실측 임대료: 없음 (조사상권 밖 — 임대료·공실률 언급 금지)";
+    const pop = findDongPopulation(ctx.region, c.districtName);
+    const popLine = pop
+      ? `배후 주거인구(주민등록 ${DONG_POP_YM_LABEL}): ${pop.total.toLocaleString()}명 · 20~30대 ${pop.age2030Pct}% · 40대+ ${pop.age40PlusPct}% (거주 인구 — 유동 아님)`
+      : "배후 주거인구: 매칭 없음 (언급 금지)";
     return `${i + 1}. ${c.districtName} (lat=${c.lat.toFixed(4)}, lng=${c.lng.toFixed(4)})
    - 동종업종 매장: ${c.competitionCount ?? 0}개 (500m 반경)
    - 카페 밀도: ${c.cafeCount ?? 0}개 (유동인구 proxy)
    - 지하철역: ${c.subwayCount ?? 0}개 (접근성)
    - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)
-   - ${rentLine}`;
+   - ${rentLine}
+   - ${popLine}`;
   }).join("\n\n");
 
   // 사용자 메시지 — dynamic 부분만. 캐시 깨지지 않게 system 과 분리.
@@ -576,6 +585,8 @@ ${candidateLines}
       meta.measuredRent = `${rent.district} 상권 ${rent.bldgLabel} ㎡당 월 ${rent.manwonPerM2}만원 — 한국부동산원 ${MARKET_RENT_QUARTER_LABEL}`;
       if (rent.vacancyPct != null) meta.vacancyPct = rent.vacancyPct;
     }
+    const popMeta = findDongPopulation(ctx.region, p.districtName);
+    if (popMeta) meta.backPopulation = formatDongPopulationLine(popMeta);
     return {
       id: cand?.id ?? `kakao-${p.districtName}`,
       title: p.title,
