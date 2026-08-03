@@ -220,10 +220,13 @@ describe("🔴 상권 단계 — 실측 연결 + 약속≤능력 (2026-08-03 상
   });
 
   it("실측 임대료는 부동산원 SSOT 에서 — high 매칭만, LLM 미경유 meta 부착", () => {
-    expect(mr).toContain("findMarketRentDistricts");
-    expect(mr).toContain('top.confidence !== "high"');           // partial 로 남의 시세 부착 금지
+    // 매칭 로직은 공유 모듈로 이관 (market-recommend·market-snapshot 공용, 2026-08-03)
+    const lookup = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-rent-lookup.ts"), "utf8");
+    expect(lookup).toContain("findMarketRentDistricts");
+    expect(lookup).toContain('top.confidence !== "high"');       // partial 로 남의 시세 부착 금지
     expect(mr).toContain("meta.measuredRent");
-    expect(mr).toContain("조사상권 밖 — 임대료·공실률 언급 금지");   // 실측 없으면 언급 금지 지시
+    const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
+    expect(nar).toContain("조사상권 밖 — 임대료·공실률 언급 금지");  // 실측 없으면 언급 금지 지시
   });
 
   it("웹 카드가 실측 라인·sbiz 브리지를 렌더한다", () => {

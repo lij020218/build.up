@@ -88,8 +88,12 @@ describe("ai-cost-budget: 단가·상한가", () => {
     expect(featureCostWon("contract-analyze")).toBeGreaterThanOrEqual(85);
   });
 
-  it("LLM 미사용 기능은 0원", () => {
-    expect(featureCostWon("market-recommend")).toBe(0);
+  it("LLM 미사용 기능은 0원 — 스냅샷(공공 API만)", () => {
+    expect(featureCostWon("market-snapshot")).toBe(0);
+  });
+
+  it("상권 추천은 내레이터(gpt-5.4-mini) 비용이 미터에 잡힌다 — 종전 null(미터 누락) 정정", () => {
+    expect(featureCostWon("market-recommend")).toBeGreaterThan(0);
   });
 });
 

@@ -15,12 +15,6 @@ export type LocalStageState = {
   expandedId: string | null;
   setExpandedId: (v: string | null) => void;
 
-  // 경쟁업체 검색
-  competitorResults: { totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null;
-  setCompetitorResults: (v: { totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null) => void;
-  competitorLoading: boolean;
-  setCompetitorLoading: (v: boolean) => void;
-
   // AI + Kakao 라이브 상권 추천 로딩/에러 상태
   aiMarketLoading: boolean;
   setAiMarketLoading: (v: boolean) => void;
@@ -52,9 +46,6 @@ export type LocalStageState = {
   setLiveProgramsData: (v: Array<{ id: string; programName: string; organizerName: string; supportCategory: string; isOpen: boolean; url?: string }>) => void;
   liveProgramsLoading: boolean;
   setLiveProgramsLoading: (v: boolean) => void;
-
-  liveMarketInsights: { loading: boolean; population?: { total: number; households: number; male: number; female: number } } | null;
-  setLiveMarketInsights: (v: { loading: boolean; population?: { total: number; households: number; male: number; female: number } } | null) => void;
 
   regPage: number;
   setRegPage: (v: number) => void;

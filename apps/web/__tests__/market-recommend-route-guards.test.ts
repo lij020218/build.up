@@ -77,3 +77,40 @@ describe("market-snapshot 라우트 가드 (LLM 무관 실측 스냅샷)", () =>
     expect(panel).toContain("비로그인 — 조용히 생략");
   });
 });
+
+describe("웹 상권 단계 IA 재구성 가드 (2026-08-03)", () => {
+  const stage = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "LocationCandidatesStage.tsx"), "utf8");
+
+  it("검색 패널 3종 제거 — 스냅샷 패널로 흡수", () => {
+    expect(stage).not.toContain("Franchise nearby store search");
+    expect(stage).not.toContain("competitorResults");
+    expect(stage).not.toContain("liveMarketInsights");
+    expect(stage).toContain("MarketSnapshotPanel");
+  });
+
+  it("거짓 카피 정리 — 113→118·4지표 25점 폐기·매물 입력 약속 제거·서울 한정 고지", () => {
+    expect(stage).not.toContain("113개 상권");
+    expect(stage).toContain("118개 상권");
+    expect(stage).not.toContain("각 25점");
+    expect(stage).not.toContain("주소·평수·임대료·메모");
+    expect(stage).toContain("서울 118곳 기준");
+  });
+
+  it("흐름 결함 수리 — locationMapReady 폐기·AI 결과 보존·푸터 page-aware", () => {
+    expect(stage).not.toContain("locationMapReady");
+    expect(stage).toContain("setAiMarketRegion(region)");
+    expect(stage).toContain("상권 선택으로 이동");
+    // 추천 그리드는 파생 조건 (모드 + 후보 존재)
+    expect(stage).toContain('locationMode === "recommended" && activeLocationCandidates.length > 0');
+    // AI CTA 병행 상시 (택1 hasCuratedMarket 게이트 폐지)
+    expect(stage).not.toContain("{!hasCuratedMarket && (");
+    // 점수 근거 접힘식 노출
+    expect(stage).toContain("item.meta?.scoreBreakdown");
+  });
+
+  it("useDataLoading — AI 결과 보존 가드 + deps 반영", () => {
+    const hook = readFileSync(join(HERE, "..", "app", "lib", "hooks", "useDataLoading.ts"), "utf8");
+    expect(hook).toContain("aiMarketRegion && aiMarketRegion === preferredRegionInput.trim()");
+    expect(hook).toContain("locationMode, aiMarketRegion]");
+  });
+});

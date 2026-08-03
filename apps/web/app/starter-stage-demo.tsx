@@ -222,8 +222,6 @@ export default function StarterStageDemo({
   // ── Hoisted from conditional render blocks to prevent hook ordering issues ──
   const [filterCat, setFilterCat] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [competitorResults, setCompetitorResults] = useState<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>(null);
-  const [competitorLoading, setCompetitorLoading] = useState(false);
   // AI + Kakao 라이브 상권 추천
   const [aiMarketLoading, setAiMarketLoading] = useState(false);
   const [aiMarketError, setAiMarketError] = useState<string | null>(null);
@@ -241,10 +239,6 @@ export default function StarterStageDemo({
   const [progFilter, setProgFilter] = useState<ProgramCategory | "all">("all");
   const [liveProgramsData, setLiveProgramsData] = useState<Array<{ id: string; programName: string; organizerName: string; supportCategory: string; isOpen: boolean; url?: string }>>([]);
   const [liveProgramsLoading, setLiveProgramsLoading] = useState(false);
-  const [liveMarketInsights, setLiveMarketInsights] = useState<{
-    loading: boolean;
-    population?: { total: number; households: number; male: number; female: number };
-  } | null>(null);
   const [regPage, setRegPage] = useState(0);
   const [mvpPage, setMvpPage] = useState(0);
   const [expandedPermitId, setExpandedPermitId] = useState<string | null>(null);
@@ -373,9 +367,6 @@ export default function StarterStageDemo({
     startupType, setStartupType,
     selectedFranchiseBrandId, setSelectedFranchiseBrandId,
     showFranchisePicker, setShowFranchisePicker,
-    nearbyFranchiseStores, setNearbyFranchiseStores,
-    nearbyFranchiseLoading, setNearbyFranchiseLoading,
-    locationMapReady, setLocationMapReady,
     stageGuideContent, guideStepIndex, setGuideStepIndex,
     guideSelections, setGuideSelections,
     vendorSelections, setVendorSelections,
@@ -693,14 +684,12 @@ export default function StarterStageDemo({
   const _ctxValue: DashboardContextValue = {
     ...d,
     mounted, filterCat, setFilterCat, expandedId, setExpandedId,
-    competitorResults, setCompetitorResults, competitorLoading, setCompetitorLoading,
     aiMarketLoading, setAiMarketLoading, aiMarketError, setAiMarketError,
     bpLoading, setBpLoading, bpSections, setBpSections, bpSummary, setBpSummary,
     bpError, setBpError, bpExpandedIdx, setBpExpandedIdx,
     onboardingDismissed, setOnboardingDismissed,
     progFilter, setProgFilter,
     liveProgramsData, setLiveProgramsData, liveProgramsLoading, setLiveProgramsLoading,
-    liveMarketInsights, setLiveMarketInsights,
     regPage, setRegPage,
     livePermitInsights, setLivePermitInsights,
     liveBudgetBenchmark, setLiveBudgetBenchmark,

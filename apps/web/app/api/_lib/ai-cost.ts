@@ -84,8 +84,12 @@ export const FEATURE_COST_SPEC: Record<string, FeatureCostSpec | null> = {
   "dashboard-actions": { model: "gpt-5.4-mini", inCap: 3_500, outCap: 2_048 },
   "insights-industry-daily": { model: "gpt-5.4-mini", inCap: 3_500, outCap: 1_500 },
 
+  // 상권 추천 — 점수는 결정론(무LLM), 서술만 gpt-5.4-mini 내레이터 (2026-08-03 역할 축소).
+  //  ⚠️ 종전 null("LLM 호출 없음")은 거짓 — scoreWithClaude 시절부터 LLM 을 쓰고 있었다. 미터 누락 정정.
+  "market-recommend": { model: "gpt-5.4-mini", inCap: 4_000, outCap: 2_048, note: "내레이터 전용 — 실패 시 템플릿(0원)" },
+
   // ── LLM 미사용 ──
-  "market-recommend": null, // 데이터 기반 추천 (LLM 호출 없음)
+  "market-snapshot": null, // 지역 실측 스냅샷 — 공공 API 만 (LLM 0)
 };
 
 /** 표에 없는 feature 가 미터에 들어오면 보수적 기본 상한으로 차감 (누락 = 과소차감 방지) */

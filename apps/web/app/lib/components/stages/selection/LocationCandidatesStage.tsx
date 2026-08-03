@@ -15,6 +15,7 @@ import {
   localizeRecommendationItem,
 } from "@foundone/shared";
 import { LocationMapPanel } from "../../LocationMapPanel";
+import MarketSnapshotPanel from "./MarketSnapshotPanel";
 import { supabase } from "../../../../../lib/supabase";
 import {
   KeyActionHero,
@@ -36,8 +37,6 @@ export function LocationCandidatesStage() {
     // Startup type / franchise
     startupType,
     selectedFranchiseBrandId,
-    nearbyFranchiseStores, setNearbyFranchiseStores,
-    nearbyFranchiseLoading, setNearbyFranchiseLoading,
     // Location
     locationOptions,
     selectedLocationId, setSelectedLocationId,
@@ -56,13 +55,8 @@ export function LocationCandidatesStage() {
     customLocationLabel,
     customLocationPlaceholder, customLocationReasonPlaceholder,
     scoreLocationLabel, selectedLocationDetailLabel,
-    locationMapReady, setLocationMapReady,
     selectedBudget,
-    // Competitor search
-    competitorResults, setCompetitorResults,
-    competitorLoading, setCompetitorLoading,
-    // Live market insights
-    liveMarketInsights, setLiveMarketInsights,
+    aiMarketRegion, setAiMarketRegion,
     // AI + Kakao 라이브 상권 추천
     aiMarketLoading, setAiMarketLoading, aiMarketError, setAiMarketError,
     // Navigation
@@ -174,7 +168,8 @@ export function LocationCandidatesStage() {
       // 브랜드 시도 분포 (공정위 신형 가족 단일 출처 — 구형 수치와 병기 금지 원칙)
       setFranchiseRegionalNote(typeof data.franchiseRegional === "string" ? data.franchiseRegional : null);
       setLocationMode("recommended");
-      setLocationMapReady(true);
+      // AI 결과 보존 — useDataLoading 큐레이션 effect 가 이 지역에선 덮어쓰지 않게 (2026-08-03)
+      setAiMarketRegion(region);
       setManualMarketEvaluation(null);
       setManualAlternative(null);
     } catch (e) {
@@ -257,7 +252,7 @@ export function LocationCandidatesStage() {
             ? "상권 = 매출 천장. 후회 없는 1곳을 정하기 위한 25분"
             : "Market = revenue ceiling. 25 min to pick the right one"}
           why={ko
-            ? "상권은 1~2년 묶이는 의사결정. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. AI 라이브 데이터 + 직접 답사 후보 + 4지표 점수화로 후회 없는 결정."
+            ? "상권은 1~2년 묶이는 의사결정. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. 공공 실측 데이터 점수 + 직접 답사 검증으로 후회 없는 결정."
             : "Market locks 1-2 years. Wrong pick caps everything else — sales can't catch rent no matter how well you market. AI live data + your visits + 4-metric scoring = no regret."}
           stat={{
             value: ko ? "47%" : "47%",
@@ -265,8 +260,8 @@ export function LocationCandidatesStage() {
           }}
           workOutline={[
             { stepLabel: ko ? "1. 지역·AI" : "1. Region·AI", title: ko ? "구체적 지역 입력 → AI 라이브 추천" : "Specific region → AI live scout", time: ko ? "5분" : "5m" },
-            { stepLabel: ko ? "2. 답사 후보" : "2. Visit", title: ko ? "직접 답사한 매물 1-2곳 추가 (정성 요소)" : "Add 1-2 properties you visited", time: ko ? "10분" : "10m" },
-            { stepLabel: ko ? "3. 점수 비교" : "3. Score", title: ko ? "4지표 (유동·임대료·경쟁·타겟) 점수 + 직관 검증" : "4 metrics + gut check", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "2. 답사 후보" : "2. Visit", title: ko ? "후보 2~3곳 직접 답사 (현장 검증)" : "Visit 2-3 candidates in person", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "3. 점수 비교" : "3. Score", title: ko ? "실측 지표 (경쟁·유동·임대·인구) 점수 + 직관 검증" : "Measured metrics + gut check", time: ko ? "10분" : "10m" },
             { stepLabel: ko ? "4. 매물 체크" : "4. Property", title: ko ? "현장 5가지 필수 확인 — 계약 전 최종 관문" : "5 in-person checks — last gate before signing", time: ko ? "15분" : "15m" },
             { stepLabel: ko ? "결정" : "Decide", title: ko ? "최종 1곳 선택 → 계약 검토 단계로" : "Pick one → Contract Review" },
           ]}
@@ -301,12 +296,12 @@ export function LocationCandidatesStage() {
           ko={ko}
           stepLabel={ko ? "2. 답사 후보 추가" : "2. Visit candidates"}
           time={ko ? "10분" : "10m"}
-          headline={ko ? "AI 추천만 ≠ 결정. 직접 답사한 매물 1-2곳 추가해야 함" : "AI scout alone ≠ decision. Add 1-2 properties you visited"}
+          headline={ko ? "추천만 ≠ 결정. 후보 상권을 직접 답사해 현장 검증해야 함" : "Scores alone ≠ decision. Visit candidates in person"}
           why={ko
             ? "AI 는 정량 데이터 (임대료·유동) 만 봄. 사장님이 직접 본 「분위기·동선·소음」 같은 정성 요소는 직접 답사 매물에서만 확인 가능."
             : "AI only sees quantitative data. Qualitative factors (vibe, flow, noise) must come from your in-person visits."}
           how={[
-            { title: ko ? "직접 답사한 매물 입력" : "Add visited properties", detail: ko ? "주소·평수·임대료·메모. AI 추천 매물과 동일한 점수 기준으로 비교됨." : "Address, area, rent, notes. Scored on same rubric as AI suggestions." },
+            { title: ko ? "아는 상권 직접 평가" : "Evaluate a market you know", detail: ko ? "후보 비교 페이지 「직접 입력하기」에 상권 이름을 넣으면 추천과 같은 점수 모델로 평가됩니다." : "Type a market name under Direct input — scored on the same model as recommendations." },
             { title: ko ? "최소 3곳 이상 비교 필수" : "Minimum 3 candidates", detail: ko ? "1곳만 보면 「이게 좋아 보인다」 가 끝. 3곳 이상 동일 기준으로 보면 차이가 명확." : "Single candidate = no comparison. 3+ on same rubric reveals real differences." },
           ]}
           watchouts={ko ? [
@@ -323,12 +318,12 @@ export function LocationCandidatesStage() {
           ko={ko}
           stepLabel={ko ? "3. 점수 비교" : "3. Score comparison"}
           time={ko ? "10분" : "10m"}
-          headline={ko ? "유동인구·임대료·경쟁 밀도·타겟 적합도 — 4지표로 동일 채점" : "Traffic / rent / competition / target fit — 4 metrics"}
+          headline={ko ? "경쟁·유동·임대·인구 — 실측 지표로 동일 채점" : "Competition / traffic / rent / population — measured metrics"}
           why={ko
-            ? "주관적 「느낌」 만으로 결정하면 후회 1순위. 객관 4지표로 채점한 후 본인 직관과 교차 검증해야 후회 없음."
+            ? "주관적 「느낌」 만으로 결정하면 후회 1순위. 공공 실측 지표로 채점한 후 본인 직관과 교차 검증해야 후회 없음."
             : "'Gut feeling' alone is the #1 regret. Score on 4 objective metrics, then cross-check intuition."}
           how={[
-            { title: ko ? "4지표 점수 확인" : "Review 4-metric scores", detail: ko ? "유동(일평균 통행) · 임대료(평당 월세) · 경쟁(반경 500m 동종 수) · 타겟(연령·소득). 각 25점, 총 100." : "Traffic (daily) · rent (per sqm) · competition (within 500m) · target (age/income). 25 each, 100 total." },
+            { title: ko ? "실측 점수 확인" : "Review measured scores", detail: ko ? "경쟁(소진공 공식, 500m) · 유동(카페 밀도) · 임대·공실(부동산원) · 인구(주민등록). 기준 60점에 실측 가감 — 카드 「점수 근거」에서 축별 확인." : "Competition (official, 500m) · traffic proxy · rent/vacancy · population. Base 60 with measured deltas — see per-card breakdown." },
             { title: ko ? "점수 1위 + 본인 직관 교차 검증" : "Top score × intuition", detail: ko ? "1위가 직관과 맞으면 결정. 다르면 그 이유를 메모 — 보통 직관이 놓친 요소가 보임." : "Match = decide. Mismatch = note why; reveals overlooked factor." },
           ]}
           watchouts={ko ? [
@@ -413,423 +408,6 @@ export function LocationCandidatesStage() {
       {/* ── 페이지 5 (후보 비교·결정) — 실제 후보 입력·점수화·선택 패널 ── */}
       {pageIdx === 5 && (
         <>
-      <div style={styles.helper}>{locationHelpText}</div>
-
-      {/* ── Franchise nearby store search ── */}
-      {startupType === "franchise" && selectedFranchiseBrandId && (() => {
-        const fb = getFranchiseBrandById(selectedFranchiseBrandId);
-        if (!fb) return null;
-        const ko = language === "ko";
-        const density = fb.storeCount > 2000 ? "high" : fb.storeCount > 500 ? "medium" : "low";
-        const densityColor = density === "high" ? "#b64c4c" : density === "medium" ? "#191970" : "#1d3557";
-        const densityLabel = density === "high"
-          ? (ko ? "매우 높음" : "Very High")
-          : density === "medium"
-            ? (ko ? "보통" : "Medium")
-            : (ko ? "낮음" : "Low");
-
-        const searchNearby = () => {
-          if (!preferredRegionInput.trim()) return;
-          const w = window as unknown as Record<string, unknown>;
-          type KPlace = { place_name: string; road_address_name: string; address_name: string; phone: string; place_url: string };
-          type KPagination = { totalCount: number };
-          const kakao = w.kakao as { maps?: { load?: (cb: () => void) => void; services?: { Places: new () => { keywordSearch: (q: string, cb: (d: KPlace[], s: string, p: KPagination) => void) => void }; Status: { OK: string; ZERO_RESULT: string; ERROR: string } } } } | undefined;
-          if (!kakao?.maps) return;
-          setNearbyFranchiseLoading(true);
-          setNearbyFranchiseStores(null);
-          const run = () => {
-            const svc = kakao!.maps!.services;
-            if (!svc) return;
-            const ps = new svc.Places();
-            const query = `${fb.name.ko} ${preferredRegionInput.trim()}`;
-            ps.keywordSearch(query, (data: KPlace[], status: string, pagination: KPagination) => {
-              if (status === svc.Status.OK) {
-                setNearbyFranchiseStores({
-                  totalCount: pagination.totalCount,
-                  places: data.map((d) => ({
-                    name: d.place_name,
-                    address: d.road_address_name || d.address_name,
-                    phone: d.phone,
-                    url: d.place_url
-                  }))
-                });
-              } else {
-                setNearbyFranchiseStores({ totalCount: 0, places: [] });
-              }
-              setNearbyFranchiseLoading(false);
-            });
-          };
-          if (kakao.maps.load) {
-            kakao.maps.load(run);
-          } else {
-            run();
-          }
-        };
-
-        return (
-          <div style={{
-            marginBottom: "16px",
-            borderRadius: "20px",
-            border: "1px solid var(--border)",
-            background: "rgba(255,255,255,0.82)",
-            overflow: "hidden"
-          }}>
-            {/* header */}
-            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "6px" }}>
-                <div style={{ fontSize: "16px", fontWeight: 650, letterSpacing: "-0.02em" }}>
-                  {ko ? `${fb.name.ko} 주변 매장 검색` : `${fb.name.en} Nearby Store Search`}
-                </div>
-                <div style={{
-                  fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "8px",
-                  background: `${densityColor}12`, color: densityColor
-                }}>
-                  {ko ? `전국 ${fb.storeCount.toLocaleString()}개` : `${fb.storeCount.toLocaleString()} nationwide`} · {densityLabel}
-                </div>
-              </div>
-              <div style={{ fontSize: "13px", lineHeight: 1.6, color: "var(--muted)" }}>
-                {ko
-                  ? "희망 지역 근처에 같은 브랜드 매장이 있는지 확인하세요. 반경 내 동일 브랜드가 많으면 매출이 분산됩니다."
-                  : "Check if the same brand already exists near your target area. Too many nearby stores will split revenue."}
-              </div>
-            </div>
-
-            {/* search action */}
-            <div style={{ padding: "14px 20px", display: "flex", gap: "8px", alignItems: "center", borderBottom: nearbyFranchiseStores ? "1px solid var(--border)" : "none" }}>
-              <button
-                type="button"
-                onClick={searchNearby}
-                disabled={!preferredRegionInput.trim() || nearbyFranchiseLoading}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: "12px",
-                  border: "none",
-                  background: preferredRegionInput.trim() ? "var(--primary)" : "rgba(0,0,0,0.06)",
-                  color: preferredRegionInput.trim() ? "#fff" : "var(--muted)",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  cursor: preferredRegionInput.trim() ? "pointer" : "default",
-                  opacity: nearbyFranchiseLoading ? 0.6 : 1
-                }}
-              >
-                {nearbyFranchiseLoading
-                  ? (ko ? "검색 중..." : "Searching...")
-                  : preferredRegionInput.trim()
-                    ? (ko ? `"${preferredRegionInput.trim()}" 근처 ${fb.name.ko} 검색` : `Search ${fb.name.en} near "${preferredRegionInput.trim()}"`)
-                    : (ko ? "아래에서 희망 지역을 먼저 입력하세요" : "Enter your preferred region below first")}
-              </button>
-            </div>
-
-            {/* results */}
-            {nearbyFranchiseStores && (
-              <div style={{ padding: "16px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 16,
-                    background: nearbyFranchiseStores.totalCount === 0 ? "#1d355718" : nearbyFranchiseStores.totalCount <= 3 ? "#19197018" : "#b64c4c18",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "14px", fontWeight: 700,
-                    color: nearbyFranchiseStores.totalCount === 0 ? "#1d3557" : nearbyFranchiseStores.totalCount <= 3 ? "#191970" : "#b64c4c"
-                  }}>
-                    {nearbyFranchiseStores.totalCount}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 600 }}>
-                      {nearbyFranchiseStores.totalCount === 0
-                        ? (ko ? "주변에 동일 브랜드가 없습니다" : "No same-brand stores nearby")
-                        : (ko ? `주변에 ${fb.name.ko} ${nearbyFranchiseStores.totalCount}개 발견` : `${nearbyFranchiseStores.totalCount} ${fb.name.en} stores found nearby`)}
-                    </div>
-                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-                      {nearbyFranchiseStores.totalCount === 0
-                        ? (ko ? "해당 지역은 출점 가능성이 높습니다" : "This area has good potential for a new store")
-                        : nearbyFranchiseStores.totalCount <= 3
-                          ? (ko ? "경쟁이 있지만 진입 가능합니다" : "Some competition but entry is viable")
-                          : (ko ? "이미 포화 상태입니다. 다른 지역을 고려하세요" : "Already saturated. Consider a different area")}
-                    </div>
-                  </div>
-                </div>
-
-                {nearbyFranchiseStores.places.length > 0 && (
-                  <div style={{ display: "grid", gap: "6px" }}>
-                    {nearbyFranchiseStores.places.slice(0, 8).map((place, pi) => (
-                      <a
-                        key={pi}
-                        href={place.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "10px 12px",
-                          borderRadius: "12px",
-                          background: "rgba(0,0,0,0.02)",
-                          border: "1px solid var(--border)",
-                          textDecoration: "none",
-                          color: "inherit",
-                          cursor: "pointer"
-                        }}
-                      >
-                        <div style={{
-                          width: 24, height: 24, borderRadius: 8,
-                          background: "var(--primary)",
-                          color: "#fff",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: "11px", fontWeight: 700, flexShrink: 0
-                        }}>
-                          {pi + 1}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{place.name}</div>
-                          <div style={{ fontSize: "11px", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{place.address}</div>
-                        </div>
-                        {place.phone && <div style={{ fontSize: "11px", color: "var(--muted)", flexShrink: 0 }}>{place.phone}</div>}
-                        <span style={{ fontSize: "12px", color: "var(--primary)", flexShrink: 0 }}>↗</span>
-                      </a>
-                    ))}
-                  </div>
-                )}
-
-                {nearbyFranchiseStores.totalCount > 8 && (
-                  <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--muted)", textAlign: "center" }}>
-                    {ko ? `외 ${nearbyFranchiseStores.totalCount - 8}개 매장 더 있음` : `${nearbyFranchiseStores.totalCount - 8} more stores`}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* ── 동종 경쟁 업체 밀도 검색 (2026-07-02: 프랜차이즈 포함 전 업종 — same-brand 검색과 별개로 경쟁 밀도 확인) ── */}
-      {(() => {
-        const ko = language === "ko";
-        const categoryKeywords: Record<string, string> = {
-          "cafe-dessert": "카페",
-          "food": industryCategoryId === "food" ? (selectedIndustryId === "chicken-burger" ? "치킨" : selectedIndustryId === "ramen-noodle" ? "국밥 면류" : selectedIndustryId === "korean-casual" ? "한식" : "음식점") : "음식점",
-          "retail": "편의점 소매점",
-          "beauty": selectedIndustryId === "hair-salon" ? "미용실" : selectedIndustryId === "nail-studio" ? "네일" : "뷰티",
-          "fitness": "헬스장 피트니스",
-          "education": "학원",
-          "pet": "펫샵 애견",
-          "living-service": "세탁소",
-          "space": "스터디카페",
-        };
-        const keyword = categoryKeywords[industryCategoryId] ?? "가게";
-        // competitorResults / competitorLoading — hoisted to component top
-
-        const searchCompetitors = () => {
-          if (!preferredRegionInput.trim()) return;
-          // 2026-05-13: kakao-maps.d.ts 글로벌 타입 — any 캐스트 제거
-          const kakao = typeof window !== "undefined" ? window.kakao : undefined;
-          const maps = kakao?.maps;
-          if (!maps?.services) return;
-          setCompetitorLoading(true);
-          setCompetitorResults(null);
-          const run = () => {
-            const ps = new maps.services.Places();
-            const query = `${keyword} ${preferredRegionInput.trim()}`;
-            ps.keywordSearch(query, (data, status, pagination) => {
-              if (status === "OK") {
-                setCompetitorResults({
-                  totalCount: pagination?.totalCount ?? 0,
-                  places: data.map((d) => ({
-                    name: d.place_name,
-                    address: d.road_address_name || d.address_name,
-                    phone: d.phone || "",
-                    url: (d as { place_url?: string }).place_url ?? "",
-                  }))
-                });
-              } else {
-                setCompetitorResults({ totalCount: 0, places: [] });
-              }
-              setCompetitorLoading(false);
-            }, { size: 10 });
-          };
-          if (maps.load) { maps.load(run); } else { run(); }
-        };
-
-        return (
-          <div style={{
-            marginBottom: "16px", borderRadius: "20px",
-            border: "1px solid var(--border)", background: "rgba(255,255,255,0.82)", overflow: "hidden"
-          }}>
-            <div style={{ padding: "18px 20px", borderBottom: competitorResults ? "1px solid var(--border)" : "none" }}>
-              <div style={{ fontSize: "16px", fontWeight: 650, letterSpacing: "-0.02em", marginBottom: "4px" }}>
-                {ko ? "주변 경쟁 업체 분석" : "Nearby Competition Analysis"}
-              </div>
-              <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.5, marginBottom: "12px" }}>
-                {ko ? "희망 지역에 같은 업종이 얼마나 있는지 확인하세요. 경쟁이 과하면 차별화 전략이 필요합니다." : "Check how many competitors exist in your target area."}
-              </div>
-              <button
-                type="button"
-                onClick={searchCompetitors}
-                disabled={!preferredRegionInput.trim() || competitorLoading}
-                style={{
-                  padding: "10px 18px", borderRadius: "12px", border: "none",
-                  background: preferredRegionInput.trim() ? "var(--primary)" : "rgba(0,0,0,0.06)",
-                  color: preferredRegionInput.trim() ? "#fff" : "var(--muted)",
-                  fontSize: "13px", fontWeight: 600, cursor: preferredRegionInput.trim() ? "pointer" : "default",
-                  opacity: competitorLoading ? 0.6 : 1
-                }}
-              >
-                {competitorLoading
-                  ? (ko ? "검색 중..." : "Searching...")
-                  : preferredRegionInput.trim()
-                    ? (ko ? `"${preferredRegionInput.trim()}" 주변 ${keyword} 검색` : `Search ${keyword} near "${preferredRegionInput.trim()}"`)
-                    : (ko ? "아래에서 지역을 먼저 입력하세요" : "Enter region below first")}
-              </button>
-            </div>
-
-            {competitorResults && (
-              <div style={{ padding: "16px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 16,
-                    background: competitorResults.totalCount <= 5 ? "#1d355718" : competitorResults.totalCount <= 15 ? "#19197018" : "#b64c4c18",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "14px", fontWeight: 700,
-                    color: competitorResults.totalCount <= 5 ? "#1d3557" : competitorResults.totalCount <= 15 ? "#191970" : "#b64c4c"
-                  }}>
-                    {competitorResults.totalCount}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 600 }}>
-                      {competitorResults.totalCount === 0
-                        ? (ko ? "주변에 동종 업체가 없습니다" : "No competitors nearby")
-                        : (ko ? `주변에 ${keyword} ${competitorResults.totalCount}곳 발견` : `${competitorResults.totalCount} ${keyword} found nearby`)}
-                    </div>
-                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-                      {competitorResults.totalCount === 0
-                        ? (ko ? "블루오션 지역입니다" : "Blue ocean area")
-                        : competitorResults.totalCount <= 5
-                          ? (ko ? "경쟁이 적어 진입하기 좋습니다" : "Low competition, good entry")
-                          : competitorResults.totalCount <= 15
-                            ? (ko ? "보통 수준의 경쟁입니다. 차별화 전략이 필요합니다" : "Medium competition. Differentiation needed")
-                            : (ko ? "경쟁이 매우 치열합니다. 강력한 차별점이 필요합니다" : "Very competitive. Strong differentiation required")}
-                    </div>
-                  </div>
-                </div>
-
-                {competitorResults.places.length > 0 && (
-                  <div style={{ display: "grid", gap: "6px" }}>
-                    {competitorResults.places.slice(0, 5).map((place, pi) => (
-                      <a key={pi} href={place.url} target="_blank" rel="noopener noreferrer" style={{
-                        display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px",
-                        borderRadius: "12px", background: "rgba(0,0,0,0.02)", border: "1px solid var(--border)",
-                        textDecoration: "none", color: "inherit"
-                      }}>
-                        <div style={{ width: 24, height: 24, borderRadius: 8, background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{pi + 1}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{place.name}</div>
-                          <div style={{ fontSize: "11px", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{place.address}</div>
-                        </div>
-                        <span style={{ fontSize: "12px", color: "var(--primary)", flexShrink: 0 }}>↗</span>
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* ── 라이브 상권 인사이트 패널 ── */}
-      {preferredRegionInput.trim() && (() => {
-        const ko = language === "ko";
-
-        const loadMarketInsights = async () => {
-          if (liveMarketInsights && !liveMarketInsights.loading) return;
-          setLiveMarketInsights({ loading: true });
-          try {
-            const session = await supabase.auth.getSession();
-            const tk = session.data.session?.access_token;
-            const parts = preferredRegionInput.trim().replace(/\s+/g, " ").split(" ");
-            let sido = parts[0] ?? "";
-            if (sido === "서울") sido = "서울특별시";
-            else if (sido === "부산") sido = "부산광역시";
-            else if (sido === "경기") sido = "경기도";
-            else if (sido === "인천") sido = "인천광역시";
-            else if (sido === "대구") sido = "대구광역시";
-            else if (sido === "대전") sido = "대전광역시";
-            const sigungu = parts[1] ?? "";
-
-            const popRes = sido
-              ? await fetch(`/api/data/population?sido=${encodeURIComponent(sido)}&sigungu=${encodeURIComponent(sigungu)}`, { headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(r => r.json()).catch(() => null)
-              : null;
-
-            const result: typeof liveMarketInsights = { loading: false };
-            if (popRes?.data?.length) {
-              const popArr = popRes.data as Array<{ totalPopulation: number; householdCount: number; malePopulation: number; femalePopulation: number }>;
-              result.population = {
-                total: popArr.reduce((s, p) => s + p.totalPopulation, 0),
-                households: popArr.reduce((s, p) => s + p.householdCount, 0),
-                male: popArr.reduce((s, p) => s + p.malePopulation, 0),
-                female: popArr.reduce((s, p) => s + p.femalePopulation, 0),
-              };
-            }
-            setLiveMarketInsights(result);
-          } catch {
-            setLiveMarketInsights({ loading: false });
-          }
-        };
-
-        // ⚠️ render 중 setState 금지. Promise.resolve() 로 마이크로태스크 큐에 넣어
-        //  현재 render commit 이후에 setLiveMarketInsights 가 호출되도록 한다.
-        if (!liveMarketInsights) void Promise.resolve().then(loadMarketInsights);
-
-        if (!liveMarketInsights || liveMarketInsights.loading) {
-          return (
-            <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(219,234,254,0.12) 0%, rgba(255,255,255,0.9) 100%)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", animation: "bentoPulse 1.5s infinite" }} />
-                <span style={{ fontSize: "14px", fontWeight: 600 }}>{ko ? "상권 데이터 조회 중..." : "Loading market data..."}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
-                {[0, 1, 2].map(i => <div key={i} style={{ height: "52px", borderRadius: "12px", background: "rgba(0,0,0,0.03)" }} />)}
-              </div>
-            </div>
-          );
-        }
-
-        if (!liveMarketInsights.population) return null;
-        const pop = liveMarketInsights.population;
-        const femaleRatio = pop.total > 0 ? Math.round((pop.female / pop.total) * 100) : 50;
-
-        return (
-          <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(219,234,254,0.12) 0%, rgba(255,255,255,0.92) 100%)", overflow: "hidden" }} className="bento-fade-in">
-            <div style={{ padding: "18px 20px 14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} />
-                <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "상권 인구 데이터" : "Market Demographics"}</span>
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "행정안전부 인구통계 API" : "MOIS Population API"}</div>
-            </div>
-            <div style={{ padding: "0 20px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.04)" }}>
-                <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "총 인구" : "Population"}</div>
-                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{pop.total.toLocaleString()}</div>
-                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "명" : "people"}</div>
-              </div>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.04)" }}>
-                <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "세대 수" : "Households"}</div>
-                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{pop.households.toLocaleString()}</div>
-                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "세대" : "units"}</div>
-              </div>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.04)" }}>
-                <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "여성 비율" : "Female %"}</div>
-                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{femaleRatio}%</div>
-                <div style={{ display: "flex", gap: "2px", marginTop: "6px" }}>
-                  <div style={{ flex: femaleRatio, height: "4px", borderRadius: "2px", background: "#ec4899" }} />
-                  <div style={{ flex: 100 - femaleRatio, height: "4px", borderRadius: "2px", background: "#3b82f6" }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
       <div style={styles.inlinePanel}>
         <div style={styles.inlinePanelHeader}>
           <div style={styles.budgetLabel}>
@@ -842,9 +420,17 @@ export function LocationCandidatesStage() {
         <input
           type="text"
           value={preferredRegionInput}
-          onChange={(event) => { setPreferredRegionInput(event.target.value); setLocationMapReady(false); }}
+          onChange={(event) => setPreferredRegionInput(event.target.value)}
           placeholder={locationInputPlaceholder}
           style={styles.textInput}
+        />
+        {/* 지역 입력만으로 실측 자동 표시 (LLM 무관) — 구 검색 패널 3종 흡수 */}
+        <MarketSnapshotPanel
+          region={preferredRegionInput}
+          categoryId={industryCategoryId}
+          subIndustryId={selectedIndustryId || undefined}
+          franchiseBrandId={startupType === "franchise" ? selectedFranchiseBrandId || undefined : undefined}
+          language={language}
         />
         <div style={styles.segmentedRow}>
           <button
@@ -852,7 +438,7 @@ export function LocationCandidatesStage() {
             disabled={!preferredRegionInput.trim()}
             style={{
               ...styles.button,
-              ...(locationMapReady && locationMode === "recommended"
+              ...(locationMode === "recommended"
                 ? styles.buttonSelected
                 : preferredRegionInput.trim()
                   ? { background: "var(--primary)", color: "#fff", border: "1px solid var(--primary)", fontWeight: 600 }
@@ -860,7 +446,7 @@ export function LocationCandidatesStage() {
             }}
             onClick={() => {
               setLocationMode("recommended");
-              setLocationMapReady(true);
+              setAiMarketRegion(null);   // 명시적 큐레이션 복귀 — AI 결과 보존 가드 해제
               setManualMarketEvaluation(null);
               setManualAlternative(null);
             }}
@@ -871,22 +457,25 @@ export function LocationCandidatesStage() {
             type="button"
             style={{
               ...styles.button,
-              ...(locationMode === "direct" && !locationMapReady ? styles.buttonSelected : {})
+              ...(locationMode === "direct" ? styles.buttonSelected : {})
             }}
             onClick={() => {
               setLocationMode("direct");
-              setLocationMapReady(false);
               setSelectedLocationId(undefined);
             }}
           >
             {locationDirectLabel}
           </button>
         </div>
+        <div style={styles.helper}>
+          {language === "ko"
+            ? "내장 상권 데이터는 서울 118곳 기준 — 그 외 지역은 아래 AI 실시간 분석을 이용하세요."
+            : "Built-in market data covers 118 Seoul districts — use AI live analysis elsewhere."}
+        </div>
 
-        {/* ── AI + Kakao 라이브 추천 CTA ────────────────────────────
-            큐레이션(우리 조사) 상권 데이터가 없는 지역에서만 노출 — 라이브 Kakao+AI.
-            큐레이션 매칭이 있으면(hasCuratedMarket) 숨겨 조사 데이터가 덮어쓰이지 않게. */}
-        {!hasCuratedMarket && (
+        {/* ── AI 실시간 분석 CTA — 큐레이션과 병행 상시 노출 (2026-08-03 택1 폐지)
+            점수는 실측 결정론(서버), AI 는 해설만. 결과 보존은 aiMarketRegion 가드. */}
+        {(
         <div style={{
           marginTop: "12px",
           padding: "14px 16px",
@@ -904,8 +493,8 @@ export function LocationCandidatesStage() {
             </div>
             <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5 }}>
               {language === "ko"
-                ? `Kakao Local + Claude 가 입력하신 "${preferredRegionInput.trim() || "지역"}" 주변을 분석해 3~5개 후보를 점수와 함께 추천합니다.`
-                : `Kakao Local + Claude analyse around "${preferredRegionInput.trim() || "region"}" and score 3–5 candidates.`}
+                ? `"${preferredRegionInput.trim() || "지역"}" 주변 3~5개 후보를 공공 실측 데이터로 점수화하고 AI가 해설합니다.${hasCuratedMarket ? " (아래 조사 상권과 별도 — 실행 시 교체)" : ""}`
+                : `Scores 3–5 candidates around "${preferredRegionInput.trim() || "region"}" from public data, with AI narration.`}
             </div>
             {aiMarketError ? (
               <div style={{ marginTop: "6px", fontSize: "12px", color: "#b64c4c", lineHeight: 1.5 }}>
@@ -944,10 +533,10 @@ export function LocationCandidatesStage() {
         )}
       </div>
 
-      {locationMapReady && locationMode === "recommended" ? (
+      {locationMode === "recommended" && activeLocationCandidates.length > 0 ? (
         <>
         {/* ── Kakao Map + Location Cards (Apple-style) ── */}
-        {locationMapReady && (
+        {(
           <LocationMapPanel
             candidates={activeLocationCandidates}
             selectedId={selectedLocationId}
@@ -1034,6 +623,15 @@ export function LocationCandidatesStage() {
                   <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>
                     🏠 {String(item.meta.backPopulation)}
                   </div>
+                )}
+                {/* 점수 근거 — 결정론 축별 가감 (measured-v1). 접힘식: 궁금한 사람만 연다 */}
+                {item.meta?.scoreBreakdown && (
+                  <details style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                      {language === "ko" ? "점수 근거 보기" : "Score breakdown"}
+                    </summary>
+                    <div style={{ marginTop: "4px", lineHeight: 1.6 }}>{String(item.meta.scoreBreakdown)}</div>
+                  </details>
                 )}
                 {/* 추정매출 격차의 정직한 브리지 — 우리가 못 주는 값은 공공 도구로 바로 보냄 */}
                 <a
@@ -1246,9 +844,9 @@ export function LocationCandidatesStage() {
         ko={language === "ko"}
         nextStageLabelKo="계약서 검토"
         doneItemsKo={[
-          { label: "1. 113개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천" },
+          { label: "1. 118개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천" },
           { label: "2. 상위 후보 3곳 선정", detail: "AI 점수 + 본인 자본 + 업종 적합도로 1차 압축" },
-          { label: "3. 직접 상권 평가", detail: "지도에서 직접 입력한 위치도 분석 — 동일 점수 모델 적용" },
+          { label: "3. 직접 상권 평가", detail: "아는 상권 이름을 입력해도 동일 점수 모델로 평가" },
           { label: "4. 최종 1곳 확정", detail: "현장 답사·임대료 견적·매물 확인 후 1곳 결정" },
         ]}
         verifyItemsKo={[
@@ -1304,6 +902,10 @@ export function LocationCandidatesStage() {
           }}
           onClick={() => {
             if (!canCompleteLocationStep) {
+              if (pageIdx !== 5) {                    // 선택 UI 는 pg5 — 무반응 대신 이동
+                setPageIdx(5);
+                return;
+              }
               setShakeWarning(true);
               locationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
               setTimeout(() => setShakeWarning(false), 2000);
@@ -1313,7 +915,9 @@ export function LocationCandidatesStage() {
           }}
         >
           {!canCompleteLocationStep
-            ? (language === "ko" ? "↑ 상권을 선택하세요" : "↑ Select a market")
+            ? (pageIdx !== 5
+              ? (language === "ko" ? "상권 선택으로 이동 →" : "Go to market selection →")
+              : (language === "ko" ? "↑ 상권을 선택하세요" : "↑ Select a market"))
             : (isDigitalCategory
               ? language === "ko"
                 ? "이 거점으로 운영 준비 시작"

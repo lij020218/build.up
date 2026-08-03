@@ -32,12 +32,9 @@ export interface DataLoadingResult {
   contractorsLoading: boolean;
   contractorsRetryKey: number;
   setContractorsRetryKey: React.Dispatch<React.SetStateAction<number>>;
-  nearbyFranchiseStores: { totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null;
-  nearbyFranchiseLoading: boolean;
-  setNearbyFranchiseStores: React.Dispatch<React.SetStateAction<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>>;
-  setNearbyFranchiseLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  locationMapReady: boolean;
-  setLocationMapReady: React.Dispatch<React.SetStateAction<boolean>>;
+  /** AI 라이브 추천이 결과를 만든 지역 — 그 지역이 유지되는 동안 큐레이션 effect 가 덮어쓰지 않는다 (2026-08-03) */
+  aiMarketRegion: string | null;
+  setAiMarketRegion: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 /**
@@ -65,12 +62,7 @@ export function useDataLoading(
   businessCtx: BusinessCtx,
 ): DataLoadingResult {
   // ── Local state ──
-  const [nearbyFranchiseStores, setNearbyFranchiseStores] = useState<{
-    totalCount: number;
-    places: Array<{ name: string; address: string; phone: string; url: string }>;
-  } | null>(null);
-  const [nearbyFranchiseLoading, setNearbyFranchiseLoading] = useState(false);
-  const [locationMapReady, setLocationMapReady] = useState(false);
+  const [aiMarketRegion, setAiMarketRegion] = useState<string | null>(null);
   const [contractors, setContractors] = useState<{
     id: string;
     name: string;
@@ -218,6 +210,11 @@ export function useDataLoading(
       setHasCuratedMarket(false);
       return;
     }
+    // AI 라이브 결과 보존 — 같은 지역에 AI 결과가 살아있으면 큐레이션/내장으로 덮어쓰지 않는다.
+    //  (종전 결함: deps 의 locationMode 가 direct→recommended 전환 시 effect 재실행 → AI 결과 즉시 소실)
+    if (aiMarketRegion && aiMarketRegion === preferredRegionInput.trim()) {
+      return;
+    }
 
     void loadMarketSignalRecommendations(supabase, {
       regionQuery: preferredRegionInput,
@@ -267,7 +264,7 @@ export function useDataLoading(
         setLocationSourceLabel(copy.common.starterFallback);
         setHasCuratedMarket(false);  // 신호 로드 실패 → 큐레이션 없음 취급, AI 버튼 노출
       });
-  }, [preferredRegionInput, industryCategoryId, selectedBudget, locationOptions, language, locationMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [preferredRegionInput, industryCategoryId, selectedBudget, locationOptions, language, locationMode, aiMarketRegion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 3. Guide knowledge loading ──
   useEffect(() => {
@@ -843,11 +840,7 @@ export function useDataLoading(
     contractorsLoading,
     contractorsRetryKey,
     setContractorsRetryKey,
-    nearbyFranchiseStores,
-    setNearbyFranchiseStores,
-    nearbyFranchiseLoading,
-    setNearbyFranchiseLoading,
-    locationMapReady,
-    setLocationMapReady,
+    aiMarketRegion,
+    setAiMarketRegion,
   };
 }
