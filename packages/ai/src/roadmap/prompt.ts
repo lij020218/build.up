@@ -403,6 +403,8 @@ conceptSummary 필드는 사용자 입력을 정제한 사업 핵심 정의입�
 - "온라인 강의" → digital-products / creator-service (강의 본인이 만들면 creator, 외부 강사 + 플랫폼이면 b2b-saas)
 - "직접 출장 청소" → cleaning-service (living-service 카테고리)
 - "어린이집" → 의료·복지 시설은 본 서비스 미지원, 가장 가까운 kids-academy 로 매핑하되 매칭 사유에 명시
+- **"스터디카페"(무인·키오스크·시간권·24시간) → study-cafe-space (space 카테고리)**. 스터디카페는 공간임대업이다.
+  study-room (education) 은 **독서실**(총무 상주·월정액 지정석·학원법 등록 대상) 전용 — 법적 인허가 체계가 다르므로 절대 혼동 금지 (2026-08-03 평가에서 오분류 실측)
 
 ## 상권 분석 (marketAnalysis) — 서버가 실측으로 대체
 marketAnalysis 필드는 스키마 유지를 위해서만 채우세요: score 0, grade "C", 나머지 필드는 빈 문자열("").
