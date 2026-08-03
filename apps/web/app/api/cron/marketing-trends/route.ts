@@ -90,9 +90,9 @@ export async function GET(request: Request) {
     memePack: null as null | { weekKey: string; status: string; itemCount: number; error?: string },
   };
 
-  // ── 주간 밈·챌린지 팩 (2026-07-24 신설) ──
-  // 매일 도는 이 크론에서 호출하지만 buildWeeklyMemePack 이 멱등이라 실제 수집은 주 1회
-  // (이번 주 팩이 이미 있으면 exists 로 즉시 반환). ?memes=force 로 강제 재수집 가능.
+  // ── 밈·챌린지 팩 (2026-07-24 신설 · 2026-08-03 일간 top-up) ──
+  // 주 1회 전체 수집 + 매일 증분: 이번 주 팩이 있으면 최근 7일 신규 URL 만 가볍게 수집해
+  // addedAt 찍어 추가(topped-up). 신규 없으면 LLM 호출 없이 exists. ?memes=force 로 강제 재수집 가능.
   // 소스 = 업자용 화이트리스트(고구마팜·캐릿 등). 수집 3개 미만이면 저장 안 함 → 서빙이 지난주/시드 폴백.
   {
     const openaiKey = getOpenAIApiKey();

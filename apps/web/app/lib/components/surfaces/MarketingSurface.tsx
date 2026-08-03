@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
-import { starterIndustryOptions, localizeRecommendationItem } from "@foundone/shared";
+import { starterIndustryOptions, localizeRecommendationItem, assessMarketingSpend } from "@foundone/shared";
 import { BP } from "../../breakpoints";
 import { getKstMonthKey } from "../../utils/business-day";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
@@ -125,6 +125,17 @@ export function MarketingSurface() {
   // 마케팅 장부(KPI+지출 추적) — 기본 접힘 (2026-07-24 개편: 실행이 주인공, 장부는 요약 한 줄)
   const [ledgerOpen, setLedgerOpen] = useState(false);
 
+  // 세그먼트 탭 (2026-08-03 개편: 한 화면에 다 쌓지 않는다 — 탭당 핵심 1~2개)
+  const [tab, setTab] = useState<"weekly" | "create">("weekly");
+
+  // 캠페인 삭제 2단계 확인 — 즉시 ✕ 는 실수 삭제 사고 경로 (3초 내 재탭 = 확정)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!confirmDeleteId) return;
+    const t = setTimeout(() => setConfirmDeleteId(null), 3000);
+    return () => clearTimeout(t);
+  }, [confirmDeleteId]);
+
   // ── Recommended channels for this business type
   const recommended = RECOMMENDED_CHANNELS[categoryId] ?? RECOMMENDED_CHANNELS["food"];
 
@@ -134,6 +145,17 @@ export function MarketingSurface() {
   const totalAttrRevenue = monthCampaigns.reduce((s, c) => s + (c.attributedRevenue ?? 0), 0);
   const blendedRoas = totalSpend > 0 ? totalAttrRevenue / totalSpend : 0;
   const activeChannels = [...new Set(monthCampaigns.map((c) => c.channel))];
+
+  // ── 적정 마케팅 예산 판정 (shared SSOT — 미국 업계 통용 기준, 한국 공식 통계 없음을 명시)
+  const isNewBiz = useMemo(() => {
+    if (!d.selectedOpenDate) return false;
+    const t = Date.parse(d.selectedOpenDate);
+    return Number.isFinite(t) && Date.now() - t < 365 * 86_400_000;
+  }, [d.selectedOpenDate]);
+  const spendCheck = useMemo(
+    () => assessMarketingSpend({ spendWon: totalSpend, revenueWon: mtdRevenueWon, categoryId, isNewBiz }),
+    [totalSpend, mtdRevenueWon, categoryId, isNewBiz],
+  );
 
 
 
@@ -245,7 +267,11 @@ export function MarketingSurface() {
   useEffect(() => {
     const weekKey = getIsoWeekKey();
     const cache = mkt.memePackCache;
-    if (cache && cache.weekKey === weekKey && !cache.stale && cache.categoryId === categoryId && cache.items.length > 0) {
+    // 일간 top-up 반영 — 같은 주라도 6시간 지나면 재조회 (fetchedAt 없는 구캐시는 즉시 재조회)
+    const fetchedRecently = !!cache?.fetchedAt
+      && Number.isFinite(Date.parse(cache.fetchedAt))
+      && Date.now() - Date.parse(cache.fetchedAt) < 6 * 3_600_000;
+    if (cache && cache.weekKey === weekKey && !cache.stale && cache.categoryId === categoryId && cache.items.length > 0 && fetchedRecently) {
       setMemePack(cache);
       return;
     }
@@ -267,6 +293,7 @@ export function MarketingSurface() {
           categoryId,
           items: j.items as MemeItem[],
           generatedAt: typeof j.generatedAt === "string" ? j.generatedAt : new Date().toISOString(),
+          fetchedAt: new Date().toISOString(),
         };
         setMemePack(next);
         mkt.setMemePackCache(next);
@@ -403,6 +430,33 @@ export function MarketingSurface() {
         </p>
       </header>
 
+      {/* ━━━ 세그먼트 탭 (2026-08-03 — 탭당 핵심 기능만, 한 화면에 다 쌓지 않는다) ━━━ */}
+      <div style={{
+        display: "flex", gap: 4, padding: 4, borderRadius: 14,
+        background: "rgba(15,23,42,0.045)", width: "fit-content",
+      }}>
+        {([
+          { key: "weekly" as const, label: ko ? "이번 주" : "This Week" },
+          { key: "create" as const, label: ko ? "만들기" : "Create" },
+        ]).map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            style={{
+              padding: "8px 18px", borderRadius: 11, fontSize: 13.5, fontWeight: 700, fontFamily: "inherit",
+              cursor: "pointer", border: "none", transition: "background 0.15s, color 0.15s",
+              background: tab === t.key ? "#fff" : "transparent",
+              color: tab === t.key ? "#0f172a" : "var(--muted)",
+              boxShadow: tab === t.key ? "0 1px 4px rgba(17,17,17,0.08)" : "none",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "weekly" && (<>
       {/* ━━━ 섹션 1: 이번 주 핵심 1가지 + 채널 진행도 (단일 엔진) ━━━ */}
       <MarketingFocus
         plays={plays}
@@ -419,10 +473,36 @@ export function MarketingSurface() {
         onToggleDone={toggleDone}
       />
 
-      {/* ━━━ 섹션 1.2: 이번 주 밈·챌린지 (2026-07-24 신설 — 전역 주간 팩, 원본만·개사 없음) ━━━ */}
+      {/* ━━━ 섹션 1.2: 이번 주 밈·챌린지 (전역 팩 — 주간 수집 + 일간 top-up, 원본만·개사 없음) ━━━ */}
       <MemeLane pack={memePack} ko={ko} />
 
-      {/* ━━━ 섹션 1.5: 카드뉴스 만들기 (2026-07-21 신설 — 지금 무료, 9월부터 프로 전용) ━━━ */}
+      {/* 리뷰 관리 — 추후 제공 예정 (2026-08-03 사장님 결정: 어중간한 반자동 대신 정식 연동 때 한 번에) */}
+      <article style={{ ...solidCard, padding: "16px 22px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>
+              {ko ? "리뷰 관리 — 추후 제공 예정" : "Review management — coming later"}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2, lineHeight: 1.5 }}>
+              {ko
+                ? "리뷰 자동 수집·분석·답글 초안을 준비 중이에요. 지금은 공식 채널에서 확인해 주세요."
+                : "Automatic review collection & reply drafts are in the works."}
+            </div>
+          </div>
+          <a
+            href="https://smartplace.naver.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 12.5, fontWeight: 700, color: "#3b5c8c", textDecoration: "none", whiteSpace: "nowrap" }}
+          >
+            {ko ? "네이버 스마트플레이스 →" : "Naver SmartPlace →"}
+          </a>
+        </div>
+      </article>
+      </>)}
+
+      {tab === "create" && (
+      /* ━━━ 만들기 탭: 카드뉴스 (지금 무료, 9월부터 프로 전용) — 향후 숏폼 대본 동급 배치 ━━━ */
       <CardNewsStudio
         ko={ko}
         storeName={d.storeName ?? ""}
@@ -432,8 +512,9 @@ export function MarketingSurface() {
         isOperating={!!d.businessLaunched}
         dailyEntries={(d.dailyEntries ?? []) as Array<{ sales: number; customers: number }>}
       />
+      )}
 
-      {/* ━━━ 섹션 2+3: 마케팅 장부 (2026-07-24 개편 — 기본 접힘, 요약 한 줄이 먼저 말한다) ━━━ */}
+      {/* ━━━ 섹션 2+3: 마케팅 장부 (탭 공통 하단 — 기본 접힘, 요약 한 줄이 먼저 말한다) ━━━ */}
       <article style={solidCard}>
         <button
           type="button"
@@ -447,10 +528,20 @@ export function MarketingSurface() {
             <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
               {ko ? "마케팅 장부" : "Marketing Ledger"}
             </div>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
-              {ko
-                ? `이달 ${totalSpend > 0 ? fmt(totalSpend) : "0원"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · 채널 ${activeChannels.length}개`
-                : `MTD ${totalSpend > 0 ? fmt(totalSpend) : "0"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · ${activeChannels.length} channels`}
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span>
+                {ko
+                  ? `이달 ${totalSpend > 0 ? fmt(totalSpend) : "0원"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · 채널 ${activeChannels.length}개`
+                  : `MTD ${totalSpend > 0 ? fmt(totalSpend) : "0"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · ${activeChannels.length} channels`}
+              </span>
+              {spendCheck?.band === "below" && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: "#b64c4c",
+                  background: "rgba(182,76,76,0.08)", padding: "2px 8px", borderRadius: 7,
+                }}>
+                  {ko ? `매출의 ${spendCheck.pct}% — 기준(${spendCheck.lowPct}~${spendCheck.highPct}%)보다 낮음` : `${spendCheck.pct}% of sales — below ${spendCheck.lowPct}–${spendCheck.highPct}%`}
+                </span>
+              )}
             </div>
           </div>
           <ChevronRight size={16} strokeWidth={2} color="var(--muted)" style={{ flexShrink: 0, transform: ledgerOpen ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
@@ -458,6 +549,33 @@ export function MarketingSurface() {
       </article>
 
       {ledgerOpen && (<>
+      {/* 적정 예산 — 판정 가능(월매출 존재)할 때만. 출처·국가를 숨기지 않는다 (한국 공식 통계 없음). */}
+      {spendCheck && (
+        <article style={{
+          ...solidCard, padding: "14px 18px",
+          borderColor: spendCheck.band === "below" ? "rgba(182,76,76,0.25)" : "var(--border)",
+        }}>
+          <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6 }}>
+            <b style={{ fontWeight: 750, color: spendCheck.band === "below" ? "#b64c4c" : "#1d3557" }}>
+              {ko ? `이달 마케팅 지출 = 매출의 ${spendCheck.pct}%` : `MTD marketing spend = ${spendCheck.pct}% of sales`}
+            </b>
+            {" — "}
+            {ko
+              ? `${spendCheck.isNewBiz ? "신규 개업 " : ""}통용 기준은 ${spendCheck.lowPct}~${spendCheck.highPct}%예요.`
+              : `${spendCheck.isNewBiz ? "New-business " : ""}norm is ${spendCheck.lowPct}–${spendCheck.highPct}%.`}
+            {spendCheck.band === "below" && (
+              <span> {ko ? "지금은 기준보다 낮아 노출이 부족할 수 있어요." : "You may be under-investing in visibility."}</span>
+            )}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+            {ko ? "한국 공식 통계는 없어 " : "No official Korean statistic exists — "}
+            <a href={spendCheck.benchmark.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#3b5c8c", textDecoration: "none" }}>
+              {ko ? spendCheck.benchmark.sourceLabelKo : spendCheck.benchmark.sourceLabelEn}
+            </a>
+            {ko ? "을 기준으로 보여드려요." : " is used as the reference."}
+          </div>
+        </article>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "10px" }}>
         <div style={{ ...kpiCard, borderColor: "rgba(59,92,140,0.1)" }}>
           <div style={kpiLabel}>
@@ -563,15 +681,25 @@ export function MarketingSurface() {
                       {roi ? ` (${roi}x)` : ""}
                     </div>
                   </div>
-                  <button type="button" onClick={() => handleDeleteCampaign(camp.id)} style={{
-                    width: "24px", height: "24px", borderRadius: "6px", border: "none",
-                    background: "rgba(15,23,42,0.04)", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 2l6 6M8 2l-6 6" stroke="rgba(15,23,42,0.3)" strokeWidth="1.2" strokeLinecap="round" />
-                    </svg>
-                  </button>
+                  {confirmDeleteId === camp.id ? (
+                    <button type="button" onClick={() => { handleDeleteCampaign(camp.id); setConfirmDeleteId(null); }} style={{
+                      height: "24px", padding: "0 10px", borderRadius: "6px", border: "none",
+                      background: "rgba(182,76,76,0.1)", cursor: "pointer",
+                      fontSize: "11px", fontWeight: 700, color: "#b64c4c", fontFamily: "inherit",
+                    }}>
+                      {ko ? "삭제 확인" : "Confirm"}
+                    </button>
+                  ) : (
+                    <button type="button" aria-label={ko ? "삭제" : "Delete"} onClick={() => setConfirmDeleteId(camp.id)} style={{
+                      width: "24px", height: "24px", borderRadius: "6px", border: "none",
+                      background: "rgba(15,23,42,0.04)", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        <path d="M2 2l6 6M8 2l-6 6" stroke="rgba(15,23,42,0.3)" strokeWidth="1.2" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -708,8 +836,14 @@ function MarketingFocus({
             {ko ? "가게 정보를 입력하면 맞춤 추천을 시작해요" : "Add your store to start"}
           </div>
           <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
-            {ko ? "마이페이지 > 가게 정보에서 상호·업종을 입력해 주세요." : "Set your store name and industry in Profile."}
+            {ko ? "상호·업종만 입력하면 바로 시작돼요." : "Just your store name and industry."}
           </div>
+          <a href="/profile" style={{
+            display: "inline-block", marginTop: "12px", padding: "9px 18px", borderRadius: "10px",
+            background: "#1d3557", color: "#fff", fontSize: "12.5px", fontWeight: 700, textDecoration: "none",
+          }}>
+            {ko ? "가게 정보 입력하러 가기 →" : "Set up my store →"}
+          </a>
         </div>
       )}
 
@@ -760,6 +894,13 @@ function MarketingFocus({
 
 // 이번 주 밈·챌린지 레인 — 업자용 소스(고구마팜·캐릿 등)에서 주 1회 수집한 전역 팩.
 // 원칙(2026-07-24): 원본 설명 + 원본 링크만 보여주고 적용은 사장님 몫 — AI 개사 금지.
+/** 일간 top-up 신선 판정 — addedAt 이 48시간 내면 NEW */
+function isFreshItem(it: MemeItem): boolean {
+  if (!it.addedAt) return false;
+  const t = Date.parse(it.addedAt);
+  return Number.isFinite(t) && Date.now() - t < 48 * 3_600_000;
+}
+
 function MemeLane({ pack, ko }: { pack: MemePackCache | null; ko: boolean }) {
   if (!pack || pack.items.length === 0) return null; // 팩 없으면 섹션 자체를 숨김 — 빈 껍데기 금지
   const kindLabel = (k: MemeItem["kind"]) =>
@@ -783,8 +924,8 @@ function MemeLane({ pack, ko }: { pack: MemePackCache | null; ko: boolean }) {
           </div>
           <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
             {ko
-              ? "마케터들이 보는 트렌드 매체에서 매주 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫."
-              : "Collected weekly from trend media marketers actually read — originals only."}
+              ? "마케터들이 보는 트렌드 매체에서 매일 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫."
+              : "Collected daily from trend media marketers actually read — originals only."}
           </div>
         </div>
       </div>
@@ -798,9 +939,16 @@ function MemeLane({ pack, ko }: { pack: MemePackCache | null; ko: boolean }) {
               padding: "14px", borderRadius: "14px", border: "1px solid var(--border)", background: "#fff",
             }}
           >
-            <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", color: "var(--muted)" }}>
-              {kindLabel(it.kind)} · {it.sourceName}
-              {it.publishedAt ? <span style={{ fontWeight: 500 }}> · {it.publishedAt.slice(5).replace("-", "/")}</span> : null}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", color: "var(--muted)" }}>
+                {kindLabel(it.kind)} · {it.sourceName}
+                {it.publishedAt ? <span style={{ fontWeight: 500 }}> · {it.publishedAt.slice(5).replace("-", "/")}</span> : null}
+              </span>
+              {isFreshItem(it) && (
+                <span style={{ fontSize: "9.5px", fontWeight: 800, letterSpacing: "0.06em", color: "#fff", background: "#1d3557", padding: "1px 6px", borderRadius: "5px" }}>
+                  NEW
+                </span>
+              )}
             </div>
             <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", lineHeight: 1.4 }}>{it.title}</div>
             <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.55 }}>{it.originDesc}</div>
@@ -898,14 +1046,18 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
 
 // 복사 실행물 한 줄 — "적용 3단계" 를 "버튼" 으로 바꾸는 단위. 클릭 → 클립보드 + 1.6초 확인 표시.
 function CopyRow({ label, content, ko }: { label: string; content: string; ko: boolean }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<null | "ok" | "fail">(null);
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
+      setCopied("ok");
+      setTimeout(() => setCopied(null), 1600);
       logMarketingEvent("copy_click"); // "쓸 재료였는가"의 직접 신호
-    } catch { /* 클립보드 권한 거부 — 조용히 무시 (내용은 화면에 보임) */ }
+    } catch {
+      // 클립보드 거부 — 조용히 삼키면 사용자는 복사된 줄 안다. 실패를 말하고 대안 안내.
+      setCopied("fail");
+      setTimeout(() => setCopied(null), 2600);
+    }
   };
   return (
     <div style={{
@@ -924,12 +1076,16 @@ function CopyRow({ label, content, ko }: { label: string; content: string; ko: b
         style={{
           flexShrink: 0, fontSize: "12px", fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
           padding: "7px 13px", borderRadius: "9px",
-          border: copied ? "1px solid #1d3557" : "1px solid rgba(59,92,140,0.3)",
-          background: copied ? "rgba(25,25,112,0.08)" : "#fff",
-          color: copied ? "#1d3557" : "#3b5c8c",
+          border: copied === "ok" ? "1px solid #1d3557" : copied === "fail" ? "1px solid rgba(182,76,76,0.4)" : "1px solid rgba(59,92,140,0.3)",
+          background: copied === "ok" ? "rgba(25,25,112,0.08)" : copied === "fail" ? "rgba(182,76,76,0.06)" : "#fff",
+          color: copied === "ok" ? "#1d3557" : copied === "fail" ? "#b64c4c" : "#3b5c8c",
         }}
       >
-        {copied ? (ko ? "✓ 복사됨" : "✓ Copied") : (ko ? "복사" : "Copy")}
+        {copied === "ok"
+          ? (ko ? "✓ 복사됨" : "✓ Copied")
+          : copied === "fail"
+            ? (ko ? "복사 안 됨 — 직접 선택해주세요" : "Copy blocked — select manually")
+            : (ko ? "복사" : "Copy")}
       </button>
     </div>
   );

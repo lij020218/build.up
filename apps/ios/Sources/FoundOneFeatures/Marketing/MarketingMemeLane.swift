@@ -15,7 +15,7 @@ struct MarketingMemeLane: View {
     let pack: MemePackResponse?
 
     @Environment(\.openURL) private var openURL
-    private let blue = Color(red: 0, green: 0.478, blue: 1.0)
+    private let blue = BUColor.accent
 
     var body: some View {
         if let pack, !pack.items.isEmpty {
@@ -64,7 +64,7 @@ struct MarketingMemeLane: View {
                 .font(.system(size: 17, weight: .bold))
                 .tracking(-0.34)
                 .foregroundStyle(BUColor.ink)
-            Text("마케터들이 보는 트렌드 매체에서 매주 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫.")
+            Text("마케터들이 보는 트렌드 매체에서 매일 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫.")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -80,14 +80,34 @@ struct MarketingMemeLane: View {
         }
     }
 
+    /// 일간 top-up 신선 판정 — addedAt 이 48시간 내면 NEW (웹 isFreshItem 패리티)
+    private func isFresh(_ item: MemeItem) -> Bool {
+        guard let raw = item.addedAt else { return false }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        guard let d = f.date(from: raw) else { return false }
+        return Date().timeIntervalSince(d) < 48 * 3_600
+    }
+
     private func memeCard(_ item: MemeItem) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            // 종류 · 매체 · 발행일
-            Text("\(kindLabel(item.kind)) · \(item.sourceName)\(item.publishedAt.map { " · \(String($0.dropFirst(5)).replacingOccurrences(of: "-", with: "/"))" } ?? "")")
-                .font(.system(size: 10.5, weight: .bold))
-                .tracking(0.5)
-                .foregroundStyle(BUColor.inkMuted)
-                .lineLimit(1)
+            // 종류 · 매체 · 발행일 (+ 일간 top-up NEW 배지)
+            HStack(spacing: 6) {
+                Text("\(kindLabel(item.kind)) · \(item.sourceName)\(item.publishedAt.map { " · \(String($0.dropFirst(5)).replacingOccurrences(of: "-", with: "/"))" } ?? "")")
+                    .font(.system(size: 10.5, weight: .bold))
+                    .tracking(0.5)
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineLimit(1)
+                if isFresh(item) {
+                    Text("NEW")
+                        .font(.system(size: 9.5, weight: .black))
+                        .tracking(0.6)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 1)
+                        .background(BUColor.success, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                }
+            }
 
             Text(item.title)
                 .font(.system(size: 14, weight: .bold))

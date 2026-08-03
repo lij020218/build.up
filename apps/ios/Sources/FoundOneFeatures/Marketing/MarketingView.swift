@@ -34,8 +34,11 @@ fileprivate final class MarketingPageState {
     var casesWeekKey: String? = nil
     var doneTitles: Set<String> = []
 
-    // 이번 주 밈·챌린지 팩 (전역 주간 팩 — 웹 MemeLane 패리티)
+    // 이번 주 밈·챌린지 팩 (전역 팩: 주간 수집 + 일간 top-up — 웹 MemeLane 패리티)
     var memePack: MemePackResponse? = nil
+
+    // 이달(KST) 매출 합 — 적정 마케팅 예산 판정용 (웹 mtdRevenueWon 패리티)
+    var mtdRevenueWon: Int = 0
 
     var profile: FundingProfileSnapshot? = nil
 }
@@ -49,6 +52,13 @@ public struct MarketingView: View {
     @State private var showGrowthForecast: Bool = false
     // 마케팅 장부(KPI+지출 추적) — 기본 접힘 (2026-07-24 개편, 웹 ledgerOpen 패리티)
     @State private var ledgerOpen: Bool = false
+    // 세그먼트 탭 (2026-08-03 개편, 웹 패리티 — 한 화면에 다 쌓지 않는다)
+    @State private var tab: MarketingTab = .weekly
+
+    enum MarketingTab: String, CaseIterable {
+        case weekly, create
+        var label: String { self == .weekly ? "이번 주" : "만들기" }
+    }
 
     public init(store: DashboardStore, mock: MockData) {
         self.store = store
@@ -70,43 +80,73 @@ public struct MarketingView: View {
         state.casesError != nil || state.plays.isEmpty
     }
 
+    // 신규 개업(12개월 이내) — 웹 isNewBiz 패리티
+    private var isNewBiz: Bool {
+        guard let raw = state.profile?.businessLaunchedDate else { return false }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        guard let d = f.date(from: String(raw.prefix(10))) else { return false }
+        return Date().timeIntervalSince(d) < 365 * 86_400
+    }
+
+    // 적정 마케팅 예산 판정 — 웹 spendCheck 패리티 (SSOT 미러 MarketingBudgetBenchmarks)
+    private var spendCheck: MarketingBudgetBenchmarks.Assessment? {
+        MarketingBudgetBenchmarks.assess(
+            spendWon: state.kpis.spendWon,
+            revenueWon: state.mtdRevenueWon,
+            categoryId: state.profile?.industryCategoryId,
+            isNewBiz: isNewBiz
+        )
+    }
+
     public var body: some View {
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
         ZStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     header
-                    growthNavCard
+                    segmentedTabs
 
-                    // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
-                    //   웹 MarketingFocus 와 패리티. 히어로 1순위 + 채널 진행도 + 더 보기.
-                    MarketingCasesCard(
-                        loading: state.casesLoading,
-                        error: state.casesError,
-                        plays: state.plays,
-                        sources: state.casesSources,
-                        activeChannels: activeChannelsThisMonth,
-                        categoryId: state.profile?.industryCategoryId,
-                        doneTitles: state.doneTitles,
-                        canRefresh: canRegenerateCases,
-                        onToggleDone: { title in togglePlayDone(title) },
-                        onRefresh: { Task { await loadCases(force: true) } }
-                    )
+                    if tab == .weekly {
+                        growthNavCard
 
-                    // 이번 주 밈·챌린지 — 웹 MemeLane 미러 (2026-07-24 신설, 전역 주간 팩 · 원본만·개사 없음)
-                    MarketingMemeLane(pack: state.memePack)
+                        // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
+                        //   웹 MarketingFocus 와 패리티. 히어로 1순위 + 채널 진행도 + 더 보기.
+                        MarketingCasesCard(
+                            loading: state.casesLoading,
+                            error: state.casesError,
+                            plays: state.plays,
+                            sources: state.casesSources,
+                            activeChannels: activeChannelsThisMonth,
+                            categoryId: state.profile?.industryCategoryId,
+                            doneTitles: state.doneTitles,
+                            canRefresh: canRegenerateCases,
+                            onToggleDone: { title in togglePlayDone(title) },
+                            onRefresh: { Task { await loadCases(force: true) } }
+                        )
 
-                    // 카드뉴스 스튜디오 — 웹 CardNewsStudio 미러 (2026-07-21 신설, 지금 무료·9월부터 프로 전용)
-                    CardNewsStudioCard(
-                        storeName: state.profile?.storeName ?? store.storeName,
-                        industryCategoryId: state.profile?.industryCategoryId,
-                        subIndustryId: state.profile?.subIndustryId,
-                        isOperating: state.profile?.businessLaunched ?? true
-                    )
+                        // 이번 주 밈·챌린지 — 웹 MemeLane 미러 (전역 팩: 주간 수집 + 일간 top-up · 원본만·개사 없음)
+                        MarketingMemeLane(pack: state.memePack)
 
-                    // 마케팅 장부 — 기본 접힘: 요약 한 줄이 먼저 말한다 (웹 패리티, 2026-07-24 개편)
+                        // 리뷰 관리 — 추후 제공 예정 (2026-08-03 사장님 결정, 웹 패리티)
+                        reviewComingSoonCard
+                    }
+
+                    if tab == .create {
+                        // 카드뉴스 스튜디오 — 웹 CardNewsStudio 미러 (지금 무료·9월부터 프로 전용)
+                        CardNewsStudioCard(
+                            storeName: state.profile?.storeName ?? store.storeName,
+                            industryCategoryId: state.profile?.industryCategoryId,
+                            subIndustryId: state.profile?.subIndustryId,
+                            isOperating: state.profile?.businessLaunched ?? true
+                        )
+                    }
+
+                    // 마케팅 장부 — 탭 공통 하단, 기본 접힘: 요약 한 줄이 먼저 말한다 (웹 패리티)
                     ledgerSummaryCard
                     if ledgerOpen {
+                        if let check = spendCheck { budgetNoteCard(check) }
                         kpiSection
                         MarketingCampaignsList(
                             campaigns: state.campaigns,
@@ -170,6 +210,91 @@ public struct MarketingView: View {
         }
     }
 
+    // 세그먼트 탭 — 웹 pill 세그먼트 패리티 (탭당 핵심 기능만)
+    private var segmentedTabs: some View {
+        HStack(spacing: 4) {
+            ForEach(MarketingTab.allCases, id: \.self) { t in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { tab = t }
+                } label: {
+                    Text(t.label)
+                        .font(.system(size: 13.5, weight: .bold))
+                        .foregroundStyle(tab == t ? BUColor.ink : BUColor.inkMuted)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                .fill(tab == t ? Color.white : Color.clear)
+                        )
+                        .buShadow(tab == t ? .card : .none)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(BUColor.ink.opacity(0.045), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    // 리뷰 관리 — 추후 제공 예정 (어중간한 반자동 대신 정식 연동 때 한 번에, 웹 패리티)
+    private var reviewComingSoonCard: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("리뷰 관리 — 추후 제공 예정")
+                    .font(.system(size: 13.5, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                Text("리뷰 자동 수집·분석·답글 초안을 준비 중이에요. 지금은 공식 채널에서 확인해 주세요.")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            if let url = URL(string: "https://smartplace.naver.com") {
+                Link("스마트플레이스 →", destination: url)
+                    .font(.system(size: 12.5, weight: .bold))
+                    .foregroundStyle(BUColor.accent)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
+                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+        )
+    }
+
+    // 적정 예산 카드 — 판정 가능(월매출 존재)할 때만. 출처·국가를 숨기지 않는다 (웹 패리티)
+    private func budgetNoteCard(_ check: MarketingBudgetBenchmarks.Assessment) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Group {
+                Text("이달 마케팅 지출 = 매출의 \(check.pct, specifier: "%.1f")%")
+                    .font(.system(size: 13, weight: .heavy))
+                    .foregroundStyle(check.band == .below ? BUColor.danger : BUColor.success)
+                + Text(" — \(check.isNewBiz ? "신규 개업 " : "")통용 기준은 \(Int(check.lowPct))~\(Int(check.highPct))%예요.\(check.band == .below ? " 지금은 기준보다 낮아 노출이 부족할 수 있어요." : "")")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(BUColor.ink)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            if let url = URL(string: check.benchmark.sourceUrl) {
+                HStack(spacing: 4) {
+                    Text("한국 공식 통계는 없어")
+                    Link(check.benchmark.sourceLabelKo, destination: url)
+                        .foregroundStyle(BUColor.accent)
+                    Text("을 기준으로 보여드려요.")
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
+                .strokeBorder(check.band == .below ? BUColor.danger.opacity(0.25) : BUColor.cardBorder, lineWidth: 1)
+        )
+    }
+
     // 장부 요약 카드 — "이달 0원 · ROAS — · 채널 N개" 한 줄 + 펼치기 (웹 ledger summary 패리티)
     private var ledgerSummaryCard: some View {
         Button {
@@ -186,6 +311,15 @@ public struct MarketingView: View {
                         .font(.system(size: 13, weight: .heavy))
                         .foregroundStyle(BUColor.ink)
                         .lineLimit(1)
+                    // 저지출 경고 — 웹 요약줄 배지 패리티 (SSOT: MarketingBudgetBenchmarks)
+                    if let check = spendCheck, check.band == .below {
+                        Text("매출의 \(check.pct, specifier: "%.1f")% — 기준(\(Int(check.lowPct))~\(Int(check.highPct))%)보다 낮음")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundStyle(BUColor.danger)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(BUColor.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                            .lineLimit(1)
+                    }
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
@@ -212,7 +346,7 @@ public struct MarketingView: View {
                     eyebrow: "이달 지출",
                     value: state.kpis.spendWon > 0 ? formatWon(state.kpis.spendWon) : "—",
                     sub: state.kpis.spendWon > 0 ? "원" : "캠페인 추가",
-                    tint: Color(red: 0, green: 0.478, blue: 1.0)
+                    tint: BUColor.accent
                 )
                 // ROAS — 웹 MarketingSurface.tsx:362 패리티. 신호등 색 제거:
                 //   ROAS ≥ 1 → 네이비(success #1d3557), < 1 → 벽돌(danger #b64c4c) 2색 분기만.
@@ -243,7 +377,7 @@ public struct MarketingView: View {
             HStack(spacing: 10) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Color(red: 0, green: 0.478, blue: 1.0))
+                    .foregroundStyle(BUColor.accent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("성장 예측 & What-If")
                         .font(.system(size: 13, weight: .heavy))
@@ -281,7 +415,17 @@ public struct MarketingView: View {
         // 2026-06-10: 코칭·트렌드는 단일 엔진(loadCases)으로 통합 — 불필요 LLM 호출 차단.
         async let cases: () = loadCases()
         async let memes: () = loadMemePack()
-        _ = await (cases, memes)
+        async let revenue: () = loadMtdRevenue()
+        _ = await (cases, memes, revenue)
+    }
+
+    /// 이달(KST) 매출 합 — 예산 판정 분모 (웹 mtdRevenueWon = dailyEntries 이달 합 패리티)
+    private func loadMtdRevenue() async {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let repo = DailyEntryRepository(supabase: BUSupabase.shared.client, getUserId: { uid })
+        let month = MarketingRepository.currentMonthKey()
+        let entries = (try? await repo.list(limit: 40, ascending: false)) ?? []
+        state.mtdRevenueWon = Int(entries.filter { $0.date.hasPrefix(month) }.reduce(0.0) { $0 + $1.sales })
     }
 
     /// 주간 밈 팩 — 전역 팩 DB 읽기(저비용, LLM 호출 아님). 실패 시 레인 숨김.
@@ -320,7 +464,8 @@ public struct MarketingView: View {
         async let kpi: () = loadKpisAndCampaigns()
         async let cases: () = loadCases(force: allowForce)
         async let memes: () = loadMemePack()
-        _ = await (kpi, cases, memes)
+        async let revenue: () = loadMtdRevenue()
+        _ = await (kpi, cases, memes, revenue)
     }
 
     private func loadCases(force: Bool = false) async {

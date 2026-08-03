@@ -110,6 +110,8 @@ public struct MemeItem: Sendable, Codable, Hashable {
     public let industryFit: [String]
     public let effortLabel: String?
     public let applyHint: String
+    /// 일간 top-up 으로 추가된 날짜 (YYYY-MM-DD) — 48시간 내면 "NEW" 배지 (웹 패리티)
+    public let addedAt: String?
 }
 
 public struct MemePackResponse: Sendable, Codable {

@@ -32,6 +32,7 @@ export * from "./starter-data";
 export * from "./digital-subtypes";
 export * from "./operations-channels";
 export * from "./marketing-channels";
+export * from "./marketing-budget-benchmarks";
 export * from "./cashflow-presets";
 export * from "./cluster-budget-benchmarks";
 export * from "./supabase/auth";

@@ -262,7 +262,7 @@ public struct ProfileView: View {
                         .tracking(-0.5)
                         .foregroundStyle(progressPercent >= 100
                             ? BUColor.success
-                            : Color(red: 0, green: 0.478, blue: 1.0))
+                            : BUColor.accent)
                 }
                 ProgressBar(percent: progressPercent)
                 Text(journeySubtitle)
@@ -986,7 +986,7 @@ private struct ProgressBar: View {
                         clamped >= 100
                             ? AnyShapeStyle(BUColor.success)
                             : AnyShapeStyle(LinearGradient(
-                                colors: [Color(red: 0, green: 0.478, blue: 1.0), Color(red: 0.353, green: 0.784, blue: 0.98)],
+                                colors: [BUColor.accent, BUColor.midnightBright],
                                 startPoint: .leading, endPoint: .trailing
                             ))
                     )
@@ -1019,7 +1019,7 @@ private struct LanguageToggle: View {
                 .padding(.horizontal, 14).padding(.vertical, 6)
                 .background(
                     language == code
-                        ? AnyShapeStyle(Color(red: 0, green: 0.478, blue: 1.0))
+                        ? AnyShapeStyle(BUColor.accent)
                         : AnyShapeStyle(Color.clear),
                     in: RoundedRectangle(cornerRadius: 8)
                 )

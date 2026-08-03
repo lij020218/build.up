@@ -151,6 +151,8 @@ export type MemeItem = {
   industryFit: string[];
   effortLabel?: string;
   applyHint: string;
+  /** 일간 top-up 으로 추가된 날짜 (YYYY-MM-DD) — 48시간 내면 "NEW" 배지 */
+  addedAt?: string;
 };
 
 export type MemePackCache = {
@@ -161,6 +163,8 @@ export type MemePackCache = {
   categoryId: string;
   items: MemeItem[];
   generatedAt: string;
+  /** 클라이언트 조회 시각 — 일간 top-up 반영 위해 6시간 지나면 재조회 (없는 구캐시는 즉시 재조회) */
+  fetchedAt?: string;
 };
 
 // ─── First 100 Customers Playbook ───

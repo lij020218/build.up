@@ -33,7 +33,7 @@ struct MarketingCasesCard: View {
     // 채널 우선순위 — 기본 접힘 (2026-07-24 개편: 요약 한 줄만, 웹 ChannelProgress 패리티)
     @State private var channelOpen: Bool = false
 
-    private let blue = Color(red: 0, green: 0.478, blue: 1.0)
+    private let blue = BUColor.accent
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -92,7 +92,7 @@ struct MarketingCasesCard: View {
                     Text(loading ? "조사 중" : (canRefresh ? "다시 찾기" : "최신"))
                         .font(.system(size: 11, weight: .heavy))
                 }
-                .foregroundStyle(Color(red: 0.122, green: 0.275, blue: 0.659))
+                .foregroundStyle(BUColor.accent)
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(blue.opacity(0.2), lineWidth: 1))
@@ -287,7 +287,7 @@ private struct PlayFullCard: View {
 
     private var isCase: Bool { play.kind == "case" }
     private var accent: Color {
-        isCase ? Color(red: 0.114, green: 0.208, blue: 0.341) : Color(red: 0, green: 0.478, blue: 1.0)
+        isCase ? BUColor.success : BUColor.accent
     }
     private var kindLabel: String { isCase ? "검증된 사례" : "지금 뜨는 트렌드" }
     private var mission: String { play.mission?.isEmpty == false ? play.mission! : play.title }
@@ -303,7 +303,7 @@ private struct PlayFullCard: View {
                             .font(.system(size: 11, weight: .heavy))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 10).padding(.vertical, 3)
-                            .background(Color(red: 0.114, green: 0.208, blue: 0.341), in: Capsule())
+                            .background(BUColor.success, in: Capsule())
                     }
                     Text(kindLabel)
                         .font(.system(size: 10, weight: .heavy))
@@ -365,7 +365,7 @@ private struct PlayFullCard: View {
                         Text(done ? "이번 주에 했어요" : "이거 했어요 — 다음 주 추천에 반영")
                             .font(.system(size: 13, weight: .heavy))
                     }
-                    .foregroundStyle(done ? Color(red: 0.114, green: 0.478, blue: 0.243) : BUColor.ink)
+                    .foregroundStyle(done ? BUColor.success : BUColor.ink)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background((done ? BUColor.success.opacity(0.10) : Color(red: 0.97, green: 0.97, blue: 0.98)), in: RoundedRectangle(cornerRadius: 10))
@@ -447,7 +447,7 @@ private struct PlayFullCard: View {
                 }
             }
             if !play.application.expectedEffect.isEmpty {
-                (Text("기대 효과 ").font(.system(size: 12, weight: .heavy)).foregroundColor(Color(red: 0.114, green: 0.208, blue: 0.341))
+                (Text("기대 효과 ").font(.system(size: 12, weight: .heavy)).foregroundColor(BUColor.success)
                  + Text(play.application.expectedEffect).font(.system(size: 12, weight: .semibold)).foregroundColor(BUColor.ink))
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -472,7 +472,7 @@ private struct DeliverableCopyRow: View {
     let deliverable: PlayDeliverable
     @State private var copied = false
 
-    private let blue = Color(red: 0, green: 0.478, blue: 1.0)
+    private let blue = BUColor.accent
 
     var body: some View {
         HStack(spacing: 10) {
@@ -500,7 +500,7 @@ private struct DeliverableCopyRow: View {
             } label: {
                 Text(copied ? "✓ 복사됨" : "복사")
                     .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(copied ? Color(red: 0.114, green: 0.208, blue: 0.341) : blue)
+                    .foregroundStyle(copied ? BUColor.success : blue)
                     .padding(.horizontal, 13).padding(.vertical, 7)
                     .background(copied ? BUColor.success.opacity(0.08) : Color.white, in: RoundedRectangle(cornerRadius: 9))
                     .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(copied ? BUColor.success.opacity(0.5) : blue.opacity(0.3), lineWidth: 1))
@@ -519,8 +519,8 @@ private struct PlayToolPill: View {
 
     private var tierColor: Color {
         switch tool.tier {
-        case "free": return Color(red: 0.114, green: 0.208, blue: 0.341)
-        case "paid": return Color(red: 0, green: 0.478, blue: 1.0)
+        case "free": return BUColor.success
+        case "paid": return BUColor.accent
         default:     return BUColor.warn
         }
     }

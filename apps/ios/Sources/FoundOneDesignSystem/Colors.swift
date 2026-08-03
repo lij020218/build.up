@@ -75,6 +75,13 @@ public enum BUColor {
         light: Color(red: 0x3A/255, green: 0x3A/255, blue: 0xC8/255),
         dark:  Color(red: 0x7E/255, green: 0x7E/255, blue: 0xE8/255)
     )
+    /// ACCENT — 슬레이트 블루 (#3B5C8C, 웹 코칭·포커스 액센트와 통일. 2026-08-03 신설)
+    ///  종전 각 화면이 애플 시스템 블루(#007AFF)를 하드코딩하던 것을 폐기 — 이 토큰만 쓸 것.
+    public static let accent = Color(
+        light: Color(red: 0x3B/255, green: 0x5C/255, blue: 0x8C/255),
+        dark:  Color(red: 0x8F/255, green: 0xB0/255, blue: 0xD9/255)
+    )
+    public static let accent08 = accent.opacity(0.08)
     public static let midnight08 = midnight.opacity(0.08)
     public static let midnight12 = midnight.opacity(0.12)
     public static let midnight18 = midnight.opacity(0.18)

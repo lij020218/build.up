@@ -79,9 +79,9 @@ struct MarketingCampaignsList: View {
             } label: {
                 Text(formOpen ? "닫기" : "+ 캠페인 추가")
                     .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(Color(red: 0, green: 0.478, blue: 1.0))
+                    .foregroundStyle(BUColor.accent)
                     .padding(.horizontal, 10).padding(.vertical, 6)
-                    .background(Color(red: 0, green: 0.478, blue: 1.0).opacity(0.08), in: Capsule())
+                    .background(BUColor.accent.opacity(0.08), in: Capsule())
             }
             .buttonStyle(.plain)
         }
@@ -114,7 +114,7 @@ struct MarketingCampaignsList: View {
                         .frame(maxWidth: .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .strokeBorder(Color(red: 0, green: 0.478, blue: 1.0).opacity(0.15), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                                .strokeBorder(BUColor.accent.opacity(0.15), style: StrokeStyle(lineWidth: 1, dash: [4]))
                         )
                 }
                 .buttonStyle(.plain)
@@ -147,7 +147,7 @@ struct MarketingCampaignsList: View {
                     .frame(maxWidth: .infinity)
                     .background(
                         canSubmit
-                            ? LinearGradient(colors: [Color(red: 0, green: 0.478, blue: 1.0), Color(red: 0.659, green: 0.333, blue: 0.969)], startPoint: .leading, endPoint: .trailing)
+                            ? LinearGradient(colors: [BUColor.accent, BUColor.midnight], startPoint: .leading, endPoint: .trailing)
                             : LinearGradient(colors: [BUColor.inkMuted.opacity(0.1), BUColor.inkMuted.opacity(0.1)], startPoint: .leading, endPoint: .trailing),
                         in: RoundedRectangle(cornerRadius: 10)
                     )
@@ -157,10 +157,10 @@ struct MarketingCampaignsList: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity)
-        .background(Color(red: 0, green: 0.478, blue: 1.0).opacity(0.02), in: RoundedRectangle(cornerRadius: 14))
+        .background(BUColor.accent.opacity(0.02), in: RoundedRectangle(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(Color(red: 0, green: 0.478, blue: 1.0).opacity(0.08), lineWidth: 1)
+                .strokeBorder(BUColor.accent.opacity(0.08), lineWidth: 1)
         )
         .transition(.opacity.combined(with: .move(edge: .top)))
     }

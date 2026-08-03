@@ -48,6 +48,8 @@ export type MemeItem = {
   industryFit: string[];          // MEME_FIT_CATEGORIES 부분집합 — 업종 fit 태그
   effortLabel?: string;           // "15초" · "글 1개" 등 짧은 규모 표시
   applyHint: string;              // "사장님 가게 이야기로 적용해보세요" — 권유 1문장, 대사 금지
+  /** 일간 top-up 으로 추가된 날짜 (YYYY-MM-DD) — 코드가 찍는다(LLM 산출물 아님). UI "NEW" 배지용. */
+  addedAt?: string;
 };
 
 export type MemeSource = { name: string; url: string };
@@ -141,6 +143,27 @@ export type CollectMemePackInput = {
   weekKey: string;
 };
 
+/** 화이트리스트 소스 수집 — days 만 다르게 해서 주간 전체 수집·일간 top-up 이 공유. */
+async function collectDocs(tavilyKey: string, days: number, maxResults: number): Promise<TavilyResult[]> {
+  const results: TavilyResult[] = [];
+  for (const q of COLLECT_QUERIES) {
+    const res = await tavilySearch(tavilyKey, q, {
+      maxResults,
+      searchDepth: "advanced",
+      includeAnswer: false,
+      includeDomains: [...MEME_SOURCE_DOMAINS],
+      days,
+    });
+    if (res) results.push(...res.results);
+  }
+  const seen = new Set<string>();
+  return results.filter((r) => {
+    if (!r.url || seen.has(r.url)) return false;
+    seen.add(r.url);
+    return true;
+  });
+}
+
 /**
  * 주간 밈 팩 수집·구조화. 실패(수집 0건·파싱 실패)는 items:[] 로 반환 —
  * 호출자(cron)는 빈 팩을 저장하지 않는다(서빙이 지난주/시드로 폴백).
@@ -151,27 +174,21 @@ export async function collectMemePack(input: CollectMemePackInput): Promise<Meme
   const empty: MemePack = { weekKey, items: [], sources: [], generatedAt: now.toISOString() };
 
   // 1) 화이트리스트 소스에서 최근 45일 글 수집
-  const results: TavilyResult[] = [];
-  for (const q of COLLECT_QUERIES) {
-    const res = await tavilySearch(tavilyKey, q, {
-      maxResults: 8,
-      searchDepth: "advanced",
-      includeAnswer: false,
-      includeDomains: [...MEME_SOURCE_DOMAINS],
-      days: 45,
-    });
-    if (res) results.push(...res.results);
-  }
-  // URL 중복 제거
-  const seen = new Set<string>();
-  const docs = results.filter((r) => {
-    if (!r.url || seen.has(r.url)) return false;
-    seen.add(r.url);
-    return true;
-  });
+  const docs = await collectDocs(tavilyKey, 45, 8);
   if (docs.length === 0) return empty;
 
   // 2) LLM 구조화 — 요약·태깅만. 개사 금지.
+  const items = await structureMemeDocs(openaiKey, docs, now);
+  const usedUrls = new Set(items.map((it) => it.originUrl));
+  const sources: MemeSource[] = docs
+    .filter((d) => usedUrls.has(d.url))
+    .map((d) => ({ name: d.title.slice(0, 60), url: d.url }));
+
+  return { weekKey, items, sources, generatedAt: now.toISOString() };
+}
+
+/** LLM 구조화 — 수집 문서 → 정제된 MemeItem[]. 게이트(sanitize)까지 통과한 것만. */
+async function structureMemeDocs(openaiKey: string, docs: TavilyResult[], now: Date): Promise<MemeItem[]> {
   const corpus = docs
     .map((d, i) => `[${i + 1}] ${d.title}\nURL: ${d.url}\n발행일: ${d.publishedDate ?? "미상"}\n내용: ${d.content}`)
     .join("\n\n")
@@ -218,42 +235,45 @@ ${corpus}
     parsed = JSON.parse(r.choices[0]?.message?.content ?? "{}");
   } catch {
     console.warn("[marketing-memes] JSON parse failed");
-    return empty;
+    return [];
   }
 
   const allowedUrls = new Set(docs.map((d) => d.url));
-  const items = (Array.isArray(parsed.items) ? parsed.items : [])
+  return (Array.isArray(parsed.items) ? parsed.items : [])
     .map((it) => sanitizeMemeItem(it, allowedUrls, now))
     .filter((it): it is MemeItem => it !== null)
     .slice(0, MAX_ITEMS);
-
-  const usedUrls = new Set(items.map((it) => it.originUrl));
-  const sources: MemeSource[] = docs
-    .filter((d) => usedUrls.has(d.url))
-    .map((d) => ({ name: d.title.slice(0, 60), url: d.url }));
-
-  return { weekKey, items, sources, generatedAt: now.toISOString() };
 }
 
+// 일간 top-up 상수 — 주간 팩 위에 매일 신선한 소재를 얹는다 (2026-08-03, 사장님 "더 빠른 정보" 지시).
+const TOPUP_MIN_INTERVAL_HOURS = 20;  // 크론 외 수동 호출이 겹쳐도 하루 1회만
+const TOPUP_MAX_PACK_ITEMS = 12;      // 주간 8 + 증분 여유. 서빙은 어차피 fit 정렬 후 6개
+const TOPUP_SEARCH_DAYS = 7;          // 최근 7일 글만 — "오늘 갓 올라온 것" 탐지용
+
 /**
- * 크론 진입점 — 이번 주 팩이 없을 때만 수집해 저장(멱등: 매일 도는 크론에서 호출해도
- * 실제 작업은 주 1회). 수집 결과가 3개 미만이면 저장하지 않는다 — 서빙이
- * 지난주/시드로 폴백하며, 빈 팩으로 덮어써 좋은 팩을 밀어내는 사고를 막는다.
+ * 크론 진입점 (매일 08:00 KST 호출).
+ *  - 이번 주 팩이 없으면: 전체 수집·저장 (기존 주간 동작).
+ *  - 이번 주 팩이 있으면: **일간 top-up** — 최근 7일 신규 글만 가볍게 수집해
+ *    새 URL 이 있을 때만 LLM 구조화 → addedAt 찍어 팩 앞에 추가.
+ *    신규 URL 이 없으면 LLM 호출 없이 종료(비용 0).
+ *  수집 결과가 3개 미만인 주간 수집은 저장하지 않는다 — 서빙이 지난주/시드로 폴백.
  */
 export async function buildWeeklyMemePack(
   supabase: SupabaseClient,
   input: { openaiKey: string; tavilyKey: string; weekKey: string; force?: boolean },
-): Promise<{ status: "exists" | "saved" | "skipped-thin" | "error"; itemCount: number; error?: string }> {
+): Promise<{ status: "exists" | "saved" | "topped-up" | "skipped-thin" | "error"; itemCount: number; error?: string }> {
   const { weekKey, force } = input;
   try {
     if (!force) {
       const { data: existing } = await supabase
         .from("marketing_meme_packs")
-        .select("week_key, items")
+        .select("week_key, items, sources, generated_at, updated_at")
         .eq("week_key", weekKey)
         .maybeSingle();
       if (existing && Array.isArray(existing.items) && existing.items.length > 0) {
-        return { status: "exists", itemCount: existing.items.length };
+        return await topUpMemePack(supabase, input, existing as {
+          week_key: string; items: MemeItem[]; sources: MemeSource[]; generated_at: string; updated_at?: string;
+        });
       }
     }
 
@@ -276,5 +296,61 @@ export async function buildWeeklyMemePack(
     return { status: "saved", itemCount: pack.items.length };
   } catch (err) {
     return { status: "error", itemCount: 0, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/** 일간 top-up — 신규 URL 이 있을 때만 LLM 을 부른다. 실패해도 기존 팩은 건드리지 않는다. */
+async function topUpMemePack(
+  supabase: SupabaseClient,
+  input: { openaiKey: string; tavilyKey: string; weekKey: string },
+  existing: { week_key: string; items: MemeItem[]; sources: MemeSource[]; generated_at: string; updated_at?: string },
+): Promise<{ status: "exists" | "topped-up" | "error"; itemCount: number; error?: string }> {
+  const count = existing.items.length;
+  try {
+    // 하루 1회 가드 — updated_at 이 최근이면 스킵
+    if (existing.updated_at) {
+      const last = Date.parse(existing.updated_at);
+      if (Number.isFinite(last) && Date.now() - last < TOPUP_MIN_INTERVAL_HOURS * 3_600_000) {
+        return { status: "exists", itemCount: count };
+      }
+    }
+
+    const now = new Date();
+    const knownUrls = new Set(existing.items.map((it) => it.originUrl));
+    const docs = (await collectDocs(input.tavilyKey, TOPUP_SEARCH_DAYS, 5)).filter((d) => !knownUrls.has(d.url));
+    if (docs.length === 0) return { status: "exists", itemCount: count }; // 신규 글 없음 — LLM 비용 0
+
+    const structured = await structureMemeDocs(input.openaiKey, docs, now);
+    const today = now.toISOString().slice(0, 10);
+    const fresh = structured
+      .filter((it) => !knownUrls.has(it.originUrl))
+      .map((it) => ({ ...it, addedAt: today }));
+    if (fresh.length === 0) return { status: "exists", itemCount: count };
+
+    // 새 소재가 앞 — 팩 상한 초과 시 addedAt 없는(주간 수집) 오래된 꼬리부터 밀려난다
+    const merged = [...fresh, ...existing.items].slice(0, TOPUP_MAX_PACK_ITEMS);
+    const usedUrls = new Set(merged.map((it) => it.originUrl));
+    const freshSources: MemeSource[] = docs
+      .filter((d) => usedUrls.has(d.url))
+      .map((d) => ({ name: d.title.slice(0, 60), url: d.url }));
+    const mergedSources = [...freshSources, ...(existing.sources ?? [])]
+      .filter((s, i, arr) => arr.findIndex((x) => x.url === s.url) === i)
+      .filter((s) => usedUrls.has(s.url));
+
+    const { error } = await supabase.from("marketing_meme_packs").upsert(
+      {
+        week_key: existing.week_key,
+        items: merged,
+        sources: mergedSources,
+        generated_at: existing.generated_at, // 주간 수집 시각은 보존
+        updated_at: now.toISOString(),
+      },
+      { onConflict: "week_key" },
+    );
+    if (error) return { status: "error", itemCount: count, error: error.message };
+    return { status: "topped-up", itemCount: merged.length };
+  } catch (err) {
+    // top-up 실패는 치명 아님 — 기존 팩 유지
+    return { status: "error", itemCount: count, error: err instanceof Error ? err.message : String(err) };
   }
 }
