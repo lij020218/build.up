@@ -22,59 +22,17 @@ import {
   sbizCountsInRadius, areaKeyFor, upjongSigFor, recordAreaSnapshot, findAreaTrend, type AreaTrend,
   franchisePresenceInRadius, type FranchisePresence,
 } from "../../_lib/sbiz-store";
-import { getFranchiseBrandById, franchiseBrandsAll } from "@foundone/shared";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
-import { findBrandRegional, formatBrandRegionalLine } from "../../_lib/franchise-regional";
-import {
-  findMarketRentDistricts,
-  representativeRent,
-  BUILDING_TYPE_LABEL,
-  MARKET_RENT_QUARTER_LABEL,
-} from "@foundone/shared";
+import { buildFranchiseCtx } from "../../_lib/franchise-context";
+import { kakao, geocodeRegion, distMeters, districtKeyFromPlace, competitionKeyword, type KakaoSearchRes } from "../../_lib/market-geo";
+import { measuredRentFor } from "../../_lib/market-rent-lookup";
+import { MARKET_RENT_QUARTER_LABEL } from "@foundone/shared";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
 import { getAnthropicApiKey, getEnvVar } from "../../_lib/env";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-// ── 카카오 Local 카테고리 코드 (참고용) ────────────────────────────
-//  FD6 = 음식점 / CE7 = 카페 / SW8 = 지하철역 / SC4 = 학교 / AC5 = 학원
-//  CT1 = 문화시설 / AT4 = 관광명소 / CS2 = 편의점 / MT1 = 대형마트
-//  HP8 = 병원 / BK9 = 은행 / PK6 = 주차장
-const KAKAO_LOCAL = "https://dapi.kakao.com/v2/local";
-
-type KakaoPlace = {
-  id?: string;
-  place_name: string;
-  category_name?: string;
-  category_group_code?: string;
-  address_name?: string;
-  road_address_name?: string;
-  region_3depth_name?: string;
-  x: string; // longitude
-  y: string; // latitude
-  distance?: string;
-};
-
-type KakaoSearchRes = { documents: KakaoPlace[]; meta?: { total_count?: number; pageable_count?: number } };
-
-/**
- * 동/가/읍/면 단위 cluster 키 추출.
- *  ⚠️ 2026-06-11 fix: 현 Kakao Local API 응답 document 에 region_3depth_name 이 없음
- *  → 항상 빈 cluster → 상권 후보가 입력 지역 1개로만 떨어지던 조용한 기능 저하.
- *  region_3depth_name 이 있으면 그대로, 없으면 address_name 에서 동 토큰을 파생.
- */
-function districtKeyFromPlace(place: KakaoPlace): string | null {
-  const fromField = place.region_3depth_name?.trim();
-  if (fromField) return fromField;
-  const addr = place.address_name?.trim();
-  if (!addr) return null;
-  const dong = addr.match(/(\S+(?:동|가|읍|면|리))/);
-  if (dong) return dong[1];
-  const gu = addr.match(/(\S+(?:구|시|군))/);
-  return gu ? gu[1] : null;
-}
 
 type SubAreaCandidate = {
   id: string;             // 안정적 id (district + lat coord)
@@ -94,182 +52,6 @@ type SubAreaCandidate = {
   trend?: AreaTrend | null;   // 60일+ 이전 자체 스냅샷 대비 델타 (없으면 미표시)
   franchise?: FranchisePresence | null;   // 프랜차이즈 선택자만 — 같은 브랜드·동종 브랜드 반경 실측
 };
-
-// ── 카카오 호출 헬퍼 ────────────────────────────────────────────────
-//  ⚠️ Kakao Local API 는 `KA` 헤더를 요구함 (2025+ 정책). 헤더에 `os` 와 `origin` 필드
-//   둘 다 들어가야 함. 없으면 401 "KA Header is required but neither os nor origin field is given".
-//   서버사이드에서도 동일 정책이라 origin 값으로 배포 URL (혹은 localhost) 을 넣어야 함.
-function kakaoKaHeader(): string {
-  const origin = getEnvVar("NEXT_PUBLIC_APP_URL")
-    ?? getEnvVar("VERCEL_URL")?.replace(/^/, "https://")
-    ?? "http://localhost:3000";
-  return `sdk/1.0.0 os/javascript origin/${origin}`;
-}
-
-async function kakao<T = KakaoSearchRes>(
-  path: string,
-  params: Record<string, string | number | undefined>,
-  apiKey: string,
-): Promise<T | null> {
-  const sp = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && v !== "") sp.set(k, String(v));
-  }
-  const url = `${KAKAO_LOCAL}/${path}?${sp.toString()}`;
-  try {
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `KakaoAK ${apiKey}`,
-        KA: kakaoKaHeader(),
-      },
-      // Kakao Local API 는 캐시 가능
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      console.warn("[market-recommend] kakao", path, res.status);
-      return null;
-    }
-    return (await res.json()) as T;
-  } catch (e) {
-    console.warn("[market-recommend] kakao err", path, (e as Error).message);
-    return null;
-  }
-}
-
-// ── 카테고리 → 동종업종 키워드 (경쟁 카운트용) ─────────────────────
-function competitionKeyword(categoryId: string, subIndustryId?: string): string {
-  // sub-industry 가 있으면 더 정밀
-  const subMap: Record<string, string> = {
-    "korean-casual": "한식",
-    "delivery-meals": "배달",
-    "salad-healthy": "샐러드",
-    "ramen-noodle": "국밥",
-    "chicken-burger": "치킨",
-    "western-pasta-brunch": "양식",
-    "takeout-coffee": "카페",
-    "specialty-coffee": "스페셜티 커피",
-    "dessert-cafe": "디저트 카페",
-    "bakery-studio": "베이커리",
-    "icecream-bingsu": "빙수",
-    "self-serve-cafe": "셀프 카페",
-    "convenience-small": "편의점",
-    "lifestyle-goods": "잡화",
-    "beauty-supplies": "화장품",
-    "fashion-accessories": "패션",
-    "health-food-store": "건강식품",
-    "hair-salon": "미용실",
-    "nail-studio": "네일",
-    "skin-care-room": "피부관리",
-    "waxing-studio": "왁싱",
-    "eyelash-brow": "속눈썹",
-    "makeup-bridal": "메이크업",
-    "pilates-studio": "필라테스",
-    "pt-gym": "헬스장",
-    "yoga-studio": "요가",
-    "crossfit-box": "크로스핏",
-    "golf-studio": "골프",
-    "study-room": "독서실",
-    "kids-academy": "어린이 학원",
-    "adult-class": "성인 학원",
-    "language-academy": "어학원",
-    "coding-class": "코딩 학원",
-    "small-study-room": "스터디룸",
-    "pet-grooming": "애견 미용",
-    "pet-supplies": "펫샵",
-    "pet-hotel": "애견 호텔",
-    "pet-cafe": "애견 카페",
-    "pet-training-school": "애견 훈련",
-    "laundry-service": "세탁소",
-    "cleaning-service": "청소 서비스",
-    "repair-service": "수리",
-    "self-laundry": "코인세탁",
-    "print-copy": "복사 출력",
-    "device-repair": "휴대폰 수리",
-    "guesthouse": "게스트하우스",
-    "rental-studio": "스튜디오 대여",
-    "party-room": "파티룸",
-    "study-cafe-space": "스터디카페",
-    "shared-office": "공유오피스",
-  };
-  if (subIndustryId && subMap[subIndustryId]) return subMap[subIndustryId];
-  const catMap: Record<string, string> = {
-    food: "음식점",
-    cafe: "카페",
-    retail: "소매",
-    beauty: "미용",
-    fitness: "헬스",
-    education: "학원",
-    pet: "펫샵",
-    "living-service": "세탁",
-    space: "스터디카페",
-  };
-  return catMap[categoryId] ?? "가게";
-}
-
-// ── 거리 helper (Haversine, 미터) ─────────────────────────────────
-function distMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000;
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-// ── 1. 지역명 → 중심 좌표 ─────────────────────────────────────────
-//  Kakao address API 는 "도봉구 창동" 처럼 시 prefix 없는 부분 주소에 빈 응답 줄 수 있음 →
-//  여러 변형을 순차 시도. 광역시 prefix 추가 / 키워드 검색 / 역 키워드 fallback.
-async function geocodeRegion(region: string, kakaoKey: string): Promise<{ lat: number; lng: number } | null> {
-  const trimmed = region.trim();
-  if (!trimmed) return null;
-
-  // 변형 후보 — 사용자 입력이 다양함 ("창동", "도봉구 창동", "서울 강남", "강남역", "수원 영통구" …)
-  const cityPrefixes = ["서울", "서울특별시", "부산", "대구", "인천", "광주", "대전", "울산", "세종"];
-  const hasCityPrefix = cityPrefixes.some((c) => trimmed.startsWith(c));
-  const variants = Array.from(new Set([
-    trimmed,
-    !hasCityPrefix ? `서울 ${trimmed}` : null,           // 서울 도봉구 창동
-    !hasCityPrefix ? `서울특별시 ${trimmed}` : null,      // 정식
-    !trimmed.endsWith("역") ? `${trimmed}역` : null,     // 창동역 (지역명 = 역세권 가능)
-  ].filter((v): v is string => typeof v === "string" && v.length > 0)));
-
-  // ① 주소 검색 — 변형들 순차 시도 (첫 hit 즉시 반환)
-  for (const q of variants) {
-    const addr = await kakao("search/address.json", { query: q, size: 1 }, kakaoKey);
-    if (addr?.documents?.[0]) {
-      const d = addr.documents[0];
-      const lat = parseFloat(d.y);
-      const lng = parseFloat(d.x);
-      if (isFinite(lat) && isFinite(lng)) return { lat, lng };
-    }
-  }
-
-  // ② 키워드 검색 fallback — POI/역/명소 매칭 (강남, 창동역, 망원역 등에 강함)
-  for (const q of variants) {
-    const kw = await kakao("search/keyword.json", { query: q, size: 1 }, kakaoKey);
-    if (kw?.documents?.[0]) {
-      const d = kw.documents[0];
-      const lat = parseFloat(d.y);
-      const lng = parseFloat(d.x);
-      if (isFinite(lat) && isFinite(lng)) return { lat, lng };
-    }
-  }
-
-  // ③ 마지막 fallback — 입력에서 마지막 토큰만 키워드 검색 (예: "도봉구 창동" → "창동")
-  const lastToken = trimmed.split(/\s+/).pop();
-  if (lastToken && lastToken !== trimmed) {
-    const kw = await kakao("search/keyword.json", { query: lastToken, size: 1 }, kakaoKey);
-    if (kw?.documents?.[0]) {
-      const d = kw.documents[0];
-      const lat = parseFloat(d.y);
-      const lng = parseFloat(d.x);
-      if (isFinite(lat) && isFinite(lng)) return { lat, lng };
-    }
-  }
-
-  return null;
-}
 
 // ── 2. 후보 sub-area 발굴 ─────────────────────────────────────────
 //  전략: 사용자 입력 지역 중심에서 반경 ~3km 안의 "상가가 밀집한 동" 들을 찾는다.
@@ -436,28 +218,6 @@ type ScoredItem = {
 };
 
 /**
- * 후보 동명 → 부동산원 조사상권 실측 매칭 (372개, 분기 갱신 SSOT).
- *  시도 게이트를 위해 사용자의 지역 텍스트를 질의에 합친다 ("대전 둔산동" + "둔산동").
- *  매칭 없으면 null — 폴백·추정 금지 (조사상권 밖은 임대료를 말하지 않는 게 정직).
- */
-function measuredRentFor(regionText: string, districtName: string): {
-  district: string; bldgLabel: string; manwonPerM2: string; vacancyPct: number | null;
-} | null {
-  const matches = findMarketRentDistricts(`${regionText} ${districtName}`, 1);
-  const top = matches[0];
-  if (!top || top.confidence !== "high") return null;   // partial 매칭으로 남의 상권 시세 부착 금지
-  const rep = representativeRent(top.entry);
-  if (!rep) return null;
-  const vac = top.entry.vacancyPct[rep.bldg];
-  return {
-    district: top.entry.district,
-    bldgLabel: BUILDING_TYPE_LABEL[rep.bldg],
-    manwonPerM2: (rep.thousandWonPerM2 / 10).toFixed(1),
-    vacancyPct: typeof vac === "number" ? vac : null,
-  };
-}
-
-/**
  * 후보별 실측 팩트 + 결정론 점수 + 서술을 조립.
  *  LLM 실패 시에도 전 후보 템플릿 서술로 성공 응답 (LLM 0 의존 경로).
  */
@@ -597,17 +357,9 @@ export async function POST(request: Request) {
   // 소진공 공식 카운트 보강 (2026-08-03 Phase A-1) — 후보당 ≤3콜, 일 10,000 쿼터 대비 미미.
   //   오류 ≠ 0개: 실패는 null 로 남겨 카카오 카운트로 폴백 (부분 실패도 합산 위조 금지).
   const sbizKey = process.env.MOIS_API_KEY;
-  // 프랜차이즈 컨텍스트 (2026-08-03 사장님 스펙) — 브랜드 확정자만
-  const fBrand = franchiseBrandId ? getFranchiseBrandById(franchiseBrandId) : undefined;
-  // 시도 분포 — 공정위 신형 가족 단일 SSOT (전국수=시도합, 기준년도 라벨 필수. 구형 수치와 병기 금지)
-  const fRegional = fBrand ? findBrandRegional(fBrand.id, region) : null;
-  const fRegionalLine = fBrand && fRegional ? formatBrandRegionalLine(fBrand.name.ko, fRegional) : null;
-  const peerNames = fBrand
-    ? franchiseBrandsAll
-        .filter((b) => b.id !== fBrand.id && (b.subIndustryIds ?? []).some((sid) => (fBrand.subIndustryIds ?? []).includes(sid)))
-        .map((b) => b.name.ko)
-        .slice(0, 12)
-    : [];
+  // 프랜차이즈 컨텍스트 (브랜드 확정자만) + 시도 분포 — franchise-context 공유 헬퍼
+  const fCtx = franchiseBrandId ? buildFranchiseCtx(franchiseBrandId, region) : null;
+  const fRegionalLine = fCtx?.regionalLine ?? null;
 
   if (candidates.length < 1) {
     return NextResponse.json({
@@ -632,8 +384,8 @@ export async function POST(request: Request) {
         void recordAreaSnapshot(admin, { areaKey, upjongSig: sig, sameCount: counts.sameUpjong, totalCount: counts.totalStores });
         c.trend = await findAreaTrend(admin, { areaKey, upjongSig: sig, currentSame: counts.sameUpjong, currentTotal: counts.totalStores });
       }
-      if (fBrand && subIndustryId) {
-        c.franchise = await franchisePresenceInRadius(subIndustryId, fBrand.name.ko, peerNames, c.lng, c.lat, 500, sbizKey);
+      if (fCtx && subIndustryId) {
+        c.franchise = await franchisePresenceInRadius(subIndustryId, fCtx.brand.name.ko, fCtx.peerNames, c.lng, c.lat, 500, sbizKey);
       }
     }));
   }

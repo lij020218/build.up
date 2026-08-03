@@ -238,7 +238,10 @@ describe("프랜차이즈 시도 분포 — 신형 가족 단일 SSOT (혼동 �
 
   it("배선 — 라우트 최상위 1회 + 프롬프트 라벨 + 웹·iOS 표시 1회 (카드 중복 금지)", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
-    expect(mr).toContain("findBrandRegional");
+    // 시도 분포 조회는 franchise-context 공유 헬퍼로 이관 (스냅샷 라우트와 공용)
+    expect(mr).toContain("buildFranchiseCtx");
+    const fctx = readFileSync(join(HERE, "..", "app", "api", "_lib", "franchise-context.ts"), "utf8");
+    expect(fctx).toContain("findBrandRegional");
     expect(mr).toContain("franchiseRegional: fRegionalLine");
     const nar = readFileSync(join(HERE, "..", "app", "api", "_lib", "market-narrator.ts"), "utf8");
     expect(nar).toContain("반경 실측이 우선 신호");

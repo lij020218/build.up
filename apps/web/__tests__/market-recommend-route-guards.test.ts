@@ -47,3 +47,33 @@ describe("market-recommend 라우트 가드", () => {
     expect(route).not.toContain("Claude 점수화");
   });
 });
+
+describe("market-snapshot 라우트 가드 (LLM 무관 실측 스냅샷)", () => {
+  const snap = readFileSync(join(HERE, "..", "app", "api", "data", "market-snapshot", "route.ts"), "utf8");
+
+  it("LLM 0 의존 — AI 클라이언트·키 import 금지", () => {
+    expect(snap).not.toContain("createAiClient");
+    expect(snap).not.toContain("getAnthropicApiKey");
+  });
+
+  it("정직성 — 축별 null 허용 + 공식/지도 병기 금지 + 출처 라벨", () => {
+    expect(snap).toContain("if (axes.competition) axes.competitionMap = null;");
+    expect(snap).toContain("소상공인시장진흥공단(국세청 원천)");
+    expect(snap).toContain("카카오 지도 노출 기준");
+    expect(snap).toContain("한국부동산원");
+  });
+
+  it("추이 원장 축적 부수효과 + 레이트리밋 + 캐시", () => {
+    expect(snap).toContain("recordAreaSnapshot");
+    expect(snap).toContain("checkSimpleRateLimit");
+    expect(snap).toContain("checkDailyRateLimit");
+    expect(snap).toContain("CACHE_TTL_MS");
+  });
+
+  it("웹 패널 — 디바운스 자동 + 비로그인 조용히 생략", () => {
+    const panel = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "MarketSnapshotPanel.tsx"), "utf8");
+    expect(panel).toContain("700");
+    expect(panel).toContain("AbortController");
+    expect(panel).toContain("비로그인 — 조용히 생략");
+  });
+});
