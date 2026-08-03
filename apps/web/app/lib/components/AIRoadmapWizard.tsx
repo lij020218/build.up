@@ -529,11 +529,11 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               {ko ? "3단계: 상권" : "Step 3: Location"}
             </div>
             <h1 style={title}>{ko ? "희망 지역이 있으신가요?" : "Do you have a preferred location?"}</h1>
-            <p style={subtitle}>{ko ? "구/동 수준이면 충분합니다. 없으면 AI가 추천합니다." : "District level is enough. AI will recommend if blank."}</p>
+            <p style={subtitle}>{ko ? "시/도까지 함께 적어주세요 — 한국부동산원 실측 상권 데이터(임대료) 매칭이 정확해집니다. 없으면 건너뛰어도 됩니다." : "Include the province/city for accurate market-data matching. Optional."}</p>
           </div>
 
           <input type="text" value={region} onChange={(e) => setRegion(e.target.value)}
-            placeholder={ko ? "예: 강남구 역삼동, 마포구 망원동" : "e.g., Gangnam Yeoksam, Mapo Mangwon"}
+            placeholder={ko ? "예: 대전 둔산동, 서울 마포구 망원동" : "e.g., Daejeon Dunsan, Seoul Mangwon"}
             style={inputStyle} />
 
           <div style={{ display: "flex", gap: "10px", marginTop: "24px" }}>
@@ -610,8 +610,11 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             <Sparkles size={11} strokeWidth={1.5} />
             {ko ? "AI 생성 중" : "AI generating"}
           </div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e1a3e", marginBottom: "24px", letterSpacing: "-0.025em" }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e1a3e", marginBottom: "6px", letterSpacing: "-0.025em" }}>
             {ko ? "로드맵을 구성하고 있습니다" : "Building your roadmap"}
+          </div>
+          <div style={{ fontSize: "12.5px", color: "rgba(30,26,62,0.5)", fontWeight: 500, marginBottom: "22px" }}>
+            {ko ? "보통 30초~1분 걸려요 — 화면을 닫지 마세요" : "Usually takes 30s–1min — keep this open"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px", textAlign: "left" as const }}>
             {genSteps.map((s, i) => (

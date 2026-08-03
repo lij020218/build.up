@@ -557,6 +557,10 @@ private struct GeneratingStepView: View {
                         .foregroundStyle(Color(red: 0.118, green: 0.102, blue: 0.243))
                         .tracking(-0.55)
                         .multilineTextAlignment(.center)
+                    // 실측 26~28초(Pass1) + 선택 호출 — 기대치 설정으로 이탈 방지 (웹 미러, 2026-08-03)
+                    Text("보통 30초~1분 걸려요 — 화면을 닫지 마세요")
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(Color(red: 0.118, green: 0.102, blue: 0.243).opacity(0.5))
                 }
 
                 // 단계 리스트

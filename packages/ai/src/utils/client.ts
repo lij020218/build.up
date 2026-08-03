@@ -261,7 +261,18 @@ class LlmClient {
       //  판단형 라우트(사업계획서·재무해석 등)를 5.6으로 올릴 땐 req.reasoning_effort 를 명시할 것.
       const isGpt56 = mappedModel.startsWith("gpt-5.6");
       if (isGpt56) {
-        baseParams.reasoning_effort = req.reasoning_effort ?? "none";
+        // ⚠️ 실측 제약 (2026-08-03, terra 로 대조): chat/completions 에서 function tools 와
+        //   reasoning_effort 는 "none" 만 공존 가능 — low/medium/high 는 물론 **필드 생략도 400**
+        //   ("Function tools with reasoning_effort are not supported ... use /v1/responses").
+        //   tools 호출인데 상위 effort 가 필요하면 Responses API 마이그레이션이 선행 조건.
+        //   여기서 강제하지 않으면 호출처 하나가 effort 를 명시하는 순간 그 기능이 전멸한다.
+        const wantsTools = Array.isArray(req.tools) && req.tools.length > 0;
+        if (wantsTools && req.reasoning_effort && req.reasoning_effort !== "none") {
+          console.warn(
+            `[LlmClient] ${mappedModel}: tools+reasoning_effort=${req.reasoning_effort} 는 API 가 거부 — "none" 으로 강제`,
+          );
+        }
+        baseParams.reasoning_effort = wantsTools ? "none" : (req.reasoning_effort ?? "none");
       } else {
         if (req.temperature !== undefined) baseParams.temperature = req.temperature;
         if (req.top_p !== undefined) baseParams.top_p = req.top_p;

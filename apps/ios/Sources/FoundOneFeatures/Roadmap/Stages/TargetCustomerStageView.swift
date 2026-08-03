@@ -420,9 +420,36 @@ private extension TargetCustomerStageView {
 
 private extension TargetCustomerStageView {
 
+    /// AI 위저드 프리필 (decision inputs.targetCustomer) — 웹 TargetCustomerStage 참고 카드 미러.
+    ///  한 문장을 4필드로 쪼개 넣는 건 위조라, 원문을 보여주고 사장님이 채운다 (2026-08-03 UX U1).
+    var aiSuggestedTarget: String? {
+        let v = roadmapStore.decisions["target-customer-definition"]?.inputs["targetCustomer"]
+        return (v?.isEmpty == false) ? v : nil
+    }
+
     var definePage: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                if let suggested = aiSuggestedTarget {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("AI 추천 타깃 (참고)")
+                            .font(.system(size: 10.5, weight: .heavy))
+                            .tracking(0.7)
+                            .foregroundStyle(BUColor.midnight)
+                        Text("\u{201C}\(suggested)\u{201D}")
+                            .font(BUFont.bodySmall.weight(.semibold))
+                            .foregroundStyle(BUColor.ink)
+                            .lineSpacing(2)
+                        Text("이 추천을 참고해 아래 항목을 사장님 언어로 채워주세요 — 여기서 정한 사람이 입지·메뉴·마케팅의 기준이 됩니다.")
+                            .font(BUFont.bodyCaption)
+                            .foregroundStyle(BUColor.inkSecondary)
+                            .lineSpacing(2)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1))
+                }
                 HStack(spacing: BUSpacing.xs) {
                     Circle()
                         .fill(BUColor.midnight)

@@ -337,6 +337,24 @@ export function TargetCustomerStage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               {/* primaryAgeRange — 연령대 / 산업 (cluster-aware) */}
+              {/* AI 추천 타깃 — 위저드 프리필(inputs.targetCustomer). 한 문장을 4필드로 쪼개
+                  넣는 건 위조라, 참고 카드로 원문을 보여주고 사장님이 채운다 (2026-08-03 UX U1).
+                  이 카드가 없으면 로드맵의 "AI가 채워뒀어요" 약속이 이 단계에서 빈 폼으로 깨진다. */}
+              {typeof (inputs as Record<string, unknown>).targetCustomer === "string" &&
+                ((inputs as Record<string, unknown>).targetCustomer as string).trim().length > 0 && (
+                <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.12)" }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: MIDNIGHT, marginBottom: 4 }}>
+                    {ko ? "AI 추천 타깃 (참고)" : "AI suggested target"}
+                  </div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.5 }}>
+                    "{String((inputs as Record<string, unknown>).targetCustomer)}"
+                  </div>
+                  <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)", marginTop: 4, lineHeight: 1.5 }}>
+                    {ko ? "이 추천을 참고해 아래 항목을 사장님 언어로 채워주세요 — 여기서 정한 사람이 입지·메뉴·마케팅의 기준이 됩니다." : "Use this as a reference to fill the fields below."}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: MIDNIGHT, marginBottom: "5px", letterSpacing: "0.03em" }}>
                   {ko

@@ -17,6 +17,10 @@ const DEFAULT_MODEL = "gpt-5.6-terra";
 // + fundingPrograms + industrySpecific + recommendations.suppliers/interior 등)
 // 으로 응답이 길어졌으므로 최소 16384 필요. 8192 에서도 stop_reason="max_tokens" 잘림 발생.
 const DEFAULT_MAX_TOKENS = 16384;
+// ⚠️ "none" 이 선택이 아니라 제약이다 (2026-08-03 실측): 이 호출은 schema 강제(function tools)
+//   경로인데, chat/completions 에서 5.6 + tools 는 effort "none" 만 허용 (생략·low·medium 전부 400).
+//   추론을 올리고 싶으면 Responses API 마이그레이션이 선행 — 그 전까지 terra 는 base 품질로 동작.
+const DEFAULT_REASONING_EFFORT: "none" | "low" | "medium" | "high" = "none";
 
 /**
  * Tool Use 스키마 — 99.8% schema 준수율 (vs JSON parsing의 95% 수준).
@@ -675,8 +679,7 @@ export async function generateRoadmap(
   const rawResponse = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    // 판단형 — 중앙 가드 기본(none)을 명시로 올린다 (client.ts 가이드라인)
-    reasoning_effort: "medium",
+    reasoning_effort: options.reasoningEffort ?? DEFAULT_REASONING_EFFORT,
     // ✦ Prompt Caching (1h TTL) — system prompt 1700+ tokens 가 시간대별 안정 재사용
     system: systemWithCache(ROADMAP_GENERATION_SYSTEM_PROMPT, "1h"),
     // ✦ Tool Use — 99.8% schema 준수율 (vs JSON parsing의 환각·필드 누락 risk)

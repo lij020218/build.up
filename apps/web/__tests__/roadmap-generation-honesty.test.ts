@@ -174,6 +174,41 @@ describe("🔴 heal 행동 검증 — 프리필(완료 없음)은 heal 이 완�
   });
 });
 
+describe("UX 리뷰 후속 (2026-08-03 U1~U4 + effort 제약)", () => {
+  it("U1: 4단계가 AI 추천 타깃을 표시한다 (프리필 키 불일치로 빈 폼이던 것) — 웹·iOS", () => {
+    const web = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "shared", "TargetCustomerStage.tsx"), "utf8");
+    const ios = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "Stages", "TargetCustomerStageView.swift"), "utf8");
+    for (const src of [web, ios]) {
+      expect(src).toContain("AI 추천 타깃 (참고)");
+      expect(src).toContain("targetCustomer");
+      expect(src).toContain("사장님 언어로 채워주세요");
+    }
+  });
+
+  it("U2: 대기 화면이 소요 시간을 말한다 (실측 26~28s) — 웹·iOS 동일 문구", () => {
+    const web = readFileSync(join(HERE, "..", "app", "lib", "components", "AIRoadmapWizard.tsx"), "utf8");
+    const ios = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "AIRoadmapWizardView.swift"), "utf8");
+    for (const src of [web, ios]) expect(src).toContain("보통 30초~1분 걸려요");
+  });
+
+  it("U3: 지역 예시가 시/도 포함 (실측 상권 매칭 정확도)", () => {
+    const web = readFileSync(join(HERE, "..", "app", "lib", "components", "AIRoadmapWizard.tsx"), "utf8");
+    expect(web).toContain("대전 둔산동, 서울 마포구 망원동");
+  });
+
+  it("U4: 분업 선언 2열(1fr 1.35fr)이 모바일 백스톱에 포함", () => {
+    const css = readFileSync(join(HERE, "..", "app", "globals.css"), "utf8");
+    expect(css).toContain('[style*="columns: 1fr 1.35fr"]');
+  });
+
+  it("🔴 effort 제약 — 5.6+tools 는 none 강제 (2026-08-03 실측: 생략·low·medium 전부 400 전멸)", () => {
+    const client = readFileSync(join(HERE, "..", "..", "..", "packages", "ai", "src", "utils", "client.ts"), "utf8");
+    expect(client).toContain('wantsTools ? "none"');
+    const gen = readFileSync(join(HERE, "..", "..", "..", "packages", "ai", "src", "roadmap", "generate.ts"), "utf8");
+    expect(gen).toContain('DEFAULT_REASONING_EFFORT: "none" | "low" | "medium" | "high" = "none"');
+  });
+});
+
 describe("목표 오픈 D-day — 과거 날짜 미표시 (죽은 카운트다운 금지)", () => {
   it("웹·iOS 모두 0~730일 범위 밖은 렌더하지 않는다", () => {
     const web = readFileSync(join(HERE, "..", "app", "lib", "components", "surfaces", "RoadmapSurface.tsx"), "utf8");
