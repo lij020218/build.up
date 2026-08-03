@@ -145,6 +145,7 @@ export default function OperationalDashboard({ d }: Props) {
           onRevenue={() => setShowCalendar(true)}
           onCosts={() => d.navigateToSurface("analytics")}
           onOfferings={() => d.navigateToSurface("offerings")}
+          onVerifyBiz={() => { d.setViewingStageId("registration-setup"); d.navigateToSurface("roadmap"); }}
         />
       )}
 

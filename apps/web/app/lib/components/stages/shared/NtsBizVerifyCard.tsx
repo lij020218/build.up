@@ -14,6 +14,7 @@
  */
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
+import { isValidBizNumber } from "@foundone/shared";
 import { supabase } from "../../../../../lib/supabase";
 import { useStoreInfoStore } from "../../../stores/store-info-store";
 
@@ -26,16 +27,26 @@ type VerifyState =
   | { s: "notfound" }
   | { s: "error" };
 
-export function NtsBizVerifyCard({ language }: { language: string }) {
+export function NtsBizVerifyCard({ language, gateMode, onVerified, onSkip }: {
+  language: string;
+  /** true = registration-setup 게이트 모드: 확인/건너뛰기 결과를 콜백으로 알린다 */
+  gateMode?: boolean;
+  /** 국세청 확인 성공 시 (unregistered 포함 안 함 — 확인된 사실만) */
+  onVerified?: () => void;
+  /** 「나중에 확인」 선택 시 — 대시보드 세팅 미션으로 후속 */
+  onSkip?: () => void;
+}) {
   const ko = language === "ko";
   const bizNo = useStoreInfoStore((st) => st.bizRegistrationNumber);
   const setField = useStoreInfoStore((st) => st.setField);
   const [state, setState] = useState<VerifyState>({ s: "idle" });
 
   const digits = bizNo.replace(/[^\d]/g, "");
+  // 체크섬 (국세청 표준 가중치) — 형식 오류를 API 호출·"미등록" 오판 전에 잡는다
+  const checksumOk = digits.length === 10 && isValidBizNumber(digits);
 
   const check = async () => {
-    if (digits.length !== 10 || state.s === "loading") return;
+    if (!checksumOk || state.s === "loading") return;
     setState({ s: "loading" });
     try {
       const { data } = await supabase.auth.getSession();
@@ -56,6 +67,7 @@ export function NtsBizVerifyCard({ language }: { language: string }) {
           : item.operatingStatus === "suspended" || item.operatingStatus === "closed" ? false
           : null,
       });
+      onVerified?.();   // 게이트 모드: 확인 시점 기록 (__setupMeta.bizVerifiedAt)
     } catch {
       setState({ s: "error" });
     }
@@ -69,7 +81,9 @@ export function NtsBizVerifyCard({ language }: { language: string }) {
           {ko ? "국세청으로 등록 확인" : "Verify with NTS"}
         </span>
         <span style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(15,23,42,0.4)" }}>
-          {ko ? "선택 — 체크 대신 증거" : "optional"}
+          {gateMode
+            ? (ko ? "확인 또는 건너뛰기 후 다음 단계" : "verify or skip to continue")
+            : (ko ? "선택 — 체크 대신 증거" : "optional")}
         </span>
       </div>
       <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)", lineHeight: 1.55, marginBottom: 10 }}>
@@ -88,16 +102,21 @@ export function NtsBizVerifyCard({ language }: { language: string }) {
         <button
           type="button"
           onClick={check}
-          disabled={state.s === "loading" || digits.length !== 10}
+          disabled={state.s === "loading" || !checksumOk}
           style={{
             padding: "0 16px", borderRadius: 10, border: "none", background: MIDNIGHT, color: "white",
             fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-            opacity: digits.length === 10 && state.s !== "loading" ? 1 : 0.4,
+            opacity: checksumOk && state.s !== "loading" ? 1 : 0.4,
           }}
         >
           {state.s === "loading" ? (ko ? "확인 중..." : "Checking...") : (ko ? "확인" : "Check")}
         </button>
       </div>
+      {digits.length === 10 && !checksumOk && (
+        <div style={{ marginTop: 8, fontSize: 12, color: "#b64c4c" }}>
+          {ko ? "번호 형식이 맞지 않아요 — 오타를 확인해주세요 (체크섬 불일치)." : "Invalid number format — please check for typos."}
+        </div>
+      )}
 
       {state.s === "confirmed" && (
         <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: "rgba(25,25,112,0.07)", border: "1px solid rgba(25,25,112,0.16)", fontSize: 12.5, fontWeight: 700, color: MIDNIGHT }}>
@@ -119,6 +138,15 @@ export function NtsBizVerifyCard({ language }: { language: string }) {
             ? "조회에 실패했어요 (국세청 서버 점검 중일 수 있어요). 미등록이라는 뜻이 아니니 잠시 후 다시 시도해주세요."
             : "Lookup failed (NTS may be under maintenance) — this does not mean unregistered. Try again shortly."}
         </div>
+      )}
+      {gateMode && state.s !== "confirmed" && (
+        <button
+          type="button"
+          onClick={() => onSkip?.()}
+          style={{ marginTop: 10, background: "none", border: "none", padding: 0, fontSize: 12, fontWeight: 600, color: "rgba(15,23,42,0.45)", cursor: "pointer", textDecoration: "underline" }}
+        >
+          {ko ? "나중에 확인할게요 (건너뛰고 다음 단계)" : "Verify later (skip for now)"}
+        </button>
       )}
     </div>
   );

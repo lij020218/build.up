@@ -11,6 +11,8 @@ import { getGenericTaskStageState } from "./generic-task-stage-state";
 import { GenericTaskStageBody } from "./GenericTaskStageBody";
 import { GenericTaskStageFooter } from "./GenericTaskStageFooter";
 import { useCurrentStageNavigation } from "./use-current-stage-navigation";
+import { useStoreInfoStore } from "../../stores/store-info-store";
+import { readSetupMeta } from "../../setup-missions";
 
 export function GenericTaskStageSection() {
   const d = useDashboardCtx();
@@ -67,6 +69,13 @@ export function GenericTaskStageSection() {
     startupType,
     taskMap,
   });
+
+  // 국세청 확인 게이트 (2026-08-03 사장님 스펙) — registration-setup 한정:
+  //  사업자번호 국세청 확인(bizVerifiedAt) 또는 「나중에 확인」(bizVerifySkipped) 후에만 다음 단계.
+  const industrySpecifics = useStoreInfoStore((st) => st.industrySpecifics);
+  const setupMeta = readSetupMeta(industrySpecifics);
+  const bizVerifyGatePassed = stageState.stageId !== "registration-setup"
+    || !!setupMeta?.bizVerifiedAt || !!setupMeta?.bizVerifySkipped;
   const footerAdapterProps = getGenericTaskFooterAdapterProps({
     decisions,
     editSaveStatus,
@@ -105,7 +114,7 @@ export function GenericTaskStageSection() {
         pageNav={pageNav}
         renderFooter={(stageLockedContent) => (
           <GenericTaskStageFooter
-            allDone={stageState.allDone}
+            allDone={stageState.allDone && bizVerifyGatePassed}
             editStatus={footerAdapterProps.editStatus}
             footerMode={stageState.footerMode}
             industryCategoryId={industryCategoryId}

@@ -57,6 +57,9 @@ import { LiveDataPanel, PermitCardsPanel, AxisChecklistWidget } from "./PermitIn
 import { ContractAiAnalysisPanel } from "./ContractAiAnalysisPanel";
 import { HiringCalculatorPanel, HiringTogglePanel } from "./HiringInteractivePanels";
 import { MyHiringPlanCard } from "../offline/MyHiringPlanCard";
+import { NtsBizVerifyCard } from "./NtsBizVerifyCard";
+import { useStoreInfoStore } from "../../../stores/store-info-store";
+import { SETUP_META_KEY, readSetupMeta } from "../../../setup-missions";
 
 /* ───────────────────────── 토큰 매핑(문자열 → 웹) ───────────────────────── */
 
@@ -849,6 +852,8 @@ function renderSection(
           return <HiringTogglePanel key={key} label={ko ? "4대보험 신고 완료 (D+14)" : "4-insurance filed (D+14)"} />;
         case "hiringPayslipDone":
           return <HiringTogglePanel key={key} label={ko ? "급여명세서 자동 발송 셋업" : "Auto payslip set up"} />;
+        case "bizVerify":
+          return <BizVerifyGateBlock key={key} ko={ko} />;
         default:
           // hometaxLink·bizRegToggle·permitToggle·taxTypeSelect·vatCalendarToggle 는 현재 iOS 전용.
           return null;
@@ -950,6 +955,44 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
           verifyItemsKo={content.wrapup.verifyItems}
           nextSummaryKo={content.wrapup.nextSummary}
         />
+      )}
+    </div>
+  );
+}
+
+/**
+ * registration-setup 게이트 블록 (2026-08-03 사장님 스펙) —
+ *  사업자번호 국세청 확인 or 「나중에 확인」 후에만 다음 단계.
+ *  기록은 __setupMeta(industrySpecifics jsonb — 마이그레이션 0) 에 시점 라벨과 함께.
+ */
+function BizVerifyGateBlock({ ko }: { ko: boolean }) {
+  const industrySpecifics = useStoreInfoStore((st) => st.industrySpecifics);
+  const setIndustrySpecific = useStoreInfoStore((st) => st.setIndustrySpecific);
+  const meta = readSetupMeta(industrySpecifics) ?? {};
+  const verified = !!meta.bizVerifiedAt;
+  const skipped = !!meta.bizVerifySkipped;
+
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <NtsBizVerifyCard
+        language={ko ? "ko" : "en"}
+        gateMode
+        onVerified={() => setIndustrySpecific(SETUP_META_KEY, {
+          ...meta,
+          bizVerifiedAt: new Date().toISOString().slice(0, 10),
+          bizVerifySkipped: false,   // 확인했으면 스킵 미션 소멸
+        })}
+        onSkip={() => setIndustrySpecific(SETUP_META_KEY, { ...meta, bizVerifySkipped: true })}
+      />
+      {verified && (
+        <div style={{ marginTop: 8, fontSize: 12, color: "#1d3557", fontWeight: 600 }}>
+          {ko ? `국세청 확인 완료 (${meta.bizVerifiedAt}) — 다음 단계로 진행할 수 있어요.` : `NTS verified (${meta.bizVerifiedAt}).`}
+        </div>
+      )}
+      {!verified && skipped && (
+        <div style={{ marginTop: 8, fontSize: 12, color: "rgba(15,23,42,0.55)" }}>
+          {ko ? "건너뛰기 선택됨 — 대시보드 「가게 세팅 미션」에서 나중에 확인할 수 있어요." : "Skipped — verify later from the dashboard setup missions."}
+        </div>
       )}
     </div>
   );

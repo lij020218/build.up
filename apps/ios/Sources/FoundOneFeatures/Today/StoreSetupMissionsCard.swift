@@ -26,6 +26,8 @@ struct BUStoreSetupMissionsCard: View {
     let onRevenue: () -> Void
     let onCosts: () -> Void
     let onOfferings: () -> Void
+    /// 국세청 확인 후속 미션 → 로드맵 탭 (건너뛴 사용자만 노출, 웹 onVerifyBiz 미러)
+    var onVerifyBiz: (() -> Void)? = nil
 
     private static let identicalCompletionThreshold = 15 // 웹 IDENTICAL_COMPLETION_THRESHOLD 미러
 
@@ -65,7 +67,20 @@ struct BUStoreSetupMissionsCard: View {
         return false
     }
 
+    /// 로드맵에서 국세청 확인을 건너뛰고 아직 확인 전 (웹 bizVerifyPending 미러)
+    private var bizVerifyPending: Bool {
+        guard case .bool(true) = metaObject?["bizVerifySkipped"]?.value else { return false }
+        if case .string = metaObject?["bizVerifiedAt"]?.value { return false }
+        return true
+    }
+
     private var missions: [Mission] {
+        // 신규 창업 로드맵 경로 — 건너뛴 국세청 확인만 노출 (웹 미러)
+        if !isExistingRegistration {
+            return bizVerifyPending
+                ? [Mission(id: "biz-verify", label: "사업자번호 국세청 확인", reward: "등록 상태 실확인", done: false)]
+                : []
+        }
         var list: [Mission] = [
             Mission(id: "profile", label: "업종·가게 정보", reward: "", done: true),
             Mission(id: "channels", label: "운영 채널", reward: "", done: true),
@@ -79,6 +94,9 @@ struct BUStoreSetupMissionsCard: View {
                 id: "offerings", label: label, reward: "원가율·재고 도구 열림",
                 done: !storeInfo.state.inventory.isEmpty
             ))
+        }
+        if bizVerifyPending {
+            list.append(Mission(id: "biz-verify", label: "사업자번호 국세청 확인", reward: "등록 상태 실확인", done: false))
         }
         return list
     }
@@ -94,8 +112,8 @@ struct BUStoreSetupMissionsCard: View {
     var body: some View {
         let items = missions
         let doneCount = items.filter(\.done).count
-        // ⚠️ 노출 게이트 — 기존 가게 등록자만 + 미완료 항목 존재 + 미해제
-        if isExistingRegistration && !isDismissed && doneCount < items.count {
+        // ⚠️ 노출 게이트 — 기존 가게 등록자, 또는 국세청 확인 건너뛴 로드맵 사용자 (웹 미러)
+        if !items.isEmpty && (bizVerifyPending || (isExistingRegistration && !isDismissed)) && doneCount < items.count {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("가게 세팅")
@@ -132,6 +150,7 @@ struct BUStoreSetupMissionsCard: View {
                             case "revenue":   onRevenue()
                             case "costs":     onCosts()
                             case "offerings": onOfferings()
+                            case "biz-verify": onVerifyBiz?()
                             default: break
                             }
                         } label: {

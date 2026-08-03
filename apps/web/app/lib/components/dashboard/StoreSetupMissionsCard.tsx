@@ -31,6 +31,8 @@ type Props = {
   onRevenue: () => void;
   onCosts: () => void;
   onOfferings: () => void;
+  /** 국세청 확인 후속 미션 → registration-setup 단계로 이동 (건너뛴 사용자만 노출) */
+  onVerifyBiz?: () => void;
 };
 
 const OFFERING_MISSION_LABEL: Record<string, { ko: string; en: string }> = {
@@ -44,20 +46,22 @@ const OFFERING_MISSION_LABEL: Record<string, { ko: string; en: string }> = {
 export function StoreSetupMissionsCard({
   ko, decisions, categoryId, subIndustryId,
   entriesCount, monthlyCostsTotal, inventoryCount,
-  onRevenue, onCosts, onOfferings,
+  onRevenue, onCosts, onOfferings, onVerifyBiz,
 }: Props) {
   const industrySpecifics = useStoreInfoStore((s) => s.industrySpecifics);
   const setIndustrySpecific = useStoreInfoStore((s) => s.setIndustrySpecific);
   const meta = readSetupMeta(industrySpecifics);
 
-  // ⚠️ 노출 게이트 — 기존 가게 등록자만. 로드맵/AI 로드맵 유저는 여기서 차단.
-  if (!isExistingBusinessRegistration(meta, decisions)) return null;
-  if (meta?.dismissed) return null;
+  // ⚠️ 노출 게이트 — 기존 가게 등록자, 또는 로드맵에서 국세청 확인을 건너뛴 사용자(후속 미션 1개만).
+  const bizVerifyPending = !!meta?.bizVerifySkipped && !meta?.bizVerifiedAt;
+  const isExisting = isExistingBusinessRegistration(meta, decisions);
+  if (!isExisting && !bizVerifyPending) return null;
+  if (meta?.dismissed && !bizVerifyPending) return null;
 
   const offeringKind = resolveOfferingKind(subIndustryId, categoryId);
   const offeringLabel = OFFERING_MISSION_LABEL[offeringKind];
 
-  const missions: Mission[] = [
+  const missions: Mission[] = isExisting ? [
     { id: "profile", label: ko ? "업종·가게 정보" : "Business profile", reward: "", done: true },
     { id: "channels", label: ko ? "운영 채널" : "Channels", reward: "", done: true },
     {
@@ -81,6 +85,23 @@ export function StoreSetupMissionsCard({
           done: inventoryCount > 0,
         }]
       : []),
+    // 로드맵에서 국세청 확인을 건너뛴 경우 — 후속 미션 (확인 완료 시 소멸)
+    ...(bizVerifyPending
+      ? [{
+          id: "biz-verify",
+          label: ko ? "사업자번호 국세청 확인" : "Verify business no. with NTS",
+          reward: ko ? "등록 상태 실확인" : "Verified registration",
+          done: false,
+        }]
+      : []),
+  ] : [
+    // 신규 창업 로드맵 경로 — 건너뛴 국세청 확인만 노출
+    {
+      id: "biz-verify",
+      label: ko ? "사업자번호 국세청 확인" : "Verify business no. with NTS",
+      reward: ko ? "등록 상태 실확인" : "Verified registration",
+      done: false,
+    },
   ];
 
   const doneCount = missions.filter((m) => m.done).length;
@@ -90,6 +111,7 @@ export function StoreSetupMissionsCard({
     if (id === "revenue") return onRevenue;
     if (id === "costs") return onCosts;
     if (id === "offerings") return onOfferings;
+    if (id === "biz-verify") return onVerifyBiz ?? null;
     return null;
   };
 

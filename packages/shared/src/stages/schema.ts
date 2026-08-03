@@ -221,7 +221,8 @@ export type InteractiveRef =
   | "soloOperator"        // 1인 운영(직원 없음) 토글 — 채용 없이 단계 통과
   | "hiringContractDone"  // 근로계약서 작성·교부 완료 토글(게이팅)
   | "hiringInsuranceDone" // 4대보험 신고 완료 토글
-  | "hiringPayslipDone";  // 급여명세서 자동 발송 셋업 토글
+  | "hiringPayslipDone"
+  | "bizVerify";  // 급여명세서 자동 발송 셋업 토글
 
 /**
  * 섹션 프리미티브. kind 로 분기.

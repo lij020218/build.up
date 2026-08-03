@@ -18,7 +18,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const result = await verifyBusinessRegistration({ apiKey, baseUrl: "" }, body.businesses ?? []);
+    // 입력 검증 (2026-08-03 하드닝) — status 라우트와 동일 규율: 비배열 = .map 크래시 방지, 상한 10
+    const businesses = (Array.isArray(body?.businesses) ? body.businesses : [])
+      .filter((b: unknown): b is Record<string, unknown> => !!b && typeof b === "object")
+      .slice(0, 10);
+    if (businesses.length === 0) {
+      return NextResponse.json({ error: "businesses 배열이 필요합니다." }, { status: 400 });
+    }
+    const result = await verifyBusinessRegistration({ apiKey, baseUrl: "" }, businesses as never);
     return NextResponse.json(result, { headers: { "x-request-id": requestId } });
   } catch (error) {
     logApiError(route, "fetch_failed", error, { requestId, userId: auth.userId, status: 502 });

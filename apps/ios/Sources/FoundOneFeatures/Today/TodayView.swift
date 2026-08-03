@@ -134,7 +134,8 @@ public struct TodayView: View {
                         subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"),
                         onRevenue: { showInputSheet = true },
                         onCosts: { onSwitchTab?(.analytics) },
-                        onOfferings: { onSwitchTab?(.offerings) }
+                        onOfferings: { onSwitchTab?(.offerings) },
+                        onVerifyBiz: { onSwitchTab?(.roadmap) }
                     )
                 }
 

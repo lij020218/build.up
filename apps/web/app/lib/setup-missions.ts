@@ -18,6 +18,10 @@ export type SetupMeta = {
   path?: string;
   registeredAt?: string;
   dismissed?: boolean;
+  /** 국세청 사업자번호 확인 시각 (YYYY-MM-DD) — "언제 확인했는지"가 함께 저장돼야 정직 */
+  bizVerifiedAt?: string;
+  /** registration-setup 게이트에서 「나중에 확인」 선택 — 세팅 미션으로 후속 */
+  bizVerifySkipped?: boolean;
 };
 
 export const SETUP_META_KEY = "__setupMeta";

@@ -274,12 +274,19 @@ public struct ExistingStoreRegistrationView: View {
                   let item = decoded.data?.first, let rawType = item.taxType, !rawType.isEmpty else {
                 bizLookupState = .error; return
             }
+            // 미등록 ≠ 오류·폐업 — 국세청에 없는 번호는 정직하게 "못 찾음" (기본값 위조 금지)
+            if item.operatingStatus == "unregistered" {
+                bizLookupState = .error
+                return
+            }
             // tax_type 예: "부가가치세 일반과세자" / "부가가치세 간이과세자" / "면세사업자"
             if rawType.contains("간이") { vatType = "simplified"; vatKnown = true }
             else if rawType.contains("일반") { vatType = "general"; vatKnown = true }
             bizLookupState = .done(
                 taxTypeLabel: rawType.replacingOccurrences(of: "부가가치세 ", with: ""),
-                isActive: (item.operatingStatus ?? "active") == "active"
+                // 상태 누락 = 판정 불가(nil 의미로 false 아님) — "계속사업자" 지어내지 않는다.
+                //  status 가 명시 "active" 일 때만 true (2026-08-03 위조 수정, 웹·NtsBizRepository 정합)
+                isActive: item.operatingStatus == "active"
             )
         } catch {
             bizLookupState = .error

@@ -664,6 +664,17 @@ export const REGISTRATION_SETUP_CONTENT: StageContent = {
         },
         { kind: "interactive", ref: "hometaxLink", platforms: ["ios"] },
         { kind: "interactive", ref: "bizRegToggle", platforms: ["ios"], config: { label: "사업자등록 완료" } },
+        // 국세청 실검증 게이트 (2026-08-03 사장님 스펙): 등록 마치면 번호 입력→국세청 확인→다음 단계.
+        //  바쁘면 「나중에 확인」 스킵 가능 — 대시보드 가게 세팅 미션으로 후속 (위조 아님: 확인 시점 라벨 저장)
+        {
+          kind: "interactive",
+          ref: "bizVerify",
+          platforms: ["web", "ios"],
+          config: {
+            title: "사업자등록번호 국세청 확인",
+            note: "발급받은 사업자등록번호를 입력하면 국세청에서 등록 상태를 확인합니다. 확인(또는 건너뛰기) 후 다음 단계로 넘어갈 수 있어요.",
+          },
+        },
         {
           kind: "interactive",
           ref: "docUpload",

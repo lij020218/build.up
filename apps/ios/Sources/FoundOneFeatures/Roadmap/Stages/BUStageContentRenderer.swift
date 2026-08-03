@@ -91,6 +91,8 @@ public struct BUStageContentRenderer: View {
 
     private var canComplete: Bool {
         let refs = iosRefs
+        // 국세청 확인 게이트 (2026-08-03) — 확인 or 「나중에 확인」 후에만 통과 (웹 bizVerifyGatePassed 미러)
+        if refs.contains("bizVerify"), !UserDefaults.standard.bool(forKey: NtsBizVerifyGateSection.gateFlagKey) { return false }
         if refs.contains("bizRegToggle"), toggles["bizRegToggle"] != true { return false }
         if refs.contains("permitToggle"), toggles["permitToggle"] != true { return false }
         if refs.contains("taxTypeSelect"), (selections["taxTypeSelect"] ?? "").isEmpty { return false }
@@ -915,6 +917,8 @@ public struct BUStageContentRenderer: View {
     @ViewBuilder
     private func interactiveSection(ref: String, config: BUStageContent.InteractiveConfig?) -> some View {
         switch ref {
+        case "bizVerify":
+            NtsBizVerifyGateSection()
         case "hometaxLink":
             BUHometaxLink()
         case "bizRegToggle":

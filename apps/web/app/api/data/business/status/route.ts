@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getRequestId, logApiError } from "../../../_lib/observability";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
-import { checkBusinessStatus } from "@foundone/shared";
+import { checkBusinessStatus, isValidBizNumber, normalizeBizNumber } from "@foundone/shared";
 
 export async function POST(request: Request) {
   const route = "/api/data/business/status";
@@ -22,6 +22,11 @@ export async function POST(request: Request) {
     const nums = Array.isArray(body?.businessNumbers)
       ? body.businessNumbers.filter((n: unknown): n is string => typeof n === "string").slice(0, 10)
       : [];
+    // 체크섬 사전 필터 (2026-08-03 shared 승격) — 형식 오류를 국세청 호출·"미등록" 오판 전에 차단
+    const invalid = nums.filter((n: string) => !isValidBizNumber(normalizeBizNumber(n)));
+    if (nums.length > 0 && invalid.length === nums.length) {
+      return NextResponse.json({ error: "사업자등록번호 형식이 올바르지 않습니다 (체크섬 불일치)." }, { status: 400 });
+    }
     if (nums.length === 0) {
       return NextResponse.json({ error: "businessNumbers 배열이 필요합니다." }, { status: 400 });
     }
