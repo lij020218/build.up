@@ -209,6 +209,37 @@ describe("UX 리뷰 후속 (2026-08-03 U1~U4 + effort 제약)", () => {
   });
 });
 
+describe("🔴 상권 단계 — 실측 연결 + 약속≤능력 (2026-08-03 상권 평가 후속)", () => {
+  const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
+  const stage = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "LocationCandidatesStage.tsx"), "utf8");
+  const iosStage = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "Stages", "LocationCandidatesStageView.swift"), "utf8");
+
+  it("추천 라우트에 서울 임대료 밴드 하드코딩이 없다 (위저드와 같은 수술)", () => {
+    expect(mr).not.toContain("한국 임대료 밴드 참고");
+    expect(mr).not.toContain("강남/명동/홍대/성수동 메인");
+  });
+
+  it("실측 임대료는 부동산원 SSOT 에서 — high 매칭만, LLM 미경유 meta 부착", () => {
+    expect(mr).toContain("findMarketRentDistricts");
+    expect(mr).toContain('top.confidence !== "high"');           // partial 로 남의 시세 부착 금지
+    expect(mr).toContain("meta.measuredRent");
+    expect(mr).toContain("조사상권 밖 — 임대료·공실률 언급 금지");   // 실측 없으면 언급 금지 지시
+  });
+
+  it("웹 카드가 실측 라인·sbiz 브리지를 렌더한다", () => {
+    expect(stage).toContain("item.meta?.measuredRent");
+    expect(stage).toContain("bigdata.sbiz.or.kr");
+  });
+
+  it("약속 문구가 실능력을 넘지 않는다 — 웹·iOS 동일 정정", () => {
+    for (const src of [stage, iosStage]) {
+      expect(src).not.toContain("평균 임대료·공실률·경쟁 밀도·유동인구·타겟 적합도 즉시 분석");
+      expect(src).toContain("조사상권 밖이면 임대료는 표시하지 않습니다");
+      expect(src).toContain("유동 신호(카페 밀도 기준)");
+    }
+  });
+});
+
 describe("목표 오픈 D-day — 과거 날짜 미표시 (죽은 카운트다운 금지)", () => {
   it("웹·iOS 모두 0~730일 범위 밖은 렌더하지 않는다", () => {
     const web = readFileSync(join(HERE, "..", "app", "lib", "components", "surfaces", "RoadmapSurface.tsx"), "utf8");

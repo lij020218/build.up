@@ -282,7 +282,7 @@ export function LocationCandidatesStage() {
             : "Wide input like 'Gangnam-gu' = poor recommendations. Narrow like '10-min walk Gangnam' = accurate rent/vacancy/density."}
           how={[
             { title: ko ? "희망 지역 입력 (구체적으로)" : "Enter region (specific)", detail: ko ? "지하철역·핫스폿 + 도보 시간 또는 「~동·구 메인」. 카카오 Local 라이브 + 공공데이터 조회." : "Subway + walking distance or 'main street of ~dong'. Pulls Kakao Local + public data." },
-            { title: ko ? "AI 라이브 추천 받기" : "AI scout", detail: ko ? "AI 가 그 지역의 평균 임대료·공실률·경쟁 밀도·유동인구·타겟 적합도 즉시 분석. 후보 3~5곳 점수와 함께." : "AI returns 3-5 candidates with rent / vacancy / competition / traffic / target-fit scores." },
+            { title: ko ? "AI 라이브 추천 받기" : "AI scout", detail: ko ? "후보 3~5곳을 실측 기반으로 점수화 — 경쟁 밀도·유동 신호(카페 밀도 기준)·접근성은 카카오 실측, 임대료·공실률은 한국부동산원 조사상권(전국 372곳) 매칭 시 실측값으로. 조사상권 밖이면 임대료는 표시하지 않습니다." : "3-5 candidates scored on measured data — competition/traffic-signal/access from Kakao, rent/vacancy from REB survey districts (372 nationwide) when matched." },
             { title: ko ? "무료 공공 도구로 교차 검증" : "Cross-check with free public tools", detail: ko ? "소상공인365(bigdata.sbiz.or.kr) 업종별 상권 리포트 · 카카오맵 반경 500m 동업종 검색 · 네이버 위성·로드뷰로 가시성 · 행정안전부 생활인구(data.mois.go.kr) 시간대별 유동인구. AI 추천을 직접 도구로 재확인하면 신뢰도 ↑." : "소상공인365 (bigdata.sbiz.or.kr) industry reports · Kakao Map 500m competitor scan · Naver satellite/roadview · MOIS living-population (data.mois.go.kr). Cross-checking AI picks with these free tools raises confidence." },
           ]}
         />
@@ -991,6 +991,22 @@ export function LocationCandidatesStage() {
                   </div>
                 </div>
                 <div style={{ fontSize: "13px", lineHeight: 1.55, color: "var(--muted)" }}>{item.summary}</div>
+                {/* 실측 임대료 — 부동산원 조사상권 매칭 시에만 서버가 meta 로 내려줌 (LLM 미경유·결정론) */}
+                {item.meta?.measuredRent && (
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>
+                    📐 {String(item.meta.measuredRent)}
+                    {typeof item.meta.vacancyPct === "number" && <> · {language === "ko" ? `공실률 ${item.meta.vacancyPct}%` : `Vacancy ${item.meta.vacancyPct}%`}</>}
+                  </div>
+                )}
+                {/* 추정매출 격차의 정직한 브리지 — 우리가 못 주는 값은 공공 도구로 바로 보냄 */}
+                <a
+                  href="https://bigdata.sbiz.or.kr/"
+                  target="_blank" rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ fontSize: "11.5px", fontWeight: 600, color: "var(--muted)", textDecoration: "none" }}
+                >
+                  {language === "ko" ? "이 동네 추정매출·유동인구는 소상공인365에서 확인 ↗" : "Check estimated revenue on 소상공인365 ↗"}
+                </a>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                   {[
                     { label: language === "ko" ? "임대료" : "Rent", value: formatMarketMetaValue("rentBand", item.meta?.rentBand, language) },

@@ -15,6 +15,12 @@
 import { NextResponse } from "next/server";
 import { createAiClient } from "@foundone/ai/utils/client";
 import type { RecommendationItem } from "@foundone/shared";
+import {
+  findMarketRentDistricts,
+  representativeRent,
+  BUILDING_TYPE_LABEL,
+  MARKET_RENT_QUARTER_LABEL,
+} from "@foundone/shared";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
 import { getAnthropicApiKey, getEnvVar } from "../../_lib/env";
@@ -449,13 +455,10 @@ const SCORING_SYSTEM_PROMPT = `당신은 한국 창업 상권 분석 전문가�
 - 펫: 주거지 (특히 30~40대 거주율 높은 동) > 오피스가
 - 게스트하우스/숙박: 관광지/역세권 > 주거지
 
-## 한국 임대료 밴드 참고 (자본금 매칭)
-- **1군 (월 임대 800만+)**: 강남/명동/홍대/성수동 메인 / 가로수길 / 청담 / 이태원 메인
-- **2군 (월 임대 300~700만)**: 망원/연남/한남/익선동 / 합정 / 신촌 / 건대입구
-- **3군 (월 임대 100~250만)**: 일반 주거지 동, 비-강남 행정동, 외곽 신도시
-- **자본금 1억 미만 + 1군 후보** = warning ("월 고정비 부담 + 회수 기간 길어짐")
-- **자본금 1억 미만 + 2군 후보** = neutral
-- **자본금 3억+ + 3군 후보** = warning ("자본 활용 비효율, 더 좋은 입지 가능성")
+## 임대료·공실률 — 실측값만 (2026-08-03 정직성 수술)
+- 각 후보에 "실측 임대료" 라인이 주입된 경우에만 임대료를 근거로 쓸 수 있다 (한국부동산원 조사상권 실측).
+- 실측 라인이 "없음" 인 후보는 임대료·공실률을 reasons/warnings 에 **일절 언급 금지** — 추정 밴드를 만들지 마라.
+- 자본금 대비 임대 부담 판단도 실측이 있는 후보에서만. 실측 공실률 8%+ 는 "공실 경고" 로 반영.
 
 ## 자주 발생하는 실패 시그널
 - 동종업종 60개+ + 카페 밀도 5개 미만 = "과밀 + 유동 부족" 최악 조합 (점수 50 이하)
@@ -479,6 +482,28 @@ JSON 배열만 출력. 점수 높은 순으로 정렬. 5개 후보 입력 시 5�
 
 JSON 외 어떤 텍스트도 출력하지 마세요. \`\`\`json 마크다운 펜스도 사용 금지. 첫 글자가 [ 로 시작.`;
 
+/**
+ * 후보 동명 → 부동산원 조사상권 실측 매칭 (372개, 분기 갱신 SSOT).
+ *  시도 게이트를 위해 사용자의 지역 텍스트를 질의에 합친다 ("대전 둔산동" + "둔산동").
+ *  매칭 없으면 null — 폴백·추정 금지 (조사상권 밖은 임대료를 말하지 않는 게 정직).
+ */
+function measuredRentFor(regionText: string, districtName: string): {
+  district: string; bldgLabel: string; manwonPerM2: string; vacancyPct: number | null;
+} | null {
+  const matches = findMarketRentDistricts(`${regionText} ${districtName}`, 1);
+  const top = matches[0];
+  if (!top || top.confidence !== "high") return null;   // partial 매칭으로 남의 상권 시세 부착 금지
+  const rep = representativeRent(top.entry);
+  if (!rep) return null;
+  const vac = top.entry.vacancyPct[rep.bldg];
+  return {
+    district: top.entry.district,
+    bldgLabel: BUILDING_TYPE_LABEL[rep.bldg],
+    manwonPerM2: (rep.thousandWonPerM2 / 10).toFixed(1),
+    vacancyPct: typeof vac === "number" ? vac : null,
+  };
+}
+
 async function scoreWithClaude(
   candidates: SubAreaCandidate[],
   ctx: { region: string; categoryId: string; subIndustryId?: string; capital?: number; language: "ko" | "en" },
@@ -486,11 +511,16 @@ async function scoreWithClaude(
 ): Promise<{ items: ScoredItem[]; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } | null }> {
   const ko = ctx.language === "ko";
   const candidateLines = candidates.map((c, i) => {
+    const rent = measuredRentFor(ctx.region, c.districtName);
+    const rentLine = rent
+      ? `실측 임대료(한국부동산원 ${MARKET_RENT_QUARTER_LABEL}): ${rent.district} 상권 ${rent.bldgLabel} ㎡당 월 ${rent.manwonPerM2}만원${rent.vacancyPct != null ? ` · 공실률 ${rent.vacancyPct}%` : ""}`
+      : "실측 임대료: 없음 (조사상권 밖 — 임대료·공실률 언급 금지)";
     return `${i + 1}. ${c.districtName} (lat=${c.lat.toFixed(4)}, lng=${c.lng.toFixed(4)})
    - 동종업종 매장: ${c.competitionCount ?? 0}개 (500m 반경)
    - 카페 밀도: ${c.cafeCount ?? 0}개 (유동인구 proxy)
    - 지하철역: ${c.subwayCount ?? 0}개 (접근성)
-   - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)`;
+   - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)
+   - ${rentLine}`;
   }).join("\n\n");
 
   // 사용자 메시지 — dynamic 부분만. 캐시 깨지지 않게 system 과 분리.
@@ -539,6 +569,13 @@ ${candidateLines}
   // candidate 와 매칭해서 id 부여
   const items: ScoredItem[] = parsed.map((p) => {
     const cand = candidates.find((c) => c.districtName === p.districtName) ?? candidates[0];
+    // 실측 임대료는 LLM 을 거치지 않고 결정론으로 meta 에 부착 (문구 왜곡·수치 변형 차단)
+    const rent = measuredRentFor(ctx.region, p.districtName);
+    const meta: Record<string, string | number> = {};
+    if (rent) {
+      meta.measuredRent = `${rent.district} 상권 ${rent.bldgLabel} ㎡당 월 ${rent.manwonPerM2}만원 — 한국부동산원 ${MARKET_RENT_QUARTER_LABEL}`;
+      if (rent.vacancyPct != null) meta.vacancyPct = rent.vacancyPct;
+    }
     return {
       id: cand?.id ?? `kakao-${p.districtName}`,
       title: p.title,
@@ -546,6 +583,7 @@ ${candidateLines}
       summary: p.summary,
       reasons: Array.isArray(p.reasons) ? p.reasons.slice(0, 4) : [],
       warnings: Array.isArray(p.warnings) ? p.warnings.slice(0, 3) : [],
+      ...(Object.keys(meta).length > 0 ? { meta } : {}),
     };
   });
   return { items, usage: response.usage };
