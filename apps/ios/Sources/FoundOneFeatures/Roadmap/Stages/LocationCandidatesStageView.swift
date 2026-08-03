@@ -114,11 +114,13 @@ public struct LocationCandidatesStageView: View {
         guard !region.isEmpty, !aiLoading else { return }
         let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
         let sub = industryId.isEmpty ? nil : industryId
+        // 프랜차이즈 선택자 — FranchiseApplicationStageView 와 동일 키 (같은 브랜드 반경 실측 활성화)
+        let brandId = UserDefaults.standard.string(forKey: "stage.franchise.selectedBrandId") ?? ""
         aiLoading = true; aiError = nil
         Task {
             do {
                 let result = try await MarketRecommendService.shared().recommend(
-                    MarketRecommendInput(region: region, categoryId: categoryId, subIndustryId: sub)
+                    MarketRecommendInput(region: region, categoryId: categoryId, subIndustryId: sub, franchiseBrandId: brandId.isEmpty ? nil : brandId)
                 )
                 await MainActor.run {
                     aiItems = result.items
@@ -851,6 +853,7 @@ public struct LocationCandidatesStageView: View {
 private func measuredMetaLines(_ item: MarketScoredItem) -> [String] {
     var lines: [String] = []
     if let v = item.meta?.officialCompetition { lines.append("🏪 " + v) }
+    if let v = item.meta?.franchisePresence { lines.append("🏢 " + v) }
     if let v = item.meta?.areaTrend { lines.append("📈 " + v) }
     if let v = item.meta?.backPopulation { lines.append("🏠 " + v) }
     if let v = item.meta?.measuredRent { lines.append("📐 " + v) }

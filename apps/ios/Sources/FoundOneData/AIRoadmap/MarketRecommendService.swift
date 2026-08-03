@@ -28,6 +28,7 @@ public struct MarketScoredItem: Decodable, Sendable, Identifiable, Hashable {
         public let backPopulation: String?
         public let officialCompetition: String?
         public let areaTrend: String?
+        public let franchisePresence: String?
     }
 }
 
@@ -37,13 +38,16 @@ public struct MarketRecommendInput: Encodable, Sendable {
     public let subIndustryId: String?
     public let capital: Int?
     public let language: String
+    /// 프랜차이즈 선택자 — 같은 브랜드·동종 브랜드 반경 실측 활성화 (2026-08-03)
+    public let franchiseBrandId: String?
 
-    public init(region: String, categoryId: String, subIndustryId: String? = nil, capital: Int? = nil, language: String = "ko") {
+    public init(region: String, categoryId: String, subIndustryId: String? = nil, capital: Int? = nil, language: String = "ko", franchiseBrandId: String? = nil) {
         self.region = region
         self.categoryId = categoryId
         self.subIndustryId = subIndustryId
         self.capital = capital
         self.language = language
+        self.franchiseBrandId = franchiseBrandId
     }
 }
 

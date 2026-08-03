@@ -151,6 +151,8 @@ export function LocationCandidatesStage() {
           subIndustryId: selectedIndustryId,
           capital: selectedBudget,
           language,
+          // 프랜차이즈 선택자 — 같은 브랜드·동종 브랜드 반경 실측 활성화 (2026-08-03)
+          franchiseBrandId: startupType === "franchise" ? selectedFranchiseBrandId : undefined,
         }),
       });
       const data = await res.json().catch(() => ({} as Record<string, unknown>));
@@ -1002,6 +1004,12 @@ export function LocationCandidatesStage() {
                 {item.meta?.officialCompetition && (
                   <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>
                     🏪 {String(item.meta.officialCompetition)}
+                  </div>
+                )}
+                {/* 프랜차이즈 실측 — 같은 브랜드(영업지역 보호 신호)·동종 브랜드 */}
+                {item.meta?.franchisePresence && (
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>
+                    🏢 {String(item.meta.franchisePresence)}
                   </div>
                 )}
                 {/* 개폐업 추이 — 자체 스냅샷 실측 (관측 이력 생기면 자동 등장) */}

@@ -228,3 +228,78 @@ export async function findAreaTrend(
     return null;
   }
 }
+
+// ─── 프랜차이즈 반경 실측 (2026-08-03 사장님 스펙) ─────────────────────────
+//  "선택한 상권에 같은 프랜차이즈 존재 현황 + 비슷한 업종 프랜차이즈 현황 → 상권 점수 반영"
+//  같은 브랜드 반경 존재 = 영업지역 보호로 가맹 자체가 불가할 수 있는 결정 신호.
+//  소진공 업소 목록(국세청 원천)의 상호명 매칭 — 지도 노출이 아닌 사업자 실측.
+
+function normalizeBizName(name: string): string {
+  return name.replace(/[\s()\-·.]/g, "").toLowerCase();
+}
+
+export type FranchisePresence = {
+  /** 같은 브랜드 반경 내 개수 */
+  sameBrand: number;
+  /** 동종 주요 프랜차이즈 브랜드별 개수 (발견된 것만, 개수 내림차순) */
+  peers: Array<{ name: string; count: number }>;
+  /** 표본 한계 — 반경 동종 업소가 300개 초과라 첫 300개만 스캔한 경우 true */
+  sampled: boolean;
+};
+
+/**
+ * 반경 내 프랜차이즈 존재 실측. 동종 업종 필터(매핑 SSOT) 안에서 상호명 매칭 —
+ *  전체 업소를 긁지 않아 호출 ≤3페이지. 매핑 없는 업종은 null (실측 불가 정직).
+ */
+export async function franchisePresenceInRadius(
+  subIndustryId: string,
+  brandName: string,
+  peerBrandNames: string[],
+  cx: number,
+  cy: number,
+  radius: number,
+  apiKey: string,
+): Promise<FranchisePresence | null> {
+  const mapping = SBIZ_UPJONG_MAP[subIndustryId] ?? null;
+  if (!mapping) return null;
+  const codes: Array<["indsSclsCd" | "indsMclsCd", string]> = [
+    ...(mapping.scls ?? []).map((c): ["indsSclsCd", string] => ["indsSclsCd", c]),
+    ...(mapping.mcls ?? []).map((c): ["indsMclsCd", string] => ["indsMclsCd", c]),
+  ];
+
+  const names: string[] = [];
+  let sampled = false;
+  try {
+    for (const [k, code] of codes) {
+      for (let page = 1; page <= 3; page++) {
+        const url = `${BASE}/storeListInRadius?serviceKey=${encodeURIComponent(apiKey)}&type=json&numOfRows=100&pageNo=${page}&radius=${radius}&cx=${cx}&cy=${cy}&${k}=${code}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+        if (!res.ok) return null;                       // 오류 = 실측 불가 (부분 결과 위장 금지)
+        const json = await res.json() as { header?: unknown; body?: { totalCount?: number; items?: Array<{ bizesNm?: string }> } };
+        const items = json?.body?.items ?? [];
+        for (const it of items) if (it?.bizesNm) names.push(it.bizesNm);
+        const total = json?.body?.totalCount ?? 0;
+        if (total > 300) sampled = true;
+        if (items.length < 100 || page * 100 >= total) break;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  const normalized = names.map(normalizeBizName);
+  const countBrand = (brand: string): number => {
+    const key = normalizeBizName(brand);
+    if (key.length < 2) return 0;
+    return normalized.filter((n) => n.includes(key)).length;
+  };
+
+  const peers = peerBrandNames
+    .filter((n) => normalizeBizName(n) !== normalizeBizName(brandName))
+    .map((n) => ({ name: n, count: countBrand(n) }))
+    .filter((x) => x.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  return { sameBrand: countBrand(brandName), peers, sampled };
+}

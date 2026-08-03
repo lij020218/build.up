@@ -141,6 +141,36 @@ describe("개폐업 추이 — 자체 스냅샷 원장 (2026-08-03)", () => {
   });
 });
 
+describe("프랜차이즈 반경 실측 (2026-08-03 사장님 스펙)", () => {
+  it("같은 브랜드 존재 = 영업지역 경고 -15점 규칙이 프롬프트에 있다", () => {
+    const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
+    expect(mr).toContain("같은 브랜드 1개+ 존재 → 최우선 경고 + -15점");
+    expect(mr).toContain("본사 영업담당에게 출점 가능 여부 확인 필수");
+    expect(mr).toContain("실측 라인이 없으면 프랜차이즈 관련 언급 금지");
+    expect(mr).toContain("meta.franchisePresence");
+    expect(mr).toContain("franchiseBrandId");
+  });
+
+  it("헬퍼 정직성 — 오류=null(부분 결과 위장 금지)·표본 한계 라벨", () => {
+    const lib = readFileSync(join(HERE, "..", "app", "api", "_lib", "sbiz-store.ts"), "utf8");
+    expect(lib).toContain("오류 = 실측 불가 (부분 결과 위장 금지)");
+    expect(lib).toContain("sampled");
+    expect(lib).toContain("영업지역 보호로 가맹 자체가 불가할 수 있는 결정 신호");
+  });
+
+  it("웹·iOS — 브랜드 전달 + 칩 렌더", () => {
+    const stage = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "LocationCandidatesStage.tsx"), "utf8");
+    expect(stage).toContain('franchiseBrandId: startupType === "franchise" ? selectedFranchiseBrandId : undefined');
+    expect(stage).toContain("item.meta?.franchisePresence");
+    const iosSvc = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneData", "AIRoadmap", "MarketRecommendService.swift"), "utf8");
+    expect(iosSvc).toContain("franchiseBrandId");
+    expect(iosSvc).toContain("franchisePresence");
+    const iosView = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "Stages", "LocationCandidatesStageView.swift"), "utf8");
+    expect(iosView).toContain("stage.franchise.selectedBrandId");
+    expect(iosView).toContain("franchisePresence");
+  });
+});
+
 describe("배선 — 라우트 주입 + 웹 칩 + 번들 격리", () => {
   it("market-recommend 가 실측 주입 + 매칭 없음 언급 금지 + meta 결정론 부착", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");

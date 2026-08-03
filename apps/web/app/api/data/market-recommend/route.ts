@@ -18,7 +18,9 @@ import type { RecommendationItem } from "@foundone/shared";
 import { findDongPopulation, formatDongPopulationLine, DONG_POP_YM_LABEL } from "../../_lib/dong-population";
 import {
   sbizCountsInRadius, areaKeyFor, upjongSigFor, recordAreaSnapshot, findAreaTrend, type AreaTrend,
+  franchisePresenceInRadius, type FranchisePresence,
 } from "../../_lib/sbiz-store";
+import { getFranchiseBrandById, franchiseBrandsAll } from "@foundone/shared";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import {
   findMarketRentDistricts,
@@ -87,6 +89,7 @@ type SubAreaCandidate = {
   officialSameCount?: number | null;
   officialTotalCount?: number | null;
   trend?: AreaTrend | null;   // 60일+ 이전 자체 스냅샷 대비 델타 (없으면 미표시)
+  franchise?: FranchisePresence | null;   // 프랜차이즈 선택자만 — 같은 브랜드·동종 브랜드 반경 실측
 };
 
 // ── 카카오 호출 헬퍼 ────────────────────────────────────────────────
@@ -473,6 +476,14 @@ reasons 에 수치 인용 시 반드시 소스를 함께 ("공식 107개" / "지
 - 실측 라인이 "없음" 인 후보는 임대료·공실률을 reasons/warnings 에 **일절 언급 금지** — 추정 밴드를 만들지 마라.
 - 자본금 대비 임대 부담 판단도 실측이 있는 후보에서만. 실측 공실률 8%+ 는 "공실 경고" 로 반영.
 
+## 프랜차이즈 규칙 (프랜차이즈 실측 라인이 주입된 경우만)
+- **같은 브랜드 1개+ 존재 → 최우선 경고 + -15점**: 대부분의 가맹계약은 영업지역 보호로
+  같은 브랜드 인근 출점이 불가하거나 본사 승인이 필요하다. warnings 첫 항목으로
+  "같은 브랜드 N개 — 본사 영업담당에게 출점 가능 여부 확인 필수" 를 넣어라.
+- 동종 프랜차이즈 다수(합 5개+) → 브랜드 경쟁 과밀 신호(-5~-10), 발견 브랜드명을 인용.
+- 동종 주요 프랜차이즈 미발견 + 동종업종 다수 → "개인점 위주 상권, 브랜드 차별화 여지" 로 해석 가능.
+- 실측 라인이 없으면 프랜차이즈 관련 언급 금지.
+
 ## 자주 발생하는 실패 시그널
 - 동종업종 60개+ + 카페 밀도 5개 미만 = "과밀 + 유동 부족" 최악 조합 (점수 50 이하)
 - 지하철역 0 + 문화시설 0 + 카페 5개 미만 = 외진 입지 (-15)
@@ -535,6 +546,9 @@ async function scoreWithClaude(
     const trendLine = c.trend
       ? `개폐업 추이(자체 스냅샷 실측): ${c.trend.daysAgo}일 전 대비 동종 ${c.trend.sameDelta >= 0 ? "+" : ""}${c.trend.sameDelta}곳${c.trend.totalDelta != null ? ` · 전체 ${c.trend.totalDelta >= 0 ? "+" : ""}${c.trend.totalDelta}곳` : ""}`
       : "개폐업 추이: 관측 이력 없음 (언급 금지)";
+    const frLine = c.franchise
+      ? `프랜차이즈 실측(상호명 매칭, 500m${c.franchise.sampled ? " · 동종 300개 표본" : ""}): 같은 브랜드 ${c.franchise.sameBrand}개${c.franchise.peers.length > 0 ? ` / 동종 프랜차이즈: ${c.franchise.peers.map((x) => `${x.name} ${x.count}`).join("·")}` : " / 동종 주요 프랜차이즈 미발견"}`
+      : "";
     const compLine = typeof c.officialSameCount === "number"
       ? `동종업종 매장 [공식]: ${c.officialSameCount}개 (소진공·국세청 원천, 500m)${typeof c.officialTotalCount === "number" ? ` / 전체 업소 ${c.officialTotalCount}개` : ""}`
       : `동종업종 매장 [지도]: ${c.competitionCount ?? 0}개 (카카오, 500m)`;
@@ -545,7 +559,7 @@ async function scoreWithClaude(
    - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)
    - ${rentLine}
    - ${popLine}
-   - ${trendLine}`;
+   - ${trendLine}${frLine ? `\n   - ${frLine}` : ""}`;
   }).join("\n\n");
 
   // 사용자 메시지 — dynamic 부분만. 캐시 깨지지 않게 system 과 분리.
@@ -606,6 +620,10 @@ ${candidateLines}
     if (typeof cand?.officialSameCount === "number") {
       meta.officialCompetition = `동종 ${cand.officialSameCount}곳${typeof cand.officialTotalCount === "number" ? ` · 전체 업소 ${cand.officialTotalCount.toLocaleString()}곳` : ""} — 소상공인시장진흥공단(국세청 원천), 500m`;
     }
+    if (cand?.franchise) {
+      const f = cand.franchise;
+      meta.franchisePresence = `같은 브랜드 ${f.sameBrand}개${f.peers.length > 0 ? ` · 동종: ${f.peers.map((x) => `${x.name} ${x.count}`).join(", ")}` : ""} — 소진공 상호명 매칭, 500m${f.sampled ? " (동종 300개 표본)" : ""}`;
+    }
     if (cand?.trend) {
       meta.areaTrend = `${cand.trend.daysAgo}일 전 대비 동종 ${cand.trend.sameDelta >= 0 ? "+" : ""}${cand.trend.sameDelta}곳${cand.trend.totalDelta != null ? ` · 전체 ${cand.trend.totalDelta >= 0 ? "+" : ""}${cand.trend.totalDelta}곳` : ""} — 자체 관측 실측`;
     }
@@ -641,7 +659,8 @@ export async function POST(request: Request) {
   });
   if (!dl.ok) return NextResponse.json({ ok: false, error: dl.error }, { status: dl.status });
 
-  let body: { region?: string; categoryId?: string; subIndustryId?: string; capital?: number; language?: string };
+  let body: { region?: string;
+    franchiseBrandId?: string; categoryId?: string; subIndustryId?: string; capital?: number; language?: string };
   try {
     body = await request.json();
   } catch {
@@ -650,6 +669,7 @@ export async function POST(request: Request) {
   const region = (body.region ?? "").trim();
   const categoryId = (body.categoryId ?? "food").trim();
   const subIndustryId = body.subIndustryId?.trim();
+  const franchiseBrandId = typeof body.franchiseBrandId === "string" ? body.franchiseBrandId.trim() : "";
   const capital = typeof body.capital === "number" ? body.capital : undefined;
   const language: "ko" | "en" = body.language === "en" ? "en" : "ko";
   if (!region) {
@@ -680,6 +700,15 @@ export async function POST(request: Request) {
   // 소진공 공식 카운트 보강 (2026-08-03 Phase A-1) — 후보당 ≤3콜, 일 10,000 쿼터 대비 미미.
   //   오류 ≠ 0개: 실패는 null 로 남겨 카카오 카운트로 폴백 (부분 실패도 합산 위조 금지).
   const sbizKey = process.env.MOIS_API_KEY;
+  // 프랜차이즈 컨텍스트 (2026-08-03 사장님 스펙) — 브랜드 확정자만
+  const fBrand = franchiseBrandId ? getFranchiseBrandById(franchiseBrandId) : undefined;
+  const peerNames = fBrand
+    ? franchiseBrandsAll
+        .filter((b) => b.id !== fBrand.id && (b.subIndustryIds ?? []).some((sid) => (fBrand.subIndustryIds ?? []).includes(sid)))
+        .map((b) => b.name.ko)
+        .slice(0, 12)
+    : [];
+
   if (sbizKey) {
     const admin = getSupabaseAdmin();
     const sig = subIndustryId ? upjongSigFor(subIndustryId) : null;
@@ -692,6 +721,9 @@ export async function POST(request: Request) {
         const areaKey = areaKeyFor(c.lng, c.lat, 500);
         void recordAreaSnapshot(admin, { areaKey, upjongSig: sig, sameCount: counts.sameUpjong, totalCount: counts.totalStores });
         c.trend = await findAreaTrend(admin, { areaKey, upjongSig: sig, currentSame: counts.sameUpjong, currentTotal: counts.totalStores });
+      }
+      if (fBrand && subIndustryId) {
+        c.franchise = await franchisePresenceInRadius(subIndustryId, fBrand.name.ko, peerNames, c.lng, c.lat, 500, sbizKey);
       }
     }));
   }
