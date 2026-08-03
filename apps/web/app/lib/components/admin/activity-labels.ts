@@ -25,8 +25,9 @@ export const AI_FEATURE_LABELS: Record<string, string> = {
   "quick-query": "AI 채팅",
   "marketing-cases": "마케팅 사례·미션",
   "marketing-cardnews": "카드뉴스 스튜디오",
-  "marketing-coach": "마케팅 코치",
-  "marketing-trends": "마케팅 트렌드",
+  // ↓ 2026-08-03 라우트 삭제된 기능 — 과거 사용량 로그 행 표시용으로만 유지
+  "marketing-coach": "마케팅 코치 (종료)",
+  "marketing-trends": "마케팅 트렌드 (종료)",
   "insights-industry-daily": "업종 데일리 코칭",
   "contract-analyze": "계약서 분석",
   "health-diagnose": "사업 건강 진단",

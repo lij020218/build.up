@@ -103,8 +103,6 @@ describe("ai-cost-budget: 헤비 실사용 프로파일 ≤ 월 ₩6,000", () =>
   const HEAVY_MONTHLY_PROFILE: Record<string, number> = {
     "marketing-cases": 8, // 주 1회 자동 + 재생성
     "marketing-cardnews": 8,
-    "marketing-coach": 8,
-    "marketing-trends": 8,
     "quick-query": 60, // 하루 2회 꼴
     "insights-industry-daily": 30, // 매일
     "contract-analyze": 2,

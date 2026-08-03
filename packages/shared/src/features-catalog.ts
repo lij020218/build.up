@@ -189,12 +189,14 @@ export const FEATURES_CATALOG: FeatureCatalogItem[] = [
     whenToUse: "프랜차이즈 가입 검토·업종 전환 고민·동종 평균 벤치마크 필요할 때.",
   },
   {
+    // id 는 구 "마케팅 트렌드" 기능에서 물려받음 — AI 캐시·클라이언트에 남은 구 액션 호환 위해 유지.
+    // 실제 내용은 마케팅 화면의 살아있는 기능(사례 기반 실행 플레이 + 주간 밈·챌린지 팩) 기준.
     id: "marketing-trends",
-    labelKo: "마케팅 트렌드 보기",
-    labelEn: "Open Marketing Trends",
+    labelKo: "마케팅 아이디어 보기",
+    labelEn: "Open Marketing Ideas",
     surface: "marketing",
-    description: "채널별 트렌드 + ROI + 캠페인 추천",
-    whenToUse: "신규 고객 확보 채널 결정·광고 예산 배분 점검 시.",
+    description: "업종 성공사례 기반 실행 플레이 + 주간 밈·챌린지 팩",
+    whenToUse: "신규 고객 확보 채널 결정·이번 주 SNS 콘텐츠 소재가 필요할 때.",
   },
 
   // ─── 데이터 연결 / 자동화 ──────────────────────────────────────

@@ -52,8 +52,7 @@ export const FEATURE_COST_SPEC: Record<string, FeatureCostSpec | null> = {
   // ── 마케팅 (GPT-5.6) ──
   "marketing-cases": { model: "gpt-5.6-terra", inCap: 6_000, outCap: 4_000, extraWon: 35, note: "실측 in 4,898 / out 2,304 (2026-07-28)" },
   "marketing-cardnews": { model: "gpt-5.6-luna", inCap: 2_000, outCap: 1_800 },
-  "marketing-coach": { model: "gpt-5.4-mini", inCap: 3_000, outCap: 4_096 },
-  "marketing-trends": { model: "gpt-5.4-mini", inCap: 2_000, outCap: 4_096 },
+  // "marketing-coach"·"marketing-trends" — 2026-08-03 라우트 삭제(호출자 0)로 스펙 제거.
 
   // ── 파서·에이전트 (luna) ──
   "members-parse": { model: "gpt-5.6-luna", inCap: 40_000, outCap: 8_192, note: "입력 50,000자 제한" },

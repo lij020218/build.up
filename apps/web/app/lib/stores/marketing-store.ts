@@ -19,79 +19,6 @@ export type CampaignRecord = {
   note?: string;
 };
 
-export type TrendToolRecommendation = {
-  name: string;                            // "CapCut", "Midjourney"
-  purpose: string;                         // "영상 편집 / 템플릿 적용"
-  tier: "free" | "paid" | "freemium";
-  url?: string;
-};
-
-export type TrendItem = {
-  title: string;
-  reason: string;
-  contentIdea: string;
-  format: "reel" | "story" | "short" | "post" | "blog" | "campaign" | "ad";
-  hashtags: string[];
-  referenceUrl?: string | null;
-  /** 실행 플레이북 — 3~5 스텝 구체 액션 (오늘 당장 따라할 수 있게) */
-  howToExecute?: string[];
-  /** 브랜드 성공 사례 — "애플은 티저로 기대감 빌드업", "스타벅스 시즌 메뉴 공식" 식 */
-  strategyExample?: string;
-  /** 효과 — "신제품 관심도 상승", "재방문율 20%+" 같은 기대 효과 */
-  effectiveness?: string;
-  /** 추천 도구 — CapCut, Midjourney, Gemini 등 */
-  tools?: TrendToolRecommendation[];
-  // ── 2026-05-12 캠페인 사례 모드 추가 (쇼츠 밈 베끼기 → 마케팅 캠페인 학습) ──
-  /** 캠페인·광고 운영 브랜드 (예: "Google", "Manus", "도브") */
-  brandName?: string;
-  /** 캠페인 공식·통용 이름 (예: "Hey Mom", "Manus Launch Demo") */
-  campaignName?: string;
-  /** 검증된 조회수 — UI 가 신뢰성 신호로 표시 */
-  viewCount?: number;
-  /**
-   * 이 캠페인에서 사장님이 *배워올 점*.
-   * "어떻게 따라할지" 가 아니라 "왜 이 사례가 이 업종에 의미 있는지" 강조.
-   */
-  lesson?: string;
-};
-
-export type TrendCache = {
-  date: string;
-  businessType: string;
-  trends: TrendItem[];
-};
-
-// ─── Marketing Coaching (가게 맞춤, 하루 1회 생성) ───
-
-export type CoachTool = {
-  name: string;
-  purpose: string;
-  tier: "free" | "paid" | "freemium";
-  url?: string;
-};
-
-export type CoachAction = {
-  priority: "now" | "this-week" | "this-month";
-  title: string;
-  why: string;
-  howToExecute: string[];
-  expectedImpact: string;
-  tools: CoachTool[];
-};
-
-export type CoachCache = {
-  /**
-   * ISO 주차 키 (예: "2026-W19") — 사용자 요청: 코칭은 *주 1회* 재생성.
-   *  과거 일 단위 캐시 (`date: YYYY-MM-DD`) 에서 2026-05-11 전환.
-   *  하위호환: 옛 필드 `date` 가 있어도 무시 (다음 주차 시작 시 재생성).
-   */
-  weekKey: string;
-  /** 하위호환 — 옛 캐시 마이그레이션 용도. 새 캐시엔 비워둠. */
-  date?: string;
-  contextKey: string;    // storeName|subIndustryId|language — 이 조합이 바뀌면 재생성
-  actions: CoachAction[];
-};
-
 // ─── Marketing Plays (사례·트렌드 → 내 사업 적용, 주 1회 생성) ───
 
 export type PlayTool = { name: string; purpose: string; tier: "free" | "paid" | "freemium"; url?: string };
@@ -227,9 +154,6 @@ export const CHANNEL_LIST: ChannelMeta[] = MARKETING_CHANNELS.map((c) => ({
 type MarketingState = {
   campaigns: CampaignRecord[];
   monthlyBudget: number;
-  trendCache: TrendCache | null;
-  trendLoading: boolean;
-  coachCache: CoachCache | null;
   casesCache: CasesCache | null;
   memePackCache: MemePackCache | null;
   // 캠페인 폼
@@ -247,9 +171,6 @@ type MarketingState = {
 type MarketingActions = {
   setCampaigns: (v: CampaignRecord[] | ((prev: CampaignRecord[]) => CampaignRecord[])) => void;
   setMonthlyBudget: (v: number) => void;
-  setTrendCache: (v: TrendCache | null) => void;
-  setTrendLoading: (v: boolean) => void;
-  setCoachCache: (v: CoachCache | null) => void;
   setCasesCache: (v: CasesCache | null) => void;
   setMemePackCache: (v: MemePackCache | null) => void;
   setCampFormOpen: (v: boolean) => void;
@@ -272,9 +193,6 @@ type MarketingActions = {
 const initialState: MarketingState = {
   campaigns: [],
   monthlyBudget: 0,
-  trendCache: null,
-  trendLoading: false,
-  coachCache: null,
   casesCache: null,
   memePackCache: null,
   campFormOpen: false,
@@ -294,9 +212,6 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
       setCampaigns: (v) =>
         set((s) => ({ campaigns: typeof v === "function" ? v(s.campaigns) : v })),
       setMonthlyBudget: (v) => set({ monthlyBudget: v }),
-      setTrendCache: (v) => set({ trendCache: v }),
-      setTrendLoading: (v) => set({ trendLoading: v }),
-      setCoachCache: (v) => set({ coachCache: v }),
       setCasesCache: (v) => set({ casesCache: v }),
       setMemePackCache: (v) => set({ memePackCache: v }),
       setCampFormOpen: (v) => set({ campFormOpen: v }),
@@ -340,6 +255,17 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
     {
       name: "foundone-marketing",
       skipHydration: true,
+      // v1 (2026-08-03): trendCache·coachCache 제거 — /api/ai/marketing/trends·coach
+      // 라우트가 UI 호출자 0 으로 삭제됨. migrate 가 구버전 localStorage 의 잔존 키를 털어낸다.
+      version: 1,
+      migrate: (persisted) => {
+        if (persisted && typeof persisted === "object") {
+          const p = persisted as Record<string, unknown>;
+          delete p.trendCache;
+          delete p.coachCache;
+        }
+        return persisted as MarketingState & MarketingActions;
+      },
       partialize: (state) => ({
         campaigns: state.campaigns,
         monthlyBudget: state.monthlyBudget,
@@ -347,8 +273,6 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
         promoCodes: state.promoCodes,
         currentCustomerCount: state.currentCustomerCount,
         // AI 응답 캐시 — 비용 절감을 위해 반드시 persist
-        trendCache: state.trendCache,
-        coachCache: state.coachCache,
         casesCache: state.casesCache,
         memePackCache: state.memePackCache,
       }),

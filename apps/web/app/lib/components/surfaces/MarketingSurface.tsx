@@ -122,11 +122,9 @@ export function MarketingSurface() {
   }, []);
   const isMobile = viewportWidth < BP.sm;
 
-  // 마케팅 장부(KPI+지출 추적) — 기본 접힘 (2026-07-24 개편: 실행이 주인공, 장부는 요약 한 줄)
-  const [ledgerOpen, setLedgerOpen] = useState(false);
-
   // 세그먼트 탭 (2026-08-03 개편: 한 화면에 다 쌓지 않는다 — 탭당 핵심 1~2개)
-  const [tab, setTab] = useState<"weekly" | "create">("weekly");
+  //  장부·예산은 전용 탭 (사장님 지시 — 종전 하단 접힘 카드에서 승격)
+  const [tab, setTab] = useState<"weekly" | "create" | "ledger">("weekly");
 
   // 캠페인 삭제 2단계 확인 — 즉시 ✕ 는 실수 삭제 사고 경로 (3초 내 재탭 = 확정)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -438,6 +436,7 @@ export function MarketingSurface() {
         {([
           { key: "weekly" as const, label: ko ? "이번 주" : "This Week" },
           { key: "create" as const, label: ko ? "만들기" : "Create" },
+          { key: "ledger" as const, label: ko ? "장부·예산" : "Ledger" },
         ]).map((t) => (
           <button
             key={t.key}
@@ -449,9 +448,14 @@ export function MarketingSurface() {
               background: tab === t.key ? "#fff" : "transparent",
               color: tab === t.key ? "#0f172a" : "var(--muted)",
               boxShadow: tab === t.key ? "0 1px 4px rgba(17,17,17,0.08)" : "none",
+              display: "inline-flex", alignItems: "center", gap: 6,
             }}
           >
             {t.label}
+            {/* 저지출 경고 점 — 장부 탭에 안 들어와도 경고가 보이게 */}
+            {t.key === "ledger" && spendCheck?.band === "below" && (
+              <span aria-label={ko ? "예산 경고" : "budget warning"} style={{ width: 6, height: 6, borderRadius: 999, background: "#b64c4c", display: "inline-block" }} />
+            )}
           </button>
         ))}
       </div>
@@ -514,41 +518,29 @@ export function MarketingSurface() {
       />
       )}
 
-      {/* ━━━ 섹션 2+3: 마케팅 장부 (탭 공통 하단 — 기본 접힘, 요약 한 줄이 먼저 말한다) ━━━ */}
-      <article style={solidCard}>
-        <button
-          type="button"
-          onClick={() => setLedgerOpen((v) => !v)}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-            background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit", textAlign: "left" as const,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
-              {ko ? "마케팅 장부" : "Marketing Ledger"}
-            </div>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span>
-                {ko
-                  ? `이달 ${totalSpend > 0 ? fmt(totalSpend) : "0원"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · 채널 ${activeChannels.length}개`
-                  : `MTD ${totalSpend > 0 ? fmt(totalSpend) : "0"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · ${activeChannels.length} channels`}
-              </span>
-              {spendCheck?.band === "below" && (
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: "#b64c4c",
-                  background: "rgba(182,76,76,0.08)", padding: "2px 8px", borderRadius: 7,
-                }}>
-                  {ko ? `매출의 ${spendCheck.pct}% — 기준(${spendCheck.lowPct}~${spendCheck.highPct}%)보다 낮음` : `${spendCheck.pct}% of sales — below ${spendCheck.lowPct}–${spendCheck.highPct}%`}
-                </span>
-              )}
-            </div>
-          </div>
-          <ChevronRight size={16} strokeWidth={2} color="var(--muted)" style={{ flexShrink: 0, transform: ledgerOpen ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
-        </button>
+      {/* ━━━ 장부·예산 탭 (2026-08-03 전용 탭 승격 — 종전 하단 접힘 카드 폐기) ━━━ */}
+      {tab === "ledger" && (<>
+      {/* 요약 한 줄 — 이달 지출·ROAS·채널 + 저지출 배지 */}
+      <article style={{ ...solidCard, padding: "16px 22px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
+          {ko ? "마케팅 장부" : "Marketing Ledger"}
+        </div>
+        <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span>
+            {ko
+              ? `이달 ${totalSpend > 0 ? fmt(totalSpend) : "0원"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · 채널 ${activeChannels.length}개`
+              : `MTD ${totalSpend > 0 ? fmt(totalSpend) : "0"} · ROAS ${blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"} · ${activeChannels.length} channels`}
+          </span>
+          {spendCheck?.band === "below" && (
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: "#b64c4c",
+              background: "rgba(182,76,76,0.08)", padding: "2px 8px", borderRadius: 7,
+            }}>
+              {ko ? `매출의 ${spendCheck.pct}% — 기준(${spendCheck.lowPct}~${spendCheck.highPct}%)보다 낮음` : `${spendCheck.pct}% of sales — below ${spendCheck.lowPct}–${spendCheck.highPct}%`}
+            </span>
+          )}
+        </div>
       </article>
-
-      {ledgerOpen && (<>
       {/* 적정 예산 — 판정 가능(월매출 존재)할 때만. 출처·국가를 숨기지 않는다 (한국 공식 통계 없음). */}
       {spendCheck && (
         <article style={{

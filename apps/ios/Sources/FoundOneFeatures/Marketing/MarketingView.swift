@@ -50,14 +50,19 @@ public struct MarketingView: View {
 
     @State private var state = MarketingPageState()
     @State private var showGrowthForecast: Bool = false
-    // 마케팅 장부(KPI+지출 추적) — 기본 접힘 (2026-07-24 개편, 웹 ledgerOpen 패리티)
-    @State private var ledgerOpen: Bool = false
     // 세그먼트 탭 (2026-08-03 개편, 웹 패리티 — 한 화면에 다 쌓지 않는다)
+    //  장부·예산은 전용 탭 (사장님 지시 — 종전 하단 접힘 카드에서 승격)
     @State private var tab: MarketingTab = .weekly
 
     enum MarketingTab: String, CaseIterable {
-        case weekly, create
-        var label: String { self == .weekly ? "이번 주" : "만들기" }
+        case weekly, create, ledger
+        var label: String {
+            switch self {
+            case .weekly: return "이번 주"
+            case .create: return "만들기"
+            case .ledger: return "장부·예산"
+            }
+        }
     }
 
     public init(store: DashboardStore, mock: MockData) {
@@ -143,9 +148,9 @@ public struct MarketingView: View {
                         )
                     }
 
-                    // 마케팅 장부 — 탭 공통 하단, 기본 접힘: 요약 한 줄이 먼저 말한다 (웹 패리티)
-                    ledgerSummaryCard
-                    if ledgerOpen {
+                    // 장부·예산 전용 탭 (2026-08-03 승격 — 종전 하단 접힘 카드 폐기, 웹 패리티)
+                    if tab == .ledger {
+                        ledgerSummaryCard
                         if let check = spendCheck { budgetNoteCard(check) }
                         kpiSection
                         MarketingCampaignsList(
@@ -217,16 +222,22 @@ public struct MarketingView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { tab = t }
                 } label: {
-                    Text(t.label)
-                        .font(.system(size: 13.5, weight: .bold))
-                        .foregroundStyle(tab == t ? BUColor.ink : BUColor.inkMuted)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                .fill(tab == t ? Color.white : Color.clear)
-                        )
-                        .buShadow(tab == t ? .card : .none)
+                    HStack(spacing: 6) {
+                        Text(t.label)
+                            .font(.system(size: 13.5, weight: .bold))
+                            .foregroundStyle(tab == t ? BUColor.ink : BUColor.inkMuted)
+                        // 저지출 경고 점 — 장부 탭에 안 들어와도 경고가 보이게 (웹 패리티)
+                        if t == .ledger, let check = spendCheck, check.band == .below {
+                            Circle().fill(BUColor.danger).frame(width: 6, height: 6)
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(tab == t ? Color.white : Color.clear)
+                    )
+                    .buShadow(tab == t ? .card : .none)
                 }
                 .buttonStyle(.plain)
             }
@@ -295,48 +306,35 @@ public struct MarketingView: View {
         )
     }
 
-    // 장부 요약 카드 — "이달 0원 · ROAS — · 채널 N개" 한 줄 + 펼치기 (웹 ledger summary 패리티)
+    // 장부 요약 카드 — "이달 0원 · ROAS — · 채널 N개" 한 줄 (장부·예산 탭 상단, 웹 패리티)
     private var ledgerSummaryCard: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.15)) { ledgerOpen.toggle() }
-        } label: {
-            HStack(spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("마케팅 장부")
-                        .font(.system(size: 10, weight: .heavy))
-                        .tracking(0.8)
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
-                        .textCase(.uppercase)
-                    Text("이달 \(state.kpis.spendWon > 0 ? formatWon(state.kpis.spendWon) + "원" : "0원") · ROAS \(state.kpis.spendWon > 0 ? String(format: "%.1fx", state.kpis.blendedRoas) : "—") · 채널 \(state.kpis.activeChannels)개")
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                        .lineLimit(1)
-                    // 저지출 경고 — 웹 요약줄 배지 패리티 (SSOT: MarketingBudgetBenchmarks)
-                    if let check = spendCheck, check.band == .below {
-                        Text("매출의 \(check.pct, specifier: "%.1f")% — 기준(\(Int(check.lowPct))~\(Int(check.highPct))%)보다 낮음")
-                            .font(.system(size: 10.5, weight: .bold))
-                            .foregroundStyle(BUColor.danger)
-                            .padding(.horizontal, 8).padding(.vertical, 2)
-                            .background(BUColor.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                            .lineLimit(1)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
-                    .rotationEffect(.degrees(ledgerOpen ? 90 : 0))
+        VStack(alignment: .leading, spacing: 2) {
+            Text("마케팅 장부")
+                .font(.system(size: 10, weight: .heavy))
+                .tracking(0.8)
+                .foregroundStyle(BUColor.inkMuted.opacity(0.65))
+                .textCase(.uppercase)
+            Text("이달 \(state.kpis.spendWon > 0 ? formatWon(state.kpis.spendWon) + "원" : "0원") · ROAS \(state.kpis.spendWon > 0 ? String(format: "%.1fx", state.kpis.blendedRoas) : "—") · 채널 \(state.kpis.activeChannels)개")
+                .font(.system(size: 13, weight: .heavy))
+                .foregroundStyle(BUColor.ink)
+                .lineLimit(1)
+            // 저지출 경고 — 웹 요약줄 배지 패리티 (SSOT: MarketingBudgetBenchmarks)
+            if let check = spendCheck, check.band == .below {
+                Text("매출의 \(check.pct, specifier: "%.1f")% — 기준(\(Int(check.lowPct))~\(Int(check.highPct))%)보다 낮음")
+                    .font(.system(size: 10.5, weight: .bold))
+                    .foregroundStyle(BUColor.danger)
+                    .padding(.horizontal, 8).padding(.vertical, 2)
+                    .background(BUColor.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .lineLimit(1)
             }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: BUSpacing.minTapTarget)
-            .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
-                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-            )
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
+                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+        )
     }
 
     private var kpiSection: some View {

@@ -52,7 +52,7 @@ export const USER_TABLES = [
   "saas_funnel_source_daily",
   "saas_funnel_events_raw",
   "ai_report_insights",
-  "marketing_coach_cache",
+  "marketing_coach_cache", // 라우트는 2026-08-03 삭제됐지만 prod 테이블·기존 행이 남아 있어 wipe 유지
   "coaching_history",
   // ── 2026-06-10 감사: 마케팅 사례 엔진 신규 테이블 (미포함 시 초기화 후 부활) ──
   //   marketing_trend_cache 는 user_id 없는 업종 공용 캐시라 제외(개인 데이터 아님).

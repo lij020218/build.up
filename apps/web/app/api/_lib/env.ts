@@ -71,27 +71,9 @@ export function getRealAnthropicApiKey(): string | undefined {
   return key && key.length >= 10 ? key : undefined;
 }
 
-/** 네이버 DataLab·Search API — Client ID/Secret 쌍 */
-export function getNaverApiCreds(): { clientId: string; clientSecret: string } | undefined {
-  const clientId = getEnvVar("NAVER_CLIENT_ID");
-  const clientSecret = getEnvVar("NAVER_CLIENT_SECRET");
-  if (!clientId || !clientSecret || clientId.length < 5 || clientSecret.length < 5) return undefined;
-  return { clientId, clientSecret };
-}
-
 /** Tavily AI 검색 API */
 export function getTavilyApiKey(): string | undefined {
   const key = getEnvVar("TAVILY_API_KEY");
-  return key && key.length >= 10 ? key : undefined;
-}
-
-/**
- * YouTube Data API v3 — 한국 트렌딩 + 키워드 검색 (1 unit/요청·10k/일 무료).
- * `YOUTUBE_API_KEY` 우선, 없으면 범용 `GOOGLE_API_KEY` 폴백 — 동일 Google Cloud 프로젝트에서
- * Restricted key 로 YouTube Data API v3 만 허용했다면 이름을 무엇으로 두어도 동작.
- */
-export function getYoutubeApiKey(): string | undefined {
-  const key = getEnvVar("YOUTUBE_API_KEY") ?? getEnvVar("GOOGLE_API_KEY");
   return key && key.length >= 10 ? key : undefined;
 }
 
