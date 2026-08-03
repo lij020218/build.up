@@ -241,6 +241,113 @@ async function recordDailyUsageLedger(userId: string, feature: string): Promise<
   }
 }
 
+/**
+ * 로드맵 생성 전용 쿼터 (2026-08-03 사장님 정책):
+ *   무료 = 계정당 **총 3회** (평생) / 프로(premium 활성) = **주 3회** (최근 7일 롤링, KST).
+ *
+ * 판정 소스:
+ *  · 사용량 = ai_daily_usage 원장 합산 (성공 게이트 통과분). 서버 게이트라 웹·iOS 동시 적용.
+ *  · 프로 = foundone_subscriptions plan=premium && 기간 미만료 (billing/status 의 읽기 시점
+ *    강등 로직과 동일 기준 — 만료됐으면 free 로 취급).
+ *
+ * 정직성:
+ *  · 원장 조회 실패 ≠ 한도 초과 — fail-closed 하되 "확인 실패, 잠시 후" 로 말한다 (한도 사칭 금지).
+ *  · 생성이 서버 오류로 실패하면 호출처가 refundRoadmapGenerationUse 로 차감을 되돌린다
+ *    (평생 3회에서 실패가 크레딧을 먹으면 가혹).
+ *  · 동시 요청 레이스로 ±1 초과 가능 — 시간당 12회 단순 리밋이 배수 남용은 막는다.
+ */
+export async function checkRoadmapGenerationQuota(userId: string): Promise<RateLimitResult> {
+  const sb = await getDailyQuotaAdmin();
+  if (!sb) {
+    return { ok: false, status: 503, error: "사용량을 확인할 수 없어요. 잠시 후 다시 시도해 주세요.", remaining: 0, limit: 3, resetAt: 0 };
+  }
+
+  // ── 프로 여부 ──
+  let isPro = false;
+  try {
+    const { data, error } = await sb
+      .from("foundone_subscriptions")
+      .select("plan, status, current_period_end")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data && data.plan === "premium") {
+      const notExpired = !data.current_period_end || new Date(data.current_period_end) >= new Date();
+      isPro = notExpired && data.status !== "canceled";
+    }
+  } catch {
+    // 구독 조회 실패 → free 기준으로 판정 (더 엄격한 쪽 — 프로 혜택을 지어내지 않는다)
+    isPro = false;
+  }
+
+  // ── 사용량 합산 ──
+  try {
+    let query = sb
+      .from("ai_daily_usage")
+      .select("count, usage_date")
+      .eq("user_id", userId)
+      .eq("feature", "roadmap-generate");
+    if (isPro) {
+      // 최근 7일 롤링 (KST 오늘 포함 7일)
+      const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+      const since = new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate() - 6));
+      query = query.gte("usage_date", since.toISOString().slice(0, 10));
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    const used = (data ?? []).reduce((s, r) => s + Number((r as { count?: unknown }).count ?? 0), 0);
+
+    if (isPro && used >= 3) {
+      return {
+        ok: false, status: 429,
+        error: "이번 주 로드맵 생성 한도(3회)를 모두 사용했어요. 다음 주에 다시 생성할 수 있습니다. 만든 로드맵의 수정·진행은 계속 가능해요.",
+        remaining: 0, limit: 3,
+        resetAt: Date.now() + 7 * 24 * 60 * 60 * 1000,   // 롤링 7일 — 대략치
+      };
+    }
+    if (!isPro && used >= 3) {
+      return {
+        ok: false, status: 429,
+        error: "무료 계정의 로드맵 생성 횟수(총 3회)를 모두 사용했어요. 만든 로드맵의 수정·진행은 계속 가능하며, 프로에서는 매주 3회 생성할 수 있어요.",
+        remaining: 0, limit: 3, resetAt: 0,   // 평생 한도 — 리셋 없음
+      };
+    }
+  } catch {
+    return { ok: false, status: 503, error: "사용량을 확인할 수 없어요. 잠시 후 다시 시도해 주세요.", remaining: 0, limit: 3, resetAt: 0 };
+  }
+
+  // 통과 → 원장 기록(+월간 AI 예산 차감은 기존 미터 그대로)
+  await recordDailyUsageLedger(userId, "roadmap-generate");
+  const monthly = await consumeMonthlyAiBudget(userId, "roadmap-generate");
+  return monthly ?? { ok: true, remaining: 3, limit: 3, resetAt: 0 };
+}
+
+/**
+ * 로드맵 생성 실패 시 차감 환불 — 오늘 원장 count 를 1 줄인다 (바닥 0).
+ *  평생 3회 체계에서 서버 오류가 크레딧을 먹지 않게. best-effort (실패 무시).
+ */
+export async function refundRoadmapGenerationUse(userId: string): Promise<void> {
+  try {
+    const sb = await getDailyQuotaAdmin();
+    if (!sb) return;
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const today = kst.toISOString().slice(0, 10);
+    const { data } = await sb
+      .from("ai_daily_usage")
+      .select("count")
+      .eq("user_id", userId).eq("feature", "roadmap-generate").eq("usage_date", today)
+      .maybeSingle();
+    const cur = Number((data as { count?: unknown } | null)?.count ?? 0);
+    if (cur <= 0) return;
+    await sb
+      .from("ai_daily_usage")
+      .update({ count: cur - 1 })
+      .eq("user_id", userId).eq("feature", "roadmap-generate").eq("usage_date", today);
+  } catch {
+    /* best-effort */
+  }
+}
+
 async function recordMonthlySpendLedger(userId: string, monthKey: string, costWon: number): Promise<void> {
   try {
     const sb = await getDailyQuotaAdmin();

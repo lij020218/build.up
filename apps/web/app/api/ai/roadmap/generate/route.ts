@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { checkSimpleRateLimit, checkRoadmapGenerationQuota, refundRoadmapGenerationUse } from "../../../_lib/rate-limit";
 import { generateRoadmap, selectFromPool } from "@foundone/ai";
 import type {
   RoadmapGenerationInput,
@@ -412,14 +412,11 @@ export async function POST(request: Request) {
   if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
 
   // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "roadmap-generate",
-    limit: 3,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
+  // 생성 쿼터 (2026-08-03 사장님 정책): 무료 = 계정당 총 3회 / 프로 = 주 3회.
+  //   서버 게이트라 웹·iOS 동시 적용. 실패 경로는 refundRoadmapGenerationUse 로 차감 환불.
+  const quota = await checkRoadmapGenerationQuota(auth.userId);
+  if (!quota.ok) {
+    return NextResponse.json({ error: quota.error }, { status: quota.status });
   }
 
   const apiKey = getAnthropicApiKey();
@@ -466,6 +463,7 @@ export async function POST(request: Request) {
         continue;
       }
 
+      await refundRoadmapGenerationUse(auth.userId);   // 서버 오류가 크레딧을 먹지 않게
       return NextResponse.json(
         { error: isTimeout
           ? "AI 분석에 시간이 오래 걸리고 있습니다. 잠시 후 다시 시도해 주세요."
@@ -475,6 +473,7 @@ export async function POST(request: Request) {
     }
   }
   if (!result) {
+    await refundRoadmapGenerationUse(auth.userId);   // 서버 오류가 크레딧을 먹지 않게
     return NextResponse.json({ error: "로드맵 생성에 실패했습니다. 잠시 후 다시 시도해 주세요." }, { status: 503 });
   }
 
