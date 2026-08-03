@@ -147,3 +147,84 @@ export async function sbizCountsInRadius(
   const [totalStores, sameUpjong] = await Promise.all([totalP, sameP]);
   return { sameUpjong, totalStores };
 }
+
+// ─── 개폐업 추이 (스냅샷 축적) ─────────────────────────────────────────
+//  API 에 개업일 필드가 없고 폐업 업소는 목록에서 사라진다 (2026-08-03 실측)
+//  → 라이브 추이 계산은 불가능. 조회 시점 카운트를 축적해 시점 간 델타만 실측으로 말한다.
+//  콜드스타트: 과거 스냅샷 없으면 추이 미표시 (지어내지 않는다).
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export function areaKeyFor(cx: number, cy: number, radius: number): string {
+  return `${cx.toFixed(3)},${cy.toFixed(3)},r${radius}`;
+}
+
+export function upjongSigFor(subIndustryId: string): string | null {
+  const m = SBIZ_UPJONG_MAP[subIndustryId] ?? null;
+  if (!m) return null;
+  const parts = [
+    ...(m.scls ?? []).map((c) => `scls:${c}`),
+    ...(m.mcls ?? []).map((c) => `mcls:${c}`),
+  ];
+  return parts.sort().join("+");
+}
+
+/** 오늘 스냅샷 기록 — fire-and-forget (실패해도 추천 흐름에 영향 없음). 같은 날 중복은 무시. */
+export async function recordAreaSnapshot(
+  admin: SupabaseClient,
+  p: { areaKey: string; upjongSig: string; sameCount: number; totalCount: number | null },
+): Promise<void> {
+  try {
+    const today = new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);   // KST
+    await admin.from("market_area_snapshots").upsert(
+      {
+        area_key: p.areaKey,
+        upjong_sig: p.upjongSig,
+        snapshot_date: today,
+        same_count: p.sameCount,
+        ...(p.totalCount != null ? { total_count: p.totalCount } : {}),
+      },
+      { onConflict: "area_key,upjong_sig,snapshot_date", ignoreDuplicates: true },   // 첫 관측 보존
+    );
+  } catch {
+    /* best-effort */
+  }
+}
+
+export type AreaTrend = {
+  daysAgo: number;
+  sameDelta: number;
+  totalDelta: number | null;
+};
+
+/**
+ * 60일+ 이전 가장 최근 스냅샷과의 델타. 없으면 null (추이 미표시).
+ *  60일 미만 비교는 분기 갱신 주기(원천 DB)보다 짧아 노이즈 — 말하지 않는 게 정직.
+ */
+export async function findAreaTrend(
+  admin: SupabaseClient,
+  p: { areaKey: string; upjongSig: string; currentSame: number; currentTotal: number | null },
+): Promise<AreaTrend | null> {
+  try {
+    const cutoff = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10);
+    const { data, error } = await admin
+      .from("market_area_snapshots")
+      .select("snapshot_date, same_count, total_count")
+      .eq("area_key", p.areaKey)
+      .eq("upjong_sig", p.upjongSig)
+      .lte("snapshot_date", cutoff)
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    const past = data as { snapshot_date: string; same_count: number; total_count: number | null };
+    const daysAgo = Math.round((Date.now() - new Date(past.snapshot_date).getTime()) / 86_400_000);
+    return {
+      daysAgo,
+      sameDelta: p.currentSame - past.same_count,
+      totalDelta: p.currentTotal != null && past.total_count != null ? p.currentTotal - past.total_count : null,
+    };
+  } catch {
+    return null;
+  }
+}

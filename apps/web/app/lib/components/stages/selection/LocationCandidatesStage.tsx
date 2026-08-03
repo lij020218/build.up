@@ -1004,6 +1004,12 @@ export function LocationCandidatesStage() {
                     🏪 {String(item.meta.officialCompetition)}
                   </div>
                 )}
+                {/* 개폐업 추이 — 자체 스냅샷 실측 (관측 이력 생기면 자동 등장) */}
+                {item.meta?.areaTrend && (
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>
+                    📈 {String(item.meta.areaTrend)}
+                  </div>
+                )}
                 {/* 배후 주거인구 — 행안부 주민등록 실측 (거주 라벨 강제 — 유동인구인 척 금지) */}
                 {item.meta?.backPopulation && (
                   <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>

@@ -111,6 +111,36 @@ describe("소진공 공식 경쟁밀도 (2026-08-03 Phase A-1)", () => {
   });
 });
 
+describe("개폐업 추이 — 자체 스냅샷 원장 (2026-08-03)", () => {
+  it("라이브 위조 없음 — 관측 이력 없으면 언급 금지, 60일 미만 비교 안 함", () => {
+    const lib = readFileSync(join(HERE, "..", "app", "api", "_lib", "sbiz-store.ts"), "utf8");
+    expect(lib).toContain("콜드스타트: 과거 스냅샷 없으면 추이 미표시");
+    expect(lib).toContain("60 * 86_400_000");                    // 60일 컷오프
+    expect(lib).toContain('ignoreDuplicates: true');             // 첫 관측 보존
+    const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
+    expect(mr).toContain("개폐업 추이: 관측 이력 없음 (언급 금지)");
+    expect(mr).toContain("meta.areaTrend");
+  });
+
+  it("마이그레이션 — 전역 통계 RLS 잠금 + 하루 1스냅샷 유니크 + wipe 보존 선언", () => {
+    const mig = readFileSync(join(HERE, "..", "..", "..", "supabase", "migrations", "20260803_000001_market_area_snapshots.sql"), "utf8");
+    expect(mig).toContain("ENABLE ROW LEVEL SECURITY");
+    expect(mig).toContain("UNIQUE (area_key, upjong_sig, snapshot_date)");
+    const wipe = readFileSync(join(HERE, "..", "__tests__", "account-wipe-coverage.test.ts"), "utf8");
+    expect(wipe).toContain("market_area_snapshots");
+  });
+
+  it("iOS — meta 디코딩 + 실측 칩 4종 렌더 (웹 패리티)", () => {
+    const svc = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneData", "AIRoadmap", "MarketRecommendService.swift"), "utf8");
+    for (const f of ["measuredRent", "backPopulation", "officialCompetition", "areaTrend"]) {
+      expect(svc, f).toContain(f);
+    }
+    const view = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "Stages", "LocationCandidatesStageView.swift"), "utf8");
+    expect(view).toContain("measuredMetaLines(item)");
+    expect(view).toContain("MeasuredMetaChip");
+  });
+});
+
 describe("배선 — 라우트 주입 + 웹 칩 + 번들 격리", () => {
   it("market-recommend 가 실측 주입 + 매칭 없음 언급 금지 + meta 결정론 부착", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");

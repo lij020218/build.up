@@ -682,6 +682,10 @@ public struct LocationCandidatesStageView: View {
                     Text(item.summary).font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
                 }
+                // 실측 칩 — 서버 meta (LLM 미경유). 없는 값은 미표시 (웹 패리티, 2026-08-03)
+                ForEach(measuredMetaLines(item), id: \.self) { line in
+                    MeasuredMetaChip(line: line)
+                }
                 ForEach(item.reasons.prefix(2), id: \.self) { r in
                     Label(r, systemImage: "checkmark.circle.fill")
                         .font(.system(size: 12)).foregroundStyle(scoreColor(86)).labelStyle(.titleAndIcon)
@@ -837,6 +841,33 @@ public struct LocationCandidatesStageView: View {
     }
     private func trafficLabel(_ t: String) -> String {
         switch t { case "mid": return "중간"; case "high": return "많음"; case "very-high": return "매우많음"; default: return t }
+    }
+}
+
+
+// MARK: - 실측 meta 칩 (웹 LocationCandidatesStage 카드 패리티, 2026-08-03)
+
+/// 서버 결정론 meta → 표시 라인. 순서 = 웹과 동일 (공식경쟁 → 추이 → 배후인구 → 임대료).
+private func measuredMetaLines(_ item: MarketScoredItem) -> [String] {
+    var lines: [String] = []
+    if let v = item.meta?.officialCompetition { lines.append("🏪 " + v) }
+    if let v = item.meta?.areaTrend { lines.append("📈 " + v) }
+    if let v = item.meta?.backPopulation { lines.append("🏠 " + v) }
+    if let v = item.meta?.measuredRent { lines.append("📐 " + v) }
+    return lines
+}
+
+private struct MeasuredMetaChip: View {
+    let line: String
+    var body: some View {
+        Text(line)
+            .font(.system(size: 11.5, weight: .semibold))
+            .foregroundStyle(BUColor.midnight)
+            .lineSpacing(2)
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.10), lineWidth: 1))
     }
 }
 

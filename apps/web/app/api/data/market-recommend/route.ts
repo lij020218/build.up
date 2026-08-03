@@ -16,7 +16,10 @@ import { NextResponse } from "next/server";
 import { createAiClient } from "@foundone/ai/utils/client";
 import type { RecommendationItem } from "@foundone/shared";
 import { findDongPopulation, formatDongPopulationLine, DONG_POP_YM_LABEL } from "../../_lib/dong-population";
-import { sbizCountsInRadius } from "../../_lib/sbiz-store";
+import {
+  sbizCountsInRadius, areaKeyFor, upjongSigFor, recordAreaSnapshot, findAreaTrend, type AreaTrend,
+} from "../../_lib/sbiz-store";
+import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import {
   findMarketRentDistricts,
   representativeRent,
@@ -83,6 +86,7 @@ type SubAreaCandidate = {
   // 소진공 공식 카운트 (국세청 원천, 사업자 기준 — 카카오 지도보다 systematically 높음)
   officialSameCount?: number | null;
   officialTotalCount?: number | null;
+  trend?: AreaTrend | null;   // 60일+ 이전 자체 스냅샷 대비 델타 (없으면 미표시)
 };
 
 // ── 카카오 호출 헬퍼 ────────────────────────────────────────────────
@@ -528,6 +532,9 @@ async function scoreWithClaude(
     const popLine = pop
       ? `배후 주거인구(주민등록 ${DONG_POP_YM_LABEL}): ${pop.total.toLocaleString()}명 · 20~30대 ${pop.age2030Pct}% · 40대+ ${pop.age40PlusPct}% (거주 인구 — 유동 아님)`
       : "배후 주거인구: 매칭 없음 (언급 금지)";
+    const trendLine = c.trend
+      ? `개폐업 추이(자체 스냅샷 실측): ${c.trend.daysAgo}일 전 대비 동종 ${c.trend.sameDelta >= 0 ? "+" : ""}${c.trend.sameDelta}곳${c.trend.totalDelta != null ? ` · 전체 ${c.trend.totalDelta >= 0 ? "+" : ""}${c.trend.totalDelta}곳` : ""}`
+      : "개폐업 추이: 관측 이력 없음 (언급 금지)";
     const compLine = typeof c.officialSameCount === "number"
       ? `동종업종 매장 [공식]: ${c.officialSameCount}개 (소진공·국세청 원천, 500m)${typeof c.officialTotalCount === "number" ? ` / 전체 업소 ${c.officialTotalCount}개` : ""}`
       : `동종업종 매장 [지도]: ${c.competitionCount ?? 0}개 (카카오, 500m)`;
@@ -537,7 +544,8 @@ async function scoreWithClaude(
    - 지하철역: ${c.subwayCount ?? 0}개 (접근성)
    - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)
    - ${rentLine}
-   - ${popLine}`;
+   - ${popLine}
+   - ${trendLine}`;
   }).join("\n\n");
 
   // 사용자 메시지 — dynamic 부분만. 캐시 깨지지 않게 system 과 분리.
@@ -597,6 +605,9 @@ ${candidateLines}
     if (popMeta) meta.backPopulation = formatDongPopulationLine(popMeta);
     if (typeof cand?.officialSameCount === "number") {
       meta.officialCompetition = `동종 ${cand.officialSameCount}곳${typeof cand.officialTotalCount === "number" ? ` · 전체 업소 ${cand.officialTotalCount.toLocaleString()}곳` : ""} — 소상공인시장진흥공단(국세청 원천), 500m`;
+    }
+    if (cand?.trend) {
+      meta.areaTrend = `${cand.trend.daysAgo}일 전 대비 동종 ${cand.trend.sameDelta >= 0 ? "+" : ""}${cand.trend.sameDelta}곳${cand.trend.totalDelta != null ? ` · 전체 ${cand.trend.totalDelta >= 0 ? "+" : ""}${cand.trend.totalDelta}곳` : ""} — 자체 관측 실측`;
     }
     return {
       id: cand?.id ?? `kakao-${p.districtName}`,
@@ -670,10 +681,18 @@ export async function POST(request: Request) {
   //   오류 ≠ 0개: 실패는 null 로 남겨 카카오 카운트로 폴백 (부분 실패도 합산 위조 금지).
   const sbizKey = process.env.MOIS_API_KEY;
   if (sbizKey) {
+    const admin = getSupabaseAdmin();
+    const sig = subIndustryId ? upjongSigFor(subIndustryId) : null;
     await Promise.all(candidates.map(async (c) => {
       const counts = await sbizCountsInRadius(subIndustryId ?? "", c.lng, c.lat, 500, sbizKey);
       c.officialSameCount = counts.sameUpjong;
       c.officialTotalCount = counts.totalStores;
+      // 개폐업 추이 — 스냅샷 축적 + 60일+ 델타 (개업일 필드가 없어 라이브 계산 불가 → 자체 원장이 유일)
+      if (admin && sig && typeof counts.sameUpjong === "number") {
+        const areaKey = areaKeyFor(c.lng, c.lat, 500);
+        void recordAreaSnapshot(admin, { areaKey, upjongSig: sig, sameCount: counts.sameUpjong, totalCount: counts.totalStores });
+        c.trend = await findAreaTrend(admin, { areaKey, upjongSig: sig, currentSame: counts.sameUpjong, currentTotal: counts.totalStores });
+      }
     }));
   }
   if (candidates.length < 1) {

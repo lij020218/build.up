@@ -19,6 +19,16 @@ public struct MarketScoredItem: Decodable, Sendable, Identifiable, Hashable {
     public let summary: String
     public let reasons: [String]
     public let warnings: [String]
+    /// 서버가 결정론 부착하는 실측 meta (2026-08-03 웹 패리티) — LLM 미경유 값.
+    ///  measuredRent(부동산원)·backPopulation(행안부)·officialCompetition(소진공)·areaTrend(자체 스냅샷)
+    public let meta: MarketItemMeta?
+
+    public struct MarketItemMeta: Decodable, Sendable, Hashable {
+        public let measuredRent: String?
+        public let backPopulation: String?
+        public let officialCompetition: String?
+        public let areaTrend: String?
+    }
 }
 
 public struct MarketRecommendInput: Encodable, Sendable {
