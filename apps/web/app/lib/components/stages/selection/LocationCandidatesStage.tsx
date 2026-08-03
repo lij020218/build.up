@@ -998,6 +998,12 @@ export function LocationCandidatesStage() {
                     {typeof item.meta.vacancyPct === "number" && <> · {language === "ko" ? `공실률 ${item.meta.vacancyPct}%` : `Vacancy ${item.meta.vacancyPct}%`}</>}
                   </div>
                 )}
+                {/* 동종업종 공식 카운트 — 소진공(국세청 원천), 실패 시 미표시 */}
+                {item.meta?.officialCompetition && (
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>
+                    🏪 {String(item.meta.officialCompetition)}
+                  </div>
+                )}
                 {/* 배후 주거인구 — 행안부 주민등록 실측 (거주 라벨 강제 — 유동인구인 척 금지) */}
                 {item.meta?.backPopulation && (
                   <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", lineHeight: 1.5, padding: "8px 10px", borderRadius: "10px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.10)" }}>

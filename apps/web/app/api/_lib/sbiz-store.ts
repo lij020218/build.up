@@ -1,0 +1,149 @@
+/**
+ * sbiz-store.ts — 소상공인시장진흥공단 상가(상권)정보 API (국세청 원천, 일 10,000건)
+ *
+ * 용도: 상권 단계 경쟁밀도의 공식화 — 카카오 지도 카운트(간판 기준)를 소진공
+ *  공식 업소 DB(사업자 기준·표준 업종분류) 카운트로 승격. 매칭 안 되는 업종은
+ *  카카오 폴백 유지 (억지 매핑 = 남의 업종 경쟁 수 부착 = 위조).
+ *
+ * 업종 매핑 근거 (2026-08-03, smallUpjongList 1,255개 전수 덤프에서 실코드 확인):
+ *  · 확인된 소분류(scls)가 있으면 그것 — 예: 치킨 I21006, 스터디카페 R10202(!),
+ *    요가/필라테스 P10603(학원 분류!), 셀프빨래방 S20902.
+ *  · 소분류가 너무 잘거나 복수 걸치면 중분류(mcls) — 예: 한식 I201, 학원 P106.
+ *  · **공식 분류가 없는 업종은 매핑하지 않는다** — 왁싱·속눈썹 전용 코드 없음(피부관리실
+ *    근사만 존재), 펫 미용/호텔/훈련·파티룸·연습실·공유오피스 코드 없음 → null 선언.
+ *  · 온라인·스타트업 = 상가업소 개념 없음 → null 선언.
+ *  가드 테스트가 70개 세부업종 전수를 "매핑 or 명시적 null" 로 강제한다.
+ */
+
+const BASE = "https://apis.data.go.kr/B553077/api/open/sdsc2";
+
+type UpjongMap = { scls?: string[]; mcls?: string[] } | null;
+
+/** 세부업종 → 상권업종 코드. null = 공식 분류 없음/무점포 (카카오 폴백·미표시) */
+export const SBIZ_UPJONG_MAP: Record<string, UpjongMap> = {
+  // ── food ──
+  "korean-casual": { mcls: ["I201"] },
+  "delivery-meals": { mcls: ["I210"] },                       // 배달 중심 간이 (치킨·분식·버거 포괄)
+  "salad-healthy": { scls: ["I21005"] },                      // 토스트/샌드위치/샐러드
+  "ramen-noodle": { scls: ["I20105", "I20303"] },             // 국수/칼국수 + 일식 면
+  "chicken-burger": { scls: ["I21006", "I21004"] },           // 치킨 + 버거
+  "western-pasta-brunch": { scls: ["I20402", "I20401"] },     // 파스타/스테이크 + 경양식
+  // ── cafe-dessert ──
+  "takeout-coffee": { scls: ["I21201"] },
+  "specialty-coffee": { scls: ["I21201"] },
+  "dessert-cafe": { scls: ["I21201"] },
+  "bakery-studio": { scls: ["I21001"] },                      // 빵/도넛
+  "icecream-bingsu": { scls: ["I21008"] },
+  "self-serve-cafe": { scls: ["I21201"] },
+  // ── retail ──
+  "convenience-small": { scls: ["G20405"] },                  // 편의점
+  "lifestyle-goods": { mcls: ["G212"] },                      // 기타 생활용품 소매
+  "beauty-supplies": { scls: ["G21503"] },                    // 화장품 소매
+  "fashion-accessories": { scls: ["G20907"] },                // 액세서리/잡화
+  "health-food-store": { scls: ["G20508"] },                  // 건강보조식품
+  "unmanned-retail": { scls: ["G20405", "G20499"] },          // 편의점 + 기타 종합소매 (무인 전용 분류 없음)
+  // ── beauty ──
+  "hair-salon": { scls: ["S20701"] },
+  "nail-studio": { scls: ["S20703"] },
+  "skin-care-room": { scls: ["S20702"] },
+  "waxing-studio": { scls: ["S20702"] },                      // 전용 코드 없음 — 피부관리실이 최근접 공식 분류
+  "eyelash-brow": { scls: ["S20702", "S20703"] },             // 전용 코드 없음 — 피부관리+네일 근사
+  "makeup-bridal": { scls: ["S20701"] },                      // 전용 코드 없음 — 미용실 계열
+  // ── fitness ──
+  "pilates-studio": { scls: ["P10603"] },                     // 요가/필라테스 학원 (스포츠 아닌 학원 분류! 인적용역 P10604 는 프리랜서분 — 점포 아님, 제외)
+  "yoga-studio": { scls: ["P10603"] },
+  "pt-gym": { scls: ["R10307"] },                             // 헬스장
+  "crossfit-box": { scls: ["R10307", "R10314"] },             // 헬스장 + 기타 스포츠시설
+  "golf-studio": { scls: ["R10311"] },                        // 골프 연습장
+  "unmanned-fitness": { scls: ["R10307"] },
+  // ── education ──
+  "study-room": { scls: ["R10202"] },                         // 독서실/스터디카페 (교육 아닌 R!)
+  "small-study-room": { scls: ["R10202"] },
+  "kids-academy": { mcls: ["P105", "P106"] },
+  "adult-class": { mcls: ["P106"] },
+  "language-academy": { scls: ["P10615"] },                   // 외국어학원 (인적용역 제외)
+  "coding-class": { mcls: ["P106"] },
+  // ── pet ──
+  "pet-grooming": null,                                       // 공식 소분류 없음 (기타 개인서비스에 섞임)
+  "pet-supplies": { scls: ["G22001"] },                       // 애완동물/용품 소매
+  "pet-hotel": null,
+  "pet-cafe": { scls: ["I21201"] },
+  "pet-training-school": null,
+  // ── living-service ──
+  "laundry-service": { scls: ["S20901"] },
+  "self-laundry": { scls: ["S20902"] },                       // 셀프 빨래방
+  "cleaning-service": { scls: ["N10201"] },
+  "repair-service": { mcls: ["S206"] },
+  "print-copy": { mcls: ["C129"] },                           // 인쇄업 (소매 인쇄소가 이 분류로 등록됨)
+  "device-repair": { scls: ["S20201"] },                      // 핸드폰/통신장비 수리
+  // ── space ──
+  "guesthouse": { scls: ["I10299", "I10103"] },               // 기타 숙박 + 펜션
+  "study-cafe-space": { scls: ["R10202"] },
+  "rental-studio": null,                                      // 공간대여 공식 분류 없음
+  "party-room": null,
+  "shared-office": null,
+  "practice-room": null,
+  // ── online-digital / startup-tech — 상가업소 개념 없음 ──
+  "smart-store": null, "digital-products": null, "creator-service": null,
+  "consignment-commerce": null, "newsletter-membership": null, "global-buying": null,
+  "ai-application": null, "developer-tools": null, "b2b-saas": null,
+  "fintech-startup": null, "healthtech-startup": null, "security-startup": null,
+  "hardware-iot": null, "robotics-physical-ai": null, "semiconductor": null,
+  "biotech-medtech": null, "climate-energy": null,
+};
+
+async function countOnce(params: string, apiKey: string): Promise<number | null> {
+  try {
+    const url = `${BASE}/storeListInRadius?serviceKey=${encodeURIComponent(apiKey)}&type=json&numOfRows=1&pageNo=1&${params}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+    if (!res.ok) return null;
+    const json = await res.json() as { header?: unknown; body?: { totalCount?: number; items?: unknown } };
+    const n = json?.body?.totalCount;
+    if (typeof n === "number" && n >= 0) return n;
+    // 실측 (2026-08-03): 결과 0건이면 totalCount 필드가 생략된 채 정상 header 로 온다
+    //  → header 존재 + totalCount 부재 = 0건. header 조차 없으면 진짜 오류 = null.
+    if (json?.header) return 0;
+    return null;
+  } catch {
+    return null;   // 오류 ≠ 0개 — null 로 구분 (0 위조 금지)
+  }
+}
+
+export type SbizCounts = {
+  /** 동종업종 공식 카운트 — 매핑 없거나 조회 실패면 null (카카오 폴백 신호) */
+  sameUpjong: number | null;
+  /** 반경 내 전체 업소 수 (상권 규모) — 실패 시 null */
+  totalStores: number | null;
+};
+
+/**
+ * 반경 내 공식 업소 카운트. 코드별 totalCount 합산 (서로 다른 분류라 중복 없음).
+ *  호출량: 후보당 코드 수(≤2) + 전체 1 = ≤3건. 일 10,000 쿼터 대비 미미.
+ */
+export async function sbizCountsInRadius(
+  subIndustryId: string,
+  cx: number,
+  cy: number,
+  radius: number,
+  apiKey: string,
+): Promise<SbizCounts> {
+  const mapping = SBIZ_UPJONG_MAP[subIndustryId] ?? null;
+  const base = `radius=${radius}&cx=${cx}&cy=${cy}`;
+
+  const totalP = countOnce(base, apiKey);
+
+  let sameP: Promise<number | null> = Promise.resolve(null);
+  if (mapping) {
+    const codes: Array<["indsSclsCd" | "indsMclsCd", string]> = [
+      ...(mapping.scls ?? []).map((c): ["indsSclsCd", string] => ["indsSclsCd", c]),
+      ...(mapping.mcls ?? []).map((c): ["indsMclsCd", string] => ["indsMclsCd", c]),
+    ];
+    sameP = Promise.all(codes.map(([k, c]) => countOnce(`${base}&${k}=${c}`, apiKey))).then((arr) => {
+      if (arr.some((v) => v === null)) return null;   // 일부 실패 = 합산 불가 — 부분합을 전체인 척 금지
+      return (arr as number[]).reduce((s, v) => s + v, 0);
+    });
+  }
+
+  const [totalStores, sameUpjong] = await Promise.all([totalP, sameP]);
+  return { sameUpjong, totalStores };
+}

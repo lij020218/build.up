@@ -54,6 +54,12 @@ export function formatKoreanDay(ymd: string): string {
   return `${Number(m[2])}월 ${Number(m[3])}일 (${week})`;
 }
 
+/** 오늘(KST)의 YYYY-MM-DD — surface_daily_visits.visit_date 와 같은 기준 */
+export function kstTodayYmd(now: Date = new Date()): string {
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
+}
+
 /** 오늘(KST) 기준 상대 표기 — "오늘 / 어제 / N일 전". 미래·비정상은 null */
 export function relativeDayLabel(ymd: string, now: Date = new Date()): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);

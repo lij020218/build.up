@@ -65,6 +65,52 @@ describe("정직 라벨 — 거주 ≠ 유동", () => {
   });
 });
 
+describe("소진공 공식 경쟁밀도 (2026-08-03 Phase A-1)", () => {
+  it("70개 세부업종 전수 — 매핑 or 명시적 null (누락 = 새 업종 추가 시 조용한 카카오 폴백 방지)", async () => {
+    const { SBIZ_UPJONG_MAP } = await import("../app/api/_lib/sbiz-store");
+    const starter = readFileSync(join(HERE, "..", "..", "..", "packages", "shared", "src", "starter-data.ts"), "utf8");
+    const seg = starter.slice(starter.indexOf("starterIndustryOptions"), starter.indexOf("];", starter.indexOf("starterIndustryOptions")));
+    const ids = [...seg.matchAll(/id:\s*"([a-z0-9-]+)"/g)].map((m) => m[1]!);
+    expect(ids.length).toBeGreaterThanOrEqual(65);
+    for (const id of ids) {
+      expect(Object.prototype.hasOwnProperty.call(SBIZ_UPJONG_MAP, id), `미선언 업종: ${id}`).toBe(true);
+    }
+  });
+
+  it("인적용역 코드 금지 — 프리랜서 등록분은 점포 경쟁이 아니다 (0건 시 totalCount 생략 버그 원인이기도)", async () => {
+    const { SBIZ_UPJONG_MAP } = await import("../app/api/_lib/sbiz-store");
+    const allCodes = Object.values(SBIZ_UPJONG_MAP).flatMap((m) => m ? [...(m.scls ?? []), ...(m.mcls ?? [])] : []);
+    // 실측 확인된 인적용역 코드들 (P10604·P10616 류) 미포함
+    for (const banned of ["P10604", "P10616", "P10612", "P10626"]) {
+      expect(allCodes, banned).not.toContain(banned);
+    }
+  });
+
+  it("무점포·무분류 업종은 null 선언 (억지 매핑 = 남의 업종 경쟁 수 위조)", async () => {
+    const { SBIZ_UPJONG_MAP } = await import("../app/api/_lib/sbiz-store");
+    for (const id of ["b2b-saas", "smart-store", "party-room", "pet-grooming", "shared-office"]) {
+      expect(SBIZ_UPJONG_MAP[id], id).toBeNull();
+    }
+  });
+
+  it("라우트 — 공식 우선·카카오 폴백·소스별 밴드·오류≠0", () => {
+    const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");
+    expect(mr).toContain("sbizCountsInRadius");
+    expect(mr).toContain("동종업종 매장 [공식]");
+    expect(mr).toContain("동종업종 매장 [지도]");            // 폴백 유지
+    expect(mr).toContain("소스 태그로 밴드를 갈라 적용");     // 공식/지도 밴드 분리
+    expect(mr).toContain("meta.officialCompetition");
+    const lib = readFileSync(join(HERE, "..", "app", "api", "_lib", "sbiz-store.ts"), "utf8");
+    expect(lib).toContain("오류 ≠ 0개");
+    expect(lib).toContain("부분합을 전체인 척 금지");
+  });
+
+  it("웹 카드가 공식 경쟁 칩을 렌더한다", () => {
+    const stage = readFileSync(join(HERE, "..", "app", "lib", "components", "stages", "selection", "LocationCandidatesStage.tsx"), "utf8");
+    expect(stage).toContain("item.meta?.officialCompetition");
+  });
+});
+
 describe("배선 — 라우트 주입 + 웹 칩 + 번들 격리", () => {
   it("market-recommend 가 실측 주입 + 매칭 없음 언급 금지 + meta 결정론 부착", () => {
     const mr = readFileSync(join(HERE, "..", "app", "api", "data", "market-recommend", "route.ts"), "utf8");

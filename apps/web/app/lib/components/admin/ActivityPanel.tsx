@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import { useAdminFetch } from "./useAdminFetch";
 import { Card, EmptyState, tableStyles, MUTED, NAVY, fmtNum } from "./ui";
 import { MetricCard, MetricGrid } from "./MetricCard";
-import { surfaceLabel, aiFeatureLabel, formatKoreanDay, relativeDayLabel } from "./activity-labels";
+import { surfaceLabel, aiFeatureLabel, formatKoreanDay, relativeDayLabel, kstTodayYmd } from "./activity-labels";
 
 type DayActivity = {
   date: string;
@@ -63,7 +63,13 @@ export function ActivityPanel() {
       .map((u) => ({ ...u, days: u.days.filter((d) => d.date === selectedDate) }));
   }, [data, selectedDate]);
 
-  const todayUsers = daily[0]?.users ?? null;
+  // daily 는 "활동이 있던 날"만 담는다 — daily[0] 을 오늘로 읽으면 오늘 활동이 없을 때
+  // 가장 최근 활동일 수치가 "오늘"로 둔갑한다(2026-08-03 실사고: 8/1의 1명이 오늘로 표시).
+  // 오늘(KST)과 정확히 일치하는 행만 인정, 조회가 성공했으면 없음 = 정직한 0.
+  const bothFailed = Boolean(data?.visitsFailed && data?.aiFailed);
+  const todayUsers = data && !bothFailed
+    ? (daily.find((d) => d.date === kstTodayYmd())?.users ?? 0)
+    : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

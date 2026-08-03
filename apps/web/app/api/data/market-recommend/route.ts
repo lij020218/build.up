@@ -16,6 +16,7 @@ import { NextResponse } from "next/server";
 import { createAiClient } from "@foundone/ai/utils/client";
 import type { RecommendationItem } from "@foundone/shared";
 import { findDongPopulation, formatDongPopulationLine, DONG_POP_YM_LABEL } from "../../_lib/dong-population";
+import { sbizCountsInRadius } from "../../_lib/sbiz-store";
 import {
   findMarketRentDistricts,
   representativeRent,
@@ -79,6 +80,9 @@ type SubAreaCandidate = {
   subwayCount?: number;            // SW8 지하철역 (500m, 접근성)
   cultureCount?: number;           // CT1 문화시설 (500m, 앵커)
   totalCount?: number;             // 총 상가 밀도 proxy (CE7 + FD6, 300m)
+  // 소진공 공식 카운트 (국세청 원천, 사업자 기준 — 카카오 지도보다 systematically 높음)
+  officialSameCount?: number | null;
+  officialTotalCount?: number | null;
 };
 
 // ── 카카오 호출 헬퍼 ────────────────────────────────────────────────
@@ -425,12 +429,13 @@ type ScoredItem = {
 const SCORING_SYSTEM_PROMPT = `당신은 한국 창업 상권 분석 전문가입니다. 사용자의 희망 지역 주변 후보 sub-area 들을 Kakao Local API 라이브 메트릭 + 한국 창업 도메인 경험으로 0~100점 점수화합니다.
 
 ## 평가 프레임워크 (5축)
-**1. 동종업종 경쟁 강도 (Competition Density)** — 500m 반경 동종업종 매장 수
-- 0~3개: 시장 미성숙 또는 부적합 입지 → 시작점 60점, 위험 시그널
-- 4~15개: 적정 경쟁 → 기준점수 그대로
-- 16~35개: 활성 시장, 차별화 필요 → 그대로 (단 차별화 reasons 강조)
-- 36~60개: 과밀 시장 → -10~-15점, 차별화 전략 강력 요구
-- 61개+: 레드오션 → -20점, 명확한 차별화 없으면 진입 비추천
+**1. 동종업종 경쟁 강도 (Competition Density)** — 500m 반경. **소스 태그로 밴드를 갈라 적용**:
+후보 라인이 [공식](소진공·사업자 등록 기준 — 지도 노출보다 1.5~2배 높게 잡힘)이면:
+- 0~5개: 시장 미성숙/부적합 → 60점 시작, 위험 시그널 · 6~30개: 적정 · 31~70개: 활성(차별화 강조)
+- 71~120개: 과밀 → -10~-15점 · 121개+: 레드오션 → -20점
+후보 라인이 [지도](카카오)이면 기존 밴드:
+- 0~3 미성숙 · 4~15 적정 · 16~35 활성 · 36~60 과밀(-10~-15) · 61+ 레드오션(-20)
+reasons 에 수치 인용 시 반드시 소스를 함께 ("공식 107개" / "지도 32개").
 
 **2. 유동인구 Proxy (CE7 카페 밀도, 500m 반경)**
 - 30개+: 강력한 유동 → +10점 (스타벅스·이디야 등 브랜드가 1차로 검증한 자리)
@@ -523,8 +528,11 @@ async function scoreWithClaude(
     const popLine = pop
       ? `배후 주거인구(주민등록 ${DONG_POP_YM_LABEL}): ${pop.total.toLocaleString()}명 · 20~30대 ${pop.age2030Pct}% · 40대+ ${pop.age40PlusPct}% (거주 인구 — 유동 아님)`
       : "배후 주거인구: 매칭 없음 (언급 금지)";
+    const compLine = typeof c.officialSameCount === "number"
+      ? `동종업종 매장 [공식]: ${c.officialSameCount}개 (소진공·국세청 원천, 500m)${typeof c.officialTotalCount === "number" ? ` / 전체 업소 ${c.officialTotalCount}개` : ""}`
+      : `동종업종 매장 [지도]: ${c.competitionCount ?? 0}개 (카카오, 500m)`;
     return `${i + 1}. ${c.districtName} (lat=${c.lat.toFixed(4)}, lng=${c.lng.toFixed(4)})
-   - 동종업종 매장: ${c.competitionCount ?? 0}개 (500m 반경)
+   - ${compLine}
    - 카페 밀도: ${c.cafeCount ?? 0}개 (유동인구 proxy)
    - 지하철역: ${c.subwayCount ?? 0}개 (접근성)
    - 문화시설: ${c.cultureCount ?? 0}개 (앵커 시설)
@@ -587,6 +595,9 @@ ${candidateLines}
     }
     const popMeta = findDongPopulation(ctx.region, p.districtName);
     if (popMeta) meta.backPopulation = formatDongPopulationLine(popMeta);
+    if (typeof cand?.officialSameCount === "number") {
+      meta.officialCompetition = `동종 ${cand.officialSameCount}곳${typeof cand.officialTotalCount === "number" ? ` · 전체 업소 ${cand.officialTotalCount.toLocaleString()}곳` : ""} — 소상공인시장진흥공단(국세청 원천), 500m`;
+    }
     return {
       id: cand?.id ?? `kakao-${p.districtName}`,
       title: p.title,
@@ -654,6 +665,17 @@ export async function POST(request: Request) {
 
   // ② 후보 sub-area 발굴
   const candidates = await discoverSubAreas(region, center, kakaoKey);
+
+  // 소진공 공식 카운트 보강 (2026-08-03 Phase A-1) — 후보당 ≤3콜, 일 10,000 쿼터 대비 미미.
+  //   오류 ≠ 0개: 실패는 null 로 남겨 카카오 카운트로 폴백 (부분 실패도 합산 위조 금지).
+  const sbizKey = process.env.MOIS_API_KEY;
+  if (sbizKey) {
+    await Promise.all(candidates.map(async (c) => {
+      const counts = await sbizCountsInRadius(subIndustryId ?? "", c.lng, c.lat, 500, sbizKey);
+      c.officialSameCount = counts.sameUpjong;
+      c.officialTotalCount = counts.totalStores;
+    }));
+  }
   if (candidates.length < 1) {
     return NextResponse.json({
       ok: false,
