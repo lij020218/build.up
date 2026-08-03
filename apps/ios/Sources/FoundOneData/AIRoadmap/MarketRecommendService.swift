@@ -29,6 +29,8 @@ public struct MarketScoredItem: Decodable, Sendable, Identifiable, Hashable {
         public let officialCompetition: String?
         public let areaTrend: String?
         public let franchisePresence: String?
+        /// 결정론 점수 근거 (measured-v1) — "기준 60 · 경쟁 +10(공식 24개) · …"
+        public let scoreBreakdown: String?
     }
 }
 

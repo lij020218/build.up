@@ -114,3 +114,37 @@ describe("웹 상권 단계 IA 재구성 가드 (2026-08-03)", () => {
     expect(hook).toContain("locationMode, aiMarketRegion]");
   });
 });
+
+describe("iOS 미러 가드 (2026-08-03 재설계)", () => {
+  const iosView = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "Stages", "LocationCandidatesStageView.swift"), "utf8");
+  const iosSvc = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneData", "AIRoadmap", "MarketRecommendService.swift"), "utf8");
+
+  it("capital 전달 + scoreBreakdown 디코드·표시", () => {
+    expect(iosView).toContain("capital: startupWon > 0 ? startupWon : nil");
+    expect(iosSvc).toContain("scoreBreakdown");
+    expect(iosView).toContain("점수 근거:");
+  });
+
+  it("게이트 = 상권 선택 (주소는 선택 입력) + 프리필 오염 제거", () => {
+    expect(iosView).toContain("!selectedMarketTitle.trimmingCharacters(in: .whitespaces).isEmpty");
+    expect(iosView).not.toContain("finalDone && !finalAddress");
+    expect(iosView).not.toContain("finalAddress = title");
+    expect(iosView).toContain("매물 계약은 다음 단계 몫");
+  });
+
+  it("실측 스냅샷 미러 — 서비스 + 디바운스 섹션", () => {
+    const snapSvc = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneData", "AIRoadmap", "MarketSnapshotService.swift"), "utf8");
+    expect(snapSvc).toContain("market-snapshot");
+    expect(snapSvc).toContain("displayLines");
+    expect(iosView).toContain("MarketSnapshotService.shared().fetch");
+    expect(iosView).toContain("700_000_000");
+  });
+
+  it("카피 정직화 미러 — 118·실측 지표·매물 입력 약속 제거", () => {
+    expect(iosView).not.toContain("113개 상권");
+    expect(iosView).toContain("118개 상권");
+    expect(iosView).not.toContain("각 25점");
+    expect(iosView).not.toContain("주소·평수·임대료·메모");
+    expect(iosView).toContain("서울 118곳 기준");
+  });
+});

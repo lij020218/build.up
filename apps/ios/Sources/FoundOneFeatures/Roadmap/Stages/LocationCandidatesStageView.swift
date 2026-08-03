@@ -77,7 +77,8 @@ public struct LocationCandidatesStageView: View {
         }
     }
 
-    // 최종 결정
+    // 최종 결정 — 게이트는 상권 선택(웹 패리티). 주소·확정 토글은 선택 입력 (매물 계약은 다음 단계 몫)
+    @AppStorage("loc.selectedMarketTitle") private var selectedMarketTitle = ""
     @AppStorage("loc.finalAddress")       private var finalAddress   = ""
     @AppStorage("loc.finalNote")          private var finalNote      = ""
     @AppStorage("loc.finalDone")          private var finalDone      = false
@@ -99,6 +100,8 @@ public struct LocationCandidatesStageView: View {
     @State private var aiDistrictMatches: [MarketDistrict] = []   // 내장 상권 DB 매칭 (즉시·오프라인 — 메인)
     @State private var didSearch = false                          // 한 번이라도 검색했는지 (AI 옵트인 노출 게이팅)
     @State private var selectedMarketId: String?                  // 사용자가 탭으로 고른 상권 (카드↔지도 핀 동기·확장)
+    @State private var snapshotAxes: MarketSnapshotAxes?          // 지역 실측 스냅샷 (LLM 무관 자동 — 웹 MarketSnapshotPanel 미러)
+    @State private var snapshotLoading = false
 
     /// Found.One 상권 추천 (내장 상권 데이터 — **메인**·오프라인 즉시). 웹 buildRecommendedMarkets 대응.
     private func runFoundOneRecommend() {
@@ -122,7 +125,7 @@ public struct LocationCandidatesStageView: View {
         Task {
             do {
                 let result = try await MarketRecommendService.shared().recommend(
-                    MarketRecommendInput(region: region, categoryId: categoryId, subIndustryId: sub, franchiseBrandId: brandId.isEmpty ? nil : brandId)
+                    MarketRecommendInput(region: region, categoryId: categoryId, subIndustryId: sub, capital: startupWon > 0 ? startupWon : nil, franchiseBrandId: brandId.isEmpty ? nil : brandId)
                 )
                 await MainActor.run {
                     aiItems = result.items
@@ -177,14 +180,15 @@ public struct LocationCandidatesStageView: View {
         if aiCenter == nil { aiCenter = pins.first?.coord }
     }
 
+    // 게이트 = 상권 1곳 선택 (웹 canCompleteLocationStep 패리티). 매물 주소는 계약 단계 몫 — 선택 입력.
+    //  근거: 정부 창업절차 정석 상권분석→입지선정→점포계약 (중기부 창업절차도)
     private var canCompleteStage: Bool {
-        finalDone && !finalAddress.trimmingCharacters(in: .whitespaces).isEmpty
+        !selectedMarketTitle.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     private var advanceHint: String {
-        if finalAddress.trimmingCharacters(in: .whitespaces).isEmpty { return "「후보 비교·결정」 탭에서 최종 매물 주소를 입력하세요" }
-        if !finalDone { return "입지 최종 확정 토글을 켜세요" }
-        return "입지 확정 — 다음 단계로"
+        if selectedMarketTitle.trimmingCharacters(in: .whitespaces).isEmpty { return "「후보 비교·결정」 탭에서 상권을 선택하세요" }
+        return "상권 확정 — 다음 단계로"
     }
 
     public init() {}
@@ -200,15 +204,15 @@ public struct LocationCandidatesStageView: View {
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
                 // address(구체 매물 주소) + preferredRegion(선호 상권 — 웹 SSOT 키, projector→preferred_regions)
-                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["address": finalAddress, "preferredRegion": aiRegion])
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["market": selectedMarketTitle, "address": finalAddress, "preferredRegion": aiRegion])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["address": finalAddress, "preferredRegion": aiRegion]) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["market": selectedMarketTitle, "address": finalAddress, "preferredRegion": aiRegion]) },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 113개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천"),
+                .init(label: "1. 118개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천"),
                 .init(label: "2. 상위 후보 3곳 선정", detail: "AI 점수 + 본인 자본 + 업종 적합도로 1차 압축"),
-                .init(label: "3. 직접 상권 평가", detail: "지도에서 직접 입력한 위치도 분석 — 동일 점수 모델 적용"),
+                .init(label: "3. 직접 상권 평가", detail: "아는 상권 이름을 입력해도 동일 점수 모델로 평가"),
                 .init(label: "4. 최종 1곳 확정", detail: "현장 답사·임대료 견적·매물 확인 후 1곳 결정"),
                 ],
                 verifyItems: [
@@ -261,7 +265,7 @@ public struct LocationCandidatesStageView: View {
                     .font(.system(size: 18, weight: .heavy)).tracking(-0.3)
                     .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("상권은 1~2년 묶이는 의사결정입니다. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. AI 라이브 데이터 + 직접 답사 후보 + 4지표 점수화로 후회 없는 결정.")
+                Text("상권은 1~2년 묶이는 의사결정입니다. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. 공공 실측 데이터 점수 + 직접 답사 검증으로 후회 없는 결정.")
                     .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -281,8 +285,8 @@ public struct LocationCandidatesStageView: View {
                     Text("이 단계에서 진행 — 총 5단계")
                         .font(BUFont.eyebrow).foregroundStyle(BUColor.midnight.opacity(0.7))
                     outlineRow("1. 지역·AI", "구체적 지역 입력 → AI 라이브 추천", "5분")
-                    outlineRow("2. 답사 후보", "직접 답사한 매물 1-2곳 추가 (정성 요소)", "10분")
-                    outlineRow("3. 점수 비교", "4지표 (유동·임대료·경쟁·타겟) 점수 + 직관 검증", "10분")
+                    outlineRow("2. 답사 후보", "후보 2~3곳 직접 답사 (현장 검증)", "10분")
+                    outlineRow("3. 점수 비교", "실측 지표 (경쟁·유동·임대·인구) 점수 + 직관 검증", "10분")
                     outlineRow("4. 매물 체크", "현장 5가지 필수 확인 — 계약 전 최종 관문", "15분")
                     outlineRow("결정", "최종 1곳 선택 → 계약 검토 단계로", nil)
                 }
@@ -414,10 +418,10 @@ public struct LocationCandidatesStageView: View {
     private var visitPage: some View {
         workStepCard(
             stepLabel: "2. 답사 후보 추가", time: "10분",
-            headline: "AI 추천만 ≠ 결정. 직접 답사한 매물 1-2곳 추가해야 함",
+            headline: "추천만 ≠ 결정. 후보 상권을 직접 답사해 현장 검증해야 함",
             why: "AI 는 정량 데이터 (임대료·유동) 만 봄. 사장님이 직접 본 「분위기·동선·소음」 같은 정성 요소는 직접 답사 매물에서만 확인 가능.",
             how: [
-                ("직접 답사한 매물 입력", "주소·평수·임대료·메모. AI 추천 매물과 동일한 점수 기준으로 비교됨."),
+                ("아는 상권 직접 분석", "후보 비교 페이지 검색창에 상권 이름을 넣으면 같은 기준(실측 점수)으로 분석됩니다."),
                 ("최소 3곳 이상 비교 필수", "1곳만 보면 「이게 좋아 보인다」 가 끝. 3곳 이상 동일 기준으로 보면 차이가 명확."),
             ],
             watchouts: [
@@ -432,10 +436,10 @@ public struct LocationCandidatesStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             workStepCard(
                 stepLabel: "3. 점수 비교", time: "10분",
-                headline: "유동인구·임대료·경쟁 밀도·타겟 적합도 — 4지표로 동일 채점",
-                why: "주관적 「느낌」 만으로 결정하면 후회 1순위. 객관 4지표로 채점한 후 본인 직관과 교차 검증해야 후회 없음.",
+                headline: "경쟁·유동·임대·인구 — 실측 지표로 동일 채점",
+                why: "주관적 「느낌」 만으로 결정하면 후회 1순위. 공공 실측 지표로 채점한 후 본인 직관과 교차 검증해야 후회 없음.",
                 how: [
-                    ("4지표 점수 확인", "유동(일평균 통행) · 임대료(평당 월세) · 경쟁(반경 500m 동종 수) · 타겟(연령·소득). 각 25점, 총 100."),
+                    ("실측 점수 확인", "경쟁(소진공 공식, 500m) · 유동(카페 밀도) · 임대·공실(부동산원) · 인구(주민등록). 기준 60점에 실측 가감 — 카드 「점수 근거」에서 축별 확인."),
                     ("점수 1위 + 본인 직관 교차 검증", "1위가 직관과 맞으면 결정. 다르면 그 이유를 메모 — 보통 직관이 놓친 요소가 보임."),
                 ],
                 watchouts: [
@@ -478,7 +482,7 @@ public struct LocationCandidatesStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("최종 선택 매물 주소")
+                    BUEyebrow("최종 선택 매물 주소 (선택 — 매물 확정 시)")
                     TextField("예) 서울 마포구 연남동 OO길 00번지 1층", text: $finalAddress, axis: .vertical)
                         .font(BUFont.body)
                         .padding(.horizontal, 10).padding(.vertical, 8)
@@ -493,8 +497,12 @@ public struct LocationCandidatesStageView: View {
                         .lineLimit(3...6)
 
                     Toggle(isOn: $finalDone) {
-                        Text("입지 최종 확정 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                        Text("매물까지 확정했어요 (선택)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                     }.tint(BUColor.midnight)
+                    if !selectedMarketTitle.isEmpty {
+                        Text("선택한 상권: \(selectedMarketTitle)")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.midnight)
+                    }
                 }
             }
         }
@@ -573,7 +581,7 @@ public struct LocationCandidatesStageView: View {
         return BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
                 BUEyebrow("Found.One 상권 추천")
-                Text("희망 지역을 입력하면 서울 상권 데이터에서 유동인구·임대료·경쟁을 점수화해 근처 상권까지 추천합니다.")
+                Text("희망 지역을 입력하면 내장 상권 데이터(서울 118곳 기준)에서 점수화해 추천하고, 아래에 공공 실측 요약이 자동 표시됩니다. 서울 외 지역은 AI 실시간 분석을 이용하세요.")
                     .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
 
                 HStack(spacing: 8) {
@@ -593,6 +601,23 @@ public struct LocationCandidatesStageView: View {
                             )
                     }
                     .disabled(region.isEmpty)
+                }
+
+                // ── 지역 실측 스냅샷 — 입력 700ms 디바운스 자동 (LLM 무관, 웹 패리티) ──
+                if snapshotLoading || snapshotAxes?.displayLines.isEmpty == false {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(snapshotLoading ? "입력 지역 실측 · 조회 중…" : "입력 지역 실측")
+                            .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                        ForEach(snapshotAxes?.displayLines ?? [], id: \.self) { line in
+                            Text(line)
+                                .font(.system(size: 11.5)).foregroundStyle(BUColor.ink)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
 
                 if !aiDistrictMatches.isEmpty {
@@ -671,6 +696,23 @@ public struct LocationCandidatesStageView: View {
             }
         }
         .sensoryFeedback(.selection, trigger: selectedMarketId)
+        .task(id: region) {
+            // 700ms 디바운스 — 타이핑 중 취소 (웹 MarketSnapshotPanel 미러)
+            guard region.count >= 2 else { snapshotAxes = nil; return }
+            snapshotLoading = true
+            defer { snapshotLoading = false }
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            guard !Task.isCancelled else { return }
+            let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
+            let brandId = UserDefaults.standard.string(forKey: "stage.franchise.selectedBrandId") ?? ""
+            let axes = await MarketSnapshotService.shared().fetch(
+                region: region,
+                categoryId: categoryId,
+                subIndustryId: industryId.isEmpty ? nil : industryId,
+                franchiseBrandId: brandId.isEmpty ? nil : brandId
+            )
+            if !Task.isCancelled { snapshotAxes = axes }
+        }
     }
 
     private func recommendItemRow(_ item: MarketScoredItem) -> some View {
@@ -732,14 +774,13 @@ public struct LocationCandidatesStageView: View {
         return BUColor.inkMuted
     }
 
-    /// 상권 카드/핀 탭 → 선택 토글. 선택 시 햅틱 + (비어있으면) 최종 입지 주소 자동 프리필.
+    /// 상권 카드/핀 탭 → 선택 토글. 상권명은 게이트·저장용 selectedMarketTitle 에만
+    ///  (finalAddress 프리필 금지 — 상권명은 매물 주소가 아니다. 2026-08-03 정직화)
     private func selectMarket(id: String, title: String) {
         withAnimation(.easeOut(duration: 0.2)) {
             selectedMarketId = (selectedMarketId == id) ? nil : id
         }
-        if selectedMarketId == id, finalAddress.trimmingCharacters(in: .whitespaces).isEmpty {
-            finalAddress = title
-        }
+        selectedMarketTitle = selectedMarketId == id ? title : ""
     }
 
     private func selectMarketByPin(_ pin: MarketMapPin) {
@@ -867,6 +908,7 @@ private func measuredMetaLines(_ item: MarketScoredItem) -> [String] {
     if let v = item.meta?.areaTrend { lines.append("📈 " + v) }
     if let v = item.meta?.backPopulation { lines.append("🏠 " + v) }
     if let v = item.meta?.measuredRent { lines.append("📐 " + v) }
+    if let v = item.meta?.scoreBreakdown { lines.append("📊 점수 근거: " + v) }
     return lines
 }
 
