@@ -36,6 +36,7 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setSelectedIndustryCategoryId,
     setSelectedBusinessModelId,
     setSelectedBudget,
+    setInitialOperatingCapital,
     setBudgetInputText,
     setPreferredRegionInput,
     setStartupType,
@@ -381,11 +382,32 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
       selectedPrimaryOptionId: result.parsed.businessModelId,
       completedAt: now,
     });
+    // ⚠️ completedAt 을 찍지 않는다 (2026-08-03 인수인계 감사).
+    //   종전엔 5단계(예산)가 완료라 4단계(타깃 고객)가 경로상 유일한 구멍이 됐고:
+    //   · 재방문 시 heal(강신호 최후방 backfill)이 4단계를 사용자 없이 완료 처리 — 세션마다 상태가 달라짐
+    //   · 직후 세션에서도 4단계를 마치면 완료된 5단계를 건너뛰어 4→6 점프
+    //   완료를 1·2·3 연속으로 유지하면 heal 이 건드릴 구멍이 없고 4→5→6 이 끊김 없이 이어진다.
+    //   예산 두 통 분리: total 에는 workingCapital(②운영예비)이 포함 — ①시설·창업비만 capital 로.
+    const aiWorkingCapital = result.budgetAllocation.workingCapital ?? 0;
+    const aiFacilityBudget =
+      aiWorkingCapital > 0 && aiWorkingCapital < result.budgetAllocation.total
+        ? result.budgetAllocation.total - aiWorkingCapital
+        : result.budgetAllocation.total;
     nextDecisions = upsertStageDecision(nextDecisions, "budget-setup", {
       stageId: "budget-setup",
-      inputs: { capital: result.budgetAllocation.total, targetOpenDate: result.timeline.targetOpenDate },
-      completedAt: now,
+      inputs: {
+        capital: aiFacilityBudget,
+        targetOpenDate: result.timeline.targetOpenDate,
+        aiGenerated: true,   // 로드맵 헤더 "AI가 채워뒀어요" 안내 조건 (완료 시 자동 소멸)
+      },
     });
+    // ── 4단계(타깃 고객) 프리필 — AI 가 뽑아놓고 버려지던 targetCustomer 를 단계에 전달 ──
+    if (result.identity?.targetCustomer) {
+      nextDecisions = upsertStageDecision(nextDecisions, "target-customer-definition", {
+        stageId: "target-customer-definition",
+        inputs: { targetCustomer: result.identity.targetCustomer },
+      });
+    }
     if (result.parsed.preferredRegion) {
       // ⚠️ completedAt 을 찍지 않는다 (2026-08-03 감사 P1).
       //   지역명 문자열 하나로 입지 단계를 완료 처리하면, 사업 생사를 가르는 결정이
@@ -402,8 +424,11 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setSelectedIndustryCategoryId(result.parsed.industryCategoryId);
     setSelectedBusinessModelId(result.parsed.businessModelId);
     setStartupType(result.parsed.startupType);
-    setSelectedBudget(result.budgetAllocation.total);
-    setBudgetInputText(String(Math.round(result.budgetAllocation.total / 10000)));
+    setSelectedBudget(aiFacilityBudget);                       // ① 시설·창업비만
+    setInitialOperatingCapital(
+      aiWorkingCapital > 0 ? aiWorkingCapital : undefined,     // ② 운영예비 — AI 산출 그대로
+    );
+    setBudgetInputText(String(Math.round(aiFacilityBudget / 10000)));
     if (result.parsed.preferredRegion) setPreferredRegionInput(result.parsed.preferredRegion);
 
     // 비용
@@ -698,7 +723,8 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
 
     setShowAIRoadmapWizard(false);
     setShowOnboardingChoice(false);
-    navigateToSurface("home");
+    // 착지 = 로드맵 (iOS .roadmap 과 통일) — 분업 선언의 "확인만 하면 됨" 서사가 이어지는 화면
+    navigateToSurface("roadmap");
   };
 
   // ──────────────────────────────────────────────────────────────────────────

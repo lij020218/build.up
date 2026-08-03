@@ -43,6 +43,8 @@ public struct AIRoadmapResult: Decodable, Sendable {
         public let subIndustryId: String
         public let industryLabel: String
         public let startupType: String
+        /// 운영 방식 id — 웹 파리티 (2026-08-03 디코딩 추가: 종전 누락으로 iOS 가 3단계를 못 채웠음)
+        public let businessModelId: String?
         public let preferredRegion: String
         public let matchingReason: String
         public let matchingConfidence: Int
@@ -76,6 +78,8 @@ public struct AIRoadmapResult: Decodable, Sendable {
     }
 
     public struct Timeline: Decodable, Sendable {
+        /// "YYYY-MM-DD" — 로드맵 D-day 칩 소스 (2026-08-03 디코딩 추가)
+        public let targetOpenDate: String?
         public let totalWeeks: Int
         public let phases: [Phase]
 

@@ -209,6 +209,14 @@ public struct RoadmapView: View {
                 Text("\(completedCount) / \(totalCount) 완료")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted.opacity(0.7))
+                if showAiHandoffHint {
+                    Text("AI가 기획 단계를 채워뒀어요 —\n다음 단계부터 확인만 하며 이어가면 됩니다.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .multilineTextAlignment(.trailing)
+                        .lineSpacing(2)
+                        .padding(.top, 2)
+                }
                 // 목표 오픈 D-day — budget-setup 결정 inputs.targetOpenDate (웹 RoadmapSurface 미러).
                 //   과거·비정상 날짜는 미표시 (카운트다운 위조 금지).
                 if let dday = openDday {
@@ -222,6 +230,13 @@ public struct RoadmapView: View {
                 }
             }
         }
+    }
+
+    /// AI 인수인계 안내 — 웹 RoadmapSurface 미러: aiGenerated 프리필이 있고 예산 단계가
+    /// 아직 미완료일 때만 ("왜 앞이 ✓인지" 설명, 사용자가 예산을 완료하면 자동 소멸).
+    private var showAiHandoffHint: Bool {
+        guard let d = store.decisions["budget-setup"] else { return false }
+        return d.inputs["aiGenerated"] == "true" && d.completedAt == nil
     }
 
     /// 웹 RoadmapSurface openDday 와 동일 규칙: 로컬 파싱, 0~730일 범위만.

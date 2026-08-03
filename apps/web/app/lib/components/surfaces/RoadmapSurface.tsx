@@ -70,6 +70,17 @@ export function RoadmapSurface() {
             <div style={{ fontSize: "28px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a", lineHeight: 1.1 }}>
               {copy.home.starterFlow}
             </div>
+            {/* AI 인수인계 안내 — 위저드가 채운 상태로 도착한 사용자에게 "왜 앞이 ✓인지" 설명.
+                aiGenerated 플래그는 budget-setup 프리필에만 있고, 사용자가 예산 단계를
+                직접 완료하는 순간부터는 이 안내가 필요 없다 (완료 시 조건 소멸). */}
+            {Boolean((d.decisions["budget-setup"]?.inputs as Record<string, unknown> | undefined)?.aiGenerated)
+              && !d.decisions["budget-setup"]?.completedAt && (
+              <div style={{ marginTop: 8, fontSize: 12.5, color: "rgba(15,23,42,0.6)", fontWeight: 500, lineHeight: 1.5 }}>
+                {ko
+                  ? "AI가 기획 단계를 채워뒀어요 — 다음 단계부터 확인만 하며 이어가면 됩니다."
+                  : "The AI pre-filled the planning stages — continue by reviewing the next one."}
+              </div>
+            )}
             {openDday && (
               <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 11px", borderRadius: 999, background: "rgba(25,25,112,0.07)", border: "1px solid rgba(25,25,112,0.14)", fontSize: 12, fontWeight: 700, color: "#191970" }}>
                 {ko

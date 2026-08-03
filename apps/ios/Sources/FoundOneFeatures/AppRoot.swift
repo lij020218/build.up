@@ -929,9 +929,10 @@ private struct OnboardingFlow: View {
                         )
                         OnboardingProfileSync.persistBusinessLaunched(false)
 
-                        // 웹 패리티(useOnboardingHandlers): AI 위저드 결과를 stage_decisions 로 prefill+완료 →
-                        //   웹·iOS 진행도 일치. 웹은 5건(industry/startup-type/business-model/budget/location)이나,
-                        //   iOS result 에 businessModelId·targetOpenDate 가 없어 그 둘은 정직하게 제외(위조 금지).
+                        // 웹 패리티(useOnboardingHandlers, 2026-08-03 인수인계 감사로 재정렬):
+                        //   완료 = 위저드에서 실제 검토한 기획 3단계(업종·형태·운영방식)만 — 연속이라
+                        //   heal 이 사이를 못 메꾼다. 예산·타깃고객·입지는 **프리필만**(완료는 사용자) —
+                        //   완료를 띄엄띄엄 찍으면 heal 무단완료·4→6 점프가 생긴다(웹 감사 F1·F2).
                         if !parsed.subIndustryId.isEmpty {
                             roadmapStore.completeStage(
                                 "industry-selection",
@@ -942,12 +943,26 @@ private struct OnboardingFlow: View {
                         if !parsed.startupType.isEmpty {
                             roadmapStore.completeStage("startup-type", selectedPrimaryOptionId: parsed.startupType)
                         }
-                        let capital = result.budgetAllocation.displayTotal
-                        if capital > 0 {
-                            roadmapStore.completeStage("budget-setup", inputs: ["capital": String(capital)])
+                        if let model = parsed.businessModelId, !model.isEmpty {
+                            roadmapStore.completeStage("business-model", selectedPrimaryOptionId: model)
+                        }
+                        // 예산 두 통 분리 (웹과 동일): total 에서 ②운영예비(workingCapital)를 뺀 ①만 capital
+                        let total = result.budgetAllocation.displayTotal
+                        let working = result.budgetAllocation.workingCapital
+                        let facility = (working > 0 && working < total) ? total - working : total
+                        if facility > 0 {
+                            var budgetInputs = ["capital": String(facility), "aiGenerated": "true"]
+                            if let open = result.timeline.targetOpenDate, !open.isEmpty {
+                                budgetInputs["targetOpenDate"] = open
+                            }
+                            roadmapStore.prefillStage("budget-setup", inputs: budgetInputs)
+                        }
+                        if let target = result.identity?.targetCustomer, !target.isEmpty {
+                            roadmapStore.prefillStage("target-customer-definition", inputs: ["targetCustomer": target])
                         }
                         if !parsed.preferredRegion.isEmpty {
-                            roadmapStore.completeStage(
+                            // 입지는 발품 전 — 완료 금지 (웹 2026-08-02 P1 수정의 iOS 미러)
+                            roadmapStore.prefillStage(
                                 "location-candidates",
                                 inputs: ["preferredRegion": parsed.preferredRegion, "selectionMode": "direct"]
                             )

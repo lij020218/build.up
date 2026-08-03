@@ -191,6 +191,30 @@ public final class RoadmapStore {
         pushUpsert(d)
     }
 
+    /// 프리필 — **완료 없이** 입력값만 채운다 (웹 SSOT: 위저드의 "채우되 완료는 사용자" 패턴).
+    ///   AI 위저드 인수인계용 (2026-08-03): completedAt 을 찍으면 경로에 구멍이 생겨
+    ///   웹 heal 이 사이 단계를 무단 완료하거나(재방문 상태 변화) 완료 단계를 건너뛰는
+    ///   점프가 생긴다. 결정은 만들되 완료 도장은 사용자의 "다음 단계로"만 찍는다.
+    public func prefillStage(
+        _ stageId: String,
+        inputs: [String: String] = [:],
+        selectedPrimaryOptionId: String? = nil
+    ) {
+        guard pathStageIds.contains(stageId) else {
+            logger.warning("prefillStage 거부 — path 외 stageId: \(stageId, privacy: .public)")
+            return
+        }
+        var d = decisions[stageId] ?? StageDecision(stageId: stageId)
+        // completedAt 은 건드리지 않는다 — 이미 완료된 단계면 완료 유지, 미완료면 미완료 유지
+        for (k, v) in inputs where d.inputs[k] == nil { d.inputs[k] = v }   // 기존 사용자 입력 보호
+        if let primary = selectedPrimaryOptionId, d.selectedPrimaryOptionId == nil {
+            d.selectedPrimaryOptionId = primary
+        }
+        decisions[stageId] = d
+        persist()
+        pushUpsert(d)
+    }
+
     /// 완료된 단계의 입력값만 갱신 (advance 없이). 웹 SSOT: handleStageEdit.
     ///   • 이미 완료된 stage 만 동작 — 미완료 stage 는 false 반환.
     ///   • completedAt 새로고침 + inputs 머지 + Supabase 즉시 sync.
