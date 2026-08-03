@@ -416,7 +416,7 @@ async function gatherMetrics(
   };
 }
 
-// ── 4. Claude 점수화 ────────────────────────────────────────────
+// ── 4. AI 점수화 (gpt-5.4-mini) ─────────────────────────────────
 type ScoredItem = {
   id: string;
   title: string;
@@ -424,10 +424,14 @@ type ScoredItem = {
   summary: string;
   reasons: string[];
   warnings: string[];
+  /** 결정론 실측 부착 (LLM 미경유) — 응답 조립 시 반드시 병합할 것.
+   *  ⚠️ 2026-08-03 사고: 이 필드가 타입에 없어 스프레드가 tsc 를 우회했고,
+   *  응답 조립부가 meta 를 새로 만들면서 실측 칩 전체가 유실됐다. */
+  meta?: Record<string, string | number>;
 };
 
 /**
- * Static 한국 창업 상권 도메인 지식 — Sonnet 4.6 cache breakpoint 활성화 (≥1024 토큰).
+ * Static 한국 창업 상권 도메인 지식 — 실제 모델은 gpt-5.4-mini (createAiClient MODEL_MAP 경유).
  *  ⚡ Prompt caching:
  *    - 5분 TTL 기본 (March 2026~). 한 사용자가 여러 지역을 비교 검색할 때 90% 비용 절감.
  *    - 5-min cache write: 1.25× / cache read: 0.1× / no cache: 1.0× (대비 약 88% 절감 hit 시).
@@ -596,19 +600,24 @@ ${candidateLines}
     .join("\n");
   const m = text.match(/\[[\s\S]*\]/);
   if (!m) {
-    console.warn("[market-recommend] claude returned no JSON array | first 300:", text.slice(0, 300));
+    console.warn("[market-recommend] LLM returned no JSON array | first 300:", text.slice(0, 300));
     return { items: [], usage: response.usage };
   }
   let parsed: Array<{ districtName: string; title: string; score: number; summary: string; reasons?: string[]; warnings?: string[] }> = [];
   try {
     parsed = JSON.parse(m[0].replace(/<cite[^>]*>/g, "").replace(/<\/cite>/g, ""));
   } catch (e) {
-    console.warn("[market-recommend] claude json parse fail:", (e as Error).message);
+    console.warn("[market-recommend] LLM json parse fail:", (e as Error).message);
     return { items: [], usage: response.usage };
   }
-  // candidate 와 매칭해서 id 부여
-  const items: ScoredItem[] = parsed.map((p) => {
-    const cand = candidates.find((c) => c.districtName === p.districtName) ?? candidates[0];
+  // candidate 와 매칭해서 id 부여 — 매칭 실패는 drop (조용한 candidates[0] 폴백은
+  //  중복 id·엉뚱한 좌표·남의 동 실측 부착을 낳는다. 남의 동 데이터 부착 금지)
+  const items: ScoredItem[] = parsed.flatMap((p) => {
+    const cand = candidates.find((c) => c.districtName === p.districtName);
+    if (!cand) {
+      console.warn(`[market-recommend] LLM districtName 불일치 — drop: "${p.districtName}"`);
+      return [];
+    }
     // 실측 임대료는 LLM 을 거치지 않고 결정론으로 meta 에 부착 (문구 왜곡·수치 변형 차단)
     const rent = measuredRentFor(ctx.region, p.districtName);
     const meta: Record<string, string | number> = {};
@@ -628,15 +637,15 @@ ${candidateLines}
     if (cand?.trend) {
       meta.areaTrend = `${cand.trend.daysAgo}일 전 대비 동종 ${cand.trend.sameDelta >= 0 ? "+" : ""}${cand.trend.sameDelta}곳${cand.trend.totalDelta != null ? ` · 전체 ${cand.trend.totalDelta >= 0 ? "+" : ""}${cand.trend.totalDelta}곳` : ""} — 자체 관측 실측`;
     }
-    return {
-      id: cand?.id ?? `kakao-${p.districtName}`,
+    return [{
+      id: cand.id,
       title: p.title,
       score: Math.max(0, Math.min(100, Math.round(p.score))),
       summary: p.summary,
       reasons: Array.isArray(p.reasons) ? p.reasons.slice(0, 4) : [],
       warnings: Array.isArray(p.warnings) ? p.warnings.slice(0, 3) : [],
       ...(Object.keys(meta).length > 0 ? { meta } : {}),
-    };
+    }];
   });
   return { items, usage: response.usage };
 }
@@ -713,10 +722,20 @@ export async function POST(request: Request) {
         .slice(0, 12)
     : [];
 
+  if (candidates.length < 1) {
+    return NextResponse.json({
+      ok: false,
+      error: `"${region}" 주변에서 상권을 찾지 못했습니다. 더 넓은 범위로 입력해 주세요.`,
+    }, { status: 404 });
+  }
+
+  // ③ 점수화 대상 확정 후에만 보강 — slice 밖 후보에 소진공 콜·추이 기록을 쓰지 않는다 (쿼터·지연)
+  const targetCandidates = candidates.slice(0, 5);
+
   if (sbizKey) {
     const admin = getSupabaseAdmin();
     const sig = subIndustryId ? upjongSigFor(subIndustryId) : null;
-    await Promise.all(candidates.map(async (c) => {
+    await Promise.all(targetCandidates.map(async (c) => {
       const counts = await sbizCountsInRadius(subIndustryId ?? "", c.lng, c.lat, 500, sbizKey);
       c.officialSameCount = counts.sameUpjong;
       c.officialTotalCount = counts.totalStores;
@@ -731,19 +750,12 @@ export async function POST(request: Request) {
       }
     }));
   }
-  if (candidates.length < 1) {
-    return NextResponse.json({
-      ok: false,
-      error: `"${region}" 주변에서 상권을 찾지 못했습니다. 더 넓은 범위로 입력해 주세요.`,
-    }, { status: 404 });
-  }
 
-  // ③ 메트릭 수집 (병렬, 단 후보 수 제한해 quota 보호)
-  const targetCandidates = candidates.slice(0, 5);
+  // 메트릭 수집 (병렬)
   const competitionKw = competitionKeyword(categoryId, subIndustryId);
   const enriched = await Promise.all(targetCandidates.map((c) => gatherMetrics(c, competitionKw, kakaoKey)));
 
-  // ④ Claude 점수화 (prompt caching: static system 프롬프트 = ephemeral cached)
+  // ④ AI 점수화 (gpt-5.4-mini — prompt caching: static system 프롬프트)
   const { items: scored, usage } = await scoreWithClaude(enriched, { region, categoryId, subIndustryId, capital, language, franchiseRegionalLine: fRegionalLine }, anthropicKey);
   if (scored.length === 0) {
     return NextResponse.json({
@@ -755,7 +767,9 @@ export async function POST(request: Request) {
   // ⑤ RecommendationItem 형태로 정리 (lat/lng meta 에 포함 → 지도에서 즉시 핀 가능)
   const items: RecommendationItem[] = scored.map((s) => {
     const cand = enriched.find((e) => e.id === s.id);
-    const meta: Record<string, string | number> = {};
+    // ⚠️ 실측 meta(s.meta: measuredRent·backPopulation·officialCompetition·franchisePresence·areaTrend)
+    //    를 먼저 깔고 지도용 필드를 얹는다 — 새로 만들면 실측 칩 전체 유실 (2026-08-03 P0 사고)
+    const meta: Record<string, string | number> = { ...(s.meta ?? {}) };
     if (cand) {
       meta.districtName = cand.districtName;
       meta.lat = cand.lat;
@@ -775,13 +789,34 @@ export async function POST(request: Request) {
       meta,
       freshness: {
         status: "fresh",
-        label: language === "ko" ? "Kakao Local + AI 실시간 분석" : "Kakao Local + AI live",
-        sources: [{
-          sourceName: "Kakao Local API",
-          sourceUrl: "https://developers.kakao.com/docs/latest/en/local/dev-guide",
-          verifiedAt: new Date().toISOString().slice(0, 10),
-          confidence: "high",
-        }],
+        label: language === "ko" ? "공공 실측 + 카카오 + AI 분석" : "Public data + Kakao + AI",
+        // 실측 축이 실제 붙은 원천만 인용 — 안 붙은 원천을 병기하면 그것도 위조
+        sources: [
+          {
+            sourceName: "Kakao Local API",
+            sourceUrl: "https://developers.kakao.com/docs/latest/en/local/dev-guide",
+            verifiedAt: new Date().toISOString().slice(0, 10),
+            confidence: "high" as const,
+          },
+          ...(meta.officialCompetition ? [{
+            sourceName: "소상공인시장진흥공단 상가(상권)정보",
+            sourceUrl: "https://www.data.go.kr/data/15012005/openapi.do",
+            verifiedAt: new Date().toISOString().slice(0, 10),
+            confidence: "high" as const,
+          }] : []),
+          ...(meta.measuredRent ? [{
+            sourceName: "한국부동산원 상업용부동산 임대동향",
+            sourceUrl: "https://www.reb.or.kr/r-one/",
+            verifiedAt: new Date().toISOString().slice(0, 10),
+            confidence: "high" as const,
+          }] : []),
+          ...(meta.backPopulation ? [{
+            sourceName: "행정안전부 주민등록 인구통계",
+            sourceUrl: "https://jumin.mois.go.kr/",
+            verifiedAt: new Date().toISOString().slice(0, 10),
+            confidence: "high" as const,
+          }] : []),
+        ],
         lastCheckedAt: new Date().toISOString().slice(0, 10),
       },
     };
