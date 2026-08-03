@@ -12,12 +12,14 @@
  *  · 여기 없는 사용자 = "안 썼다"가 아니라 **"계측된 활동이 없다"**.
  *    계측(record_surface_visit)은 2026-07-28 부터, 그 이전 활동은 기록이 없다.
  *  · 화면 방문은 "탭 진입" 이지 체류·완료가 아니다. 횟수는 하루 1,000 상한(스팸 가드).
- *  · 이메일은 마스킹해서 내려준다 (운영자도 원문을 볼 이유가 없다).
+ *  · 이메일은 원문 표시 (2026-08-03 사장님 지시 — "오늘 쓴 사용자가 누구인지" 식별이
+ *    이 화면의 존재 이유. 마스킹하면 답을 못 한다). 가게 이름도 함께 내려 식별을 돕는다.
+ *    이 라우트는 requireAdmin + rate limit 뒤에만 열린다.
  *  · **내부 계정은 집계에서 제외** (운영자·사장님 본인·직원·테스트 — internal-accounts.ts).
  *    테스트 사용이 실사용자 통계를 부풀린다. 제외 계정 수·기준은 응답에 실어 화면이 명시한다.
  */
 import { NextResponse } from "next/server";
-import { requireAdmin, maskEmail } from "../../_lib/admin-auth";
+import { requireAdmin } from "../../_lib/admin-auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { adminRateLimit, buildEmailMap, buildExcludedUserIdSet, kstRecentDateStrings } from "../_shared";
 import { internalExclusionRules } from "../../_lib/internal-accounts";
@@ -34,7 +36,8 @@ type DayActivity = {
 
 type UserActivity = {
   userId: string;
-  email: string;                                  // 마스킹됨
+  email: string;                                  // 원문 (admin 게이트 뒤)
+  storeName: string | null;                       // 가게 이름 — 식별 보조
   lastActiveDate: string;                         // 최신 사용일
   activeDays: number;                             // 기간 내 활동한 날 수
   days: DayActivity[];                            // 최신순
@@ -124,6 +127,23 @@ export async function GET(request: Request) {
 
   const emailMap = await buildEmailMap(admin);
 
+  // 가게 이름 — 이메일과 함께 "누구인지" 식별 보조 (실패해도 활동 목록은 살린다)
+  const storeNameMap = new Map<string, string>();
+  try {
+    const ids = [...byUser.keys()];
+    if (ids.length > 0) {
+      const { data } = await admin.from("user_store_data").select("user_id, store_name").in("user_id", ids);
+      for (const row of data ?? []) {
+        const r = row as { user_id?: unknown; store_name?: unknown };
+        if (typeof r.user_id === "string" && typeof r.store_name === "string" && r.store_name.trim()) {
+          storeNameMap.set(r.user_id, r.store_name.trim());
+        }
+      }
+    }
+  } catch {
+    // 보조 정보 — 없으면 이메일만 표시
+  }
+
   const users: UserActivity[] = [...byUser.entries()]
     .map(([userId, dayMap]) => {
       const dayList = [...dayMap.values()]
@@ -135,7 +155,8 @@ export async function GET(request: Request) {
         .sort((a, b) => b.date.localeCompare(a.date));
       return {
         userId,
-        email: maskEmail(emailMap.get(userId) ?? ""),
+        email: emailMap.get(userId) ?? "",
+        storeName: storeNameMap.get(userId) ?? null,
         lastActiveDate: dayList[0]?.date ?? "",
         activeDays: dayList.length,
         days: dayList,

@@ -25,7 +25,8 @@ type DayActivity = {
 };
 type UserActivity = {
   userId: string;
-  email: string;
+  email: string;          // 원문 (2026-08-03 정책 변경 — 누구인지 식별이 이 화면의 목적)
+  storeName: string | null;
   lastActiveDate: string;
   activeDays: number;
   days: DayActivity[];
@@ -195,7 +196,14 @@ export function ActivityPanel() {
                       onClick={() => setOpenUser(open ? null : u.userId)}
                       style={{ cursor: "pointer", background: open ? "rgba(25,25,112,0.03)" : undefined }}
                     >
-                      <td style={{ ...tableStyles.td, fontWeight: 650 }}>{u.email || "—"}</td>
+                      <td style={{ ...tableStyles.td, fontWeight: 650 }}>
+                        {u.email || "—"}
+                        {u.storeName && (
+                          <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: MUTED, marginTop: 2 }}>
+                            {u.storeName}
+                          </span>
+                        )}
+                      </td>
                       <td style={tableStyles.td}>
                         {formatKoreanDay(u.lastActiveDate)}
                         {rel && <span style={{ color: MUTED, fontSize: 11.5, marginLeft: 6 }}>{rel}</span>}
