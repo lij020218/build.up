@@ -133,8 +133,11 @@ public struct InfluencerCollabResponse: Sendable, Codable {
     public let feeSources: String
 
     public struct CuratedInfluencer: Sendable, Codable {
+        /// "instagram" | "youtube" — 구버전 응답 호환 optional (없으면 인스타로 취급)
+        public let platform: String?
         public let name: String
         public let handle: String
+        /// 인스타=팔로워 · 유튜브=구독자
         public let followers: Int
         public let regionKo: String
         public let engagementRatePct: Double?

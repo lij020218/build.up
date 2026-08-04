@@ -14,22 +14,23 @@ export const INFLUENCER_DIRECTORY_CHECKED_AT = "2026-08";
 export type CuratedInfluencerCategory = "food" | "cafe-dessert" | "beauty" | "fitness" | "space";
 
 export type CuratedInfluencer = {
-  platform: "instagram";
+  platform: "instagram" | "youtube";
   name: string;
   /** @ 없이 저장 — 프로필 URL 은 influencerProfileUrl() 로 */
   handle: string;
-  /** 사장님 제공 2026-08 기준 */
+  /** 인스타=팔로워 · 유튜브=구독자 (조회 시점 실측) */
   followers: number;
   /** 활동 지역·영역 — 지역 연관 표시용 */
   regionKo: string;
   categoryId: CuratedInfluencerCategory;
-  /** 공개 통계 페이지에서 확인된 참여율(%) — 출처 없으면 null */
+  /** 공개 통계 페이지에서 확인된 참여율(%) — 출처 없으면 null (유튜브는 통계 페이지 부재로 대부분 null) */
   engagementRatePct: number | null;
   /** 참여율·팔로워 수치의 출처 — engagementRatePct 가 있으면 필수 */
   statsSourceUrl: string | null;
 };
 
-export function influencerProfileUrl(i: Pick<CuratedInfluencer, "handle">): string {
+export function influencerProfileUrl(i: Pick<CuratedInfluencer, "handle" | "platform">): string {
+  if (i.platform === "youtube") return `https://www.youtube.com/@${i.handle}`;
   return `https://instagram.com/${i.handle}`;
 }
 
@@ -93,10 +94,46 @@ export const INFLUENCER_DIRECTORY: CuratedInfluencer[] = [
   { platform: "instagram", name: "찍길동", handle: "from___jin", followers: 72_500, regionKo: "국내 여행·꽃 명소", categoryId: "space", engagementRatePct: 1.48, statsSourceUrl: "https://hypeauditor.com/instagram/from___jin/" },
   { platform: "instagram", name: "류쁨", handle: "ryuppeum", followers: 41_600, regionKo: "국내외 여행", categoryId: "space", engagementRatePct: 0.98, statsSourceUrl: "https://hypeauditor.com/instagram/ryuppeum/" },
   { platform: "instagram", name: "Linda", handle: "mmmh_linda", followers: 20_000, regionKo: "거제 로컬·여행", categoryId: "space", engagementRatePct: null, statsSourceUrl: null },
+
+  // ── 직접 발굴 (2026-08-05, 에이전트 실측 검증 — 실존·팔로워/구독자 확인) ──
+  { platform: "instagram", name: "부산맛집여기", handle: "busan.food.here", followers: 306_200, regionKo: "부산 맛집", categoryId: "food", engagementRatePct: 0.43, statsSourceUrl: "https://hypeauditor.com/instagram/busan.food.here/" },
+  { platform: "instagram", name: "햄지 맛집", handle: "hamzy_tasty", followers: 73_000, regionKo: "인천·서울 맛집", categoryId: "food", engagementRatePct: 2.24, statsSourceUrl: "https://hypeauditor.com/instagram/hamzy_tasty/" },
+  { platform: "instagram", name: "대전맛집", handle: "taste.daejeon", followers: 193_600, regionKo: "대전 맛집", categoryId: "food", engagementRatePct: 2.15, statsSourceUrl: "https://hypeauditor.com/instagram/taste.daejeon/" },
+  { platform: "instagram", name: "광주맛집 맛광인", handle: "matgwangin", followers: 37_600, regionKo: "광주 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "울산언니", handle: "ulsansisters", followers: 93_400, regionKo: "울산 맛집", categoryId: "food", engagementRatePct: 0.58, statsSourceUrl: "https://hypeauditor.com/instagram/ulsansisters/" },
+  { platform: "instagram", name: "전주맛집 잇츠전주", handle: "eats.jeonju", followers: 24_200, regionKo: "전주 맛집", categoryId: "food", engagementRatePct: 0.74, statsSourceUrl: "https://hypeauditor.com/instagram/eats.jeonju/" },
+  { platform: "instagram", name: "도민이의 제주맛집", handle: "matzip.asmr", followers: 197_600, regionKo: "제주 맛집", categoryId: "food", engagementRatePct: 0.43, statsSourceUrl: "https://hypeauditor.com/instagram/matzip.asmr/" },
+  { platform: "instagram", name: "카페in부산", handle: "cafe.in.busan", followers: 11_000, regionKo: "부산 카페", categoryId: "cafe-dessert", engagementRatePct: 1.42, statsSourceUrl: "https://hypeauditor.com/instagram/cafe.in.busan/" },
+  { platform: "instagram", name: "카페in인천부천", handle: "cafe.in.incheon", followers: 12_500, regionKo: "인천 카페", categoryId: "cafe-dessert", engagementRatePct: 1.2, statsSourceUrl: "https://hypeauditor.com/instagram/cafe.in.incheon/" },
+  { platform: "instagram", name: "카페in대전", handle: "cafe.in.daejeon", followers: 13_900, regionKo: "대전 카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "카페in광주", handle: "cafe.in.gwangju", followers: 13_900, regionKo: "광주 카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "전주핫플", handle: "hotjeonju", followers: 36_300, regionKo: "전주 카페·맛집", categoryId: "cafe-dessert", engagementRatePct: 0.58, statsSourceUrl: "https://hypeauditor.com/instagram/hotjeonju/" },
+  { platform: "instagram", name: "강릉핫플", handle: "hotgangneung", followers: 84_800, regionKo: "강릉 카페·맛집", categoryId: "cafe-dessert", engagementRatePct: 0.69, statsSourceUrl: "https://hypeauditor.com/instagram/hotgangneung/" },
+  { platform: "instagram", name: "기우쌤", handle: "kiu_design_", followers: 441_000, regionKo: "헤어스타일·미용실", categoryId: "beauty", engagementRatePct: 0.95, statsSourceUrl: "https://hypeauditor.com/instagram/kiu_design_/" },
+  { platform: "instagram", name: "진훤", handle: "_hwoniii", followers: 402_800, regionKo: "헤어스타일·뷰티", categoryId: "beauty", engagementRatePct: 1.9, statsSourceUrl: "https://hypeauditor.com/instagram/_hwoniii/" },
+  { platform: "instagram", name: "유니스텔라 박은경", handle: "nail_unistella", followers: 694_700, regionKo: "네일아트", categoryId: "beauty", engagementRatePct: 5.81, statsSourceUrl: "https://hypeauditor.com/instagram/nail_unistella/" },
+  { platform: "instagram", name: "심으뜸", handle: "euddeume_", followers: 821_400, regionKo: "헬스·피트니스", categoryId: "fitness", engagementRatePct: 0.86, statsSourceUrl: "https://hypeauditor.com/instagram/euddeume_/" },
+  { platform: "instagram", name: "말왕", handle: "horseking123", followers: 525_700, regionKo: "헬스·운동", categoryId: "fitness", engagementRatePct: 1.59, statsSourceUrl: "https://hypeauditor.com/instagram/horseking123/" },
+  { platform: "instagram", name: "핏블리 문석기", handle: "fitvely_moon", followers: 225_400, regionKo: "헬스·PT", categoryId: "fitness", engagementRatePct: 0.45, statsSourceUrl: "https://hypeauditor.com/instagram/fitvely_moon/" },
+  { platform: "instagram", name: "고민정", handle: "go_mj_", followers: 88_800, regionKo: "크로스핏", categoryId: "fitness", engagementRatePct: 2.71, statsSourceUrl: "https://hypeauditor.com/instagram/go_mj_/" },
+
+  // ── 유튜브 (2026-08-05 구독자 실측 — followers = 구독자) ──
+  { platform: "youtube", name: "정육왕 MeatCreator", handle: "MeatCreator", followers: 814_000, regionKo: "전국 고기 맛집 방문 리뷰", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "떡볶퀸", handle: "tteokbokqueen", followers: 655_000, regionKo: "전국 떡볶이·분식 방문 리뷰", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "맛객리우", handle: "Liwoo_foodie", followers: 174_000, regionKo: "서울·수도권 가성비 맛집 리뷰", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "내복곰", handle: "nebokgom", followers: 904_000, regionKo: "디저트 카페 방문 브이로그", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "ondo온도", handle: "ondovlog", followers: 1_220_000, regionKo: "카페 운영·감성 브이로그 (협찬 문의 공개)", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "기우쌤", handle: "kiudesign", followers: 1_600_000, regionKo: "헤어 디자이너 (스타일링·복구)", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "민스코", handle: "minsco_", followers: 734_000, regionKo: "메이크업·화장품 리뷰", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "힙으뜸", handle: "euddeume", followers: 1_820_000, regionKo: "홈트·피트니스", categoryId: "fitness", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "빅씨스", handle: "BIGSIS", followers: 1_080_000, regionKo: "홈트·근력 운동", categoryId: "fitness", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "youtube", name: "원지의하루", handle: "im1G", followers: 930_000, regionKo: "여행 브이로그 (국내 다수)", categoryId: "space", engagementRatePct: null, statsSourceUrl: null },
+
 ];
 
 /** 업종별 큐레이션 — 없으면 빈 배열 (억지 매칭 금지, 발굴 도구가 담당) */
 export function influencersForCategory(categoryId: string | null | undefined): CuratedInfluencer[] {
   if (!categoryId) return [];
+
   return INFLUENCER_DIRECTORY.filter((i) => i.categoryId === categoryId);
 }

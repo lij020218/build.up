@@ -150,7 +150,13 @@ struct InfluencerCollabTabView: View {
                         }
                     }
                     HStack(spacing: 6) {
-                        Text("\(tierKo[tierFor(i.followers)] ?? "") · \(fmtFollowers(i.followers))")
+                        let isYoutube = i.platform == "youtube"
+                        Text(isYoutube ? "유튜브" : "인스타")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundStyle(isYoutube ? BUColor.danger : BUColor.accent)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background((isYoutube ? BUColor.danger08 : BUColor.accent08), in: Capsule())
+                        Text(isYoutube ? "\(fmtFollowers(i.followers)) 구독" : "\(tierKo[tierFor(i.followers)] ?? "") · \(fmtFollowers(i.followers))")
                             .font(.system(size: 10.5, weight: .bold))
                             .padding(.horizontal, 8).padding(.vertical, 2)
                             .background(BUColor.ink.opacity(0.05), in: Capsule())

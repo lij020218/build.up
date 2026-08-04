@@ -139,7 +139,13 @@ export function InfluencerCollabTab({
                   <a href={influencerProfileUrl(i)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13.5, fontWeight: 750, color: "#0f172a", textDecoration: "none" }}>
                     {i.name} <span style={{ color: "#3b5c8c", fontWeight: 650 }}>@{i.handle} ↗</span>
                   </a>
-                  <span style={chip}>{TIER_KO[tierForFollowers(i.followers)] ?? ""} · {fmtFollowers(i.followers)}</span>
+                  <span style={{ ...chip, background: i.platform === "youtube" ? "rgba(182,76,76,0.08)" : "rgba(59,92,140,0.08)", color: i.platform === "youtube" ? "#b64c4c" : "#3b5c8c" }}>
+                    {i.platform === "youtube" ? (ko ? "유튜브" : "YouTube") : (ko ? "인스타" : "IG")}
+                  </span>
+                  <span style={chip}>
+                    {i.platform === "instagram" ? `${TIER_KO[tierForFollowers(i.followers)] ?? ""} · ` : ""}
+                    {fmtFollowers(i.followers)}{i.platform === "youtube" ? (ko ? " 구독" : " subs") : ""}
+                  </span>
                   {i.engagementRatePct != null ? (
                     <span style={{ ...chip, background: "rgba(29,53,87,0.08)", color: "#1d3557" }}>
                       {ko ? "참여율" : "ER"} {i.engagementRatePct}%

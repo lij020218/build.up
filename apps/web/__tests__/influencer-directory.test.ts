@@ -38,7 +38,8 @@ describe("influencer-directory SSOT", () => {
     expect(influencersForCategory("food").length).toBeGreaterThan(0);
   });
 
-  it("프로필 URL 은 인스타 공식 도메인", () => {
-    expect(influencerProfileUrl({ handle: "ry.hyun" })).toBe("https://instagram.com/ry.hyun");
+  it("프로필 URL 은 플랫폼 공식 도메인", () => {
+    expect(influencerProfileUrl({ handle: "ry.hyun", platform: "instagram" })).toBe("https://instagram.com/ry.hyun");
+    expect(influencerProfileUrl({ handle: "somechannel", platform: "youtube" })).toBe("https://www.youtube.com/@somechannel");
   });
 });
