@@ -746,7 +746,9 @@ private struct ReviewStepView: View {
     // budgetAllocation 은 *만원 단위* (웹과 동일) — 원으로 오인하면 합 15,000만원→"1만원" 으로 깨진다.
     private func fmt(_ manwon: Int) -> String {
         if manwon <= 0 { return "—" }
-        let v = abs(manwon)
+        var v = abs(manwon)
+        // 원 단위 오염 힐링 (2026-08-03, 웹 패리티) — 만원 단위 100억 이상은 비현실 = 원 단위로 판단해 ÷10,000
+        if v >= 1_000_000 { v = Int((Double(v) / 10_000).rounded()) }
         if v >= 10_000 {
             let eok = v / 10_000
             let rest = v % 10_000
@@ -848,6 +850,12 @@ private struct ReviewStepView: View {
                 // 정부지원 카드
                 if !result.fundingPrograms.isEmpty {
                     fundingCard
+                }
+
+                // 내 지역 업체·공급처 — 서버 부착 실데이터 (웹 지역 실명 블록 미러, 2026-08-04)
+                if (result.recommendations.regionalInteriorFirms?.isEmpty == false)
+                    || (result.recommendations.regionalSupplierPlaces?.isEmpty == false) {
+                    regionalVendorsCard
                 }
 
                 // 시작 버튼
@@ -983,6 +991,76 @@ private struct ReviewStepView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(color.opacity(0.08), in: Capsule())
+    }
+
+    // 내 지역 업체·공급처 — 웹 지역 실명 블록 미러 (2026-08-04).
+    //  신호 배지 3종(업종 특화·등록 확인·영업 확인)·거리·전화, 탭 → 카카오맵.
+    private var regionalVendorsCard: some View {
+        AISectionCard(icon: "mappin.and.ellipse", title: "내 지역 업체·공급처") {
+            VStack(alignment: .leading, spacing: 10) {
+                if let firms = result.recommendations.regionalInteriorFirms, !firms.isEmpty {
+                    Text("인테리어 — 업종 검색 × 등록 대장 교차")
+                        .font(.system(size: 11, weight: .heavy))
+                        .foregroundStyle(midnight)
+                    ForEach(Array(firms.enumerated()), id: \.offset) { _, f in
+                        regionalFirmRow(f)
+                    }
+                }
+                if let places = result.recommendations.regionalSupplierPlaces, !places.isEmpty {
+                    Text("공급처 — 카카오맵 검색")
+                        .font(.system(size: 11, weight: .heavy))
+                        .foregroundStyle(midnight)
+                        .padding(.top, 4)
+                    ForEach(Array(places.enumerated()), id: \.offset) { _, p in
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                tagChip(p.keyword, color: midnight)
+                                Text(p.name)
+                                    .font(.system(size: 12.5, weight: .bold))
+                                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                            }
+                            Text([p.phone, p.address].compactMap { $0 }.joined(separator: " · "))
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+                        }
+                        .padding(.bottom, 4)
+                    }
+                }
+                Text("업종 특화 업체를 상권에서 가까운 순으로 먼저 보여드려요. 평점이 아니니 반드시 2~3곳 복수 견적을 비교하세요.")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
+                    .lineSpacing(1.8)
+                    .padding(.top, 2)
+            }
+        }
+    }
+
+    private func regionalFirmRow(_ f: AIRoadmapResult.Recommendations.RegionalInteriorFirm) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 5) {
+                if let url = f.mapUrl.flatMap(URL.init(string:)) {
+                    Link(f.name + " ↗", destination: url)
+                        .font(.system(size: 12.5, weight: .bold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                } else {
+                    Text(f.name)
+                        .font(.system(size: 12.5, weight: .bold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                }
+                if f.industryMatch { tagChip("업종 특화", color: midnight) }
+                if f.licensed { tagChip("등록 확인", color: BUColor.success) }
+                if f.operating { tagChip("영업 확인", color: BUColor.accent) }
+                if let d = f.distanceM {
+                    Text(d < 1000 ? "\(Int(d))m" : String(format: "%.1fkm", d / 1000))
+                        .font(.system(size: 10.5, weight: .bold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
+                }
+            }
+            Text([f.phone, f.address].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+        }
+        .padding(.bottom, 4)
     }
 }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
 import { getEnvVar } from "../../_lib/env";
+import { searchKakaoPlaces } from "../../_lib/kakao-local";
 
 export type ContractorResult = {
   id: string;
@@ -12,65 +13,22 @@ export type ContractorResult = {
   mapUrl: string | null;
 };
 
-type KakaoPlace = {
-  id: string;
-  place_name: string;
-  address_name: string;
-  road_address_name: string;
-  phone: string;
-  category_name: string;
-  place_url: string;
-};
-
-type KakaoResponse = {
-  documents: KakaoPlace[];
-  meta: { total_count: number; pageable_count: number; is_end: boolean };
-};
-
+// Kakao 검색 구현은 _lib/kakao-local.ts 로 SSOT 화 (2026-08-04) —
+// 로드맵 생성의 지역 공급처 실명 부착과 같은 코드를 쓴다.
 async function searchContractorsViaKakao(
   region: string,
   keyword: string,
   apiKey: string
 ): Promise<ContractorResult[]> {
-  const query = `${region} ${keyword}`;
-  const searchParams = new URLSearchParams({
-    query,
-    size: "5", // 5개 가져와서 상위 3개 선별
-    sort: "accuracy",
-  });
-
-  // ⚠️ Kakao Local API 정책 (2025+): `KA` 헤더에 `os` + `origin` 필드 둘 다 필수.
-  //    없으면 401 "KA Header is required but neither os nor origin field is given".
-  const origin = getEnvVar("NEXT_PUBLIC_APP_URL")
-    ?? getEnvVar("VERCEL_URL")?.replace(/^/, "https://")
-    ?? "http://localhost:3000";
-  const res = await fetch(
-    `https://dapi.kakao.com/v2/local/search/keyword.json?${searchParams.toString()}`,
-    {
-      headers: {
-        Authorization: `KakaoAK ${apiKey}`,
-        KA: `sdk/1.0.0 os/javascript origin/${origin}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Kakao Local API error ${res.status}: ${err}`);
-  }
-
-  const data = (await res.json()) as KakaoResponse;
-
-  return data.documents
-    .slice(0, 3)
-    .map((place) => ({
-      id: `kakao-${place.id}`,
-      name: place.place_name,
-      address: place.road_address_name || place.address_name,
-      phone: place.phone || null,
-      description: place.category_name.split(" > ").slice(-1)[0] || "",
-      mapUrl: place.place_url || null,
-    }));
+  const places = await searchKakaoPlaces(region, keyword, apiKey, { size: 5 });
+  return places.slice(0, 3).map((p) => ({
+    id: p.id,
+    name: p.name,
+    address: p.address,
+    phone: p.phone,
+    description: p.category,
+    mapUrl: p.mapUrl,
+  }));
 }
 
 // GET /api/contractors/local?region=홍대&categoryId=cafe-dessert&keyword=카페+인테리어+전문

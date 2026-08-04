@@ -504,6 +504,22 @@ export function MarketingSurface() {
           </a>
         </div>
       </article>
+
+      {/* 단골 비율 — 데이터 쌓이면 (iOS LoyaltyDonutBlock 문구 1:1 이식, 2026-08-04 패리티) */}
+      <article style={{ ...solidCard, padding: "16px 22px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
+          LOYALTY
+        </div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{ko ? "단골 비율" : "Loyalty mix"}</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, lineHeight: 1.6 }}>
+          {ko
+            ? "단골·신규·일회성 비율은 고객별 방문 이력이 쌓이면 자동으로 분석해 드려요. 멤버십·예약 연동이나 재방문 기록이 모이면 여기에 실제 비율이 표시됩니다."
+            : "Loyal/new/one-time mix appears automatically once per-customer visit history accumulates."}
+        </div>
+      </article>
+
+      {/* 캠페인 아이디어 (예시 가이드) — iOS CampaignIdeasBlock 1:1 이식 (가게별 실측 아님을 명시) */}
+      <CampaignIdeas ko={ko} />
       </>)}
 
       {tab === "create" && (
@@ -1220,6 +1236,73 @@ function PlayBlock({ p, ko, done, onToggleDone, hero }: { p: MarketingPlay; ko: 
         </button>
       )}
     </div>
+  );
+}
+
+// 캠페인 아이디어 (예시 가이드) — iOS CampaignIdeasBlock 문구 1:1 (2026-08-04 패리티).
+//  정직성: 업종 공통 "예시 플레이북"이며 특정 가게 데이터로 계산된 값이 아님 — 제목에 명시.
+const CAMPAIGN_IDEAS = [
+  {
+    title: "단골 win-back 메시지",
+    summary: "한동안 안 오신 단골 다시 부르기",
+    details: "마지막 방문일이 오래된 고객에게 카카오 채널·문자로 할인 쿠폰(예: 5,000원)을 보내 재방문을 유도하세요. 대상은 좁게, 메시지는 짧고 따뜻하게.",
+  },
+  {
+    title: "리뷰 답글 관리",
+    summary: "새 리뷰에 빠르게 답글",
+    details: "네이버 플레이스·배민 신규 리뷰에 24시간 안에 답글을 달면 신뢰도와 노출에 도움이 됩니다. 부정 리뷰일수록 정중하고 빠른 응대가 중요해요.",
+  },
+  {
+    title: "점심 직장인 타임 광고",
+    summary: "피크 시간대 집중 노출",
+    details: "주변 오피스 상권을 타겟으로 배달앱·지역 광고를 점심 시간대(11:30~13:30)에 집중하세요. 예산은 소액(예: 일 1만원)으로 시작해 반응을 보고 조정합니다.",
+  },
+  {
+    title: "주말 SNS 콘텐츠",
+    summary: "신메뉴·매장 분위기 릴스",
+    details: "인스타 릴스·스토리로 신메뉴나 매장 분위기를 보여주세요. 비용 없이 시작할 수 있고, 꾸준히 올릴수록 도달이 늘어납니다.",
+  },
+] as const;
+
+function CampaignIdeas({ ko }: { ko: boolean }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  return (
+    <article style={solidCard}>
+      <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
+        CAMPAIGN
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 750, color: "var(--text)", marginBottom: 12 }}>
+        {ko ? "캠페인 아이디어 (예시 가이드)" : "Campaign ideas (guide)"}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+        {CAMPAIGN_IDEAS.map((idea, i) => {
+          const open = openIdx === i;
+          return (
+            <div key={idea.title} style={{ borderRadius: 12, border: "1px solid var(--border)", background: "#fff" }}>
+              <button
+                type="button"
+                onClick={() => setOpenIdx(open ? null : i)}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 13px",
+                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left" as const,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{idea.title}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>{idea.summary}</div>
+                </div>
+                <ChevronRight size={13} strokeWidth={2} color="var(--muted)" style={{ flexShrink: 0, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }} />
+              </button>
+              {open && (
+                <div style={{ padding: "0 13px 12px", fontSize: 12, color: "var(--text)", lineHeight: 1.6 }}>
+                  {idea.details}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </article>
   );
 }
 

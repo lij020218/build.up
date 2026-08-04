@@ -121,6 +121,10 @@ public struct AIRoadmapResult: Decodable, Sendable {
         /// 분업 선언(AI가 끝낸 것) 집계용 — 구버전 응답 호환 optional
         public let interiorVendors: [InteriorVendor]?
         public let operationalChannels: [OperationalChannel]?
+        /// 내 지역 인테리어 업체 — 서버 부착 실데이터 (업종검색×국토부 대장×소진공 교차, 2026-08-04)
+        public let regionalInteriorFirms: [RegionalInteriorFirm]?
+        /// 내 지역 공급처 — Kakao Local 실데이터 (서버 부착)
+        public let regionalSupplierPlaces: [RegionalSupplierPlace]?
 
         public struct Supplier: Decodable, Sendable {
             public let id: String?
@@ -128,11 +132,33 @@ public struct AIRoadmapResult: Decodable, Sendable {
             public let category: String
             public let reason: String
             public let priceRange: String
+            /// 실명 후보·비교 포인트 — DB 풀 description (하림·마니커 등 실명이 여기 산다)
+            public let description: String?
         }
 
         public struct InteriorVendor: Decodable, Sendable {
             public let id: String
             public let title: String
+        }
+
+        public struct RegionalInteriorFirm: Decodable, Sendable {
+            public let name: String
+            public let address: String
+            public let phone: String?
+            public let registeredAt: String?
+            public let licensed: Bool
+            public let operating: Bool
+            public let industryMatch: Bool
+            public let distanceM: Double?
+            public let mapUrl: String?
+        }
+
+        public struct RegionalSupplierPlace: Decodable, Sendable {
+            public let keyword: String
+            public let name: String
+            public let address: String
+            public let phone: String?
+            public let mapUrl: String?
         }
 
         public struct OperationalChannel: Decodable, Sendable {

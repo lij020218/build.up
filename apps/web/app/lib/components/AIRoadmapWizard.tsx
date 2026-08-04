@@ -215,7 +215,9 @@ const fmt = (n: number) => {
 // 예산(budgetAllocation)은 *만원 단위* — fmt(원 단위)로 포맷하면 4,000만원→"4,000원", 합 15,000만원→"1만원" 으로 깨진다.
 const fmtBudget = (manwon: number) => {
   if (!isFinite(manwon) || isNaN(manwon)) return "—";
-  const v = Math.round(Math.abs(manwon));
+  let v = Math.round(Math.abs(manwon));
+  // 원 단위 오염 힐링 — 파서 가드와 동일 기준 (만원 단위 100억 이상 = 원 단위로 판단)
+  if (v >= 1_000_000) v = Math.round(v / 10000);
   if (v >= 10000) {
     const eok = Math.floor(v / 10000);
     const rest = v % 10000;
@@ -1140,10 +1142,33 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                         <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", flex: 1 }}>{s.name}</span>
                         {s.id && <span title={ko ? "DB 풀 검증" : "DB-verified"} style={{ display: "inline-flex", alignItems: "center" }}><ShieldCheck size={12} strokeWidth={1.8} color="#191970" /></span>}
                       </div>
+                      {/* 실제 업체명·비교 포인트 — DB 풀 description (하림·마니커 등 실명이 여기 산다) */}
+                      {s.description && <div style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.55, marginBottom: s.reason ? 4 : 0 }}>{s.description}</div>}
                       {s.reason && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>{s.reason}</div>}
                       {s.priceRange && <div style={{ fontSize: 11, fontWeight: 700, color: "#191970", marginTop: 3 }}>{s.priceRange}</div>}
                     </div>
                   ))}
+
+                  {/* 내 지역 공급처 — Kakao Local 실데이터 (서버 부착, LLM 아님) */}
+                  {(result.recommendations.regionalSupplierPlaces?.length ?? 0) > 0 && (
+                    <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.10)" }}>
+                      <div style={{ fontSize: 11, fontWeight: 750, color: "#191970", marginBottom: 8 }}>
+                        {ko ? "내 지역 공급처 · 카카오맵 검색" : "Local suppliers (Kakao Local)"}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+                        {result.recommendations.regionalSupplierPlaces!.map((p, i) => (
+                          <div key={i} style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.5 }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: "1px 6px", borderRadius: 999, background: "rgba(25,25,112,0.07)", color: "#191970", marginRight: 6 }}>{p.keyword}</span>
+                            {p.mapUrl
+                              ? <a href={p.mapUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#0f172a", textDecoration: "none" }}>{p.name} ↗</a>
+                              : <b style={{ fontWeight: 700 }}>{p.name}</b>}
+                            {p.phone && <span style={{ color: "var(--muted)" }}> · {p.phone}</span>}
+                            {p.address && <span style={{ color: "var(--muted)" }}> · {p.address}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.20)", color: "#191970", fontSize: 13, fontWeight: 600, lineHeight: 1.55 }}>
@@ -1227,6 +1252,53 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                       {v.reason && <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {v.reason}</div>}
                     </div>
                   ))}
+
+                  {/* 내 지역 인테리어 업체 — 업종 검색(카카오)×국토부 등록 대장 교차 (서버 부착 실데이터, LLM 아님) */}
+                  {(result.recommendations.regionalInteriorFirms?.length ?? 0) > 0 && (
+                    <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.10)" }}>
+                      <div style={{ fontSize: 11, fontWeight: 750, color: "#191970", marginBottom: 8 }}>
+                        {ko ? "내 지역 인테리어 업체 · 업종 검색 × 등록 대장 교차" : "Local contractors · industry search × registry"}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" as const, gap: 7 }}>
+                        {result.recommendations.regionalInteriorFirms!.map((f, i) => (
+                          <div key={i} style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.5 }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap" as const }}>
+                              {f.mapUrl
+                                ? <a href={f.mapUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#0f172a", textDecoration: "none" }}>{f.name} ↗</a>
+                                : <b style={{ fontWeight: 700 }}>{f.name}</b>}
+                              {f.industryMatch && (
+                                <span style={{ fontSize: 9, fontWeight: 750, padding: "1px 6px", borderRadius: 999, background: "rgba(25,25,112,0.08)", color: "#191970" }}>
+                                  {ko ? "업종 특화" : "Industry"}
+                                </span>
+                              )}
+                              {f.licensed && (
+                                <span style={{ fontSize: 9, fontWeight: 750, padding: "1px 6px", borderRadius: 999, background: "rgba(29,53,87,0.10)", color: "#1d3557" }}>
+                                  {ko ? "등록 확인" : "Licensed"}
+                                </span>
+                              )}
+                              {f.operating && (
+                                <span style={{ fontSize: 9, fontWeight: 750, padding: "1px 6px", borderRadius: 999, background: "rgba(59,92,140,0.10)", color: "#3b5c8c" }}>
+                                  {ko ? "영업 확인" : "Operating"}
+                                </span>
+                              )}
+                              {typeof f.distanceM === "number" && (
+                                <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--muted)" }}>
+                                  {f.distanceM < 1000 ? `${f.distanceM}m` : `${(f.distanceM / 1000).toFixed(1)}km`}
+                                </span>
+                              )}
+                            </span>
+                            {f.phone && <span style={{ color: "var(--muted)" }}> · {f.phone}</span>}
+                            {f.address && <span style={{ color: "var(--muted)" }}> · {f.address}</span>}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
+                        {ko
+                          ? "업종 특화(업종 키워드 검색) 업체를 상권에서 가까운 순으로 먼저 보여드려요 · 등록 확인 = 국토부 면허 대장 · 영업 확인 = 국세청 원천 상가 데이터. 평점이 아니니 반드시 2~3곳 복수 견적을 비교하세요."
+                          : "Industry-specialized first, nearest to your area · Licensed = MOLIT registry · Operating = NTS-sourced data. Not ratings — always compare 2–3 quotes."}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </StageCard>
             )}

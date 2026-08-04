@@ -9,7 +9,10 @@ import type { AiRoadmapSnapshot } from "../../stores/roadmap-store";
 //   (이 컴포넌트의 fmt 는 예산 표시 전용. 단위 문자열(만원/억원)을 포함해 반환.)
 const fmt = (manwon: number) => {
   if (!isFinite(manwon) || isNaN(manwon)) return "—";
-  const v = Math.round(Math.abs(manwon));
+  let v = Math.round(Math.abs(manwon));
+  // 구 스냅샷 힐링 — 파서 가드(2026-08-03) 이전에 원 단위로 저장된 값(1억=100,000,000)이
+  // "10000억원" 으로 보이던 사고. 만원 단위로 100억 이상은 비현실 → 원 단위로 판단해 ÷10,000.
+  if (v >= 1_000_000) v = Math.round(v / 1_0000);
   if (v >= 1_0000) {
     const eok = Math.floor(v / 1_0000);
     const rest = v % 1_0000;

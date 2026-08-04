@@ -7,9 +7,10 @@
 //    2. 성장 예측 진입 카드 (탭 → GrowthForecastView sheet)
 //    3. 마케팅 작업하기 = 사례 엔진 (MarketingCasesCard) — 히어로 1 + 채널 진행도 + 더 보기.
 //       2026-06-10: 기존 코칭·트렌드 2개 섹션은 이 단일 엔진으로 통합·삭제됨.
-//    3.5. 이번 주 밈·챌린지 (MarketingMemeLane) — 2026-07-24 신설, 전역 주간 팩 미러.
-//    4. 채널별 지출 추적 (추천 chip + list + collapsible add form)
-//    5. 보조: LoyaltyDonut + CampaignIdeas (iOS 고유 유지)
+//    3.5. 이번 주 밈·챌린지 (MarketingMemeLane) — 2026-07-24 신설, 전역 팩 미러.
+//    4. 채널별 지출 추적 (추천 chip + list + collapsible add form) — 장부·예산 탭
+//    5. 단골 비율·캠페인 아이디어 — 2026-08-04 웹 이식 완료 (양쪽 동일, 이번 주 탭 하단)
+//    ※ growthNavCard(성장 예측)만 iOS 전용 진입점 — 웹은 같은 기능이 재무 탭에 있음 (배치 차이, 내용 동일)
 //
 
 import SwiftUI
@@ -136,6 +137,10 @@ public struct MarketingView: View {
 
                         // 리뷰 관리 — 추후 제공 예정 (2026-08-03 사장님 결정, 웹 패리티)
                         reviewComingSoonCard
+
+                        // 단골 비율·캠페인 아이디어 — 웹과 동일 배치 (2026-08-04 패리티: 이번 주 탭 하단)
+                        LoyaltyDonutBlock()
+                        CampaignIdeasBlock()
                     }
 
                     if tab == .create {
@@ -160,10 +165,6 @@ public struct MarketingView: View {
                             onDelete: { id in Task { await deleteCampaign(id) } }
                         )
                     }
-
-                    // iOS 고유 보조 블록
-                    LoyaltyDonutBlock()
-                    CampaignIdeasBlock()
 
                     Color.clear.frame(height: 110)
                 }

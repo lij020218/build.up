@@ -77,23 +77,25 @@ const ROADMAP_TOOL: { name: string; description?: string; input_schema?: unknown
       },
       budgetAllocation: {
         type: "object",
+        description: "모든 숫자는 만원 단위 정수 (1억원 → 10000). 원 단위 금지.",
         properties: {
-          deposit: { type: "number" },
-          interior: { type: "number" },
-          equipment: { type: "number" },
-          workingCapital: { type: "number" },
-          total: { type: "number" },
+          deposit: { type: "number", description: "만원 단위" },
+          interior: { type: "number", description: "만원 단위" },
+          equipment: { type: "number", description: "만원 단위" },
+          workingCapital: { type: "number", description: "만원 단위" },
+          total: { type: "number", description: "만원 단위" },
         },
         required: ["deposit", "interior", "equipment", "workingCapital", "total"],
       },
       monthlyCosts: {
         type: "object",
+        description: "모든 숫자는 만원 단위 정수 (월세 200만원 → 200). 원 단위 금지.",
         properties: {
-          ingredients: { type: "number" },
-          labor: { type: "number" },
-          rent: { type: "number" },
-          utilities: { type: "number" },
-          other: { type: "number" },
+          ingredients: { type: "number", description: "만원 단위" },
+          labor: { type: "number", description: "만원 단위" },
+          rent: { type: "number", description: "만원 단위" },
+          utilities: { type: "number", description: "만원 단위" },
+          other: { type: "number", description: "만원 단위" },
         },
         required: ["ingredients", "labor", "rent", "utilities", "other"],
       },
@@ -333,7 +335,8 @@ const ROADMAP_TOOL: { name: string; description?: string; input_schema?: unknown
   },
 };
 
-function parseResponse(raw: string): RoadmapGenerationResult {
+// export: 단위 정규화 등 파서 가드의 단위 테스트용 (apps/web/__tests__/roadmap-budget-units.test.ts)
+export function parseResponse(raw: string): RoadmapGenerationResult {
   // 마크다운 블록 제거
   let cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
 
@@ -469,12 +472,22 @@ function parseResponse(raw: string): RoadmapGenerationResult {
       // 0 미만은 모두 0 으로 clamp.
       const nn = (v: unknown) => Math.max(0, Number(v) || 0);
       const ba = (obj.budgetAllocation as Record<string, unknown>) ?? {};
-      const deposit = nn(ba.deposit);
-      const interior = nn(ba.interior);
-      const equipment = nn(ba.equipment);
-      const workingCapital = nn(ba.workingCapital);
+      let deposit = nn(ba.deposit);
+      let interior = nn(ba.interior);
+      let equipment = nn(ba.equipment);
+      let workingCapital = nn(ba.workingCapital);
+      let rawTotal = nn(ba.total);
+      // 단위 정규화 (2026-08-03 실사고) — 스키마는 만원 단위지만 모델이 가끔 원 단위로 반환:
+      //   자본금 1억 → total 100000000 → 화면(만원 가정)이 "10000억원" 으로 표시.
+      //   소상공인·초기창업 컨텍스트에서 총예산 100억(만원 단위 1,000,000) 초과는 비현실 → 원 단위로 판단해 ÷10,000.
+      const looksLikeWon = Math.max(rawTotal, deposit + interior + equipment + workingCapital) >= 1_000_000;
+      if (looksLikeWon) {
+        const toMan = (v: number) => Math.round(v / 10_000);
+        deposit = toMan(deposit); interior = toMan(interior);
+        equipment = toMan(equipment); workingCapital = toMan(workingCapital);
+        rawTotal = toMan(rawTotal);
+      }
       // total 이 명시되지 않았거나 명백히 잘못된 경우 합계로 자동 계산.
-      const rawTotal = nn(ba.total);
       const sum = deposit + interior + equipment + workingCapital;
       const total = rawTotal > 0 && Math.abs(rawTotal - sum) < sum * 0.1 ? rawTotal : sum;
       return { deposit, interior, equipment, workingCapital, total };
@@ -482,13 +495,18 @@ function parseResponse(raw: string): RoadmapGenerationResult {
     monthlyCosts: (() => {
       const nn = (v: unknown) => Math.max(0, Number(v) || 0);
       const mc = (obj.monthlyCosts as Record<string, unknown>) ?? {};
-      return {
-        ingredients: nn(mc.ingredients),
-        labor: nn(mc.labor),
-        rent: nn(mc.rent),
-        utilities: nn(mc.utilities),
-        other: nn(mc.other),
-      };
+      let ingredients = nn(mc.ingredients);
+      let labor = nn(mc.labor);
+      let rent = nn(mc.rent);
+      let utilities = nn(mc.utilities);
+      let other = nn(mc.other);
+      // budgetAllocation 과 동일한 원 단위 오염 가드 — 월비용 합 100억(만원 단위) 초과 = 원 단위로 판단.
+      if (ingredients + labor + rent + utilities + other >= 1_000_000) {
+        const toMan = (v: number) => Math.round(v / 10_000);
+        ingredients = toMan(ingredients); labor = toMan(labor);
+        rent = toMan(rent); utilities = toMan(utilities); other = toMan(other);
+      }
+      return { ingredients, labor, rent, utilities, other };
     })(),
     recommendations: {
       suppliers: Array.isArray((obj.recommendations as Record<string, unknown>)?.suppliers)
@@ -500,6 +518,7 @@ function parseResponse(raw: string): RoadmapGenerationResult {
               category: String(s.category ?? ""),
               reason: String(s.reason ?? ""),
               priceRange: String(s.priceRange ?? ""),
+              ...(s.description ? { description: String(s.description) } : {}),
             };
           })
         : [],

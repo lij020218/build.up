@@ -27,6 +27,13 @@ import {
   getUniversalMaterialFallback,
   getUniversalConceptFallback,
 } from "./universal-fallback";
+// 세부업종 특화 인테리어 실명 SSOT — 시공 단계 UI 와 동일 출처 (데이터 파일, 클라이언트 의존 없음)
+import { SUB_INDUSTRY_INTERIOR_2026 } from "../../../../lib/components/stages/offline/sub-industry-interior-2026";
+// 지역 실명 데이터 (2026-08-04) — 국토부 등록 시공업체 + Kakao 지역 공급처
+import { fetchInteriorFirms, extractSigungu, extractSido, normalizeFirmName } from "../../../_lib/interior-firms";
+import { searchKakaoPlaces, geocodeRegion } from "../../../_lib/kakao-local";
+import { sbizInteriorFirmsNear } from "../../../_lib/sbiz-store";
+import { getEnvVar } from "../../../_lib/env";
 
 // Vercel serverless 함수 타임아웃: 120초 (Pro 플랜 필요)
 export const maxDuration = 120;
@@ -265,6 +272,9 @@ function mergePoolSelections(
         category: v.vendorTypeLabel,
         reason: pick.reason,
         priceRange: "",
+        // 실제 업체명(하림·마니커 등)은 title 이 아니라 description 에 산다 —
+        // 종전엔 여기서 버려져 카드가 "…업체를 선정합니다" 만 보였다 (2026-08-03 사장님 리포트).
+        description: v.description,
       });
     }
   }
@@ -371,6 +381,7 @@ function mergePoolSelections(
           category: v.vendorTypeLabel,
           reason: "검증 풀 우선순위 기준 자동 추천",
           priceRange: "",
+          description: v.description,
         });
         if (picked.length >= 6) break;
       }
@@ -542,6 +553,18 @@ export async function POST(request: Request) {
   // ⭐ mergePoolSelections — picks 가 빈 경우에도 풀에서 결정론적으로 채움 (이미 구현)
   const enriched = mergePoolSelections(result, pool, picks);
 
+  // ── 인테리어 시공 업체 실명 보강 (2026-08-03 사장님 리포트) ──
+  //   vendor_recommendations 의 interior 시드는 순수 가이드 텍스트(업체명 0)라 카드가
+  //   "업체를 추천해줄 것처럼 해놓고 인테리어 해야 한다는 내용만" 이 됐다.
+  //   세부업종 SSOT(sub-industry-interior-2026)의 실명 업체·플랫폼을 description 에 덧붙인다.
+  enrichInteriorVendorNames(enriched, result.parsed.subIndustryId);
+
+  // ── 지역 실명 부착 (2026-08-04) — LLM 산출이 아니라 서버가 실데이터를 붙인다 ──
+  //   ① 국토부 전국인테리어업체표준데이터: 내 시군구 등록 시공업체 (면허 등록 확인)
+  //   ② Kakao Local: 내 지역 공급처 (식자재마트 등 업종별 검색어)
+  //   지역이 없거나 API 실패면 필드 자체를 비운다 — 거짓 실패 화면 금지, 블록 비표시가 정직.
+  await attachRegionalRealNames(enriched, result.parsed.preferredRegion, result.parsed.industryCategoryId, result.parsed.subIndustryId);
+
   // ── 지원사업 — LLM 산출을 버리고 SSOT 매칭으로 결정론 대체 (2026-08-03 감사 P2) ──
   //   종전엔 프롬프트에 7개 프로그램이 하드코딩("2026 기준" — 해 지나면 낡음)돼 있었고
   //   fitScore 를 LLM 이 지어냈다. 이제 startup-programs SSOT + getMatchedProgramsV2
@@ -608,4 +631,184 @@ export async function POST(request: Request) {
   );
 
   return NextResponse.json(enriched);
+}
+
+/**
+ * 인테리어 시공 업체 카드에 실명 업체·플랫폼 한 줄 보강.
+ *  1순위: 세부업종 특화 SSOT(sub-industry-interior-2026)의 specialistFirms (예: 큐플레이스·집닥).
+ *  폴백: 전 업종 공통 비교견적·매칭 플랫폼 (universal-fallback 의 실명군과 동일 — 서버 표시 전용).
+ *  광고가 아닌 참고용 — 복수 견적·계약서 검증 안내는 시공 단계 UI 에 이미 존재.
+ */
+function enrichInteriorVendorNames(r: RoadmapGenerationResult, subIndustryId: string | null | undefined): void {
+  const vendors = r.recommendations.interiorVendors;
+  if (!vendors || vendors.length === 0) return;
+  const spec = subIndustryId ? SUB_INDUSTRY_INTERIOR_2026[subIndustryId] : undefined;
+  const firms = (spec?.specialistFirms ?? []).map((f) => `${f.nameKo} (${f.typeKo})`);
+  const line = firms.length > 0
+    ? `업체·플랫폼 예: ${firms.join(", ")}`
+    : "업체·플랫폼 예: 큐플레이스 (상업공간 비교견적), 집닥 (시공 매칭), 오늘의집 시공, 한샘 리하우스";
+  for (const v of vendors) {
+    if (v.description.includes("업체·플랫폼 예:")) continue; // 중복 보강 방지
+    v.description = v.description ? `${v.description} ${line}.` : `${line}.`;
+  }
+}
+
+// ── 지역 공급처 검색어 — 업종별 (서버 표시 전용, 억지 매칭보다 비움 우선) ──
+const REGIONAL_SUPPLIER_KEYWORDS: Record<string, string[]> = {
+  food: ["식자재마트", "업소용 주방"],
+  "cafe-dessert": ["커피 원두 도매", "업소용 주방"],
+  retail: ["도매 상가"],
+  beauty: ["미용 재료 도매"],
+};
+
+// ── 업종별 인테리어 검색어 — "[지역] [업종] 인테리어" 카카오 검색 (업종 특화 신호) ──
+const INTERIOR_INDUSTRY_KEYWORDS: Record<string, string> = {
+  food: "음식점 인테리어",
+  "cafe-dessert": "카페 인테리어",
+  beauty: "미용실 인테리어",
+  retail: "매장 인테리어",
+  fitness: "헬스장 인테리어",
+  education: "학원 인테리어",
+  pet: "펫샵 인테리어",
+  space: "상가 인테리어",
+};
+
+// 세부업종 정밀 검색어 (2026-08-04) — 실제로 통용되는 검색어만 등재, 없으면 업종 폴백.
+//  키 = starterIndustryOptions/sub-industry-interior-2026 의 subIndustryId.
+const INTERIOR_SUBINDUSTRY_KEYWORDS: Record<string, string> = {
+  // 외식
+  "korean-casual": "식당 인테리어",
+  "chicken-burger": "치킨집 인테리어",
+  "western-pasta-brunch": "레스토랑 인테리어",
+  // 카페·디저트
+  "bakery-studio": "베이커리 인테리어",
+  // 뷰티
+  "hair-salon": "미용실 인테리어",
+  "nail-studio": "네일샵 인테리어",
+  "skin-care-room": "피부관리실 인테리어",
+  "makeup-bridal": "메이크업샵 인테리어",
+  // 피트니스
+  "pilates-studio": "필라테스 인테리어",
+  "yoga-studio": "요가원 인테리어",
+  "golf-studio": "골프연습장 인테리어",
+};
+
+/**
+ * 지역 실명 부착 — 국토부 등록 시공업체(표준데이터) + Kakao 지역 공급처.
+ *  두 소스는 독립 실패 (한쪽이 죽어도 다른 쪽은 붙는다). 지역 없으면 no-op.
+ */
+async function attachRegionalRealNames(
+  r: RoadmapGenerationResult,
+  preferredRegion: string | null | undefined,
+  categoryId: string,
+  subIndustryId?: string | null,
+): Promise<void> {
+  const region = (preferredRegion ?? "").trim();
+  if (!region) return;
+
+  // ① 인테리어 업체 — 3개 실데이터 소스 이름 교차 검증 (2026-08-04 사장님 지시).
+  //    · CSV 등록 대장(국토부, interior_firms): 면허 등록 = licensed. 전화·등록일 보유.
+  //    · 소진공 상가 API(국세청 원천): 상권 좌표 반경 내 실재 영업 = operating.
+  //    · 카카오 "[지역] [업종] 인테리어" 검색: 업종 특화 = industryMatch. 전화·지도링크 보유.
+  //    필드는 있는 소스에서 병합(전화 = CSV → 카카오, 주소 = CSV → 카카오 → 소진공).
+  //    랭킹 = 확인된 신호 수 내림차순 (3중 > 2중 > 단일), 동점은 CSV 규모·업력 순.
+  //    평점 데이터가 없으므로 "최고" 위조 금지 — 신호 기준을 UI 가 그대로 말한다. 소스별 독립 실패.
+  const firmsPromise = (async () => {
+    try {
+      if (!r.recommendations.interiorVendors?.length) return;
+      const sigungu = extractSigungu(region);
+      const kakaoKey = getEnvVar("KAKAO_REST_API_KEY");
+      const sbizKey = process.env.MOIS_API_KEY;
+      // 세부업종 정밀 검색어 우선 (네일샵·베이커리 등) → 업종 → 범용 폴백
+      const interiorKeyword =
+        (subIndustryId ? INTERIOR_SUBINDUSTRY_KEYWORDS[subIndustryId] : undefined)
+        ?? INTERIOR_INDUSTRY_KEYWORDS[categoryId]
+        ?? "상가 인테리어";
+
+      // 중심 좌표 먼저 — 카카오(거리순 정렬·distance)·소진공(반경) 둘 다 이 좌표를 쓴다
+      const center = kakaoKey ? await geocodeRegion(region, kakaoKey).catch(() => null) : null;
+
+      const [firms, places, sbizFirms] = await Promise.all([
+        // sido 동반 필터 — 동명 시군구(서울/부산 강서구 등) 충돌 방지 (2026-08-04 실측 버그)
+        sigungu ? fetchInteriorFirms({ sigungu, sido: extractSido(region), limit: 12 }) : Promise.resolve([]),
+        kakaoKey
+          ? searchKakaoPlaces(region, interiorKeyword, kakaoKey, { size: 8, center: center ?? undefined }).catch(() => [])
+          : Promise.resolve([]),
+        center && sbizKey
+          ? sbizInteriorFirmsNear(center.lng, center.lat, 2000, sbizKey).catch(() => [])
+          : Promise.resolve([]),
+      ]);
+
+      type RegionalFirm = NonNullable<RoadmapGenerationResult["recommendations"]["regionalInteriorFirms"]>[number];
+      // 이름(정규화) 키로 3소스 병합 — csvRank 는 규모·업력 정렬 순서 보존용
+      const merged = new Map<string, RegionalFirm & { csvRank: number }>();
+      const upsert = (name: string, patch: Partial<RegionalFirm>, csvRank = 999) => {
+        const norm = normalizeFirmName(name);
+        if (!norm) return;
+        const cur = merged.get(norm) ?? {
+          name, address: "", phone: null, registeredAt: null,
+          licensed: false, operating: false, industryMatch: false, distanceM: null, mapUrl: null, csvRank: 999,
+        };
+        merged.set(norm, {
+          ...cur,
+          // 필드 병합 — 이미 있는 값(우선순위 높은 소스가 먼저 넣음)을 지키고 빈 곳만 채움
+          address: cur.address || (patch.address ?? ""),
+          phone: cur.phone ?? patch.phone ?? null,
+          registeredAt: cur.registeredAt ?? patch.registeredAt ?? null,
+          mapUrl: cur.mapUrl ?? patch.mapUrl ?? null,
+          licensed: cur.licensed || !!patch.licensed,
+          operating: cur.operating || !!patch.operating,
+          industryMatch: cur.industryMatch || !!patch.industryMatch,
+          // 거리 = 좌표 있는 소스 중 최솟값 (같은 업체가 두 소스에 있으면 더 정확한 쪽)
+          distanceM: cur.distanceM != null && patch.distanceM != null
+            ? Math.min(cur.distanceM, patch.distanceM)
+            : cur.distanceM ?? patch.distanceM ?? null,
+          csvRank: Math.min(cur.csvRank, csvRank),
+        });
+      };
+      // 소스 투입 순서 = 필드 우선순위 (CSV 전화·주소 우선 → 카카오 → 소진공)
+      firms.forEach((f, i) => upsert(f.name, {
+        address: f.address, phone: f.phone, registeredAt: f.registeredAt, licensed: true,
+      }, i));
+      for (const p of places) upsert(p.name, {
+        address: p.address, phone: p.phone, mapUrl: p.mapUrl, industryMatch: true, distanceM: p.distanceM,
+      });
+      for (const s of sbizFirms) upsert(s.name, { address: s.address, operating: true, distanceM: s.distanceM });
+
+      const signalCount = (f: RegionalFirm) =>
+        Number(f.licensed) + Number(f.operating) + Number(f.industryMatch);
+      // 랭킹 (2026-08-04 사장님 지시: "거리·업종 특화로 승부") —
+      //   ① 업종 특화 우선 ② 가까운 거리 (좌표 없는 CSV-only 는 후순위) ③ 교차 신호 수 ④ CSV 규모·업력
+      const ranked = [...merged.values()]
+        // 단일 신호가 소진공뿐인 항목은 제외 — 반경 내 사업자일 뿐 추천 근거로는 약함
+        .filter((f) => !(signalCount(f) === 1 && f.operating))
+        .sort((a, b) =>
+          Number(b.industryMatch) - Number(a.industryMatch)
+          || (a.distanceM ?? Infinity) - (b.distanceM ?? Infinity)
+          || signalCount(b) - signalCount(a)
+          || a.csvRank - b.csvRank)
+        .slice(0, 5)
+        .map(({ csvRank: _unused, ...f }) => f);
+      if (ranked.length > 0) r.recommendations.regionalInteriorFirms = ranked;
+    } catch { /* 독립 실패 — 비표시 */ }
+  })();
+
+  // ② 지역 공급처 — 업종 검색어별 top 2
+  const suppliersPromise = (async () => {
+    try {
+      const keywords = REGIONAL_SUPPLIER_KEYWORDS[categoryId];
+      const kakaoKey = getEnvVar("KAKAO_REST_API_KEY");
+      if (!keywords || !kakaoKey) return;
+      const found: NonNullable<RoadmapGenerationResult["recommendations"]["regionalSupplierPlaces"]> = [];
+      for (const keyword of keywords) {
+        const places = await searchKakaoPlaces(region, keyword, kakaoKey, { size: 3 });
+        for (const p of places.slice(0, 2)) {
+          found.push({ keyword, name: p.name, address: p.address, phone: p.phone, mapUrl: p.mapUrl });
+        }
+      }
+      if (found.length > 0) r.recommendations.regionalSupplierPlaces = found;
+    } catch { /* 독립 실패 — 비표시 */ }
+  })();
+
+  await Promise.all([firmsPromise, suppliersPromise]);
 }

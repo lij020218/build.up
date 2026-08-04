@@ -303,3 +303,61 @@ export async function franchisePresenceInRadius(
 
   return { sameBrand: countBrand(brandName), peers, sampled };
 }
+
+// ── 반경 내 인테리어 사업자 (2026-08-04, 사장님 지시 — 상가 API 재활용) ──
+//  업종코드 실측(2026-08-04, 강남역 반경 2km): M11201 인테리어 디자인업 = 376곳 실명 확인.
+//  F10602(도배·실내장식 공사업)는 최밀집 지역에서도 0건 — 상가 DB 에 건설업(F) 코드가
+//  사실상 비어 있어 제외 (추정 매핑 금지 원칙: 실코드 근거만 쓴다).
+const INTERIOR_SCLS_CODES = ["M11201"] as const;
+
+export type SbizInteriorFirm = { name: string; address: string; distanceM: number | null };
+
+/** 두 좌표 간 거리(m) — 하버사인 */
+function haversineM(lng1: number, lat1: number, lng2: number, lat2: number): number {
+  const R = 6_371_000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+}
+
+/**
+ * 상권 좌표 반경 내 인테리어 사업자 목록 (+중심점 거리). 실패·키 없음 = [] (독립 실패, 위장 금지).
+ *  코드당 1페이지(100행)만 — 추천 후보 용도라 전수 불필요.
+ */
+export async function sbizInteriorFirmsNear(
+  cx: number,
+  cy: number,
+  radius: number,
+  apiKey: string,
+): Promise<SbizInteriorFirm[]> {
+  const out: SbizInteriorFirm[] = [];
+  try {
+    for (const code of INTERIOR_SCLS_CODES) {
+      const url = `${BASE}/storeListInRadius?serviceKey=${encodeURIComponent(apiKey)}&type=json&numOfRows=100&pageNo=1&radius=${radius}&cx=${cx}&cy=${cy}&indsSclsCd=${code}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+      if (!res.ok) continue;
+      const json = await res.json() as { body?: { items?: Array<{ bizesNm?: string; rdnmAdr?: string; lnoAdr?: string; lon?: unknown; lat?: unknown }> } };
+      for (const it of json?.body?.items ?? []) {
+        const name = typeof it?.bizesNm === "string" ? it.bizesNm.trim() : "";
+        if (!name) continue;
+        const lon = Number(it.lon), lat = Number(it.lat);
+        out.push({
+          name,
+          address: (it.rdnmAdr ?? it.lnoAdr ?? "").trim(),
+          distanceM: Number.isFinite(lon) && Number.isFinite(lat) ? haversineM(cx, cy, lon, lat) : null,
+        });
+      }
+    }
+  } catch { /* 실측 불가 — 빈 목록 */ }
+  // 상호 중복 제거 (지점 중복 등) — 가까운 것 우선 유지
+  out.sort((a, b) => (a.distanceM ?? Infinity) - (b.distanceM ?? Infinity));
+  const seen = new Set<string>();
+  return out.filter((f) => {
+    const k = normalizeBizName(f.name);
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}

@@ -243,14 +243,14 @@ export type RoadmapGenerationResult = {
     targetFit: string;
     summary: string;
   };
-  budgetAllocation: {
+  budgetAllocation: {   // ⚠️ 모든 숫자 = 만원 단위 정수 (예: 1억원 → 10000). 원 단위 금지.
     deposit: number;
     interior: number;
     equipment: number;
     workingCapital: number;
     total: number;
   };
-  monthlyCosts: {
+  monthlyCosts: {   // ⚠️ 모든 숫자 = 만원 단위 정수 (예: 월세 200만원 → 200). 원 단위 금지.
     ingredients: number;
     labor: number;
     rent: number;
@@ -265,9 +265,39 @@ export type RoadmapGenerationResult = {
       category: string;
       reason: string;
       priceRange: string;
+      /** 실명 후보·비교 포인트 — DB 풀 row 의 description (실제 업체명은 여기 산다. 2026-08-03) */
+      description?: string;
     }>;
     deliveryPlatforms: string[];
     snsChannels: string[];
+    /**
+     * 내 지역 인테리어 업체 — 서버가 생성 후 부착 (LLM 산출 아님, 2026-08-04).
+     * 신호 교차: 카카오 업종 검색(industryMatch) × 국토부 등록 대장(licensed).
+     * "최고" 위조 금지 — 평점·실적 데이터가 없으므로 신호 기준을 UI 가 그대로 말한다.
+     */
+    regionalInteriorFirms?: Array<{
+      name: string;
+      address: string;
+      phone: string | null;
+      registeredAt: string | null;
+      /** 국토부 등록 대장(CSV 적재)에서 확인됨 (면허 등록 — 품질 보증 아님) */
+      licensed: boolean;
+      /** 소진공 상가 API(국세청 원천) 상권 반경에서 확인됨 — 실재 영업 신호 */
+      operating: boolean;
+      /** "[지역] [업종] 인테리어" 카카오 검색에서 확인 — 업종 특화 신호 */
+      industryMatch: boolean;
+      /** 상권 중심점에서의 거리(m) — 좌표가 있는 소스(카카오·소진공)만. CSV-only 는 null */
+      distanceM?: number | null;
+      mapUrl?: string | null;
+    }>;
+    /** 내 지역 공급처 실명 — Kakao Local 검색 (서버 부착, LLM 산출 아님). */
+    regionalSupplierPlaces?: Array<{
+      keyword: string;      // 검색어 라벨 ("식자재마트")
+      name: string;
+      address: string;
+      phone: string | null;
+      mapUrl: string | null;
+    }>;
     /** @deprecated — legal.permitsDetailed 사용 권장. 하위호환 위해 유지 */
     permits: string[];
     taxAdvice: string;
@@ -624,6 +654,7 @@ industrySpecific 필드는 업종에 따라:
    - region: 지역 언급 없으면 포함
    - teamSize: 팀 규모 언급 없으면 포함 (단, 1인 창업이 명시되면 제외)
 3. 예산이 주어지면 업종 벤치마크에 맞춰 현실적으로 배분하세요.
+   **budgetAllocation·monthlyCosts 의 모든 숫자는 만원 단위 정수** (1억원 → 10000, 원 단위 금지).
 4. 월비용은 해당 업종/지역의 실제 시세를 반영하세요.
 5. 타임라인은 현실적으로 (카페 최소 4개월, 음식점 최소 5개월, 온라인 최소 2개월).
 6. 위험 요소를 반드시 1개 이상 제시하되, 대응 방법도 같이.
