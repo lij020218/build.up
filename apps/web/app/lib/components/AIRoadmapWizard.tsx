@@ -1149,6 +1149,36 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                     </div>
                   ))}
 
+                  {/* 대표 공급 브랜드 — SSOT (점유율·인증 근거, LLM 아님. 프랜차이즈엔 미표시) */}
+                  {(result.recommendations.supplyBrands?.length ?? 0) > 0 && (
+                    <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(29,53,87,0.03)", border: "1px solid rgba(29,53,87,0.10)" }}>
+                      <div style={{ fontSize: 11, fontWeight: 750, color: "#1d3557", marginBottom: 8 }}>
+                        {ko ? "대표 공급 브랜드 · 시장 검증" : "Leading supply brands"}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                        {result.recommendations.supplyBrands!.map((g, gi) => (
+                          <div key={gi}>
+                            <div style={{ fontSize: 10.5, fontWeight: 750, color: "var(--muted)", letterSpacing: "0.04em", marginBottom: 4 }}>{g.category}</div>
+                            <div style={{ display: "flex", flexDirection: "column" as const, gap: 3 }}>
+                              {g.brands.map((b, bi) => (
+                                <div key={bi} style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.5 }}>
+                                  {b.url
+                                    ? <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#0f172a", textDecoration: "none" }}>{b.name} ↗</a>
+                                    : <b style={{ fontWeight: 700 }}>{b.name}</b>}
+                                  <span style={{ color: "var(--muted)" }}> — {b.note}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 3 }}>
+                              {g.basis}{" "}
+                              <a href={g.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#3b5c8c", textDecoration: "none" }}>{ko ? "출처 →" : "Source →"}</a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* 내 지역 공급처 — Kakao Local 실데이터 (서버 부착, LLM 아님) */}
                   {(result.recommendations.regionalSupplierPlaces?.length ?? 0) > 0 && (
                     <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.10)" }}>

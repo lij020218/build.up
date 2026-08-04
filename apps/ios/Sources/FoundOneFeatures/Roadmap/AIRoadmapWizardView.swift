@@ -858,6 +858,11 @@ private struct ReviewStepView: View {
                     regionalVendorsCard
                 }
 
+                // 대표 공급 브랜드 — SSOT 시장 검증 (웹 supplyBrands 블록 미러. 프랜차이즈엔 서버가 미부착)
+                if result.recommendations.supplyBrands?.isEmpty == false {
+                    supplyBrandsCard
+                }
+
                 // 시작 버튼
                 VStack(spacing: 10) {
                     primaryButton(label: "로드맵 시작하기 →") {
@@ -1031,6 +1036,48 @@ private struct ReviewStepView: View {
                     .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
                     .lineSpacing(1.8)
                     .padding(.top, 2)
+            }
+        }
+    }
+
+    // 대표 공급 브랜드 — 점유율·인증 근거와 출처를 그대로 보여준다 (평점 아님)
+    private var supplyBrandsCard: some View {
+        AISectionCard(icon: "shippingbox.fill", title: "대표 공급 브랜드 · 시장 검증") {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array((result.recommendations.supplyBrands ?? []).enumerated()), id: \.offset) { _, g in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(g.category)
+                            .font(.system(size: 10.5, weight: .heavy))
+                            .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+                        ForEach(Array(g.brands.enumerated()), id: \.offset) { _, b in
+                            HStack(alignment: .top, spacing: 4) {
+                                if let url = b.url.flatMap(URL.init(string:)) {
+                                    Link(b.name + " ↗", destination: url)
+                                        .font(.system(size: 12.5, weight: .bold))
+                                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                                } else {
+                                    Text(b.name)
+                                        .font(.system(size: 12.5, weight: .bold))
+                                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                                }
+                                Text("— " + b.note)
+                                    .font(.system(size: 11.5, weight: .medium))
+                                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+                            }
+                        }
+                        HStack(spacing: 4) {
+                            Text(g.basis)
+                                .font(.system(size: 10.5, weight: .medium))
+                                .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
+                            if let src = URL(string: g.sourceUrl) {
+                                Link("출처 →", destination: src)
+                                    .font(.system(size: 10.5, weight: .bold))
+                                    .foregroundStyle(BUColor.accent)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 4)
+                }
             }
         }
     }

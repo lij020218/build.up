@@ -290,6 +290,16 @@ export type RoadmapGenerationResult = {
       distanceM?: number | null;
       mapUrl?: string | null;
     }>;
+    /**
+     * 대표 공급 브랜드 — 서버 부착 SSOT (LLM 산출 아님, 2026-08-04).
+     * 점유율·인증 등 검증 가능한 근거(basis·sourceUrl)와 함께. 프랜차이즈에는 미부착(본사 물류).
+     */
+    supplyBrands?: Array<{
+      category: string;
+      brands: Array<{ name: string; note: string; url?: string }>;
+      basis: string;
+      sourceUrl: string;
+    }>;
     /** 내 지역 공급처 실명 — Kakao Local 검색 (서버 부착, LLM 산출 아님). */
     regionalSupplierPlaces?: Array<{
       keyword: string;      // 검색어 라벨 ("식자재마트")

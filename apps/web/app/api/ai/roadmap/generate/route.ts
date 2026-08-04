@@ -34,6 +34,7 @@ import { fetchInteriorFirms, extractSigungu, extractSido, normalizeFirmName } fr
 import { searchKakaoPlaces, geocodeRegion } from "../../../_lib/kakao-local";
 import { sbizInteriorFirmsNear } from "../../../_lib/sbiz-store";
 import { getEnvVar } from "../../../_lib/env";
+import { getSupplyBrands } from "../../../_lib/supply-brands";
 
 // Vercel serverless 함수 타임아웃: 120초 (Pro 플랜 필요)
 export const maxDuration = 120;
@@ -564,6 +565,13 @@ export async function POST(request: Request) {
   //   ② Kakao Local: 내 지역 공급처 (식자재마트 등 업종별 검색어)
   //   지역이 없거나 API 실패면 필드 자체를 비운다 — 거짓 실패 화면 금지, 블록 비표시가 정직.
   await attachRegionalRealNames(enriched, result.parsed.preferredRegion, result.parsed.industryCategoryId, result.parsed.subIndustryId);
+
+  // ── 대표 공급 브랜드 (SSOT — 점유율·인증 근거, 2026-08-04) ──
+  //   프랜차이즈는 본사 물류가 강제라 부착하지 않는다. 근거 없는 업종은 빈 결과(정직).
+  if (result.parsed.startupType !== "franchise") {
+    const groups = getSupplyBrands(result.parsed.subIndustryId);
+    if (groups.length > 0) enriched.recommendations.supplyBrands = groups;
+  }
 
   // ── 지원사업 — LLM 산출을 버리고 SSOT 매칭으로 결정론 대체 (2026-08-03 감사 P2) ──
   //   종전엔 프롬프트에 7개 프로그램이 하드코딩("2026 기준" — 해 지나면 낡음)돼 있었고

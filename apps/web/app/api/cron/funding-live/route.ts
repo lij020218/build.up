@@ -33,6 +33,8 @@ export async function GET(request: Request) {
     count: result.count,
     live: result.live,
     stored: result.stored,
+    // 실패 사유 노출 (2026-08-04 실사고: 사유 없는 count:0 이 이틀간 침묵) — Vercel 로그 진단용
+    ...(result.error ? { error: result.error } : {}),
     ms: Date.now() - t0,
   });
 }

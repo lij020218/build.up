@@ -123,6 +123,8 @@ public struct AIRoadmapResult: Decodable, Sendable {
         public let operationalChannels: [OperationalChannel]?
         /// 내 지역 인테리어 업체 — 서버 부착 실데이터 (업종검색×국토부 대장×소진공 교차, 2026-08-04)
         public let regionalInteriorFirms: [RegionalInteriorFirm]?
+        /// 대표 공급 브랜드 — 서버 부착 SSOT (점유율·인증 근거. 프랜차이즈 미부착)
+        public let supplyBrands: [SupplyBrandGroup]?
         /// 내 지역 공급처 — Kakao Local 실데이터 (서버 부착)
         public let regionalSupplierPlaces: [RegionalSupplierPlace]?
 
@@ -159,6 +161,19 @@ public struct AIRoadmapResult: Decodable, Sendable {
             public let address: String
             public let phone: String?
             public let mapUrl: String?
+        }
+
+        public struct SupplyBrandGroup: Decodable, Sendable {
+            public let category: String
+            public let brands: [SupplyBrand]
+            public let basis: String
+            public let sourceUrl: String
+
+            public struct SupplyBrand: Decodable, Sendable {
+                public let name: String
+                public let note: String
+                public let url: String?
+            }
         }
 
         public struct OperationalChannel: Decodable, Sendable {

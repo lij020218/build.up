@@ -48,16 +48,32 @@ function getReadClient(): SupabaseClient | null {
   return _readClient;
 }
 
+/** 직전 라이브 페치 실패 사유 — cron 응답에 실어 Vercel 로그에서 원인이 보이게 한다. */
+let lastFetchFailReason: string | null = null;
+
 /** K-Startup 라이브 페치 → 현재 "공고 중"(접수 진행) 인 것만 정규화. */
 async function fetchLiveNormalized(): Promise<StartupProgram[]> {
   const ksKey = process.env.KSTARTUP_API_KEY;
-  if (!ksKey) return [];
+  // ⚠️ 침묵 실패 금지 (2026-08-04 실사고): prod 키 문제로 8/2 부터 크론이 조용히 count:0 을
+  //   반환하며 스냅샷이 썩었고, 사용자에겐 큐레이션(하드코딩)만 보였다. 실패 사유를 남긴다.
+  if (!ksKey) {
+    lastFetchFailReason = "KSTARTUP_API_KEY 미설정";
+    console.error("[funding-live] KSTARTUP_API_KEY 미설정 — 라이브 페치 불가");
+    return [];
+  }
   const gov = await fetchKStartupPrograms(
     { apiKey: ksKey, baseUrl: "" },
     { numOfRows: KSTARTUP_FETCH, recruitingOnly: true },
   )
-    .then((r) => r.data)
-    .catch(() => []);
+    .then((r) => {
+      lastFetchFailReason = null;
+      return r.data;
+    })
+    .catch((e: unknown) => {
+      lastFetchFailReason = e instanceof Error ? e.message : String(e);
+      console.error("[funding-live] K-Startup 페치 실패:", lastFetchFailReason);
+      return [];
+    });
   return gov.map((g) => normalizeLiveProgram(g)).filter((p) => p.applicationStatus === "open");
 }
 
@@ -112,12 +128,18 @@ async function writeSnapshot(live: StartupProgram[]): Promise<boolean> {
  * cron 전용 — 라이브 강제 재페치 후 스냅샷 저장. (사용자 경로 밖)
  *  @returns 저장된 라이브 공고 수 + 성공 여부.
  */
-export async function rebuildAndStoreFundingSnapshot(): Promise<{ count: number; live: boolean; stored: boolean }> {
+export async function rebuildAndStoreFundingSnapshot(): Promise<{ count: number; live: boolean; stored: boolean; error?: string }> {
   const live = await fetchLiveNormalized();
   const stored = live.length > 0 ? await writeSnapshot(live) : false;
   // memo 무효화 — 다음 사용자 요청이 새 스냅샷 반영
   memo = null;
-  return { count: live.length, live: live.length > 0, stored };
+  return {
+    count: live.length,
+    live: live.length > 0,
+    stored,
+    // 0건이면 사유를 응답에 실어 크론 로그만으로 진단 가능하게 (2026-08-04 실사고 재발 방지)
+    ...(live.length === 0 ? { error: lastFetchFailReason ?? "페치 성공했으나 모집중 공고 0건" } : {}),
+  };
 }
 
 /**
