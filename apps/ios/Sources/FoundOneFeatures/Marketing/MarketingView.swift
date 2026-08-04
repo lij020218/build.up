@@ -4,13 +4,14 @@
 //  웹 SSOT: apps/web/app/lib/components/surfaces/MarketingSurface.tsx
 //   섹션 순서 (모두 인라인, 시트 없음):
 //    1. Header + KPI 3 (이달 지출 / ROAS / 활성 채널)
-//    2. 성장 예측 진입 카드 (탭 → GrowthForecastView sheet)
+//    2. (제거됨 2026-08-04) 성장 예측 진입 — 홈 TodayView .growth 시트가 담당 (웹=홈 대시보드 Tier4·5)
 //    3. 마케팅 작업하기 = 사례 엔진 (MarketingCasesCard) — 히어로 1 + 채널 진행도 + 더 보기.
 //       2026-06-10: 기존 코칭·트렌드 2개 섹션은 이 단일 엔진으로 통합·삭제됨.
 //    3.5. 이번 주 밈·챌린지 (MarketingMemeLane) — 2026-07-24 신설, 전역 팩 미러.
 //    4. 채널별 지출 추적 (추천 chip + list + collapsible add form) — 장부·예산 탭
 //    5. 단골 비율·캠페인 아이디어 — 2026-08-04 웹 이식 완료 (양쪽 동일, 이번 주 탭 하단)
-//    ※ growthNavCard(성장 예측)만 iOS 전용 진입점 — 웹은 같은 기능이 재무 탭에 있음 (배치 차이, 내용 동일)
+//    ⚠️ 절대 원칙 (사장님 재지시 2026-08-04): 마케팅 화면 구성은 웹과 예외 없이 1:1 —
+//       한쪽에만 카드·진입점을 추가하지 말 것.
 //
 
 import SwiftUI
@@ -50,7 +51,6 @@ public struct MarketingView: View {
     let mock: MockData
 
     @State private var state = MarketingPageState()
-    @State private var showGrowthForecast: Bool = false
     // 세그먼트 탭 (2026-08-03 개편, 웹 패리티 — 한 화면에 다 쌓지 않는다)
     //  장부·예산은 전용 탭 (사장님 지시 — 종전 하단 접힘 카드에서 승격)
     @State private var tab: MarketingTab = .weekly
@@ -115,8 +115,6 @@ public struct MarketingView: View {
                     segmentedTabs
 
                     if tab == .weekly {
-                        growthNavCard
-
                         // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
                         //   웹 MarketingFocus 와 패리티. 히어로 1순위 + 채널 진행도 + 더 보기.
                         MarketingCasesCard(
@@ -178,20 +176,6 @@ public struct MarketingView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .task { await initialLoad() }
-        .sheet(isPresented: $showGrowthForecast) {
-            NavigationStack {
-                GrowthForecastView(mock: mock)
-                    .navigationTitle("성장 예측")
-                    #if os(iOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                    #endif
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("닫기") { showGrowthForecast = false }
-                        }
-                    }
-            }
-        }
     }
 
     // MARK: - Sections
@@ -370,38 +354,9 @@ public struct MarketingView: View {
         }
     }
 
-    private var growthNavCard: some View {
-        Button {
-            showGrowthForecast = true
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(BUColor.accent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("성장 예측 & What-If")
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("7일 매출 예측 · 마일스톤 · 시나리오 시뮬레이션")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
-            }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: BUSpacing.minTapTarget)
-            .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
-                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
+    // growthNavCard 제거 (2026-08-04 사장님 지시 "기능은 모두 동일해야해"):
+    //  성장 예측 시트는 홈(TodayView .growth)에 이미 있고 웹도 홈 대시보드(Tier4·5)가 담당 —
+    //  마케팅 쪽 진입은 iOS 에만 있던 중복 진입점이라 삭제해 화면 구성을 웹과 1:1 로 맞췄다.
 
     // MARK: - Load
 
