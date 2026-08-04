@@ -122,6 +122,50 @@ public struct MemePackResponse: Sendable, Codable {
     public let generatedAt: String?
 }
 
+// MARK: - 협찬 (인플루언서) — 웹 shared SSOT 서빙 응답 (2026-08-04)
+
+public struct InfluencerCollabResponse: Sendable, Codable {
+    public let checkedAt: String
+    public let curated: [CuratedInfluencer]
+    public let plays: [CollabPlay]
+    public let notFit: NotFit?
+    public let feeRanges: [FeeRange]
+    public let feeSources: String
+
+    public struct CuratedInfluencer: Sendable, Codable {
+        public let name: String
+        public let handle: String
+        public let followers: Int
+        public let regionKo: String
+        public let engagementRatePct: Double?
+        public let statsSourceUrl: String?
+        public let profileUrl: String
+    }
+
+    public struct CollabPlay: Sendable, Codable {
+        public let id: String
+        public let titleKo: String
+        public let targetKo: String
+        public let practiceKo: String
+        public let collabType: String
+        public let instagramQueries: [String]
+        public let dmTemplateKo: String
+    }
+
+    public struct NotFit: Sendable, Codable {
+        public let reasonKo: String
+        public let insteadKo: String
+    }
+
+    public struct FeeRange: Sendable, Codable {
+        public let tier: String
+        public let followersKo: String
+        public let barterKo: String
+        public let feedFeeKo: String
+        public let reelsFeeKo: String
+    }
+}
+
 // MARK: - Errors
 
 public enum MarketingRepositoryError: LocalizedError, Sendable {
@@ -385,6 +429,26 @@ public actor MarketingRepository {
             try await attachAuth(&req)
             let resp: MemePackResponse = try await perform(req)
             return resp.items.isEmpty ? nil : resp
+        } catch {
+            return nil
+        }
+    }
+
+    // MARK: - 협찬 (인플루언서 큐레이션·플레이 — 웹 shared SSOT 서빙 라우트, LLM 0%)
+
+    public func fetchInfluencerCollab(categoryId: String?) async -> InfluencerCollabResponse? {
+        guard var comps = URLComponents(url: baseURL.appendingPathComponent("/api/marketing/influencer-collab"), resolvingAgainstBaseURL: false) else { return nil }
+        if let categoryId, !categoryId.isEmpty {
+            comps.queryItems = [URLQueryItem(name: "categoryId", value: categoryId)]
+        }
+        guard let url = comps.url else { return nil }
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.timeoutInterval = 20
+        do {
+            try await attachAuth(&req)
+            let resp: InfluencerCollabResponse = try await perform(req)
+            return resp
         } catch {
             return nil
         }

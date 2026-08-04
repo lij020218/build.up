@@ -39,6 +39,9 @@ fileprivate final class MarketingPageState {
     // 이번 주 밈·챌린지 팩 (전역 팩: 주간 수집 + 일간 top-up — 웹 MemeLane 패리티)
     var memePack: MemePackResponse? = nil
 
+    // 협찬 탭 데이터 (웹 shared SSOT 서빙 — 1회 로드 후 캐시)
+    var influencerCollab: InfluencerCollabResponse? = nil
+
     // 이달(KST) 매출 합 — 적정 마케팅 예산 판정용 (웹 mtdRevenueWon 패리티)
     var mtdRevenueWon: Int = 0
 
@@ -56,11 +59,12 @@ public struct MarketingView: View {
     @State private var tab: MarketingTab = .weekly
 
     enum MarketingTab: String, CaseIterable {
-        case weekly, create, ledger
+        case weekly, create, collab, ledger
         var label: String {
             switch self {
             case .weekly: return "이번 주"
             case .create: return "만들기"
+            case .collab: return "협찬"
             case .ledger: return "장부·예산"
             }
         }
@@ -149,6 +153,21 @@ public struct MarketingView: View {
                             subIndustryId: state.profile?.subIndustryId,
                             isOperating: state.profile?.businessLaunched ?? true
                         )
+                    }
+
+                    // 협찬 탭 — 인플루언서 큐레이션·발굴·예산 매칭 (2026-08-04, 웹 패리티, LLM 0%)
+                    if tab == .collab {
+                        InfluencerCollabTabView(
+                            collab: state.influencerCollab,
+                            storeName: state.profile?.storeName ?? store.storeName,
+                            region: "",
+                            budgetWon: state.monthlyBudget,
+                            onBudgetChange: { won in
+                                state.monthlyBudget = won
+                                Task { await saveMonthlyBudget(won) }
+                            }
+                        )
+                        .task { await loadInfluencerCollab() }
                     }
 
                     // 장부·예산 전용 탭 (2026-08-03 승격 — 종전 하단 접힘 카드 폐기, 웹 패리티)
@@ -469,6 +488,23 @@ public struct MarketingView: View {
             let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
             await repo.setPlayDone(weekKey: wk, title: title, done: willDo)
         }
+    }
+
+    /// 협찬 탭 데이터 — 1회 로드 (웹 shared SSOT 서빙 라우트, LLM 0%)
+    private func loadInfluencerCollab() async {
+        guard state.influencerCollab == nil, let uid = BUSupabase.shared.currentUser?.id else { return }
+        if state.profile == nil { state.profile = await loadProfileQuiet() }
+        let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
+        state.influencerCollab = await repo.fetchInfluencerCollab(categoryId: state.profile?.industryCategoryId)
+    }
+
+    /// 월 인플루언서 예산 저장 — user_store_data.marketing_monthly_budget (웹과 동일 컬럼)
+    private func saveMonthlyBudget(_ won: Int) async {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
+        do {
+            _ = try await repo.saveCampaigns(state.campaigns, monthlyBudget: won)
+        } catch { /* 다음 입력에서 재시도 — 로컬 state 는 유지 */ }
     }
 
     private func addCampaign(_ campaign: CampaignRecord) async {

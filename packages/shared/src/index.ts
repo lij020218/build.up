@@ -53,6 +53,7 @@ export * from "./franchise-data";
 export * from "./inspiration-data";
 export * from "./marketing-trend-clusters";
 export * from "./marketing/influencer-plays";
+export * from "./marketing/influencer-directory";
 export * from "./permits/permit-matrix";
 export * from "./market/seoul-districts";
 export * from "./startup-programs";

@@ -10,6 +10,7 @@ import { supabase } from "../../../../lib/supabase";
 import { useStoreInfoStore } from "../../stores/store-info-store";
 import { deriveRegionFromAddress } from "../../utils/region";
 import { CardNewsStudio } from "./CardNewsStudio";
+import { InfluencerCollabTab } from "./InfluencerCollabTab";
 import {
   useMarketingStore,
   CHANNEL_LIST,
@@ -123,8 +124,8 @@ export function MarketingSurface() {
   const isMobile = viewportWidth < BP.sm;
 
   // 세그먼트 탭 (2026-08-03 개편: 한 화면에 다 쌓지 않는다 — 탭당 핵심 1~2개)
-  //  장부·예산은 전용 탭 (사장님 지시 — 종전 하단 접힘 카드에서 승격)
-  const [tab, setTab] = useState<"weekly" | "create" | "ledger">("weekly");
+  //  장부·예산 전용 탭(사장님 지시) + 협찬 탭 (2026-08-04 인플루언서 연결)
+  const [tab, setTab] = useState<"weekly" | "create" | "collab" | "ledger">("weekly");
 
   // 캠페인 삭제 2단계 확인 — 즉시 ✕ 는 실수 삭제 사고 경로 (3초 내 재탭 = 확정)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -436,6 +437,7 @@ export function MarketingSurface() {
         {([
           { key: "weekly" as const, label: ko ? "이번 주" : "This Week" },
           { key: "create" as const, label: ko ? "만들기" : "Create" },
+          { key: "collab" as const, label: ko ? "협찬" : "Collab" },
           { key: "ledger" as const, label: ko ? "장부·예산" : "Ledger" },
         ]).map((t) => (
           <button
@@ -533,6 +535,21 @@ export function MarketingSurface() {
         isOperating={!!d.businessLaunched}
         dailyEntries={(d.dailyEntries ?? []) as Array<{ sales: number; customers: number }>}
       />
+      )}
+
+      {/* ━━━ 협찬 탭 (2026-08-04 — 인플루언서 큐레이션·발굴·예산 매칭, LLM 0%) ━━━ */}
+      {tab === "collab" && (
+        <InfluencerCollabTab
+          ko={ko}
+          categoryId={categoryId}
+          storeName={d.storeName ?? ""}
+          region={region ?? ""}
+          budgetWon={mkt.monthlyBudget}
+          onBudgetChange={(won) => {
+            mkt.setMonthlyBudget(won);
+            void d.flushStoreDataImmediate?.();
+          }}
+        />
       )}
 
       {/* ━━━ 장부·예산 탭 (2026-08-03 전용 탭 승격 — 종전 하단 접힘 카드 폐기) ━━━ */}
