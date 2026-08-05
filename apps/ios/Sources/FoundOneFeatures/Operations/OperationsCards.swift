@@ -176,6 +176,14 @@ public struct InventoryOpsCard: View {
         .padding(.vertical, 8)
     }
 
+    /// ABC 등급 (웹 InventoryManagementCard 패리티, 2026-08-05) — 매출기여 누적 80/95%
+    private var abcById: [String: String] {
+        let grades = InventoryInsights.abcClassify(items)
+        var out: [String: String] = [:]
+        for (idx, item) in items.enumerated() { if let g = grades[idx] { out[item.id] = g } }
+        return out
+    }
+
     private func itemRow(_ item: BUInventoryItem) -> some View {
         HStack(alignment: .center, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
@@ -183,6 +191,13 @@ public struct InventoryOpsCard: View {
                     Text(item.name)
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(BUColor.ink)
+                    if let g = abcById[item.id] {
+                        Text("\(g)급")
+                            .font(.system(size: 9.5, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6).padding(.vertical, 1)
+                            .background(g == "A" ? BUColor.success : (g == "B" ? BUColor.accent : BUColor.inkMuted), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                    }
                     Spacer(minLength: 0)
                     severityBadge(item)
                 }
@@ -192,6 +207,13 @@ public struct InventoryOpsCard: View {
                 Text(stockText)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
+                // 상품 회전일수 + 풀필먼트(로켓그로스) 무료보관 60일 초과 경고 (웹 패리티)
+                if item.itemType == "product", let ds = InventoryInsights.daysOfStock(item) {
+                    let over = ds > InventoryInsights.fulfillmentFreeStorageDays
+                    Text(over ? "재고 \(ds)일치 — 풀필먼트 무료보관 60일 초과, 장기보관비 주의" : "재고 \(ds)일치")
+                        .font(.system(size: 10.5, weight: over ? .bold : .medium))
+                        .foregroundStyle(over ? BUColor.danger : BUColor.inkMuted)
+                }
             }
         }
         .padding(.horizontal, 10)

@@ -5,11 +5,17 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { VENDOR_URL_MAP } from "../../../constants";
 import { importInventoryFromFile, INVENTORY_IMPORT_ACCEPT } from "../../../inventory-file-import";
+import { resolveVendorDisplayName } from "../../stages/offline/vendor-setup-data";
 import type { InventoryItem, InvForm } from "../../../stores/operations-store";
 import {
   getFranchiseBrandById,
   getFranchiseSupplyInfo,
   getSupplyTypeColor,
+  abcClassify,
+  daysOfStock,
+  suggestedThreshold,
+  ABC_TARGET_KO,
+  FULFILLMENT_FREE_STORAGE_DAYS,
 } from "@foundone/shared";
 import { getKstDate } from "../../../utils/business-day";
 
@@ -90,6 +96,12 @@ export function InventoryManagementCard() {
     ? inventory
     : inventory.filter(i => (i.category ?? "other") === invCategoryFilter);
   const sorted = [...filtered].sort((a, b) => SORT[itemStatus(a)] - SORT[itemStatus(b)]);
+  // ABC 등급 (2026-08-05 온라인 셀러 재고 철학) — 매출기여 80/95% 누적. 원본 inventory 순서 기준.
+  const abcGrades = abcClassify(inventory);
+  const abcOf = (id: string) => {
+    const idx = inventory.findIndex((i) => i.id === id);
+    return idx >= 0 ? abcGrades[idx] : null;
+  };
 
   // ── 통계 ──
   const urgentList  = inventory.filter(i => itemStatus(i) === "urgent");
@@ -270,6 +282,29 @@ export function InventoryManagementCard() {
 
             {/* 핵심 인사이트 줄 */}
             <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginBottom: "12px", alignItems: "center" }}>
+              {/* ABC 등급 (상품, 매출 데이터 있을 때만) — 품절 우선순위 철학 (2026-08-05) */}
+              {(() => {
+                const g = abcOf(item.id);
+                if (!g) return null;
+                const gc = g === "A" ? "#1d3557" : g === "B" ? "#3b5c8c" : "rgba(15,23,42,0.45)";
+                return (
+                  <span title={ABC_TARGET_KO[g]} style={{ fontSize: "10px", fontWeight: 800, color: "#fff", background: gc, borderRadius: "5px", padding: "2px 7px", flexShrink: 0, cursor: "help" }}>
+                    {g}{ko ? "급" : ""}
+                  </span>
+                );
+              })()}
+              {/* 상품 회전일수 + 풀필먼트 장기보관 경고 (로켓그로스 무료 보관 60일 기준) */}
+              {item.itemType === "product" && (() => {
+                const ds = daysOfStock(item);
+                if (ds === null) return null;
+                const over = ds > FULFILLMENT_FREE_STORAGE_DAYS;
+                return (
+                  <span style={{ fontSize: "12px", fontWeight: over ? 700 : 600, color: over ? "#b64c4c" : "var(--muted)" }}>
+                    {ko ? `재고 ${ds}일치` : `${ds}d stock`}
+                    {over && (ko ? ` — 풀필먼트(로켓그로스) 무료보관 ${FULFILLMENT_FREE_STORAGE_DAYS}일 초과 구간, 장기보관비 주의` : " — over free storage window")}
+                  </span>
+                );
+              })()}
               {d !== null ? (
                 <span style={{ fontSize: "12px", fontWeight: 600, color: d <= (item.leadTimeDays || 1) ? "#b64c4c" : d <= 7 ? "#191970" : "var(--muted)" }}>
                   {d === 0 ? (ko ? "오늘 소진" : "Depletes today") : d === 1 ? (ko ? "내일 소진" : "Depletes tomorrow") : (ko ? `D-${d} 소진 예정` : `${d}d left`)}
@@ -484,7 +519,7 @@ export function InventoryManagementCard() {
             const savedSuppliers = Object.entries(vendorSelections)
               .filter(([, v]) => v !== "")
               .map(([k, v]) => {
-                const name = v.startsWith("__etc__") ? (vendorCustomInputs[k] ?? "").trim() : v;
+                const name = resolveVendorDisplayName(v, k, vendorCustomInputs);
                 return { name, url: VENDOR_URL_MAP[name] ?? "" };
               })
               .filter(({ name }) => name !== "")
@@ -594,6 +629,23 @@ export function InventoryManagementCard() {
                     : (ko ? `현재 수량으로 ${days}일치 — 당장 주문 불필요` : `${days} days of stock — no immediate order needed`)}
                 </div>
               </div>
+            );
+          })()}
+
+          {/* 재주문 기준 제안 — 안전재고 공식(일수요×리드타임+30% 버퍼). 탭하면 채움 (2026-08-05) */}
+          {(() => {
+            const daily = Number(invForm.dailyUsage) || 0;
+            if (daily <= 0) return null;
+            const lead = Math.max(1, Number(invForm.leadTimeDays) || 1);
+            const suggest = suggestedThreshold({ quantity: 0, dailyUsage: daily, leadTimeDays: lead });
+            if (suggest === null || String(suggest) === invForm.threshold) return null;
+            return (
+              <button type="button" onClick={() => setInvForm(f => ({ ...f, threshold: String(suggest) }))}
+                style={{ textAlign: "left" as const, padding: "10px 14px", borderRadius: "11px", border: "1px dashed rgba(29,53,87,0.25)", background: "rgba(29,53,87,0.03)", cursor: "pointer", fontFamily: "inherit" }}>
+                <span style={{ fontSize: "12px", fontWeight: 650, color: "#1d3557" }}>
+                  {ko ? `재주문 기준 제안: ${suggest}${invForm.unit || ""} — 일사용 ${daily} × 리드타임 ${lead}일 + 30% 버퍼 (탭하여 적용)` : `Suggested reorder point: ${suggest} (tap to apply)`}
+                </span>
+              </button>
             );
           })()}
 
