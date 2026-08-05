@@ -92,12 +92,16 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
       { name: "Next.js + Vercel", category: "프론트엔드", description: { ko: "React 풀스택 프레임워크 + 자동 배포. 스타트업 표준", en: "React fullstack framework + auto deploy" }, url: "https://vercel.com", pricing: "무료~$20/월", monthlyEstimate: "$20", koreanSupport: false, aiPowered: false, recommended: true, tags: ["프론트엔드", "배포"] },
       { name: "Supabase", category: "백엔드", description: { ko: "PostgreSQL + Auth + Storage + Realtime. Firebase 대안", en: "PostgreSQL + Auth + Storage. Firebase alternative" }, url: "https://supabase.com", pricing: "무료~$25/월", monthlyEstimate: "$25", koreanSupport: false, aiPowered: false, recommended: true, tags: ["백엔드", "DB", "인증"] },
       { name: "GitHub", category: "버전관리", description: { ko: "코드 저장소 + CI/CD + Copilot", en: "Code repository + CI/CD + Copilot" }, url: "https://github.com", pricing: "무료", monthlyEstimate: "$0", koreanSupport: false, aiPowered: true, recommended: true, tags: ["Git", "CI/CD"] },
+      { name: "Lovable", category: "AI 앱 빌더", description: { ko: "프롬프트→풀스택 앱 생성. 코딩 경험 없는 창업자의 MVP 표준 (2026)", en: "Prompt to full-stack app — the non-coder MVP standard" }, url: "https://lovable.dev", pricing: "무료~$25/월", monthlyEstimate: "$25", koreanSupport: false, aiPowered: true, recommended: true, tags: ["노코드", "AI", "비개발자"] },
     ],
     optionalTools: [
       { name: "Tailwind CSS + shadcn/ui", category: "UI 프레임워크", description: { ko: "유틸리티 CSS + 복사-붙여넣기 컴포넌트", en: "Utility CSS + copy-paste components" }, url: "https://ui.shadcn.com", pricing: "무료", koreanSupport: false, aiPowered: false, recommended: true, tags: ["CSS", "컴포넌트"] },
       { name: "Railway / Fly.io", category: "배포", description: { ko: "Vercel 대안 — 백엔드/서비스 배포", en: "Backend deployment alternative" }, url: "https://railway.app", pricing: "$5~/월", koreanSupport: false, aiPowered: false, recommended: false, tags: ["배포", "백엔드"] },
+      { name: "Bolt.new / Replit", category: "AI 앱 빌더", description: { ko: "브라우저에서 프롬프트→풀스택 앱. Lovable 대안", en: "Browser prompt-to-app builders" }, url: "https://bolt.new", pricing: "무료~$25/월", koreanSupport: false, aiPowered: true, recommended: false, tags: ["노코드", "AI", "비개발자"] },
+      { name: "Neon", category: "DB", description: { ko: "서버리스 PostgreSQL — 무료 티어 관대. Supabase DB 대안", en: "Serverless Postgres with generous free tier" }, url: "https://neon.tech", pricing: "무료~$19/월", koreanSupport: false, aiPowered: false, recommended: false, tags: ["DB", "서버리스"] },
+      { name: "Clerk", category: "인증", description: { ko: "로그인·회원 관리 전용 서비스 — 소셜 로그인 10분 연동", en: "Auth & user management — social login in minutes" }, url: "https://clerk.com", pricing: "무료~$25/월", koreanSupport: false, aiPowered: false, recommended: false, tags: ["인증", "회원"] },
     ],
-    aiTip: { ko: "Claude Code Skills로 테스트 작성, 린팅, 배포를 자동화하세요. 반복 작업에 시간을 쓰지 마세요. v0으로 UI 프로토타입을 빠르게 만들고, Cursor에서 세부 구현하세요.", en: "Automate tests, linting, deploy with Claude Code Skills. Use v0 for UI prototypes, Cursor for implementation." },
+    aiTip: { ko: "코딩을 모르면 Lovable로 시작하세요 — 프롬프트만으로 동작하는 MVP가 나옵니다. 개발자라면 v0으로 UI 프로토타입 → Cursor·Claude Code로 세부 구현. 테스트·린팅·배포는 Claude Code Skills로 자동화.", en: "Non-coders: start with Lovable. Developers: v0 for UI, Cursor/Claude Code for implementation, automate with Skills." },
     estimatedMonthlyCost: "6~10만원",
   },
 
@@ -114,9 +118,11 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
       { name: "Sentry", category: "에러 모니터링", description: { ko: "실시간 에러 추적 + AI 자동 분류. 5K 이벤트/월 무료", en: "Real-time error tracking + AI classification" }, url: "https://sentry.io", pricing: "무료~$26/월", monthlyEstimate: "$0", koreanSupport: false, aiPowered: true, recommended: true, tags: ["에러", "모니터링"] },
       { name: "Toss Payments / PortOne", category: "결제", description: { ko: "한국 결제 연동. PortOne은 멀티PG (구 아임포트)", en: "Korean payment integration" }, url: "https://www.tosspayments.com", pricing: "거래당 수수료", koreanSupport: true, aiPowered: false, recommended: true, tags: ["결제", "한국"] },
       { name: "Channel Talk (채널톡)", category: "고객 지원", description: { ko: "실시간 채팅 + AI 봇 + CRM — 한국 스타트업 표준", en: "Live chat + AI bot + CRM — Korean standard" }, url: "https://channel.io", pricing: "무료~$36/월", monthlyEstimate: "$0", koreanSupport: true, aiPowered: true, recommended: true, tags: ["고객지원", "채팅", "한국"] },
+      { name: "디스콰이엇", category: "런칭 채널", description: { ko: "국내 메이커 커뮤니티 런칭 — 유료 광고 없이 첫 유저·피드백 확보", en: "Korean maker community launch — first users without ads" }, url: "https://disquiet.io", pricing: "무료", monthlyEstimate: "$0", koreanSupport: true, aiPowered: false, recommended: true, tags: ["런칭", "커뮤니티", "한국"] },
     ],
     optionalTools: [
       { name: "Stripe", category: "글로벌 결제", description: { ko: "글로벌 결제. 해외 고객 대상 시 필수", en: "Global payments for international customers" }, url: "https://stripe.com", pricing: "2.9%+30¢/건", koreanSupport: true, aiPowered: false, recommended: false, tags: ["결제", "글로벌"] },
+      { name: "Product Hunt", category: "글로벌 런칭", description: { ko: "글로벌 제품 런칭 커뮤니티 — 해외 시장 노릴 때", en: "Global product launch community" }, url: "https://www.producthunt.com", pricing: "무료", koreanSupport: false, aiPowered: false, recommended: false, tags: ["런칭", "글로벌"] },
       { name: "Lemon Squeezy", category: "디지털 판매", description: { ko: "디지털 상품 판매 + 구독 관리 + 세금 자동 처리", en: "Digital product sales + subscriptions + tax" }, url: "https://lemonsqueezy.com", pricing: "5%+50¢/건", koreanSupport: false, aiPowered: false, recommended: false, tags: ["디지털", "구독"] },
     ],
     aiTip: { ko: "PostHog의 AI 기능으로 퍼널 이탈 원인을 자동 분석하세요. 채널톡 AI 봇으로 반복 문의를 자동 응대하면 초기에 CS 인력 없이 운영 가능합니다.", en: "Use PostHog AI for funnel analysis, Channel Talk AI bot for automated support." },
@@ -138,6 +144,8 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
     ],
     optionalTools: [
       { name: "Resend", category: "이메일", description: { ko: "개발자 친화적 이메일 API. React Email 지원", en: "Developer-friendly email API" }, url: "https://resend.com", pricing: "무료~$20/월", koreanSupport: false, aiPowered: false, recommended: false, tags: ["이메일", "API"] },
+      { name: "Granola", category: "AI 회의록", description: { ko: "미팅 자동 기록·요약 — 고객 미팅·투자 미팅 기록의 2026 표준", en: "AI meeting notes — the 2026 default" }, url: "https://granola.ai", pricing: "무료~$18/월", koreanSupport: false, aiPowered: true, recommended: false, tags: ["회의록", "AI"] },
+      { name: "Attio", category: "CRM", description: { ko: "차세대 CRM — 이메일·미팅 데이터 자동 수집. HubSpot 대안", en: "Next-gen CRM, auto-enriched. HubSpot alternative" }, url: "https://attio.com", pricing: "무료~$34/월", koreanSupport: false, aiPowered: true, recommended: false, tags: ["CRM", "영업"] },
     ],
     aiTip: { ko: "매주 월요일 아침, Claude에 주간 데이터(MAU, 전환율, 이탈률)를 넣고 '가장 큰 레버리지 포인트 1개'를 물으세요. 데이터 기반 의사결정의 핵심.", en: "Every Monday, feed weekly data to Claude and ask for the #1 leverage point." },
     estimatedMonthlyCost: "2~5만원",

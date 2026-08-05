@@ -356,6 +356,25 @@
             "Git",
             "CI/CD"
           ]
+        },
+        {
+          "name": "Lovable",
+          "category": "AI 앱 빌더",
+          "description": {
+            "ko": "프롬프트→풀스택 앱 생성. 코딩 경험 없는 창업자의 MVP 표준 (2026)",
+            "en": "Prompt to full-stack app — the non-coder MVP standard"
+          },
+          "url": "https://lovable.dev",
+          "pricing": "무료~$25/월",
+          "monthlyEstimate": "$25",
+          "koreanSupport": false,
+          "aiPowered": true,
+          "recommended": true,
+          "tags": [
+            "노코드",
+            "AI",
+            "비개발자"
+          ]
         }
       ],
       "optionalTools": [
@@ -392,11 +411,63 @@
             "배포",
             "백엔드"
           ]
+        },
+        {
+          "name": "Bolt.new / Replit",
+          "category": "AI 앱 빌더",
+          "description": {
+            "ko": "브라우저에서 프롬프트→풀스택 앱. Lovable 대안",
+            "en": "Browser prompt-to-app builders"
+          },
+          "url": "https://bolt.new",
+          "pricing": "무료~$25/월",
+          "koreanSupport": false,
+          "aiPowered": true,
+          "recommended": false,
+          "tags": [
+            "노코드",
+            "AI",
+            "비개발자"
+          ]
+        },
+        {
+          "name": "Neon",
+          "category": "DB",
+          "description": {
+            "ko": "서버리스 PostgreSQL — 무료 티어 관대. Supabase DB 대안",
+            "en": "Serverless Postgres with generous free tier"
+          },
+          "url": "https://neon.tech",
+          "pricing": "무료~$19/월",
+          "koreanSupport": false,
+          "aiPowered": false,
+          "recommended": false,
+          "tags": [
+            "DB",
+            "서버리스"
+          ]
+        },
+        {
+          "name": "Clerk",
+          "category": "인증",
+          "description": {
+            "ko": "로그인·회원 관리 전용 서비스 — 소셜 로그인 10분 연동",
+            "en": "Auth & user management — social login in minutes"
+          },
+          "url": "https://clerk.com",
+          "pricing": "무료~$25/월",
+          "koreanSupport": false,
+          "aiPowered": false,
+          "recommended": false,
+          "tags": [
+            "인증",
+            "회원"
+          ]
         }
       ],
       "aiTip": {
-        "ko": "Claude Code Skills로 테스트 작성, 린팅, 배포를 자동화하세요. 반복 작업에 시간을 쓰지 마세요. v0으로 UI 프로토타입을 빠르게 만들고, Cursor에서 세부 구현하세요.",
-        "en": "Automate tests, linting, deploy with Claude Code Skills. Use v0 for UI prototypes, Cursor for implementation."
+        "ko": "코딩을 모르면 Lovable로 시작하세요 — 프롬프트만으로 동작하는 MVP가 나옵니다. 개발자라면 v0으로 UI 프로토타입 → Cursor·Claude Code로 세부 구현. 테스트·린팅·배포는 Claude Code Skills로 자동화.",
+        "en": "Non-coders: start with Lovable. Developers: v0 for UI, Cursor/Claude Code for implementation, automate with Skills."
       },
       "estimatedMonthlyCost": "6~10만원"
     },
@@ -482,6 +553,25 @@
             "채팅",
             "한국"
           ]
+        },
+        {
+          "name": "디스콰이엇",
+          "category": "런칭 채널",
+          "description": {
+            "ko": "국내 메이커 커뮤니티 런칭 — 유료 광고 없이 첫 유저·피드백 확보",
+            "en": "Korean maker community launch — first users without ads"
+          },
+          "url": "https://disquiet.io",
+          "pricing": "무료",
+          "monthlyEstimate": "$0",
+          "koreanSupport": true,
+          "aiPowered": false,
+          "recommended": true,
+          "tags": [
+            "런칭",
+            "커뮤니티",
+            "한국"
+          ]
         }
       ],
       "optionalTools": [
@@ -499,6 +589,23 @@
           "recommended": false,
           "tags": [
             "결제",
+            "글로벌"
+          ]
+        },
+        {
+          "name": "Product Hunt",
+          "category": "글로벌 런칭",
+          "description": {
+            "ko": "글로벌 제품 런칭 커뮤니티 — 해외 시장 노릴 때",
+            "en": "Global product launch community"
+          },
+          "url": "https://www.producthunt.com",
+          "pricing": "무료",
+          "koreanSupport": false,
+          "aiPowered": false,
+          "recommended": false,
+          "tags": [
+            "런칭",
             "글로벌"
           ]
         },
@@ -607,6 +714,40 @@
           "tags": [
             "이메일",
             "API"
+          ]
+        },
+        {
+          "name": "Granola",
+          "category": "AI 회의록",
+          "description": {
+            "ko": "미팅 자동 기록·요약 — 고객 미팅·투자 미팅 기록의 2026 표준",
+            "en": "AI meeting notes — the 2026 default"
+          },
+          "url": "https://granola.ai",
+          "pricing": "무료~$18/월",
+          "koreanSupport": false,
+          "aiPowered": true,
+          "recommended": false,
+          "tags": [
+            "회의록",
+            "AI"
+          ]
+        },
+        {
+          "name": "Attio",
+          "category": "CRM",
+          "description": {
+            "ko": "차세대 CRM — 이메일·미팅 데이터 자동 수집. HubSpot 대안",
+            "en": "Next-gen CRM, auto-enriched. HubSpot alternative"
+          },
+          "url": "https://attio.com",
+          "pricing": "무료~$34/월",
+          "koreanSupport": false,
+          "aiPowered": true,
+          "recommended": false,
+          "tags": [
+            "CRM",
+            "영업"
           ]
         }
       ],

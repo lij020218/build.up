@@ -52,8 +52,8 @@ export function StartupToolkitPanel() {
     </a>
   );
 
-  const preview = toolkit.essential.slice(0, 3);
-  const rest = toolkit.essential.slice(3);
+  const preview = toolkit.essential.slice(0, 5);
+  const rest = toolkit.essential.slice(5);
   const hasMore = rest.length > 0;
 
   return (

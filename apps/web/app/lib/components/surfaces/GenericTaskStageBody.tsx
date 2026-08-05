@@ -72,7 +72,9 @@ export function GenericTaskStageBody() {
       {stageCode === "customer_discovery" && <CustomerDiscoveryStage />}
       {stageCode === "growth_engine" && <GrowthEngineStage />}
       {stageCode === "mvp_build" && <MvpBuildStage />}
-      {isStartupCategory && stageCode !== "mvp_build" && stageCode !== "launch_gtm" && (
+      {/* 도구 추천 — 전 스타트업 단계 노출 (2026-08-05: MVP·런칭 제외 조건 삭제 —
+          정작 도구가 가장 필요한 두 단계에서 안 보이던 것이 "부실" 체감의 원인) */}
+      {isStartupCategory && (
         <StartupToolkitPanel />
       )}
       {stageCode === "launch_gtm" && <LaunchGtmStage />}
