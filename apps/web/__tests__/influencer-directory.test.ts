@@ -28,12 +28,12 @@ describe("influencer-directory SSOT", () => {
       expect(seen.has(i.handle), `중복 핸들 ${i.handle}`).toBe(false);
       seen.add(i.handle);
       expect(i.followers, i.handle).toBeGreaterThan(0);
-      expect(["food", "cafe-dessert", "beauty", "fitness", "space"]).toContain(i.categoryId);
+      expect(["food", "cafe-dessert", "beauty", "fitness", "space", "pet", "retail", "education"]).toContain(i.categoryId);
     }
   });
 
   it("업종 필터 — 미정의 업종·null 은 빈 배열 (억지 매칭 금지)", () => {
-    expect(influencersForCategory("education")).toEqual([]);
+    expect(influencersForCategory("online-digital")).toEqual([]);
     expect(influencersForCategory(null)).toEqual([]);
     expect(influencersForCategory("food").length).toBeGreaterThan(0);
   });

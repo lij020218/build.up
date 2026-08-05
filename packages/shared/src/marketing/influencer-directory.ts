@@ -11,7 +11,9 @@
 
 export const INFLUENCER_DIRECTORY_CHECKED_AT = "2026-08";
 
-export type CuratedInfluencerCategory = "food" | "cafe-dessert" | "beauty" | "fitness" | "space";
+export type CuratedInfluencerCategory =
+  | "food" | "cafe-dessert" | "beauty" | "fitness" | "space"
+  | "pet" | "retail" | "education";
 
 export type CuratedInfluencer = {
   platform: "instagram" | "youtube";
@@ -129,6 +131,37 @@ export const INFLUENCER_DIRECTORY: CuratedInfluencer[] = [
   { platform: "youtube", name: "빅씨스", handle: "BIGSIS", followers: 1_080_000, regionKo: "홈트·근력 운동", categoryId: "fitness", engagementRatePct: null, statsSourceUrl: null },
   { platform: "youtube", name: "원지의하루", handle: "im1G", followers: 930_000, regionKo: "여행 브이로그 (국내 다수)", categoryId: "space", engagementRatePct: null, statsSourceUrl: null },
 
+
+  // ── 직접 발굴 2차 (2026-08-05 — 장르·확장 카테고리: 전국 외식·펫·리테일·교육·숙소·골프·요가) ──
+  { platform: "instagram", name: "먹쩡 김현정", handle: "muk_jeong", followers: 212_700, regionKo: "부산·전국 맛집 리뷰", categoryId: "food", engagementRatePct: 0.69, statsSourceUrl: "https://hypeauditor.com/instagram/muk_jeong/" },
+  { platform: "instagram", name: "요미", handle: "biteofyommy", followers: 148_900, regionKo: "서울·전국 맛집", categoryId: "food", engagementRatePct: 0.55, statsSourceUrl: "https://hypeauditor.com/instagram/biteofyommy/" },
+  { platform: "instagram", name: "뽀 먹스타그램", handle: "bbo_muksta", followers: 211_400, regionKo: "전국 맛집", categoryId: "food", engagementRatePct: 0.94, statsSourceUrl: "https://hypeauditor.com/instagram/bbo_muksta/" },
+  { platform: "instagram", name: "맛집정보특공대", handle: "bestgreedfood", followers: 98_000, regionKo: "전국 맛집 큐레이션", categoryId: "food", engagementRatePct: 17.73, statsSourceUrl: "https://hypeauditor.com/instagram/bestgreedfood/" },
+  { platform: "instagram", name: "맛집탐방 먹스타그램", handle: "goodfood__________", followers: 12_000, regionKo: "전국 맛집탐방", categoryId: "food", engagementRatePct: 1.0, statsSourceUrl: "https://hypeauditor.com/instagram/goodfood__________/" },
+  { platform: "instagram", name: "요리하는 남자", handle: "heon__l", followers: 13_700, regionKo: "맛집·요리 리뷰", categoryId: "food", engagementRatePct: 0.32, statsSourceUrl: "https://hypeauditor.com/instagram/heon__l/" },
+  { platform: "instagram", name: "투데이 디저트", handle: "today_dessert", followers: 467_800, regionKo: "전국 디저트·카페 전문", categoryId: "cafe-dessert", engagementRatePct: 0.96, statsSourceUrl: "https://hypeauditor.com/instagram/today_dessert/" },
+  { platform: "instagram", name: "카페 다녀왔습니다", handle: "go.cafe.tour", followers: 30_100, regionKo: "전국 감성 카페", categoryId: "cafe-dessert", engagementRatePct: 0.79, statsSourceUrl: "https://hypeauditor.com/instagram/go.cafe.tour/" },
+  { platform: "instagram", name: "리샤", handle: "donaland.risha", followers: 15_700, regionKo: "고양이 집사 크리에이터", categoryId: "pet", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "강아지들의 공감사연", handle: "petsymphathystory", followers: 55_400, regionKo: "반려견 케어·사연", categoryId: "pet", engagementRatePct: 0.67, statsSourceUrl: "https://hypeauditor.com/instagram/petsymphathystory/" },
+  { platform: "instagram", name: "하이앤헬로", handle: "hihellostagram", followers: 10_400, regionKo: "강아지 모델 (브랜드 협업 활발)", categoryId: "pet", engagementRatePct: 3.82, statsSourceUrl: "https://hypeauditor.com/instagram/hihellostagram/" },
+  { platform: "instagram", name: "fly_yuna", handle: "fly_yuna", followers: 49_500, regionKo: "고양이·책 크리에이터", categoryId: "pet", engagementRatePct: 8.44, statsSourceUrl: "https://hypeauditor.com/instagram/fly_yuna/" },
+  { platform: "instagram", name: "김찐빵", handle: "zzinnbbang_", followers: 63_000, regionKo: "고양이 계정", categoryId: "pet", engagementRatePct: 4.89, statsSourceUrl: "https://hypeauditor.com/instagram/zzinnbbang_/" },
+  { platform: "instagram", name: "맘린", handle: "momlin_22", followers: 11_300, regionKo: "리빙 제품리뷰", categoryId: "retail", engagementRatePct: 2.49, statsSourceUrl: "https://hypeauditor.com/instagram/momlin_22/" },
+  { platform: "instagram", name: "엘리사맘", handle: "elisa_mom_", followers: 47_300, regionKo: "리빙·홈스타일링·소품", categoryId: "retail", engagementRatePct: 28.2, statsSourceUrl: "https://hypeauditor.com/instagram/elisa_mom_/" },
+  { platform: "instagram", name: "리빙크리에이터", handle: "livingcreat.or", followers: 73_900, regionKo: "살림·리빙템 리뷰", categoryId: "retail", engagementRatePct: 0.91, statsSourceUrl: "https://hypeauditor.com/instagram/livingcreat.or/" },
+  { platform: "instagram", name: "엘리 희재맘", handle: "smy2166", followers: 75_400, regionKo: "뷰티·라이프·IT 제품 리뷰", categoryId: "retail", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "살림에 진심", handle: "salrim.100", followers: 67_900, regionKo: "살림팁·생활꿀템", categoryId: "retail", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "소을맘", handle: "zzu_ni", followers: 126_800, regionKo: "육아 인플루언서", categoryId: "education", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "배짱이", handle: "jin_dkyn", followers: 53_900, regionKo: "초등맘 교육·독서", categoryId: "education", engagementRatePct: 0.32, statsSourceUrl: "https://hypeauditor.com/instagram/jin_dkyn/" },
+  { platform: "instagram", name: "메이미인", handle: "may__miin", followers: 10_800, regionKo: "육아·키즈모델", categoryId: "education", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "뚝딱이맘", handle: "ohdaeri", followers: 22_300, regionKo: "육아·여행·리빙", categoryId: "education", engagementRatePct: 2.04, statsSourceUrl: "https://hypeauditor.com/instagram/ohdaeri/" },
+  { platform: "instagram", name: "사랑댁", handle: "peach0724s2", followers: 92_200, regionKo: "육아 키즈 (협찬 활발)", categoryId: "education", engagementRatePct: 1.85, statsSourceUrl: "https://hypeauditor.com/instagram/peach0724s2/" },
+  { platform: "instagram", name: "민혜주", handle: "hyeju._.m", followers: 111_100, regionKo: "국내외 숙소 전문", categoryId: "space", engagementRatePct: 1.71, statsSourceUrl: "https://hypeauditor.com/instagram/hyeju._.m/" },
+  { platform: "instagram", name: "감성여행", handle: "gamsungtravel", followers: 29_800, regionKo: "전국 감성숙소·여행지", categoryId: "space", engagementRatePct: 0.16, statsSourceUrl: "https://hypeauditor.com/instagram/gamsungtravel/" },
+  { platform: "instagram", name: "뿜뿜", handle: "role_p1", followers: 16_100, regionKo: "피부관리·스킨케어 니치", categoryId: "beauty", engagementRatePct: 0.34, statsSourceUrl: "https://hypeauditor.com/instagram/role_p1/" },
+  { platform: "instagram", name: "골쀼", handle: "golf_bbu", followers: 45_500, regionKo: "골프장·골프 라이프", categoryId: "fitness", engagementRatePct: 2.9, statsSourceUrl: "https://hypeauditor.com/instagram/golf_bbu/" },
+  { platform: "instagram", name: "요가현아", handle: "yoga_hyuna", followers: 248_800, regionKo: "요가 강사·웰니스", categoryId: "fitness", engagementRatePct: 2.42, statsSourceUrl: "https://hypeauditor.com/instagram/yoga_hyuna/" },
+  { platform: "instagram", name: "칼리", handle: "inno7373", followers: 33_600, regionKo: "골프·여행", categoryId: "fitness", engagementRatePct: null, statsSourceUrl: null },
 ];
 
 /** 업종별 큐레이션 — 없으면 빈 배열 (억지 매칭 금지, 발굴 도구가 담당) */
