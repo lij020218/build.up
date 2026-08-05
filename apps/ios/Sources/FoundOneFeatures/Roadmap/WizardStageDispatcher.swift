@@ -35,14 +35,15 @@ public func wizardStageView(for stageId: String) -> some View {
     case "sourcing-setup":           SourcingSetupStageView()
     case "store-setup":              StoreSetupStageView()
     case "online-marketing":         OnlineMarketingStageView()
-    case "startup-foundation":       StartupFoundationStageView()
-    case "customer-discovery":       CustomerDiscoveryStageView()
-    case "company-setup":            CompanySetupStageView()
-    case "mvp-build":                MvpBuildStageView()
-    case "launch-gtm":               LaunchGtmStageView()
+    // 스타트업 단계 = 본문 + 추천 도구 패널 (웹 GenericTaskStageBody + StartupToolkitPanel 패리티, 2026-08-05)
+    case "startup-foundation":       VStack(spacing: 14) { StartupFoundationStageView(); StartupToolkitPanelView(stageId: "startup-foundation") }
+    case "customer-discovery":       VStack(spacing: 14) { CustomerDiscoveryStageView(); StartupToolkitPanelView(stageId: "customer-discovery") }
+    case "company-setup":            VStack(spacing: 14) { CompanySetupStageView(); StartupToolkitPanelView(stageId: "company-setup") }
+    case "mvp-build":                VStack(spacing: 14) { MvpBuildStageView(); StartupToolkitPanelView(stageId: "mvp-build") }
+    case "launch-gtm":               VStack(spacing: 14) { LaunchGtmStageView(); StartupToolkitPanelView(stageId: "launch-gtm") }
     case "go-live":                  GoLiveStageView()
-    case "growth-engine":            GrowthEngineStageView()
-    case "fundraising-readiness":    FundraisingReadinessStageView()
+    case "growth-engine":            VStack(spacing: 14) { GrowthEngineStageView(); StartupToolkitPanelView(stageId: "growth-engine") }
+    case "fundraising-readiness":    VStack(spacing: 14) { FundraisingReadinessStageView(); StartupToolkitPanelView(stageId: "fundraising-readiness") }
     case "venture-certification":    VentureCertificationStageView()
     case "hardware-prototype":       HardwarePrototypeStageView()
     case "bom-supply-chain":         BomSupplyChainStageView()

@@ -40,10 +40,11 @@ export function StartupToolkitPanel() {
           : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.35)" strokeWidth="1.6"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "1px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "1px", flexWrap: "wrap" }}>
           <span style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{tool.name}</span>
           {tool.aiPowered && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT }}>AI</span>}
           {tool.koreanSupport && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT }}>KR</span>}
+          {tool.tags?.includes("비개발자") && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(29,53,87,0.1)", color: "#1d3557" }}>{ko ? "코딩 몰라도 OK" : "No-code OK"}</span>}
         </div>
         <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>{ko ? tool.description.ko : tool.description.en}</div>
         <div style={{ fontSize: "11px", fontWeight: 600, color: MIDNIGHT, marginTop: "2px" }}>{tool.pricing}</div>
@@ -54,7 +55,7 @@ export function StartupToolkitPanel() {
 
   const preview = toolkit.essential.slice(0, 5);
   const rest = toolkit.essential.slice(5);
-  const hasMore = rest.length > 0;
+  const hasMore = rest.length > 0 || toolkit.optional.length > 0;
 
   return (
     <div style={{ marginBottom: "16px", borderRadius: "14px", border: `1px solid ${MIDNIGHT_BORDER}`, overflow: "hidden", background: "white" }}>
@@ -68,6 +69,13 @@ export function StartupToolkitPanel() {
         <div style={{ display: "grid", gap: "5px" }}>
           {preview.map(toolRenderer)}
         </div>
+        {/* aiTip 상시 노출 — 특허 출원 시한 같은 핵심 경고가 접힘 뒤에 숨지 않게 (2026-08-05 UX) */}
+        {toolkit.aiTip.ko && (
+          <div style={{ padding: "9px 12px", borderRadius: "10px", background: MIDNIGHT_SOFT, display: "flex", gap: "8px", alignItems: "flex-start", marginTop: "8px", border: `1px solid ${MIDNIGHT_BORDER}` }}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke={MIDNIGHT} strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke={MIDNIGHT} strokeWidth="1.4" strokeLinecap="round"/></svg>
+            <span style={{ fontSize: "12px", color: MIDNIGHT, lineHeight: 1.55 }}>{ko ? toolkit.aiTip.ko : toolkit.aiTip.en}</span>
+          </div>
+        )}
       </div>
       {/* 더보기 (3개 초과 시) */}
       {hasMore && (
@@ -77,7 +85,7 @@ export function StartupToolkitPanel() {
             padding: "7px", borderRadius: "8px", border: `1px solid ${MIDNIGHT_BORDER}`,
             background: "transparent", cursor: "pointer", fontSize: "12px", fontWeight: 600, color: MIDNIGHT,
           }}>
-            {toolsOpen ? (ko ? "접기" : "Less") : (ko ? `+${rest.length}개 더보기` : `+${rest.length} more`)}
+            {toolsOpen ? (ko ? "접기" : "Less") : (ko ? `+${rest.length + toolkit.optional.length}개 더보기` : `+${rest.length + toolkit.optional.length} more`)}
             <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ transform: toolsOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s ease" }}>
               <path d="M3 5l4 4 4-4" stroke={MIDNIGHT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -85,10 +93,15 @@ export function StartupToolkitPanel() {
           {toolsOpen && (
             <div style={{ display: "grid", gap: "5px", marginTop: "6px", animation: "bentoFadeIn 0.2s ease" }}>
               {rest.map(toolRenderer)}
-              <div style={{ padding: "10px 12px", borderRadius: "10px", background: MIDNIGHT_SOFT, display: "flex", gap: "8px", alignItems: "flex-start", marginTop: "2px", border: `1px solid ${MIDNIGHT_BORDER}` }}>
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke={MIDNIGHT} strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke={MIDNIGHT} strokeWidth="1.4" strokeLinecap="round"/></svg>
-                <span style={{ fontSize: "12px", color: MIDNIGHT, lineHeight: 1.55 }}>{ko ? toolkit.aiTip.ko : toolkit.aiTip.en}</span>
-              </div>
+              {/* 선택 도구 — 종전엔 웹에서 아예 미표시되던 optional 노출 (2026-08-05 UX) */}
+              {toolkit.optional.length > 0 && (
+                <>
+                  <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", color: "rgba(15,23,42,0.4)", marginTop: "6px", textTransform: "uppercase" as const }}>
+                    {ko ? "선택 도구 — 상황에 따라" : "Optional"}
+                  </div>
+                  {toolkit.optional.map(toolRenderer)}
+                </>
+              )}
             </div>
           )}
         </div>
