@@ -49,8 +49,11 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
     ],
     optionalTools: [
       { name: "Linear", category: "프로젝트관리", description: { ko: "이슈 트래커 — 스타트업 표준 PM 도구", en: "Issue tracker — startup standard" }, url: "https://linear.app", pricing: "무료~$8/월", monthlyEstimate: "$0", koreanSupport: false, aiPowered: true, recommended: true, tags: ["PM", "이슈"] },
+      { name: "Slack", category: "팀 메신저", description: { ko: "팀 커뮤니케이션 표준 — 외부 파트너·투자사 채널 연결", en: "Team messaging standard" }, url: "https://slack.com", pricing: "무료~$8.75/월", koreanSupport: true, aiPowered: true, recommended: true, tags: ["메신저", "협업"] },
+      { name: "모두싸인", category: "전자계약", description: { ko: "주주간계약·근로계약 전자서명 — 한국 전자계약 표준", en: "E-signature — Korean standard" }, url: "https://www.modusign.co.kr", pricing: "무료~", koreanSupport: true, aiPowered: false, recommended: false, tags: ["계약", "전자서명"] },
+      { name: "KIPRIS (특허검색)", category: "지식재산", description: { ko: "특허·상표 무료 선행조사 — 아이디어 공개 전 반드시 검색", en: "Free patent/trademark prior-art search" }, url: "https://www.kipris.or.kr", pricing: "무료", koreanSupport: true, aiPowered: false, recommended: true, tags: ["특허", "상표", "IP"] },
     ],
-    aiTip: { ko: "Claude/ChatGPT로 주주간계약서 초안을 작성하고, 변호사에게 최종 검토를 받으세요. AI가 90%를 커버하지만 법적 효력은 전문가 확인이 필수.", en: "Draft shareholder agreements with AI, but get final legal review." },
+    aiTip: { ko: "Claude/ChatGPT로 주주간계약서 초안을 작성하고, 변호사에게 최종 검토를 받으세요. ⚠️ 특허는 아이디어가 공개된 날로부터 12개월(디자인 6개월) 안에만 출원할 수 있습니다 — 데모데이·SNS 공개 전에 KIPRIS 선행조사부터.", en: "Draft agreements with AI, get legal review. Patents must be filed within 12 months of public disclosure." },
     estimatedMonthlyCost: "0~5만원",
   },
 
@@ -70,6 +73,7 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
     ],
     optionalTools: [
       { name: "Otter.ai", category: "녹음/전사", description: { ko: "인터뷰 자동 녹음 + AI 전사 + 요약", en: "Auto transcription + AI summary" }, url: "https://otter.ai", pricing: "무료~$17/월", koreanSupport: false, aiPowered: true, recommended: false, tags: ["인터뷰", "전사"] },
+      { name: "Dovetail", category: "인터뷰 분석", description: { ko: "인터뷰 전사본 태깅·패턴 분석 리포지토리 — 인터뷰 10건+ 시", en: "Interview tagging & pattern repository" }, url: "https://dovetail.com", pricing: "무료~$39/월", koreanSupport: false, aiPowered: true, recommended: false, tags: ["인터뷰", "리서치"] },
     ],
     aiTip: { ko: "인터뷰 후 Claude에 전사본을 넣고 '반복되는 불만 패턴 3가지를 뽑아줘'라고 요청하세요. 패턴 감지가 핵심.", en: "Feed interview transcripts to Claude and ask for recurring pain patterns." },
     estimatedMonthlyCost: "0~2만원",
@@ -166,6 +170,8 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
     ],
     optionalTools: [
       { name: "Vanta", category: "보안 인증", description: { ko: "SOC 2, ISO 27001 자동화. B2B SaaS 필수", en: "SOC 2, ISO 27001 automation" }, url: "https://vanta.com", pricing: "$10K+/년", koreanSupport: false, aiPowered: true, recommended: false, tags: ["보안", "인증"] },
+      { name: "특허로 (출원)", category: "지식재산", description: { ko: "특허청 전자출원 — 특허·상표 직접 출원. 초기창업패키지로 출원 비용 지원 가능", en: "KIPO e-filing for patents/trademarks" }, url: "https://www.patent.go.kr", pricing: "출원료 수만원~", koreanSupport: true, aiPowered: false, recommended: false, tags: ["특허", "상표", "IP"] },
+      { name: "Mercury / Deel", category: "글로벌 진출", description: { ko: "미국 법인 은행(Mercury) + 해외 인력 고용·급여(Deel) — 글로벌 확장 시", en: "US banking (Mercury) + global hiring (Deel)" }, url: "https://mercury.com", pricing: "무료~", koreanSupport: false, aiPowered: false, recommended: false, tags: ["글로벌", "은행", "고용"] },
     ],
     aiTip: { ko: "자비스 AI가 매입/매출 세금계산서를 자동 분류합니다. 초기에 직접 기장하지 마세요 — AI 세무 서비스가 월 5만원으로 시간을 절약해줍니다.", en: "Use AI bookkeeping from day one. Don't do manual accounting — it's $40/month to save hours." },
     estimatedMonthlyCost: "5~10만원",
@@ -186,6 +192,7 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
     ],
     optionalTools: [
       { name: "DocSend", category: "피치덱 공유", description: { ko: "피치덱 링크 공유 + 열람 분석 (누가, 얼마나 봤는지)", en: "Pitch deck sharing + view analytics" }, url: "https://docsend.com", pricing: "$10/월~", koreanSupport: false, aiPowered: false, recommended: false, tags: ["피치", "분석"] },
+      { name: "원티드", category: "핵심 채용", description: { ko: "개발자·핵심 인재 채용 — 투자 전 CTO·영업 리더 갭 채우기가 시리즈A 신호", en: "Key-hire recruiting — filling CTO/sales gaps signals Series A readiness" }, url: "https://www.wanted.co.kr", pricing: "채용 성사 시 수수료", koreanSupport: true, aiPowered: true, recommended: false, tags: ["채용", "팀빌딩"] },
     ],
     aiTip: { ko: "피치덱 초안을 Claude에 넣고 '투자자 관점에서 가장 약한 슬라이드 3개'를 물으세요. 그리고 TIPS 운영사별 투자 성향을 Perplexity로 조사하세요.", en: "Ask Claude to identify the 3 weakest slides from an investor's perspective." },
     estimatedMonthlyCost: "0~2만원",
@@ -199,6 +206,7 @@ export const AI_STARTUP_EXTRA_TOOLS: SubCategoryToolOverride = {
     { name: "Anthropic Claude API", category: "LLM", description: { ko: "가장 안정적인 LLM API. claude-sonnet-4-5 기본 추천", en: "Most reliable LLM API" }, url: "https://docs.anthropic.com", pricing: "사용량 기반", monthlyEstimate: "$10~50", koreanSupport: true, aiPowered: true, recommended: true, tags: ["LLM", "API"] },
     { name: "Vercel AI SDK", category: "AI 프레임워크", description: { ko: "스트리밍 + 도구 호출 + 멀티모달. Next.js와 최적 통합", en: "Streaming + tool use + multimodal" }, url: "https://sdk.vercel.ai", pricing: "무료 (오픈소스)", koreanSupport: false, aiPowered: true, recommended: true, tags: ["프레임워크", "스트리밍"] },
     { name: "Supabase pgvector", category: "벡터 DB", description: { ko: "PostgreSQL 벡터 검색. RAG 구현 시 별도 DB 불필요", en: "Vector search in PostgreSQL. No separate DB for RAG" }, url: "https://supabase.com/docs/guides/ai", pricing: "Supabase 포함", koreanSupport: false, aiPowered: false, recommended: true, tags: ["벡터", "RAG"] },
+    { name: "OpenRouter", category: "LLM 라우팅", description: { ko: "여러 LLM 을 한 API 로 — 모델별 비용·성능 비교, 폴백 구성", en: "Many LLMs behind one API — cost/perf routing & fallback" }, url: "https://openrouter.ai", pricing: "사용량 기반", koreanSupport: false, aiPowered: true, recommended: false, tags: ["LLM", "라우팅"] },
     { name: "LangSmith / Braintrust", category: "LLM Eval", description: { ko: "LLM 출력 품질 평가, A/B 테스트, 프롬프트 관리", en: "LLM output evaluation, A/B testing, prompt management" }, url: "https://smith.langchain.com", pricing: "무료~$39/월", koreanSupport: false, aiPowered: true, recommended: true, tags: ["평가", "품질"] },
   ],
   specificTip: { ko: "2026년 AI 스타트업의 80%는 자체 모델 훈련 대신 API-first 접근을 사용합니다. Claude API + pgvector RAG로 시작하고, PMF 검증 후 파인튜닝을 고려하세요.", en: "80% of 2026 AI startups use API-first. Start with Claude API + pgvector RAG." },

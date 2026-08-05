@@ -83,11 +83,63 @@
             "PM",
             "이슈"
           ]
+        },
+        {
+          "name": "Slack",
+          "category": "팀 메신저",
+          "description": {
+            "ko": "팀 커뮤니케이션 표준 — 외부 파트너·투자사 채널 연결",
+            "en": "Team messaging standard"
+          },
+          "url": "https://slack.com",
+          "pricing": "무료~$8.75/월",
+          "koreanSupport": true,
+          "aiPowered": true,
+          "recommended": true,
+          "tags": [
+            "메신저",
+            "협업"
+          ]
+        },
+        {
+          "name": "모두싸인",
+          "category": "전자계약",
+          "description": {
+            "ko": "주주간계약·근로계약 전자서명 — 한국 전자계약 표준",
+            "en": "E-signature — Korean standard"
+          },
+          "url": "https://www.modusign.co.kr",
+          "pricing": "무료~",
+          "koreanSupport": true,
+          "aiPowered": false,
+          "recommended": false,
+          "tags": [
+            "계약",
+            "전자서명"
+          ]
+        },
+        {
+          "name": "KIPRIS (특허검색)",
+          "category": "지식재산",
+          "description": {
+            "ko": "특허·상표 무료 선행조사 — 아이디어 공개 전 반드시 검색",
+            "en": "Free patent/trademark prior-art search"
+          },
+          "url": "https://www.kipris.or.kr",
+          "pricing": "무료",
+          "koreanSupport": true,
+          "aiPowered": false,
+          "recommended": true,
+          "tags": [
+            "특허",
+            "상표",
+            "IP"
+          ]
         }
       ],
       "aiTip": {
-        "ko": "Claude/ChatGPT로 주주간계약서 초안을 작성하고, 변호사에게 최종 검토를 받으세요. AI가 90%를 커버하지만 법적 효력은 전문가 확인이 필수.",
-        "en": "Draft shareholder agreements with AI, but get final legal review."
+        "ko": "Claude/ChatGPT로 주주간계약서 초안을 작성하고, 변호사에게 최종 검토를 받으세요. ⚠️ 특허는 아이디어가 공개된 날로부터 12개월(디자인 6개월) 안에만 출원할 수 있습니다 — 데모데이·SNS 공개 전에 KIPRIS 선행조사부터.",
+        "en": "Draft agreements with AI, get legal review. Patents must be filed within 12 months of public disclosure."
       },
       "estimatedMonthlyCost": "0~5만원"
     },
@@ -190,6 +242,23 @@
           "tags": [
             "인터뷰",
             "전사"
+          ]
+        },
+        {
+          "name": "Dovetail",
+          "category": "인터뷰 분석",
+          "description": {
+            "ko": "인터뷰 전사본 태깅·패턴 분석 리포지토리 — 인터뷰 10건+ 시",
+            "en": "Interview tagging & pattern repository"
+          },
+          "url": "https://dovetail.com",
+          "pricing": "무료~$39/월",
+          "koreanSupport": false,
+          "aiPowered": true,
+          "recommended": false,
+          "tags": [
+            "인터뷰",
+            "리서치"
           ]
         }
       ],
@@ -840,6 +909,42 @@
             "보안",
             "인증"
           ]
+        },
+        {
+          "name": "특허로 (출원)",
+          "category": "지식재산",
+          "description": {
+            "ko": "특허청 전자출원 — 특허·상표 직접 출원. 초기창업패키지로 출원 비용 지원 가능",
+            "en": "KIPO e-filing for patents/trademarks"
+          },
+          "url": "https://www.patent.go.kr",
+          "pricing": "출원료 수만원~",
+          "koreanSupport": true,
+          "aiPowered": false,
+          "recommended": false,
+          "tags": [
+            "특허",
+            "상표",
+            "IP"
+          ]
+        },
+        {
+          "name": "Mercury / Deel",
+          "category": "글로벌 진출",
+          "description": {
+            "ko": "미국 법인 은행(Mercury) + 해외 인력 고용·급여(Deel) — 글로벌 확장 시",
+            "en": "US banking (Mercury) + global hiring (Deel)"
+          },
+          "url": "https://mercury.com",
+          "pricing": "무료~",
+          "koreanSupport": false,
+          "aiPowered": false,
+          "recommended": false,
+          "tags": [
+            "글로벌",
+            "은행",
+            "고용"
+          ]
         }
       ],
       "aiTip": {
@@ -929,6 +1034,23 @@
           "tags": [
             "피치",
             "분석"
+          ]
+        },
+        {
+          "name": "원티드",
+          "category": "핵심 채용",
+          "description": {
+            "ko": "개발자·핵심 인재 채용 — 투자 전 CTO·영업 리더 갭 채우기가 시리즈A 신호",
+            "en": "Key-hire recruiting — filling CTO/sales gaps signals Series A readiness"
+          },
+          "url": "https://www.wanted.co.kr",
+          "pricing": "채용 성사 시 수수료",
+          "koreanSupport": true,
+          "aiPowered": true,
+          "recommended": false,
+          "tags": [
+            "채용",
+            "팀빌딩"
           ]
         }
       ],
@@ -1772,6 +1894,23 @@
           "tags": [
             "벡터",
             "RAG"
+          ]
+        },
+        {
+          "name": "OpenRouter",
+          "category": "LLM 라우팅",
+          "description": {
+            "ko": "여러 LLM 을 한 API 로 — 모델별 비용·성능 비교, 폴백 구성",
+            "en": "Many LLMs behind one API — cost/perf routing & fallback"
+          },
+          "url": "https://openrouter.ai",
+          "pricing": "사용량 기반",
+          "koreanSupport": false,
+          "aiPowered": true,
+          "recommended": false,
+          "tags": [
+            "LLM",
+            "라우팅"
           ]
         },
         {
