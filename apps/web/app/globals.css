@@ -107,6 +107,10 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 한국어 줄바꿈(word-break: keep-all)은 위 body 블록에 이미 있다 (2026-07-14 커밋 46a8ffe8).
+   여기에 중복 선언하지 말 것 — 2026-08-05 에 없는 줄 알고 다시 넣었다가 되돌렸다.
+   (오독 원인: Next 500 에러 페이지에서 computed 값을 읽었더니 normal 로 보였다.) */
+
 /* hover 가능한 입력 장치만 (= 데스크탑 마우스) hover 효과 활성. 모바일 탭 후 잔류 차단 */
 @media (hover: none) {
   *:hover {
@@ -359,23 +363,67 @@ textarea:focus-visible {
     --staff-page-top: calc(env(safe-area-inset-top) + 64px);
   }
 
-  /* ── 모바일 그리드 백스톱 (2026-07-14) ─────────────────────────────────
+  /* ── 모바일 그리드 백스톱 (2026-07-14, 2026-08-05 전면 수정) ───────────
      스테이지·카드 상당수가 반응형 클래스를 안 붙인 채 인라인 `gridTemplateColumns`
      로 2~4열을 하드코딩 → 폰에서 데스크톱 폭 유지 → overflow-x:hidden 이 클립
      (탭 잘림·카드 겹침). 폰(≤sm)에서 그런 다열 그리드를 1열로 강제한다.
-     · column 속성에 anchor → grid-template-rows 등 오작동 방지
-     · repeat(5+)·7열(요일 캘린더 등)은 대상 제외 — 의도적 고정열 보존
-     · 컴포넌트가 자체 반응형 클래스를 쓰면 그 규칙이 이 백스톱과 함께/우선 동작 */
-  [style*="columns: repeat(2,"],
-  [style*="columns: repeat(3,"],
-  [style*="columns: repeat(4,"],
-  [style*="columns: 1fr 1fr"],
-  [style*="columns: 1fr 1.35fr"] {  /* AI 위저드 분업 선언 2열 (2026-08-03) */
-    /* ⚠️ `1fr` 이 아니라 `minmax(0, 1fr)`. 1fr = minmax(auto, 1fr) 이고 auto = min-content 라,
+
+     ⚠️⚠️ 2026-08-05 실측 — 이 백스톱은 도입 이후 **한 번도 동작한 적이 없었다**.
+       선택자는 `[style*="columns: repeat(2,"]` (콜론 뒤 공백)인데, React/Next 가
+       SSR 로 직렬화하는 실제 속성값은 `grid-template-columns:1fr 1.35fr` (공백 없음).
+       브라우저 실측: 공백 표기 매칭 0건 / 무공백 표기 매칭 2건, computed 는 그대로 2열.
+       → **모든 값에 대해 공백·무공백 두 표기를 다 적는다.** 한쪽만 적으면 죽은 규칙이 된다.
+       (클라이언트에서 style 을 다시 쓰면 브라우저 직렬화 = 공백 표기라 두 형태가 공존한다.)
+
+     ⚠️ 값 매칭을 유지하는 이유 — `[style*="grid-template-columns"]` 로 뭉뚱그리면
+       `auto 1fr auto`(아이콘|본문|값 행 레이아웃)·7열 요일 캘린더까지 1열로 무너진다.
+       "동등 분할 N열"만 골라서 접는 지금 방식이 맞다. 새 템플릿을 추가할 땐
+       __tests__/mobile-grid-backstop.test.ts 가 누락을 잡아준다.
+
+     ⚠️ `1fr` 이 아니라 `minmax(0, 1fr)`. 1fr = minmax(auto, 1fr) 이고 auto = min-content 라,
        1열로 바꿔도 자식의 min-content 가 컬럼을 밀어올려 카드가 컨테이너를 넘는다(grid blowout).
-       2026-07-15 갤럭시(341px) 우측 잘림의 잔여 원인 — 1열 전환은 됐는데 잘림은 안 막혔었다. */
+       2026-07-15 갤럭시(341px) 우측 잘림의 잔여 원인. */
+  [style*="columns:repeat(2,"],      [style*="columns: repeat(2,"],
+  [style*="columns:repeat(3,"],      [style*="columns: repeat(3,"],
+  [style*="columns:repeat(4,"],      [style*="columns: repeat(4,"],
+  /* 5·6열은 `1fr` 까지 붙여 정확히 매칭 — `repeat(6, 10px)`(도트 인디케이터)처럼
+     열 수가 곧 의미인 고정폭 그리드를 접지 않기 위함. */
+  [style*="columns:repeat(5, 1fr)"], [style*="columns: repeat(5, 1fr)"],
+  [style*="columns:repeat(6, 1fr)"], [style*="columns: repeat(6, 1fr)"],
+  [style*="columns:1fr 1fr"],        [style*="columns: 1fr 1fr"],
+  [style*="columns:1fr 1.35fr"],     [style*="columns: 1fr 1.35fr"],
+  [style*="columns:1.4fr 1fr 1fr"],  [style*="columns: 1.4fr 1fr 1fr"],
+  [style*="columns:1.2fr 0.8fr"],    [style*="columns: 1.2fr 0.8fr"],
+  [style*="columns:1fr 0.7fr 1fr"],  [style*="columns: 1fr 0.7fr 1fr"],
+  [style*="columns:minmax(0, 1fr) minmax(0, 1fr)"],
+  [style*="columns: minmax(0, 1fr) minmax(0, 1fr)"],
+  [style*="columns:minmax(0, 340px) minmax(0, 1fr)"],
+  [style*="columns: minmax(0, 340px) minmax(0, 1fr)"],
+  [style*="columns:minmax(140px, 200px) 1fr"],
+  [style*="columns: minmax(140px, 200px) 1fr"],
+  [style*="columns:260px 1fr"],      [style*="columns: 260px 1fr"],
+  [style*="columns:1fr 110px"],      [style*="columns: 1fr 110px"],
+  [style*="columns:76px 1fr 32px"],  [style*="columns: 76px 1fr 32px"],
+  [style*="columns:60px 1fr 1fr 1fr"], [style*="columns: 60px 1fr 1fr 1fr"],
+  [style*="columns:1fr auto 1fr auto 1fr"], [style*="columns: 1fr auto 1fr auto 1fr"] {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+
+  /* auto-fill/auto-fit 트랙 최소폭이 폰 콘텐츠 폭(≈296px)을 넘으면 열은 1개인데도
+     트랙 자체가 넘쳐 우측이 잘린다 (GuidesView 340px 등). 폰에선 트랙 최소폭 해제. */
+  [style*="minmax(220px"], [style*="minmax(240px"], [style*="minmax(260px"],
+  [style*="minmax(280px"], [style*="minmax(300px"], [style*="minmax(320px"],
+  [style*="minmax(340px"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* 컴팩트 타일(숫자+라벨)은 1열로 펴면 카드가 과대해지고 스크롤만 길어진다.
+     밀도를 지켜야 하는 그리드는 컴포넌트에서 data-cols="2" 로 명시 opt-in. */
+  [data-cols="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* 요일 캘린더(repeat(7,…))·도트 인디케이터처럼 열 수가 곧 의미인 그리드는
+     애초에 위 목록에 없어서 그대로 유지된다 — 별도 opt-out 속성이 필요 없다. */
 
   /* 마일스톤 토스트: 데스크톱은 상단중앙 고정이나, 폰에선 고정 상단바(52px)+가게명 헤더를
      덮어 "사..." 잘림처럼 보임. 상단바 아래로 내리고 좌우 여백 full-width (2026-07-14). */
@@ -399,16 +447,71 @@ textarea:focus-visible {
   /* 좁은 폰(갤럭시 360px) 오버플로우 백스톱 (2026-07-14): flex 자식의 큰 인라인 min-width 가
      카드 폭을 초과해 우측 클립을 유발 → 컨테이너 폭을 넘지 않게 캡(min(100%, 160px)).
      min(100%,…) 라 항상 컨테이너 안에 들어옴(넘침 0). MilestoneToast 내부(min-width:0)는
-     더 구체 선택자가 우선. */
-  [style*="min-width: 200px"],
-  [style*="min-width: 210px"],
-  [style*="min-width: 220px"],
-  [style*="min-width: 240px"],
-  [style*="min-width: 260px"],
-  [style*="min-width: 280px"],
-  [style*="min-width: 300px"],
-  [style*="min-width: 320px"] {
+     더 구체 선택자가 우선.
+     ⚠️ 그리드 백스톱과 같은 공백 버그가 있었다 — SSR 직렬화는 `min-width:200px`. 두 표기 모두 적는다. */
+  [style*="min-width:200px"], [style*="min-width: 200px"],
+  [style*="min-width:210px"], [style*="min-width: 210px"],
+  [style*="min-width:220px"], [style*="min-width: 220px"],
+  [style*="min-width:240px"], [style*="min-width: 240px"],
+  [style*="min-width:260px"], [style*="min-width: 260px"],
+  [style*="min-width:280px"], [style*="min-width: 280px"],
+  [style*="min-width:300px"], [style*="min-width: 300px"],
+  [style*="min-width:320px"], [style*="min-width: 320px"] {
     min-width: min(100%, 160px) !important;
+  }
+  /* ⚠️ 가로 캐러셀 카드(MarketingSurface 의 min-width:218px)는 폭이 곧 스냅 단위라
+     위 목록에 **넣지 않는 방식**으로 제외한다. `min-width: revert` 로 되돌리려 하면
+     인라인 값이 아니라 UA 기본값(0)으로 떨어져 카드가 찌그러진다 — 되돌리기는 답이 아니다. */
+
+  /* 고정 폭 요소가 뷰포트를 넘지 않도록 — DDayWidget(width:360) 등 팝오버 백스톱. */
+  [style*="width:360px"], [style*="width: 360px"],
+  [style*="width:380px"], [style*="width: 380px"],
+  [style*="width:400px"], [style*="width: 400px"] {
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  /* 큰 수치·제목 폰 캡 (2026-08-05) ────────────────────────────────────
+     인앱 화면에는 clamp() 가 한 군데도 없어 KPI 숫자가 데스크톱 크기(36~42px) 그대로
+     좁은 그리드 셀에 들어가 줄바뀜·잘림을 만든다. 폰에서만 한 단계 낮춘다.
+     (24~28px 은 폰에서도 적정이라 건드리지 않는다.) */
+  [style*="font-size:42px"], [style*="font-size: 42px"],
+  [style*="font-size:40px"], [style*="font-size: 40px"] { font-size: 30px !important; }
+  [style*="font-size:36px"], [style*="font-size: 36px"] { font-size: 28px !important; }
+  [style*="font-size:34px"], [style*="font-size: 34px"] { font-size: 27px !important; }
+  [style*="font-size:32px"], [style*="font-size: 32px"] { font-size: 26px !important; }
+  [style*="font-size:30px"], [style*="font-size: 30px"] { font-size: 25px !important; }
+
+  /* 내 가게 히어로 (2026-08-05) — 우상단 absolute 배지 묶음을 폰에서는 일반 흐름으로 되돌린다.
+     absolute 로 두면 eyebrow 가 그 밑으로 파고들어 paddingRight:200 이 필요했고, 폰 폭
+     296px 에서 그 예약폭은 본문에 96px 만 남긴다. static 으로 바꾸면 예약 자체가 불필요. */
+  .mystore-hero-badges {
+    position: static !important;
+    justify-content: flex-start !important;
+    padding: 14px 16px 0 !important;
+  }
+  .mystore-hero-eyebrow {
+    padding-right: 0 !important;
+  }
+  /* 2열로 접힌 지표 스트립은 셀 사이 세로 구분선이 어긋나 보인다 — 폰에선 구분선 대신 여백. */
+  [data-cols="2"] > * {
+    border-right: none !important;
+  }
+
+  /* 아이콘 전용 링크·버튼 탭 영역 확대 (2026-08-05).
+     외부링크 아이콘이 13×13px 로 렌더돼 사실상 못 누르는 곳이 많다. 레이아웃은 그대로 두고
+     ::after 로 히트박스만 넓힌다 (iOS HIG 44pt / Android 48dp 근접). */
+  a:has(> svg:only-child),
+  button:has(> svg:only-child) {
+    position: relative;
+  }
+  a:has(> svg:only-child)::after,
+  button:has(> svg:only-child)::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
   }
 }
 

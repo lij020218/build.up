@@ -25,6 +25,7 @@
 import { useMemo, useCallback } from "react";
 import { Boxes, Plus, Trash2, Truck } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { resolveVendorDisplayName } from "./vendor-setup-data";
 import type { InventoryItem } from "../../../stores/operations-store";
 
 const MIDNIGHT = "#191970";
@@ -57,15 +58,17 @@ const CATEGORY_OPTIONS: Array<{ id: InventoryItem["category"]; ko: string; en: s
 export function InitialOrderPlanCard({ ko }: { ko: boolean }) {
   const d = useDashboardCtx();
 
-  // 1. 선택된 공급처 추출 — vendor-setup_s1_c{cursor} 키
+  // 1. 선택된 공급처 추출 — vendor-setup_s1_c{cursor} 키.
+  //    AI 위저드 커스텀 선택(`__etc__` 값)은 vendorCustomInputs 에서 표시명으로 해석 (2026-08-05).
   const suppliers = useMemo(() => {
     const sel = (d.vendorSelections ?? {}) as Record<string, string>;
+    const custom = (d.vendorCustomInputs ?? {}) as Record<string, string>;
     const names = Object.entries(sel)
       .filter(([k]) => k.startsWith("vendor-setup_s1_"))
-      .map(([, v]) => (typeof v === "string" ? v.trim() : ""))
+      .map(([k, v]) => resolveVendorDisplayName(typeof v === "string" ? v : "", k, custom))
       .filter((v) => v.length > 0);
     return Array.from(new Set(names));
-  }, [d.vendorSelections]);
+  }, [d.vendorSelections, d.vendorCustomInputs]);
 
   // 2. 저장된 material 리스트 복원
   const inputs =

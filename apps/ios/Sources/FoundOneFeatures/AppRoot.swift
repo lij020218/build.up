@@ -979,6 +979,13 @@ private struct OnboardingFlow: View {
                                 inputs: ["preferredRegion": parsed.preferredRegion, "selectionMode": "direct"]
                             )
                         }
+                        // AI 추천 공급처·장비·POS·인테리어 시공 → vendor-setup 프리필
+                        // (웹 useOnboardingHandlers 미러, 2026-08-05 감사 후속 — 종전엔 iOS 에서 통째로 버려짐)
+                        AIVendorHandoff.apply(
+                            result: result,
+                            subIndustryId: parsed.subIndustryId,
+                            categoryId: parsed.industryCategoryId
+                        )
                         selectedTab = .roadmap
                     },
                     onBack: { path = nil }

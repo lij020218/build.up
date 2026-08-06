@@ -922,7 +922,7 @@ export default function AuthPage() {
         <h1
           className="hero-title"
           style={{
-            fontSize: "clamp(44px, 8vw, 80px)",
+            fontSize: "clamp(36px, 8vw, 80px)",
             fontWeight: 700,
             lineHeight: 1.05,
             letterSpacing: "-0.04em",
@@ -1041,7 +1041,7 @@ export default function AuthPage() {
                 {/* title — appears second, with slight scale */}
                 <h2
                   style={{
-                    fontSize: "clamp(32px, 5vw, 56px)",
+                    fontSize: "clamp(27px, 5vw, 56px)",
                     fontWeight: 700,
                     lineHeight: 1.08,
                     letterSpacing: "-0.03em",
@@ -1110,7 +1110,7 @@ export default function AuthPage() {
             {language === "ko" ? "전체 기능" : "Everything Included"}
           </p>
           <h2 style={{
-            fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: "-0.03em", marginBottom: 40, whiteSpace: "pre-line",
+            fontSize: "clamp(27px, 5vw, 48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: "-0.03em", marginBottom: 40, whiteSpace: "pre-line",
             opacity: gv ? 1 : 0, transform: gv ? "translateY(0) scale(1)" : "translateY(30px) scale(0.97)",
             transition: "opacity 0.8s ease, transform 0.8s ease", transitionDelay: "0.12s"
           }}>
@@ -1153,7 +1153,7 @@ export default function AuthPage() {
         {(() => { const cv = revealed.has(features.length + 1); return <>
         <h2
           style={{
-            fontSize: "clamp(32px, 5vw, 56px)",
+            fontSize: "clamp(27px, 5vw, 56px)",
             fontWeight: 700,
             letterSpacing: "-0.03em",
             lineHeight: 1.08,

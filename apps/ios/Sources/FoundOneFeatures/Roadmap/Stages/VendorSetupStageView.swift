@@ -351,6 +351,10 @@ public struct VendorSetupStageView: View {
     @AppStorage("stage.vendor.equipmentJson")  private var equipmentJson  = "[]"
     @AppStorage("stage.vendor.posJson")        private var posJson        = "[]"
     @AppStorage("stage.vendor.materialsJson")  private var materialsJson  = "[]"
+    // AI 위저드 커스텀 추천 (카탈로그 밖 업체) — AIVendorHandoff.apply 가 기록 (웹 vendorCustomInputs 미러).
+    @AppStorage("stage.vendor.aiPicksJson")    private var aiPicksJson    = "[]"
+    // s4 (인테리어·기타) 선택 배열 — 웹 vendor-setup_s4_* 키 미러.
+    @AppStorage("stage.vendor.otherJson")      private var otherJson      = "[]"
 
     private var cluster: VendorCluster { VendorCluster.from(industryId: industryId) }
 
@@ -395,6 +399,9 @@ public struct VendorSetupStageView: View {
     private var selectedSuppliers: [String] { parseStrings(suppliersJson) }
     private var selectedEquipment: [String]  { parseStrings(equipmentJson) }
     private var selectedPos: [String]        { parseStrings(posJson) }
+
+    private var allAiPicks: [AIVendorHandoff.Pick] { AIVendorHandoff.decodePicks(aiPicksJson) }
+    private func aiPicks(step: Int) -> [AIVendorHandoff.Pick] { allAiPicks.filter { $0.step == step } }
     private var materials: [InitialMaterialItem] { parseMaterials(materialsJson) }
 
     // Initial order form state
@@ -477,7 +484,8 @@ public struct VendorSetupStageView: View {
                     subtitle: cluster.supplierSectionSubtitle,
                     icon: "cart.fill",
                     entries: suppliers,
-                    selectedJson: $suppliersJson
+                    selectedJson: $suppliersJson,
+                    aiPicks: aiPicks(step: 1)
                 )
 
                 vendorSection(
@@ -485,7 +493,8 @@ public struct VendorSetupStageView: View {
                     subtitle: cluster.equipmentSectionSubtitle,
                     icon: "wrench.adjustable.fill",
                     entries: equipment,
-                    selectedJson: $equipmentJson
+                    selectedJson: $equipmentJson,
+                    aiPicks: aiPicks(step: 2)
                 )
 
                 vendorSection(
@@ -493,8 +502,21 @@ public struct VendorSetupStageView: View {
                     subtitle: "토스플레이스는 수수료 0% — 채널·예약 연동 확인",
                     icon: "creditcard.fill",
                     entries: posEntries,
-                    selectedJson: $posJson
+                    selectedJson: $posJson,
+                    aiPicks: aiPicks(step: 3)
                 )
+
+                // 인테리어 시공 · 기타 (s4) — AI 위저드 커스텀 추천만. 없으면 섹션 비표시 (웹 미러).
+                if !aiPicks(step: 4).isEmpty {
+                    vendorSection(
+                        title: "인테리어 시공 · 기타",
+                        subtitle: "AI 위저드 추천 — 시공 준비·계약은 「인테리어 공사」 단계에서 진행",
+                        icon: "sparkles",
+                        entries: [],
+                        selectedJson: $otherJson,
+                        aiPicks: aiPicks(step: 4)
+                    )
+                }
 
                 redirectionCard
 
@@ -543,9 +565,17 @@ public struct VendorSetupStageView: View {
         subtitle: String,
         icon: String,
         entries: [VendorEntry],
-        selectedJson: Binding<String>
+        selectedJson: Binding<String>,
+        aiPicks: [AIVendorHandoff.Pick] = []
     ) -> some View {
-        VStack(alignment: .leading, spacing: BUSpacing.sm) {
+        // AI 커스텀 추천 → 행으로 합류. 카탈로그와 동명이면 카탈로그 행이 대표 (중복 방지).
+        let pickEntries = aiPicks
+            .filter { p in !entries.contains(where: { $0.name == p.name }) }
+            .map { VendorEntry(name: $0.name,
+                               desc: $0.note.isEmpty ? "AI 위저드가 내 사업 조건에 맞춰 추천한 업체" : $0.note,
+                               tag: "AI 추천") }
+        let allEntries = entries + pickEntries
+        return VStack(alignment: .leading, spacing: BUSpacing.sm) {
             HStack(spacing: BUSpacing.xs) {
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .semibold))
@@ -560,12 +590,12 @@ public struct VendorSetupStageView: View {
                 .foregroundStyle(BUColor.inkSecondary)
 
             VStack(spacing: 0) {
-                ForEach(entries) { entry in
+                ForEach(allEntries) { entry in
                     VendorRow(
                         entry: entry,
                         selectedJson: selectedJson
                     )
-                    if entry.id != entries.last?.id {
+                    if entry.id != allEntries.last?.id {
                         Divider()
                             .padding(.leading, 52)
                     }

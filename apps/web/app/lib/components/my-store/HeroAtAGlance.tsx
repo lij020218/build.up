@@ -66,8 +66,10 @@ export function HeroAtAGlance(p: HeroProps) {
         }} />
       </div>
 
-      {/* 우상단 status + D-Day — Hero 안의 absolute 영역 (카드 높이 영향 0) */}
-      <div style={{
+      {/* 우상단 status + D-Day — Hero 안의 absolute 영역 (카드 높이 영향 0).
+          폰(≤640px)에서는 globals.css 가 static 으로 되돌려 본문 위 한 줄로 흐르게 한다 —
+          296px 폭에서 우상단 200px 를 비워두면 eyebrow 에 96px 밖에 안 남는다. */}
+      <div className="mystore-hero-badges" style={{
         position: "absolute" as const,
         top: 14,
         right: 14,
@@ -100,12 +102,12 @@ export function HeroAtAGlance(p: HeroProps) {
           {/* eyebrow: 카테고리 ▸ 세부업종 ▸ 모델
               우상단 status/D-Day 영역 (≈200px) 과 겹치지 않도록 paddingRight 확보 + flex-wrap.
               긴 텍스트 (예: "음식점 ▸ 한식 (국밥·김밥…) ▸ DINE-IN-DELIVERY-RETAIL") 가 pill 영역 밑으로 들어가는 버그 수정. */}
-          <div style={{
+          <div className="mystore-hero-eyebrow" style={{
             fontSize: 11, fontWeight: 700, color: PALETTE.MIDNIGHT, opacity: 0.7,
             letterSpacing: "0.08em", textTransform: "uppercase" as const,
             display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" as const,
             lineHeight: 1.55,
-            paddingRight: 200, // ← 우상단 absolute pills 영역 회피
+            paddingRight: 200, // ← 우상단 absolute pills 영역 회피 (폰에선 globals.css 가 0 으로 해제)
           }}>
             <Building2 size={11} strokeWidth={1.5} style={{ flexShrink: 0 }} />
             <span>{p.categoryLabel}</span>
@@ -178,7 +180,9 @@ export function HeroAtAGlance(p: HeroProps) {
       </div>
 
       {/* 핵심 숫자 스트립 — 카드 하단 모서리 라운드 명시 (Hero 가 overflow:visible) */}
-      <div style={{
+      {/* data-cols="2" — 폰에서는 2열. 최대 6열을 그대로 두면 지표당 ~40px 라 숫자가 잘리고,
+          1열로 펴면 스트립이 세로로 6칸 늘어져 히어로가 화면을 독점한다. */}
+      <div data-cols="2" style={{
         display: "grid",
         gridTemplateColumns: `repeat(${Math.min(p.metrics.length, 6)}, minmax(0, 1fr))`,
         background: "rgba(255,255,255,0.55)",

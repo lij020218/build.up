@@ -17,6 +17,7 @@ import {
   useOperationsStore,
 } from "../stores";
 import { useStoreInfoStore } from "../stores/store-info-store";
+import { buildAiVendorHandoff, getVendorData } from "../components/stages/offline/vendor-setup-data";
 import { supabase } from "../../../lib/supabase";
 import type { DashboardDeps, DashboardSurface } from "../types";
 import { SURFACE_HREFS } from "../constants";
@@ -463,38 +464,17 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setOpsSelections(ops);
 
     // ── ⭐ 추천 공급업체 + 인테리어 시공 업체 → vendorSelections/vendorCustomInputs 자동 채우기 ──
-    // - suppliers: 식재료·장비·POS·포장 등 (vendor_type != interior)
-    // - interiorVendors: 인테리어 시공 업체 (vendor_type='interior') — s4 (인테리어/기타) 단계로
+    // step 구분은 VendorSetupStage 섹션과 1:1 (2026-08-05 감사 후속 — 종전엔 포장→s2, 장비·POS→s3 로 어긋남):
+    //   s1 공급처 · s2 장비 · s3 POS·결제 · s4 인테리어·기타
+    // 카탈로그(getVendorData)와 이름이 일치하면 네이티브 행으로 프리체크(`__etc__` 없이 이름 저장),
+    // 아니면 `__etc__` 커스텀으로 저장 → VendorSetupStage 가 "AI 추천" 행으로 렌더.
+    // vendorCustomInputs 값은 표시명(업체명)만 — 이유·가격은 aiRoadmapResult 에서 enrich (iOS AIVendorHandoff 미러).
     {
-      const vs: Record<string, string> = {};
-      const vc: Record<string, string> = {};
-      let cursor = 0;
-
-      if (result.recommendations.suppliers && result.recommendations.suppliers.length > 0) {
-        result.recommendations.suppliers.forEach((supplier) => {
-          const step =
-            supplier.category.includes("식재료") || supplier.category.includes("식자재") || supplier.category.includes("재료") || supplier.category.includes("소싱") ? 1
-            : supplier.category.includes("포장") || supplier.category.includes("소모품") || supplier.category.includes("안전") ? 2
-            : supplier.category.includes("장비") || supplier.category.includes("POS") || supplier.category.includes("설비") || supplier.category.includes("예약") || supplier.category.includes("운영") || supplier.category.includes("진열") ? 3
-            : 4;
-          const key = `vendor-setup_s${step}_c${cursor++}`;
-          vs[key] = `__etc__${key}`;
-          const verified = supplier.id ? "[검증] " : "";
-          const reason = supplier.reason ? ` — ${supplier.reason}` : "";
-          const price = supplier.priceRange ? ` (${supplier.priceRange})` : "";
-          vc[key] = `${verified}${supplier.name}${reason}${price}`;
-        });
-      }
-
-      // 인테리어 시공 업체는 s4 (기타/인테리어) 단계에 별도로 추가
-      if (result.recommendations.interiorVendors && result.recommendations.interiorVendors.length > 0) {
-        result.recommendations.interiorVendors.forEach((iv) => {
-          const key = `vendor-setup_s4_c${cursor++}`;
-          vs[key] = `__etc__${key}`;
-          vc[key] = `[검증·인테리어 시공] ${iv.title} — ${iv.description}${iv.reason ? ` · ${iv.reason}` : ""}`;
-        });
-      }
-
+      const { vendorSelections: vs, vendorCustomInputs: vc } = buildAiVendorHandoff(
+        result.recommendations.suppliers ?? [],
+        result.recommendations.interiorVendors ?? [],
+        getVendorData(result.parsed.subIndustryId, result.parsed.industryCategoryId),
+      );
       if (Object.keys(vs).length > 0) {
         setVendorSelections(vs);
         setVendorCustomInputs(vc);

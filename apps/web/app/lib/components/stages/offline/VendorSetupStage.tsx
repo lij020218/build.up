@@ -32,7 +32,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
-import { getVendorData, type VendorItem } from "./vendor-setup-data";
+import { useRoadmapStore } from "../../../stores";
+import { getVendorData, parseVendorCustomLabel, type VendorItem } from "./vendor-setup-data";
 import { StageWrapup } from "../shared/StageWrapup";
 import { MyIngredientsPlanCard } from "./MyIngredientsPlanCard";
 import { InitialOrderPlanCard } from "./InitialOrderPlanCard";
@@ -87,17 +88,36 @@ const PRIORITY_BADGE: Record<Priority, { label: string; bg: string; fg: string; 
   },
 };
 
+// AI 위저드 커스텀 추천 항목 (카탈로그 밖 업체) — vendorCustomInputs + aiRoadmapResult 에서 조립.
+type AiPickEntry = {
+  key: string;          // vendorSelections/vendorCustomInputs 공용 키 (vendor-setup_s{n}_c{m})
+  name: string;
+  selected: boolean;
+  verified: boolean;    // 서비스 DB 검증 풀(id 보유) 출신 여부
+  reason?: string;
+  priceRange?: string;
+};
+
+const AI_PICK_BADGE = {
+  label: "AI 추천",
+  bg: "rgba(25,25,112,0.10)",
+  fg: MIDNIGHT,
+  border: "rgba(25,25,112,0.25)",
+};
+
 function VendorRow({
   item,
   selected,
   onToggle,
+  badgeOverride,
 }: {
   item: VendorItem;
   selected: boolean;
   onToggle: () => void;
+  badgeOverride?: typeof AI_PICK_BADGE;
 }) {
   const priority = item.priority ?? "recommended";
-  const badge = PRIORITY_BADGE[priority];
+  const badge = badgeOverride ?? PRIORITY_BADGE[priority];
   const budget = item.budgetTier ? BUDGET_BADGE[item.budgetTier] : null;
   const hasUrl = !!item.url;
 
@@ -233,22 +253,28 @@ function VendorSection({
   step,
   selections,
   onToggle,
+  aiPicks = [],
+  onToggleAiPick,
 }: {
   icon: LucideIcon;
   title: string;
   subtitle: string;
   items: VendorItem[];
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4;
   selections: Record<string, string>;
-  onToggle: (step: 1 | 2 | 3, itemName: string) => void;
+  onToggle: (step: 1 | 2 | 3 | 4, itemName: string) => void;
+  aiPicks?: AiPickEntry[];
+  onToggleAiPick?: (key: string) => void;
 }) {
-  if (!items || items.length === 0) return null;
+  // AI 커스텀 추천 중 카탈로그와 동명인 항목은 카탈로그 행이 대표 (중복 행 방지).
+  const visiblePicks = aiPicks.filter((p) => !items.some((it) => it.name.trim() === p.name));
+  if ((!items || items.length === 0) && visiblePicks.length === 0) return null;
   // 같은 step 안에서 이미 선택된 vendor name 셋 — VendorRow 의 토글 표시용.
   const selectedNames = new Set<string>();
   for (const [k, v] of Object.entries(selections)) {
-    if (k.startsWith(`vendor-setup_s${step}_`) && v) selectedNames.add(v);
+    if (k.startsWith(`vendor-setup_s${step}_`) && v && !v.startsWith("__etc__")) selectedNames.add(v);
   }
-  const selectedCount = selectedNames.size;
+  const selectedCount = selectedNames.size + visiblePicks.filter((p) => p.selected).length;
   return (
     <div style={{ marginBottom: "20px" }}>
       {/* Section header */}
@@ -308,7 +334,25 @@ function VendorSection({
               selected={selectedNames.has(item.name)}
               onToggle={() => onToggle(step, item.name)}
             />
-            {idx < items.length - 1 && (
+            {(idx < items.length - 1 || visiblePicks.length > 0) && (
+              <div style={{ height: "1px", background: "rgba(0,0,0,0.05)", marginLeft: "36px" }} />
+            )}
+          </div>
+        ))}
+        {/* AI 위저드 커스텀 추천 — 카탈로그 밖 업체. 체크 해제·재선택 가능 (키는 유지). */}
+        {visiblePicks.map((pick, idx) => (
+          <div key={pick.key}>
+            <VendorRow
+              item={{
+                name: pick.name,
+                desc: `${pick.verified ? "서비스 DB 검증 업체 · " : ""}${pick.reason ?? "AI 위저드가 내 사업 조건에 맞춰 추천한 업체"}`,
+                priceRange: pick.priceRange,
+              }}
+              selected={pick.selected}
+              onToggle={() => onToggleAiPick?.(pick.key)}
+              badgeOverride={AI_PICK_BADGE}
+            />
+            {idx < visiblePicks.length - 1 && (
               <div style={{ height: "1px", background: "rgba(0,0,0,0.05)", marginLeft: "36px" }} />
             )}
           </div>
@@ -320,7 +364,9 @@ function VendorSection({
 
 export function VendorSetupStage() {
   const d = useDashboardCtx();
-  const { selectedIndustryId, industryCategoryId, selectedSpecialtyId, vendorSelections, setVendorSelections, language } = d;
+  const { selectedIndustryId, industryCategoryId, selectedSpecialtyId, vendorSelections, setVendorSelections, vendorCustomInputs, language } = d;
+  // AI 위저드 결과 (영속) — 커스텀 추천 행의 이유·가격·검증 여부 enrich 용.
+  const aiResult = useRoadmapStore((s) => s.aiRoadmapResult);
 
   // ─── 업종군 분기 (2026-07-02 업종 정합 감사) ───────────────────────────
   //   데이터(getVendorData)는 업종별인데 히어로·섹션명·팁·마무리 chrome 이 '식자재·가스·HACCP·폐기율' 외식 고정이던 문제.
@@ -349,7 +395,7 @@ export function VendorSetupStage() {
   //   useTaskAutoCompletion 가 step 별로 "1개 이상 선택" 검사 → supplier-identified / equipment-planned / pos-selected
   //   task 자동 완료. 자동 저장 (Zustand persist + Supabase user_store_data.vendor_selections).
   const handleToggle = useCallback(
-    (step: 1 | 2 | 3, itemName: string) => {
+    (step: 1 | 2 | 3 | 4, itemName: string) => {
       const prefix = `vendor-setup_s${step}_`;
       const next = { ...vendorSelections };
       // 이미 선택돼 있으면 해제 — 해당 키 제거.
@@ -363,6 +409,43 @@ export function VendorSetupStage() {
       let cursor = 0;
       while (next[`${prefix}c${cursor}`] !== undefined) cursor += 1;
       next[`${prefix}c${cursor}`] = itemName;
+      setVendorSelections(next);
+    },
+    [vendorSelections, setVendorSelections],
+  );
+
+  // ── AI 위저드 커스텀 추천 (`__etc__` 값) → 단계별 "AI 추천" 행 ─────────
+  //   종전(2026-08-03 감사): __etc__ 값이 카탈로그 이름과 매칭 안 돼 AI 선택이 이 화면에서 안 보였음.
+  //   vendorCustomInputs[key] = 표시명 (구형 "[검증] 이름 — 이유" 포맷은 파싱), 이유·가격은 aiRoadmapResult 로 enrich.
+  const aiPicksByStep = useMemo(() => {
+    const byStep: Record<1 | 2 | 3 | 4, AiPickEntry[]> = { 1: [], 2: [], 3: [], 4: [] };
+    const suppliers = aiResult?.recommendations.suppliers ?? [];
+    const interiorVendors = aiResult?.recommendations.interiorVendors ?? [];
+    for (const [key, label] of Object.entries(vendorCustomInputs ?? {})) {
+      const m = key.match(/^vendor-setup_s([1-4])_/);
+      if (!m) continue;
+      const parsed = parseVendorCustomLabel(label);
+      if (!parsed.name) continue;
+      const sup = suppliers.find((s) => s.name.trim() === parsed.name);
+      const iv = !sup ? interiorVendors.find((v) => v.title.trim() === parsed.name) : undefined;
+      byStep[Number(m[1]) as 1 | 2 | 3 | 4].push({
+        key,
+        name: parsed.name,
+        selected: (vendorSelections[key] ?? "").startsWith("__etc__"),
+        verified: parsed.verified || !!sup?.id || !!iv,
+        reason: sup?.reason || iv?.reason || parsed.reason,
+        priceRange: sup?.priceRange || undefined,
+      });
+    }
+    return byStep;
+  }, [vendorCustomInputs, vendorSelections, aiResult]);
+
+  // AI 추천 행 토글 — OFF 는 선택 키만 제거 (vendorCustomInputs 는 유지 → 행이 남아 재선택 가능).
+  const handleToggleAiPick = useCallback(
+    (key: string) => {
+      const next = { ...vendorSelections };
+      if ((next[key] ?? "").startsWith("__etc__")) delete next[key];
+      else next[key] = `__etc__${key}`;
       setVendorSelections(next);
     },
     [vendorSelections, setVendorSelections],
@@ -426,8 +509,9 @@ export function VendorSetupStage() {
           순서로 진행하세요.
         </div>
 
-        {/* 미니 팁 카드 3개 */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "16px", position: "relative", zIndex: 1 }}>
+        {/* 미니 팁 카드 3개 — 폰에서는 2열 (data-cols="2").
+            3열 유지 시 89px 칸에 11px 문구가 3줄로 깨지고, 1열로 펴면 히어로가 첫 화면을 독점한다. */}
+        <div data-cols="2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "16px", position: "relative", zIndex: 1 }}>
           <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
               <Lightbulb size={11} strokeWidth={2.2} />
@@ -463,6 +547,8 @@ export function VendorSetupStage() {
         step={1}
         selections={vendorSelections}
         onToggle={handleToggle}
+        aiPicks={aiPicksByStep[1]}
+        onToggleAiPick={handleToggleAiPick}
       />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -476,6 +562,8 @@ export function VendorSetupStage() {
         step={2}
         selections={vendorSelections}
         onToggle={handleToggle}
+        aiPicks={aiPicksByStep[2]}
+        onToggleAiPick={handleToggleAiPick}
       />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -489,6 +577,24 @@ export function VendorSetupStage() {
         step={3}
         selections={vendorSelections}
         onToggle={handleToggle}
+        aiPicks={aiPicksByStep[3]}
+        onToggleAiPick={handleToggleAiPick}
+      />
+
+      {/* ═══════════════════════════════════════════════════════════
+          인테리어 시공 · 기타 (s4) — AI 위저드 커스텀 추천만.
+          카탈로그 없음 → AI 추천이 없으면 섹션 자체가 안 보임.
+          ═════════════════════════════════════════════════════════ */}
+      <VendorSection
+        icon={Sparkles}
+        title="인테리어 시공 · 기타"
+        subtitle="AI 위저드 추천 — 시공 준비·계약은 「인테리어 공사」 단계에서 진행"
+        items={[]}
+        step={4}
+        selections={vendorSelections}
+        onToggle={handleToggle}
+        aiPicks={aiPicksByStep[4]}
+        onToggleAiPick={handleToggleAiPick}
       />
 
       {/* ═══════════════════════════════════════════════════════════

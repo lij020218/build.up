@@ -2666,6 +2666,88 @@ export const SPECIALTY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorData
  * sub-industry / specialty / 카테고리에 맞는 vendor 데이터 lookup (3-tier 머지).
  * 우선순위: specialty override → sub-industry override → 카테고리 베이스
  */
+/**
+ * vendorCustomInputs 라벨 파싱 — AI 위저드 커스텀 항목(`__etc__` 값)의 표시명 추출.
+ * 신형 포맷은 업체명만 저장하지만, 구형 "[검증] 이름 — 이유 (가격)" 포맷 데이터가
+ * 기존 사용자에게 남아 있어 양쪽 모두 처리한다.
+ */
+export function parseVendorCustomLabel(label: string): { name: string; reason?: string; verified: boolean } {
+  let rest = (label ?? "").trim();
+  let verified = false;
+  const bracket = rest.match(/^\[([^\]]+)\]\s*/);
+  if (bracket) {
+    verified = bracket[1].includes("검증");
+    rest = rest.slice(bracket[0].length);
+  }
+  const dash = rest.indexOf(" — ");
+  if (dash > 0) {
+    return { name: rest.slice(0, dash).trim(), reason: rest.slice(dash + 3).trim(), verified };
+  }
+  return { name: rest, verified };
+}
+
+/**
+ * vendorSelections 값 → 표시명 하나로 통일.
+ * 카탈로그 선택은 값 자체가 이름, `__etc__` 커스텀은 vendorCustomInputs 에서 이름을 찾는다.
+ * (InventoryManagementCard·InitialOrderPlanCard 등 공급처 이름 소비처 공용.)
+ */
+export function resolveVendorDisplayName(
+  value: string,
+  key: string,
+  customInputs: Record<string, string>,
+): string {
+  const raw = (value ?? "").trim();
+  if (!raw) return "";
+  if (!raw.startsWith("__etc__")) return raw;
+  return parseVendorCustomLabel(customInputs[key] ?? "").name;
+}
+
+/**
+ * AI 위저드 추천 category 문자열 → VendorSetupStage 섹션 step.
+ *   s1 공급처 · s2 장비 · s3 POS·결제 · s4 인테리어·기타 (섹션과 1:1, 2026-08-05 감사 후속).
+ * ⚠️ 키워드·검사 순서는 iOS AIVendorHandoff.step(forCategory:) 와 동일 유지 (웹 SSOT).
+ */
+export function aiVendorStepForCategory(category: string): 1 | 2 | 3 | 4 {
+  if (["POS", "결제", "예약"].some((kw) => category.includes(kw))) return 3;
+  if (["장비", "설비", "기기", "집기", "진열", "주방", "운영"].some((kw) => category.includes(kw))) return 2;
+  if (["식재료", "식자재", "재료", "소싱", "포장", "소모품", "안전", "원두", "부자재"].some((kw) => category.includes(kw))) return 1;
+  return 4;
+}
+
+/**
+ * AI 위저드 추천 공급업체 → vendorSelections/vendorCustomInputs 핸드오프 (useOnboardingHandlers 에서 호출).
+ * - 카탈로그와 이름이 정확히 일치 → 네이티브 행 프리체크 (값 = 카탈로그 이름, `__etc__` 없음).
+ * - 불일치 → `__etc__` 커스텀. vendorCustomInputs 값은 표시명만 — 이유·가격은 aiRoadmapResult 에서 enrich.
+ */
+export function buildAiVendorHandoff(
+  suppliers: Array<{ name: string; category: string }>,
+  interiorVendors: Array<{ title: string }>,
+  catalog: SubIndustryVendorData,
+): { vendorSelections: Record<string, string>; vendorCustomInputs: Record<string, string> } {
+  const vs: Record<string, string> = {};
+  const vc: Record<string, string> = {};
+  let cursor = 0;
+  const catalogForStep: Record<1 | 2 | 3, VendorItem[]> = {
+    1: catalog.suppliers, 2: catalog.equipment, 3: catalog.pos,
+  };
+  const pushPick = (step: 1 | 2 | 3 | 4, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const native = step !== 4 ? catalogForStep[step].find((it) => it.name.trim() === trimmed) : undefined;
+    const key = `vendor-setup_s${step}_c${cursor++}`;
+    if (native) {
+      vs[key] = native.name;
+      return;
+    }
+    vs[key] = `__etc__${key}`;
+    vc[key] = trimmed;
+  };
+  for (const supplier of suppliers) pushPick(aiVendorStepForCategory(supplier.category), supplier.name);
+  // 인테리어 시공 업체는 s4 (인테리어/기타) — 시공 준비는 인테리어 공사 단계에서 진행
+  for (const iv of interiorVendors) pushPick(4, iv.title);
+  return { vendorSelections: vs, vendorCustomInputs: vc };
+}
+
 export function getVendorData(
   subIndustryId?: string,
   categoryId?: string,
