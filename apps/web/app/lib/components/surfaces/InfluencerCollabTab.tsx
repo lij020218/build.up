@@ -27,6 +27,7 @@ import {
   fillDmTemplate,
   fillQuery,
   tierForFollowers,
+  sortInfluencersForBudget,
   type CuratedInfluencer,
   type InfluencerPlay,
 } from "@foundone/shared";
@@ -85,7 +86,11 @@ export function InfluencerCollabTab({
   const [feeOpen, setFeeOpen] = useState(false);
   const [budgetText, setBudgetText] = useState(budgetWon > 0 ? String(Math.round(budgetWon / 10_000)) : "");
 
-  const curated = useMemo(() => influencersForCategory(categoryId), [categoryId]);
+  // 예산 맞춤 정렬 (2026-08-07 사장님 지시) — 예산으로 접촉 가능한 등급 먼저, 초과는 뒤로(제외 아님).
+  const curated = useMemo(
+    () => sortInfluencersForBudget(influencersForCategory(categoryId), budgetWon),
+    [categoryId, budgetWon],
+  );
   const plays = useMemo(() => playsForIndustry(categoryId), [categoryId]);
   const notFit = INFLUENCER_NOT_FIT[categoryId];
   const dmForCurated = (i: CuratedInfluencer): string => {
@@ -146,6 +151,11 @@ export function InfluencerCollabTab({
                     {i.platform === "instagram" ? `${TIER_KO[tierForFollowers(i.followers)] ?? ""} · ` : ""}
                     {fmtFollowers(i.followers)}{i.platform === "youtube" ? (ko ? " 구독" : " subs") : ""}
                   </span>
+                  {!i.withinBudget && budgetWon > 0 && (
+                    <span style={{ ...chip, color: "var(--muted)", background: "rgba(15,23,42,0.04)" }}>
+                      {ko ? "예산 초과 — 협의 필요" : "Over budget"}
+                    </span>
+                  )}
                   {i.engagementRatePct != null ? (
                     <span style={{ ...chip, background: "rgba(29,53,87,0.08)", color: "#1d3557" }}>
                       {ko ? "참여율" : "ER"} {i.engagementRatePct}%

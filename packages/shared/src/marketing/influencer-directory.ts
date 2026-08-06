@@ -13,7 +13,7 @@ export const INFLUENCER_DIRECTORY_CHECKED_AT = "2026-08";
 
 export type CuratedInfluencerCategory =
   | "food" | "cafe-dessert" | "beauty" | "fitness" | "space"
-  | "pet" | "retail" | "education";
+  | "pet" | "retail" | "education" | "travel" | "fashion";
 
 export type CuratedInfluencer = {
   platform: "instagram" | "youtube";
@@ -162,11 +162,116 @@ export const INFLUENCER_DIRECTORY: CuratedInfluencer[] = [
   { platform: "instagram", name: "골쀼", handle: "golf_bbu", followers: 45_500, regionKo: "골프장·골프 라이프", categoryId: "fitness", engagementRatePct: 2.9, statsSourceUrl: "https://hypeauditor.com/instagram/golf_bbu/" },
   { platform: "instagram", name: "요가현아", handle: "yoga_hyuna", followers: 248_800, regionKo: "요가 강사·웰니스", categoryId: "fitness", engagementRatePct: 2.42, statsSourceUrl: "https://hypeauditor.com/instagram/yoga_hyuna/" },
   { platform: "instagram", name: "칼리", handle: "inno7373", followers: 33_600, regionKo: "골프·여행", categoryId: "fitness", engagementRatePct: null, statsSourceUrl: null },
+
+  // ═══ 2026-08-07 사장님 제공 2차 목록 ═══
+  //  팔로워: 목록 제공값 그대로(프로필 실측 전 — 분기 갱신 루틴에서 실측). ER: 미확보 → null (추정 금지).
+  //  제외 2건: @kto9suk9suk(한국관광공사 공식 계정 — 소상공인 협찬 대상 아님) · @ireneisgood 중복행.
+
+  // ── 외식 (food) — 2차 ──
+  { platform: "instagram", name: "서울라이프", handle: "seoul_life___", followers: 212_000, regionKo: "서울 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "서울잇츠", handle: "seoul.eats_", followers: 204_000, regionKo: "서울 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "서울핫플", handle: "seoulhotple", followers: 518_000, regionKo: "서울 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "오늘뭐먹지", handle: "omuk.official", followers: 1_372_000, regionKo: "전국 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "동네부기", handle: "dongne_mukstagram", followers: 22_000, regionKo: "대구·경주·부산 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "대전맛집", handle: "daejeonfood.taste", followers: 57_000, regionKo: "대전 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "미식일기", handle: "mishik_diary", followers: 32_000, regionKo: "미식·레스토랑", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "서울푸드", handle: "seoul_foodie", followers: 76_000, regionKo: "서울 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "부산먹방", handle: "busanmukbang", followers: 29_000, regionKo: "부산 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "대전집", handle: "daejeon___food", followers: 175_000, regionKo: "대전 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "대전라이프", handle: "hungry_dj", followers: 88_000, regionKo: "대전 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "제주잇츠", handle: "jeju.eats", followers: 203_000, regionKo: "제주 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "제주에서 뭐 하지?", handle: "all.about.jeju", followers: 298_000, regionKo: "제주 맛집·여행", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "숙이네도시락", handle: "28insook", followers: 92_000, regionKo: "도시락·집밥", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Fume", handle: "fume_yamyam", followers: 441_000, regionKo: "먹방", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "쏘영", handle: "ssoyoung_mukbang", followers: 278_000, regionKo: "먹방", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "서애경 (에이스푸디)", handle: "acefoodie903", followers: 61_000, regionKo: "전국 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "키다리 아저씨", handle: "iam_gladiator", followers: 7_800, regionKo: "전국 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "재슐랭 가이드", handle: "food_writer_jw", followers: 174_000, regionKo: "서울·제주 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "먹자", handle: "mukja_muksta", followers: 103_000, regionKo: "서울·인천·경기·제주 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "미식맨", handle: "misikmann", followers: 77_000, regionKo: "맛집·카페·핫플", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "쏘아미", handle: "sso_yummy_", followers: 64_000, regionKo: "맛집·여행·핫플", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "호랑 큐레이터", handle: "horang_curator", followers: 197_000, regionKo: "맛집·팝업", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "훈남의 맛집투어", handle: "hoon_yummy", followers: 124_000, regionKo: "서울 맛집·디저트·술집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "밍푸디", handle: "ming_foodie_", followers: 131_000, regionKo: "서울 맛집·핫플", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "원잇", handle: "wanteat._eat", followers: 36_000, regionKo: "성수·서울 맛집·핫플", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "재선장", handle: "jack_foodie", followers: 145_000, regionKo: "서울·잠실·강남 맛집", categoryId: "food", engagementRatePct: null, statsSourceUrl: null },
+
+  // ── 카페·디저트 (cafe-dessert) — 2차 ──
+  { platform: "instagram", name: "카페플렉스", handle: "cafe.flex", followers: 4_100, regionKo: "카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "하란", handle: "for_nan2", followers: 2_300, regionKo: "신상카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "띵수", handle: "jin_s._.o", followers: 8_800, regionKo: "신상카페·디저트", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "미애픽", handle: "miae_pick", followers: 4_400, regionKo: "대구·경북 신상카페·맛집", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "미미", handle: "mimi_cafe.tour", followers: 8_700, regionKo: "전국 카페투어", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "디저트 교과서", handle: "dessert_entrance", followers: 80_000, regionKo: "디저트 전문", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "푸딩몽", handle: "pudding.mong", followers: 2_400, regionKo: "디저트 전문", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "은가람", handle: "eun__garam", followers: 42_000, regionKo: "카페투어·공간소개", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "빵푸디", handle: "bbang_pd00", followers: 1_900, regionKo: "빵·카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "진이찐", handle: "jini_zzin", followers: 51_000, regionKo: "디저트·카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "먹랩", handle: "muk_rap", followers: 121_000, regionKo: "디저트맛집·카페", categoryId: "cafe-dessert", engagementRatePct: null, statsSourceUrl: null },
+
+  // ── 뷰티 (beauty) — 2차 ──
+  { platform: "instagram", name: "미니", handle: "hyemin__09", followers: 67_000, regionKo: "스킨케어", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Dayun", handle: "da_yooni", followers: 44_000, regionKo: "메이크업", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Nathaniel Briner", handle: "nthanl", followers: 11_000, regionKo: "K-뷰티·스킨케어", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "유니님", handle: "yooni_mup", followers: 72_000, regionKo: "메이크업", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "롤링제이", handle: "rollingjay_onymakeup", followers: 75_000, regionKo: "메이크업", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "한솔", handle: "solmup", followers: 62_000, regionKo: "메이크업", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "로아", handle: "makeup_zeec", followers: 14_000, regionKo: "메이크업", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "정샛별", handle: "saetbyulthestar", followers: 4_300, regionKo: "뷰티 크리에이터", categoryId: "beauty", engagementRatePct: null, statsSourceUrl: null },
+
+  // ── 여행 (travel — 신설: 숙박·공간 업종 매칭) ──
+  { platform: "instagram", name: "Antje", handle: "nextstopkorea", followers: 117_000, regionKo: "국내여행·서울", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Amy Kim", handle: "korean.amykim", followers: 74_000, regionKo: "한국문화·여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Kyuho & Sarah", handle: "2hearts1seoul", followers: 42_000, regionKo: "서울·커플여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Hallie Bradley", handle: "thesoulofseoulblog", followers: 22_000, regionKo: "서울·국내여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Ploy", handle: "ployslittleatlas", followers: 17_000, regionKo: "서울·국내여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Sharen Hau", handle: "seoulfuldiaries", followers: 13_000, regionKo: "서울·여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "여행에미치다", handle: "yeomi.travel", followers: 1_504_000, regionKo: "국내·해외여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "여행톡톡", handle: "tour.toctoc", followers: 197_000, regionKo: "국내여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "여행친구", handle: "trip_friend_", followers: 1_900, regionKo: "여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "실버리", handle: "silvery_ooo", followers: 85_000, regionKo: "감성숙소·여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "캣블링", handle: "cat_veling", followers: 55_000, regionKo: "호캉스·여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "유경영", handle: "again_gangneung", followers: 32_000, regionKo: "강릉여행", categoryId: "travel", engagementRatePct: null, statsSourceUrl: null },
+
+  // ── 패션 (fashion — 신설: 의류·잡화 소매 매칭) ──
+  { platform: "instagram", name: "SUBIN", handle: "sub_b_", followers: 62_000, regionKo: "여성코디", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "윤슬", handle: "yunsle_style", followers: 37_000, regionKo: "미니멀룩", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "은비", handle: "eunbi.fit", followers: 31_000, regionKo: "캐주얼", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "나리", handle: "nari.ootd", followers: 28_000, regionKo: "데일리코디", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "서아", handle: "seoa.style", followers: 25_000, regionKo: "여성코디", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "김나영", handle: "nayoungkeem", followers: 865_000, regionKo: "여성패션·라이프스타일", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "차정원", handle: "ch_amii", followers: 2_040_000, regionKo: "여성패션·OOTD", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "기은세", handle: "kieunse", followers: 827_000, regionKo: "여성패션·럭셔리", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "한혜연", handle: "hhy6588", followers: 773_000, regionKo: "스타일링·패션", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "이사배", handle: "risabae_art", followers: 2_560_000, regionKo: "패션·뷰티", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "Irene Kim", handle: "ireneisgood", followers: 3_020_000, regionKo: "글로벌 패션", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "송해나", handle: "hena1108", followers: 1_120_000, regionKo: "여성패션", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "김진경", handle: "jinkyung3_3", followers: 447_000, regionKo: "모델·패션", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "깡스타일리스트", handle: "kkang.stylist", followers: 97_000, regionKo: "남성코디", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "빅사이즈 thisthat", handle: "thi_s_that", followers: 56_000, regionKo: "빅사이즈·데일리룩", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "바이린", handle: "by_rin_ootd", followers: 124_000, regionKo: "OOTD", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "김성길", handle: "s.geol_fashion", followers: 1_200, regionKo: "남자코디", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "데일리룩 코디추천", handle: "vividvogue_on", followers: 7_000, regionKo: "코디추천", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+  { platform: "instagram", name: "이재훈", handle: "hoon_lo.ok", followers: 1_000, regionKo: "남친룩·미니멀룩", categoryId: "fashion", engagementRatePct: null, statsSourceUrl: null },
+
 ];
 
 /** 업종별 큐레이션 — 없으면 빈 배열 (억지 매칭 금지, 발굴 도구가 담당) */
+/**
+ * 업종 → 디렉토리 카테고리 확장 매핑 (2026-08-07).
+ *  travel·fashion 은 업종 id 가 아니라 *인플루언서 장르*다:
+ *   · space(공간대여·숙박) 사장님에게는 공간 계정 + 여행 계정이 모두 유효
+ *   · retail(소매) 사장님에게는 소매 계정 + 패션 계정이 모두 유효
+ *  그 외 업종은 1:1. 억지 매칭 금지 원칙은 유지 — 매핑에 없으면 빈 배열.
+ */
+const CATEGORY_EXPANSION: Partial<Record<string, CuratedInfluencerCategory[]>> = {
+  "space": ["space", "travel"],
+  "retail": ["retail", "fashion"],
+};
+
 export function influencersForCategory(categoryId: string | null | undefined): CuratedInfluencer[] {
   if (!categoryId) return [];
 
-  return INFLUENCER_DIRECTORY.filter((i) => i.categoryId === categoryId);
+  const cats = CATEGORY_EXPANSION[categoryId] ?? [categoryId as CuratedInfluencerCategory];
+  return INFLUENCER_DIRECTORY.filter((i) => cats.includes(i.categoryId));
 }

@@ -85,6 +85,39 @@ export function tierForFollowers(followers: number): string {
   return "macro";
 }
 
+/**
+ * 등급별 월 예산 하한(원) — 협찬형(barter) 기준. INFLUENCER_FEE_RANGES 값에서만 조합
+ * (새 숫자 발명 금지, 2026-08-07):
+ *  nano  0원      — "제공만으로 가능한 경우 다수"
+ *  micro 5만      — "제공 + 5~30만 협의" 의 하한
+ *  mid   100만    — "원고료 협의 필수" → 피드 하한 100만
+ *  macro 500만    — 피드 하한 500만
+ */
+export const TIER_BUDGET_FLOOR_WON: Record<string, number> = {
+  nano: 0,
+  micro: 50_000,
+  mid: 1_000_000,
+  macro: 5_000_000,
+};
+
+/**
+ * 예산 맞춤 정렬 — 예산으로 접촉 가능한 등급을 앞으로, 그 안에서 팔로워 내림차순.
+ * **제외가 아니라 정렬**: 예산 초과 계정도 협의·장기 목표로 유효하므로 뒤로 보내기만 한다.
+ * budgetWon<=0 은 나노(제공 중심)만 "예산 내" — budgetAdvice 문구와 같은 논리.
+ * ⚠️ iOS InfluencerCollabTabView 가 같은 규칙을 손미러 — 수정 시 양쪽 동시.
+ */
+export function sortInfluencersForBudget<T extends { followers: number }>(
+  list: T[],
+  budgetWon: number,
+): Array<T & { withinBudget: boolean }> {
+  return list
+    .map((i) => ({ ...i, withinBudget: (TIER_BUDGET_FLOOR_WON[tierForFollowers(i.followers)] ?? 0) <= budgetWon }))
+    .sort((a, b) => {
+      if (a.withinBudget !== b.withinBudget) return a.withinBudget ? -1 : 1;
+      return b.followers - a.followers;
+    });
+}
+
 export type InfluencerPlay = {
   id: string;
   /** 사장님 눈에 보이는 이름 — 행동이 보이게 */

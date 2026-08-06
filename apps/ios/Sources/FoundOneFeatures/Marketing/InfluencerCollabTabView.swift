@@ -71,6 +71,22 @@ struct InfluencerCollabTabView: View {
         return "macro"
     }
 
+    /// 등급별 월 예산 하한(원) — 웹 TIER_BUDGET_FLOOR_WON 손미러 (시세표 값에서만 조합).
+    private let tierBudgetFloorWon: [String: Int] = ["nano": 0, "micro": 50_000, "mid": 1_000_000, "macro": 5_000_000]
+
+    private func withinBudget(_ followers: Int) -> Bool {
+        (tierBudgetFloorWon[tierFor(followers)] ?? 0) <= budgetWon
+    }
+
+    /// 예산 맞춤 정렬 — 웹 sortInfluencersForBudget 손미러 (제외가 아니라 정렬).
+    private func sortedForBudget(_ list: [InfluencerCollabResponse.CuratedInfluencer]) -> [InfluencerCollabResponse.CuratedInfluencer] {
+        list.sorted { a, b in
+            let aw = withinBudget(a.followers), bw = withinBudget(b.followers)
+            if aw != bw { return aw }
+            return a.followers > b.followers
+        }
+    }
+
     private func fmtFollowers(_ n: Int) -> String {
         n >= 10_000 ? String(format: n % 10_000 == 0 ? "%.0f만" : "%.1f만", Double(n) / 10_000) : "\(n)"
     }
@@ -140,7 +156,7 @@ struct InfluencerCollabTabView: View {
             Text("팔로워·참여율은 \(c.checkedAt) 조회 기준이에요. 참여율은 공개 통계에서 확인된 계정만 표시합니다.")
                 .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted)
-            ForEach(c.curated, id: \.handle) { i in
+            ForEach(sortedForBudget(c.curated), id: \.handle) { i in
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 6) {
                         if let url = URL(string: i.profileUrl) {
@@ -160,6 +176,13 @@ struct InfluencerCollabTabView: View {
                             .font(.system(size: 10.5, weight: .bold))
                             .padding(.horizontal, 8).padding(.vertical, 2)
                             .background(BUColor.ink.opacity(0.05), in: Capsule())
+                        if budgetWon > 0 && !withinBudget(i.followers) {
+                            Text("예산 초과 — 협의 필요")
+                                .font(.system(size: 10.5, weight: .bold))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .padding(.horizontal, 8).padding(.vertical, 2)
+                                .background(BUColor.ink.opacity(0.04), in: Capsule())
+                        }
                         if let er = i.engagementRatePct {
                             Text("참여율 \(er, specifier: "%.2f")%")
                                 .font(.system(size: 10.5, weight: .bold))
