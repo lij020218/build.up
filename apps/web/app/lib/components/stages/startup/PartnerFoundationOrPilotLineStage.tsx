@@ -127,7 +127,6 @@ export function PartnerFoundationOrPilotLineStage() {
       stageId="partner-foundation-or-pilot-line"
       stepLabel="Cluster D — Extreme Deep Tech 4/4"
       title="파운드리 파트너십 / 파일럿 라인"
-      contextLabel="12단계 / 22"
       contentBySubIndustry={{
         "semiconductor": semiconductor,
         "climate-energy": climate,

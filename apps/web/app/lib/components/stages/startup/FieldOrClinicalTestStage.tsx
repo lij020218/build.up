@@ -127,7 +127,6 @@ export function FieldOrClinicalTestStage() {
       stageId="field-or-clinical-test"
       stepLabel="Cluster C — Deep Tech Lab 3/4"
       title="필드 테스트 / 임상 시험"
-      contextLabel="11단계 / 22"
       contentBySubIndustry={{
         "robotics-physical-ai": robotics,
         "biotech-medtech": biotech,

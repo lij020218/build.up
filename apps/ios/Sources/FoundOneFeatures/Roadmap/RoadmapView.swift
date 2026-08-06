@@ -4,12 +4,12 @@
 //  ⚠️ 웹 SSOT: apps/web/app/lib/components/surfaces/RoadmapSurface.tsx
 //   ※ 이 파일은 웹과 동일한 시각 언어로 유지되어야 함:
 //      1. 헤더 — eyebrow + 큰 타이틀 + 우측 큰 % 숫자
-//      2. 세그먼트 진행 바 — 단계 수만큼 4px 얇은 바
+//      2. 진행 바 — 4px 연속 트랙 1개 (2026-08-06: 단계 수만큼 쪼갠 조각 → 연속 트랙)
 //      3. 평면 stage 리스트 + 단일 수직 타임라인 (Phase 그룹 헤더 X)
 //      4. 작은 12px 원형 노드 (current pulse)
-//      5. 반투명 화이트 카드 + 20px radius
-//      6. 현재 stage 카드 — Aurora 그라데이션
-//      7. stage 별 색상 태그 칩
+//      5. 카드 표면은 디자인 시스템 토큰(cardGradient/heroGradient) — 흰색 하드코딩 금지
+//      6. 현재 stage 카드 — 미드나잇 계열 hero 그라데이션 (2026-08-06: Aurora 무지개 블롭 제거)
+//      7. stage 태그 칩 — 브랜드 네이비 단일 색 (2026-08-06: 단계별 무지개 색 제거)
 //
 //  cluster 별 총 단계 수:
 //    offline-food: 21 / online-digital: 15 / startup-tech: 19 / 그 외: 22-23
@@ -20,20 +20,23 @@ import FoundOneDesignSystem
 import FoundOneComponents
 import FoundOneData
 
-// MARK: - Stage tag colors (웹 SSOT 미러)
+// MARK: - Stage tags (웹 SSOT 미러)
 
-private let stageTagMap: [String: (label: String, color: Color)] = [
-    "budget-setup":          ("재무 시뮬레이션", Color(red: 0.486, green: 0.227, blue: 0.929)),  // #7c3aed
-    "location-candidates":   ("상권 분석",       Color(red: 0.149, green: 0.388, blue: 0.922)),  // #2563eb
-    "contract-review":       ("AI 계약 분석",    Color(red: 0.486, green: 0.227, blue: 0.929)),
-    "construction-setup":    ("인테리어·집기",   BUColor.warn),  // #d97706
-    "vendor-setup":          ("공급업체",         BUColor.success),  // #059669
-    "operations-setup":      ("배달·SNS",         Color(red: 0.859, green: 0.157, blue: 0.467)),  // #db2777
-    "pre-launch":            ("소프트오픈",       BUColor.warn),  // #ea580c
-    "tax-guide":             ("절세 가이드",      Color(red: 0.051, green: 0.600, blue: 0.533)),  // #0d9488
-    "loan-guide":            ("자금조달·지원사업", BUColor.success),
-    "venture-certification": ("벤처인증",         BUColor.success),
-    "launch-gtm":            ("GTM 전략",         Color(red: 0.859, green: 0.157, blue: 0.467)),
+/// 단계 태그 라벨. **색은 단계마다 다르게 주지 않는다** —
+/// 종전에는 보라·파랑·분홍·청록이 뒤섞여(#7c3aed·#2563eb·#db2777·#0d9488)
+/// 브랜드 토큰(미드나잇 네이비 + 라벤더) 밖의 무지개가 됐다 (2026-08-06 정리).
+private let stageTagMap: [String: String] = [
+    "budget-setup":          "재무 시뮬레이션",
+    "location-candidates":   "상권 분석",
+    "contract-review":       "AI 계약 분석",
+    "construction-setup":    "인테리어·집기",
+    "vendor-setup":          "공급업체",
+    "operations-setup":      "배달·SNS",
+    "pre-launch":            "소프트오픈",
+    "tax-guide":             "절세 가이드",
+    "loan-guide":            "자금조달·지원사업",
+    "venture-certification": "벤처인증",
+    "launch-gtm":            "GTM 전략",
 ]
 
 // MARK: - RoadmapView
@@ -74,9 +77,13 @@ public struct RoadmapView: View {
         //   RoadmapView 가 NavigationStack 을 제공 → StageRow 는 NavigationLink 로 push.
         //   로드맵 과정 중에 stage 가 중심이라 popup 보다는 화면 전환이 자연스러움.
         NavigationStack(path: $stagePath) {
-            // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
-            //   .onAppear / .onChange 는 ZStack 자체로 옮김.
+            // ⚠️ 2026-08-06 되돌림: NavigationStack 은 자체 불투명 배경을 칠하므로
+            //   MobileShell 의 풀스크린 Aurora 가 가려져 로드맵만 흰 화면이 됐다.
+            //   (2026-05-25 에 "중복"이라 판단해 지웠던 것이 원인 — TodayView 의
+            //    NavigationStack 도 안쪽에 BUBackgroundSurface 를 둔다.)
             ZStack {
+                BUBackgroundSurface()
+                    .ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         // ── 헤더: eyebrow + 타이틀 + 우측 큰 % ──
@@ -195,20 +202,22 @@ public struct RoadmapView: View {
             Spacer(minLength: 0)
 
             VStack(alignment: .trailing, spacing: 2) {
+                // 진행 0일 때 거대한 "0%" 가 화면을 지배하며 실패처럼 읽혔다 →
+                //   숫자 무게를 낮추고, 시작 전에는 회색으로 물러나게 한다 (2026-08-06).
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
                     Text("\(percent)")
-                        .font(.system(size: 36, weight: .heavy))
-                        .tracking(-1.8)
-                        .foregroundStyle(BUColor.ink)
+                        .font(.system(size: 30, weight: .semibold))
+                        .tracking(-1.2)
+                        .foregroundStyle(completedCount > 0 ? BUColor.ink : BUColor.inkMuted.opacity(0.55))
                         .monospacedDigit()
                     Text("%")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.7))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.6))
                 }
                 .lineLimit(1)
-                Text("\(completedCount) / \(totalCount) 완료")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.7))
+                Text(completedCount > 0 ? "\(completedCount) / \(totalCount) 완료" : "\(totalCount)단계 · 시작 전")
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.8))
                 if showAiHandoffHint {
                     Text("AI가 기획 단계를 채워뒀어요 —\n다음 단계부터 확인만 하며 이어가면 됩니다.")
                         .font(.system(size: 11, weight: .medium))
@@ -255,25 +264,20 @@ public struct RoadmapView: View {
 
     // MARK: - Segmented progress bar
 
+    /// 연속 트랙 하나. 종전에는 단계 수만큼(오프라인 21칸) 조각을 늘어놨는데,
+    /// 진행 0일 때 회색 부스러기처럼 보이고 단계가 많을수록 지저분했다 (2026-08-06 정리).
     private var segmentedProgress: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<totalCount, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(barColor(at: i))
-                    .frame(height: 4)
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(BUColor.midnight.opacity(0.08))
+                Capsule()
+                    .fill(BUColor.midnight)
+                    .frame(width: max(completedCount > 0 ? 8 : 0,
+                                      geo.size.width * CGFloat(completedCount) / CGFloat(max(1, totalCount))))
                     .animation(.easeOut(duration: 0.4), value: completedCount)
             }
         }
-    }
-
-    private func barColor(at index: Int) -> Color {
-        if index < completedCount {
-            return BUColor.midnight
-        } else if index == completedCount {
-            return BUColor.midnight.opacity(0.3)
-        } else {
-            return BUColor.midnight.opacity(0.05)
-        }
+        .frame(height: 4)
     }
 
     // MARK: - Timeline (평면 리스트 + 단일 vertical line)
@@ -326,7 +330,7 @@ private struct StageRow: View {
         guard stage.status == .upcoming, let curr = currentIndex else { return false }
         return index > curr + 1
     }
-    private var tag: (label: String, color: Color)? { stageTagMap[stage.id] }
+    private var tag: String? { stageTagMap[stage.id] }
 
     var body: some View {
         // 2026-05-21: value-based NavigationLink — stageId 를 path 에 push.
@@ -369,13 +373,13 @@ private struct StageRow: View {
                 // 태그 칩 (완료 X)
                 if !isCompleted, let tag = tag {
                     HStack(spacing: 4) {
-                        Text(tag.label)
+                        Text(tag)
                             .font(.system(size: 10, weight: .semibold))
                             .tracking(0.2)
-                            .foregroundStyle(tag.color)
+                            .foregroundStyle(BUColor.midnight)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 3)
-                            .background(tag.color.opacity(0.04), in: Capsule())
+                            .background(BUColor.midnight.opacity(0.06), in: Capsule())
                     }
                 }
 
@@ -390,7 +394,7 @@ private struct StageRow: View {
                 }
             }
             .padding(.horizontal, isCurrent ? 24 : 20)
-            .padding(.vertical, isCurrent ? 22 : (isCompleted ? 14 : 18))
+            .padding(.vertical, isCurrent ? 22 : (isCompleted || isLockedFuture ? 14 : 18))
         }
         // 노드 (수직선 위에 떠있는 점)
         .overlay(alignment: .topLeading) {
@@ -398,46 +402,58 @@ private struct StageRow: View {
                 .offset(x: -24, y: 20)  // web: left:-24px, top:20px
         }
         .padding(.bottom, isCurrent ? 12 : 8)
-        .opacity(isLockedFuture ? 0.55 : 1.0)
+        // 종전엔 카드 전체를 0.55 로 흐려 글자까지 뿌옇게 죽었다.
+        //   → 표면·여백·글자색으로 위계를 만들고 불투명도는 건드리지 않는다 (2026-08-06).
     }
 
     @ViewBuilder
     private var background: some View {
+        // 2026-08-06 정리: 종전 현재 단계 카드는 AuroraGradientLayer(하늘색·보라·초록 블롭)를
+        //   깔아 카드 하나가 무지개로 보였고, 나머지 카드는 흰색 불투명(0.72/0.48)이라
+        //   라벤더 배경 위에 흰 판이 이어 붙은 화면이 됐다.
+        //   → 디자인 시스템 토큰(hero/card 그라데이션, 미드나잇 네이비) 한 계열로 통일.
         if isCurrent {
-            ZStack {
-                // ── Aurora gradient blob (current 전용 — 웹 AuroraBackground 미러) ──
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.98),
-                                Color(red: 0.961, green: 0.973, blue: 1.0).opacity(0.94),
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                AuroraGradientLayer()
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .opacity(0.85)
-                    .allowsHitTesting(false)
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1)
-            }
-            .shadow(color: BUColor.midnight.opacity(0.06), radius: 12, x: 0, y: 4)
-        } else if isCompleted {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.48))
+                .fill(
+                    LinearGradient(
+                        colors: [BUColor.heroGradientMid, BUColor.heroGradientEnd],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.03), lineWidth: 1)
+                        .strokeBorder(BUColor.midnight.opacity(0.16), lineWidth: 1)
+                )
+                .shadow(color: BUColor.midnight.opacity(0.08), radius: 14, x: 0, y: 5)
+        } else if isCompleted {
+            // 완료 = 가장 조용하게. 배경(라벤더 미스트)이 그대로 비쳐야 흰 판처럼 보이지 않는다.
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(BUColor.cardGradientTop.opacity(0.34))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(BUColor.midnight.opacity(0.06), lineWidth: 1)
+                )
+        } else if isLockedFuture {
+            // 아직 잠긴 먼 단계 — 가장 가볍게. 목록이 흰 판의 반복으로 보이지 않게 한다.
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(BUColor.cardGradientTop.opacity(0.26))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(BUColor.midnight.opacity(0.05), lineWidth: 1)
                 )
         } else {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.72))
+                .fill(
+                    LinearGradient(
+                        colors: [BUColor.cardGradientTop.opacity(0.58), BUColor.cardGradientBottom.opacity(0.52)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.04), lineWidth: 1)
+                        .strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1)
                 )
         }
     }
@@ -445,6 +461,8 @@ private struct StageRow: View {
     private var titleColor: Color {
         if isCurrent { return BUColor.ink }
         if isCompleted { return Color(white: 0.45) }
+        // 잠금 단계는 카드 전체를 흐리는 대신 글자만 한 단계 낮춘다 (가독성 유지).
+        if isLockedFuture { return BUColor.ink.opacity(0.55) }
         return BUColor.ink
     }
 
@@ -582,34 +600,3 @@ private struct StageDetailSheet: View {
 }
 #endif
 
-// MARK: - AuroraGradientLayer (현재 단계 강조 — 웹 AuroraBackground 미러)
-//
-// 3개 컬러 blob 을 비스듬히 배치 → blur 처리 → 카드 모양에 clip.
-// 정적 (애니메이션 없음) — 모바일 성능 우선. 웹은 keyframes 로 흐르는 효과지만
-// SwiftUI 에서 비싸므로 정적 그라데이션으로 동일 분위기 전달.
-//
-
-private struct AuroraGradientLayer: View {
-    var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                Circle()
-                    .fill(Color(red: 0.353, green: 0.784, blue: 0.98))     // sky blue
-                    .frame(width: proxy.size.width * 0.7, height: proxy.size.width * 0.7)
-                    .blur(radius: 40)
-                    .offset(x: -proxy.size.width * 0.25, y: -proxy.size.height * 0.25)
-                Circle()
-                    .fill(Color(red: 0.486, green: 0.227, blue: 0.929))     // purple
-                    .frame(width: proxy.size.width * 0.6, height: proxy.size.width * 0.6)
-                    .blur(radius: 50)
-                    .offset(x: proxy.size.width * 0.3, y: proxy.size.height * 0.1)
-                Circle()
-                    .fill(BUColor.success)      // green
-                    .frame(width: proxy.size.width * 0.5, height: proxy.size.width * 0.5)
-                    .blur(radius: 45)
-                    .offset(x: proxy.size.width * 0.1, y: proxy.size.height * 0.5)
-            }
-            .opacity(0.18)   // 카드 콘텐츠 가독성 우선
-        }
-    }
-}

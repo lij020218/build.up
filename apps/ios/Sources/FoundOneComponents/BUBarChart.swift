@@ -43,16 +43,22 @@ public struct BUBarChart: View {
     let bepValue: Double?         // 손익분기 라인 (점선)
     let showLabels: Bool
 
+    /// 막대(및 라벨) 탭 → 해당 index. nil 이면 차트는 표시 전용.
+    /// 웹 ActivitySnapshotCard 는 막대를 누르면 그 날짜 입력이 열린다 — iOS 도 동일 (2026-08-06).
+    let onSelect: ((Int) -> Void)?
+
     public init(
         bars: [Bar],
         height: CGFloat = 140,
         bepValue: Double? = nil,
-        showLabels: Bool = true
+        showLabels: Bool = true,
+        onSelect: ((Int) -> Void)? = nil
     ) {
         self.bars = bars
         self.height = height
         self.bepValue = bepValue
         self.showLabels = showLabels
+        self.onSelect = onSelect
     }
 
     private var maxValue: Double {
@@ -81,12 +87,21 @@ public struct BUBarChart: View {
 
                 // Bars
                 HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(bars) { bar in
-                        BarColumn(
+                    ForEach(Array(bars.enumerated()), id: \.element.id) { idx, bar in
+                        let column = BarColumn(
                             bar: bar,
                             maxValue: maxValue,
                             chartHeight: height
                         )
+                        if let onSelect {
+                            Button { onSelect(idx) } label: {
+                                // 값이 0 인 빈 막대도 눌러서 그날을 기록할 수 있어야 한다
+                                column.contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            column
+                        }
                     }
                 }
                 .frame(height: height, alignment: .bottom)
@@ -95,11 +110,17 @@ public struct BUBarChart: View {
             // X-axis labels
             if showLabels {
                 HStack(spacing: 6) {
-                    ForEach(bars) { bar in
-                        Text(bar.label ?? "")
+                    ForEach(Array(bars.enumerated()), id: \.element.id) { idx, bar in
+                        let label = Text(bar.label ?? "")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(bar.highlighted ? BUColor.midnight : BUColor.inkMuted)
                             .frame(maxWidth: .infinity)
+                        if let onSelect {
+                            Button { onSelect(idx) } label: { label.contentShape(Rectangle()) }
+                                .buttonStyle(.plain)
+                        } else {
+                            label
+                        }
                     }
                 }
             }

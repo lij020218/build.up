@@ -940,7 +940,8 @@ export const styles = {
     gap: "6px",
     borderRadius: "20px",
     border: "1px solid rgba(0,0,0,0.04)",
-    background: "rgba(255,255,255,0.72)",
+    // 배경(라벤더 미스트)이 비쳐야 흰 판이 이어 붙은 화면으로 보이지 않는다 (2026-08-06).
+    background: "linear-gradient(180deg, rgba(255,255,255,0.58) 0%, rgba(247,248,254,0.52) 100%)",
     padding: "18px 20px",
     marginBottom: "8px",
     position: "relative" as const,
@@ -948,13 +949,21 @@ export const styles = {
   },
   roadmapRowCurrent: {
     border: "1px solid rgba(29,53,87,0.12)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,248,255,0.94) 100%)",
+    // 2026-08-06: 흰색 하드코딩 → 브랜드 라벤더 계열 (iOS heroGradientMid/End 와 같은 계열).
+    background: "linear-gradient(135deg, rgba(238,240,251,0.96) 0%, rgba(229,232,247,0.94) 100%)",
     boxShadow: "0 8px 32px rgba(29,53,87,0.06), 0 1px 0 rgba(255,255,255,0.9) inset",
     padding: "22px 24px",
     marginBottom: "12px",
   },
+  /** 아직 잠긴 먼 단계 — 가장 가볍게. 목록이 흰 판의 반복으로 보이지 않게 한다 (2026-08-06). */
+  roadmapRowLocked: {
+    background: "rgba(255,255,255,0.26)",
+    border: "1px solid rgba(29,53,87,0.05)",
+    padding: "14px 20px",
+    color: "rgba(15,23,42,0.55)",
+  },
   roadmapRowCompleted: {
-    background: "rgba(255,255,255,0.48)",
+    background: "rgba(255,255,255,0.34)",
     border: "1px solid rgba(0,0,0,0.03)",
     padding: "14px 20px",
   },

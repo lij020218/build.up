@@ -128,8 +128,8 @@ export function StartupTypeSelectionStage() {
             ? "창업 형태가 모든 절차·세무·자금원을 결정합니다"
             : "Your startup type decides every procedure, tax path, and funding source",
           detail: language === "ko"
-            ? "프랜차이즈 · 자영업 · 스타트업 — 형태별로 인허가·자금·세무 경로가 완전히 다름. 한 번 선택하면 14단계 로드맵이 그 형태에 맞게 분기."
-            : "Franchise · independent · startup — permits, funding, and tax differ entirely by type. Once chosen, the 14-stage roadmap branches to fit it.",
+            ? "프랜차이즈 · 자영업 · 스타트업 — 형태별로 인허가·자금·세무 경로가 완전히 다름. 한 번 선택하면 이후 로드맵이 그 형태에 맞게 분기."
+            : "Franchise · independent · startup — permits, funding, and tax differ entirely by type. Once chosen, the rest of the roadmap branches to fit it.",
         }}
       />
       {!showFranchisePicker ? (

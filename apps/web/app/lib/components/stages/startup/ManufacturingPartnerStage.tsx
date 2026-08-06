@@ -86,7 +86,6 @@ export function ManufacturingPartnerStage() {
       stageId="manufacturing-partner"
       stepLabel="Cluster B — Hardware NPI 4/4"
       title="제조 파트너 (EMS / CM) 선정"
-      contextLabel="12단계 / 22"
       contentBySubIndustry={{ "hardware-iot": defaultContent }}
       defaultContent={defaultContent}
     />

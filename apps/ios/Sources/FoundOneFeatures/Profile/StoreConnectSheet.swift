@@ -164,7 +164,7 @@ public struct StoreConnectSheet: View {
                 Text("연결 완료\(connectedStore.map { " — \($0)" } ?? "")!")
                     .font(.system(size: 15, weight: .heavy))
                     .foregroundStyle(BUColor.ink)
-                Text("근무표·출퇴근·연차는 웹 직원 화면에서 바로 쓸 수 있어요.\niOS 직원 화면은 준비 중입니다.")
+                Text("근무표·출퇴근·연차를 앱과 웹 직원 화면에서 바로 쓸 수 있어요.")
                     .font(.system(size: 12.5))
                     .foregroundStyle(BUColor.inkSecondary)
                     .multilineTextAlignment(.center)

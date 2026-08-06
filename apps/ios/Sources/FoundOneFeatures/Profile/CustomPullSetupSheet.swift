@@ -462,7 +462,7 @@ public struct CustomPullSetupSheet: View {
             return
         }
         phase = .testing
-        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client)
+        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client, baseURL: BUSupabase.shared.env.webAppURL)
         do {
             let result = try await repo.testPullConnection(
                 endpointURL: trimmedURL,
@@ -486,7 +486,7 @@ public struct CustomPullSetupSheet: View {
     private func runSave() async {
         focusedField = nil
         phase = .saving
-        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client)
+        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client, baseURL: BUSupabase.shared.env.webAppURL)
         do {
             _ = try await repo.savePullConnection(
                 endpointURL: trimmedURL,

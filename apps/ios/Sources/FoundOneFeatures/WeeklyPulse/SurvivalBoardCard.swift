@@ -171,15 +171,21 @@ private struct SurvivalMetricCell: View {
                 .foregroundStyle(BUColor.inkMuted)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            if let series = sparkline, series.count >= 2 {
-                MiniSparkline(values: series, color: sparkColor)
-                    .frame(height: 22)
-                    .padding(.top, 2)
+            // 스파크라인 자리는 값이 없어도 항상 확보한다 —
+            // 있는 칸만 커지면 2×2 격자의 네 칸 높이가 제각각이 된다 (2026-08-06 수정).
+            Group {
+                if let series = sparkline, series.count >= 2 {
+                    MiniSparkline(values: series, color: sparkColor)
+                } else {
+                    Color.clear
+                }
             }
+            .frame(height: 22)
+            .padding(.top, 2)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(
             LinearGradient(
                 colors: [

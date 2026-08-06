@@ -86,7 +86,6 @@ export function BomSupplyChainStage() {
       stageId="bom-supply-chain"
       stepLabel="Cluster B — Hardware NPI 2/4"
       title="BOM 및 공급망 락인"
-      contextLabel="10단계 / 22"
       contentBySubIndustry={{ "hardware-iot": defaultContent }}
       defaultContent={defaultContent}
     />

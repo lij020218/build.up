@@ -96,7 +96,6 @@ export function CertificationKcCeStage() {
       stageId="certification-kc-ce"
       stepLabel="Cluster B — Hardware NPI 3/4"
       title="인증 (KC · CE · FCC)"
-      contextLabel="11단계 / 22"
       contentBySubIndustry={{ "hardware-iot": defaultContent }}
       defaultContent={defaultContent}
     />

@@ -744,7 +744,7 @@ public struct DataConnectionSheet: View {
     private func loadConnections() async {
         isLoading = true
         loadError = nil
-        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client)
+        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client, baseURL: BUSupabase.shared.env.webAppURL)
         do {
             connections = try await repo.listConnections()
         } catch let e as FunnelConnectionError {
@@ -757,7 +757,7 @@ public struct DataConnectionSheet: View {
 
     @MainActor
     private func deleteConnection(id: UUID) async {
-        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client)
+        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client, baseURL: BUSupabase.shared.env.webAppURL)
         do {
             try await repo.deletePullConnection(connectionId: id)
             pendingDeleteId = nil

@@ -32,6 +32,9 @@ public struct ActivitySnapshotCard: View {
     let autoSourceCount: Int      // 자동수집 연결 채널 수 (>0이면 "자동 N곳" 배지 — 웹 패리티)
     let autoBreakdown: [RevenueBreakdownEntry]  // 채널별 매출 내역
     let onTapBasis: (() -> Void)?  // "자동 N곳" 배지 탭 → 기준 선택 sheet (nil이면 탭 비활성)
+    /// 날짜 선택 → 그 날짜 매출 입력 열기. 웹은 막대를 누르면 해당 날짜 입력이 채워진다 —
+    /// iOS 는 카드에서 입력으로 가는 길이 아예 없어 사장님이 화면 맨 아래 버튼을 찾아야 했다 (2026-08-06 수정).
+    let onSelectDate: ((Date) -> Void)?
 
     public init(
         entries: [DailyEntry],
@@ -39,7 +42,8 @@ public struct ActivitySnapshotCard: View {
         ko: Bool = true,
         autoSourceCount: Int = 0,
         autoBreakdown: [RevenueBreakdownEntry] = [],
-        onTapBasis: (() -> Void)? = nil
+        onTapBasis: (() -> Void)? = nil,
+        onSelectDate: ((Date) -> Void)? = nil
     ) {
         self.entries = entries
         self.bepDailySales = bepDailySales
@@ -47,6 +51,7 @@ public struct ActivitySnapshotCard: View {
         self.autoSourceCount = autoSourceCount
         self.autoBreakdown = autoBreakdown
         self.onTapBasis = onTapBasis
+        self.onSelectDate = onSelectDate
     }
 
     /// 채널별 매출 내역 라벨 (웹 revenueSourceLabel 미러).
@@ -216,6 +221,24 @@ public struct ActivitySnapshotCard: View {
                         autoBadge
                     }
                 }
+
+                Spacer(minLength: 0)
+
+                // 상시 노출 입력 버튼 — 막대 탭만으로는 "여기서 기록할 수 있다"가 안 보인다.
+                if let onSelectDate {
+                    Button { onSelectDate(Date()) } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle.fill").font(.system(size: 12, weight: .semibold))
+                            Text(ko ? "기록" : "Log")
+                                .font(.system(size: 12.5, weight: .bold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(BUColor.midnight, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -275,7 +298,13 @@ public struct ActivitySnapshotCard: View {
                 bars: bars,
                 height: 120,
                 bepValue: bepDailySales,
-                showLabels: true
+                showLabels: true,
+                onSelect: onSelectDate.map { cb in
+                    { idx in
+                        guard weekSlots.indices.contains(idx) else { return }
+                        cb(weekSlots[idx].date)
+                    }
+                }
             )
 
             if let bep = bepDailySales {

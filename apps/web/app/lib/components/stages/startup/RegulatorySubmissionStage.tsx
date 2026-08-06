@@ -120,7 +120,6 @@ export function RegulatorySubmissionStage() {
       stageId="regulatory-submission"
       stepLabel="Cluster C — Deep Tech Lab 4/4"
       title="인허가 제출 및 승인"
-      contextLabel="12단계 / 22"
       contentBySubIndustry={{
         "robotics-physical-ai": robotics,
         "biotech-medtech": biotech,

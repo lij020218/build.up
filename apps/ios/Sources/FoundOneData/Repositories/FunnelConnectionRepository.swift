@@ -122,15 +122,14 @@ public enum FunnelConnectionError: LocalizedError, Sendable {
 
 public actor FunnelConnectionRepository {
 
-    /// Found.One web API base URL. 환경 변수에서 가져오는 게 이상적이지만,
-    /// TODO: BUEnvironment 에 webApiBaseURL 추가 필요. 그 전까지 prod 고정.
     private let baseURL: URL
     private let supabase: SupabaseClient
     private let urlSession: URLSession
 
+    /// baseURL 은 항상 BUSupabase.shared.env.webAppURL 를 전달 (스테이징·TestFlight 이 prod 를 치지 않도록 기본값 없음).
     public init(
         supabase: SupabaseClient,
-        baseURL: URL = URL(string: "https://foundone.dev")!,
+        baseURL: URL,
         urlSession: URLSession = .shared
     ) {
         self.supabase = supabase

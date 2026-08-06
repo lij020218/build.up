@@ -73,6 +73,19 @@ export function ClusterStageTemplate({
   const { language, selectedIndustryId } = d;
   const ko = language === "ko";
 
+  /**
+   * "N단계 / 총단계" — 실제 사장님 경로(pathStageList)에서 계산한다.
+   * 종전에는 12개 파일에 `contextLabel="12단계 / 22"` 식으로 박아뒀는데,
+   * 하드웨어·랩·반도체 경로는 실제 23단계라 숫자가 어긋났고 단계를 추가할 때마다 낡았다
+   * (2026-08-06 정리 — "46단계 로드맵"·"14단계 로드맵" 과 같은 유형의 오류).
+   */
+  const autoContextLabel = (() => {
+    if (!stageId) return undefined;
+    const idx = d.pathStageList.findIndex((s) => s.stageId === stageId);
+    if (idx < 0 || d.pathTotalStages <= 0) return undefined;
+    return ko ? `${idx + 1}단계 / ${d.pathTotalStages}` : `Step ${idx + 1} / ${d.pathTotalStages}`;
+  })();
+
   const content = (selectedIndustryId && contentBySubIndustry[selectedIndustryId])
     ? contentBySubIndustry[selectedIndustryId]
     : defaultContent;
@@ -92,12 +105,12 @@ export function ClusterStageTemplate({
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
       {/* 헤더 */}
       <div>
-        {contextLabel && (
+        {(contextLabel ?? autoContextLabel) && (
           <div style={{
             fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT,
             letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: "4px",
           }}>
-            {contextLabel}
+            {contextLabel ?? autoContextLabel}
           </div>
         )}
         <div style={{ fontSize: "20px", fontWeight: 700, letterSpacing: "-0.5px", color: "var(--text)", lineHeight: 1.3 }}>

@@ -112,7 +112,6 @@ export function PrototypeIterationStage() {
       stageId="prototype-iteration"
       stepLabel="Cluster C — Deep Tech Lab 2/4"
       title="프로토타입 반복 사이클"
-      contextLabel="10단계 / 22"
       contentBySubIndustry={{
         "robotics-physical-ai": robotics,
         "biotech-medtech": biotech,

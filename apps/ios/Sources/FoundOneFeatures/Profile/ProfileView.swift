@@ -503,7 +503,7 @@ public struct ProfileView: View {
             connectionCount = nil
             return
         }
-        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client)
+        let repo = FunnelConnectionRepository(supabase: BUSupabase.shared.client, baseURL: BUSupabase.shared.env.webAppURL)
         do {
             let rows = try await repo.listConnections()
             connectionCount = rows.count
@@ -594,7 +594,9 @@ public struct ProfileView: View {
                 divider
                 supportRow(
                     title: "문의하기",
-                    url: URL(string: "mailto:support@foundone.dev")
+                    // 웹 푸터·지원 페이지와 동일한 주소로 통일 (2026-08-06 사장님 지시).
+                    //   support@foundone.dev 는 수신함이 없어 문의가 유실된다.
+                    url: URL(string: "mailto:\(BusinessInfo.contactEmail)")
                 )
                 divider
                 HStack {

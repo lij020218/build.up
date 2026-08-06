@@ -58,6 +58,8 @@ public struct TodayView: View {
     /// 탭 전환 (세팅 미션 딥링크 — 비용=내 가게, 오퍼링) — MainTabs 가 주입
     let onSwitchTab: ((AppRoot.Tab) -> Void)?
     @State private var showInputSheet = false
+    /// 매출 흐름 막대에서 선택한 날짜 (nil = 오늘)
+    @State private var inputSheetDate: Date? = nil
     @State private var showInventorySheet = false
     @State private var showTeamSheet = false
     @State private var showRecipeSheet = false
@@ -158,7 +160,12 @@ public struct TodayView: View {
                     autoSourceCount: dashboardStore?.autoSourceCount ?? 0,
                     autoBreakdown: dashboardStore?.autoBreakdown ?? [],
                     onTapBasis: ((dashboardStore?.autoCardOverlap ?? false) || (dashboardStore?.autoHasPopbill ?? false))
-                        ? { showBasisSheet = true } : nil
+                        ? { showBasisSheet = true } : nil,
+                    // 막대·"기록" 탭 → 그 날짜로 입력 시트 (웹 패리티)
+                    onSelectDate: { date in
+                        inputSheetDate = date
+                        showInputSheet = true
+                    }
                 )
 
                 // ③ 사용자수(고객 변화) — 성장 선행지표라 매출 직하 always-on.
@@ -282,8 +289,8 @@ public struct TodayView: View {
         .onReceive(storeInfo?.objectWillChange ?? ObservableObjectPublisher()) { _ in
             storeRevision &+= 1
         }
-        .sheet(isPresented: $showInputSheet) {
-            QuickInputSheet(dashboardStore: dashboardStore)
+        .sheet(isPresented: $showInputSheet, onDismiss: { inputSheetDate = nil }) {
+            QuickInputSheet(dashboardStore: dashboardStore, initialDate: inputSheetDate)
         }
         .sheet(isPresented: $showInventorySheet) {
             if let si = storeInfo {
@@ -1410,6 +1417,8 @@ private struct QuickInputButton: View {
 ///   저장은 dashboardStore.upsertEntry(임의 날짜 upsert→Supabase), 삭제는 deleteEntry(date).
 private struct QuickInputSheet: View {
     let dashboardStore: DashboardStore?
+    /// 매출 흐름 막대에서 넘어온 날짜 (nil = 오늘)
+    var initialDate: Date? = nil
     @Environment(\.dismiss) private var dismiss
 
     private enum Field: Hashable { case sales, customers }
@@ -1497,7 +1506,10 @@ private struct QuickInputSheet: View {
                 }
             }
             #endif
-            .onAppear { loadForDate() }
+            .onAppear {
+                if let initialDate { selectedDate = initialDate }
+                loadForDate()
+            }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)

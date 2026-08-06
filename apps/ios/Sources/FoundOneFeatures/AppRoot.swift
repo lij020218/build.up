@@ -129,13 +129,25 @@ public struct AppRoot: View {
         #endif
     }
 
+    /// 데모 탭 — DemoTabs 는 `#if DEBUG` 안에만 정의되므로 호출부도 같이 갈라야 한다.
+    /// (Release 아카이브에서 "cannot find 'DemoTabs' in scope" 로 빌드가 깨졌다 — 2026-08-06)
+    /// Release 에서는 demoMode 가 절대 nil 이 아닌 값이 되지 않으므로 이 경로는 도달 불가.
+    @ViewBuilder
+    private func demoTabs(scenario: MockScenario) -> some View {
+        #if DEBUG
+        DemoTabs(scenario: scenario, selectedTab: $selectedTab) {
+            demoMode = nil
+        }
+        #else
+        EmptyView()
+        #endif
+    }
+
     public var body: some View {
         Group {
             if let scenario = demoMode {
-                // ── DEBUG 데모 모드 ──
-                DemoTabs(scenario: scenario, selectedTab: $selectedTab) {
-                    demoMode = nil
-                }
+                // ── DEBUG 데모 모드 ── (Release 에서는 DemoTabs 자체가 컴파일되지 않는다)
+                demoTabs(scenario: scenario)
             } else if coordinator.isAuthenticated {
                 if let store = dashboardStore {
                     // ── 역할 게이트 (2026-07-12, 웹 fast-gate 미러) ──

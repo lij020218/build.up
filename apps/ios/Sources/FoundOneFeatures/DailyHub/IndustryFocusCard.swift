@@ -313,6 +313,9 @@ private struct BookingFocusCard: View {
 // MARK: - 일반: Inspiration
 
 private struct InspirationCard: View {
+    /// 날짜가 바뀌면 문장도 바뀐다 (KST 자정 기준, 웹과 같은 문장).
+    private var quote: BUInspirationQuote? { BUInspiration.forDate() }
+
     var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
@@ -328,16 +331,20 @@ private struct InspirationCard: View {
                     Spacer()
                 }
 
-                Text("\"가장 중요한 한 가지를 정하고, 그것만 오늘 끝내라.\"")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(BUColor.ink)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let quote {
+                    Text("\"\(quote.text)\"")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.ink)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text("— Peter Drucker")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
+                    // 출처까지 적는다 — 어디서 온 말인지 사장님이 확인할 수 있어야 한다.
+                    Text("— \(quote.author) · \(quote.source)")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }

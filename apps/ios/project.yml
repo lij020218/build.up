@@ -83,10 +83,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_PREVIEWS: YES
         # Live Activity / Widget Extension entitlements 는 추후 Widget target 추가 시
-      configs:
-        Debug:
-          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": "Apple Development"
-        Release:
-          # 아카이브·App Store 업로드용. DEVELOPMENT_TEAM 은 Config/Build.xcconfig
-          # (Scripts/generate-xcconfig.sh 가 .env.local 의 APPLE_TEAM_ID 로 주입).
-          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": "Apple Distribution"
+      # 실기기(iphoneos) identity 는 지정하지 않는다 — Automatic 서명에서 수동 지정은
+      # "conflicting provisioning settings" 아카이브 실패를 부른다 (2026-08-06 실측).
+      # 아카이브는 Apple Development 로 서명되고, exportArchive(app-store-connect) 가
+      # Distribution 으로 자동 재서명한다. DEVELOPMENT_TEAM 은 Config/Build.xcconfig.
