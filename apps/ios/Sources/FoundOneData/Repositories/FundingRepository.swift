@@ -503,14 +503,94 @@ public actor FundingRepository {
         return response.result
     }
 
+    // MARK: - 공고 맞춤 사업계획서 (2026-08-14, 주 2회 — 웹 FundingPlanModal 미러)
+
+    /// POST /api/ai/business-plan/generate 의 program 모드 응답 섹션.
+    public struct BusinessPlanSection: Sendable, Decodable {
+        public let title: String
+        public let content: String
+
+        public init(title: String, content: String) {
+            self.title = title
+            self.content = content
+        }
+    }
+
+    public struct BusinessPlanDraft: Sendable, Decodable {
+        public let summary: String?
+        public let sections: [BusinessPlanSection]
+
+        public init(summary: String?, sections: [BusinessPlanSection]) {
+            self.summary = summary
+            self.sections = sections
+        }
+    }
+
+    /// 로드맵 프로필 → 사업계획서 사용자 입력 (웹 PlanUserPayload 와 동일 필드).
+    public struct PlanUserInput: Sendable, Encodable {
+        public let industry: String
+        public let subIndustry: String
+        public let startupType: String
+        public let businessModel: String
+        public let capital: Int
+        public let targetOpenDate: String
+        public let location: String?
+        public let language: String
+        public let purpose: String
+
+        public init(profile: FundingProfileSnapshot) {
+            self.industry = profile.industryCategoryId ?? ""
+            self.subIndustry = profile.subIndustryId ?? ""
+            self.startupType = profile.startupType ?? "independent"
+            self.businessModel = ""
+            self.capital = profile.capital ?? 0
+            self.targetOpenDate = profile.businessLaunchedDate ?? ""
+            self.location = profile.preferredRegion
+            self.language = "ko"
+            self.purpose = "govt-support"
+        }
+    }
+
+    /// 공고 맞춤 초안 생성 — 서버가 주 2회 한도(business-plan-program)를 집행한다(429 = 한도).
+    public func generateProgramPlan(
+        program: FundingProgram,
+        user: PlanUserInput
+    ) async throws -> BusinessPlanDraft {
+        struct ProgramContext: Encodable {
+            let id: String, name: String
+            let organizer: String?, category: String?, target: String?, benefit: String?
+            let applicationEnd: String?
+        }
+        struct Body: Encodable {
+            let industry: String, subIndustry: String, startupType: String, businessModel: String
+            let capital: Int, targetOpenDate: String
+            let location: String?, language: String, purpose: String
+            let program: ProgramContext
+        }
+        let body = Body(
+            industry: user.industry, subIndustry: user.subIndustry, startupType: user.startupType,
+            businessModel: user.businessModel, capital: user.capital, targetOpenDate: user.targetOpenDate,
+            location: user.location, language: user.language, purpose: user.purpose,
+            program: ProgramContext(
+                id: program.id, name: program.name, organizer: program.organizer,
+                category: program.category, target: program.target, benefit: program.benefit,
+                applicationEnd: program.applicationDeadline
+            )
+        )
+        // 사업계획서는 장문 생성 — 서버 maxDuration 120s 에 맞춰 타임아웃 확장
+        let req = try await authedRequest(path: "/api/ai/business-plan/generate", method: "POST", body: body, timeout: 130)
+        let draft: BusinessPlanDraft = try await perform(req)
+        return draft
+    }
+
     // MARK: - Helpers
 
-    private func authedRequest<Body: Encodable>(path: String, method: String, body: Body) async throws -> URLRequest {
+    private func authedRequest<Body: Encodable>(path: String, method: String, body: Body, timeout: TimeInterval = 45) async throws -> URLRequest {
         var req = URLRequest(url: baseURL.appendingPathComponent(path))
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        req.timeoutInterval = 45   // AI score 는 OpenAI 30s timeout 포함
+        req.timeoutInterval = timeout   // AI score 45s / 사업계획서 130s
         try await attachAuth(&req)
         let encoder = JSONEncoder()
         encoder.outputFormatting = []

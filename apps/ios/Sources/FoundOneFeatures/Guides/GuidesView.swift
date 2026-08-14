@@ -110,6 +110,8 @@ public struct GuidesView: View {
     @State private var state = FundingPageState()
     @State private var scoreTarget: FundingProgram? = nil
     @State private var applyTarget: FundingProgram? = nil
+    /// 공고 맞춤 사업계획서 시트 (2026-08-14, 주 2회 — 웹 FundingPlanModal 미러)
+    @State private var planTarget: FundingProgram? = nil
     @Environment(\.openURL) private var openURL
 
     public init(store: DashboardStore) {
@@ -161,6 +163,11 @@ public struct GuidesView: View {
         .sheet(item: $applyTarget) { program in
             if let snapshot = state.profileSnapshot {
                 GrantApplySheet(program: program, snapshot: snapshot)
+            }
+        }
+        .sheet(item: $planTarget) { program in
+            if let snapshot = state.profileSnapshot {
+                FundingPlanSheet(program: program, profile: snapshot)
             }
         }
     }
@@ -364,7 +371,8 @@ public struct GuidesView: View {
                     ProgramCard(
                         program: program,
                         onApply: { applyTo(program) },
-                        onScore: { scoreTarget = program }
+                        onScore: { scoreTarget = program },
+                        onPlan: { planTarget = program }
                     )
                 }
             }
@@ -512,6 +520,8 @@ private struct ProgramCard: View {
     let program: FundingProgram
     let onApply: () -> Void
     let onScore: () -> Void
+    /// 공고 맞춤 사업계획서 시트 오픈 (주 2회)
+    let onPlan: () -> Void
 
     @State private var docsExpanded: Bool = false
     @State private var reasonsExpanded: Bool = false
@@ -615,6 +625,21 @@ private struct ProgramCard: View {
                         Image(systemName: "sparkles")
                             .font(.system(size: 10, weight: .heavy))
                         Text("AI 점수")
+                            .font(.system(size: 12, weight: .heavy))
+                    }
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(minHeight: BUSpacing.minTapTarget)
+                    .background(BUColor.midnight.opacity(0.10), in: Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onPlan) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 10, weight: .heavy))
+                        Text("맞춤 계획서")
                             .font(.system(size: 12, weight: .heavy))
                     }
                     .foregroundStyle(BUColor.midnight)
