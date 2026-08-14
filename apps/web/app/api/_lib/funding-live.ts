@@ -22,6 +22,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   decodeHtmlEntities,
   fetchKStartupPrograms,
+  mapKstartupRawItems,
   normalizeLiveProgram,
   mergeFundingPrograms,
   startupPrograms,
@@ -140,6 +141,22 @@ export async function rebuildAndStoreFundingSnapshot(): Promise<{ count: number;
     // 0건이면 사유를 응답에 실어 크론 로그만으로 진단 가능하게 (2026-08-04 실사고 재발 방지)
     ...(live.length === 0 ? { error: lastFetchFailReason ?? "페치 성공했으나 모집중 공고 0건" } : {}),
   };
+}
+
+/**
+ * 릴레이 경로 — 한국 IP 환경(로컬 맥 launchd)이 K-Startup 원본(data 배열)을 받아 POST 로 넘기면,
+ *  서버가 SSOT 매핑·정규화 후 스냅샷 저장. (2026-08-14: data.go.kr 게이트웨이가 클라우드 IP 를
+ *  차단해 Vercel 직접 페치가 400 → 원본 수집만 밖에서, 가공은 여기서.)
+ */
+export async function storeFundingSnapshotFromRawItems(
+  rawItems: unknown[],
+): Promise<{ count: number; stored: boolean }> {
+  const live = mapKstartupRawItems(rawItems)
+    .map((g) => normalizeLiveProgram(g))
+    .filter((p) => p.applicationStatus === "open");
+  const stored = live.length > 0 ? await writeSnapshot(live) : false;
+  memo = null; // 다음 사용자 요청이 새 스냅샷 반영
+  return { count: live.length, stored };
 }
 
 /**

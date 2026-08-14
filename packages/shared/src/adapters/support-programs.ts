@@ -81,6 +81,47 @@ export function decodeHtmlEntities(s: string): string {
     .replace(/&amp;/g, "&"); // 마지막에 처리 — 이중 인코딩(&amp;apos;) 1단계 해제
 }
 
+/**
+ * K-Startup 원본 레코드(data 배열) → GovernmentSupportProgram 매핑.
+ *  fetchKStartupPrograms 내부와 로컬 릴레이 경로(/api/cron/funding-live POST)가 공유하는 SSOT.
+ *  (2026-08-14: data.go.kr 게이트웨이가 클라우드 IP를 차단해, 한국 가정 IP에서 원본을 받아
+ *   서버로 중계하는 경로가 생김 — 매핑·정규화는 반드시 이 함수 하나로.)
+ */
+export function mapKstartupRawItems(rawItems: unknown[]): GovernmentSupportProgram[] {
+  const arr = rawItems as Record<string, unknown>[];
+  const now = new Date().toISOString();
+  const today = now.slice(0, 10).replace(/-/g, "");
+  return arr
+    .filter((it) => it && it.biz_pbanc_nm)
+    .map((it) => {
+      const start = normKstartupDate(it.pbanc_rcpt_bgng_dt);
+      const end = normKstartupDate(it.pbanc_rcpt_end_dt);
+      const rcrt = String(it.Rcrt_prgs_yn ?? it.rcrt_prgs_yn ?? "").toUpperCase();
+      const isOpen = rcrt === "Y" || (end ? end.replace(/-/g, "") >= today : true);
+      return {
+        id: `kstartup-${it.pbanc_sn ?? it.biz_pbanc_nm}`,
+        source: "kstartup" as const,
+        programName: decodeHtmlEntities(String(it.biz_pbanc_nm ?? "")),
+        organizerName: decodeHtmlEntities(String(it.pbanc_ntrp_nm || "창업지원기관")),
+        organizerType: it.sprv_inst ? String(it.sprv_inst) : undefined,
+        supportCategory: decodeHtmlEntities(String(it.supt_biz_clsfc ?? "창업")),
+        applicationStart: start,
+        applicationEnd: end,
+        isOpen,
+        targetDescription: decodeHtmlEntities(String(it.aply_trgt_ctnt || it.aply_trgt || "")) || undefined,
+        benefitDescription: decodeHtmlEntities(String(it.pbanc_ctnt || "")) || undefined,
+        applicationMethod: it.aply_mthd_onli_rcpt_istc ? String(it.aply_mthd_onli_rcpt_istc) : undefined,
+        contactInfo: it.prch_cnpl_no ? String(it.prch_cnpl_no) : undefined,
+        url: String(it.detl_pg_url || it.biz_gdnc_url || "") || undefined,
+        region: it.supt_regin ? String(it.supt_regin) : undefined,
+        targetAge: it.biz_trgt_age ? String(it.biz_trgt_age) : undefined,
+        businessPeriod: it.biz_enyy ? String(it.biz_enyy) : undefined,
+        preferentialNote: it.prfn_matr ? decodeHtmlEntities(String(it.prfn_matr)) : undefined,
+        fetchedAt: now,
+      };
+    });
+}
+
 export async function fetchKStartupPrograms(
   config: SupportProgramsConfig,
   params: SupportProgramsParams = {}
@@ -118,39 +159,8 @@ export async function fetchKStartupPrograms(
       json?.items?.item ??
       json?.response?.body?.items?.item ??
       [];
-    const arr: Record<string, unknown>[] = Array.isArray(rawItems) ? rawItems : [rawItems];
+    const data = mapKstartupRawItems(Array.isArray(rawItems) ? rawItems : [rawItems]);
     const now = new Date().toISOString();
-    const today = now.slice(0, 10).replace(/-/g, "");
-
-    const data: GovernmentSupportProgram[] = arr
-      .filter((it) => it && it.biz_pbanc_nm)
-      .map((it) => {
-        const start = normKstartupDate(it.pbanc_rcpt_bgng_dt);
-        const end = normKstartupDate(it.pbanc_rcpt_end_dt);
-        const rcrt = String(it.Rcrt_prgs_yn ?? it.rcrt_prgs_yn ?? "").toUpperCase();
-        const isOpen = rcrt === "Y" || (end ? end.replace(/-/g, "") >= today : true);
-        return {
-          id: `kstartup-${it.pbanc_sn ?? it.biz_pbanc_nm}`,
-          source: "kstartup" as const,
-          programName: decodeHtmlEntities(String(it.biz_pbanc_nm ?? "")),
-          organizerName: decodeHtmlEntities(String(it.pbanc_ntrp_nm || "창업지원기관")),
-          organizerType: it.sprv_inst ? String(it.sprv_inst) : undefined,
-          supportCategory: decodeHtmlEntities(String(it.supt_biz_clsfc ?? "창업")),
-          applicationStart: start,
-          applicationEnd: end,
-          isOpen,
-          targetDescription: decodeHtmlEntities(String(it.aply_trgt_ctnt || it.aply_trgt || "")) || undefined,
-          benefitDescription: decodeHtmlEntities(String(it.pbanc_ctnt || "")) || undefined,
-          applicationMethod: it.aply_mthd_onli_rcpt_istc ? String(it.aply_mthd_onli_rcpt_istc) : undefined,
-          contactInfo: it.prch_cnpl_no ? String(it.prch_cnpl_no) : undefined,
-          url: String(it.detl_pg_url || it.biz_gdnc_url || "") || undefined,
-          region: it.supt_regin ? String(it.supt_regin) : undefined,
-          targetAge: it.biz_trgt_age ? String(it.biz_trgt_age) : undefined,
-          businessPeriod: it.biz_enyy ? String(it.biz_enyy) : undefined,
-          preferentialNote: it.prfn_matr ? decodeHtmlEntities(String(it.prfn_matr)) : undefined,
-          fetchedAt: now,
-        };
-      });
 
     return {
       data,
