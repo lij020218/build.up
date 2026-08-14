@@ -103,7 +103,13 @@ export async function fetchKStartupPrograms(
 
   try {
     const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`K-Startup API responded with ${response.status}`);
+    if (!response.ok) {
+      // 상태코드만으로는 원인 진단 불가(2026-08-14 icn1 400 사고) — 응답 본문 앞부분을 에러에 싣는다.
+      const errBody = await response.text().catch(() => "");
+      throw new Error(
+        `K-Startup API responded with ${response.status}${errBody ? ` — ${errBody.slice(0, 300).replace(/\s+/g, " ")}` : ""}`,
+      );
+    }
 
     const json = await response.json();
     // 신규 포맷 { data:[...] } 우선, 구포맷(items.item) 폴백.
