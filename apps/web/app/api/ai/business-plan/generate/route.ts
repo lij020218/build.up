@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { checkSimpleRateLimit, checkDailyRateLimit, checkWeeklyRateLimit } from "../../../_lib/rate-limit";
 import { buildPlanFacts, PLAN_HONESTY_RULES } from "../../../_lib/business-plan-facts";
 
 // 사업계획서 생성은 긴 AI 응답이 필요하므로 타임아웃 확장
@@ -45,6 +45,22 @@ type BusinessPlanInput = {
   northStarMetricName?: string;
   interviewInsights?: string;
   targetCustomer?: string;
+  /**
+   * 공고 맞춤 모드 (펀딩 페이지, 2026-08-14) — K-Startup 라이브 공고의 특성을 주입해
+   * 해당 공고 제출용으로 강조점을 조정한다. 있으면 주 2회 한도(business-plan-program) 적용.
+   */
+  program?: {
+    id: string;
+    name: string;
+    organizer?: string;
+    category?: string;
+    target?: string;
+    benefit?: string;
+    region?: string;
+    targetAge?: string;
+    businessPeriod?: string;
+    applicationEnd?: string;
+  };
 };
 
 type BusinessPlanSection = {
@@ -72,15 +88,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
   }
 
-  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "business-plan-generate",
-    limit: 3,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
+  // body 를 먼저 파싱해야 공고 맞춤 모드 여부로 한도를 분기할 수 있다.
+  let earlyInput: BusinessPlanInput;
+  try {
+    earlyInput = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  if (earlyInput.program) {
+    // 공고 맞춤 모드 — 주 2회 (2026-08-14 사장님 지시: 무료 개방이므로 주간 캡으로 비용 통제)
+    const weekly = await checkWeeklyRateLimit({
+      userId: auth.userId,
+      feature: "business-plan-program",
+      limit: 2,
+      message: "공고 맞춤 사업계획서는 주 2회까지예요. 다음 주 월요일에 초기화됩니다.",
+    });
+    if (!weekly.ok) {
+      return NextResponse.json({ error: weekly.error, remaining: 0, limit: weekly.limit, resetAt: weekly.resetAt }, { status: weekly.status });
+    }
+  } else {
+    // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+    const dailyLimit = await checkDailyRateLimit({
+      userId: auth.userId,
+      feature: "business-plan-generate",
+      limit: 3,
+      message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+    });
+    if (!dailyLimit.ok) {
+      return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
+    }
   }
 
   const apiKey = getAnthropicApiKey();
@@ -90,12 +127,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
   }
 
-  let input: BusinessPlanInput;
-  try {
-    input = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
+  const input: BusinessPlanInput = earlyInput;
 
   const ko = input.language === "ko";
   const isStartup = input.industry === "startup-tech";
@@ -151,10 +183,33 @@ PSST 프레임워크 (창업진흥원 평가 기준):
 각 섹션의 content는 3~5문단으로, 구체적인 숫자와 데이터를 포함하여 신뢰감 있게 작성하세요. 추상적 표현 대신 실제 데이터를 인용하세요.
 자금 용도는 "운전자금"처럼 뭉뚱그리지 말고 항목별 구체 금액으로 작성하세요.`;
 
+  // ── 공고 맞춤 블록 (2026-08-14) — 공고의 대상·내용을 평가 포인트로 삼아 강조점을 조정.
+  //   공고 원문이 길 수 있어 항목별 600자 컷 (입력 상한 6,500 토큰 예산 내).
+  const clip = (s: string | undefined, n = 600) => (s ? (s.length > n ? `${s.slice(0, n)}…` : s) : null);
+  const p = input.program;
+  const programBlock = p
+    ? [
+        `\n\n[지원 공고 맞춤 지침 — 이 사업계획서는 아래 공고 제출용입니다]`,
+        `- 공고명: ${clip(p.name, 200)}`,
+        p.organizer ? `- 주관: ${clip(p.organizer, 100)}` : null,
+        p.category ? `- 지원 분야: ${clip(p.category, 100)}` : null,
+        p.region ? `- 지역: ${clip(p.region, 100)}` : null,
+        p.targetAge ? `- 대상 연령: ${clip(p.targetAge, 100)}` : null,
+        p.businessPeriod ? `- 대상 업력: ${clip(p.businessPeriod, 100)}` : null,
+        p.target ? `- 지원 대상: ${clip(p.target)}` : null,
+        p.benefit ? `- 지원 내용: ${clip(p.benefit)}` : null,
+        `맞춤 규칙:`,
+        `1. 공고의 지원 대상 조건(연령·업력·지역·분야)과 신청자의 실제 조건이 맞닿는 지점을 개요/팀 섹션에서 명시적으로 연결하세요.`,
+        `2. 공고의 지원 내용(자금 용도·프로그램 산출물)에 맞춰 자금 계획·실행 계획의 지면을 늘리고, 공고와 무관한 내용은 줄이세요.`,
+        `3. 공고가 특정 분야(수출, 기술, 청년, 재도전 등)를 명시하면 해당 관점의 목표와 지표를 각 섹션에 반영하세요.`,
+        `4. 공고 조건 충족 여부가 데이터로 확인되지 않으면 단정하지 말고 [확인 필요] 로 남기세요.`,
+      ].filter(Boolean).join("\n")
+    : "";
+
   // 정직성 규칙(PLAN_HONESTY_RULES)은 두 프롬프트 공통 — 없는 수치를 지어내는 대신
   //   [확인 필요: …] 플레이스홀더로 남기게 한다. 가짜 출처보다 빈 칸이 신뢰도에 낫다.
   const systemPrompt = ko
-    ? `${isStartup ? startupSystemPrompt : smbSystemPrompt}\n\n${PLAN_HONESTY_RULES}`
+    ? `${isStartup ? startupSystemPrompt : smbSystemPrompt}${programBlock}\n\n${PLAN_HONESTY_RULES}`
     : `You are a startup business consultant. Generate a structured business plan based on the user's data. Respond ONLY in the JSON format specified.
 Never invent statistics. If a figure is not provided in the [검증된 데이터] block, leave a bracketed placeholder such as "[TODO: verify via Statistics Korea]" instead of fabricating a number or citing an institution without a figure.`;
 

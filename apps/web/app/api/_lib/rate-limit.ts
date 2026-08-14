@@ -442,6 +442,38 @@ async function checkDailyCallCount(params: {
   });
 }
 
+/** KST 기준 주간(월요일 시작) 키 — 주간 한도 카운터용. */
+export function kstWeekKey(): string {
+  const kst = new Date(Date.now() + 9 * 3_600_000);
+  const day = (kst.getUTCDay() + 6) % 7; // 월=0
+  const monday = new Date(kst.getTime() - day * 86_400_000);
+  return `${monday.getUTCFullYear()}-${String(monday.getUTCMonth() + 1).padStart(2, "0")}-${String(monday.getUTCDate()).padStart(2, "0")}`;
+}
+
+/**
+ * 주간 사용 한도 + 월간 AI 예산 선차감. (2026-08-14 공고 맞춤 사업계획서 — 주 2회 지시)
+ *  일일 쿼터와 같은 구조: 카운터 통과 시 원장 기록 → 월간 예산 차감.
+ *  카운터 키에 KST 주(월요일 시작)를 박아 슬라이딩이 아닌 "달력 주" 기준으로 초기화된다.
+ */
+export async function checkWeeklyRateLimit(params: {
+  userId: string;
+  feature: string;
+  limit: number;
+  message?: string;
+}): Promise<RateLimitResult> {
+  const week = kstWeekKey();
+  const res = await checkSimpleRateLimit({
+    key: `weekly:${params.feature}:${week}:${params.userId}`,
+    limit: params.limit,
+    windowMs: 7 * 24 * 60 * 60 * 1000,
+    message: params.message ?? "이번 주 사용 한도를 모두 썼습니다. 다음 주 월요일에 초기화됩니다.",
+  });
+  if (!res.ok) return res;
+  await recordDailyUsageLedger(params.userId, params.feature);
+  const monthly = await consumeMonthlyAiBudget(params.userId, params.feature);
+  return monthly ?? res;
+}
+
 export async function peekRateLimit(params: {
   key: string;
   limit: number;

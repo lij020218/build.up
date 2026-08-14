@@ -16,9 +16,10 @@ import {
   type ApplicationStatus,
   type MatchCriteria,
 } from "@foundone/shared";
-import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb, Search } from "lucide-react";
+import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb, Search, FileText } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";
+import { FundingPlanModal, type PlanUserPayload } from "./FundingPlanModal";
 
 /**
  * GuidesView — 펀딩 페이지 (Midnight Blue 디자인 철학)
@@ -296,6 +297,19 @@ export function GuidesView() {
       employeesCount: employees.length,
     };
   }, [dailyEntries, storeName, industryCategoryId, businessLaunched, businessLaunchedDate, weeklySalesChangePct, employees.length]);
+
+  // ─── 공고 맞춤 사업계획서 모달 (2026-08-14, 주 2회) ───
+  const [planModalProgram, setPlanModalProgram] = useState<StartupProgram | null>(null);
+  const planUserPayload = useMemo<PlanUserPayload>(() => ({
+    industry: industryCategoryId || "",
+    subIndustry: selectedIndustryId || selectedSpecialtyId || "",
+    startupType: startupType || "independent",
+    businessModel: (d as { businessModel?: string }).businessModel ?? "",
+    capital: selectedBudget ?? 0,
+    targetOpenDate: businessLaunchedDate ?? "",
+    location: preferredRegionInput || undefined,
+    language: ko ? "ko" : "en",
+  }), [industryCategoryId, selectedIndustryId, selectedSpecialtyId, startupType, d, selectedBudget, businessLaunchedDate, preferredRegionInput, ko]);
 
   // ─── AI 점수 보기 모달 상태 ───
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
@@ -707,6 +721,7 @@ export function GuidesView() {
                 program={program}
                 ko={ko}
                 onScoreClick={() => handleScoreClick(program)}
+                onPlanClick={() => setPlanModalProgram(program)}
                 onApplyClick={() => setApplyModalProgram(program)}
                 applyState={{ windowState: grantWindowState(), applied: grantApplied === true }}
                 rank={recommendMode ? idx + 1 : undefined}
@@ -733,6 +748,14 @@ export function GuidesView() {
         error={scoreError}
         result={scoreResult}
         ko={ko}
+      />
+
+      {/* 공고 맞춤 사업계획서 모달 */}
+      <FundingPlanModal
+        program={planModalProgram}
+        ko={ko}
+        userPayload={planUserPayload}
+        onClose={() => setPlanModalProgram(null)}
       />
 
       {/* 창업지원금 신청 모달 */}
@@ -822,6 +845,7 @@ function ProgramCard({
   program,
   ko,
   onScoreClick,
+  onPlanClick,
   onApplyClick,
   applyState,
   rank,
@@ -836,6 +860,8 @@ function ProgramCard({
   };
   ko: boolean;
   onScoreClick: () => void;
+  /** 공고 맞춤 사업계획서 모달 오픈 (자금지원형만, 주 2회) */
+  onPlanClick?: () => void;
   /** 앱 내부 신청(internalApply)형 카드의 "신청하기" 클릭 — 신청 모달 오픈 */
   onApplyClick?: () => void;
   /** 앱 내부 신청형 카드의 접수 기간/신청완료 상태 */
@@ -1026,6 +1052,17 @@ function ProgramCard({
           >
             <Wand2 size={13} strokeWidth={1.6} />
             {ko ? "AI 점수 보기" : "AI score"}
+          </button>
+        )}
+        {fundable && onPlanClick && (
+          <button
+            type="button"
+            onClick={onPlanClick}
+            style={{ ...ctaSecondaryStyle, flexShrink: 0 }}
+            aria-label={ko ? "공고 맞춤 사업계획서" : "Tailored business plan"}
+          >
+            <FileText size={13} strokeWidth={1.6} />
+            {ko ? "맞춤 계획서" : "Plan draft"}
           </button>
         )}
         {program.internalApply ? (() => {
