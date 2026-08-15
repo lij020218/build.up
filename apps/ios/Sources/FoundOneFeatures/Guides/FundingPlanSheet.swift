@@ -36,6 +36,23 @@ struct FundingPlanSheet: View {
 
     private static let notice = "생성 결과는 초안입니다. 반드시 공고에 첨부된 공식 양식(HWP)에 옮겨 제출하세요 — 임의 양식 제출 시 평가에서 제외될 수 있어요."
 
+    // 로딩 연출 (2026-08-14, 웹 FundingPlanModal 미러) — 최대 2분 대기를 "일하는 과정"으로
+    private static let loadingStages = [
+        "공고의 지원 대상과 평가 포인트를 분석하고 있어요",
+        "사장님의 업종·자본·입지 데이터를 연결하고 있어요",
+        "문제 인식과 솔루션 섹션을 쓰고 있어요",
+        "시장 분석과 성장 전략을 정리하고 있어요",
+        "재무 계획과 자금 집행 계획을 계산하고 있어요",
+        "심사위원 관점에서 문장을 다듬고 있어요",
+    ]
+    private static let loadingTips = [
+        "생성이 끝나면 '채우면 완성' 체크리스트가 함께 나와요",
+        "결과는 공고의 공식 양식(HWP)에 옮겨 제출하는 초안이에요",
+        "대표자 경력·고객 반응을 입력할수록 초안이 강해져요",
+        "저장된 초안은 다시 열어봐도 주 2회 한도를 쓰지 않아요",
+    ]
+    @State private var loadingElapsed: Int = 0
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -161,17 +178,62 @@ struct FundingPlanSheet: View {
     // MARK: - Loading / Error
 
     private var loadingView: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-            Text("공고 특성에 맞춰 작성하고 있어요…")
-                .font(.system(size: 12, weight: .medium))
+        let stage = min(loadingElapsed / 10, Self.loadingStages.count - 1)
+        let tip = (loadingElapsed / 8) % Self.loadingTips.count
+        return VStack(alignment: .leading, spacing: 14) {
+            // 단계 체크리스트 — 지난 단계 ✓, 현재 스피너, 이후 흐림
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(Self.loadingStages.enumerated()), id: \.offset) { i, text in
+                    HStack(spacing: 10) {
+                        if i < stage {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(BUColor.midnight)
+                        } else if i == stage {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: "circle")
+                                .font(.system(size: 13))
+                                .foregroundStyle(BUColor.inkMuted.opacity(0.4))
+                        }
+                        Text(text)
+                            .font(.system(size: 12.5, weight: i == stage ? .heavy : .medium))
+                            .foregroundStyle(i == stage ? BUColor.midnight : BUColor.ink)
+                            .opacity(i > stage ? 0.4 : 1)
+                    }
+                }
+            }
+            .animation(.easeInOut(duration: 0.35), value: stage)
+
+            // 팁 로테이션
+            Text("💡 \(Self.loadingTips[tip])")
+                .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted)
-            Text("최대 2분 정도 걸릴 수 있어요. 화면을 닫지 말아 주세요.")
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+                .padding(10)
+                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .id(tip)
+                .transition(.opacity)
+                .animation(.easeIn(duration: 0.4), value: tip)
+
+            Text("보통 1~2분 걸려요 · 화면을 닫지 말아 주세요")
                 .font(.system(size: 10.5, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted.opacity(0.65))
+                .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 50)
+        .padding(BUSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(cardSurface)
+        .task(id: phase) {
+            guard phase == .loading else { return }
+            loadingElapsed = 0
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if phase != .loading { break }
+                loadingElapsed += 1
+            }
+        }
     }
 
     private var errorView: some View {

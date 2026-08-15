@@ -43,6 +43,24 @@ export type PlanUserPayload = {
   language: "ko" | "en";
 };
 
+// ── 로딩 연출 (2026-08-14) — 최대 2분 대기를 "일하는 과정"으로 보여줘 이탈감 제거 ──
+const LOADING_STAGES = [
+  "공고의 지원 대상과 평가 포인트를 분석하고 있어요",
+  "사장님의 업종·자본·입지 데이터를 연결하고 있어요",
+  "문제 인식과 솔루션 섹션을 쓰고 있어요",
+  "시장 분석과 성장 전략을 정리하고 있어요",
+  "재무 계획과 자금 집행 계획을 계산하고 있어요",
+  "심사위원 관점에서 문장을 다듬고 있어요",
+] as const;
+const LOADING_TIPS = [
+  "생성이 끝나면 '채우면 완성' 체크리스트가 함께 나와요",
+  "결과는 공고의 공식 양식(HWP)에 옮겨 제출하는 초안이에요",
+  "대표자 경력·고객 반응을 입력할수록 초안이 강해져요",
+  "저장된 초안은 다시 열어봐도 주 2회 한도를 쓰지 않아요",
+] as const;
+const STAGE_INTERVAL_MS = 10_000; // 6단계 × 10초 ≈ 통상 생성 시간, 마지막 단계에서 유지
+const TIP_INTERVAL_MS = 8_000;
+
 const cacheKey = (uid: string, programId: string) => `fo:funding-plan:${uid}:${programId}`;
 
 function readCache(uid: string | null, programId: string): PlanResult | null {
@@ -86,6 +104,26 @@ export function FundingPlanModal({
   const [founderBackground, setFounderBackground] = useState("");
   const [differentiation, setDifferentiation] = useState("");
   const [customerEvidence, setCustomerEvidence] = useState("");
+  // 로딩 연출 상태
+  const [loadingStage, setLoadingStage] = useState(0);
+  const [tipIdx, setTipIdx] = useState(0);
+
+  // 로딩 중 단계·팁 로테이션 (마지막 단계에서 유지 — 거짓 완료 연출 금지)
+  useEffect(() => {
+    if (view !== "loading") return;
+    setLoadingStage(0);
+    setTipIdx(0);
+    const stageTimer = setInterval(() => {
+      setLoadingStage((s) => Math.min(s + 1, LOADING_STAGES.length - 1));
+    }, STAGE_INTERVAL_MS);
+    const tipTimer = setInterval(() => {
+      setTipIdx((t) => (t + 1) % LOADING_TIPS.length);
+    }, TIP_INTERVAL_MS);
+    return () => {
+      clearInterval(stageTimer);
+      clearInterval(tipTimer);
+    };
+  }, [view]);
   const [result, setResult] = useState<PlanResult | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -318,17 +356,54 @@ export function FundingPlanModal({
           </div>
         )}
 
-        {/* 로딩 */}
+        {/* 로딩 — 문서에 글이 써지는 연출 + 단계 체크리스트 + 팁 로테이션 (2026-08-14) */}
         {view === "loading" && (
-          <div style={{ padding: "36px 0", textAlign: "center" }}>
-            <Loader2 size={26} color={MIDNIGHT} style={{ animation: "spin 1s linear infinite" }} />
-            <div style={{ fontSize: 13.5, color: TEXT_PRIMARY, fontWeight: 600, marginTop: 12 }}>
-              {ko ? "공고 특성에 맞춰 작성하고 있어요…" : "Drafting for this program…"}
+          <div style={{ padding: "20px 4px 8px" }}>
+            {/* 써지는 문서 애니메이션 */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+              <div style={{ width: 92, height: 112, background: "white", border: `1.5px solid rgba(25,25,112,0.18)`, borderRadius: 10, padding: "14px 12px", boxShadow: "0 8px 24px rgba(25,25,112,0.10)", position: "relative", overflow: "hidden" }}>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div key={i} style={{ height: 5, borderRadius: 3, background: i === 0 ? MIDNIGHT : "rgba(25,25,112,0.22)", marginBottom: 9, width: 0, animation: `fo-write 2.4s ${i * 0.45}s ease-out infinite` }} />
+                ))}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.85) 50%, transparent 60%)", animation: "fo-sheen 2.4s linear infinite" }} />
+              </div>
             </div>
-            <div style={{ fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>
-              {ko ? "최대 2분 정도 걸릴 수 있어요. 창을 닫지 말아 주세요." : "This can take up to 2 minutes."}
+
+            {/* 단계 체크리스트 */}
+            <div style={{ maxWidth: 420, margin: "0 auto" }}>
+              {LOADING_STAGES.map((stage, i) => {
+                const done = i < loadingStage;
+                const current = i === loadingStage;
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", opacity: done || current ? 1 : 0.35, transition: "opacity .4s" }}>
+                    {done ? (
+                      <Check size={14} color={MIDNIGHT} strokeWidth={2.6} style={{ flexShrink: 0 }} />
+                    ) : current ? (
+                      <Loader2 size={14} color={MIDNIGHT} style={{ flexShrink: 0, animation: "spin 1s linear infinite" }} />
+                    ) : (
+                      <span style={{ width: 14, height: 14, flexShrink: 0, display: "inline-block", borderRadius: "50%", border: "1.5px solid rgba(15,23,42,0.2)" }} />
+                    )}
+                    <span style={{ fontSize: 12.5, fontWeight: current ? 700 : 500, color: current ? MIDNIGHT : TEXT_PRIMARY, lineHeight: 1.5 }}>
+                      {stage}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+            {/* 팁 로테이션 */}
+            <div key={tipIdx} style={{ maxWidth: 420, margin: "16px auto 0", background: "rgba(25,25,112,0.05)", borderRadius: 10, padding: "9px 12px", fontSize: 11.5, color: TEXT_MUTED, lineHeight: 1.55, textAlign: "center", animation: "fo-fadein .5s ease" }}>
+              💡 {LOADING_TIPS[tipIdx]}
+            </div>
+            <div style={{ fontSize: 11, color: TEXT_MUTED, textAlign: "center", marginTop: 10 }}>
+              {ko ? "보통 1~2분 걸려요 · 창을 닫지 말아 주세요" : "Usually takes 1–2 minutes."}
+            </div>
+            <style>{`
+              @keyframes spin{to{transform:rotate(360deg)}}
+              @keyframes fo-write{0%{width:0}55%{width:100%}100%{width:100%}}
+              @keyframes fo-sheen{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+              @keyframes fo-fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+            `}</style>
           </div>
         )}
 
