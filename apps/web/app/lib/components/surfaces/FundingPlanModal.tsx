@@ -23,7 +23,13 @@ const TEXT_PRIMARY = "#0f172a";
 const TEXT_MUTED = "rgba(15,23,42,0.55)";
 
 export type PlanSection = { title: string; content: string };
-export type PlanResult = { summary: string; sections: PlanSection[]; generatedAt: string };
+export type PlanResult = {
+  summary: string;
+  sections: PlanSection[];
+  /** 사용자가 채워야 완성되는 항목 (Claude 경로, 2026-08-14) — "빈칸 = 할 일" 체크리스트 */
+  missingInfo?: string[];
+  generatedAt: string;
+};
 
 /** 사용자 데이터(공고 제외) — GuidesView 가 store 에서 조립해 내려준다. */
 export type PlanUserPayload = {
@@ -76,6 +82,10 @@ export function FundingPlanModal({
 
   const [uid, setUid] = useState<string | null>(null);
   const [view, setView] = useState<"confirm" | "loading" | "result" | "error">("confirm");
+  // 미니 위저드 (2026-08-14) — 심사위원이 보는 "그 팀만의 내용" 3문항 (선택)
+  const [founderBackground, setFounderBackground] = useState("");
+  const [differentiation, setDifferentiation] = useState("");
+  const [customerEvidence, setCustomerEvidence] = useState("");
   const [result, setResult] = useState<PlanResult | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +149,9 @@ export function FundingPlanModal({
         body: JSON.stringify({
           ...userPayload,
           purpose: "govt-support",
+          founderBackground: founderBackground.trim() || undefined,
+          differentiation: differentiation.trim() || undefined,
+          customerEvidence: customerEvidence.trim() || undefined,
           program: {
             id: program.id,
             name: program.name[lang],
@@ -164,6 +177,7 @@ export function FundingPlanModal({
       const next: PlanResult = {
         summary: String(json.summary ?? ""),
         sections: (json.sections ?? []) as PlanSection[],
+        missingInfo: Array.isArray(json.missingInfo) ? (json.missingInfo as string[]) : undefined,
         generatedAt: new Date().toISOString(),
       };
       setResult(next);
@@ -174,7 +188,7 @@ export function FundingPlanModal({
       setError(e instanceof Error ? e.message : String(e));
       setView("error");
     }
-  }, [program, userPayload, lang, ko, uid]);
+  }, [program, userPayload, lang, ko, uid, founderBackground, differentiation, customerEvidence]);
 
   const copyAll = useCallback(async () => {
     if (!result || !program) return;
@@ -257,6 +271,32 @@ export function FundingPlanModal({
             <div style={{ fontSize: 12.5, color: MIDNIGHT, fontWeight: 600, background: "rgba(25,25,112,0.06)", borderRadius: 10, padding: "10px 12px", lineHeight: 1.6 }}>
               {ko ? "무료 · 주 2회 한도 — 이번 생성으로 1회를 사용해요. 생성된 초안은 저장되어 다시 볼 때는 한도를 쓰지 않아요." : "Free · 2 per week. Saved drafts can be reopened without using the quota."}
             </div>
+
+            {/* 미니 위저드 — 심사위원이 보는 "그 팀만의 내용" (선택 입력, 채울수록 초안이 강해짐) */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: TEXT_PRIMARY, marginBottom: 8 }}>
+                {ko ? "3가지만 알려주시면 초안이 훨씬 강해져요 (선택)" : "Optional: 3 quick inputs make the draft stronger"}
+              </div>
+              {[
+                { v: founderBackground, set: setFounderBackground, ph: ko ? "대표자 경력·전문성 — 예: 프랜차이즈 카페 매니저 5년, 바리스타 자격" : "Founder background" },
+                { v: differentiation, set: setDifferentiation, ph: ko ? "우리 가게만의 차별점 — 예: 직접 로스팅, 지역 유일 스페셜티 원두" : "Key differentiation" },
+                { v: customerEvidence, set: setCustomerEvidence, ph: ko ? "고객 반응·검증 — 예: 팝업 시식회 200명, 사전예약 50건, 인스타 팔로워 3천" : "Customer evidence" },
+              ].map((f, i) => (
+                <textarea
+                  key={i}
+                  value={f.v}
+                  onChange={(e) => f.set(e.target.value)}
+                  placeholder={f.ph}
+                  rows={2}
+                  maxLength={500}
+                  style={{
+                    width: "100%", marginBottom: 8, padding: "9px 11px", fontSize: 12.5, lineHeight: 1.5,
+                    borderRadius: 10, border: "1px solid rgba(15,23,42,0.14)", resize: "vertical",
+                    fontFamily: "inherit", color: TEXT_PRIMARY, background: "white", boxSizing: "border-box",
+                  }}
+                />
+              ))}
+            </div>
             <div style={{ fontSize: 12, color: TEXT_MUTED, lineHeight: 1.6, marginTop: 10 }}>{notice}</div>
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button
@@ -326,6 +366,20 @@ export function FundingPlanModal({
             {result.summary && (
               <div style={{ fontSize: 13.5, fontWeight: 700, color: MIDNIGHT, lineHeight: 1.6, marginBottom: 14 }}>
                 {result.summary}
+              </div>
+            )}
+            {/* 채울 항목 체크리스트 — 빈칸을 "할 일"로 (2026-08-14) */}
+            {result.missingInfo && result.missingInfo.length > 0 && (
+              <div style={{ background: "rgba(25,25,112,0.05)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: MIDNIGHT, marginBottom: 8 }}>
+                  {ko ? `✍️ 이 ${result.missingInfo.length}가지만 채우면 완성돼요` : "Fill these to complete the plan"}
+                </div>
+                {result.missingInfo.map((item, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, fontSize: 12.5, color: TEXT_PRIMARY, lineHeight: 1.6, marginBottom: 4 }}>
+                    <span style={{ color: MIDNIGHT, flexShrink: 0 }}>☐</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
               </div>
             )}
             {result.sections.map((s) => (

@@ -519,10 +519,13 @@ public actor FundingRepository {
     public struct BusinessPlanDraft: Sendable, Decodable {
         public let summary: String?
         public let sections: [BusinessPlanSection]
+        /// 사용자가 채워야 완성되는 항목 (Claude 경로, 2026-08-14) — "빈칸 = 할 일" 체크리스트
+        public let missingInfo: [String]?
 
-        public init(summary: String?, sections: [BusinessPlanSection]) {
+        public init(summary: String?, sections: [BusinessPlanSection], missingInfo: [String]? = nil) {
             self.summary = summary
             self.sections = sections
+            self.missingInfo = missingInfo
         }
     }
 
@@ -537,6 +540,10 @@ public actor FundingRepository {
         public let location: String?
         public let language: String
         public let purpose: String
+        // 미니 위저드 (2026-08-14) — 웹 FundingPlanModal 과 동일 3문항 (선택)
+        public var founderBackground: String?
+        public var differentiation: String?
+        public var customerEvidence: String?
 
         public init(profile: FundingProfileSnapshot) {
             self.industry = profile.industryCategoryId ?? ""
@@ -565,20 +572,23 @@ public actor FundingRepository {
             let industry: String, subIndustry: String, startupType: String, businessModel: String
             let capital: Int, targetOpenDate: String
             let location: String?, language: String, purpose: String
+            let founderBackground: String?, differentiation: String?, customerEvidence: String?
             let program: ProgramContext
         }
         let body = Body(
             industry: user.industry, subIndustry: user.subIndustry, startupType: user.startupType,
             businessModel: user.businessModel, capital: user.capital, targetOpenDate: user.targetOpenDate,
             location: user.location, language: user.language, purpose: user.purpose,
+            founderBackground: user.founderBackground, differentiation: user.differentiation,
+            customerEvidence: user.customerEvidence,
             program: ProgramContext(
                 id: program.id, name: program.name, organizer: program.organizer,
                 category: program.category, target: program.target, benefit: program.benefit,
                 applicationEnd: program.applicationDeadline
             )
         )
-        // 사업계획서는 장문 생성 — 서버 maxDuration 120s 에 맞춰 타임아웃 확장
-        let req = try await authedRequest(path: "/api/ai/business-plan/generate", method: "POST", body: body, timeout: 130)
+        // 사업계획서는 장문 생성 — 서버 maxDuration 240s(Claude+폴백 순차)에 맞춰 타임아웃 확장
+        let req = try await authedRequest(path: "/api/ai/business-plan/generate", method: "POST", body: body, timeout: 250)
         let draft: BusinessPlanDraft = try await perform(req)
         return draft
     }

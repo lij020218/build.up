@@ -1,11 +1,13 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
-import { getAnthropicApiKey } from "../../../_lib/env";
+import { getAnthropicApiKey, getRealAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit, checkDailyRateLimit, checkWeeklyRateLimit } from "../../../_lib/rate-limit";
 import { buildPlanFacts, PLAN_HONESTY_RULES } from "../../../_lib/business-plan-facts";
 
 // 사업계획서 생성은 긴 AI 응답이 필요하므로 타임아웃 확장
-export const maxDuration = 120; // 120초 (Vercel Pro: 최대 300초)
+// Claude(최대 110s) 실패 시 OpenAI 폴백(90s)까지 순차 실행될 수 있어 합산 여유 확보 (2026-08-14)
+export const maxDuration = 240; // Vercel Pro: 최대 300초
 
 /**
  * POST /api/ai/business-plan/generate
@@ -45,6 +47,13 @@ type BusinessPlanInput = {
   northStarMetricName?: string;
   interviewInsights?: string;
   targetCustomer?: string;
+  // ── 미니 위저드 입력 (2026-08-14 하네스 고도화) — 심사위원이 보는 "그 팀만의 내용" 보강 ──
+  /** 대표자 경력·전문성 (선택) */
+  founderBackground?: string;
+  /** 우리 가게/제품만의 차별점 (선택) */
+  differentiation?: string;
+  /** 고객 반응·검증 근거 (선택) — 시식회, 사전 주문, 인터뷰 등 */
+  customerEvidence?: string;
   /**
    * 공고 맞춤 모드 (펀딩 페이지, 2026-08-14) — K-Startup 라이브 공고의 특성을 주입해
    * 해당 공고 제출용으로 강조점을 조정한다. 있으면 주 2회 한도(business-plan-program) 적용.
@@ -71,7 +80,74 @@ type BusinessPlanSection = {
 type BusinessPlanResponse = {
   sections: BusinessPlanSection[];
   summary: string;
+  /** 사용자가 채워야 완성되는 항목 체크리스트 (Claude 경로만 채움 — 빈칸을 '할 일'로 전환) */
+  missingInfo?: string[];
 };
+
+// ── Claude Sonnet 5 구조화 출력 스키마 (2026-08-14) — 파싱 실패 자체를 제거 ──
+const CLAUDE_MODEL = "claude-sonnet-5";
+const PLAN_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string", description: "사업계획서 한 줄 요약 (엘리베이터 피치)" },
+    sections: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          content: { type: "string" },
+        },
+        required: ["title", "content"],
+        additionalProperties: false,
+      },
+    },
+    missingInfo: {
+      type: "array",
+      items: { type: "string" },
+      description: "사용자가 제공하지 않아 [확인 필요]로 남긴 핵심 항목 — '무엇을 왜 채워야 하는지' 한 줄씩, 3~7개",
+    },
+  },
+  required: ["summary", "sections", "missingInfo"],
+  additionalProperties: false,
+} as const;
+
+/**
+ * Claude Sonnet 5 경로 — 구조화 출력 + 시스템 프롬프트 캐싱.
+ *  · system 은 세그먼트(스타트업/소상공인)별로 안정적 → cache_control 로 5분 캐시(입력비 ~90% 절감).
+ *    공고 컨텍스트·유저 데이터는 user 메시지에 실어 캐시 프리픽스를 깨지 않는다.
+ *  · adaptive thinking 은 Sonnet 5 기본값(생략 = on). max_tokens 는 사고+본문 합산 상한.
+ *  · SDK 0.39 타이핑에 output_config 가 없어 cast — 서버는 GA 파라미터로 정상 처리.
+ */
+async function generateWithClaude(
+  apiKey: string,
+  systemPrompt: string,
+  userContent: string,
+): Promise<BusinessPlanResponse> {
+  const client = new Anthropic({ apiKey, timeout: 110_000 });
+  const res = (await client.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 16000,
+    system: [
+      { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+    ] as never,
+    messages: [{ role: "user", content: userContent }],
+    ...({ output_config: { format: { type: "json_schema", schema: PLAN_OUTPUT_SCHEMA } } } as object),
+  })) as unknown as {
+    stop_reason?: string;
+    content?: Array<{ type: string; text?: string }>;
+  };
+
+  if (res.stop_reason === "refusal") {
+    throw new Error("claude_refusal");
+  }
+  const text = res.content?.find((b) => b.type === "text")?.text ?? "";
+  const parsed = JSON.parse(text) as BusinessPlanResponse;
+  if (!Array.isArray(parsed.sections) || parsed.sections.length === 0) {
+    throw new Error("claude_empty_sections");
+  }
+  return parsed;
+}
 
 export async function POST(req: NextRequest) {
   const auth = await requireApiUser(req);
@@ -158,7 +234,7 @@ PSST 프레임워크 (창업진흥원 평가 기준):
 }
 
 핵심 규칙:
-- 각 섹션 3~5문단. 구체적 숫자와 데이터 필수. 추상적 표현 금지.
+- 각 섹션 4~7문단. 구체적 숫자와 데이터 필수. 추상적 표현 금지. 전체는 공식 양식에 옮겼을 때 A4 7~10장이 되는 분량을 목표로 충실하게 작성.
 - 사용자가 제공한 문제 정의, 인터뷰 인사이트, 팀 구성 데이터를 반드시 반영하세요.
 - 평가위원이 "근거 있는 계획"이라고 느끼도록 업종 데이터와 벤치마크를 인용하세요.
 - TAM/SAM/SOM은 반드시 출처(통계청, 업종 보고서 등)를 명시하세요.`;
@@ -180,7 +256,7 @@ PSST 프레임워크 (창업진흥원 평가 기준):
   ]
 }
 
-각 섹션의 content는 3~5문단으로, 구체적인 숫자와 데이터를 포함하여 신뢰감 있게 작성하세요. 추상적 표현 대신 실제 데이터를 인용하세요.
+각 섹션의 content는 4~7문단으로, 구체적인 숫자와 데이터를 포함하여 신뢰감 있게 작성하세요. 추상적 표현 대신 실제 데이터를 인용하세요. 전체는 공식 양식에 옮겼을 때 A4 7~10장이 되는 분량을 목표로 충실하게 작성하세요.
 자금 용도는 "운전자금"처럼 뭉뚱그리지 말고 항목별 구체 금액으로 작성하세요.`;
 
   // ── 공고 맞춤 블록 (2026-08-14) — 공고의 대상·내용을 평가 포인트로 삼아 강조점을 조정.
@@ -206,10 +282,15 @@ PSST 프레임워크 (창업진흥원 평가 기준):
       ].filter(Boolean).join("\n")
     : "";
 
+  // missingInfo 체크리스트 규칙 (2026-08-14) — 빈칸을 결함이 아니라 "할 일"로 전환.
+  const missingInfoRule = `\n\n[미제공 정보 체크리스트]\n사용자가 제공하지 않아 [확인 필요]로 남긴 핵심 항목을 missingInfo 배열에 담으세요.\n각 항목은 "무엇을(어느 섹션에) 왜 채워야 하는지"가 드러나는 한 문장으로, 3~7개. 없으면 빈 배열.`;
+
   // 정직성 규칙(PLAN_HONESTY_RULES)은 두 프롬프트 공통 — 없는 수치를 지어내는 대신
   //   [확인 필요: …] 플레이스홀더로 남기게 한다. 가짜 출처보다 빈 칸이 신뢰도에 낫다.
+  // ⚠️ 공고 맞춤 블록(programBlock)은 system 이 아니라 user 메시지에 싣는다 —
+  //   system 을 세그먼트별로 안정시켜 Claude prompt cache 프리픽스를 살리기 위함 (2026-08-14).
   const systemPrompt = ko
-    ? `${isStartup ? startupSystemPrompt : smbSystemPrompt}${programBlock}\n\n${PLAN_HONESTY_RULES}`
+    ? `${isStartup ? startupSystemPrompt : smbSystemPrompt}\n\n${PLAN_HONESTY_RULES}${missingInfoRule}`
     : `You are a startup business consultant. Generate a structured business plan based on the user's data. Respond ONLY in the JSON format specified.
 Never invent statistics. If a figure is not provided in the [검증된 데이터] block, leave a bracketed placeholder such as "[TODO: verify via Statistics Korea]" instead of fabricating a number or citing an institution without a figure.`;
 
@@ -249,6 +330,10 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
     input.northStarType ? `북극성 지표 유형: ${input.northStarType}` : null,
     input.northStarMetricName ? `핵심 추적 지표: ${input.northStarMetricName}` : null,
     input.interviewInsights ? `고객 인터뷰 인사이트: ${input.interviewInsights}` : null,
+    // 미니 위저드 입력 (2026-08-14) — 심사위원이 보는 "그 팀만의 내용". 각 500자 컷.
+    input.founderBackground ? `대표자 경력·전문성: ${clip(input.founderBackground, 500)}` : null,
+    input.differentiation ? `핵심 차별점: ${clip(input.differentiation, 500)}` : null,
+    input.customerEvidence ? `고객 반응·검증 근거: ${clip(input.customerEvidence, 500)}` : null,
   ].filter(Boolean).join("\n");
 
   // ── 검증된 정량 데이터 주입 ─────────────────────────────────────────
@@ -258,8 +343,31 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
   const factsSection = facts.factsBlock
     ? `\n\n──────────\n[검증된 데이터 — 아래 수치만 출처와 함께 인용하세요]\n${facts.factsBlock}`
     : "";
-  const userDataWithFacts = `${userData}${factsSection}`;
+  // 공고 맞춤 블록은 user 콘텐츠 말미에 — system 캐시 프리픽스 보존 (위 주석 참조).
+  const userDataWithFacts = `${userData}${factsSection}${programBlock}`;
 
+  // ── 1차: Claude Sonnet 5 (구조화 출력 + 시스템 캐싱, 2026-08-14 하네스 업그레이드) ──
+  const claudeKey = getRealAnthropicApiKey();
+  if (claudeKey) {
+    try {
+      const result = await generateWithClaude(
+        claudeKey,
+        systemPrompt,
+        `아래 데이터를 기반으로 사업계획서를 작성해주세요.\n\n${userDataWithFacts}`,
+      );
+      return NextResponse.json(result);
+    } catch (err) {
+      // 폴백 사유를 남긴다 (침묵 강등 금지) — refusal·타임아웃·파싱 실패 등
+      console.warn(
+        "[business-plan] Claude Sonnet 5 실패 → gpt-5.4-mini 폴백:",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  } else {
+    console.warn("[business-plan] ANTHROPIC_API_KEY 미설정 — gpt-5.4-mini 경로 사용");
+  }
+
+  // ── 2차(폴백): 기존 OpenAI 경로 ──
   try {
     // ⚠️ 2026-05-18 마이그레이션: 종전엔 Anthropic URL 로 raw fetch 했는데 OPENAI_API_KEY 가
     //   전달되어 401 → 사업계획서 기능 100% 실패. OpenAI Chat Completions URL + Bearer 인증으로

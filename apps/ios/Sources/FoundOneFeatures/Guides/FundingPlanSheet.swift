@@ -29,6 +29,10 @@ struct FundingPlanSheet: View {
     @State private var fromCache: Bool = false
     @State private var errorMessage: String? = nil
     @State private var copied: Bool = false
+    // 미니 위저드 (2026-08-14) — 웹 FundingPlanModal 과 동일 3문항 (선택)
+    @State private var founderBackground: String = ""
+    @State private var differentiation: String = ""
+    @State private var customerEvidence: String = ""
 
     private static let notice = "생성 결과는 초안입니다. 반드시 공고에 첨부된 공식 양식(HWP)에 옮겨 제출하세요 — 임의 양식 제출 시 평가에서 제외될 수 있어요."
 
@@ -106,6 +110,17 @@ struct FundingPlanSheet: View {
                 .foregroundStyle(BUColor.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
 
+            // 미니 위저드 — 채울수록 초안이 강해짐 (선택)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("3가지만 알려주시면 초안이 훨씬 강해져요 (선택)")
+                    .font(.system(size: 12.5, weight: .heavy))
+                    .foregroundStyle(BUColor.ink)
+                wizardField("대표자 경력·전문성 — 예: 카페 매니저 5년", text: $founderBackground)
+                wizardField("우리 가게만의 차별점 — 예: 직접 로스팅", text: $differentiation)
+                wizardField("고객 반응·검증 — 예: 시식회 200명, 사전예약 50건", text: $customerEvidence)
+            }
+            .padding(.top, 4)
+
             Button {
                 Task { await generate() }
             } label: {
@@ -126,6 +141,21 @@ struct FundingPlanSheet: View {
         .padding(BUSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(cardSurface)
+    }
+
+    private func wizardField(_ placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text, axis: .vertical)
+            .lineLimit(2...4)
+            .font(.system(size: 12.5, weight: .medium))
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+                    )
+            )
     }
 
     // MARK: - Loading / Error
@@ -200,6 +230,29 @@ struct FundingPlanSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            // 채울 항목 체크리스트 — 빈칸을 "할 일"로 (2026-08-14, 웹 미러)
+            if let missing = draft?.missingInfo, !missing.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("✍️ 이 \(missing.count)가지만 채우면 완성돼요")
+                        .font(.system(size: 12.5, weight: .heavy))
+                        .foregroundStyle(BUColor.midnight)
+                    ForEach(missing, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("☐")
+                                .font(.system(size: 12.5, weight: .bold))
+                                .foregroundStyle(BUColor.midnight)
+                            Text(item)
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(BUColor.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+
             ForEach(draft?.sections ?? [], id: \.title) { section in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(section.title)
@@ -257,10 +310,18 @@ struct FundingPlanSheet: View {
         phase = .loading
         errorMessage = nil
         let repo = FundingRepository(supabase: BUSupabase.shared.client)
+        var input = FundingRepository.PlanUserInput(profile: profile)
+        let trimmed = { (s: String) -> String? in
+            let t = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            return t.isEmpty ? nil : t
+        }
+        input.founderBackground = trimmed(founderBackground)
+        input.differentiation = trimmed(differentiation)
+        input.customerEvidence = trimmed(customerEvidence)
         do {
             let result = try await repo.generateProgramPlan(
                 program: program,
-                user: FundingRepository.PlanUserInput(profile: profile)
+                user: input
             )
             draft = result
             fromCache = false
@@ -302,7 +363,8 @@ struct FundingPlanSheet: View {
         else { return }
         draft = FundingRepository.BusinessPlanDraft(
             summary: cached.summary,
-            sections: cached.sections.map { .init(title: $0.title, content: $0.content) }
+            sections: cached.sections.map { .init(title: $0.title, content: $0.content) },
+            missingInfo: cached.missingInfo
         )
         fromCache = true
         phase = .result
@@ -312,7 +374,8 @@ struct FundingPlanSheet: View {
         guard let key = cacheKey else { return }
         let cached = CachedDraft(
             summary: result.summary,
-            sections: result.sections.map { .init(title: $0.title, content: $0.content) }
+            sections: result.sections.map { .init(title: $0.title, content: $0.content) },
+            missingInfo: result.missingInfo
         )
         if let data = try? JSONEncoder().encode(cached) {
             UserDefaults.standard.set(data, forKey: key)
@@ -323,6 +386,8 @@ struct FundingPlanSheet: View {
         struct Section: Codable { let title: String; let content: String }
         let summary: String?
         let sections: [Section]
+        // 구캐시(필드 부재) 호환 — optional 디코드
+        var missingInfo: [String]? = nil
     }
 
     private var cardSurface: some View {

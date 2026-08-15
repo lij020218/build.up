@@ -23,6 +23,8 @@ export const MODEL_PRICES_USD_PER_MTOK = {
   "gpt-5.4-mini": { in: 0.75, out: 4.5 },
   // Opus 4.5 공시가($5/$25)와 동일 가정 — 계약분석 실측 ~₩85/건과 정합. 공시가 변경 시 갱신
   "claude-opus-4-8": { in: 5, out: 25 },
+  // 사업계획서 전용 (2026-08-14) — 공시가 $3/$15 기준(8/31까지 인트로 $2/$10이지만 보수적 상한)
+  "claude-sonnet-5": { in: 3, out: 15 },
 } as const;
 
 export type AiCostModel = keyof typeof MODEL_PRICES_USD_PER_MTOK;
@@ -67,9 +69,13 @@ export const FEATURE_COST_SPEC: Record<string, FeatureCostSpec | null> = {
   "contract-analyze": { model: "claude-opus-4-8", inCap: 11_000, outCap: 2_048, extraWon: 70, note: "입력 10,000자 제한, 실측 ~₩85/건" },
 
   // ── 판단형·생성형 (5.4-mini) ──
-  "business-plan-generate": { model: "gpt-5.4-mini", inCap: 5_000, outCap: 12_288 },
-  // 공고 맞춤 사업계획서(펀딩 페이지) — 공고 컨텍스트만큼 입력 상한 상향. 주 2회 (2026-08-14 지시)
-  "business-plan-program": { model: "gpt-5.4-mini", inCap: 6_500, outCap: 12_288 },
+  // ── 사업계획서 (Claude Sonnet 5, 2026-08-14 사장님 지시) ──
+  //  장문 품질 업그레이드. outCap 16,384 = 사고(adaptive) + 본문 합산 상한.
+  //  상한가 ≈ ₩330~400/건 — 주 2회(월 8회) 풀사용 시 인당 월 ~₩3,000 (₩6,000 예산의 절반 이하).
+  //  실패 시 gpt-5.4-mini 폴백(더 저렴)이므로 Sonnet 상한이 지배.
+  "business-plan-generate": { model: "claude-sonnet-5", inCap: 6_000, outCap: 16_384 },
+  // 공고 맞춤(펀딩 페이지) — 공고 컨텍스트 + 위저드 입력만큼 입력 상한 상향. 주 2회
+  "business-plan-program": { model: "claude-sonnet-5", inCap: 7_500, outCap: 16_384 },
   "roadmap-classify": { model: "gpt-5.6-luna", inCap: 3_000, outCap: 800, note: "업종 후보 3개 — 분류 분리 (2026-08-03)" },
   "roadmap-generate": { model: "gpt-5.6-terra", inCap: 6_000, outCap: 16_384, extraWon: 30, note: "Pass1 terra(tools 제약으로 effort none, 실측 28s/2.7k out) + Pass2 luna 상한 30원" },
   "interview": { model: "gpt-5.4-mini", inCap: 3_000, outCap: 8_192 },
