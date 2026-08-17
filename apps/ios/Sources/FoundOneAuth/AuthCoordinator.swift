@@ -142,6 +142,9 @@ public final class AuthCoordinator {
                 "first_name": .string(firstName),
                 "last_name": .string(lastName),
                 "name": .string(displayName),
+                // 가입 플랫폼 — Supabase 인증 메일 템플릿이 {{ .Data.signup_platform }} 를 보고
+                //   링크에 from=ios 를 붙여, 웹 콜백이 "앱으로 돌아가 로그인" 안내를 보여준다 (재발송에도 유지).
+                "signup_platform": .string("ios"),
             ]
             if let year = birthYear {
                 metadata["birth_year"] = .string(String(year))
