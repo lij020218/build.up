@@ -39,11 +39,14 @@ function AuthCallbackInner() {
   const [status, setStatus] = useState<"verifying" | "success" | "signup-complete" | "confirmed" | "error" | "recovery-form">("verifying");
   const [errorMsg, setErrorMsg] = useState("");
   const [newPw, setNewPw] = useState("");
+  const [newPw2, setNewPw2] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSetNewPassword = async () => {
     const pwdErr = validatePassword(newPw);
     if (pwdErr) { setErrorMsg(pwdErr); return; }
+    if (newPw !== newPw2) { setErrorMsg("두 비밀번호가 서로 달라요. 같은 비밀번호를 다시 입력해 주세요."); return; }
     setSubmitting(true); setErrorMsg("");
     try {
       await updateCurrentUserPassword(supabase, newPw);
@@ -211,19 +214,51 @@ function AuthCallbackInner() {
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", marginBottom: "20px", lineHeight: 1.6 }}>
             8자 이상, 숫자를 포함한 새 비밀번호를 입력해 주세요.
           </p>
-          <input
-            type="password"
-            value={newPw}
-            onChange={(e) => setNewPw(e.target.value)}
-            placeholder="새 비밀번호"
-            autoFocus
-            onKeyDown={(e) => { if (e.key === "Enter" && !submitting) void handleSetNewPassword(); }}
-            style={{
-              width: "100%", padding: "13px 14px", borderRadius: "10px",
-              border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)",
-              color: "#fff", fontSize: "15px", marginBottom: "12px", boxSizing: "border-box",
-            }}
-          />
+          {/* 새 비밀번호 + 확인 + 눈 아이콘(표시/숨김) — iOS ResetPasswordView 와 동일 구성 (2026-08-14) */}
+          {([
+            { key: "pw1", value: newPw, set: setNewPw, placeholder: "새 비밀번호", autoFocus: true },
+            { key: "pw2", value: newPw2, set: setNewPw2, placeholder: "새 비밀번호 확인", autoFocus: false },
+          ] as const).map((f) => (
+            <div key={f.key} style={{ position: "relative", marginBottom: "12px" }}>
+              <input
+                type={showPw ? "text" : "password"}
+                value={f.value}
+                onChange={(e) => f.set(e.target.value)}
+                placeholder={f.placeholder}
+                autoFocus={f.autoFocus}
+                autoComplete="new-password"
+                onKeyDown={(e) => { if (e.key === "Enter" && !submitting) void handleSetNewPassword(); }}
+                style={{
+                  width: "100%", padding: "13px 44px 13px 14px", borderRadius: "10px",
+                  border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)",
+                  color: "#fff", fontSize: "15px", boxSizing: "border-box",
+                }}
+              />
+              <button
+                type="button"
+                aria-label={showPw ? "비밀번호 숨기기" : "비밀번호 보기"}
+                aria-pressed={showPw}
+                onClick={() => setShowPw((v) => !v)}
+                style={{
+                  position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)",
+                  width: "32px", height: "32px", border: "none", background: "transparent",
+                  color: "rgba(255,255,255,0.55)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {showPw ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          ))}
           {errorMsg && (
             <p style={{ color: "#ff6b6b", fontSize: "13px", marginBottom: "12px" }}>{errorMsg}</p>
           )}

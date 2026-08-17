@@ -16,13 +16,18 @@ struct ResetPasswordView: View {
     @Bindable var coordinator: AuthCoordinator
 
     @State private var newPassword = ""
+    @State private var confirmPassword = ""
+    @State private var showPassword = false
     @State private var submitting = false
     @State private var errorText: String?
     @State private var done = false
-    @FocusState private var focused: Bool
+    private enum Field: Hashable { case first, second }
+    @FocusState private var focusedField: Field?
 
     /// 웹 SSOT 와 동일 규칙: 8자 이상 + 영문 + 숫자 + 흔한 비번 제외.
     private var strong: Bool { PasswordPolicy.isStrong(newPassword) }
+    private var matches: Bool { !confirmPassword.isEmpty && confirmPassword == newPassword }
+    private var canSubmit: Bool { strong && matches }
 
     var body: some View {
         ZStack {
@@ -48,7 +53,7 @@ struct ResetPasswordView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .onAppear { focused = true }
+        .onAppear { focusedField = .first }
     }
 
     // MARK: - 새 비밀번호 입력
@@ -69,18 +74,18 @@ struct ResetPasswordView: View {
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
 
-                SecureField("새 비밀번호", text: $newPassword)
-                    .textContentType(.newPassword)
-                    .focused($focused)
-                    .submitLabel(.done)
-                    .onSubmit(submit)
-                    .padding(.horizontal, 14)
-                    .frame(height: 50)
-                    .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.md, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                            .strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1)
-                    )
+                // 새 비밀번호 + 확인 + 눈 아이콘(표시/숨김) — 웹 /auth/callback recovery-form 과 동일 구성 (2026-08-14)
+                passwordField("새 비밀번호", text: $newPassword, focusedField: .first, submitLabel: .next) {
+                    focusedField = .second
+                }
+                passwordField("새 비밀번호 확인", text: $confirmPassword, focusedField: .second, submitLabel: .done) {
+                    submit()
+                }
+                if !confirmPassword.isEmpty && !matches {
+                    Text("두 비밀번호가 서로 달라요.")
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(BUColor.danger)
+                }
 
                 // 강도 힌트
                 if !newPassword.isEmpty && !strong {
@@ -111,10 +116,10 @@ struct ResetPasswordView: View {
                         ),
                         in: RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
                     )
-                    .opacity(strong && !submitting ? 1 : 0.5)
+                    .opacity(canSubmit && !submitting ? 1 : 0.5)
                 }
                 .buttonStyle(.plain)
-                .disabled(!strong || submitting)
+                .disabled(!canSubmit || submitting)
                 .padding(.top, 2)
 
                 Button {
@@ -207,9 +212,55 @@ struct ResetPasswordView: View {
         }
     }
 
+    /// 비밀번호 입력 필드 — 눈 아이콘으로 표시/숨김 전환. 두 필드가 하나의 showPassword 를 공유한다.
+    @ViewBuilder
+    private func passwordField(
+        _ placeholder: String,
+        text: Binding<String>,
+        focusedField field: Field,
+        submitLabel: SubmitLabel,
+        onSubmit: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 8) {
+            Group {
+                if showPassword {
+                    TextField(placeholder, text: text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } else {
+                    SecureField(placeholder, text: text)
+                }
+            }
+            .textContentType(.newPassword)
+            .focused($focusedField, equals: field)
+            .submitLabel(submitLabel)
+            .onSubmit(onSubmit)
+
+            Button {
+                showPassword.toggle()
+            } label: {
+                Image(systemName: showPassword ? "eye.slash" : "eye")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(showPassword ? "비밀번호 숨기기" : "비밀번호 보기")
+        }
+        .padding(.leading, 14)
+        .padding(.trailing, 6)
+        .frame(height: 50)
+        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.md, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
+                .strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1)
+        )
+    }
+
     private func submit() {
-        guard strong, !submitting else { return }
-        focused = false
+        guard canSubmit, !submitting else { return }
+        focusedField = nil
         submitting = true
         errorText = nil
         Task {
