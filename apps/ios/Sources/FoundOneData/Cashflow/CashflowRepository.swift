@@ -66,6 +66,22 @@ public actor CashflowRepository {
         }
     }
 
+    /// ② 운영예비 → 현금 잔고 시드 (2026-08-12, budget-setup 커밋 투영 전용).
+    ///   **비어 있을 때만** 시드 — 사장님이 현금흐름 설정에서 직접 넣은 잔고를 절대 덮지 않는다.
+    ///   웹 handleBudgetContinue 의 시드와 동일 규칙 (양쪽 동시 수정).
+    @MainActor
+    public static func seedInitialCashIfEmpty(won: Double) {
+        guard won > 0, let uid = BUSupabase.shared.currentUser?.id else { return }
+        let repo = CashflowRepository(supabase: BUSupabase.shared.client, userId: uid)
+        Task {
+            guard var settings = try? await repo.load(defaultCategoryKey: nil) else { return }
+            guard settings.currentBalance <= 0 else { return }   // 이미 값 있음 — 손대지 않는다
+            settings.currentBalance = won
+            settings.currentBalanceUpdatedAt = ISO8601DateFormatter().string(from: Date())
+            try? await repo.save(settings)
+        }
+    }
+
     private struct Upsert: Encodable, Sendable {
         let user_id: UUID
         let cashflow_settings: CashflowSettings

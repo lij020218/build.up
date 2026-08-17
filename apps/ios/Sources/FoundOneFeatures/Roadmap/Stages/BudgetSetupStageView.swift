@@ -174,6 +174,78 @@ public struct BudgetSetupStageView: View {
         }
     }
 
+    // MARK: - 항목별 예산 (2026-08-07 — 웹 startup-budget-items.ts 손미러)
+    //  키·구성은 웹 SSOT 와 1:1. 가드: apps/web/__tests__/startup-budget-items.test.ts (Swift 파싱)
+
+    private struct BudgetItemDef { let key: String; let labelKo: String; let hintKo: String; var franchiseOnly = false; var optionalKo: String? = nil }
+
+    private static let offlineItems: [BudgetItemDef] = [
+        .init(key: "deposit", labelKo: "보증금", hintKo: "상가 임대차 보증금"),
+        .init(key: "premium", labelKo: "권리금", hintKo: "시설·영업·바닥 권리금 — 계약서 명시·세금계산서 수취", optionalKo: "없는 자리면 0"),
+        .init(key: "franchiseFee", labelKo: "가맹비·교육비", hintKo: "가맹금·교육비·보증금 등 본사 납부액 (정보공개서 기준)", franchiseOnly: true),
+        .init(key: "interior", labelKo: "인테리어·간판", hintKo: "철거·설비·간판 포함 — '별도 공사' 항목까지 확인"),
+        .init(key: "equipment", labelKo: "집기·주방설비", hintKo: "주방기기·냉장·테이블·POS 등"),
+        .init(key: "initialStock", labelKo: "초도물품", hintKo: "식자재·포장재·소모품 첫 사입"),
+        .init(key: "permits", labelKo: "인허가·행정·보험", hintKo: "위생교육·영업신고·면허세·화재보험 등 잡비"),
+        .init(key: "openMarketing", labelKo: "오픈 마케팅", hintKo: "오픈 이벤트·전단·플레이스 세팅 등 일회성 판촉"),
+    ]
+    private static let onlineItems: [BudgetItemDef] = [
+        .init(key: "initialStock", labelKo: "초도재고·사입", hintKo: "첫 재고 매입 (위탁·무재고면 0)", optionalKo: "무재고면 0"),
+        .init(key: "content", labelKo: "촬영·콘텐츠", hintKo: "제품 촬영·모델·장비"),
+        .init(key: "storefront", labelKo: "스토어 구축", hintKo: "스킨·상세페이지 디자인·로고"),
+        .init(key: "permits", labelKo: "신고·행정", hintKo: "통신판매업 신고 면허세 등 잡비"),
+        .init(key: "openMarketing", labelKo: "초기 광고", hintKo: "런칭 광고·체험단 등 일회성 집행"),
+    ]
+    private static let startupItems: [BudgetItemDef] = [
+        .init(key: "incorporation", labelKo: "법인설립·행정", hintKo: "설립 등기·등록면허세·정관 등"),
+        .init(key: "equipment", labelKo: "장비·SW·인프라", hintKo: "개발장비·서버·SaaS 초기 셋업"),
+        .init(key: "development", labelKo: "개발·초기 인건비", hintKo: "외주 개발비 또는 런칭 전 인건비"),
+        .init(key: "openMarketing", labelKo: "초기 마케팅", hintKo: "런칭 캠페인·랜딩·콘텐츠"),
+    ]
+
+    private var budgetItemDefs: [BudgetItemDef] {
+        let base: [BudgetItemDef] = isStartup ? Self.startupItems : (categoryId == "online-digital" ? Self.onlineItems : Self.offlineItems)
+        return startupType == "franchise" ? base : base.filter { !$0.franchiseOnly }
+    }
+
+    /// key → 만원 문자열. inputs 저장 시 "budgetItem.<key>" 로 직렬화 (웹 규약).
+    @State private var itemTexts: [String: String] = [:]
+    /// 월 마케팅 예산 (만원) — user_store_data.marketing_monthly_budget 로 투영.
+    @State private var monthlyMarketingText: String = ""
+
+    private var itemSumWon: Int? {
+        let vals = budgetItemDefs.compactMap { Int(itemTexts[$0.key] ?? "") }.filter { $0 > 0 }
+        guard !vals.isEmpty else { return nil }
+        return vals.reduce(0, +) * 10_000
+    }
+
+    /// 입력 중 자동 서버저장 (0.8초 디바운스) — 웹 autosave 미러.
+    ///   "다음" 버튼 전에 화면을 떠나도 항목·월마케팅이 stage_decisions 에 남는다 (2026-08-07).
+    @State private var draftSaveTask: Task<Void, Never>? = nil
+
+    private func scheduleDraftSave() {
+        draftSaveTask?.cancel()
+        draftSaveTask = Task { [itemTexts, monthlyMarketingText, budgetItemDefs] in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            guard !Task.isCancelled else { return }
+            var m: [String: String] = [:]
+            for def in budgetItemDefs {
+                if let t = itemTexts[def.key], let n = Int(t), n > 0 { m["budgetItem.\(def.key)"] = String(n) }
+            }
+            if let n = Int(monthlyMarketingText), n > 0 { m["monthlyMarketingBudget"] = String(n) }
+            if startupWon > 0 { m["capital"] = String(startupWon) }
+            roadmapStore.saveInputsDraft(stageId, inputs: m)
+        }
+    }
+
+    private func applyItemSum() {
+        guard let sum = itemSumWon else { return }
+        let won = min(300_000_000, max(0, sum))
+        startupWon = won
+        startupText = String(won / 10_000)
+        startupSlider = Double(max(1_000_000, won))
+    }
+
     // MARK: - Presets
 
     private let startupPresets: [(String, Int)] = [
@@ -217,6 +289,11 @@ public struct BudgetSetupStageView: View {
         if let iso = Self.targetOpenDateISO(openDateId: openDateId) {
             m["targetOpenDate"] = iso
         }
+        // 항목별 예산 (웹 규약: budgetItem.<key> = 만원 문자열) + 월 마케팅 예산
+        for def in budgetItemDefs {
+            if let t = itemTexts[def.key], let n = Int(t), n > 0 { m["budgetItem.\(def.key)"] = String(n) }
+        }
+        if let n = Int(monthlyMarketingText), n > 0 { m["monthlyMarketingBudget"] = String(n) }
         return m
     }
 
@@ -324,6 +401,7 @@ public struct BudgetSetupStageView: View {
                 franchiseCostPanel
                 startupCapitalSection      // ① 시설·창업 비용
                 operatingCapitalSection    // ② 운영 예비자금
+                monthlyMarketingSection    // 매달 쓰는 돈 — 월 마케팅 예산 (marketing_monthly_budget 투영)
                 totalNeededCard            // 총 필요 자금 = ① + ②
                 BudgetInsightCard(userBudgetWon: startupWon)  // 시설비 vs 세부 업종 평균
                 fundingMatchSection        // 미달 시 지원 사업
@@ -338,6 +416,15 @@ public struct BudgetSetupStageView: View {
             if operatingWon > 0 {
                 operatingSlider = Double(operatingWon)
                 operatingText = String(operatingWon / 10_000)
+            }
+            // 항목·월마케팅 프리필 — 웹/이전 세션이 저장한 inputs 복원 (빈 상태만 채움: 입력 중 덮어쓰기 방지)
+            if itemTexts.isEmpty, let inputs = roadmapStore.decisions[stageId]?.inputs {
+                for (k, v) in inputs where k.hasPrefix("budgetItem.") {
+                    if let n = Int(v), n > 0 { itemTexts[String(k.dropFirst("budgetItem.".count))] = String(n) }
+                }
+                if monthlyMarketingText.isEmpty, let m = inputs["monthlyMarketingBudget"], Int(m) ?? 0 > 0 {
+                    monthlyMarketingText = m
+                }
             }
         }
         .task(id: "\(industryId)-\(startupWon)-\(startupType)") {
@@ -672,6 +759,33 @@ public struct BudgetSetupStageView: View {
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(BUColor.midnight.opacity(0.1), lineWidth: 1))
     }
 
+    // MARK: - 월 마케팅 예산 (매달 쓰는 돈 — 2026-08-07, 웹 미러)
+
+    private var monthlyMarketingSection: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.xs) {
+                HStack(spacing: 6) {
+                    bucketBadge("매달 쓰는 돈")
+                    BUEyebrow("월 마케팅 예산")
+                    Spacer()
+                }
+                Text("외식·카페 업계 통상 월 매출의 3~6% (신규 오픈 첫 해는 5~10%). 여기 입력하면 마케팅 페이지의 예산·인플루언서 추천이 이 값을 그대로 씁니다.")
+                    .font(BUFont.bodyCaption)
+                    .foregroundStyle(BUColor.inkSecondary)
+                HStack(spacing: BUSpacing.sm) {
+                    TextField("예: 30", text: $monthlyMarketingText)
+                        .buTextFieldStyle()
+                        .keyboardType(.numberPad)
+                        .onChange(of: monthlyMarketingText) { _, v in
+                            monthlyMarketingText = v.filter(\.isNumber)
+                            scheduleDraftSave()
+                        }
+                    Text("만원/월").font(BUFont.body).foregroundStyle(BUColor.inkSecondary)
+                }
+            }
+        }
+    }
+
     // MARK: - § 1 시설·창업 비용
 
     private var startupCapitalSection: some View {
@@ -694,6 +808,83 @@ public struct BudgetSetupStageView: View {
                         : "보증금·인테리어·집기·인허가 — 오픈 전에 한 번 지출하는 돈입니다. 아래에서 세밀하게 조정하세요.")
                     .font(BUFont.bodyCaption)
                     .foregroundStyle(BUColor.inkSecondary)
+
+                // 항목별 입력 (2026-08-07) — 설정 화면형 행 목록: 왼쪽 항목·힌트 / 오른쪽 정렬 입력.
+                //   (초판이 상자 나열이라 "메모장 같다"는 지적 — 한 카드 안의 행 + 구분선 + 합계 바로 재설계)
+                VStack(spacing: 0) {
+                    ForEach(Array(budgetItemDefs.enumerated()), id: \.element.key) { idx, def in
+                        if idx > 0 {
+                            Divider().overlay(BUColor.midnight.opacity(0.08)).padding(.leading, 14)
+                        }
+                        HStack(alignment: .center, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 5) {
+                                    Text(def.labelKo)
+                                        .font(.system(size: 13.5, weight: .bold))
+                                        .foregroundStyle(BUColor.ink)
+                                    if let opt = def.optionalKo {
+                                        Text(opt)
+                                            .font(.system(size: 9.5, weight: .bold))
+                                            .foregroundStyle(BUColor.inkMuted)
+                                            .padding(.horizontal, 6).padding(.vertical, 1.5)
+                                            .background(BUColor.ink.opacity(0.05), in: Capsule())
+                                    }
+                                }
+                                Text(def.hintKo)
+                                    .font(.system(size: 10.5))
+                                    .foregroundStyle(BUColor.inkMuted)
+                                    .lineLimit(2)
+                            }
+                            Spacer(minLength: 8)
+                            HStack(spacing: 4) {
+                                TextField("0", text: Binding(
+                                    get: { itemTexts[def.key] ?? "" },
+                                    set: { v in
+                                        itemTexts[def.key] = v.filter(\.isNumber)
+                                        applyItemSum()
+                                        scheduleDraftSave()
+                                    }
+                                ))
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle((Int(itemTexts[def.key] ?? "") ?? 0) > 0 ? BUColor.midnightDeep : BUColor.inkMuted)
+                                .frame(width: 76)
+                                .padding(.vertical, 7).padding(.horizontal, 10)
+                                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                                Text("만원")
+                                    .font(.system(size: 11.5, weight: .semibold))
+                                    .foregroundStyle(BUColor.inkMuted)
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 11)
+                    }
+
+                    // 합계 바 — 미드나잇 강조, 카드 하단 고정
+                    HStack {
+                        Text("합계 = ① 시설·창업비")
+                            .font(.system(size: 12.5, weight: .bold))
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Text(itemSumWon != nil ? "\((itemSumWon ?? 0) / 10_000)만원" : "항목을 입력하세요")
+                            .font(.system(size: itemSumWon != nil ? 16 : 12, weight: .heavy))
+                            .foregroundStyle(itemSumWon != nil ? .white : .white.opacity(0.75))
+                            .monospacedDigit()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(BUColor.midnight)
+                }
+                .background(BUColor.cardGradientTop.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1))
+
+                Text(itemSumWon != nil
+                    ? "항목을 고치면 총액이 다시 계산됩니다. 세부 내역 없이 총액만 알면 아래에 직접 입력하세요."
+                    : "항목별로 입력하면 총액이 자동 계산됩니다. 총액만 알면 아래 슬라이더·직접 입력을 쓰세요.")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(BUColor.inkMuted)
 
                 Slider(
                     value: $startupSlider,

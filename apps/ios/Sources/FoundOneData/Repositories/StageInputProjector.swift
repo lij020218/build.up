@@ -44,6 +44,7 @@ public enum StageInputProjector {
         "preferredRegion", "capital", "categoryId", "subIndustryId",
         "costRent", "costLabor", "costUtilities", "costInterest",
         "costIngredients", "costSga", "costMarketing", "costOther",
+        "monthlyMarketingBudget", "operatingWon",
     ]
 
     /// 월 운영비 8필드 입력 키 (만원 단위). financial-review stage 가 emit.
@@ -117,7 +118,19 @@ public enum StageInputProjector {
                 interest:    won("costInterest")
             ))
         }
+        if let v = inputs["monthlyMarketingBudget"], let man = Int(v), man > 0 {
+            MarketingRepository.persistMonthlyBudgetForCurrentUser(man * 10_000)
+        }
+        // 12. operatingWon(원, budget-setup ② 운영예비) → cashflow_settings.currentBalance 시드.
+        //     런웨이·현금 위기 알림의 뿌리 데이터 — 비어 있을 때만 (직접 입력 잔고 보호).
+        if let v = inputs["operatingWon"], let won = Double(v), won > 0 {
+            CashflowRepository.seedInitialCashIfEmpty(won: won)
+        }
     }
+
+    // 11. monthlyMarketingBudget(만원, budget-setup 단계) → user_store_data.marketing_monthly_budget (원).
+    //     협찬 탭·저지출 경고·인플루언서 예산 정렬이 같은 컬럼을 읽는다 (2026-08-07).
+    //     0/미입력은 투영하지 않음 — 협찬 탭에서 입력한 값을 덮지 않는다 (데이터 보호).
 
     #if DEBUG
     /// 투영 커버리지 감사 — 완료된 decision 들에서 투영 키에 값이 있는데 정식 컬럼이 비어있으면 경고.

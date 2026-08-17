@@ -137,7 +137,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					DCB6D0EF33F2A895BF76E3CC = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = 7VMPNM5KMF;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -259,7 +259,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/FoundOne/FoundOne.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
@@ -339,7 +338,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/FoundOne/FoundOne.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;

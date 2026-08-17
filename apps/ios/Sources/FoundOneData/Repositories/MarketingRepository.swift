@@ -486,6 +486,21 @@ public actor MarketingRepository {
             .execute()
     }
 
+    /// 월 마케팅 예산만 upsert — 캠페인 배열은 건드리지 않는다.
+    /// (saveCampaigns 는 campaigns 를 항상 쓰므로, 예산 단계 투영에서 쓰면 빈 배열로 덮을 위험)
+    @MainActor
+    public static func persistMonthlyBudgetForCurrentUser(_ won: Int) {
+        guard won > 0, let uid = BUSupabase.shared.currentUser?.id else { return }
+        struct BudgetOnlyUpsert: Encodable { let user_id: UUID; let marketing_monthly_budget: Int }
+        let client = BUSupabase.shared.client
+        Task {
+            _ = try? await client
+                .from("user_store_data")
+                .upsert(BudgetOnlyUpsert(user_id: uid, marketing_monthly_budget: won), onConflict: "user_id")
+                .execute()
+        }
+    }
+
     public func addCampaign(_ campaign: CampaignRecord) async throws -> [CampaignRecord] {
         var (campaigns, budget) = try await listCampaigns()
         campaigns.append(campaign)

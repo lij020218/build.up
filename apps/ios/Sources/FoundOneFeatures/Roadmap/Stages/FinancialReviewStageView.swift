@@ -207,6 +207,14 @@ public struct FinancialReviewStageView: View {
             sgaText = sga > 0 ? "\(sga)" : ""
             mktText = marketing > 0 ? "\(marketing)" : ""
             otherText = other > 0 ? "\(other)" : ""
+            // 마케팅 — budget-setup 의 월 마케팅 예산(만원) 프리필. 같은 값을 두 번 묻지 않는다 (2026-08-12).
+            //   미입력일 때만 (사장님이 여기서 직접 고친 값을 덮지 않음). 웹 estimator marketingMonthlyKrw 와 동일 규칙.
+            if marketing == 0,
+               let raw = roadmapStore.decisions["budget-setup"]?.inputs["monthlyMarketingBudget"],
+               let man = Int(raw), man > 0 {
+                marketing = man
+                mktText = "\(man)"
+            }
         }
         // 채용계획(hiring-setup staffPlan) → 인건비 프리필(웹 재무검토와 동일 소비). 미입력일 때만.
         .task {

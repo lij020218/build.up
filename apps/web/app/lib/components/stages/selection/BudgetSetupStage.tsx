@@ -2,6 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { useMemo } from "react";
+import {
+  budgetItemsFor, parseBudgetItems, sumBudgetItemsWon,
+  BUDGET_ITEM_INPUT_PREFIX, MONTHLY_MARKETING_INPUT_KEY,
+} from "@foundone/shared";
+import { useMarketingStore } from "../../../stores/marketing-store";
 import { styles } from "../../../styles";
 import {
   formatBudgetPresetLabel,
@@ -36,9 +42,55 @@ export function BudgetSetupStage() {
     selectedOpenDate, setSelectedOpenDate,
     activeOpenDatePreset,
     canCompleteBudgetStep, handleBudgetContinue,
+    decisions, setDecisions,
     prevTraversedStage, setViewingStageId,
     resetDemo,
   } = d;
+
+  // ─── 항목별 예산 (2026-08-07 사장님 지시 — "항목을 나눠 입력한 뒤 총 예산을 계산") ───
+  //   저장: budget-setup 결정 inputs 의 flat 키 `budgetItem.<key>` (만원 문자열, iOS 미러).
+  //   항목 합계가 있으면 ① 시설·창업비(selectedBudget)로 자동 반영 — 총액 직접입력은 폴백.
+  const setMonthlyMarketingBudget = useMarketingStore((st) => st.setMonthlyBudget);
+  const budgetInputs = (decisions["budget-setup"]?.inputs ?? {}) as Record<string, unknown>;
+  const itemDefs = useMemo(
+    () => budgetItemsFor(industryCategoryId, startupType === "franchise"),
+    [industryCategoryId, startupType],
+  );
+  const itemValues = useMemo(() => parseBudgetItems(budgetInputs), [budgetInputs]);
+  const itemSumWon = useMemo(() => sumBudgetItemsWon(itemValues), [itemValues]);
+  const monthlyMarketingManwon = Number(budgetInputs[MONTHLY_MARKETING_INPUT_KEY]) || 0;
+
+  const upsertBudgetInput = (key: string, value: string) => {
+    setDecisions((prev: Record<string, unknown>) => {
+      const prevStage = (prev["budget-setup"] as Record<string, unknown>) ?? {};
+      const prevInputs = (prevStage.inputs as Record<string, unknown>) ?? {};
+      const nextInputs = { ...prevInputs };
+      if (value) nextInputs[key] = value; else delete nextInputs[key];
+      return { ...prev, "budget-setup": { ...prevStage, stageId: "budget-setup", inputs: nextInputs } };
+    });
+  };
+
+  const onItemChange = (key: string, raw: string) => {
+    const digits = raw.replace(/[^0-9]/g, "");
+    upsertBudgetInput(`${BUDGET_ITEM_INPUT_PREFIX}${key}`, digits);
+    // 합계 → ① 시설·창업비 자동 반영 (setDecisions 는 비동기라 로컬로 재계산)
+    const next = { ...itemValues };
+    if (digits) next[key] = Number(digits); else delete next[key];
+    const sum = sumBudgetItemsWon(next);
+    if (sum != null) {
+      setSelectedBudget(Math.min(300000000, Math.max(0, sum)));
+      setBudgetInputText(String(Math.round(sum / 10000)));
+    }
+  };
+
+  const onMonthlyMarketingChange = (raw: string) => {
+    const digits = raw.replace(/[^0-9]/g, "");
+    upsertBudgetInput(MONTHLY_MARKETING_INPUT_KEY, digits);
+    // 협찬 탭·저지출 경고와 같은 필드(user_store_data.marketing_monthly_budget)로 흘러간다.
+    setMonthlyMarketingBudget(digits ? Number(digits) * 10_000 : 0);
+    // 서버 저장까지 즉시 — 협찬 탭 onBudgetChange 와 동일한 저장 강도 (5초 인터벌 의존 금지).
+    void d.flushStoreData?.();
+  };
 
   // ─── 업종별 손익분기 원가 구조 (2026-07-02 업종 정합 수정) ───────────────
   //   이전엔 외식 원가율(인건비 25%·재료비 30%·임대료 10%)이 필터 없이 마무리 박스에 노출됐다.
@@ -269,6 +321,55 @@ export function BudgetSetupStage() {
                     : "Deposit, interior, equipment, permits — spent once before opening. Set a rough figure, then fine-tune below.")}
           </div>
         </div>
+        {/* 항목별 입력 (2026-08-07) — 설정 화면형 행 목록: 왼쪽 항목·힌트 / 오른쪽 정렬 입력 + 하단 합계 바.
+            (초판이 상자 나열이라 "메모장 같다"는 지적 — iOS 와 동시 재설계) */}
+        <div style={{ margin: "14px 0 6px", borderRadius: 14, border: "1px solid rgba(29,53,87,0.12)", overflow: "hidden", background: "rgba(255,255,255,0.6)" }}>
+          {itemDefs.map((def, idx) => (
+            <div key={def.key} style={{
+              display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
+              borderTop: idx > 0 ? "1px solid rgba(29,53,87,0.08)" : "none",
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 750, color: "#0f172a" }}>{def.labelKo}</span>
+                  {def.optionalKo && (
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--muted)", background: "rgba(15,23,42,0.05)", borderRadius: 999, padding: "1.5px 7px" }}>{def.optionalKo}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--muted)", lineHeight: 1.4, marginTop: 2 }}>{def.hintKo}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                <input
+                  type="text" inputMode="numeric"
+                  value={itemValues[def.key] != null ? String(itemValues[def.key]) : ""}
+                  onChange={(e) => onItemChange(def.key, e.target.value)}
+                  placeholder="0"
+                  style={{
+                    width: 82, padding: "7px 10px", borderRadius: 9, border: "none",
+                    background: "rgba(29,53,87,0.05)", fontSize: 15, fontWeight: 750,
+                    textAlign: "right" as const,
+                    color: (itemValues[def.key] ?? 0) > 0 ? "#191970" : "var(--muted)",
+                  }}
+                />
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>{language === "ko" ? "만원" : "×10k"}</span>
+              </div>
+            </div>
+          ))}
+          {/* 합계 바 — 미드나잇 강조, 카드 하단 고정 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", background: "#191970" }}>
+            <span style={{ fontSize: 12.5, fontWeight: 750, color: "white" }}>{language === "ko" ? "합계 = ① 시설·창업비" : "Items total"}</span>
+            <span style={{ fontSize: itemSumWon != null ? 16 : 12, fontWeight: 800, color: itemSumWon != null ? "white" : "rgba(255,255,255,0.75)", fontVariantNumeric: "tabular-nums" }}>
+              {itemSumWon != null ? `${(itemSumWon / 10000).toLocaleString()}${language === "ko" ? "만원" : ""}` : (language === "ko" ? "항목을 입력하세요" : "Enter items")}
+            </span>
+          </div>
+        </div>
+        <div style={styles.helper}>
+          {language === "ko"
+            ? (itemSumWon != null
+                ? "항목을 고치면 총액이 다시 계산됩니다. 세부 내역 없이 총액만 알면 아래에 직접 입력하세요."
+                : "항목별로 입력하면 총액이 자동 계산됩니다. 총액만 알면 아래 슬라이더·직접 입력을 쓰세요.")
+            : "Enter line items to auto-calculate the total, or use the slider below."}
+        </div>
         <input
           type="range"
           min={1000000}
@@ -339,6 +440,31 @@ export function BudgetSetupStage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── 월 마케팅 예산 (2026-08-07) — 개업 전에 정하고, 마케팅 페이지 협찬 탭·저지출 경고가 이어받는다 ── */}
+      <div style={{ ...styles.budgetPanel, marginTop: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "var(--primary)", background: "rgba(29,53,87,0.07)", padding: "2px 8px", borderRadius: 7 }}>
+            {language === "ko" ? "매달 쓰는 돈" : "Monthly"}
+          </span>
+          <div style={styles.budgetLabel}>{language === "ko" ? "월 마케팅 예산" : "Monthly marketing budget"}</div>
+        </div>
+        <div style={styles.helper}>
+          {language === "ko"
+            ? "외식·카페 업계 통상 월 매출의 3~6% (신규 오픈 첫 해는 5~10%). 여기 입력하면 마케팅 페이지의 예산·인플루언서 추천이 이 값을 그대로 씁니다."
+            : "Typically 3–6% of monthly revenue (5–10% for new stores). The marketing page reuses this value."}
+        </div>
+        <span style={{ display: "flex", alignItems: "center", gap: 6, maxWidth: 220 }}>
+          <input
+            type="text" inputMode="numeric"
+            value={monthlyMarketingManwon > 0 ? String(monthlyMarketingManwon) : ""}
+            onChange={(e) => onMonthlyMarketingChange(e.target.value)}
+            placeholder={language === "ko" ? "예: 30" : "e.g. 30"}
+            style={{ width: "100%", padding: "8px 10px", borderRadius: 9, border: "1px solid rgba(29,53,87,0.14)", fontSize: 13.5, fontWeight: 700, background: "white" }}
+          />
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", flexShrink: 0 }}>{language === "ko" ? "만원/월" : "×10k/mo"}</span>
+        </span>
       </div>
 
       {/* ── 초기 운영자본금 / 런웨이 자본 (업종 + 세부업종 + 운영 모드 분기) ── */}

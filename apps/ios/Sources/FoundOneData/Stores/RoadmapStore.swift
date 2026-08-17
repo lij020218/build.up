@@ -237,6 +237,20 @@ public final class RoadmapStore {
         return true
     }
 
+    /// 입력 초안 저장 — **완료 상태를 건드리지 않고** inputs 만 로컬+서버에 upsert.
+    ///   예산 단계처럼 입력이 많은 화면에서 "다음" 을 누르기 전에 이탈해도 값이 살아남고,
+    ///   다른 기기(웹)가 같은 stage_decisions 를 하이드레이트한다 (2026-08-07 사장님 지시).
+    ///   completedAt 은 WriteDTO encodeIfPresent 라 미완료면 키가 생략돼 서버 완료 상태 무해.
+    ///   ⚠️ StageInputProjector 는 호출하지 않는다 — 정식 컬럼 투영은 사용자 commit 시점에만.
+    public func saveInputsDraft(_ stageId: String, inputs: [String: String]) {
+        guard !inputs.isEmpty else { return }
+        var d = decisions[stageId] ?? StageDecision(stageId: stageId)
+        for (k, v) in inputs { d.inputs[k] = v }
+        decisions[stageId] = d
+        persist()
+        pushUpsert(d)
+    }
+
     /// 완료 취소 — 사장님이 단계를 다시 열고 "되돌리기" 했을 때.
     ///   ⚠️ pushUpsert 금지: WriteDTO 가 encodeIfPresent 라 completedAt=nil 이면 키가 생략되어
     ///   서버 완료 상태가 그대로 남고, 다음 sync 의 원격우선 머지가 로컬 되돌리기를 원복했다

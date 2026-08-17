@@ -41,6 +41,7 @@ const INTENTIONAL_FIXED_COLUMNS: Record<string, string> = {
   "repeat(4, minmax(0, 1fr))": "백스톱 `columns:repeat(4,` 가 커버.",
   "repeat(4, minmax(0,1fr))": "백스톱 `columns:repeat(4,` 가 커버.",
   "auto 1fr auto": "행 레이아웃(아이콘|본문|값). 열이 아니라 한 줄 안의 역할 분담이라 접으면 오히려 깨진다.",
+  "repeat(auto-fill, minmax(230px, 1fr))": "예산 항목 그리드. auto-fill 이라 폰(≤640px)에서는 자연히 1열로 접힌다 — 고정 열이 아님.",
   "auto 1fr auto auto auto": "행 레이아웃. 위와 동일.",
   "1fr auto": "행 레이아웃(본문|값).",
   "1fr auto auto": "행 레이아웃.",

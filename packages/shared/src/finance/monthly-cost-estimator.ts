@@ -51,6 +51,12 @@ export type StageInputs = {
   ingredientsCogsRate?: number;
   /** 인력 계획 (hiring-setup 단계) */
   staffPlan?: StaffPlan;
+  /**
+   * 사장이 budget-setup 단계에서 입력한 월 마케팅 예산 (원).
+   * 있으면 업종 평균 대신 사용 — 같은 값을 두 번 묻지 않는다. source = "stage-derived".
+   * (2026-08-12 — 마케팅비 이중 입력 불일치 해소)
+   */
+  marketingMonthlyKrw?: number;
   /** 운영 설정 (operations-setup 단계) */
   operations?: OperationsSelections;
   /** 대출 정보 (loan-guide 단계) */
@@ -200,7 +206,8 @@ export function estimateMonthlyCosts(
   // ── utilities · marketing · other ── 업종 평균 fallback
   const avgs = INDUSTRY_AVERAGE[categoryId] ?? INDUSTRY_AVERAGE.food;
   const utilitiesFromAvg = avgs.utilities ?? 0;
-  const marketingFromAvg = avgs.marketing ?? 0;
+  const marketingUserProvided = (stages.marketingMonthlyKrw ?? 0) > 0;
+  const marketingFromStage = marketingUserProvided ? stages.marketingMonthlyKrw! : (avgs.marketing ?? 0);
   const otherFromAvg = avgs.other ?? 0;
 
   // ── interest ── 대출 있을 때만
@@ -215,7 +222,7 @@ export function estimateMonthlyCosts(
     rent:        overrides.rent        ?? rentFromStage,
     utilities:   overrides.utilities   ?? utilitiesFromAvg,
     sga:         overrides.sga         ?? sgaFromStage,
-    marketing:   overrides.marketing   ?? marketingFromAvg,
+    marketing:   overrides.marketing   ?? marketingFromStage,
     other:       overrides.other       ?? otherFromAvg,
     interest:    overrides.interest    ?? interestFromStage,
   };
@@ -226,7 +233,7 @@ export function estimateMonthlyCosts(
     rent:        overrides.rent        != null ? "user-input" : (rentFromStage > 0 ? "stage-derived" : "insufficient-data"),
     utilities:   overrides.utilities   != null ? "user-input" : "industry-average",
     sga:         overrides.sga         != null ? "user-input" : (sgaFromStage > 0 ? "stage-derived" : "insufficient-data"),
-    marketing:   overrides.marketing   != null ? "user-input" : "industry-average",
+    marketing:   overrides.marketing   != null ? "user-input" : (marketingUserProvided ? "stage-derived" : "industry-average"),
     other:       overrides.other       != null ? "user-input" : "industry-average",
     interest:    overrides.interest    != null ? "user-input" : (interestFromStage > 0 ? "stage-derived" : "insufficient-data"),
   };

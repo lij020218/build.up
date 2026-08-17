@@ -466,8 +466,14 @@ export function FinancialReviewStage() {
     const ingCogsRate = ingMode === "rate" ? vendorDecision?.inputs?.ingredientsCogsRate : undefined;
     const ingExpectedRev = ingMode === "rate" ? vendorDecision?.inputs?.ingredientsExpectedRevenueKrw : undefined;
 
+    // marketing — 사장이 budget-setup 에서 입력한 월 마케팅 예산(만원). 같은 값을 두 번 묻지 않는다 (2026-08-12).
+    const budgetDecision = (d.decisions as Record<string, { inputs?: { monthlyMarketingBudget?: number | string } }>)?.["budget-setup"];
+    const mktManwon = Number(budgetDecision?.inputs?.monthlyMarketingBudget) || 0;
+    const marketingMonthlyKrw = mktManwon > 0 ? mktManwon * 10_000 : undefined;
+
     return {
       categoryId,
+      marketingMonthlyKrw,
       selectedDistrictId,
       customPyeong,
       // rate 모드는 사장 입력 매출 × 입력 원가율 → expectedMonthlyRevenueKrw 도 함께 전달

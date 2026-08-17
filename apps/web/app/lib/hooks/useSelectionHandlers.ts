@@ -22,6 +22,7 @@ import {
   useProfileStore,
   useRoadmapStore,
   useOnboardingStore,
+  useCashflowStore,
 } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import type { DashboardDeps } from "../types";
@@ -261,6 +262,14 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
         targetOpenDate: selectedOpenDate,
       },
     });
+    // ② 운영예비 → 현금 잔고 시드 (2026-08-12) — 런웨이·현금 위기 알림의 뿌리 데이터.
+    //   사장님이 이미 입력한 숫자의 재사용일 뿐 새 값 발명이 아니다.
+    //   **비어 있을 때만** 시드 — 현금흐름 설정에서 직접 입력한 잔고를 절대 덮지 않는다.
+    const operating = useProfileStore.getState().initialOperatingCapital ?? 0;
+    const cf = useCashflowStore.getState();
+    if (operating > 0 && cf.currentBalance <= 0) {
+      cf.setCurrentBalance(operating);
+    }
     applySelectionAdvance(result);
   };
 
