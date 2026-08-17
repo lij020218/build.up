@@ -20,6 +20,7 @@ import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle
 import { supabase } from "../../../../lib/supabase";
 import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";
 import { FundingPlanModal, type PlanUserPayload } from "./FundingPlanModal";
+import { FundingPlansListModal } from "./FundingPlansListModal";
 
 /**
  * GuidesView — 펀딩 페이지 (Midnight Blue 디자인 철학)
@@ -300,6 +301,8 @@ export function GuidesView() {
 
   // ─── 공고 맞춤 사업계획서 모달 (2026-08-14, 주 2회) ───
   const [planModalProgram, setPlanModalProgram] = useState<StartupProgram | null>(null);
+  // ─── 내 사업계획서 목록 팝업 (서버 저장 원장, 2026-08-14) ───
+  const [plansListOpen, setPlansListOpen] = useState(false);
   const planUserPayload = useMemo<PlanUserPayload>(() => ({
     industry: industryCategoryId || "",
     subIndustry: selectedIndustryId || selectedSpecialtyId || "",
@@ -607,6 +610,15 @@ export function GuidesView() {
                 : (ko ? "내게 가장 잘 맞는 프로그램 추천" : "Recommend best-fit programs")}
             </span>
           </button>
+          {/* 내 사업계획서 보기 — 서버 저장 원장 목록 → 터치 → 열람 (2026-08-14) */}
+          <button
+            type="button"
+            onClick={() => setPlansListOpen(true)}
+            style={{ ...recommendBtnStyle, background: "#fff", color: "#191970", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" }}
+          >
+            <FileText size={14} strokeWidth={1.8} />
+            <span>{ko ? "내 사업계획서 보기" : "My business plans"}</span>
+          </button>
           {recommendMode && (
             <div style={recommendNoteStyle}>
               {ko
@@ -749,6 +761,9 @@ export function GuidesView() {
         result={scoreResult}
         ko={ko}
       />
+
+      {/* 내 사업계획서 목록 팝업 */}
+      <FundingPlansListModal open={plansListOpen} ko={ko} onClose={() => setPlansListOpen(false)} />
 
       {/* 공고 맞춤 사업계획서 모달 */}
       <FundingPlanModal

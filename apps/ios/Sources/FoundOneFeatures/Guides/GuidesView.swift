@@ -112,6 +112,8 @@ public struct GuidesView: View {
     @State private var applyTarget: FundingProgram? = nil
     /// 공고 맞춤 사업계획서 시트 (2026-08-14, 주 2회 — 웹 FundingPlanModal 미러)
     @State private var planTarget: FundingProgram? = nil
+    /// 내 사업계획서 목록 시트 (서버 저장 원장 — 웹 FundingPlansListModal 미러)
+    @State private var plansListOpen: Bool = false
     @Environment(\.openURL) private var openURL
 
     public init(store: DashboardStore) {
@@ -132,6 +134,7 @@ public struct GuidesView: View {
                     } else {
                         kpiSummary
                         recommendToggle
+                        myPlansButton
                         OwnerProfileChips(onChange: { Task { await loadPrograms() } }, showNudge: true)
                         categoryChips
                         statusChips
@@ -169,6 +172,9 @@ public struct GuidesView: View {
             if let snapshot = state.profileSnapshot {
                 FundingPlanSheet(program: program, profile: snapshot)
             }
+        }
+        .sheet(isPresented: $plansListOpen) {
+            FundingPlansListSheet()
         }
     }
 
@@ -318,6 +324,45 @@ public struct GuidesView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
                     .strokeBorder(state.recommendMode ? Color.clear : BUColor.cardBorder, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - My plans (서버 저장 사업계획서 목록, 2026-08-14)
+
+    private var myPlansButton: some View {
+        Button {
+            plansListOpen = true
+        } label: {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(BUColor.midnight)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("내 사업계획서 보기")
+                        .font(.system(size: 13, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    Text("생성한 초안 목록 · 어디서든 열람")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: BUSpacing.minTapTarget)
+            .background(
+                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
+                    .fill(Color.white.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
+                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

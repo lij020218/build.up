@@ -593,6 +593,49 @@ public actor FundingRepository {
         return draft
     }
 
+    // MARK: - 내 사업계획서 원장 (2026-08-14 — 펀딩 '내 사업계획서 보기', 웹 FundingPlansListModal 미러)
+
+    /// GET /api/funding/plans 응답 항목 (서버 저장 business_plan_drafts).
+    public struct SavedPlan: Sendable, Decodable, Identifiable, Hashable {
+        public let id: String
+        public let programId: String?
+        public let programName: String?
+        public let purpose: String
+        public let summary: String?
+        public let sections: [BusinessPlanSection]
+        public let missingInfo: [String]?
+        public let model: String?
+        public let createdAt: String
+
+        public static func == (lhs: SavedPlan, rhs: SavedPlan) -> Bool { lhs.id == rhs.id }
+        public func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    }
+
+    /// 본인 초안 목록(최신순). RLS 가 소유권 보장.
+    public func listSavedPlans(limit: Int = 50) async throws -> [SavedPlan] {
+        struct Response: Decodable { let ok: Bool; let drafts: [SavedPlan] }
+        var req = URLRequest(url: baseURL.appendingPathComponent("/api/funding/plans")
+            .appending(queryItems: [URLQueryItem(name: "limit", value: String(limit))]))
+        req.httpMethod = "GET"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.timeoutInterval = 30
+        try await attachAuth(&req)
+        let res: Response = try await perform(req)
+        return res.drafts
+    }
+
+    /// 본인 초안 삭제.
+    public func deleteSavedPlan(id: String) async throws {
+        struct Response: Decodable { let ok: Bool }
+        var req = URLRequest(url: baseURL.appendingPathComponent("/api/funding/plans")
+            .appending(queryItems: [URLQueryItem(name: "id", value: id)]))
+        req.httpMethod = "DELETE"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.timeoutInterval = 30
+        try await attachAuth(&req)
+        let _: Response = try await perform(req)
+    }
+
     // MARK: - Helpers
 
     private func authedRequest<Body: Encodable>(path: String, method: String, body: Body, timeout: TimeInterval = 45) async throws -> URLRequest {

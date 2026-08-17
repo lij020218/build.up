@@ -62,6 +62,8 @@ export const USER_TABLES = [
   //   이 누락이 반복되어 __tests__/account-wipe-coverage.test.ts 가드를 신설했다.
   "program_applications",
   "coaching_feedback",
+  // 2026-08-14 사업계획서 초안 원장 (펀딩 페이지 '사업계획서 보기')
+  "business_plan_drafts",
 ] as const;
 
 // owner_user_id 컬럼 테이블 (사용자가 소유자로 만든 row 만).

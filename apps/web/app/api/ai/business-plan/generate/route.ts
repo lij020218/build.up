@@ -4,6 +4,46 @@ import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey, getRealAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit, checkDailyRateLimit, checkWeeklyRateLimit } from "../../../_lib/rate-limit";
 import { buildPlanFacts, PLAN_HONESTY_RULES } from "../../../_lib/business-plan-facts";
+import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
+
+/**
+ * 생성 성공 시 business_plan_drafts 원장에 저장 (2026-08-14 — 펀딩 페이지 '사업계획서 보기').
+ *  fire-and-forget: 저장 실패가 생성 응답을 막지 않는다(로그만). 반환된 id 는 응답에 실어
+ *  클라이언트가 목록과 매칭할 수 있게 한다.
+ */
+async function persistDraft(
+  userId: string,
+  input: BusinessPlanInput,
+  plan: BusinessPlanResponse,
+  model: string,
+): Promise<string | null> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from("business_plan_drafts")
+      .insert({
+        user_id: userId,
+        program_id: input.program?.id ?? null,
+        program_name: input.program?.name ?? null,
+        purpose: input.purpose ?? "govt-support",
+        summary: plan.summary ?? null,
+        sections: plan.sections,
+        missing_info: plan.missingInfo ?? [],
+        model,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      console.warn("[business-plan] 초안 저장 실패:", error.message);
+      return null;
+    }
+    return (data?.id as string) ?? null;
+  } catch (e) {
+    console.warn("[business-plan] 초안 저장 예외:", e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
 
 // 사업계획서 생성은 긴 AI 응답이 필요하므로 타임아웃 확장
 // Claude(최대 110s) 실패 시 OpenAI 폴백(90s)까지 순차 실행될 수 있어 합산 여유 확보 (2026-08-14)
@@ -355,7 +395,8 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
         systemPrompt,
         `아래 데이터를 기반으로 사업계획서를 작성해주세요.\n\n${userDataWithFacts}`,
       );
-      return NextResponse.json(result);
+      const draftId = await persistDraft(auth.userId, input, result, CLAUDE_MODEL);
+      return NextResponse.json({ ...result, draftId });
     } catch (err) {
       // 폴백 사유를 남긴다 (침묵 강등 금지) — refusal·타임아웃·파싱 실패 등
       console.warn(
@@ -455,7 +496,8 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
       return NextResponse.json({ error: "AI response sections are empty or malformed" }, { status: 502 });
     }
 
-    return NextResponse.json(parsed);
+    const draftId = await persistDraft(auth.userId, input, parsed, "gpt-5.4-mini");
+    return NextResponse.json({ ...parsed, draftId });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[business-plan] Error:", msg);

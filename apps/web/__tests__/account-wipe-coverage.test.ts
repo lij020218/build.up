@@ -50,6 +50,7 @@ const INTENTIONALLY_RETAINED: Record<string, string> = {
   ai_monthly_spend: "월간 AI 비용 예산(₩6,000) 카운터. 초기화로 리셋되면 예산 우회가 된다.",
   surface_daily_visits: "화면 방문 운영 통계(가게 데이터 아님 — 초기화 대상 아님). 계정 삭제는 FK CASCADE.",
   market_area_snapshots: "상권 개폐업 추이 전역 원장(user_id 없음 — 특정 사장님 데이터 아님). 초기화·삭제와 무관.",
+  interior_firms: "내 지역 인테리어 업체 공공 공개 데이터(user_id 없음 — 계정 데이터 아님). 초기화·삭제와 무관.",
   ga4_oauth_nonces: "만료 nonce. cleanup_ga4_oauth_nonces 가 자동 정리.",
 
   // ── 부모 CASCADE 로 정리됨 ──
