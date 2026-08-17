@@ -33,7 +33,8 @@ export default function AuthCallbackPage() {
 function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"verifying" | "success" | "confirmed" | "error" | "recovery-form">("verifying");
+  // signup-complete: 가입 인증 + 자동 로그인까지 된 상태 — "회원가입 완료" 전용 화면 (2026-08-14 사장님 지시)
+  const [status, setStatus] = useState<"verifying" | "success" | "signup-complete" | "confirmed" | "error" | "recovery-form">("verifying");
   const [errorMsg, setErrorMsg] = useState("");
   const [newPw, setNewPw] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -104,6 +105,13 @@ function AuthCallbackInner() {
           const { data } = await supabase.auth.getSession();
           if (data.session) {
             if (isRecovery) { setStatus("recovery-form"); return; }
+            if (isConfirmFlow) {
+              // 가입 인증 + 자동 로그인 성공 — "회원가입 완료" 를 분명히 보여준 뒤 이동 (종전 0.6초 flash 는 인지 불가)
+              setStatus("signup-complete");
+              const dest = consumeReturnTo();
+              setTimeout(() => { window.location.assign(dest); }, 2200);
+              return;
+            }
             setStatus("success");
             const dest = consumeReturnTo();
             setTimeout(() => { window.location.assign(dest); }, 600);
@@ -254,6 +262,24 @@ function AuthCallbackInner() {
       )}
 
       {/* 인증 성공 + 자동 로그인 불가(다른 브라우저에서 링크 오픈) — 성공으로 안내하고 로그인 유도 */}
+      {status === "signup-complete" && (
+        <div>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "50%",
+            background: "rgba(104,211,145,0.15)", margin: "0 auto 20px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#68d391" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>회원가입이 완료되었습니다 🎉</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.6 }}>
+            이메일 인증이 끝났어요.<br />Found.One에 오신 걸 환영합니다 — 잠시 후 시작 화면으로 이동해요.
+          </p>
+        </div>
+      )}
+
       {status === "confirmed" && (
         <div>
           <div style={{
@@ -265,9 +291,9 @@ function AuthCallbackInner() {
               <path d="M5 13l4 4L19 7" stroke="#68d391" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>이메일 인증 완료!</h2>
+          <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>회원가입이 완료되었습니다 🎉</h2>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
-            계정 인증이 끝났습니다.<br />가입하신 이메일과 비밀번호로 로그인해 주세요.
+            이메일 인증이 끝났어요.<br />가입하신 이메일과 비밀번호로 로그인해 주세요.
           </p>
           <button
             type="button"
