@@ -153,6 +153,15 @@ function AuthCallbackInner() {
             return;
           }
           if (type === "recovery") { setStatus("recovery-form"); return; }
+          // 가입 인증(token_hash 템플릿) — 어느 기기에서 열어도 verifyOtp 가 세션까지 만들어 준다.
+          //   iOS 출발(from=ios)이면 세션을 웹에 남기지 않고 "앱으로 돌아가 로그인" 안내만.
+          if (type === "signup" || type === "email" || isConfirmFlow) {
+            if (fromIos) { void supabase.auth.signOut(); setStatus("confirmed"); return; }
+            setStatus("signup-complete");
+            const dest = consumeReturnTo();
+            setTimeout(() => { window.location.assign(dest); }, 2200);
+            return;
+          }
           setStatus("success");
           const dest = consumeReturnTo();
           setTimeout(() => { window.location.assign(dest); }, 1200);

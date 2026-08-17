@@ -189,10 +189,12 @@ public final class AuthCoordinator {
     }
 
     /// 비밀번호 재설정 메일 발송.
-    /// redirect 를 앱 커스텀 스킴(foundone://auth/reset)으로 보내, 같은 기기에서 메일 링크를 열면
-    /// 앱이 다시 열리고 앱 안에서 새 비밀번호를 설정한다. (PKCE — verifier 가 이 기기에 저장돼 있어야 함)
+    /// 2026-08-14: 링크를 웹 콜백으로 통일. Supabase 메일 템플릿이 token_hash 방식이라
+    /// **어느 기기·브라우저에서 열어도** 웹에서 새 비밀번호를 정할 수 있다(사장님 실사용: 노트북 요청→
+    /// 데스크탑 클릭 실패 → 수정). 종전 foundone:// 딥링크는 PKCE verifier 가 이 폰에만 있어 같은 폰에서만 됐다.
+    /// handlePasswordRecoveryURL(딥링크 수신)은 하위호환으로 유지.
     public func sendPasswordReset(email: String) async throws {
-        let redirect = URL(string: "foundone://auth/reset")
+        let redirect = URL(string: "\(BUSupabase.shared.env.webAppURL.absoluteString)/auth/callback?type=recovery")
         try await supabase.auth.resetPasswordForEmail(email, redirectTo: redirect)
     }
 
