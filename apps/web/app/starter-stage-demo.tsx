@@ -425,7 +425,7 @@ export default function StarterStageDemo({
     showProfileDetails, setShowProfileDetails,
     showMonthlyCostPrompt, setShowMonthlyCostPrompt,
     lastUnlocked, selectedStoreIndex, setSelectedStoreIndex,
-    authLabel, persistenceLabel, persistenceReady,
+    authLabel, userName, persistenceLabel, persistenceReady,
     saveStatus, setSaveStatus,
     profile, authResolved, requiresAuth,
     transitionNotice, setTransitionNotice,
@@ -905,6 +905,53 @@ export default function StarterStageDemo({
         flex: 1; min-width: 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
+      /* ━━━ 사이드바 푸터 — 계정 정보 + 로그아웃 (2026-08-14) ━━━ */
+      .bup-sidebar-footer {
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 0.5px solid rgba(255,255,255,0.7);
+        box-shadow: 0 -1px 0 rgba(15,23,42,0.06);
+        display: flex; flex-direction: column; gap: 2px;
+        position: relative; z-index: 1;
+      }
+      .bup-sidebar-account {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 10px;
+        border: none; background: transparent; cursor: pointer;
+        border-radius: 10px; font-family: inherit; text-align: left;
+        min-width: 0;
+        transition: background .15s ease;
+      }
+      .bup-sidebar-account:hover { background: rgba(255,255,255,0.45); }
+      .bup-sidebar-avatar {
+        width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+        background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+        color: #fff; font-size: 12px; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 6px rgba(29,53,87,0.18);
+      }
+      .bup-sidebar-account-text {
+        display: flex; flex-direction: column; min-width: 0; flex: 1;
+      }
+      .bup-sidebar-account-name {
+        font-size: 12.5px; font-weight: 700; color: #0f172a;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+      }
+      .bup-sidebar-account-email {
+        font-size: 11px; font-weight: 500; color: rgba(15,23,42,0.5);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .bup-sidebar-signout {
+        display: flex; align-items: center; gap: 11px;
+        padding: 9px 12px;
+        border: none; background: transparent; cursor: pointer;
+        border-radius: 10px; font-family: inherit;
+        font-size: 13px; font-weight: 600; color: rgba(15,23,42,0.55);
+        text-align: left; letter-spacing: -0.01em;
+        transition: background .15s ease, color .15s ease;
+      }
+      .bup-sidebar-signout:hover { background: rgba(220,38,38,0.07); color: #b91c1c; }
       /* ━━━ 사이드바 collapsed 모드 (아이콘만, 60px) ━━━ */
       .bup-sidebar { transition: width .25s cubic-bezier(0.16, 1, 0.3, 1); }
       .bup-sidebar[data-collapsed="true"] {
@@ -929,6 +976,10 @@ export default function StarterStageDemo({
         /* 접힌 상태에선 left bar 살짝 숨김 (아이콘 가운데 정렬 깨지지 않게) */
         opacity: 0.6;
       }
+      /* 접힌 상태 푸터: 아바타·로그아웃 아이콘만 가운데 정렬 */
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-account-text { display: none; }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-account { justify-content: center; padding: 8px 0; }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-signout { justify-content: center; padding: 9px 8px; }
 
       /* ━━━ 사이드바 우측 가장자리 토글 버튼 (Linear/Notion 표준) ━━━ */
       .bup-sidebar-toggle {
@@ -1137,6 +1188,49 @@ export default function StarterStageDemo({
             );
           })}
         </nav>
+        {/* ── 사이드바 푸터: 간단한 계정 정보 + 로그아웃 (2026-08-14 사장님 지시 — 로그아웃을 더 쉽게) ── */}
+        {(() => {
+          const email = authLabel && authLabel.includes(" · ") ? authLabel.split(" · ")[0] : (authLabel || "");
+          const name = (userName ?? "").trim();
+          const initial = (name || email || "?")[0]?.toUpperCase() ?? "?";
+          const flush = (d as { flushStoreDataImmediate?: () => Promise<void> }).flushStoreDataImmediate;
+          const onSignOut = async () => {
+            // ProfileView.handleSignOut 과 동일 순서: 대기 중 자동저장 flush → signOut → /auth
+            try { if (flush) await flush(); } catch (err) { console.warn("[sidebar signOut] flush failed (non-fatal):", err); }
+            await supabase.auth.signOut();
+            router.push("/auth");
+          };
+          return (
+            <div className="bup-sidebar-footer">
+              <button
+                type="button"
+                className="bup-sidebar-account"
+                onClick={() => { navigateToSurface("profile"); setMobileNavOpen(false); }}
+                title={sidebarCollapsed ? (name || email || "내 정보") : undefined}
+              >
+                <span className="bup-sidebar-avatar" aria-hidden>{initial}</span>
+                <span className="bup-sidebar-account-text">
+                  <span className="bup-sidebar-account-name">{name || (language === "ko" ? "내 계정" : "My account")}</span>
+                  {email && <span className="bup-sidebar-account-email">{email}</span>}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="bup-sidebar-signout"
+                onClick={() => { void onSignOut(); }}
+                title={language === "ko" ? "로그아웃" : "Sign out"}
+                aria-label={language === "ko" ? "로그아웃" : "Sign out"}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span className="bup-sidebar-btn-label">{language === "ko" ? "로그아웃" : "Sign out"}</span>
+              </button>
+            </div>
+          );
+        })()}
       </aside>
     )}
 
