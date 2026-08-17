@@ -153,7 +153,7 @@ public final class AuthCoordinator {
                 email: email,
                 password: password,
                 data: metadata,
-                redirectTo: URL(string: "\(BUSupabase.shared.env.webAppURL.absoluteString)/auth/callback?flow=confirm")
+                redirectTo: URL(string: "\(BUSupabase.shared.env.webAppURL.absoluteString)/auth/callback?flow=confirm&from=ios")
             )
 
             guard let session = response.session else {
@@ -176,7 +176,13 @@ public final class AuthCoordinator {
 
     public func resendEmailConfirmation(email: String) async {
         do {
-            try await supabase.auth.resend(email: email, type: .signup)
+            // 재발송도 첫 가입 메일과 같은 콜백(flow=confirm)으로 — 미지정 시 Site URL 루트로 떨어져
+            //   "회원가입 완료" 안내 없이 랜딩만 보였다 (웹 resendConfirmationEmail 과 동일하게, 2026-08-14).
+            try await supabase.auth.resend(
+                email: email,
+                type: .signup,
+                emailRedirectTo: URL(string: "\(BUSupabase.shared.env.webAppURL.absoluteString)/auth/callback?flow=confirm&from=ios")
+            )
         } catch {
             state = .failed(Self.authErrorMessage(error))
         }

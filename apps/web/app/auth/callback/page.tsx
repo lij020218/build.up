@@ -33,6 +33,8 @@ export default function AuthCallbackPage() {
 function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // iOS 앱에서 시작한 가입 인증 (AuthCoordinator 가 from=ios 마커를 붙임) — 앱으로 돌아가라는 안내용
+  const fromIos = searchParams.get("from") === "ios";
   // signup-complete: 가입 인증 + 자동 로그인까지 된 상태 — "회원가입 완료" 전용 화면 (2026-08-14 사장님 지시)
   const [status, setStatus] = useState<"verifying" | "success" | "signup-complete" | "confirmed" | "error" | "recovery-form">("verifying");
   const [errorMsg, setErrorMsg] = useState("");
@@ -292,20 +294,29 @@ function AuthCallbackInner() {
             </svg>
           </div>
           <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>회원가입이 완료되었습니다 🎉</h2>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
-            이메일 인증이 끝났어요.<br />가입하신 이메일과 비밀번호로 로그인해 주세요.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push("/auth")}
-            style={{
-              padding: "13px 32px", borderRadius: "980px",
-              background: "#3b5c8c", border: "none",
-              color: "#fff", fontSize: "15px", fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            로그인하러 가기 →
-          </button>
+          {fromIos ? (
+            // iOS 앱에서 가입 → 사파리로 인증 → 앱으로 돌아가 로그인 (앱 딥링크 없이 안내만, 2026-08-14)
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
+              이메일 인증이 끝났어요.<br />Found.One 앱으로 돌아가서 가입하신 이메일과 비밀번호로 로그인해 주세요.
+            </p>
+          ) : (
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
+              이메일 인증이 끝났어요.<br />가입하신 이메일과 비밀번호로 로그인해 주세요.
+            </p>
+          )}
+          {!fromIos && (
+            <button
+              type="button"
+              onClick={() => router.push("/auth")}
+              style={{
+                padding: "13px 32px", borderRadius: "980px",
+                background: "#3b5c8c", border: "none",
+                color: "#fff", fontSize: "15px", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              로그인하러 가기 →
+            </button>
+          )}
         </div>
       )}
 
