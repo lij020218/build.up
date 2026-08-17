@@ -36,14 +36,17 @@ public struct SignInView: View {
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
 
+                // 2026-08-14 리디자인: 브랜드 → 헤드라인 → 글래스 카드 그리드, 순차 페이드업.
+                //   이전: 마크+워드마크+한 줄 부제 + 좌측 정렬 소형 리스트 3줄 → 위아래가 비고 밋밋했다.
                 BrandMark()
-                    .padding(.bottom, BUSpacing.xl)
+                    .padding(.bottom, BUSpacing.xxl)
+                    .foEntrance(delay: 0)
 
                 ValuePropositions()
-                    .padding(.horizontal, BUSpacing.lg)
-                    .padding(.bottom, BUSpacing.xl)
+                    .padding(.horizontal, BUSpacing.md)
+                    .foEntrance(delay: 0.12)
 
-                Spacer(minLength: 0)
+                Spacer(minLength: BUSpacing.xl)
 
                 VStack(spacing: 10) {
                     // ⚠️ 카카오 로그인은 네이티브 SDK 미연동(KakaoAuthProvider 스텁, Package.swift 주석)이라
@@ -466,17 +469,39 @@ private struct AuthSecureField: View {
 
 private struct BrandMark: View {
     var body: some View {
-        VStack(spacing: BUSpacing.md) {
-            // Logo mark — 둥근 사각 + Aurora 그라디언트 (BrandBar 와 동일 톤)
-            FoundOneSpiralLogo(size: 68, color: BUColor.midnightBright)
-                .frame(width: 72, height: 72)
+        VStack(spacing: 0) {
+            // Logo mark — 뒤에 은은한 브랜드 글로우 (Aurora 배경 위에서 마크가 떠 보이게)
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [BUColor.midnightBright.opacity(0.22), BUColor.midnightBright.opacity(0.0)],
+                            center: .center, startRadius: 6, endRadius: 78
+                        )
+                    )
+                    .frame(width: 156, height: 156)
+                FoundOneSpiralLogo(size: 76, color: BUColor.midnightBright)
+                    .frame(width: 80, height: 80)
+                    .shadow(color: BUColor.midnightBright.opacity(0.28), radius: 18, x: 0, y: 8)
+            }
+            .padding(.bottom, 2)
 
             // Wordmark — 공식 로고 서체(FoundOneWordmark). "." 은 마크색 액센트.
-            FoundOneWordmark(height: 27, color: BUColor.ink, dotColor: BUColor.midnightBright)
+            FoundOneWordmark(height: 26, color: BUColor.ink, dotColor: BUColor.midnightBright)
+                .padding(.bottom, BUSpacing.lg)
 
-            // 부제목
-            Text("매일 5초, 사장님 옆에 함께")
-                .font(.system(size: 14.5, weight: .regular))
+            // 헤드라인 — 부제 한 줄에서 "약속" 두 줄로 격상
+            Text("사장님의 하루를\n5초로 정리해 드릴게요")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(BUColor.ink)
+                .multilineTextAlignment(.center)
+                .tracking(-0.6)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.bottom, 8)
+
+            Text("창업 준비부터 매출 관리까지, 한 흐름으로")
+                .font(.system(size: 13.5, weight: .medium))
                 .foregroundStyle(BUColor.inkSecondary)
                 .multilineTextAlignment(.center)
                 .tracking(-0.2)
@@ -485,55 +510,90 @@ private struct BrandMark: View {
     }
 }
 
-// MARK: - Value Propositions
+// MARK: - Value Propositions (글래스 카드 그리드)
 
 private struct ValuePropositions: View {
+    // ⚠️ 총 단계 수를 문구로 박지 않는다 — 사장님이 보는 수는 업종별로 다르다
+    //    (오프라인 21 · 온라인 15 · 스타트업 19 · 하드웨어/랩/반도체 23). (2026-08-06)
+    // 제목은 모두 2줄로 맞춰 카드 3장의 높이를 균일하게 (한 장만 3줄이면 들쭉날쭉)
+    private let items: [(icon: String, title: String, detail: String)] = [
+        ("chart.line.uptrend.xyaxis", "매일 30초\n코칭", "어제 매출과\n오늘 할 일 하나"),
+        ("bell.badge.fill", "현금 위기\n미리 알림", "통장 부족 예상\n7일 전 푸시"),
+        ("map.fill", "업종 맞춤\n로드맵", "내 업종에 필요한\n단계만 골라서"),
+    ]
+
     var body: some View {
-        VStack(spacing: 10) {
-            valueRow(
-                icon: "chart.line.uptrend.xyaxis",
-                title: "매일 30초 코칭",
-                detail: "어제 매출 + 오늘 행동 1개"
-            )
-            valueRow(
-                icon: "exclamationmark.shield.fill",
-                title: "현금 위기 7일 전 알림",
-                detail: "통장 부족 예상 즉시 푸시"
-            )
-            valueRow(
-                icon: "map.fill",
-                // ⚠️ 총 단계 수를 문구로 박지 않는다 — 사장님이 보는 수는 업종별로 다르다
-                //    (오프라인 21 · 온라인 15 · 스타트업 19 · 하드웨어/랩/반도체 23).
-                //    "46단계" 로 적혀 있었으나 실제 로드맵은 21단계로 표시돼 어긋났다 (2026-08-06).
-                title: "업종 맞춤 로드맵",
-                detail: "내 업종에 필요한 단계만"
-            )
+        // ⚠️ 카드 높이는 고정(fixedSize) — 이전 Spacer 방식은 부모 세로 공간을 전부 먹어
+        //    카드가 화면 절반까지 늘어났다 (2026-08-14 실렌더에서 발견).
+        HStack(alignment: .top, spacing: 10) {
+            ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+                valueCard(icon: item.icon, title: item.title, detail: item.detail)
+                    .foEntrance(delay: 0.16 + Double(i) * 0.07)
+            }
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    private func valueRow(icon: String, title: String, detail: String) -> some View {
-        HStack(spacing: 12) {
+    private func valueCard(icon: String, title: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(BUColor.midnight08)
-                    .frame(width: 36, height: 36)
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [BUColor.midnight, BUColor.midnightBright],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 34, height: 34)
+                    .shadow(color: BUColor.midnight.opacity(0.22), radius: 6, x: 0, y: 3)
                 Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(BUColor.midnight)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
             }
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 13.5, weight: .bold))
+                    .font(.system(size: 12.5, weight: .bold))
                     .foregroundStyle(BUColor.ink)
+                    .tracking(-0.2)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(detail)
-                    .font(.system(size: 11.5, weight: .regular))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
+                    .lineSpacing(1)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
         }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.62))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.75), lineWidth: 0.8)
+                )
+                .shadow(color: BUColor.midnight.opacity(0.06), radius: 12, x: 0, y: 6)
+        )
     }
+}
+
+// MARK: - Entrance animation (순차 페이드업)
+
+private struct FoEntranceModifier: ViewModifier {
+    let delay: Double
+    @State private var shown = false
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown ? 0 : 10)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.55).delay(delay)) { shown = true }
+            }
+    }
+}
+
+private extension View {
+    func foEntrance(delay: Double) -> some View { modifier(FoEntranceModifier(delay: delay)) }
 }
 
 // MARK: - Buttons
