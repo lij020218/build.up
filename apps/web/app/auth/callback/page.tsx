@@ -94,16 +94,28 @@ function AuthCallbackInner() {
       return () => authSub.subscription.unsubscribe();
     }
     if (oauthCode) {
+      // ⚠️ 2026-08-14 P0: 비밀번호 재설정 링크도 PKCE(flowType:"pkce")라 `?code=&type=recovery` 로 온다.
+      //   종전엔 code 만 보고 "로그인 성공 → 홈" 으로 보내 (1) 새 비번 화면이 안 뜨고 (2) 링크 클릭만으로
+      //   자동 로그인되는 심각한 결함. type=recovery 면 세션 성립 후 반드시 새 비번 폼으로 간다.
+      //   (세션 자체는 비번 변경에 필요 — updateUser 가 세션 기반. 폼을 안 거치고 홈으로 새는 게 문제였다.)
+      const isRecovery = type === "recovery";
       void (async () => {
         for (let i = 0; i < 10; i++) {
           const { data } = await supabase.auth.getSession();
           if (data.session) {
+            if (isRecovery) { setStatus("recovery-form"); return; }
             setStatus("success");
             const dest = consumeReturnTo();
             setTimeout(() => { window.location.assign(dest); }, 600);
             return;
           }
           await new Promise((r) => setTimeout(r, 400));
+        }
+        if (isRecovery) {
+          // PKCE 는 "요청한 그 브라우저" 에서만 code 교환 가능 — 메일앱 내장 브라우저·다른 기기면 실패가 정상.
+          setStatus("error");
+          setErrorMsg("이 링크는 비밀번호 찾기를 요청한 브라우저에서 열어야 해요. 같은 브라우저에서 다시 열거나, 재설정을 다시 요청해 주세요.");
+          return;
         }
         if (isConfirmFlow) {
           // 인증은 완료 — 자동 로그인만 불가(다른 브라우저). 성공으로 안내하고 로그인 유도.
@@ -208,6 +220,19 @@ function AuthCallbackInner() {
             }}
           >
             비밀번호 변경
+          </button>
+          {/* 재설정 세션은 새 비번을 정하기 위한 임시 세션 — 취소 시 로그아웃해 "링크만 눌러 로그인된 상태" 가 남지 않게 (2026-08-14) */}
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => { void (async () => { await supabase.auth.signOut(); window.location.assign("/auth"); })(); }}
+            style={{
+              width: "100%", padding: "11px 0", marginTop: "10px", borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.15)", background: "transparent",
+              color: "rgba(255,255,255,0.7)", fontSize: "13.5px", fontWeight: 500, cursor: "pointer",
+            }}
+          >
+            취소하고 로그아웃
           </button>
         </div>
       )}
