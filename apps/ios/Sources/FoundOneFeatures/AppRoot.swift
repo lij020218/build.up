@@ -1183,7 +1183,11 @@ private struct MainTabs: View {
         FoundOneMobileShell(
             selectedTab: $selectedTab,
             tabs: webSurfaceTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
-            bottomTabs: bottomQuickTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId)
+            bottomTabs: bottomQuickTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
+            // 사이드바 푸터 — 계정 정보 + 로그아웃 (웹 .bup-sidebar-footer 미러, 2026-08-14)
+            accountName: coordinator.currentSession?.displayName,
+            accountEmail: coordinator.currentSession?.email,
+            onSignOut: { Task { await coordinator.signOut() } }
         ) {
             switch selectedTab {
             case .home:
@@ -1333,17 +1337,27 @@ private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
     let bottomTabs: [FoundOneSurfaceTab]
     let accessory: Accessory
     let content: Content
+    /// 사이드바 푸터 계정 정보 + 로그아웃 (실계정 쉘만 — 데모 쉘은 nil) 2026-08-14
+    let accountName: String?
+    let accountEmail: String?
+    let onSignOut: (() -> Void)?
 
     init(
         selectedTab: Binding<AppRoot.Tab>,
         tabs: [FoundOneSurfaceTab],
         bottomTabs: [FoundOneSurfaceTab] = [],
+        accountName: String? = nil,
+        accountEmail: String? = nil,
+        onSignOut: (() -> Void)? = nil,
         @ViewBuilder accessory: () -> Accessory,
         @ViewBuilder content: () -> Content
     ) {
         self._selectedTab = selectedTab
         self.tabs = tabs
         self.bottomTabs = bottomTabs
+        self.accountName = accountName
+        self.accountEmail = accountEmail
+        self.onSignOut = onSignOut
         self.accessory = accessory()
         self.content = content()
     }
@@ -1378,6 +1392,14 @@ private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
                     FoundOneLiquidSidebar(
                         tabs: tabs,
                         selectedTab: $selectedTab,
+                        accountName: accountName,
+                        accountEmail: accountEmail,
+                        onSignOut: onSignOut.map { signOut in
+                            {
+                                withAnimation(.snappy(duration: 0.24)) { sidebarOpen = false }
+                                signOut()
+                            }
+                        },
                         onClose: {
                             withAnimation(.snappy(duration: 0.24)) {
                                 sidebarOpen = false
@@ -1453,12 +1475,18 @@ private extension FoundOneMobileShell where Accessory == EmptyView {
         selectedTab: Binding<AppRoot.Tab>,
         tabs: [FoundOneSurfaceTab],
         bottomTabs: [FoundOneSurfaceTab] = [],
+        accountName: String? = nil,
+        accountEmail: String? = nil,
+        onSignOut: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.init(
             selectedTab: selectedTab,
             tabs: tabs,
             bottomTabs: bottomTabs,
+            accountName: accountName,
+            accountEmail: accountEmail,
+            onSignOut: onSignOut,
             accessory: { EmptyView() },
             content: content
         )
@@ -1508,6 +1536,10 @@ private struct FoundOneBrandBar<Accessory: View>: View {
 private struct FoundOneLiquidSidebar: View {
     let tabs: [FoundOneSurfaceTab]
     @Binding var selectedTab: AppRoot.Tab
+    /// 사이드바 푸터 계정 정보 + 로그아웃 (2026-08-14 사장님 지시 — 웹 사이드바 푸터 미러)
+    var accountName: String? = nil
+    var accountEmail: String? = nil
+    var onSignOut: (() -> Void)? = nil
     let onClose: () -> Void
 
     var body: some View {
@@ -1557,6 +1589,11 @@ private struct FoundOneLiquidSidebar: View {
             Spacer(minLength: 0)
 
             // 2026-05-25 사장님 신고: "웹 surface와 동일한 순서" 개발자 문구 노출 — 제거.
+
+            // ── 푸터: 간단한 계정 정보 + 로그아웃 (2026-08-14, 웹 .bup-sidebar-footer 미러) ──
+            if onSignOut != nil {
+                sidebarFooter
+            }
         }
         .padding(.horizontal, 18)
         .frame(width: 292)
@@ -1592,6 +1629,77 @@ private struct FoundOneLiquidSidebar: View {
                 .shadow(color: Color.black.opacity(0.12), radius: 24, x: 4, y: 0)
                 .ignoresSafeArea()
         )
+    }
+
+    // MARK: - Footer (계정 + 로그아웃)
+
+    private var sidebarFooter: some View {
+        let name = (accountName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let email = (accountEmail ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let initial = String((name.isEmpty ? (email.isEmpty ? "?" : email) : name).prefix(1)).uppercased()
+        return VStack(alignment: .leading, spacing: 4) {
+            Rectangle()
+                .fill(BUColor.midnight.opacity(0.08))
+                .frame(height: 0.5)
+                .padding(.bottom, 8)
+
+            // 계정 행 — 탭하면 내 정보로
+            Button {
+                selectedTab = .profile
+                onClose()
+            } label: {
+                HStack(spacing: 10) {
+                    Text(initial)
+                        .font(.system(size: 12, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .background(
+                            LinearGradient(colors: [BUColor.midnight, BUColor.midnightBright], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        )
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(name.isEmpty ? "내 계정" : name)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .lineLimit(1)
+                        if !email.isEmpty {
+                            Text(email)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .frame(minHeight: 46)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("내 정보")
+
+            // 로그아웃
+            Button {
+                onSignOut?()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(width: 22, height: 22)
+                    Text("로그아웃")
+                        .font(.system(size: 14, weight: .semibold))
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(BUColor.inkSecondary)
+                .padding(.horizontal, 13)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("로그아웃")
+        }
+        .padding(.bottom, 24)
     }
 }
 
