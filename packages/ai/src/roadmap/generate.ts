@@ -440,7 +440,7 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
 
   // monthlyCosts 는 budgetAllocation.monthlyFixedCost 파생에 먼저 필요 → result 리터럴 앞에서 계산.
   const monthlyCosts = (() => {
-    const nn = (v: unknown) => Math.max(0, Number(v) || 0);
+    const nn = (v: unknown) => Math.max(0, Math.round(Number(v) || 0));
     const mc = (obj.monthlyCosts as Record<string, unknown>) ?? {};
     let ingredients = nn(mc.ingredients);
     let labor = nn(mc.labor);
@@ -470,7 +470,7 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
       businessModelId: String(p.businessModelId ?? "dine-in"),
       preferredRegion: String(p.preferredRegion ?? ""),
       matchingReason: String(p.matchingReason ?? ""),
-      matchingConfidence: Math.max(0, Math.min(100, Number(p.matchingConfidence) || 50)),
+      matchingConfidence: Math.round(Math.max(0, Math.min(100, Number(p.matchingConfidence) || 50))),
       alternativeSubIndustries: Array.isArray(p.alternativeSubIndustries)
         ? (p.alternativeSubIndustries as Array<Record<string, unknown>>)
             .map(a => ({ id: String(a.id ?? ""), reason: String(a.reason ?? "") }))
@@ -490,7 +490,7 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
     budgetAllocation: (() => {
       // 음수 가드 — 모델이 가끔 negative number 를 반환 (특히 운영자금에 -90000만 같은 케이스).
       // 0 미만은 모두 0 으로 clamp.
-      const nn = (v: unknown) => Math.max(0, Number(v) || 0);
+      const nn = (v: unknown) => Math.max(0, Math.round(Number(v) || 0));
       const ba = (obj.budgetAllocation as Record<string, unknown>) ?? {};
       let deposit = nn(ba.deposit);
       let interior = nn(ba.interior);
@@ -547,9 +547,14 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
     },
     timeline: {
       targetOpenDate: String((obj.timeline as Record<string, unknown>)?.targetOpenDate ?? new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10)),
-      totalWeeks: Number((obj.timeline as Record<string, unknown>)?.totalWeeks) || 16,
+      totalWeeks: Math.max(1, Math.round(Number((obj.timeline as Record<string, unknown>)?.totalWeeks) || 16)),
       phases: Array.isArray((obj.timeline as Record<string, unknown>)?.phases)
-        ? ((obj.timeline as Record<string, unknown>).phases as Array<{ name: string; weeks: number }>)
+        ? ((obj.timeline as Record<string, unknown>).phases as Array<Record<string, unknown>>).map(ph => ({
+            name: String(ph?.name ?? ""),
+            weeks: Math.max(0, Math.round(Number(ph?.weeks) || 0)),
+            // iOS 1.0.0(4) Timeline.Phase.tasks:[String] non-optional (2026-08-19 prod 실측 디코딩 실패) — 스키마에 없어도 항상 배열로.
+            tasks: Array.isArray(ph?.tasks) ? (ph.tasks as unknown[]).map(t => String(t ?? "")).filter(Boolean) : [],
+          }))
         : [],
     },
     risks: Array.isArray(obj.risks)

@@ -74,3 +74,31 @@ describe("roadmap budgetAllocation.monthlyFixedCost — iOS 디코딩 계약", (
     expect(r.budgetAllocation).toHaveProperty("monthlyFixedCost", 0);
   });
 });
+
+/**
+ * iOS 디코딩 계약 #2 (2026-08-19 prod 실측): Timeline.Phase.tasks:[String] non-optional 인데
+ * 서버 스키마엔 tasks 가 없어 LLM 이 phases 를 채우면 keyNotFound. 서버가 항상 [] 이상 보장.
+ */
+describe("roadmap timeline.phases — iOS 디코딩 계약", () => {
+  it("phases 각 항목에 name·weeks(정수)·tasks(배열) 항상 존재", () => {
+    const r = parseResponse(JSON.stringify({
+      parsed: { industryCategoryId: "food", subIndustryId: "korean-casual", industryLabel: "한식당" },
+      timeline: { totalWeeks: 15.6, phases: [{ name: "입지", weeks: 2.4 }, { name: "인테리어", weeks: 5, tasks: ["견적", 3] }] },
+    }));
+    expect(r.timeline.totalWeeks).toBe(16);
+    expect(r.timeline.phases).toEqual([
+      { name: "입지", weeks: 2, tasks: [] },
+      { name: "인테리어", weeks: 5, tasks: ["견적", "3"] },
+    ]);
+  });
+  it("정수 계약: budgetAllocation·monthlyCosts·matchingConfidence 는 소수 입력에도 정수", () => {
+    const r = parseResponse(JSON.stringify({
+      parsed: { industryCategoryId: "food", subIndustryId: "korean-casual", industryLabel: "한식당", matchingConfidence: 87.5 },
+      budgetAllocation: { deposit: 1500.4, interior: 1400, equipment: 1300, workingCapital: 800, total: 5000 },
+      monthlyCosts: { ingredients: 180.2, labor: 0, rent: 180, utilities: 35.5, other: 70 },
+    }));
+    expect(Number.isInteger(r.parsed.matchingConfidence)).toBe(true);
+    for (const v of Object.values(r.budgetAllocation)) expect(Number.isInteger(v)).toBe(true);
+    for (const v of Object.values(r.monthlyCosts)) expect(Number.isInteger(v)).toBe(true);
+  });
+});

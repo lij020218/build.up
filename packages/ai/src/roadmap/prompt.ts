@@ -368,7 +368,8 @@ export type RoadmapGenerationResult = {
   timeline: {
     targetOpenDate: string;
     totalWeeks: number;
-    phases: Array<{ name: string; weeks: number }>;
+    /** tasks: iOS 디코딩 계약(non-optional 배열) — 서버가 항상 [] 이상 보장 */
+    phases: Array<{ name: string; weeks: number; tasks: string[] }>;
   };
   risks: Array<{
     level: "high" | "medium" | "low";
