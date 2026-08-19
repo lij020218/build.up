@@ -29,29 +29,30 @@ import {
   getRedisClient, kstWeekKey, type RateLimitResult,
 } from "./rate-limit";
 import { getSupabaseAdmin } from "./supabase-admin";
-import { isTransientLlmError } from "@foundone/ai/utils/client";
+import { isTransientLlmError, llmCallContext } from "@foundone/ai/utils/client";
 
 // ─────────────────────────────────────────────────────────────
 // 기능별 한도 표 — 일/주/분당. 월간은 ₩6,000 예산 미터(ai-cost.ts)가 담당.
 //   원칙: 주간 = 일일 × 4 안팎(하루 몰아쓰기 허용하되 주 총량은 묶는다). 분당은 연타·오작동 방지.
 // ─────────────────────────────────────────────────────────────
-export type AiFeatureLimit = { daily: number; weekly: number; perMinute?: number };
-export const DEFAULT_AI_LIMIT: AiFeatureLimit = { daily: 20, weekly: 80, perMinute: 6 };
+/** timeoutMs/maxRetries = 이 기능 안에서 만들어지는 모든 LlmClient 의 기본 (AsyncLocalStorage 로 주입, 2026-08-19 P0) */
+export type AiFeatureLimit = { daily: number; weekly: number; perMinute?: number; timeoutMs?: number; maxRetries?: number };
+export const DEFAULT_AI_LIMIT: AiFeatureLimit = { daily: 20, weekly: 80, perMinute: 6, timeoutMs: 30_000, maxRetries: 2 };
 export const AI_FEATURE_LIMITS: Record<string, AiFeatureLimit> = {
   // 로드맵 — 별도 평생/주 3회 정책(checkRoadmapGenerationQuota)이 있어 여기선 상한만
-  "roadmap-generate":        { daily: 3,  weekly: 6,   perMinute: 2 },
+  "roadmap-generate":        { daily: 3,  weekly: 6,   perMinute: 2, timeoutMs: 110_000, maxRetries: 1 },
   "roadmap-classify":        { daily: 12, weekly: 40,  perMinute: 6 },
   // 파서·짧은 생성
   "quick-query":             { daily: 20, weekly: 80,  perMinute: 6 },
-  "members-parse":           { daily: 10, weekly: 30,  perMinute: 4 },
-  "products-parse":          { daily: 10, weekly: 30,  perMinute: 4 },
+  "members-parse":           { daily: 10, weekly: 30,  perMinute: 4, timeoutMs: 25_000 },
+  "products-parse":          { daily: 10, weekly: 30,  perMinute: 4, timeoutMs: 25_000 },
   "agents-content-draft":    { daily: 10, weekly: 40,  perMinute: 4 },
   "agents-coupon-copy":      { daily: 10, weekly: 40,  perMinute: 4 },
   "agents-feedback-form":    { daily: 6,  weekly: 24,  perMinute: 3 },
   // 무거운 판단형
-  "contract-analyze":        { daily: 3,  weekly: 8,   perMinute: 2 },
-  "business-plan-generate":  { daily: 2,  weekly: 4,   perMinute: 1 },
-  "business-plan-program":   { daily: 2,  weekly: 4,   perMinute: 1 },
+  "contract-analyze":        { daily: 3,  weekly: 8,   perMinute: 2, timeoutMs: 90_000,  maxRetries: 1 },
+  "business-plan-generate":  { daily: 2,  weekly: 4,   perMinute: 1, timeoutMs: 110_000, maxRetries: 1 },
+  "business-plan-program":   { daily: 2,  weekly: 4,   perMinute: 1, timeoutMs: 110_000, maxRetries: 1 },
   "interview":               { daily: 6,  weekly: 20,  perMinute: 4 },
   "interview-analyze":       { daily: 3,  weekly: 10,  perMinute: 2 },
   "health-diagnose":         { daily: 4,  weekly: 12,  perMinute: 2 },
@@ -65,17 +66,17 @@ export const AI_FEATURE_LIMITS: Record<string, AiFeatureLimit> = {
   "funding-score":           { daily: 8,  weekly: 24,  perMinute: 3 },
   "guides-ask":              { daily: 12, weekly: 40,  perMinute: 4 },
   "dashboard-actions":       { daily: 6,  weekly: 24,  perMinute: 2 },
-  "insights-industry-daily": { daily: 3,  weekly: 12,  perMinute: 2 },
+  "insights-industry-daily": { daily: 3,  weekly: 12,  perMinute: 2, timeoutMs: 40_000,  maxRetries: 1 },
   // 마케팅
-  "marketing-cases":         { daily: 4,  weekly: 12,  perMinute: 2 },
-  "marketing-cardnews":      { daily: 6,  weekly: 20,  perMinute: 2 },
+  "marketing-cases":         { daily: 4,  weekly: 12,  perMinute: 2, timeoutMs: 55_000,  maxRetries: 1 },
+  "marketing-cardnews":      { daily: 6,  weekly: 20,  perMinute: 2, timeoutMs: 40_000,  maxRetries: 1 },
   "marketing-memes":         { daily: 4,  weekly: 12,  perMinute: 2 },
   "marketing-engagement":    { daily: 60, weekly: 300, perMinute: 20 },
   // 코칭
   "coaching-feedback":       { daily: 30, weekly: 120, perMinute: 10 },
 };
 export function limitsFor(feature: string): AiFeatureLimit {
-  return AI_FEATURE_LIMITS[feature] ?? DEFAULT_AI_LIMIT;
+  return { ...DEFAULT_AI_LIMIT, ...(AI_FEATURE_LIMITS[feature] ?? {}) };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -244,18 +245,17 @@ export async function runAiFeature(
   if (!g.ok) return g.response;
   const retryOnce = opts.retryOnce !== false;
 
-  const attempt = async (): Promise<NextResponse> => handler(g);
+  // 재시도 1층 원칙(P0): 일시 오류(429/5xx/타임아웃)는 SDK 가 이미 재시도+폴백 — 여기선 **파싱/빈 응답**에만 1회 더.
+  const attempt = async (): Promise<NextResponse> =>
+    llmCallContext.run({ feature: opts.feature, timeoutMs: g.limits.timeoutMs, maxRetries: g.limits.maxRetries }, () => handler(g));
   let res: NextResponse | null = null;
   let lastErr: unknown = null;
   try {
     res = await attempt();
-    if (res.status >= 500 && retryOnce) {
-      console.warn(`[ai-guard] ${opts.feature} first attempt ${res.status} → retry once`);
-      res = await attempt();
-    }
+    // 5xx 응답은 핸들러(LLM 층)가 이미 재시도·폴백을 소진한 결과 — 여기서 또 돌리면 지연·비용 2배. 재시도 없이 환불.
   } catch (e) {
     lastErr = e;
-    if (retryOnce && (isTransientLlmError(e) || isParseLikeError(e))) {
+    if (retryOnce && isParseLikeError(e) && !isTransientLlmError(e)) {
       console.warn(`[ai-guard] ${opts.feature} threw (${(e as Error)?.name}: ${String((e as Error)?.message ?? "").slice(0, 120)}) → retry once`);
       try { res = await attempt(); lastErr = null; } catch (e2) { lastErr = e2; }
     }

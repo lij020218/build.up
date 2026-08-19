@@ -483,21 +483,17 @@ export async function POST(request: Request) {
 async function runRoadmapGeneration(body: RoadmapGenerationInput, apiKey: string): Promise<NextResponse> {
   // ── Pass 1: sub-industry 결정 + 전체 컨텍스트 ──
   let result: RoadmapGenerationResult | null = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  // 재시도 1층 원칙(2026-08-19): Pass1 재시도·폴백은 LlmClient(SDK 재시도 1회 + 모델 폴백 + 서킷 브레이커)가 담당.
+  //   라우트에서 또 돌리면 최악 110s×4 = 440s > maxDuration 300. 여기선 1회만.
+  {
     try {
       result = await generateRoadmap(body, { apiKey });
-      break;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const isTimeout = message.toLowerCase().includes("timeout") || message.toLowerCase().includes("timed out");
-      console.error(`[roadmap/generate Pass 1] Attempt ${attempt + 1} error:`, message);
+      console.error(`[roadmap/generate Pass 1] error:`, message);
 
-      if (isTimeout && attempt === 0) {
-        console.log("[roadmap/generate] Retrying Pass 1 after timeout...");
-        continue;
-      }
-
-      // 503 → ai-guard 가 1회 재시도 후 일·주·월 환불(+ POST 에서 쿼터 환불)
+      // 503 → ai-guard 가 일·주·월 환불
       return NextResponse.json(
         { error: isTimeout
           ? "AI 분석에 시간이 오래 걸리고 있습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요."

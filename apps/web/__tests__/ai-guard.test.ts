@@ -63,15 +63,22 @@ describe("ai-guard", () => {
     expect(r2.status).toBe(429);
   });
 
-  it("② 일시 오류는 1회 재시도 후 성공하면 정상 응답(차감 1회)", async () => {
+  it("② 파싱 실패(우리 쪽)는 1회 재시도 후 성공하면 정상 응답(차감 1회) / 일시 오류는 SDK 층 재시도에 맡기고 여기선 환불", async () => {
     const feature = freshFeature();
     const limits = { daily: 5, weekly: 10, perMinute: 100 };
     let n = 0;
-    const flaky = async () => { n++; if (n === 1) { const e = new Error("timeout"); (e as { status?: number }).status = 503; throw e; } return NextResponse.json({ ok: true, n }); };
-    const r = await runAiFeature({ request: req(), feature, limits }, flaky);
+    const flakyParse = async () => { n++; if (n === 1) throw new SyntaxError("Unexpected token in JSON"); return NextResponse.json({ ok: true, n }); };
+    const r = await runAiFeature({ request: req(), feature, limits }, flakyParse);
     expect(r.status).toBe(200);
     expect((await r.json()).n).toBe(2);
     const g = await guardAiFeature({ request: req(), feature, limits });
     expect(g.ok && g.usage.dayUsed).toBe(2); // 위 1회 + 지금 1회
+
+    // 일시 오류(타임아웃)는 재시도 없이 환불 + 503 (재시도 1층 원칙 — SDK 가 이미 재시도·폴백)
+    const f2 = freshFeature();
+    const timeoutOnce = async () => { const e = new Error("timeout"); (e as { status?: number }).status = 503; throw e; };
+    const r2 = await runAiFeature({ request: req(), feature: f2, limits }, timeoutOnce);
+    expect(r2.status).toBe(503);
+    expect((await r2.json()).refunded).toBe(true);
   });
 });

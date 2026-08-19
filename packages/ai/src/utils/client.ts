@@ -11,6 +11,14 @@
 
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { AsyncLocalStorage } from "node:async_hooks";
+
+/**
+ * 호출 문맥(기능별 타임아웃·재시도) — ai-guard 가 핸들러 실행 동안 설정하면 그 안에서 만들어지는
+ * 모든 LlmClient 가 자동으로 따른다 (packages/ai 내부 함수들이 createAiClient 를 직접 호출해도 적용).
+ */
+export type LlmCallContext = { feature?: string; timeoutMs?: number; maxRetries?: number };
+export const llmCallContext = new AsyncLocalStorage<LlmCallContext>();
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const LONG_TIMEOUT_MS = 60_000;
@@ -65,6 +73,56 @@ export function isTransientLlmError(err: unknown): boolean {
 export class EmptyLlmResponseError extends Error {
   constructor(model: string) { super(`empty response from ${model}`); this.name = "EmptyLlmResponseError"; }
 }
+
+/**
+ * ── 모델별 서킷 브레이커 (2026-08-19 P0) ─────────────────────────────────
+ *  최근 FAIL_WINDOW_MS 안에 일시 오류(타임아웃·5xx·429)가 FAIL_THRESHOLD 회 이상이면 OPEN_MS 동안 그 모델을
+ *  건너뛰고 바로 폴백으로 간다 — "재시도 스톰" 방지(장애 모델에 매 요청 110s 허비 금지).
+ *  프로세스 메모리 기반(서버리스 인스턴스별). 하프오픈: OPEN_MS 경과 후 첫 요청 1건만 원 모델로 시도.
+ */
+const FAIL_THRESHOLD = 3;
+const FAIL_WINDOW_MS = 60_000;
+const OPEN_MS = 120_000;
+type BreakerState = { failures: number[]; openUntil: number };
+const _breakers = new Map<string, BreakerState>();
+function breaker(model: string): BreakerState {
+  let b = _breakers.get(model);
+  if (!b) { b = { failures: [], openUntil: 0 }; _breakers.set(model, b); }
+  return b;
+}
+export function isModelOpen(model: string): boolean {
+  const b = breaker(model);
+  if (b.openUntil > Date.now()) return true;
+  if (b.openUntil !== 0) { b.openUntil = 0; b.failures = []; }   // half-open → 다음 1건 시도
+  return false;
+}
+export function recordModelFailure(model: string): void {
+  const b = breaker(model);
+  const now = Date.now();
+  b.failures = b.failures.filter((t) => now - t < FAIL_WINDOW_MS);
+  b.failures.push(now);
+  if (b.failures.length >= FAIL_THRESHOLD) {
+    b.openUntil = now + OPEN_MS;
+    console.warn(`[LlmClient] circuit OPEN for ${model} (${b.failures.length} failures/60s) — ${OPEN_MS / 1000}s 동안 폴백 직행`);
+  }
+}
+export function recordModelSuccess(model: string): void {
+  const b = breaker(model); b.failures = []; b.openUntil = 0;
+}
+/** 테스트·관리용 */
+export function resetCircuitBreakers(): void { _breakers.clear(); }
+
+/**
+ * ── 호출 관측 훅 (ai_call_log 등) ── 앱 계층이 등록. 실패해도 호출엔 영향 없음.
+ */
+export type LlmCallEvent = {
+  requestedModel: string; usedModel: string; ms: number; ok: boolean;
+  fallback: boolean; circuitSkipped: boolean; inputTokens: number; outputTokens: number;
+  errorName?: string; errorMessage?: string;
+};
+let _observer: ((e: LlmCallEvent) => void) | null = null;
+export function setLlmCallObserver(fn: ((e: LlmCallEvent) => void) | null): void { _observer = fn; }
+function emit(e: LlmCallEvent) { try { _observer?.(e); } catch { /* ignore */ } }
 
 /**
  * Web search 활성 모델 — `tools: [{type: "web_search...."}]` 요청 시 자동 라우팅.
@@ -197,10 +255,12 @@ function flattenSystem(system?: string | ASystemBlock[]): string {
 class LlmClient {
   private readonly openai: OpenAI;
   constructor(apiKey: string, options: { timeout?: number; maxRetries?: number } = {}) {
+    const ctx = llmCallContext.getStore();
     this.openai = new OpenAI({
       apiKey,
-      timeout: options.timeout ?? DEFAULT_TIMEOUT_MS,
-      maxRetries: options.maxRetries ?? SDK_MAX_RETRIES,
+      // 우선순위: 명시 옵션 > 기능 문맥(ai-guard) > 기본값
+      timeout: options.timeout ?? ctx?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+      maxRetries: options.maxRetries ?? ctx?.maxRetries ?? SDK_MAX_RETRIES,
     });
   }
 
@@ -353,15 +413,33 @@ class LlmClient {
         if (!hasTool && !hasText && c?.finish_reason !== "length") throw new EmptyLlmResponseError(model);
         return r;
       };
+      const t0 = Date.now();
+      const fbModel = fallbackFor(mappedModel);
+      const circuitSkipped = fbModel !== null && fbModel !== mappedModel && isModelOpen(mappedModel);
+      let fellBack = false;
       try {
-        response = await callOnce(mappedModel);
-      } catch (firstErr) {
-        const fb = fallbackFor(mappedModel);
-        if (!fb || !isTransientLlmError(firstErr) && !(firstErr instanceof EmptyLlmResponseError)) throw firstErr;
-        console.warn(`[LlmClient] ${mappedModel} 실패(${(firstErr as Error)?.name ?? "err"}: ${String((firstErr as Error)?.message ?? "").slice(0, 120)}) → 폴백 ${fb}`);
-        response = await callOnce(fb);
-        usedModel = fb;
+        if (circuitSkipped) {
+          console.warn(`[LlmClient] ${mappedModel} circuit open → 폴백 ${fbModel} 직행`);
+          response = await callOnce(fbModel!); usedModel = fbModel!; fellBack = true;
+        } else {
+          try {
+            response = await callOnce(mappedModel);
+            recordModelSuccess(mappedModel);
+          } catch (firstErr) {
+            const transient = isTransientLlmError(firstErr) || firstErr instanceof EmptyLlmResponseError;
+            if (transient) recordModelFailure(mappedModel);
+            if (!fbModel || !transient) throw firstErr;
+            console.warn(`[LlmClient] ${mappedModel} 실패(${(firstErr as Error)?.name ?? "err"}: ${String((firstErr as Error)?.message ?? "").slice(0, 120)}) → 폴백 ${fbModel}`);
+            response = await callOnce(fbModel); usedModel = fbModel; fellBack = true;
+          }
+        }
+      } catch (err) {
+        emit({ requestedModel: mappedModel, usedModel, ms: Date.now() - t0, ok: false, fallback: fellBack, circuitSkipped,
+          inputTokens: 0, outputTokens: 0, errorName: (err as Error)?.name, errorMessage: String((err as Error)?.message ?? "").slice(0, 200) });
+        throw err;
       }
+      emit({ requestedModel: mappedModel, usedModel, ms: Date.now() - t0, ok: true, fallback: fellBack, circuitSkipped,
+        inputTokens: response.usage?.prompt_tokens ?? 0, outputTokens: response.usage?.completion_tokens ?? 0 });
       const choice = response.choices[0];
       const finish = choice?.finish_reason ?? null;
 
