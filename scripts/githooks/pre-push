@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# pre-push — 푸시 전에 타입체크(+빠른 린트)를 로컬에서 강제 (2026-08-19)
+#   배경: Vercel 빌드의 "Linting and checking validity of types" 단계가 멈춰 next.config 에서 빌드 중
+#   tsc/lint 를 생략했다. 품질 게이트는 ① 이 훅(푸시 전 13초) ② GitHub Actions CI(lint·typecheck·build·test)
+#   두 겹으로 유지한다. 건너뛰려면: SKIP_PREPUSH=1 git push
+set -euo pipefail
+[ "${SKIP_PREPUSH:-}" = "1" ] && exit 0
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+echo "▶ pre-push: typecheck (apps/web + packages/ai)"
+( cd apps/web && npx tsc --noEmit ) || { echo "✖ apps/web 타입 오류 — 푸시 중단"; exit 1; }
+( cd packages/ai && npx tsc --noEmit -p . ) || { echo "✖ packages/ai 타입 오류 — 푸시 중단"; exit 1; }
+echo "✔ typecheck OK"
