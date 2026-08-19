@@ -43,26 +43,27 @@ public struct TaxView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: BUSpacing.md) {
-                header
-                // 국세청 바로가기 — 다음 행동(신고·납부)은 홈택스 (2026-07-24 사장님 지시, 웹 정합)
-                BUQuickLinksCard(
-                    title: "국세청 바로가기",
-                    caption: "신고·납부·전자세금계산서는 홈택스에서 — 이 화면의 값은 예상치예요.",
-                    links: [BUQuickLink(label: "국세청 홈택스", url: hometax, isPrimary: true)]
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일)
+                BUPageHeader(
+                    title: "세금",
+                    subtitle: "과세유형·부가세 예상, 세액공제, 신고 일정을 한곳에 — 모든 값은 예상치예요. 정확한 세액은 홈택스·세무사로 확정하세요."
                 )
-                calcSection
-                creditSection
-                scheduleSection
-                Color.clear.frame(height: 100)
+                VStack(alignment: .leading, spacing: BUSpacing.md) {
+                    // 국세청 바로가기 — 다음 행동(신고·납부)은 홈택스 (2026-07-24 사장님 지시, 웹 정합)
+                    BUQuickLinksCard(
+                        title: "국세청 바로가기",
+                        caption: "신고·납부·전자세금계산서는 홈택스에서 — 이 화면의 값은 예상치예요.",
+                        links: [BUQuickLink(label: "국세청 홈택스", url: hometax, isPrimary: true)]
+                    )
+                    calcSection
+                    creditSection
+                    scheduleSection
+                    Color.clear.frame(height: 100)
+                }
+                .padding(.horizontal, BUSpacing.screenMargin)
             }
-            .padding(.horizontal, BUSpacing.screenMargin)
-            .padding(.top, BUSpacing.md)
         }
-        .navigationTitle("세금")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
         .task {
             if !loaded {
                 loaded = true
@@ -71,18 +72,6 @@ public struct TaxView: View {
                     profile = try? await repo.loadSnapshot()
                 }
             }
-        }
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("TAX").font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.midnight.opacity(0.65)).tracking(1.5)
-            Text("내 세금").font(.system(size: 26, weight: .heavy)).foregroundStyle(BUColor.ink)
-            Text("과세유형·부가세 예상, 내 업종이 받을 수 있는 세액공제, 신고 일정을 한곳에. 모든 값은 예상치예요 — 정확한 세액은 홈택스·세무사로 확정하세요.")
-                .font(.system(size: 14)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

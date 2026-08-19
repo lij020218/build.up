@@ -193,23 +193,28 @@ public struct FranchiseView: View {
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
         ZStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    header
-                    searchBar
-                    categoryChips
-                    brandCards
-                    disclaimerCard
-                    Color.clear.frame(height: 110)
+                VStack(spacing: 0) {
+                    // 공통 페이지 헤더 (2026-08-19 통일) — 검색 + 카테고리 칩은 accessory
+                    BUPageHeader(
+                        title: "프랜차이즈",
+                        subtitle: "초기 비용 · 운영 난이도 · 폐점률 — 본사가 안 알려주는 진짜 데이터",
+                        accessory: {
+                            VStack(alignment: .leading, spacing: 10) {
+                                searchBar
+                                categoryChips
+                            }
+                        }
+                    )
+                    VStack(alignment: .leading, spacing: 16) {
+                        brandCards
+                        disclaimerCard
+                        Color.clear.frame(height: 110)
+                    }
+                    .padding(.horizontal, BUSpacing.screenMargin)
                 }
-                .padding(.horizontal, BUSpacing.screenMargin)
-                .padding(.top, BUSpacing.md)
             }
             .scrollIndicators(.hidden)
         }
-        .navigationTitle("프랜차이즈")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
-        #endif
         .sheet(item: $selectedBrand) { brand in
             FranchiseDetailSheet(brand: brand)
         }
@@ -223,30 +228,6 @@ public struct FranchiseView: View {
             }
             recomputeFiltered()
         }
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("프랜차이즈 · BRAND ANALYSIS")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(1.32)
-                .foregroundStyle(BUColor.midnight.opacity(0.65))
-                .textCase(.uppercase)
-
-            Text("검증된 브랜드 비교")
-                .font(.system(size: 26, weight: .bold))
-                .tracking(-0.65)
-                .foregroundStyle(BUColor.ink)
-
-            Text("초기 비용 · 운영 난이도 · 폐점률 — 본사가 안 알려주는 진짜 데이터")
-                .font(.system(size: 13.5, weight: .regular))
-                .foregroundStyle(BUColor.inkMuted)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Search (웹 SSOT FranchiseView 검색과 톤 통일 — 흰 배경·라운드·미드나잇 보더)
@@ -326,6 +307,9 @@ public struct FranchiseView: View {
             }
             .padding(.vertical, 2)
         }
+        // 헤더 accessory 안에서 화면 가장자리까지 스크롤 (헤더 H 패딩 20 상쇄 + 콘텐츠 마진 복원)
+        .padding(.horizontal, -20)
+        .contentMargins(.horizontal, 20, for: .scrollContent)
     }
 
     // MARK: - Brand cards (vertical stack — mobile 1-col)

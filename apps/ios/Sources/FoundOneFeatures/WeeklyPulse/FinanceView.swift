@@ -21,36 +21,21 @@ public struct FinanceView: View {
 
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: BUSpacing.shellGap) {
-                header
-                bepTracker
-                financeCards
-                Color.clear.frame(height: 110)
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일)
+                BUPageHeader(
+                    title: "재무",
+                    subtitle: "이번 달 손익분기 · 13주 자금흐름 · 12개월 시뮬레이션 — 모든 수치는 사장님 입력 데이터 기반"
+                )
+                VStack(spacing: BUSpacing.shellGap) {
+                    bepTracker
+                    financeCards
+                    Color.clear.frame(height: 110)
+                }
+                .padding(.horizontal, BUSpacing.md)
             }
-            .padding(.horizontal, BUSpacing.md)
-            .padding(.top, BUSpacing.md)
         }
         .background(BUBackgroundSurface())
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("재무 · FINANCE")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(1.54)
-                .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-                .textCase(.uppercase)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text("재무")
-                .font(.system(size: 26, weight: .bold))
-                .tracking(-1.0)
-                .foregroundStyle(BUColor.ink)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text("이번 달 손익분기 · 13주 자금흐름 · 12개월 시뮬레이션 — 모든 수치는 사장님 입력 데이터 기반")
-                .font(.system(size: 13))
-                .foregroundStyle(BUColor.inkSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
     }
 
     // ── ① 이번 달 손익분기 트래커 (웹 BEP 트래커 미러) ──

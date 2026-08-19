@@ -150,165 +150,172 @@ public struct TodayView: View {
 
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            // 성능(2026-08-19): 카드 수십 장 — LazyVStack 으로 화면 밖 카드 지연 생성.
-            LazyVStack(spacing: BUSpacing.shellGap) {
-                // Header (사장님 추가 — 카드 아님) + 알림 벨 (2026-07-14)
-                StoreStatusHeader(mock: mock, notifUnread: notifStore.unreadCount, onBell: { showNotifications = true })
-                HomeRitualBanner()
-
-                // 가게 세팅 미션 — 기존 가게 등록자만 (로드맵·AI 로드맵 유저 미노출, 완료 시 자동 소멸)
-                if let storeInfo {
-                    BUStoreSetupMissionsCard(
-                        storeInfo: storeInfo,
-                        decisions: roadmapStore.decisions,
-                        entriesCount: mock.entries.count,
-                        costsTotal: dashboardStore?.costs.total ?? 0,
-                        categoryId: Self.starterCategoryId(for: mock.category),
-                        subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"),
-                        onRevenue: { showInputSheet = true },
-                        onCosts: { onSwitchTab?(.analytics) },
-                        onOfferings: { onSwitchTab?(.offerings) },
-                        onVerifyBiz: { onSwitchTab?(.roadmap) }
-                    )
-                }
-
-                // ─ 모바일 홈 = 공통 6장 + 업종 핵심 (2026-06-04 사장님 결정) ─
-                //   원칙: 홈은 가장 중요한 카드만. 강등(KPI 스트립·고객·운영의식)은 "더 알아보기 > 오늘 상세"
-                //         팝업으로 — 카드 종류는 펼치면 도달(누락 0).
-
-                // ① AI 모닝 히어로 — 인사 + 위험신호(+스타트업 신호) + NSM + AI 코칭
-                HeroOuterCard(
-                    mock: mock,
-                    healthResult: healthResult,
-                    hero: hero,
-                    aiActions: aiActions
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일) — 가게 이름 + 상태 한 줄 + 알림 벨
+                BUPageHeader(
+                    title: mock.storeName.isEmpty ? "내 가게" : mock.storeName,
+                    subtitle: mock.resolverInput.businessLaunched
+                        ? (mock.daysSinceLaunch > 0 ? "운영 중 · \(mock.daysSinceLaunch + 1)일째" : "운영 중")
+                        : "오픈 준비 중",
+                    trailing: { NotificationBell(unread: notifStore.unreadCount, action: { showNotifications = true }) }
                 )
+                // 성능(2026-08-19): 카드 수십 장 — LazyVStack 으로 화면 밖 카드 지연 생성.
+                LazyVStack(spacing: BUSpacing.shellGap) {
+                    HomeRitualBanner()
 
-                // ② 매출 흐름 (PortOne·TossPlace 등 자동수집 매출 합산 — autoSourceCount 배지)
-                ActivitySnapshotCard(
-                    entries: mock.entries,
-                    bepDailySales: bepDailySales,
-                    autoSourceCount: dashboardStore?.autoSourceCount ?? 0,
-                    autoBreakdown: dashboardStore?.autoBreakdown ?? [],
-                    onTapBasis: ((dashboardStore?.autoCardOverlap ?? false) || (dashboardStore?.autoHasPopbill ?? false))
-                        ? { showBasisSheet = true } : nil,
-                    // 막대·"기록" 탭 → 그 날짜로 입력 시트 (웹 패리티)
-                    onSelectDate: { date in
-                        inputSheetDate = date
-                        showInputSheet = true
+                    // 가게 세팅 미션 — 기존 가게 등록자만 (로드맵·AI 로드맵 유저 미노출, 완료 시 자동 소멸)
+                    if let storeInfo {
+                        BUStoreSetupMissionsCard(
+                            storeInfo: storeInfo,
+                            decisions: roadmapStore.decisions,
+                            entriesCount: mock.entries.count,
+                            costsTotal: dashboardStore?.costs.total ?? 0,
+                            categoryId: Self.starterCategoryId(for: mock.category),
+                            subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"),
+                            onRevenue: { showInputSheet = true },
+                            onCosts: { onSwitchTab?(.analytics) },
+                            onOfferings: { onSwitchTab?(.offerings) },
+                            onVerifyBiz: { onSwitchTab?(.roadmap) }
+                        )
                     }
-                )
 
-                // ③ 사용자수(고객 변화) — 성장 선행지표라 매출 직하 always-on.
-                //   2026-07-14 웹 UserActivityCard 정확 미러 (웹 Tier1DailyHub 순서 매출→사용자수→손익→현금 일치).
-                //   회원 로스터(CustomerSummary, ⑥)와 다른 *지표* 카드 — 웹도 둘을 공존시킴(이중 아님).
-                //   데이터 0 이면 마일스톤 '첫 10명' 온보딩 empty (가짜 없음).
-                UserActivityCard(
-                    totalCustomers: totalCustomers,
-                    thisMonthCustomers: thisMonthCustomers,
-                    dailyAvgCustomers: dailyAvgCustomers,
-                    avgTicket: avgTicket
-                )
+                    // ─ 모바일 홈 = 공통 6장 + 업종 핵심 (2026-06-04 사장님 결정) ─
+                    //   원칙: 홈은 가장 중요한 카드만. 강등(KPI 스트립·고객·운영의식)은 "더 알아보기 > 오늘 상세"
+                    //         팝업으로 — 카드 종류는 펼치면 도달(누락 0).
 
-                // ④ 손익 (2026-06-04 홈 신규 편입) — 월 환산 매출 vs 월 비용 (실데이터).
-                //   웹 순서 손익→현금 미러 (2026-07-14: 종전 현금→손익 에서 스왑).
-                PLHeroCard(
-                    totalSales: ratios.monthlyRevenueEquivalent,
-                    totalCosts: mock.costs.total,
-                    ingredientRatio: ratios.ingredientRatio,
-                    laborRatio: ratios.laborRatio,
-                    rentRatio: ratios.rentRatio,
-                    thresholds: IndustryThresholds.thresholds(for: mock.category),
-                    categoryId: mock.category.benchmarkCategoryId
-                )
-
-                // ⑤ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
-                if let cs = cashflowStore {
-                    CashflowSection(
-                        store: cs,
-                        recentDailyEntries: mock.entries.map { CashflowDailyEntry(date: $0.date, sales: $0.sales) },
-                        fallbackMonthlyCostsTotal: mock.costs.total
+                    // ① AI 모닝 히어로 — 인사 + 위험신호(+스타트업 신호) + NSM + AI 코칭
+                    HeroOuterCard(
+                        mock: mock,
+                        healthResult: healthResult,
+                        hero: hero,
+                        aiActions: aiActions
                     )
-                } else {
-                    CashflowHeroCard(
-                        currentBalance: mock.currentCash ?? 0,
-                        projectedBalances: projected14,
-                        isCrisis: (projected14.last ?? 0) < 0,
-                        crisisDaysUntil: crisisDaysUntil()
+
+                    // ② 매출 흐름 (PortOne·TossPlace 등 자동수집 매출 합산 — autoSourceCount 배지)
+                    ActivitySnapshotCard(
+                        entries: mock.entries,
+                        bepDailySales: bepDailySales,
+                        autoSourceCount: dashboardStore?.autoSourceCount ?? 0,
+                        autoBreakdown: dashboardStore?.autoBreakdown ?? [],
+                        onTapBasis: ((dashboardStore?.autoCardOverlap ?? false) || (dashboardStore?.autoHasPopbill ?? false))
+                            ? { showBasisSheet = true } : nil,
+                        // 막대·"기록" 탭 → 그 날짜로 입력 시트 (웹 패리티)
+                        onSelectDate: { date in
+                            inputSheetDate = date
+                            showInputSheet = true
+                        }
                     )
-                }
 
-                // ⑥ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
-                if mock.category.showsCustomerCardInsteadOfInventory {
-                    let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
-                    CustomerSummaryCard(
-                        members: realMembers,
-                        mode: mode,
-                        label: mock.category.customerLabelKo,
-                        onManage: { showCustomerSheet = true }
-                    )
-                } else if mock.category != .startupTech {
-                    // 통합 '메뉴·재료 관리' (2026-07-22 사장님 지시, 웹 정합):
-                    //   메뉴 업종은 메뉴 섹션(→ MenuRecipeSheet: 원가율·판매 ±·레시피·재고 자동차감) 동봉.
-                    InventoryOpsCard(
-                        items: inventoryForCard,
-                        onManage: { showInventorySheet = true },
-                        menuItems: isMenuCardIndustry ? menuProducts : [],
-                        onManageMenus: (isMenuCardIndustry && storeInfo != nil) ? { showRecipeSheet = true } : nil
-                    )
-                }
-
-                // ⑦ 직원 관리 (전 업종) — 웹은 재고·팀을 한 관리 그룹으로 묶음 → 팀을 재고 직후로 올림
-                //   (2026-07-14: 종전 메뉴 뒤 → 재고 옆. 웹 opsCards 그룹 미러).
-                TeamCard(
-                    employees: realEmployees,
-                    invitedNames: invitedStaff.map(\.name),
-                    manualLaborCost: mock.costs.labor,
-                    onManage: { showTeamSheet = true }
-                )
-
-                // ⑧ 메뉴 수익성 카드 → '메뉴·재료 관리'(InventoryOpsCard 메뉴 섹션 → MenuRecipeSheet)로
-                //   흡수 (2026-07-22 통합, 웹 정합 — 추가 폼은 재고 카드인데 관리 카드가 없던 모순 해소).
-
-                // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
-                IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)
-
-                // 스타트업 핵심 지표 점수판 (런웨이·순burn·성장률·ARR/직원·총이익률·Burn Multiple, 전부 실데이터)
-                if mock.category == .startupTech {
-                    StartupHealthCard(metrics: startupHealthMetrics)
-                }
-
-                // 외식·카페 위생점검 — 원가율(IndustryFocus)과 나란히 홈에 (사장님: "둘 다")
-                if mock.category == .restaurant || mock.category == .cafe {
-                    FoodSafetyCard()
-                }
-
-                // 빠른 매출 입력
-                QuickInputButton(action: { showInputSheet = true })
-
-                // ─ 더 알아보기 — 팝업 (오늘 상세[KPI·고객·운영의식] · 주간점검 · 성장 · 내 가게 · 로드맵) ─
-                MoreInsightsStrip(
-                    mock: mock,
-                    dailyKpiCells: dailyKpiCells,
-                    userActivity: UserActivitySummary(
-                        total: totalCustomers,
-                        thisMonth: thisMonthCustomers,
-                        dailyAvg: dailyAvgCustomers,
+                    // ③ 사용자수(고객 변화) — 성장 선행지표라 매출 직하 always-on.
+                    //   2026-07-14 웹 UserActivityCard 정확 미러 (웹 Tier1DailyHub 순서 매출→사용자수→손익→현금 일치).
+                    //   회원 로스터(CustomerSummary, ⑥)와 다른 *지표* 카드 — 웹도 둘을 공존시킴(이중 아님).
+                    //   데이터 0 이면 마일스톤 '첫 10명' 온보딩 empty (가짜 없음).
+                    UserActivityCard(
+                        totalCustomers: totalCustomers,
+                        thisMonthCustomers: thisMonthCustomers,
+                        dailyAvgCustomers: dailyAvgCustomers,
                         avgTicket: avgTicket
-                    ),
-                    dashboardStore: dashboardStore,
-                    storeInfo: storeInfo,
-                    coaching: coaching,
-                    saas: saas,
-                    subscription: subscription
-                )
+                    )
 
-                // 하단 탭바 회피
-                Color.clear.frame(height: 110)
+                    // ④ 손익 (2026-06-04 홈 신규 편입) — 월 환산 매출 vs 월 비용 (실데이터).
+                    //   웹 순서 손익→현금 미러 (2026-07-14: 종전 현금→손익 에서 스왑).
+                    PLHeroCard(
+                        totalSales: ratios.monthlyRevenueEquivalent,
+                        totalCosts: mock.costs.total,
+                        ingredientRatio: ratios.ingredientRatio,
+                        laborRatio: ratios.laborRatio,
+                        rentRatio: ratios.rentRatio,
+                        thresholds: IndustryThresholds.thresholds(for: mock.category),
+                        categoryId: mock.category.benchmarkCategoryId
+                    )
+
+                    // ⑤ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
+                    if let cs = cashflowStore {
+                        CashflowSection(
+                            store: cs,
+                            recentDailyEntries: mock.entries.map { CashflowDailyEntry(date: $0.date, sales: $0.sales) },
+                            fallbackMonthlyCostsTotal: mock.costs.total
+                        )
+                    } else {
+                        CashflowHeroCard(
+                            currentBalance: mock.currentCash ?? 0,
+                            projectedBalances: projected14,
+                            isCrisis: (projected14.last ?? 0) < 0,
+                            crisisDaysUntil: crisisDaysUntil()
+                        )
+                    }
+
+                    // ⑥ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
+                    if mock.category.showsCustomerCardInsteadOfInventory {
+                        let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
+                        CustomerSummaryCard(
+                            members: realMembers,
+                            mode: mode,
+                            label: mock.category.customerLabelKo,
+                            onManage: { showCustomerSheet = true }
+                        )
+                    } else if mock.category != .startupTech {
+                        // 통합 '메뉴·재료 관리' (2026-07-22 사장님 지시, 웹 정합):
+                        //   메뉴 업종은 메뉴 섹션(→ MenuRecipeSheet: 원가율·판매 ±·레시피·재고 자동차감) 동봉.
+                        InventoryOpsCard(
+                            items: inventoryForCard,
+                            onManage: { showInventorySheet = true },
+                            menuItems: isMenuCardIndustry ? menuProducts : [],
+                            onManageMenus: (isMenuCardIndustry && storeInfo != nil) ? { showRecipeSheet = true } : nil
+                        )
+                    }
+
+                    // ⑦ 직원 관리 (전 업종) — 웹은 재고·팀을 한 관리 그룹으로 묶음 → 팀을 재고 직후로 올림
+                    //   (2026-07-14: 종전 메뉴 뒤 → 재고 옆. 웹 opsCards 그룹 미러).
+                    TeamCard(
+                        employees: realEmployees,
+                        invitedNames: invitedStaff.map(\.name),
+                        manualLaborCost: mock.costs.labor,
+                        onManage: { showTeamSheet = true }
+                    )
+
+                    // ⑧ 메뉴 수익성 카드 → '메뉴·재료 관리'(InventoryOpsCard 메뉴 섹션 → MenuRecipeSheet)로
+                    //   흡수 (2026-07-22 통합, 웹 정합 — 추가 폼은 재고 카드인데 관리 카드가 없던 모순 해소).
+
+                    // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
+                    IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)
+
+                    // 스타트업 핵심 지표 점수판 (런웨이·순burn·성장률·ARR/직원·총이익률·Burn Multiple, 전부 실데이터)
+                    if mock.category == .startupTech {
+                        StartupHealthCard(metrics: startupHealthMetrics)
+                    }
+
+                    // 외식·카페 위생점검 — 원가율(IndustryFocus)과 나란히 홈에 (사장님: "둘 다")
+                    if mock.category == .restaurant || mock.category == .cafe {
+                        FoodSafetyCard()
+                    }
+
+                    // 빠른 매출 입력
+                    QuickInputButton(action: { showInputSheet = true })
+
+                    // ─ 더 알아보기 — 팝업 (오늘 상세[KPI·고객·운영의식] · 주간점검 · 성장 · 내 가게 · 로드맵) ─
+                    MoreInsightsStrip(
+                        mock: mock,
+                        dailyKpiCells: dailyKpiCells,
+                        userActivity: UserActivitySummary(
+                            total: totalCustomers,
+                            thisMonth: thisMonthCustomers,
+                            dailyAvg: dailyAvgCustomers,
+                            avgTicket: avgTicket
+                        ),
+                        dashboardStore: dashboardStore,
+                        storeInfo: storeInfo,
+                        coaching: coaching,
+                        saas: saas,
+                        subscription: subscription
+                    )
+
+                    // 하단 탭바 회피
+                    Color.clear.frame(height: 110)
+                }
+                .padding(.horizontal, BUSpacing.screenMargin)
+                .padding(.bottom, BUSpacing.md)
             }
-            .padding(.horizontal, BUSpacing.screenMargin)
-            .padding(.top, BUSpacing.md)
-            .padding(.bottom, BUSpacing.md)
         }
         // ⚠️ 2026-05-25: 중복 .background(BUBackgroundSurface()) 제거.
         //   FoundOneMobileShell 이 이미 풀스크린 Aurora 를 깔고 있음. 콘텐츠 영역에 또 깔면
@@ -707,56 +714,7 @@ public struct TodayView: View {
     }
 }
 
-// MARK: - Tier 0 — store title + ritual, 웹 OperationalDashboard 상단 미러
-
-private struct StoreStatusHeader: View {
-    let mock: MockData
-    var notifUnread: Int = 0
-    var onBell: (() -> Void)? = nil
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Text(mock.storeName.isEmpty ? "내 가게" : mock.storeName)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(BUColor.ink)
-                .tracking(-0.66)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-
-            if mock.resolverInput.businessLaunched {
-                LivePill()
-            }
-
-            Spacer(minLength: 0)
-
-            if let onBell {
-                NotificationBell(unread: notifUnread, action: onBell)
-            }
-        }
-        .padding(.top, 4)
-    }
-}
-
-private struct LivePill: View {
-    // 신호등 컬러 금지 — "운영 중"(양호 상태)은 미드나잇 네이비 success 토큰. 종전 에메랄드 #059669 폐기(2026-06-16).
-    private let tint = BUColor.success
-    var body: some View {
-        HStack(spacing: 5) {
-            Circle()
-                .fill(tint)
-                .frame(width: 6, height: 6)
-                .shadow(color: tint.opacity(0.25), radius: 3)
-            Text("운영 중")
-                .font(.system(size: 11.5, weight: .semibold))
-                .foregroundStyle(tint)
-                .tracking(0.1)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(tint.opacity(0.08), in: Capsule())
-        .fixedSize()
-    }
-}
+// MARK: - Tier 0 — ritual banner (헤더는 BUPageHeader 공통, 2026-08-19)
 
 private struct HomeRitualBanner: View {
     var body: some View {
@@ -899,7 +857,7 @@ private struct Row1Greeting: View {
         //   Hero가 화면 절반 차지 → 다른 카드 집중도 ↓.
         // 변경:
         //   • 아이콘 30×30 (-6pt)
-        //   • Sub-greeting "상호명 · 운영 N일째" 제거 (StoreStatusHeader 중복)
+        //   • Sub-greeting "상호명 · 운영 N일째" 제거 (BUPageHeader 중복)
         //   • 인사말 1줄 lineLimit + minimumScaleFactor
         HStack(alignment: .center, spacing: 10) {
             ZStack {

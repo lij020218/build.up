@@ -67,23 +67,26 @@ public struct ProfileView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: BUSpacing.md) {
-                header
-                accountCard
-                journeyCard
-                storeCard
-                ownerProfileCard
-                dataConnectionCard
-                storeConnectCard
-                notificationCard
-                languageCard
-                supportCard
-                feedbackCard
-                accountActionsCard
-                Color.clear.frame(height: 110)
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일) — "내 정보" + 아바타 블록은 아래 header 로 축소 유지
+                BUPageHeader(title: "내 정보", subtitle: profileSubtitle)
+                VStack(alignment: .leading, spacing: BUSpacing.md) {
+                    header
+                    accountCard
+                    journeyCard
+                    storeCard
+                    ownerProfileCard
+                    dataConnectionCard
+                    storeConnectCard
+                    notificationCard
+                    languageCard
+                    supportCard
+                    feedbackCard
+                    accountActionsCard
+                    Color.clear.frame(height: 110)
+                }
+                .padding(.horizontal, BUSpacing.screenMargin)
             }
-            .padding(.horizontal, BUSpacing.screenMargin)
-            .padding(.top, BUSpacing.md)
         }
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
         .sheet(isPresented: $showDataConnections, onDismiss: {
@@ -184,31 +187,38 @@ public struct ProfileView: View {
                             endPoint: .bottomTrailing
                         ))
                     )
-                    .frame(width: 64, height: 64)
+                    .frame(width: 52, height: 52)
                 if isAnonymous {
                     Image(systemName: "person.crop.circle")
-                        .font(.system(size: 28, weight: .regular))
+                        .font(.system(size: 24, weight: .regular))
                         .foregroundStyle(BUColor.inkMuted)
                 } else {
                     Text(initialChar)
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(.white)
                 }
             }
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
+                // 페이지 타이틀은 BUPageHeader("내 정보") — 여기선 이름·가게만 (큰 글자 중복 금지, 2026-08-19)
                 Text(isAnonymous ? "로그인이 필요합니다" : displayName)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(BUColor.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Text(store.storeName.isEmpty ? "가게 이름을 입력해 주세요" : store.storeName)
-                    .font(.system(size: 14, weight: .regular))
+                    .font(.system(size: 13.5, weight: .regular))
                     .foregroundStyle(BUColor.inkSecondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, BUSpacing.xs)
+        .padding(.horizontal, 4)
+        .padding(.bottom, BUSpacing.xxs)
+    }
+
+    /// 헤더 부제 — 로그인 상태 한 줄 (계정 상세는 아래 카드).
+    private var profileSubtitle: String {
+        coordinator?.currentSession == nil ? "로그인하면 계정·가게 정보를 관리할 수 있어요" : "계정 · 가게 · 알림 · 데이터 연결"
     }
 
     // MARK: - 2. accountCard

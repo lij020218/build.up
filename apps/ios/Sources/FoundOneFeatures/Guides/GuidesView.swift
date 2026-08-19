@@ -124,37 +124,34 @@ public struct GuidesView: View {
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
         ZStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    header
+                VStack(spacing: 0) {
+                    // 공통 페이지 헤더 (2026-08-19 통일) — "정책자금" + 매칭 모드 한 줄
+                    BUPageHeader(title: "정책자금", subtitle: headerSubtitle)
+                    VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        if state.loading {
+                            loadingState
+                        } else if let err = state.error {
+                            errorState(err)
+                        } else {
+                            kpiSummary
+                            recommendToggle
+                            myPlansButton
+                            OwnerProfileChips(onChange: { Task { await loadPrograms() } }, showNudge: true)
+                            categoryChips
+                            statusChips
+                            programList
+                        }
 
-                    if state.loading {
-                        loadingState
-                    } else if let err = state.error {
-                        errorState(err)
-                    } else {
-                        kpiSummary
-                        recommendToggle
-                        myPlansButton
-                        OwnerProfileChips(onChange: { Task { await loadPrograms() } }, showNudge: true)
-                        categoryChips
-                        statusChips
-                        programList
+                        footnote
+                        Color.clear.frame(height: 110)
                     }
-
-                    footnote
-                    Color.clear.frame(height: 110)
+                    .padding(.horizontal, BUSpacing.screenMargin)
                 }
-                .padding(.horizontal, BUSpacing.screenMargin)
-                .padding(.top, BUSpacing.md)
             }
             .refreshable {
                 await loadPrograms()
             }
         }
-        .navigationTitle("펀딩")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
         .task {
             await loadPrograms()
         }
@@ -178,34 +175,14 @@ public struct GuidesView: View {
         }
     }
 
-    // MARK: - Header
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("정책자금 · POLICY FUND")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(1.54)
-                .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-                .textCase(.uppercase)
-
-            Text(state.recommendMode ? "내 가게에 맞는 펀딩" : "지금 받을 수 있는 자금")
-                .font(.system(size: 28, weight: .bold))
-                .tracking(-1.12)
-                .foregroundStyle(BUColor.ink)
-
-            Text(headerSubtitle)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted.opacity(0.78))
-                .padding(.top, 2)
-        }
-    }
+    // MARK: - Header subtitle (종전 큰 제목 "지금 받을 수 있는 자금/내 가게에 맞는 펀딩"은 부제로 합침)
 
     private var headerSubtitle: String {
-        if state.recommendMode { return "사장님 업종·매출·런웨이에 맞춘 TOP 6" }
+        if state.recommendMode { return "내 가게에 맞는 펀딩 — 업종·매출·런웨이에 맞춘 TOP 6" }
         if let snapshot = state.profileSnapshot, !snapshot.businessLaunched {
             return "사업 정보를 입력하면 맞춤 매칭이 시작됩니다"
         }
-        return "전체 매칭 — 마감 임박·모집중 우선"
+        return "지금 받을 수 있는 자금 — 전체 매칭, 마감 임박·모집중 우선"
     }
 
     // MARK: - States

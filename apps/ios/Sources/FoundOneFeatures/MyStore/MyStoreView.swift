@@ -41,42 +41,47 @@ public struct MyStoreView: View {
         // ⚠️ 2026-05-25: ZStack + BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
         //   중복 Aurora 두 인스턴스가 독립 애니메이션 → 배경 분리감 발생.
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                HeroAtAGlance(store: storeInfo, photoUploader: photoUploader)
-                    .padding(.horizontal, 16)
-
-                FinancialSnapshotCard(store: store)
-                    .padding(.horizontal, 16)
-
-                CostManagementCard(store: store)
-                    .padding(.horizontal, 16)
-
-                ddayCard
-                    .padding(.horizontal, 16)
-
-                BusinessDocumentsCard(storeInfo: storeInfo, uploader: documentUploader)
-                    .padding(.horizontal, 16)
-
-                ForEach(allSections, id: \.id) { spec in
-                    SectionCard(spec: spec, store: storeInfo)
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일) — 히어로 카드 위에 "내 가게" + 상태 한 줄
+                BUPageHeader(title: "내 가게", subtitle: myStoreSubtitle)
+                VStack(alignment: .leading, spacing: 16) {
+                    HeroAtAGlance(store: storeInfo, photoUploader: photoUploader)
                         .padding(.horizontal, 16)
+
+                    FinancialSnapshotCard(store: store)
+                        .padding(.horizontal, 16)
+
+                    CostManagementCard(store: store)
+                        .padding(.horizontal, 16)
+
+                    ddayCard
+                        .padding(.horizontal, 16)
+
+                    BusinessDocumentsCard(storeInfo: storeInfo, uploader: documentUploader)
+                        .padding(.horizontal, 16)
+
+                    ForEach(allSections, id: \.id) { spec in
+                        SectionCard(spec: spec, store: storeInfo)
+                            .padding(.horizontal, 16)
+                    }
+
+                    footer
+                        .padding(.horizontal, 16)
+
+                    Color.clear.frame(height: 80)
                 }
-
-                footer
-                    .padding(.horizontal, 16)
-
-                Color.clear.frame(height: 80)
             }
-            .padding(.top, 12)
         }
         .scrollIndicators(.hidden)
-        .navigationTitle("내 가게")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
-        #endif
         .task {
             await storeInfo.load()
         }
+    }
+
+    /// 헤더 부제 — 운영 상태 + 상호 (가짜 숫자 없음, 상태 문구만).
+    private var myStoreSubtitle: String {
+        let status = store.businessLaunched ? "운영 중" : "오픈 준비 중"
+        return store.storeName.isEmpty ? status : "\(status) · \(store.storeName)"
     }
 
     // MARK: - Section composition (common + footprint + category)

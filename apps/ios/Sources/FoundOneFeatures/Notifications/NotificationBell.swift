@@ -21,26 +21,13 @@ public struct NotificationBell: View {
     }
 
     public var body: some View {
-        Button(action: action) {
-            ZStack(alignment: .topTrailing) {
-                Image(systemName: unread > 0 ? "bell.fill" : "bell")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(unread > 0 ? BUColor.midnight : BUColor.inkMuted)
-                    .frame(width: 34, height: 34)
-                if unread > 0 {
-                    Text(unread > 9 ? "9+" : "\(unread)")
-                        .font(.system(size: 9, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 4)
-                        .frame(minWidth: 15, minHeight: 15)
-                        .background(BUColor.midnight, in: Capsule())
-                        .overlay(Capsule().strokeBorder(.white, lineWidth: 1.5))
-                        .offset(x: 5, y: -3)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(unread > 0 ? "알림 \(unread)개" : "알림")
+        // 공통 페이지 헤더 trailing 슬롯 규격 (BUHeaderIconButton) — 34pt 원형 · 배지 (2026-08-19)
+        BUHeaderIconButton(
+            systemName: unread > 0 ? "bell.fill" : "bell",
+            badge: unread,
+            accessibilityLabel: unread > 0 ? "알림 \(unread)개" : "알림",
+            action: action
+        )
     }
 }
 

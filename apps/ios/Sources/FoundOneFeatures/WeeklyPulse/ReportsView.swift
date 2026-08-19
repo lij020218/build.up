@@ -39,123 +39,93 @@ public struct ReportsView: View {
 
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: BUSpacing.shellGap) {
-                header
-                periodTabs
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일) — "보고서" + 기간별 부제 + 일/주/월/분기 세그먼트
+                BUPageHeader(title: "보고서", subtitle: reportSubtitle, accessory: { periodTabs })
+                VStack(spacing: BUSpacing.shellGap) {
+                    ReportHeroCard(data: data)
+                    ReportKpiRow(data: data)
+                    ReportChartCard(data: data)
+                    ReportDonutCard(data: data)
 
-                ReportHeroCard(data: data)
-                ReportKpiRow(data: data)
-                ReportChartCard(data: data)
-                ReportDonutCard(data: data)
-
-                if !data.anomalies.isEmpty {
-                    AnomalySignalsCard(anomalies: data.anomalies)
-                }
-
-                NextActionCard(actionText: data.nextActionText, wisdom: data.wisdom)
-
-                // iOS 고유 — 주간 점검 전용 블록은 week period 에서만 노출
-                if period == .week {
-                    let ratios = CostRatios.calculate(
-                        costs: mock.costs,
-                        totalRevenue: mock.entries.reduce(0) { $0 + $1.sales },
-                        days: mock.entries.count
-                    )
-                    let healthResult = HealthScore.calculate(
-                        entries: mock.entries,
-                        costs: mock.costs,
-                        category: mock.category,
-                        stage: mock.stage,
-                        currentCash: mock.currentCash
-                    )
-                    let weeklyBalances: [Double] = {
-                        guard let cash = mock.currentCash else { return [] }
-                        let weeklyNet = (ratios.monthlyRevenueEquivalent - mock.costs.total) / 4.33
-                        return (0..<13).map { week in cash + weeklyNet * Double(week) }
-                    }()
-                    let isCrisis = weeklyBalances.contains(where: { $0 < 0 })
-
-                    weeklyOnlyEyebrow
-
-                    SurvivalBoardCard(mock: mock, healthResult: healthResult)
-                    if !weeklyBalances.isEmpty {
-                        Cashflow13WeekCard(
-                            currentBalance: mock.currentCash ?? 0,
-                            weeklyBalances: weeklyBalances,
-                            isCrisis: isCrisis
-                        )
+                    if !data.anomalies.isEmpty {
+                        AnomalySignalsCard(anomalies: data.anomalies)
                     }
-                    if ratios.ready && mock.category != .startupTech {
-                        CostStructureCard(
-                            ingredientRatio: ratios.ingredientRatio,
-                            laborRatio: ratios.laborRatio,
-                            rentRatio: ratios.rentRatio,
-                            primeCostRatio: ratios.primeCostRatio,
-                            thresholds: IndustryThresholds.thresholds(for: mock.category)
-                        )
-                    }
-                    WeeklyChecklistBlock()
-                    MonthlyRevenueProgressBlock(entries: mock.entries)
-                    WeeklyInsightsBlock(entries: mock.entries, ratios: ratios, category: mock.category)
-                }
 
-                Color.clear.frame(height: 110)
+                    NextActionCard(actionText: data.nextActionText, wisdom: data.wisdom)
+
+                    // iOS 고유 — 주간 점검 전용 블록은 week period 에서만 노출
+                    if period == .week {
+                        let ratios = CostRatios.calculate(
+                            costs: mock.costs,
+                            totalRevenue: mock.entries.reduce(0) { $0 + $1.sales },
+                            days: mock.entries.count
+                        )
+                        let healthResult = HealthScore.calculate(
+                            entries: mock.entries,
+                            costs: mock.costs,
+                            category: mock.category,
+                            stage: mock.stage,
+                            currentCash: mock.currentCash
+                        )
+                        let weeklyBalances: [Double] = {
+                            guard let cash = mock.currentCash else { return [] }
+                            let weeklyNet = (ratios.monthlyRevenueEquivalent - mock.costs.total) / 4.33
+                            return (0..<13).map { week in cash + weeklyNet * Double(week) }
+                        }()
+                        let isCrisis = weeklyBalances.contains(where: { $0 < 0 })
+
+                        weeklyOnlyEyebrow
+
+                        SurvivalBoardCard(mock: mock, healthResult: healthResult)
+                        if !weeklyBalances.isEmpty {
+                            Cashflow13WeekCard(
+                                currentBalance: mock.currentCash ?? 0,
+                                weeklyBalances: weeklyBalances,
+                                isCrisis: isCrisis
+                            )
+                        }
+                        if ratios.ready && mock.category != .startupTech {
+                            CostStructureCard(
+                                ingredientRatio: ratios.ingredientRatio,
+                                laborRatio: ratios.laborRatio,
+                                rentRatio: ratios.rentRatio,
+                                primeCostRatio: ratios.primeCostRatio,
+                                thresholds: IndustryThresholds.thresholds(for: mock.category)
+                            )
+                        }
+                        WeeklyChecklistBlock()
+                        MonthlyRevenueProgressBlock(entries: mock.entries)
+                        WeeklyInsightsBlock(entries: mock.entries, ratios: ratios, category: mock.category)
+                    }
+
+                    Color.clear.frame(height: 110)
+                }
+                .padding(.horizontal, BUSpacing.md)
+                .padding(.bottom, BUSpacing.md)
             }
-            .padding(.horizontal, BUSpacing.md)
-            .padding(.top, BUSpacing.md)
-            .padding(.bottom, BUSpacing.md)
         }
         .background(BUBackgroundSurface())
     }
 
-    // MARK: - Header + tabs
+    // MARK: - Header subtitle + tabs
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("보고서 · REPORTS")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(1.54)
-                .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-                .textCase(.uppercase)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text(reportTitle)
-                .font(.system(size: 26, weight: .bold))
-                .tracking(-1.0)
-                .foregroundStyle(BUColor.ink)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text(reportSubtitle)
-                .font(.system(size: 12.5, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted.opacity(0.78))
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private var reportTitle: String {
-        switch period {
-        case .day:     return "오늘의 매출"
-        case .week:    return "이번 주 점검"
-        case .month:   return "이번 달 흐름"
-        case .quarter: return "분기 회고"
-        }
-    }
-
+    /// 기간별 한 줄 — 종전 큰 제목("이번 주 점검" 등)은 공통 헤더 타이틀 "보고서"로 통일하고
+    /// 기간 문맥은 부제에 합친다.
     private var reportSubtitle: String {
         switch period {
-        case .day:     return "지난 7일 평균과 비교"
-        case .week:    return "주간 매출·비용·이상 신호"
-        case .month:   return "월간 P&L 및 추세"
-        case .quarter: return "분기별 성과 + 다음 우선순위"
+        case .day:     return "오늘의 매출 — 지난 7일 평균과 비교"
+        case .week:    return "이번 주 점검 — 주간 매출·비용·이상 신호"
+        case .month:   return "이번 달 흐름 — 월간 P&L 및 추세"
+        case .quarter: return "분기 회고 — 분기별 성과 + 다음 우선순위"
         }
     }
 
     private var periodTabs: some View {
-        HStack(spacing: 6) {
-            ForEach(ReportPeriod.allCases) { p in
-                PeriodTab(period: p, isSelected: period == p) {
-                    withAnimation(.easeInOut(duration: 0.18)) { period = p }
-                }
-            }
-        }
+        BUSegmentedControl(
+            items: ReportPeriod.allCases.map { BUSegmentItem(id: $0, label: $0.labelKo) },
+            selection: $period
+        )
     }
 
     private var weeklyOnlyEyebrow: some View {
@@ -168,33 +138,6 @@ public struct ReportsView: View {
             Spacer()
         }
         .padding(.top, 8)
-    }
-}
-
-// MARK: - Period tab
-
-private struct PeriodTab: View {
-    let period: ReportPeriod
-    let isSelected: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            Text(period.labelKo)
-                .font(.system(size: 13, weight: .heavy))
-                .foregroundStyle(isSelected ? .white : BUColor.inkMuted)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 36)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(isSelected ? BUColor.midnight : Color.white.opacity(0.72))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(isSelected ? Color.clear : BUColor.cardBorder, lineWidth: 1)
-                )
-        }
-        .buttonStyle(.plain)
     }
 }
 

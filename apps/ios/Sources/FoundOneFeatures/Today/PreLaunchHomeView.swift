@@ -83,14 +83,22 @@ public struct PreLaunchHomeView: View {
 
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
-                heroPanel
-                roadmapSignalCard
-                founderSnapshotCard
-                Color.clear.frame(height: 110)  // 하단 탭바 회피
+            VStack(spacing: 0) {
+                // 공통 페이지 헤더 (2026-08-19 통일) — 가게 이름 + 준비 상태 한 줄
+                BUPageHeader(
+                    title: store.storeName.isEmpty ? "내 가게" : store.storeName,
+                    subtitle: allStagesDone
+                        ? "오픈 준비 완료 · \(totalCount)단계 모두 완료"
+                        : "오픈 준비 중 · \(completedCount)/\(totalCount)단계 완료"
+                )
+                VStack(alignment: .leading, spacing: 16) {
+                    heroPanel
+                    roadmapSignalCard
+                    founderSnapshotCard
+                    Color.clear.frame(height: 110)  // 하단 탭바 회피
+                }
+                .padding(.horizontal, BUSpacing.screenMargin)
             }
-            .padding(.horizontal, BUSpacing.screenMargin)
-            .padding(.top, BUSpacing.md)
         }
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
     }

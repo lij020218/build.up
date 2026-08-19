@@ -93,16 +93,19 @@ public struct RoadmapView: View {
                     .ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        // ── 헤더: eyebrow + 타이틀 + 우측 큰 % ──
-                        header(snap)
-                            .padding(.horizontal, BUSpacing.md)
-                            .padding(.top, BUSpacing.md)
-                            .padding(.bottom, 12)
-
-                        // ── 세그먼트 진행 바 ──
-                        segmentedProgress(snap)
-                            .padding(.horizontal, BUSpacing.md)
-                            .padding(.bottom, 20)
+                        // ── 공통 페이지 헤더 (2026-08-19 통일): 타이틀 "로드맵" + 진행 한 줄 + 업종 그리드 버튼
+                        //    accessory = 업종 컨텍스트 행 + 진행 바 ──
+                        BUPageHeader(
+                            title: "로드맵",
+                            subtitle: progressLine(snap),
+                            trailing: {
+                                BUHeaderIconButton(systemName: "square.grid.2x2", accessibilityLabel: "업종 변경") {
+                                    showClusterPicker = true
+                                }
+                            },
+                            accessory: { headerAccessory(snap) }
+                        )
+                        .padding(.bottom, 6)
 
                         // ── 평면 stage 리스트 + 수직 타임라인 ──
                         timeline(snap)
@@ -114,22 +117,11 @@ public struct RoadmapView: View {
             }
             .onAppear { store.setCluster(clusterRaw) }
             .onChange(of: clusterRaw) { _, new in store.setCluster(new) }
-            .navigationTitle("로드맵")
+            // 센터 내비 타이틀·툴바 제거 — 타이틀은 BUPageHeader 하나만 (2026-08-19).
+            //   push 된 stage 화면은 자체 navigationTitle 을 유지하므로 루트에서만 숨긴다.
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showClusterPicker = true
-                    } label: {
-                        Image(systemName: "square.grid.2x2")
-                            .foregroundStyle(BUColor.midnight)
-                    }
-                }
-                #endif
-            }
             .sheet(isPresented: $showClusterPicker) {
                 // 업종 선택은 진입 단계 (path 정의 자체를 바꿈) → sheet 유지.
                 IndustrySelectionStageView()
@@ -169,23 +161,20 @@ public struct RoadmapView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Header (BUPageHeader subtitle + accessory)
 
-    private func header(_ snap: Snapshot) -> some View {
-        HStack(alignment: .top, spacing: BUSpacing.md) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("창업 로드맵")
-                    .font(.system(size: 11, weight: .semibold))
-                    .tracking(1.54)
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-                    .textCase(.uppercase)
+    /// 진행 한 줄 — "음식점·카페·소매 · 21/21 완료" (시작 전엔 "· 21단계 · 시작 전").
+    private func progressLine(_ snap: Snapshot) -> String {
+        let progress = snap.completedCount > 0
+            ? "\(snap.completedCount)/\(snap.totalCount) 완료 · \(snap.percent)%"
+            : "\(snap.totalCount)단계 · 시작 전"
+        return "\(cluster.displayName) · \(progress)"
+    }
 
-                Text(cluster.displayName)
-                    .font(.system(size: 28, weight: .bold))
-                    .tracking(-1.12)
-                    .foregroundStyle(BUColor.ink)
-                    .lineSpacing(2)
-
+    /// accessory — 업종 변경 캡슐 + (있으면) D-day 칩 / AI 인수인계 안내 + 진행 바.
+    private func headerAccessory(_ snap: Snapshot) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
                 Button {
                     showClusterPicker = true
                 } label: {
@@ -203,48 +192,30 @@ public struct RoadmapView: View {
                     .background(BUColor.midnight.opacity(0.06), in: Capsule())
                 }
                 .buttonStyle(.plain)
-                .padding(.top, 2)
-            }
 
-            Spacer(minLength: 0)
-
-            VStack(alignment: .trailing, spacing: 2) {
-                // 진행 0일 때 거대한 "0%" 가 화면을 지배하며 실패처럼 읽혔다 →
-                //   숫자 무게를 낮추고, 시작 전에는 회색으로 물러나게 한다 (2026-08-06).
-                HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text("\(snap.percent)")
-                        .font(.system(size: 30, weight: .semibold))
-                        .tracking(-1.2)
-                        .foregroundStyle(snap.completedCount > 0 ? BUColor.ink : BUColor.inkMuted.opacity(0.55))
-                        .monospacedDigit()
-                    Text("%")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.6))
-                }
-                .lineLimit(1)
-                Text(snap.completedCount > 0 ? "\(snap.completedCount) / \(snap.totalCount) 완료" : "\(snap.totalCount)단계 · 시작 전")
-                    .font(.system(size: 11.5, weight: .semibold))
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.8))
-                if showAiHandoffHint {
-                    Text("AI가 기획 단계를 채워뒀어요 —\n다음 단계부터 확인만 하며 이어가면 됩니다.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .multilineTextAlignment(.trailing)
-                        .lineSpacing(2)
-                        .padding(.top, 2)
-                }
                 // 목표 오픈 D-day — budget-setup 결정 inputs.targetOpenDate (웹 RoadmapSurface 미러).
                 //   과거·비정상 날짜는 미표시 (카운트다운 위조 금지).
                 if let dday = openDday {
                     Text(dday.diff == 0 ? "오늘이 목표 오픈일" : "목표 오픈 D-\(dday.diff) · \(dday.label)")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(BUColor.midnight)
-                        .padding(.horizontal, 9).padding(.vertical, 3)
+                        .padding(.horizontal, 9).padding(.vertical, 5)
                         .background(BUColor.midnight.opacity(0.07), in: Capsule())
                         .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.14), lineWidth: 1))
-                        .padding(.top, 2)
                 }
+                Spacer(minLength: 0)
             }
+
+            if showAiHandoffHint {
+                Text("AI가 기획 단계를 채워뒀어요 — 다음 단계부터 확인만 하며 이어가면 됩니다.")
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // 세그먼트 진행 바 (헤더 아래 accessory 유지)
+            segmentedProgress(snap)
         }
     }
 

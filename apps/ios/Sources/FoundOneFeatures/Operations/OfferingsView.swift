@@ -71,40 +71,40 @@ public struct OfferingsView: View {
     public var body: some View {
         ZStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    header
+                VStack(spacing: 0) {
+                    // 공통 페이지 헤더 (2026-08-19 통일) — 업종별 오퍼링 라벨(offering-kinds SSOT) + 한 줄 설명
+                    BUPageHeader(
+                        title: meta?.tabLabelKo ?? "내가 파는 것",
+                        subtitle: meta?.pageSubKo
+                    )
+                    VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        if kind == "hidden" {
+                            EmptyView() // 탭 미노출 업종 — 방어적 (직접 진입 없음)
+                        } else if isSplitKind {
+                            // 메뉴/시술 카드 ↔ 재고 카드 분리 (2026-07-27 사장님 지시 —
+                            //   통합 카드는 대시보드 몫, 전용 페이지는 명확 구분. 웹 section prop 미러)
+                            menuListCard
+                            InventoryOpsCard(
+                                items: inventory.filter { $0.itemType != "product" },
+                                onManage: { showManageSheet = true },
+                                titleOverride: kind == "service-menu" ? "소모품 재고" : "재료 재고"
+                            )
+                        } else if isInventoryKind {
+                            // 소매·이커머스 — 상품=재고, 통합 카드 유지
+                            InventoryOpsCard(
+                                items: inventory,
+                                onManage: { showManageSheet = true }
+                            )
+                        } else {
+                            catalogCard
+                        }
 
-                    if kind == "hidden" {
-                        EmptyView() // 탭 미노출 업종 — 방어적 (직접 진입 없음)
-                    } else if isSplitKind {
-                        // 메뉴/시술 카드 ↔ 재고 카드 분리 (2026-07-27 사장님 지시 —
-                        //   통합 카드는 대시보드 몫, 전용 페이지는 명확 구분. 웹 section prop 미러)
-                        menuListCard
-                        InventoryOpsCard(
-                            items: inventory.filter { $0.itemType != "product" },
-                            onManage: { showManageSheet = true },
-                            titleOverride: kind == "service-menu" ? "소모품 재고" : "재료 재고"
-                        )
-                    } else if isInventoryKind {
-                        // 소매·이커머스 — 상품=재고, 통합 카드 유지
-                        InventoryOpsCard(
-                            items: inventory,
-                            onManage: { showManageSheet = true }
-                        )
-                    } else {
-                        catalogCard
+                        Color.clear.frame(height: 110)
                     }
-
-                    Color.clear.frame(height: 110)
+                    .padding(.horizontal, BUSpacing.screenMargin)
                 }
-                .padding(.horizontal, BUSpacing.screenMargin)
-                .padding(.top, BUSpacing.md)
             }
         }
-        .navigationTitle(meta?.tabLabelKo ?? "내가 파는 것")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
         .task {
             guard let uid = BUSupabase.shared.currentUser?.id else { return }
             let repo = FundingProfileRepository(supabase: BUSupabase.shared.client, userId: uid)
@@ -127,24 +127,6 @@ public struct OfferingsView: View {
                         }
                     }
             }
-        }
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("OFFERINGS")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(1.54)
-                .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-            Text(meta?.tabLabelKo ?? "내가 파는 것")
-                .font(.system(size: 28, weight: .bold))
-                .tracking(-1.12)
-                .foregroundStyle(BUColor.ink)
-            Text(meta?.pageSubKo ?? "")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted.opacity(0.78))
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 2)
         }
     }
 

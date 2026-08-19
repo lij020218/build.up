@@ -114,141 +114,101 @@ public struct MarketingView: View {
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
         ZStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    header
-                    segmentedTabs
+                VStack(spacing: 0) {
+                    // 공통 페이지 헤더 (2026-08-19 통일) — 타이틀 + 한 줄 카피 + 세그먼트 탭(accessory)
+                    BUPageHeader(
+                        title: "마케팅",
+                        // 웹 MarketingSurface.tsx 헤더 카피와 통일 (2026-07-24 개편).
+                        subtitle: "이번 주에 딱 하나. 읽을 건 줄이고, 바로 쓸 것만 드려요.",
+                        accessory: { segmentedTabs }
+                    )
+                    VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        if tab == .weekly {
+                            // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
+                            //   웹 MarketingFocus 와 패리티. 히어로 1순위 + 채널 진행도 + 더 보기.
+                            MarketingCasesCard(
+                                loading: state.casesLoading,
+                                error: state.casesError,
+                                plays: state.plays,
+                                sources: state.casesSources,
+                                activeChannels: activeChannelsThisMonth,
+                                categoryId: state.profile?.industryCategoryId,
+                                doneTitles: state.doneTitles,
+                                canRefresh: canRegenerateCases,
+                                onToggleDone: { title in togglePlayDone(title) },
+                                onRefresh: { Task { await loadCases(force: true) } }
+                            )
 
-                    if tab == .weekly {
-                        // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
-                        //   웹 MarketingFocus 와 패리티. 히어로 1순위 + 채널 진행도 + 더 보기.
-                        MarketingCasesCard(
-                            loading: state.casesLoading,
-                            error: state.casesError,
-                            plays: state.plays,
-                            sources: state.casesSources,
-                            activeChannels: activeChannelsThisMonth,
-                            categoryId: state.profile?.industryCategoryId,
-                            doneTitles: state.doneTitles,
-                            canRefresh: canRegenerateCases,
-                            onToggleDone: { title in togglePlayDone(title) },
-                            onRefresh: { Task { await loadCases(force: true) } }
-                        )
+                            // 이번 주 밈·챌린지 — 웹 MemeLane 미러 (전역 팩: 주간 수집 + 일간 top-up · 원본만·개사 없음)
+                            MarketingMemeLane(pack: state.memePack)
 
-                        // 이번 주 밈·챌린지 — 웹 MemeLane 미러 (전역 팩: 주간 수집 + 일간 top-up · 원본만·개사 없음)
-                        MarketingMemeLane(pack: state.memePack)
+                            // 리뷰 관리 — 추후 제공 예정 (2026-08-03 사장님 결정, 웹 패리티)
+                            reviewComingSoonCard
 
-                        // 리뷰 관리 — 추후 제공 예정 (2026-08-03 사장님 결정, 웹 패리티)
-                        reviewComingSoonCard
+                            // 단골 비율·캠페인 아이디어 — 웹과 동일 배치 (2026-08-04 패리티: 이번 주 탭 하단)
+                            LoyaltyDonutBlock()
+                            CampaignIdeasBlock()
+                        }
 
-                        // 단골 비율·캠페인 아이디어 — 웹과 동일 배치 (2026-08-04 패리티: 이번 주 탭 하단)
-                        LoyaltyDonutBlock()
-                        CampaignIdeasBlock()
+                        if tab == .create {
+                            // 카드뉴스 스튜디오 — 웹 CardNewsStudio 미러 (지금 무료·9월부터 프로 전용)
+                            CardNewsStudioCard(
+                                storeName: state.profile?.storeName ?? store.storeName,
+                                industryCategoryId: state.profile?.industryCategoryId,
+                                subIndustryId: state.profile?.subIndustryId,
+                                isOperating: state.profile?.businessLaunched ?? true
+                            )
+                        }
+
+                        // 협찬 탭 — 인플루언서 큐레이션·발굴·예산 매칭 (2026-08-04, 웹 패리티, LLM 0%)
+                        if tab == .collab {
+                            InfluencerCollabTabView(
+                                collab: state.influencerCollab,
+                                storeName: state.profile?.storeName ?? store.storeName,
+                                region: "",
+                                budgetWon: state.monthlyBudget,
+                                onBudgetChange: { won in
+                                    state.monthlyBudget = won
+                                    Task { await saveMonthlyBudget(won) }
+                                }
+                            )
+                            .task { await loadInfluencerCollab() }
+                        }
+
+                        // 장부·예산 전용 탭 (2026-08-03 승격 — 종전 하단 접힘 카드 폐기, 웹 패리티)
+                        if tab == .ledger {
+                            ledgerSummaryCard
+                            if let check = spendCheck { budgetNoteCard(check) }
+                            kpiSection
+                            MarketingCampaignsList(
+                                campaigns: state.campaigns,
+                                industryCategoryId: state.profile?.industryCategoryId,
+                                onAdd: { campaign in Task { await addCampaign(campaign) } },
+                                onDelete: { id in Task { await deleteCampaign(id) } }
+                            )
+                        }
+
+                        Color.clear.frame(height: 110)
                     }
-
-                    if tab == .create {
-                        // 카드뉴스 스튜디오 — 웹 CardNewsStudio 미러 (지금 무료·9월부터 프로 전용)
-                        CardNewsStudioCard(
-                            storeName: state.profile?.storeName ?? store.storeName,
-                            industryCategoryId: state.profile?.industryCategoryId,
-                            subIndustryId: state.profile?.subIndustryId,
-                            isOperating: state.profile?.businessLaunched ?? true
-                        )
-                    }
-
-                    // 협찬 탭 — 인플루언서 큐레이션·발굴·예산 매칭 (2026-08-04, 웹 패리티, LLM 0%)
-                    if tab == .collab {
-                        InfluencerCollabTabView(
-                            collab: state.influencerCollab,
-                            storeName: state.profile?.storeName ?? store.storeName,
-                            region: "",
-                            budgetWon: state.monthlyBudget,
-                            onBudgetChange: { won in
-                                state.monthlyBudget = won
-                                Task { await saveMonthlyBudget(won) }
-                            }
-                        )
-                        .task { await loadInfluencerCollab() }
-                    }
-
-                    // 장부·예산 전용 탭 (2026-08-03 승격 — 종전 하단 접힘 카드 폐기, 웹 패리티)
-                    if tab == .ledger {
-                        ledgerSummaryCard
-                        if let check = spendCheck { budgetNoteCard(check) }
-                        kpiSection
-                        MarketingCampaignsList(
-                            campaigns: state.campaigns,
-                            industryCategoryId: state.profile?.industryCategoryId,
-                            onAdd: { campaign in Task { await addCampaign(campaign) } },
-                            onDelete: { id in Task { await deleteCampaign(id) } }
-                        )
-                    }
-
-                    Color.clear.frame(height: 110)
+                    .padding(.horizontal, BUSpacing.screenMargin)
                 }
-                .padding(.horizontal, BUSpacing.screenMargin)
-                .padding(.top, BUSpacing.md)
             }
             .refreshable { await refreshAll() }
         }
-        .navigationTitle("마케팅")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
         .task { await initialLoad() }
     }
 
     // MARK: - Sections
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("마케팅 · MARKETING")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(1.54)
-                .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-                .textCase(.uppercase)
-            Text("내 가게 마케팅")
-                .font(.system(size: 28, weight: .bold))
-                .tracking(-1.12)
-                .foregroundStyle(BUColor.ink)
-            // 웹 MarketingSurface.tsx 헤더 카피와 통일 (2026-07-24 개편).
-            Text("이번 주에 딱 하나. 읽을 건 줄이고, 바로 쓸 것만 드려요.")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted.opacity(0.78))
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 2)
-        }
-    }
-
-    // 세그먼트 탭 — 웹 pill 세그먼트 패리티 (탭당 핵심 기능만)
+    // 세그먼트 탭 — 공통 BUSegmentedControl (웹 pill 세그먼트 패리티, 탭당 핵심 기능만)
     private var segmentedTabs: some View {
-        HStack(spacing: 4) {
-            ForEach(MarketingTab.allCases, id: \.self) { t in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.15)) { tab = t }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(t.label)
-                            .font(.system(size: 13.5, weight: .bold))
-                            .foregroundStyle(tab == t ? Color.white : BUColor.inkMuted)
-                        // 저지출 경고 점 — 장부 탭에 안 들어와도 경고가 보이게 (웹 패리티)
-                        if t == .ledger, let check = spendCheck, check.band == .below {
-                            Circle().fill(BUColor.danger).frame(width: 6, height: 6)
-                        }
-                    }
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 8)
-                    .background(
-                        // 선택 = 브랜드 미드나잇 네이비 (2026-08-03 사장님 지시 — 종전 흰 배경, 웹 패리티)
-                        RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .fill(tab == t ? BUColor.midnight : Color.clear)
-                    )
-                    .buShadow(tab == t ? .card : .none)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(BUColor.ink.opacity(0.045), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        BUSegmentedControl(
+            items: MarketingTab.allCases.map { t in
+                // 저지출 경고 점 — 장부 탭에 안 들어와도 경고가 보이게 (웹 패리티)
+                BUSegmentItem(id: t, label: t.label, showsDot: t == .ledger && spendCheck?.band == .below)
+            },
+            selection: $tab
+        )
     }
 
     // 리뷰 관리 — 추후 제공 예정 (어중간한 반자동 대신 정식 연동 때 한 번에, 웹 패리티)
