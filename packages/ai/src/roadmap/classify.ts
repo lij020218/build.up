@@ -11,7 +11,7 @@
  * 택소노미는 Pass 1 과 동일 SSOT (SUB_INDUSTRY_TAXONOMY_BLOCK) — 이중 관리 금지.
  */
 import { createAiClient, systemWithCache } from "../utils/client";
-import { looseExtractJson } from "../utils/parse-json";
+import { parseLlmJson } from "../utils/parse-json";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { SUB_INDUSTRY_TAXONOMY_BLOCK } from "./prompt";
@@ -64,7 +64,7 @@ export async function classifyIndustry(
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(looseExtractJson(text));
+    parsed = parseLlmJson(text);
   } catch {
     throw new AiParseError("업종 분류 응답이 유효한 JSON이 아닙니다.", text);
   }

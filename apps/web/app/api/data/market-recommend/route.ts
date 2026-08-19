@@ -27,8 +27,7 @@ import { buildFranchiseCtx } from "../../_lib/franchise-context";
 import { kakao, geocodeRegion, distMeters, districtKeyFromPlace, competitionKeyword, type KakaoSearchRes } from "../../_lib/market-geo";
 import { measuredRentFor } from "../../_lib/market-rent-lookup";
 import { MARKET_RENT_QUARTER_LABEL } from "@foundone/shared";
-import { requireApiUser } from "../../_lib/auth";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
+import { runAiFeature } from "../../_lib/ai-guard";
 import { getAnthropicApiKey, getEnvVar } from "../../_lib/env";
 
 export const runtime = "nodejs";
@@ -299,23 +298,7 @@ async function scoreAndNarrate(
 
 // ── 라우트 ─────────────────────────────────────────────────────
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
-
-  // 분당 10회 — 프롬프트 비용·Kakao quota 보호
-  const rl = await checkSimpleRateLimit({
-    key: `market-recommend:${auth.userId}`,
-    limit: 10, windowMs: 60_000,
-    message: "잠시 후 다시 시도해 주세요. (분당 10회 한도)",
-  });
-  if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
-  // 일 50회
-  const dl = await checkDailyRateLimit({
-    userId: auth.userId, feature: "market-recommend", limit: 50,
-    message: "오늘의 상권 추천 한도(50회)를 모두 사용했습니다.",
-  });
-  if (!dl.ok) return NextResponse.json({ ok: false, error: dl.error }, { status: dl.status });
-
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 요청은 절대 차감되지 않는다 (2026-08-19 ai-guard 이관)
   let body: { region?: string;
     franchiseBrandId?: string; categoryId?: string; subIndustryId?: string; capital?: number; language?: string };
   try {
@@ -340,6 +323,12 @@ export async function POST(request: Request) {
   // LLM 키 없어도 동작 — 점수는 결정론, 서술은 템플릿 폴백 (LLM 0 의존 경로)
   const anthropicKey = getAnthropicApiKey() ?? null;
 
+  // 한도(분·일·주·월)·환불 = ai-guard(AI_FEATURE_LIMITS "market-recommend").
+  //  refundOn4xx: 지오코딩 실패(404) 등은 LLM 을 부르기 전이라 차감 유지 사유가 없다 → 환불.
+  //  템플릿 해설(LLM 실패)로 응답할 때도 ctx.refund() — 사용자에게 AI 해설을 못 준 건 우리 책임.
+  return runAiFeature(
+    { request, feature: "market-recommend", refundOn4xx: true },
+    async (ctx) => {
   const startedAt = Date.now();
 
   // ① 지오코딩
@@ -396,6 +385,9 @@ export async function POST(request: Request) {
 
   // ④ 점수(결정론) + 해설(LLM, 실패 시 템플릿) — 항상 성공 응답
   const { items: scored, narration, usage } = await scoreAndNarrate(enriched, { region, categoryId, subIndustryId, capital, language, franchiseRegionalLine: fRegionalLine }, anthropicKey);
+  // 템플릿 폴백 = LLM 해설 실패(또는 키 부재) → 사용 횟수 환불 (2026-08-19 ③). 캐시 히트가 아닌 순수 실패 경로.
+  const refunded = narration === "template";
+  if (refunded) await ctx.refund();
 
   // ⑤ RecommendationItem 형태로 정리 (lat/lng meta 에 포함 → 지도에서 즉시 핀 가능)
   const items: RecommendationItem[] = scored.map((s) => {
@@ -477,5 +469,8 @@ export async function POST(request: Request) {
     source: "kakao+ai",
     tookMs: Date.now() - startedAt,
     cache: cacheStats,
+    ...(refunded ? { refunded: true } : {}),
   });
+    },
+  );
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireApiUser } from "../../_lib/auth";
 import { getAnthropicApiKey } from "../../_lib/env";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
+import { runAiFeature } from "../../_lib/ai-guard";
 import { generateInterviewScript } from "@foundone/ai";
 import type { InterviewInput } from "@foundone/ai";
 
@@ -9,33 +8,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-  const rl = await checkSimpleRateLimit({
-    key: `ai-interview:${auth.userId}`,
-    limit: 20,
-    windowMs: 60 * 60 * 1000,
-  });
-  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
-
-  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "interview",
-    limit: 3,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
-  }
-
-  const apiKey = getAnthropicApiKey();
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI 서비스를 사용할 수 없습니다." }, { status: 503 });
-  }
-
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 입력은 절대 차감하지 않는다.
   let body: InterviewInput;
   try {
     body = await request.json();
@@ -43,16 +16,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!body.problemStatement?.trim() || !body.targetCustomer?.trim()) {
+  if (!body?.problemStatement?.trim() || !body?.targetCustomer?.trim()) {
     return NextResponse.json({ error: "문제 정의와 타겟 고객을 입력해주세요." }, { status: 400 });
   }
 
-  try {
-    const result = await generateInterviewScript(body, { apiKey });
-    return NextResponse.json(result);
-  } catch (error) {
-    // 내부 오류 상세는 서버 로그에만 — 클라이언트엔 고정 문자열.
-    console.error("[ai/interview] generate failed:", error);
-    return NextResponse.json({ error: "인터뷰지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." }, { status: 503 });
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    return NextResponse.json({ error: "AI 서비스를 사용할 수 없습니다." }, { status: 503 });
   }
+
+  // 2026-08-19 ai-guard: 분·일·주·월 한도 + 실패(throw) 시 1회 재시도 후 전액 환불 + 503.
+  return runAiFeature(
+    { request, feature: "interview", failMessage: "인터뷰지 생성 중 오류가 발생했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요." },
+    async () => {
+      const result = await generateInterviewScript(body, { apiKey });
+      return NextResponse.json(result);
+    },
+  );
 }

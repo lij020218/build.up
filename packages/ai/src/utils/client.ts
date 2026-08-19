@@ -25,6 +25,48 @@ const MODEL_MAP: Record<string, string> = {
 };
 
 /**
+ * ── 신뢰성 계층 (2026-08-19 사장님 지시: "AI 실패 확률 0 으로 수렴") ──────────
+ *  1) OpenAI SDK 자체 재시도(429/5xx/네트워크, maxRetries=3, 지수 백오프)
+ *  2) 그래도 실패하면 **모델 폴백 체인**으로 1회 더 — 상위 모델 장애·용량 부족 시 하위 모델이 받쳐줌.
+ *     응답 품질은 낮아질 수 있으나 "실패" 대신 "결과" 를 준다. 폴백 사용은 usage 로그에 남긴다.
+ *  3) 폴백 대상이 없는 모델(이미 mini)은 같은 모델로 1회 재호출.
+ *  ⚠️ 폴백은 4xx 입력 오류(400 invalid_request 등)에는 적용하지 않는다 — 같은 입력이면 같은 400.
+ */
+const SDK_MAX_RETRIES = 3;
+const FALLBACK_MODEL: Record<string, string> = {
+  "gpt-5.6-sol":   "gpt-5.6-terra",
+  "gpt-5.6-terra": "gpt-5.6-luna",
+  "gpt-5.6-luna":  "gpt-5.4-mini",
+  "gpt-5.4":       "gpt-5.4-mini",
+  "gpt-5.4-mini":  "gpt-5.4-mini",
+  "claude-sonnet-5": "gpt-5.4-mini",
+  "claude-opus-5":   "gpt-5.4-mini",
+  "claude-haiku-4-5-20251001": "gpt-5.4-mini",
+};
+function fallbackFor(model: string): string | null {
+  const fb = FALLBACK_MODEL[model];
+  return fb ?? "gpt-5.4-mini";
+}
+/** 재시도/폴백 가치가 있는 오류인지 — 입력 오류(400/401/403/404/422)는 제외 */
+export function isTransientLlmError(err: unknown): boolean {
+  const e = err as { status?: number; code?: string; name?: string; message?: string } | undefined;
+  const status = typeof e?.status === "number" ? e.status : undefined;
+  if (status !== undefined) {
+    if (status === 408 || status === 409 || status === 429 || status >= 500) return true;
+    if (status >= 400 && status < 500) return false;
+  }
+  const name = String(e?.name ?? "");
+  const code = String(e?.code ?? "");
+  const msg = String(e?.message ?? "").toLowerCase();
+  return name.includes("Timeout") || name.includes("APIConnection") || code === "ECONNRESET" || code === "ETIMEDOUT"
+    || msg.includes("timeout") || msg.includes("timed out") || msg.includes("network") || msg.includes("socket");
+}
+/** 서버 과부하 등으로 콘텐츠가 비어 온 응답도 "실패" 로 간주해 폴백 대상으로 삼는다 */
+export class EmptyLlmResponseError extends Error {
+  constructor(model: string) { super(`empty response from ${model}`); this.name = "EmptyLlmResponseError"; }
+}
+
+/**
  * Web search 활성 모델 — `tools: [{type: "web_search...."}]` 요청 시 자동 라우팅.
  *  gpt-5.4-mini + Responses API + 내장 web_search tool 사용.
  *  · 일반 호출과 동일 모델 → 출력 톤·품질 일관성
@@ -158,6 +200,7 @@ class LlmClient {
     this.openai = new OpenAI({
       apiKey,
       timeout: options.timeout ?? DEFAULT_TIMEOUT_MS,
+      maxRetries: SDK_MAX_RETRIES,
     });
   }
 
@@ -286,7 +329,39 @@ class LlmClient {
       if (oaiTools) baseParams.tools = oaiTools;
       if (oaiToolChoice !== undefined) baseParams.tool_choice = oaiToolChoice;
 
-      const response = await this.openai.chat.completions.create(baseParams as never);
+      // ── 호출 + 폴백 (SDK 재시도는 내부에서 이미 3회) ──
+      type ChatResp = { choices: Array<{ finish_reason?: string | null; message?: { content?: string | null; tool_calls?: unknown[] } }>; usage?: { prompt_tokens?: number; completion_tokens?: number } };
+      let response: ChatResp;
+      let usedModel = mappedModel;
+      const callOnce = async (model: string) => {
+        const params = { ...baseParams, model };
+        // 폴백 모델이 5.6 계열이 아니면 reasoning_effort 를 빼고, temperature 는 원래 요청대로
+        if (!model.startsWith("gpt-5.6")) {
+          delete (params as Record<string, unknown>).reasoning_effort;
+          if (req.temperature !== undefined) (params as Record<string, unknown>).temperature = req.temperature;
+          if (req.top_p !== undefined) (params as Record<string, unknown>).top_p = req.top_p;
+        } else if (!("reasoning_effort" in params)) {
+          (params as Record<string, unknown>).reasoning_effort = "none";
+          delete (params as Record<string, unknown>).temperature;
+          delete (params as Record<string, unknown>).top_p;
+        }
+        const r = (await this.openai.chat.completions.create(params as never)) as unknown as ChatResp;
+        const c = r.choices?.[0];
+        const hasTool = Array.isArray((c?.message as { tool_calls?: unknown[] } | undefined)?.tool_calls)
+          && ((c?.message as { tool_calls?: unknown[] }).tool_calls?.length ?? 0) > 0;
+        const hasText = typeof c?.message?.content === "string" && c.message.content.trim().length > 0;
+        if (!hasTool && !hasText && c?.finish_reason !== "length") throw new EmptyLlmResponseError(model);
+        return r;
+      };
+      try {
+        response = await callOnce(mappedModel);
+      } catch (firstErr) {
+        const fb = fallbackFor(mappedModel);
+        if (!fb || !isTransientLlmError(firstErr) && !(firstErr instanceof EmptyLlmResponseError)) throw firstErr;
+        console.warn(`[LlmClient] ${mappedModel} 실패(${(firstErr as Error)?.name ?? "err"}: ${String((firstErr as Error)?.message ?? "").slice(0, 120)}) → 폴백 ${fb}`);
+        response = await callOnce(fb);
+        usedModel = fb;
+      }
       const choice = response.choices[0];
       const finish = choice?.finish_reason ?? null;
 
@@ -319,7 +394,7 @@ class LlmClient {
       return {
         content: contentBlocks.length ? contentBlocks : [{ type: "text", text: "" }],
         stop_reason,
-        model: mappedModel,
+        model: usedModel,
         usage: {
           input_tokens: response.usage?.prompt_tokens ?? 0,
           output_tokens: response.usage?.completion_tokens ?? 0,

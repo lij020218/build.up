@@ -76,3 +76,72 @@ export function parseAiJsonResponse<T>(raw: string, schema: ZodType<T>): T {
 
   return result.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// parseLlmJson — 모든 AI 라우트 공용 robust 파서 (2026-08-19 "실패 확률 0 수렴")
+//   1) 그대로 JSON.parse
+//   2) 코드펜스·산문 제거(looseExtractJson) 후 파싱
+//   3) 흔한 오염 수리: 후행 콤마 제거, 스마트 따옴표 → ", 문자열 내 개행 이스케이프
+//   4) max_tokens 로 잘린 JSON 복구(닫히지 않은 {[" 보충) 후 파싱
+//   전부 실패하면 AiParseError (호출처는 ai-guard 가 재시도·환불).
+// ─────────────────────────────────────────────────────────────
+export function repairTruncatedJson(s: string): string {
+  let depth = 0, inString = false, escapeNext = false, lastValidEnd = -1;
+  const stack: Array<"object" | "array"> = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escapeNext) { escapeNext = false; continue; }
+    if (ch === "\\") { escapeNext = true; continue; }
+    if (ch === '"') inString = !inString;
+    if (inString) continue;
+    if (ch === "{") { stack.push("object"); depth++; }
+    else if (ch === "[") { stack.push("array"); depth++; }
+    else if (ch === "}" || ch === "]") { stack.pop(); depth--; if (depth === 0) lastValidEnd = i; }
+  }
+  if (depth === 0) return s;
+  if (lastValidEnd >= 0) return s.slice(0, lastValidEnd + 1);
+  let out = s;
+  if (inString) out += '"';
+  // 마지막 미완성 키/값 꼬리("key": 또는 , ) 정리
+  out = out.replace(/,\s*$/, "").replace(/"[^"]*"\s*:\s*$/, "").replace(/,\s*$/, "");
+  while (stack.length > 0) out += stack.pop() === "object" ? "}" : "]";
+  return out;
+}
+
+function fixCommonJsonDamage(s: string): string {
+  return s
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/,\s*([}\]])/g, "$1")
+    // 문자열 안의 실제 개행 → \n (키/값 사이의 개행은 JSON.parse 가 허용하므로 문자열 안만 노린다)
+    .replace(/"(?:[^"\\]|\\.)*"/g, (m) => m.replace(/\r?\n/g, "\\n"));
+}
+
+export function parseLlmJson<T = unknown>(raw: string): T {
+  const attempts: Array<() => string> = [
+    () => raw,
+    () => looseExtractJson(raw),
+    () => fixCommonJsonDamage(looseExtractJson(raw)),
+    () => repairTruncatedJson(fixCommonJsonDamage(looseExtractJson(raw))),
+  ];
+  let lastErr: unknown = null;
+  for (const get of attempts) {
+    try {
+      const txt = get().trim();
+      if (!txt) continue;
+      return JSON.parse(txt) as T;
+    } catch (e) { lastErr = e; }
+  }
+  throw new AiParseError(`AI 응답 JSON 파싱 실패: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`, raw.slice(0, 200));
+}
+
+/** parseLlmJson + Zod 검증 (schema 실패도 AiParseError) */
+export function parseLlmJsonWith<T>(raw: string, schema: ZodType<T>): T {
+  const parsed = parseLlmJson<unknown>(raw);
+  const r = schema.safeParse(parsed);
+  if (!r.success) {
+    const issues = r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
+    throw new AiParseError(`AI 응답이 예상 형식과 다릅니다: ${issues}`, raw.slice(0, 200));
+  }
+  return r.data;
+}

@@ -7,6 +7,7 @@
  *  LLM 0 의존 경로). 강제 경고(mandatoryWarnings)는 호출측이 warnings 선두에 병합한다.
  */
 import { createAiClient } from "@foundone/ai/utils/client";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import type { DeterministicScore } from "./market-scoring";
 import { MARKET_RENT_QUARTER_LABEL } from "@foundone/shared";
 import { DONG_POP_YM_LABEL } from "./dong-population";
@@ -134,16 +135,23 @@ ${lines}
       .filter((c) => c.type === "text")
       .map((c) => (c as { type: "text"; text: string }).text)
       .join("\n");
-    const m = text.match(/\[[\s\S]*\]/);
-    if (!m) {
-      console.warn("[market-narrator] no JSON array | first 300:", text.slice(0, 300));
-      return null;
+    // robust 4단계 파서(strict → loose → damage fix → truncated repair) — 2026-08-19
+    const cleanedText = text.replace(/<cite[^>]*>/g, "").replace(/<\/cite>/g, "");
+    let parsed = parseLlmJson<unknown>(cleanedText);
+    if (!Array.isArray(parsed)) {
+      // {items:[...]} 처럼 객체로 감싸 온 경우 관용
+      const inner = parsed && typeof parsed === "object" ? Object.values(parsed as Record<string, unknown>).find(Array.isArray) : undefined;
+      if (!inner) {
+        console.warn("[market-narrator] no JSON array | first 300:", text.slice(0, 300));
+        return null;
+      }
+      parsed = inner;
     }
-    const parsed = JSON.parse(m[0].replace(/<cite[^>]*>/g, "").replace(/<\/cite>/g, "")) as Array<{
+    const rows = parsed as Array<{
       districtName?: string; title?: string; summary?: string; reasons?: string[]; warnings?: string[];
     }>;
     const byDistrict = new Map<string, Narration>();
-    for (const p of parsed) {
+    for (const p of rows) {
       if (!p.districtName || !p.summary) continue;
       byDistrict.set(p.districtName, {
         title: p.title || p.districtName,

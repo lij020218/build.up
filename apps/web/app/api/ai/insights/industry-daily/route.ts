@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getOpenAIApiKey } from "../../../_lib/env";
-import { requireApiUser } from "../../../_lib/auth";
 import { fetchRecentNegativeFeedbackLines, buildNegativeFeedbackBlock } from "../../../_lib/coaching-feedback";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
+import { isTransientLlmError, EmptyLlmResponseError } from "@foundone/ai/utils/client";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import {
   getIndustryBenchmark,
   formatKRW,
@@ -214,32 +215,30 @@ type RequestBody = {
 export const runtime = "nodejs";
 export const maxDuration = 90; // Vercel function timeout
 
+/**
+ * OpenAI 직접 호출(response_format json_object 필요)용 로컬 폴백 — 일시 오류·빈 응답이면 gpt-5.4-mini 로 1회 재시도.
+ *  (LlmClient 는 response_format 미지원이라 이 라우트는 OpenAI 를 유지. 2026-08-19)
+ */
+async function withLlmFallback<T>(primaryModel: string, run: (model: string) => Promise<T>): Promise<T> {
+  try {
+    return await run(primaryModel);
+  } catch (e) {
+    if (!isTransientLlmError(e) && !(e instanceof EmptyLlmResponseError)) throw e;
+    console.warn(`[industry-daily] ${primaryModel} transient failure → fallback gpt-5.4-mini:`, e instanceof Error ? e.message : String(e));
+    return run("gpt-5.4-mini");
+  }
+}
+
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 입력은 절대 차감하지 않는다.
+  let body: RequestBody;
+  try {
+    body = (await request.json()) as RequestBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-
-  const rateLimit = await checkSimpleRateLimit({
-    key: `industry-insight:${auth.userId}`,
-    limit: 10,
-    windowMs: 86_400_000,
-  });
-  if (!rateLimit.ok) {
-    return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
-  }
-
-  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "insights-industry-daily",
-    // 하루 1회 코칭 의도 — 클라 localStorage 캐시가 우회돼도 서버가 강제(2026-07: 30→10 하향).
-    //   다기기·캐시미스 여유로 10회면 충분. 정상 사용은 캐시 hit 로 1회.
-    limit: 10,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const apiKey = getOpenAIApiKey();
@@ -247,13 +246,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "AI not configured (OPENAI_API_KEY missing)" }, { status: 500 });
   }
 
-  let body: RequestBody;
-  try {
-    body = (await request.json()) as RequestBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  // 2026-08-19 ai-guard: 분·일·주·월 한도 + 실패 시 전액 환불.
+  //  refundOn4xx: 핸들러 내부 4xx 는 OpenAI 크레딧 부족(402)뿐 — 우리 쪽 문제이므로 환불.
+  //  retryOnce=false: 내부에 이미 3개 강제 재시도 + withLlmFallback 이 있어(호출당 30s) 90s 예산 보호.
+  //  (하루 1회 코칭 의도 — 클라 캐시 우회돼도 서버 한도표가 강제)
+  return runAiFeature(
+    { request, feature: "insights-industry-daily", refundOn4xx: true, retryOnce: false },
+    async ({ userId }) => generateIndustryInsight(body, apiKey, userId),
+  );
+}
 
+async function generateIndustryInsight(body: RequestBody, apiKey: string, userId: string): Promise<NextResponse> {
   const categoryId = body.categoryId ?? "food";
   // 세부 업종 1순위: 프로파일 있으면 그 라벨·핵심지표, 없으면 카테고리 폴백.
   const specialtyProfile = body.specialtyId ? SPECIALTY_KPI_PROFILE[body.specialtyId] : undefined;
@@ -426,7 +429,7 @@ export async function POST(request: Request) {
 
   // 자가개선: 사장님이 최근 "안 맞아요"로 표시한 코칭을 prompt 에 주입 → 비슷한 코칭 회피.
   const negFeedbackBlock = buildNegativeFeedbackBlock(
-    await fetchRecentNegativeFeedbackLines(auth.userId, { source: "industry-daily" }),
+    await fetchRecentNegativeFeedbackLines(userId, { source: "industry-daily" }),
   );
 
   const userPrompt = `오늘 ${today}.
@@ -453,43 +456,43 @@ ${userContext}${caseStudyBlock}${ragBlock}${negFeedbackBlock}
 다른 설명 없이 JSON 만.`;
 
   try {
-    const client = new OpenAI({ apiKey, timeout: 30_000 });
+    const client = new OpenAI({ apiKey, timeout: 30_000, maxRetries: 3 });
 
-    // 단일 호출 헬퍼 — 1차 + retry 시 동일 사용
-    const callLLM = async (extraNudge: string = ""): Promise<string> => {
-      const r = await client.chat.completions.create({
-        // gpt-5.4-mini — 복합 인사이트 생성 영역, GPQA 88%, JSON mode + 한국어 nuance.
-        // (nano 는 분류·라우팅용이라 우리 use case 비권장. 비교 결과 2026-05-08)
-        model: "gpt-5.4-mini",
-        // ⚠️ GPT-5.4 series 는 max_completion_tokens 사용 (max_tokens 미지원, 2026 API 변경)
-        max_completion_tokens: 1500,
-        temperature: 0.4,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt + extraNudge },
-        ],
+    // 단일 호출 헬퍼 — 1차 + retry 시 동일 사용. 일시 오류·빈 응답은 withLlmFallback 이 1회 더 시도.
+    const callLLM = async (extraNudge: string = ""): Promise<string> =>
+      withLlmFallback("gpt-5.4-mini", async (model) => {
+        const r = await client.chat.completions.create({
+          // gpt-5.4-mini — 복합 인사이트 생성 영역, GPQA 88%, JSON mode + 한국어 nuance.
+          // (nano 는 분류·라우팅용이라 우리 use case 비권장. 비교 결과 2026-05-08)
+          model,
+          // ⚠️ GPT-5.4 series 는 max_completion_tokens 사용 (max_tokens 미지원, 2026 API 변경)
+          max_completion_tokens: 1500,
+          temperature: 0.4,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt + extraNudge },
+          ],
+        });
+        const out = r.choices[0]?.message?.content ?? "";
+        if (!out.trim()) throw new EmptyLlmResponseError(model);
+        return out;
       });
-      return r.choices[0]?.message?.content ?? "{}";
+
+    // parseLlmJson: 코드펜스·잘림 복구 포함. 1차가 완전 비-JSON 이면 빈 insights 로 두고 아래 retry 가 재시도.
+    const safeParse = (raw: string): { insights?: unknown; confidence?: number } => {
+      try { return parseLlmJson<{ insights?: unknown; confidence?: number }>(raw); }
+      catch { return { insights: [] }; }
     };
 
     let text = await callLLM();
-    let jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return NextResponse.json({ error: "AI response malformed" }, { status: 500 });
-    }
 
     // 1차 응답 검증 — insights 가 3개 미만이면 retry 1회 (강한 강제 문구)
-    let firstParse = (() => {
-      try { return JSON.parse(jsonMatch[0]) as { insights?: unknown[] }; }
-      catch { return { insights: [] }; }
-    })();
+    const firstParse = safeParse(text);
     const firstCount = Array.isArray(firstParse.insights) ? firstParse.insights.length : 0;
     if (firstCount < 3) {
       console.warn(`[Industry insight] 1차 응답 ${firstCount}개 — retry 시도 (3개 강제)`);
       text = await callLLM(`\n\n⚠️ 위 1차 답변이 ${firstCount}개였는데, 시스템 요구는 정확히 3개. 데이터가 빈약하면 단계 특정 초기 운영 인사이트로 채워서라도 반드시 3개 (high/medium/low) 반환.`);
-      const m2 = text.match(/\{[\s\S]*\}/);
-      if (m2) jsonMatch = m2;
     }
 
     type RawInsight = {
@@ -502,10 +505,8 @@ ${userContext}${caseStudyBlock}${ragBlock}${negFeedbackBlock}
       priority?: unknown;
       sourceLabel?: unknown;
     };
-    const parsed = JSON.parse(jsonMatch[0]) as {
-      insights?: unknown;
-      confidence?: number;
-    };
+    // 재시도 후에도 파싱 불가 → throw → 게이트가 환불 + 503
+    const parsed = parseLlmJson<{ insights?: unknown; confidence?: number }>(text);
 
     // ─── confidence — UI 용 메타데이터로만 사용 (suppression X) ───
     //
@@ -646,10 +647,11 @@ ${userContext}${caseStudyBlock}${ragBlock}${negFeedbackBlock}
     // OpenAI 크레딧 부족 / 결제 문제 — 명확한 메시지
     if (errMsg.includes("insufficient_quota") || errMsg.includes("billing") || errMsg.includes("rate_limit")) {
       return NextResponse.json(
-        { error: "OpenAI API 크레딧이 부족하거나 한도 초과. Console 에서 확인해주세요.", code: "credits_low" },
+        { error: "OpenAI API 크레딧이 부족하거나 한도 초과. Console 에서 확인해주세요.", code: "credits_low", refunded: true },
         { status: 402 },
       );
     }
-    return NextResponse.json({ error: "Failed to generate insight" }, { status: 500 });
+    // ≥500 → 게이트가 환불(x-ai-refunded) + 1회 재시도
+    return NextResponse.json({ error: "Failed to generate insight", refunded: true }, { status: 500 });
   }
 }

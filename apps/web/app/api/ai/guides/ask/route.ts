@@ -10,9 +10,8 @@ import {
 import { interpretGuideQuestion } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { supabase } from "../../../../../lib/supabase";
-import { requireApiUser } from "../../../_lib/auth";
 import { getRequestId, logApiError, logApiEvent } from "../../../_lib/observability";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
 
 type RequestBody = {
   guideId?: string;
@@ -26,143 +25,56 @@ export const maxDuration = 60; // Vercel function timeout
 export async function POST(request: Request) {
   const route = "/api/ai/guides/ask";
   const requestId = getRequestId(request);
+
+  // 입력 검증·가이드 조회는 게이트(차감) 전에 — 400/404 는 절대 차감하지 않는다.
+  let body: RequestBody;
   try {
-    const auth = await requireApiUser(request);
-    if (!auth.ok) {
-      logApiEvent("warn", {
-        area: "ai",
-        route,
-        requestId,
-        event: "auth_failed",
-        status: auth.status,
-        detail: auth.error
-      });
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
-    }
+    body = (await request.json()) as RequestBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+  if (!body?.guideId || !body.question?.trim()) {
+    return NextResponse.json({ error: "guideId and question are required." }, { status: 400 });
+  }
+  const question = body.question;
+  const language = body.language ?? "ko";
 
-    const rateLimit = await checkSimpleRateLimit({
-      key: `guide:${auth.userId}`,
-      limit: 20,
-      windowMs: 60_000
-    });
-    if (!rateLimit.ok) {
-      logApiEvent("warn", {
-        area: "ai",
-        route,
-        requestId,
-        event: "rate_limited",
-        userId: auth.userId,
-        status: rateLimit.status,
-        detail: rateLimit.error
-      });
-      return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
-    }
+  let guide: Awaited<ReturnType<typeof loadKnowledgeRecordById>>;
+  try {
+    guide = await loadKnowledgeRecordById(supabase, body.guideId);
+  } catch (error) {
+    logApiError(route, "fetch_failed", error, { requestId, status: 500 });
+    return NextResponse.json(
+      { error: "답변 생성에 실패했습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 500, headers: { "x-request-id": requestId } }
+    );
+  }
+  if (!guide) {
+    return NextResponse.json({ error: "Guide not found." }, { status: 404 });
+  }
+  const loadedGuide = guide;
 
-    // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-    const dailyLimit = await checkDailyRateLimit({
-      userId: auth.userId,
-      feature: "guides-ask",
-      limit: 30,
-      message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-    });
-    if (!dailyLimit.ok) {
-      logApiEvent("warn", {
-        area: "ai",
-        route,
-        requestId,
-        event: "rate_limited",
-        userId: auth.userId,
-        status: dailyLimit.status,
-        detail: dailyLimit.error,
-      });
-      return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
-    }
+  const staticAnswer = (): GuideQaAnswer =>
+    answerGuideQuestion({ question, language, guide: loadedGuide } satisfies GuideQaRequest);
 
-    const body = (await request.json()) as RequestBody;
-
-    if (!body.guideId || !body.question?.trim()) {
-      return NextResponse.json(
-        {
-          error: "guideId and question are required."
-        },
-        { status: 400 }
-      );
-    }
-
-    const guide = await loadKnowledgeRecordById(supabase, body.guideId);
-
-    if (!guide) {
-      return NextResponse.json(
-        {
-          error: "Guide not found."
-        },
-        { status: 404 }
-      );
-    }
-
-    const language = body.language ?? "ko";
+  // 2026-08-19 ai-guard: 분·일·주·월 한도. LLM 실패 → 정적 가이드 답변(200)으로 내려가되
+  //  우리 쪽 실패이므로 사용 횟수는 환불(refunded:true). 키 미설정도 LLM 0회 → 환불.
+  return runAiFeature({ request, feature: "guides-ask" }, async ({ userId, refund }) => {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     let answer: GuideQaAnswer;
+    let refunded = false;
 
     if (apiKey) {
       try {
-        const interpreted = await interpretGuideQuestion(guide, body.question, language, {
-          apiKey
-        });
-        const firstSource = interpreted.context.sources[0];
-        const citations = interpreted.context.sources.length
-          ? interpreted.context.sections.slice(0, 2).map((section) => ({
-              guideId: interpreted.context.guideId,
-              title: interpreted.context.title,
-              sourceName: firstSource?.sourceName ?? "",
-              sourceUrl: firstSource?.sourceUrl,
-              sectionTitle: section.title
-            }))
-          : [];
-        const fallbackContext = buildGuideContextBlock(guide, language);
-        const normalizedQuestionTokens = body.question
-          .toLowerCase()
-          .replace(/[^\p{L}\p{N}\s]/gu, " ")
-          .split(/\s+/)
-          .map((token) => token.trim())
-          .filter(Boolean);
-        const matchedSections = fallbackContext.sections.filter((section) => {
-          const content = `${section.title} ${section.items.join(" ")}`.toLowerCase();
-          return normalizedQuestionTokens.some((token) => content.includes(token));
-        });
-
-        answer = {
-          shortAnswer: interpreted.answer.shortAnswer,
-          explanation: interpreted.answer.explanation,
-          reasons: [],
-          cautions: interpreted.answer.cautions,
-          nextActions: interpreted.answer.nextActions,
-          confidence: deriveGuideQaConfidence({
-            proposedConfidence: interpreted.answer.confidence,
-            matchedSectionsCount: matchedSections.length,
-            topMatchScore: matchedSections.length > 0 ? 2 : 0,
-            hasCitations: citations.length > 0,
-            freshness: fallbackContext.freshness,
-            sourceConfidence: guide.sources[0]?.confidence
-          }),
-          citations
-        };
-      } catch {
+        answer = await interpretWithLlm(loadedGuide, question, language, apiKey);
+      } catch (error) {
         logApiEvent("warn", {
-          area: "ai",
-          route,
-          requestId,
-          event: "fallback_used",
-          userId: auth.userId,
-          meta: {
-            mode: "model_failed"
-          }
+          area: "ai", route, requestId, event: "fallback_used", userId,
+          meta: { mode: "model_failed", detail: error instanceof Error ? error.message.slice(0, 160) : String(error) },
         });
-        answer = answerGuideQuestion({
-          question: body.question,
-          language,
-          guide
-        } satisfies GuideQaRequest);
+        await refund();
+        refunded = true;
+        answer = staticAnswer();
         answer = {
           ...answer,
           confidence: "check_needed",
@@ -176,46 +88,63 @@ export async function POST(request: Request) {
       }
     } else {
       logApiEvent("info", {
-        area: "ai",
-        route,
-        requestId,
-        event: "fallback_used",
-        userId: auth.userId,
-        meta: {
-          mode: "missing_api_key"
-        }
+        area: "ai", route, requestId, event: "fallback_used", userId,
+        meta: { mode: "missing_api_key" },
       });
-      answer = answerGuideQuestion({
-        question: body.question,
-        language,
-        guide
-      } satisfies GuideQaRequest);
-      answer = {
-        ...answer,
-        confidence: "check_needed"
-      };
+      await refund();
+      refunded = true;
+      answer = { ...staticAnswer(), confidence: "check_needed" };
     }
 
-    return NextResponse.json(answer satisfies GuideQaAnswer, {
-      headers: {
-        "x-request-id": requestId
-      }
-    });
-  } catch (error) {
-    logApiError(route, "request_failed", error, {
-      requestId,
-      status: 500
-    });
-    return NextResponse.json(
-      {
-        error: "답변 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."
-      },
-      {
-        status: 500,
-        headers: {
-          "x-request-id": requestId
-        }
-      }
-    );
-  }
+    const payload: GuideQaAnswer & { refunded?: boolean } = refunded ? { ...answer, refunded: true } : answer;
+    return NextResponse.json(payload, { headers: { "x-request-id": requestId } });
+  });
+}
+
+/** LLM 해석 경로 — interpretGuideQuestion 결과를 GuideQaAnswer 로 정규화. 실패는 throw (호출자가 정적 폴백). */
+async function interpretWithLlm(
+  guide: NonNullable<Awaited<ReturnType<typeof loadKnowledgeRecordById>>>,
+  question: string,
+  language: Language,
+  apiKey: string,
+): Promise<GuideQaAnswer> {
+  const interpreted = await interpretGuideQuestion(guide, question, language, { apiKey });
+  const firstSource = interpreted.context.sources[0];
+  const citations = interpreted.context.sources.length
+    ? interpreted.context.sections.slice(0, 2).map((section) => ({
+        guideId: interpreted.context.guideId,
+        title: interpreted.context.title,
+        sourceName: firstSource?.sourceName ?? "",
+        sourceUrl: firstSource?.sourceUrl,
+        sectionTitle: section.title
+      }))
+    : [];
+  const fallbackContext = buildGuideContextBlock(guide, language);
+  const normalizedQuestionTokens = question
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+  const matchedSections = fallbackContext.sections.filter((section) => {
+    const content = `${section.title} ${section.items.join(" ")}`.toLowerCase();
+    return normalizedQuestionTokens.some((token) => content.includes(token));
+  });
+
+  return {
+    shortAnswer: interpreted.answer.shortAnswer,
+    explanation: interpreted.answer.explanation,
+    reasons: [],
+    cautions: interpreted.answer.cautions,
+    nextActions: interpreted.answer.nextActions,
+    confidence: deriveGuideQaConfidence({
+      proposedConfidence: interpreted.answer.confidence,
+      matchedSectionsCount: matchedSections.length,
+      topMatchScore: matchedSections.length > 0 ? 2 : 0,
+      hasCitations: citations.length > 0,
+      freshness: fallbackContext.freshness,
+      sourceConfidence: guide.sources[0]?.confidence
+    }),
+    citations
+  };
 }

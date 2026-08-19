@@ -2,6 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
+import { parseLlmJson } from "../utils/parse-json";
 import { QUICK_QUERY_SYSTEM_PROMPT, buildQuickQueryUserPrompt } from "./prompt";
 import type { QuickQueryContext, QuickQueryResult } from "./prompt";
 
@@ -10,13 +11,10 @@ const DEFAULT_MODEL = "gpt-5.6-luna"; // 2026-07-27 luna 전환 — 인터랙티
 const DEFAULT_MAX_TOKENS = 768;
 
 function parseResponse(raw: string): QuickQueryResult {
-  let cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  if (start !== -1 && end !== -1) cleaned = cleaned.slice(start, end + 1);
-
+  const cleaned = raw;
   try {
-    const obj = JSON.parse(cleaned) as Record<string, unknown>;
+    // 2026-08-19 robust 파서(4단계: strict → loose → damage fix → truncated repair)
+    const obj = parseLlmJson<Record<string, unknown>>(raw);
     // referencedCase: { id, name } 두 string 필드 모두 있을 때만 통과
     let referencedCase: { id: string; name: string } | undefined;
     const rc = obj.referencedCase;

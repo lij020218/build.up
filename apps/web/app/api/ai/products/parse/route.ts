@@ -1,9 +1,9 @@
 import { createAiClient } from "@foundone/ai/utils/client";
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { requireApiUser } from "../../../_lib/auth";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
 
 type ParsedProduct = {
   name: string;
@@ -55,29 +55,7 @@ async function xlsxToCsv(data: ArrayBuffer): Promise<string> {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request).catch(() => null);
-  if (!auth || !auth.ok) {
-    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
-  }
-  const rl = await checkSimpleRateLimit({
-    key: `ai-products-parse:${auth.userId}`,
-    limit: 30,
-    windowMs: 60 * 60 * 1000,
-  });
-  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
-
-  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "products-parse",
-    // 파일 파싱은 출력 8192 로 호출당 비용이 커, 하루 30번 할 일은 드묾 (2026-07: 30→10 하향).
-    limit: 10,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
-  }
-
+  // 입력 검증·파일 변환은 게이트(차감) 전에 — 잘못된 요청은 절대 차감되지 않는다 (2026-08-19 ai-guard 이관)
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     console.error("[products/parse] ANTHROPIC_API_KEY not found");
@@ -116,13 +94,16 @@ export async function POST(request: Request) {
   }
   // 텍스트 직접 입력은 50KB 초과 거부, xlsx 변환분은 안전하게 컷.
   if (!body.fileBase64 && text.length > 50_000) {
-    return NextResponse.json({ error: "Data too large (max 50KB)" }, { status: 400 });
+    return NextResponse.json({ error: "Data too large (max 50KB)" }, { status: 413 });
   }
   text = text.slice(0, 50_000);
 
   // 사용자 입력을 로그에 노출하지 않음 (보안)
 
-  try {
+  // 한도(분·일·주·월)·실패 환불 = ai-guard(AI_FEATURE_LIMITS "products-parse"). 모델·파싱 실패는 throw → 재시도 1회 후 환불+503.
+  return runAiFeature(
+    { request, feature: "products-parse", failMessage: "제품 데이터 파싱에 실패했어요. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요." },
+    async () => {
     const client = createAiClient(apiKey);
     const response = await client.messages.create({
       model: "gpt-5.6-luna", // 2026-07-27 luna — 파싱 전용(CSV·엑셀 임포트 포함)
@@ -169,59 +150,28 @@ Rules:
 
     const content = response.content[0];
     if (content.type !== "text") {
-      return NextResponse.json({ error: "Unexpected AI response" }, { status: 502 });
+      throw new Error("Unexpected AI response (no text block)");
     }
 
-    let products: ParsedProduct[];
-    try {
-      // AI 응답 정리: 마크다운 블록 제거 + 배열 추출 + 잘린 JSON 복구
-      let cleaned = content.text
-        .replace(/```json\s*/gi, "")
-        .replace(/```\s*/gi, "")
-        .trim();
-
-      // [ 부터 ] 까지 추출
-      const start = cleaned.indexOf("[");
-      let end = cleaned.lastIndexOf("]");
-      if (start !== -1) {
-        if (end !== -1 && end > start) {
-          cleaned = cleaned.slice(start, end + 1);
-        } else {
-          // ] 가 없음 = 잘린 응답 → 마지막 완전한 객체까지만 사용
-          cleaned = cleaned.slice(start);
-          // 마지막 완전한 } 찾기
-          const lastBrace = cleaned.lastIndexOf("}");
-          if (lastBrace > 0) {
-            cleaned = cleaned.slice(0, lastBrace + 1) + "]";
-          }
-        }
-      }
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[products/parse] Cleaned (first 300):", cleaned.slice(0, 300));
-      }
-      products = JSON.parse(cleaned);
-      if (!Array.isArray(products)) throw new Error("Not an array");
-      products = products.filter(
-        (p) => p && typeof p.name === "string" && p.name.trim().length > 0
-      ).map((p) => ({
-        name: String(p.name).trim(),
-        category: String(p.category || "기타").trim(),
-        price: Math.max(0, Math.round(Number(p.price) || 0)),
-        cost: Math.max(0, Math.round(Number(p.cost) || 0)),
-        stock: Math.max(0, Math.round(Number(p.stock) || 0)),
-        unit: String(p.unit || "개").trim(),
-      }));
-    } catch (parseErr) {
-      console.error("[products/parse] Parse error:", parseErr instanceof Error ? parseErr.message : parseErr);
-      console.error("[products/parse] AI text length:", content.text.length);
-      return NextResponse.json({ error: `AI 응답 파싱 실패: ${content.text.slice(0, 100)}` }, { status: 502 });
+    // robust 4단계 파서(strict → loose → damage fix → truncated repair). 실패는 throw → 가드 재시도·환불.
+    let raw = parseLlmJson<unknown>(content.text);
+    if (!Array.isArray(raw)) {
+      const inner = raw && typeof raw === "object" ? Object.values(raw as Record<string, unknown>).find(Array.isArray) : undefined;
+      if (!inner) throw new Error("AI 응답 파싱 실패: 배열이 아닙니다");
+      raw = inner;
     }
+    const products: ParsedProduct[] = (raw as Array<Record<string, unknown>>).filter(
+      (p) => p && typeof p.name === "string" && p.name.trim().length > 0
+    ).map((p) => ({
+      name: String(p.name).trim(),
+      category: String(p.category || "기타").trim(),
+      price: Math.max(0, Math.round(Number(p.price) || 0)),
+      cost: Math.max(0, Math.round(Number(p.cost) || 0)),
+      stock: Math.max(0, Math.round(Number(p.stock) || 0)),
+      unit: String(p.unit || "개").trim(),
+    }));
 
     return NextResponse.json({ products });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[products/parse] Error:", message);
-    return NextResponse.json({ error: `제품 데이터 파싱 중 오류: ${message}` }, { status: 500 });
-  }
+    },
+  );
 }

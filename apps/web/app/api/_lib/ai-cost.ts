@@ -97,6 +97,13 @@ export const FEATURE_COST_SPEC: Record<string, FeatureCostSpec | null> = {
 
   // ── LLM 미사용 ──
   "market-snapshot": null, // 지역 실측 스냅샷 — 공공 API 만 (LLM 0)
+
+  // ── 2026-08-19 ai-guard 이관으로 미터에 편입 (종전 분당 한도만 있던 라우트) ──
+  //  세무·대출 지식 Q&A (SSE 스트리밍, gpt-5.4-mini) — 입력 = 시스템 프롬프트 + RAG 청크 ≤7개
+  //   inCap 4,500 = 시스템 ~600 + RAG 청크 ≤7개(~400tok) + 질문 ≤1,000자 / outCap 1,024 = 라우트 max_tokens
+  "knowledge-qa": { model: "gpt-5.4-mini", inCap: 4_500, outCap: 1_024, note: "SSE — 첫 토큰 전 실패 시 환불" },
+  //  인사이트 벡터 검색 — text-embedding-3-small 쿼리 1건 (LLM 생성 없음, 회당 ₩1 미만 → extraWon 1 로 상한)
+  "insights-search": { model: "gpt-5.4-mini", inCap: 0, outCap: 0, extraWon: 1, note: "임베딩 전용 — 회당 ₩1 상한" },
 };
 
 /** 표에 없는 feature 가 미터에 들어오면 보수적 기본 상한으로 차감 (누락 = 과소차감 방지) */

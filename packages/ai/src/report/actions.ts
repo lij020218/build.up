@@ -2,6 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
+import { parseLlmJson } from "../utils/parse-json";
 import { REPORT_INSIGHT_SYSTEM_PROMPT, buildReportInsightPrompt } from "./prompt";
 import type { ReportInsightInput } from "./prompt";
 
@@ -9,22 +10,11 @@ const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이�
 const DEFAULT_MAX_TOKENS = 300;
 
 function parseInsight(raw: string): string {
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = parseLlmJson(raw); // 2026-08-19 robust 4단계 파서
   } catch {
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (match) {
-      try {
-        parsed = JSON.parse(match[0]);
-      } catch {
-        throw new AiParseError("보고서 인사이트 응답이 유효한 JSON이 아닙니다.", raw);
-      }
-    } else {
-      throw new AiParseError("보고서 인사이트 응답이 유효한 JSON이 아닙니다.", raw);
-    }
+    throw new AiParseError("보고서 인사이트 응답이 유효한 JSON이 아닙니다.", raw);
   }
 
   if (typeof parsed !== "object" || parsed === null) {

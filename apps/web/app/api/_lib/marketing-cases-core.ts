@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
+import { withOpenAiFallback, OPENAI_SDK_MAX_RETRIES } from "./openai-fallback";
 import { researchMarketingCases, type ResearchSource } from "./marketing-research";
 
 /**
@@ -148,6 +150,8 @@ export type GeneratePlaysOutput = {
   sources: ResearchSource[];
   /** 스모크 하네스 진단용 — 리서치 산문 (라우트는 사용 안 함) */
   researchText: string;
+  /** plays 가 비어 있을 때 원인 — 라우트가 사용 횟수 환불 판단에 사용 (2026-08-19). 정상이면 undefined */
+  failReason?: "research_empty" | "parse_failed";
 };
 
 /** 리서치 → 합성 → 정제. 리서치 실패 시 plays:[] (호출자가 graceful 처리). */
@@ -158,7 +162,7 @@ export async function generateMarketingPlays(input: GeneratePlaysInput): Promise
   // ── 1단계: 사례·트렌드 조사 ──
   const research = await researchMarketingCases({ apiKey: openaiKey, tavilyKey, label, language });
   if (!research.text || research.text.trim().length < 80) {
-    return { plays: [], sources: research.sources, researchText: research.text ?? "" };
+    return { plays: [], sources: research.sources, researchText: research.text ?? "", failReason: "research_empty" };
   }
 
   // ── 2단계: 가게 맞춤 구조화 ──
@@ -266,12 +270,13 @@ a realistic "timeLabel", and 2-3 "deliverables" (ready-to-paste caption/message/
 Mark kind "case" ONLY when a named brand + source url exist in [RESEARCH]; otherwise "trend". Respond ONLY with JSON:
 {"plays":[{"kind":"case|trend","title":"...","mission":"...","timeLabel":"...","deliverables":[{"kind":"copy|guide","label":"...","content":"..."}],"source":{"brand":"...","whatHappened":"...","whyItWorked":"...","metric":"...","url":"..."},"application":{"steps":["..."],"expectedEffect":"...","effortLevel":"low|medium|high"},"tools":[{"name":"...","purpose":"...","tier":"free|paid|freemium","url":"..."}]}]}`;
 
-  const client = new OpenAI({ apiKey: openaiKey, timeout: 55_000 }); // terra 추론 지연 여유 (실측 합성 ~25s)
-  const r = await client.chat.completions.create({
+  // SDK 재시도 3 + 일시 오류 시 gpt-5.4-mini 폴백 (2026-08-19). response_format json_object 필요라 OpenAI 직접 호출 유지.
+  const client = new OpenAI({ apiKey: openaiKey, timeout: 55_000, maxRetries: OPENAI_SDK_MAX_RETRIES }); // terra 추론 지연 여유 (실측 합성 ~25s)
+  const r = await withOpenAiFallback("gpt-5.6-terra", (model) => client.chat.completions.create({
     // 2026-07-27 GPT-5.6 전환 실험: terra = 5.5 동급 성능 절반가($2.5/$15).
     //  ⚠️ 5.6 계열은 temperature 미지원(400) — 파라미터 제거. reasoning_effort low 로
     //  추론 토큰(출력 과금)·지연 상한. max 토큰은 추론분 여유 +600.
-    model: "gpt-5.6-terra",
+    model,
     reasoning_effort: "low",
     max_completion_tokens: 4000,
     response_format: { type: "json_object" },
@@ -279,18 +284,19 @@ Mark kind "case" ONLY when a named brand + source url exist in [RESEARCH]; other
       { role: "system", content: system },
       { role: "user", content: user },
     ],
-  });
+  }), "[marketing-cases-core]");
 
   // [ai-cost] 비용 관측 — 1인 월 ₩6,000 예산 검사용 (2026-07-27 사장님 지시). prod 로그에서 grep "[ai-cost]"
-  console.info("[ai-cost] marketing-cases", JSON.stringify({ model: "gpt-5.6-terra", in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
+  console.info("[ai-cost] marketing-cases", JSON.stringify({ model: r.model, in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
 
-  const content = r.choices[0]?.message?.content ?? "{}";
+  const content = r.choices[0]?.message?.content ?? "";
   let parsed: { plays?: unknown[] };
   try {
-    parsed = JSON.parse(content);
+    // robust 4단계 파서(strict → loose → damage fix → truncated repair)
+    parsed = content.trim() ? parseLlmJson<{ plays?: unknown[] }>(content) : {};
   } catch {
     console.warn("[marketing-cases-core] JSON parse failed, len:", content.length);
-    return { plays: [], sources: research.sources, researchText: research.text };
+    return { plays: [], sources: research.sources, researchText: research.text, failReason: "parse_failed" };
   }
 
   const plays = (Array.isArray(parsed.plays) ? parsed.plays : [])
@@ -298,5 +304,5 @@ Mark kind "case" ONLY when a named brand + source url exist in [RESEARCH]; other
     .filter((p): p is MarketingPlay => p !== null)
     .slice(0, 6);
 
-  return { plays, sources: research.sources, researchText: research.text };
+  return { plays, sources: research.sources, researchText: research.text, ...(plays.length === 0 ? { failReason: "parse_failed" as const } : {}) };
 }

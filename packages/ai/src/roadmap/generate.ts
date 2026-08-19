@@ -2,6 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
+import { parseLlmJson } from "../utils/parse-json";
 import {
   ROADMAP_GENERATION_SYSTEM_PROMPT,
   buildRoadmapGenerationPrompt,
@@ -349,7 +350,8 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    // 2026-08-19 robust 4단계 파서(strict → loose → damage fix → truncated repair)
+    parsed = parseLlmJson(cleaned);
   } catch (e) {
     const parseMsg = e instanceof Error ? e.message : String(e);
     console.error("[roadmap/parse] JSON parse error:", parseMsg);

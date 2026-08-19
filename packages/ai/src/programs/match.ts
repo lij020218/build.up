@@ -2,7 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
-import { looseExtractJson } from "../utils/parse-json";
+import { parseLlmJson } from "../utils/parse-json";
 import {
   PROGRAM_MATCHING_SYSTEM_PROMPT,
   buildProgramMatchingUserPrompt,
@@ -111,11 +111,9 @@ export function checkEligibility(
 // ─── 응답 파싱 ──────────────────────────────────────────────────────────────
 
 function parseMatchingResponse(raw: string): ProgramMatchingResult {
-  const cleaned = looseExtractJson(raw);
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = parseLlmJson(raw); // 2026-08-19 robust 4단계 파서
   } catch {
     throw new AiParseError("프로그램 매칭 응답이 유효한 JSON이 아닙니다.", raw);
   }

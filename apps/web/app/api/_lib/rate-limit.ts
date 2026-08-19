@@ -35,6 +35,53 @@ function getRedis(): Redis | null {
   return _redis;
 }
 
+/** ai-guard 등 외부 모듈이 같은 Redis 인스턴스를 쓰도록 노출 (없으면 null) */
+export function getRedisClient(): Redis | null { return getRedis(); }
+
+/**
+ * 월간 AI 예산 환불 — 서버/모델 오류로 실패한 호출의 선차감을 되돌린다 (2026-08-19 사장님 지시:
+ * "우리 실수는 우리가 책임진다"). Redis 카운터 decrby + Supabase 원장 spent_won 감소(바닥 0). best-effort.
+ */
+export async function refundMonthlyAiBudget(userId: string, feature: string): Promise<void> {
+  const costWon = featureCostWon(feature);
+  if (costWon <= 0) return;
+  const monthKey = kstMonthKey();
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const key = `@buildup/aicost:${monthKey}:${userId}`;
+      const after = await redis.decrby(key, costWon);
+      if (after < 0) await redis.set(key, 0);
+    } catch { /* fallthrough to ledger */ }
+  }
+  try {
+    const sb = await getDailyQuotaAdmin();
+    if (!sb) return;
+    const { data } = await sb.from("ai_monthly_spend").select("spent_won")
+      .eq("user_id", userId).eq("month_key", monthKey).maybeSingle();
+    const cur = Number((data as { spent_won?: unknown } | null)?.spent_won ?? 0);
+    if (cur <= 0) return;
+    await sb.from("ai_monthly_spend").update({ spent_won: Math.max(0, cur - costWon), updated_at: new Date().toISOString() })
+      .eq("user_id", userId).eq("month_key", monthKey);
+  } catch { /* best-effort */ }
+}
+
+/** 일일 원장(ai_daily_usage) 1건 환불 — 오늘 행 count-1 (바닥 0). RPC 경로 일일 쿼터와 원장을 동시에 되돌린다. */
+export async function refundDailyLedger(userId: string, feature: string, n = 1): Promise<void> {
+  try {
+    const sb = await getDailyQuotaAdmin();
+    if (!sb) return;
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const today = kst.toISOString().slice(0, 10);
+    const { data } = await sb.from("ai_daily_usage").select("count")
+      .eq("user_id", userId).eq("feature", feature).eq("usage_date", today).maybeSingle();
+    const cur = Number((data as { count?: unknown } | null)?.count ?? 0);
+    if (cur <= 0) return;
+    await sb.from("ai_daily_usage").update({ count: Math.max(0, cur - n) })
+      .eq("user_id", userId).eq("feature", feature).eq("usage_date", today);
+  } catch { /* best-effort */ }
+}
+
 function msToUpstashDuration(ms: number): `${number} ${"ms" | "s" | "m" | "h" | "d"}` {
   if (ms % 86_400_000 === 0) return `${ms / 86_400_000} d`;
   if (ms % 3_600_000 === 0) return `${ms / 3_600_000} h`;
@@ -231,7 +278,7 @@ const _monthlySpendMem = new Map<string, { monthKey: string; spentWon: number }>
  * /admin/usage 집계가 어느 모드에서든 실데이터를 갖게 한다. 거대 한도 = 카운터 전용(차단 안 함).
  * best-effort: 실패는 무시(집행 결과에 영향 없음).
  */
-async function recordDailyUsageLedger(userId: string, feature: string): Promise<void> {
+export async function recordDailyUsageLedger(userId: string, feature: string): Promise<void> {
   try {
     const sb = await getDailyQuotaAdmin();
     if (!sb) return;

@@ -37,17 +37,31 @@ function collectRouteFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-/** 라우트 소스에서 checkDailyRateLimit 호출의 feature 키를 추출 */
+/** 라우트가 AI 미터를 쓰는지 — 구형 checkDailyRateLimit 또는 신형 ai-guard(runAiFeature/guardAiFeature, 2026-08-19) */
+function usesAiMeter(src: string): boolean {
+  return src.includes("checkDailyRateLimit") || src.includes("runAiFeature(") || src.includes("guardAiFeature(");
+}
+
+/** 라우트 소스에서 checkDailyRateLimit / runAiFeature 호출의 feature 키를 추출 */
 function extractDailyLimitFeatures(): Map<string, string> {
   const found = new Map<string, string>(); // feature → route path
   for (const file of collectRouteFiles(API_DIR)) {
     const src = readFileSync(file, "utf8");
-    if (!src.includes("checkDailyRateLimit")) continue;
-    for (const m of src.matchAll(/feature:\s*"([^"]+)"/g)) {
-      found.set(m[1], file);
-    }
+    if (!usesAiMeter(src)) continue;
+    for (const key of extractFeatureKeys(src)) found.set(key, file);
   }
   return found;
+}
+
+/** feature 키 추출 — `feature: "literal"` 또는 `feature: CONST` (+ `const CONST = "literal"`) */
+function extractFeatureKeys(src: string): string[] {
+  const keys: string[] = [];
+  for (const m of src.matchAll(/feature:\s*"([^"]+)"/g)) keys.push(m[1]);
+  for (const m of src.matchAll(/feature:\s*([A-Z][A-Z0-9_]*)\b/g)) {
+    const def = src.match(new RegExp(`const\\s+${m[1]}\\s*=\\s*"([^"]+)"`));
+    if (def) keys.push(def[1]);
+  }
+  return keys;
 }
 
 describe("ai-cost-budget: 드리프트 가드", () => {
@@ -66,9 +80,9 @@ describe("ai-cost-budget: 드리프트 가드", () => {
   it("feature 키에 변수 전달(literal 아닌) 호출이 없다 — 추출 가드", () => {
     for (const file of collectRouteFiles(API_DIR)) {
       const src = readFileSync(file, "utf8");
-      if (!src.includes("checkDailyRateLimit")) continue;
-      // checkDailyRateLimit 블록 안에 feature: "literal" 이 최소 1개는 있어야 함
-      expect(/feature:\s*"/.test(src), `${file}: feature 키가 문자열 리터럴이 아님 — 비용표 매칭 불가`).toBe(true);
+      if (!usesAiMeter(src)) continue;
+      // checkDailyRateLimit / runAiFeature 블록 안에 feature 리터럴(또는 리터럴 상수)이 최소 1개는 있어야 함
+      expect(extractFeatureKeys(src).length > 0, `${file}: feature 키가 문자열 리터럴이 아님 — 비용표 매칭 불가`).toBe(true);
     }
   });
 });
@@ -126,7 +140,9 @@ describe("ai-cost-budget: 헤비 실사용 프로파일 ≤ 월 ₩6,000", () =>
     "funding-score": 2,
     "guides-ask": 10,
     "dashboard-actions": 10,
-    "market-recommend": 30, // 0원
+    "market-recommend": 20, // 내레이터 gpt-5.4-mini ₩18/회 (종전 "0원" 주석은 null 시절 잔재). 상권 검색 월 20회 = 헤비
+    "knowledge-qa": 12, // 세무·대출 Q&A — 주 3회 꼴 (2026-08-19 ai-guard 이관으로 미터 편입)
+    "insights-search": 10, // 임베딩 검색(디버그·독립 API) — 회당 ₩1 상한 (2026-08-19)
   };
 
   it("프로파일이 비용표의 모든 유료 기능을 포함한다 (누락 시 합계가 과소평가됨)", () => {

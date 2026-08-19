@@ -3,7 +3,7 @@ import { resolveTrendGroup, TREND_GROUP_LABELS } from "@foundone/shared";
 import { getOpenAIApiKey, getTavilyApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
 import { generateMarketingPlays, type MarketingPlay } from "../../../_lib/marketing-cases-core";
 import type { ResearchSource } from "../../../_lib/marketing-research";
 
@@ -19,7 +19,8 @@ import type { ResearchSource } from "../../../_lib/marketing-research";
  *    이 라우트는 인증·캐시·레이트리밋·피드백 루프 조회만 담당.
  *
  *  캐시: marketing_cases_cache (user_id, week_key, context_key) — coach 와 동일 정책. 웹/iOS 동일 결과.
- *  인증: Supabase Bearer.
+ *  인증: Supabase Bearer. 한도(분·일·주·월)·실패 환불: ai-guard(AI_FEATURE_LIMITS "marketing-cases") — 2026-08-19 이관.
+ *   캐시 히트는 차감 전에 반환(0원). LLM 실패로 빈 plays 를 돌려줄 때는 refunded:true + 카운터 환불.
  */
 
 export const runtime = "nodejs";
@@ -68,19 +69,21 @@ type RequestBody = {
 };
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const userId = auth.userId;
-
-  const apiKey = getOpenAIApiKey();
-  if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 500 });
-
+  // 입력 검증은 어떤 차감보다 먼저
   let body: RequestBody;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+
+  const apiKey = getOpenAIApiKey();
+  if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 500 });
+
+  // 캐시 조회용 인증 (캐시 히트는 LLM 0원 → 차감 없이 반환). 게이트 자체는 runAiFeature 가 다시 인증·차감한다.
+  const auth = await requireApiUser(request);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const userId = auth.userId;
 
   const lang: "ko" | "en" = body.language === "en" ? "en" : "ko";
   const ko = lang === "ko";
@@ -111,23 +114,15 @@ export async function POST(request: Request) {
     }
   }
 
-  // ── 레이트리밋 (web_search 비용 보호) ──
-  const burst = await checkSimpleRateLimit({ key: `ai-marketing-cases:${userId}`, limit: 6, windowMs: 60 * 60 * 1000 });
-  if (!burst.ok) return NextResponse.json({ error: burst.error }, { status: burst.status });
-  const daily = await checkDailyRateLimit({
-    userId,
-    feature: "marketing-cases",
-    limit: 20,
-    message: ko ? "오늘 사례 추천 사용량을 초과했습니다. 내일 다시 시도해 주세요." : "Daily limit reached. Try again tomorrow.",
-  });
-  if (!daily.ok) return NextResponse.json({ error: daily.error }, { status: daily.status });
-
   // ── 업종 라벨 해석 (coach 와 동일) ──
   const subGroup = resolveTrendGroup(body.subIndustryId ?? null);
   const groupLabel = subGroup ? (ko ? TREND_GROUP_LABELS[subGroup].ko : TREND_GROUP_LABELS[subGroup].en) : null;
   const label = body.subIndustryLabel?.trim() || groupLabel || (body.industryCategoryId ?? (ko ? "소상공인" : "small business"));
 
-  try {
+  return runAiFeature(
+    { request, feature: "marketing-cases" },
+    async (ctx) => {
+    try {
     // ── 피드백 루프: 지난주 사장님이 "했어요" 체크한 플레이 + 매출 추세 ──
     let feedbackBlock = "";
     if (ko) {
@@ -170,7 +165,14 @@ export async function POST(request: Request) {
 
     const generatedAt = new Date().toISOString();
 
-    if (supa && result.plays.length > 0) {
+    if (result.plays.length === 0) {
+      // 리서치 빈약·LLM 파싱 실패 = 우리 책임 → 빈 결과(200, UI graceful) + 사용 횟수 환불 (2026-08-19 ③)
+      console.warn("[marketing-cases] empty plays →", result.failReason ?? "unknown", "(refunded)");
+      await ctx.refund();
+      return NextResponse.json({ plays: [], sources: result.sources, generatedAt, cached: false, weekKey, refunded: true }, { status: 200 });
+    }
+
+    if (supa) {
       const { error: cacheErr } = await supa
         .from("marketing_cases_cache")
         .upsert(
@@ -181,8 +183,12 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ plays: result.plays, sources: result.sources, generatedAt, cached: false, weekKey });
-  } catch (err) {
-    console.error("[marketing-cases error]", err);
-    return NextResponse.json({ plays: [], sources: [], error: "Failed to generate cases" }, { status: 200 });
-  }
+    } catch (err) {
+      console.error("[marketing-cases error]", err);
+      // 모델·네트워크 실패 → 빈 결과(200, UI graceful) + 사용 횟수 환불
+      await ctx.refund();
+      return NextResponse.json({ plays: [], sources: [], error: "Failed to generate cases", refunded: true }, { status: 200 });
+    }
+    },
+  );
 }

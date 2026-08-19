@@ -2,7 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
-import { looseExtractJson } from "../utils/parse-json";
+import { parseLlmJson } from "../utils/parse-json";
 import {
   STAGE_BRIEF_SYSTEM_PROMPT,
   buildStageBriefUserPrompt,
@@ -14,11 +14,9 @@ const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이�
 const DEFAULT_MAX_TOKENS = 600;
 
 function parseStageBriefResponse(raw: string): StageBriefResult {
-  const cleaned = looseExtractJson(raw);
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = parseLlmJson(raw); // 2026-08-19 robust 4단계 파서
   } catch {
     throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
   }

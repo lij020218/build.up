@@ -1,7 +1,7 @@
 import { createAiClient } from "@foundone/ai/utils/client";
 import { supabase } from "../../../../lib/supabase";
-import { requireApiUser } from "../../_lib/auth";
-import { checkSimpleRateLimit } from "../../_lib/rate-limit";
+import { isTransientLlmError } from "@foundone/ai/utils/client";
+import { guardAiFeature } from "../../_lib/ai-guard";
 import { getAnthropicApiKey } from "../../_lib/env";
 
 type RequestBody = {
@@ -58,37 +58,42 @@ function buildUserPrompt(question: string, chunks: KnowledgeChunk[], industryCat
     .join("\n");
 }
 
+function jsonResponse(payload: unknown, status: number): Response {
+  return new Response(JSON.stringify(payload), { status, headers: { "Content-Type": "application/json" } });
+}
+
+/**
+ * SSE 스트리밍 라우트 — ai-guard 는 수동(guardAiFeature) 적용 (2026-08-19):
+ *  · 분·일·주·월 한도 = AI_FEATURE_LIMITS["knowledge-qa"] (일 30 / 주 120 / 분당 6) + 월 예산(ai-cost "knowledge-qa").
+ *  · 입력 검증은 게이트(차감) 전에.
+ *  · 스트림이 **첫 토큰 전에** 실패하면(모델·네트워크) 1회 재시도 후에도 실패 시 ctx.refund() — 사용자에게 아무것도 못 준 건 우리 책임.
+ */
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error }), {
-      status: auth.status,
-      headers: { "Content-Type": "application/json" },
-    });
+  let body: RequestBody;
+  try {
+    body = (await request.json()) as RequestBody;
+  } catch {
+    return jsonResponse({ error: "잘못된 요청입니다." }, 400);
+  }
+  if (!body.question?.trim()) {
+    return jsonResponse({ error: "질문을 입력해주세요." }, 400);
+  }
+  if (body.question.length > 1_000) {
+    return jsonResponse({ error: "질문이 너무 깁니다 (최대 1,000자)." }, 400);
   }
 
-  const rateLimit = await checkSimpleRateLimit({
-    key: `knowledge-qa:${auth.userId}`,
-    limit: 10,
-    windowMs: 60_000,
-  });
-  if (!rateLimit.ok) {
-    return new Response(JSON.stringify({ error: rateLimit.error }), {
-      status: rateLimit.status,
-      headers: { "Content-Type": "application/json" },
-    });
+  //   getAnthropicApiKey(): OPENAI_API_KEY 우선 반환(메인 LLM) → ANTHROPIC 폴백.
+  //   종전 process.env.ANTHROPIC_API_KEY 직접 참조 시 그 키가 비면 prod 에서 이 라우트만 503.
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    return jsonResponse({ error: "AI 서비스가 아직 설정되지 않았습니다." }, 503);
   }
+
+  // 한도 표(ai-guard AI_FEATURE_LIMITS)에 행이 없어 인라인 지정 — 일 30 / 주 120 / 분당 6
+  const guard = await guardAiFeature({ request, feature: "knowledge-qa", limits: { daily: 30, weekly: 120, perMinute: 6 } });
+  if (!guard.ok) return guard.response;
 
   try {
-    const body = (await request.json()) as RequestBody;
-
-    if (!body.question?.trim()) {
-      return new Response(JSON.stringify({ error: "질문을 입력해주세요." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
     const domain = body.domain ?? "tax";
     const question = body.question.trim();
     const industryCategoryId = body.industryCategoryId;
@@ -142,23 +147,15 @@ export async function POST(request: Request) {
     }
 
     // ── LLM streaming ─────────────────────────────────────────────
-    //   getAnthropicApiKey(): OPENAI_API_KEY 우선 반환(메인 LLM) → ANTHROPIC 폴백.
-    //   종전 process.env.ANTHROPIC_API_KEY 직접 참조 시 그 키가 비면 prod 에서 이 라우트만 503.
-    const apiKey = getAnthropicApiKey();
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "AI 서비스가 아직 설정되지 않았습니다." }), {
-        status: 503,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
     const client = createAiClient(apiKey);
     const userPrompt = buildUserPrompt(question, finalChunks, industryCategoryId);
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
-        try {
+        let emittedAny = false;
+        // 첫 토큰 전 실패는 1회 재시도(일시 오류·빈 스트림). 토큰이 나간 뒤 끊기면 재시도 없이 오류 이벤트만.
+        const runStream = async () => {
           const stream = client.messages.stream({
             model: "gpt-5.4-mini",
             max_tokens: 1024,
@@ -172,13 +169,31 @@ export async function POST(request: Request) {
               (event.delta as { type: string }).type === "text_delta"
             ) {
               const text = (event.delta as { type: string; text: string }).text;
+              emittedAny = true;
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
             }
           }
+        };
+        try {
+          try {
+            await runStream();
+          } catch (first) {
+            if (emittedAny || !isTransientLlmError(first)) throw first;
+            console.warn("[knowledge-qa] stream failed before first token → retry once:", first instanceof Error ? first.message : String(first));
+            await runStream();
+          }
+          if (!emittedAny) throw new Error("empty response from model");
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         } catch (err) {
           const errMsg = err instanceof Error ? err.message : "스트림 오류가 발생했습니다.";
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`));
+          console.error("[knowledge-qa] stream error:", errMsg);
+          if (!emittedAny) {
+            // 사용자에게 한 글자도 못 줌 = 우리 실패 → 전액 환불
+            await guard.refund();
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: "답변 생성에 실패했어요. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.", refunded: true })}\n\n`));
+          } else {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`));
+          }
         } finally {
           controller.close();
         }
@@ -193,9 +208,11 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "요청 처리에 실패했습니다." }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    // 스트림 열기 전 서버 오류 — 차감 환불
+    await guard.refund();
+    return jsonResponse(
+      { error: error instanceof Error ? error.message : "요청 처리에 실패했습니다.", refunded: true },
+      500,
     );
   }
 }

@@ -5,7 +5,8 @@
 // Once an admin role exists in the project, swap the token check for that.)
 
 import { timingSafeEqual } from "node:crypto";
-import { ingestInsightDocument, type InsightDocumentInput } from "@foundone/ai";
+import OpenAI from "openai";
+import { chunkInsightBody, ingestInsightDocument, type InsightDocumentInput } from "@foundone/ai";
 import { getEnvVar, getOpenAiApiKey } from "../../_lib/env";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 
@@ -13,6 +14,10 @@ const MAX_BODY_CHARS = 50_000;
 const MAX_TITLE_CHARS = 500;
 const MAX_CATEGORY_CHARS = 200;
 const MAX_TAG_CHARS = 200;
+/** 요청당 임베딩 청크 하드캡 (2026-08-19 내부 라우트 비용 상한 — 50KB 본문 ≈ 50~120 청크, 400 이면 충분) */
+const MAX_CHUNKS_PER_REQUEST = 400;
+/** 임베딩 OpenAI SDK 재시도 (embed.ts 자체 1회 재시도와 별개 — 일시 오류 흡수) */
+const EMBED_SDK_MAX_RETRIES = 3;
 
 type RequestBody = Partial<InsightDocumentInput> & { replace?: boolean };
 
@@ -57,6 +62,12 @@ export async function POST(request: Request) {
   const categoryTrimmed = body.category.trim().slice(0, MAX_CATEGORY_CHARS);
   const tagsTrimmed = body.tags?.map(t => t.slice(0, MAX_TAG_CHARS));
 
+  // 청크 하드캡 — 임베딩 호출량 상한 (내부 라우트지만 무제한 금지)
+  const chunkCount = chunkInsightBody(bodyTrimmed).length;
+  if (chunkCount > MAX_CHUNKS_PER_REQUEST) {
+    return json({ error: `Document too large: ${chunkCount} chunks (max ${MAX_CHUNKS_PER_REQUEST}). Split the document.` }, 413);
+  }
+
   try {
     const result = await ingestInsightDocument(
       {
@@ -71,7 +82,7 @@ export async function POST(request: Request) {
       },
       {
         supabase: supabase as unknown as Parameters<typeof ingestInsightDocument>[1]["supabase"],
-        embed: { apiKey: openAiKey },
+        embed: { apiKey: openAiKey, client: new OpenAI({ apiKey: openAiKey, maxRetries: EMBED_SDK_MAX_RETRIES }) },
       },
       { replace: body.replace === true },
     );

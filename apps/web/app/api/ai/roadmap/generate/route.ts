@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit, checkRoadmapGenerationQuota, refundRoadmapGenerationUse } from "../../../_lib/rate-limit";
+import { checkRoadmapGenerationQuota, refundRoadmapGenerationUse } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
 import { generateRoadmap, selectFromPool } from "@foundone/ai";
 import type {
   RoadmapGenerationInput,
@@ -415,31 +416,7 @@ function mergePoolSelections(
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-  const rl = await checkSimpleRateLimit({
-    key: `ai-roadmap-generate:${auth.userId}`,
-    limit: 12,
-    windowMs: 60 * 60 * 1000,
-  });
-  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
-
-  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  // 생성 쿼터 (2026-08-03 사장님 정책): 무료 = 계정당 총 3회 / 프로 = 주 3회.
-  //   서버 게이트라 웹·iOS 동시 적용. 실패 경로는 refundRoadmapGenerationUse 로 차감 환불.
-  const quota = await checkRoadmapGenerationQuota(auth.userId);
-  if (!quota.ok) {
-    return NextResponse.json({ error: quota.error }, { status: quota.status });
-  }
-
-  const apiKey = getAnthropicApiKey();
-  if (!apiKey) {
-    console.error("[roadmap/generate] ANTHROPIC_API_KEY missing. env value length:", process.env.ANTHROPIC_API_KEY?.length ?? 0);
-    return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
-  }
-
+  // ── 입력 검증은 어떤 차감보다 먼저 — 잘못된 요청은 절대 차감되지 않는다 (2026-08-19 ai-guard 이관)
   let body: RoadmapGenerationInput;
   try {
     body = await request.json();
@@ -466,6 +443,48 @@ export async function POST(request: Request) {
     ...(body.region !== undefined && { region: body.region.trim().slice(0, MAX_REGION) }),
   };
 
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    console.error("[roadmap/generate] ANTHROPIC_API_KEY missing. env value length:", process.env.ANTHROPIC_API_KEY?.length ?? 0);
+    return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
+  }
+
+  const auth = await requireApiUser(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  // 생성 쿼터 (2026-08-03 사장님 정책): 무료 = 계정당 총 3회 / 프로 = 주 3회. — 비쿼터 업무 게이트라 ai-guard 앞에 둔다
+  //   (쿼터 거부 사용자는 일일 카운터가 차감되지 않게). 서버 게이트라 웹·iOS 동시 적용.
+  //   실패 경로는 refundRoadmapGenerationUse 로 차감 환불.
+  const quota = await checkRoadmapGenerationQuota(auth.userId);
+  if (!quota.ok) {
+    return NextResponse.json({ error: quota.error }, { status: quota.status });
+  }
+
+  // ── ai-guard: 분당·일(3)·주(6)·월 ₩6,000 한도 + 실패 시 전액 환불 (2026-08-19) ──
+  //   핸들러가 503 을 돌려주거나 throw 하면 가드가 일·주·월 카운터를 환불한다(ctx.refund 중복 호출 금지 — 이중 환불).
+  const res = await runAiFeature(
+    {
+      request,
+      feature: "roadmap-generate",
+      limits: { daily: 3, weekly: 6 },
+      failMessage: "로드맵 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.",
+    },
+    async () => runRoadmapGeneration(body, apiKey),
+  );
+
+  // 가드 한도(429)·서버/모델 실패(≥500)면 평생/주 쿼터도 되돌린다 — 실패·거부가 크레딧을 먹지 않게
+  if (res.status === 429) {
+    await refundRoadmapGenerationUse(auth.userId);   // 가드 한도 거부 — 쿼터 소비 취소
+  } else if (res.status >= 500) {
+    await refundRoadmapGenerationUse(auth.userId);   // 서버 오류가 크레딧을 먹지 않게
+  }
+  return res;
+}
+
+/** Pass1(로드맵 본문) → Pass2(풀 선택) → 결정론 보강. 실패는 503 JSON(가드가 카운터 환불) 또는 throw. */
+async function runRoadmapGeneration(body: RoadmapGenerationInput, apiKey: string): Promise<NextResponse> {
   // ── Pass 1: sub-industry 결정 + 전체 컨텍스트 ──
   let result: RoadmapGenerationResult | null = null;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -482,18 +501,18 @@ export async function POST(request: Request) {
         continue;
       }
 
-      await refundRoadmapGenerationUse(auth.userId);   // 서버 오류가 크레딧을 먹지 않게
+      // 503 → ai-guard 가 1회 재시도 후 일·주·월 환불(+ POST 에서 쿼터 환불)
       return NextResponse.json(
         { error: isTimeout
-          ? "AI 분석에 시간이 오래 걸리고 있습니다. 잠시 후 다시 시도해 주세요."
-          : `로드맵 생성 중 오류: ${message}` },
+          ? "AI 분석에 시간이 오래 걸리고 있습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요."
+          : `로드맵 생성 중 오류: ${message}`, refunded: true },
         { status: 503 }
       );
     }
   }
   if (!result) {
-    await refundRoadmapGenerationUse(auth.userId);   // 서버 오류가 크레딧을 먹지 않게
-    return NextResponse.json({ error: "로드맵 생성에 실패했습니다. 잠시 후 다시 시도해 주세요." }, { status: 503 });
+    // 503 → ai-guard 환불(+ POST 에서 쿼터 환불)
+    return NextResponse.json({ error: "로드맵 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.", refunded: true }, { status: 503 });
   }
 
   // ── Pass 2 + Pool Enrichment ─────────────────────────────────────────────

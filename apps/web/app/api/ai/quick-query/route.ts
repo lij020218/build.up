@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
-import { checkSimpleRateLimit, checkDailyRateLimit, peekRateLimit } from "../../_lib/rate-limit";
+import { getRedisClient } from "../../_lib/rate-limit";
+import { getSupabaseAdmin } from "../../_lib/supabase-admin";
+import { runAiFeature, limitsFor } from "../../_lib/ai-guard";
 import { getAnthropicApiKey, getOpenAiApiKey } from "../../_lib/env";
 import {
   askQuickQuery,
@@ -11,59 +13,19 @@ import type { QuickQueryContext } from "@foundone/ai";
 import { matchKHitCases } from "@foundone/shared";
 import { supabase as supabaseAnon } from "../../../../lib/supabase";
 
-const DAILY_LIMIT = 10;
-const DAILY_KEY = (userId: string) => `daily:quick-query:${userId}`;
+const FEATURE = "quick-query";
 
 /**
- * AI 채팅 한도 정책:
- *  1) **일일 10회** — 사장님이 AI 의존도가 과해지지 않도록 + Anthropic API 비용 통제
- *  2) **분당 5회 (burst)** — 빠르게 연타하는 행위 방지 (사람은 천천히 생각하고 묻습니다)
- *
- * 응답 헤더로 X-RateLimit-Remaining / X-RateLimit-Reset 동봉 → UI 가 실시간으로 남은 횟수 표시.
+ * AI 채팅 한도 정책 (2026-08-19 ai-guard 이관):
+ *  분당·일일·주간·월간 한도 = AI_FEATURE_LIMITS["quick-query"] (일 20 / 주 80 / 분당 6) + 월 ₩6,000 예산.
+ *  서버·모델·파싱 실패 시 전액 환불(가드). 응답 헤더 X-RateLimit-* 는 일일 기준으로 유지 → UI 남은 횟수 표시.
  */
 
 export const runtime = "nodejs";
 export const maxDuration = 30; // Vercel function timeout
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
-  // ── 1. 일일 한도 (가장 먼저 체크 — 매우 중요)
-  const daily = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "quick-query",
-    limit: DAILY_LIMIT,
-    message: `오늘의 AI 채팅 횟수(${DAILY_LIMIT}회)를 모두 사용하셨습니다. 내일 다시 만나요.`,
-  });
-  if (!daily.ok) {
-    return NextResponse.json(
-      { error: daily.error, remaining: 0, limit: daily.limit, resetAt: daily.resetAt },
-      { status: 429, headers: rateLimitHeaders(daily) }
-    );
-  }
-
-  // ── 2. 버스트 방지 (분당 5회)
-  const burst = await checkSimpleRateLimit({
-    key: `quick-query-burst:${auth.userId}`,
-    limit: 5,
-    windowMs: 60_000,
-    message: "잠깐 너무 빠릅니다. 1분만 기다려 주세요.",
-  });
-  if (!burst.ok) {
-    return NextResponse.json(
-      { error: burst.error, remaining: daily.remaining, limit: daily.limit, resetAt: daily.resetAt },
-      { status: 429, headers: rateLimitHeaders(daily) }
-    );
-  }
-
-  const apiKey = getAnthropicApiKey();
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI is not configured." }, { status: 500 });
-  }
-
+  // ── 입력 검증은 게이트(차감) 전에 — 잘못된 요청은 절대 차감되지 않는다
   let body: QuickQueryContext;
   try {
     body = (await request.json()) as QuickQueryContext;
@@ -79,70 +41,105 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "질문이 너무 깁니다 (최대 500자)." }, { status: 400 });
   }
 
-  // 서버에서 K-히트 사례 자동 매칭 (사장님 업종 기반) — AI 가 답변 시 인용 가능
-  const enrichedBody: QuickQueryContext = {
-    ...body,
-    matchedKHitCases: body.matchedKHitCases ?? matchKHitCases({
-      categoryId: body.industryCategoryId,
-      subIndustryId: body.industrySubIndustryId,
-      limit: 3,
-    }).map((c) => ({
-      id: c.id,
-      name: c.name.ko,
-      oneLiner: c.oneLiner.ko,
-      lesson: c.lesson.ko,
-    })),
-  };
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    return NextResponse.json({ error: "AI is not configured." }, { status: 500 });
+  }
 
-  // ── RAG: 외부 인사이트 자료 검색 (실패해도 메인 답변은 진행) ──
-  const openAiKey = getOpenAiApiKey();
-  if (openAiKey && !enrichedBody.insightContext) {
-    try {
-      const chunks = await retrieveInsightChunks(
-        body.question,
-        {
-          supabase: supabaseAnon as unknown as Parameters<typeof retrieveInsightChunks>[1]["supabase"],
-          embed: { apiKey: openAiKey },
-        },
-        { matchCount: 4, minSimilarity: 0.4 },
+  return runAiFeature(
+    { request, feature: FEATURE, failMessage: "답변 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요." },
+    async (ctx) => {
+      const daily = {
+        remaining: Math.max(0, ctx.limits.daily - ctx.usage.dayUsed),
+        limit: ctx.limits.daily,
+        resetAt: nextKstMidnightMs(),
+      };
+
+      // 서버에서 K-히트 사례 자동 매칭 (사장님 업종 기반) — AI 가 답변 시 인용 가능
+      const enrichedBody: QuickQueryContext = {
+        ...body,
+        matchedKHitCases: body.matchedKHitCases ?? matchKHitCases({
+          categoryId: body.industryCategoryId,
+          subIndustryId: body.industrySubIndustryId,
+          limit: 3,
+        }).map((c) => ({
+          id: c.id,
+          name: c.name.ko,
+          oneLiner: c.oneLiner.ko,
+          lesson: c.lesson.ko,
+        })),
+      };
+
+      // ── RAG: 외부 인사이트 자료 검색 (실패해도 메인 답변은 진행) ──
+      const openAiKey = getOpenAiApiKey();
+      if (openAiKey && !enrichedBody.insightContext) {
+        try {
+          const chunks = await retrieveInsightChunks(
+            body.question,
+            {
+              supabase: supabaseAnon as unknown as Parameters<typeof retrieveInsightChunks>[1]["supabase"],
+              embed: { apiKey: openAiKey },
+            },
+            { matchCount: 4, minSimilarity: 0.4 },
+          );
+          const insightContext = formatInsightContext(chunks);
+          if (insightContext) enrichedBody.insightContext = insightContext;
+        } catch (err) {
+          // RAG 실패는 답변 차단 사유가 아님 — 로그만 남기고 계속.
+          console.warn("[quick-query] insight retrieval skipped:", err instanceof Error ? err.message : err);
+        }
+      }
+
+      // 모델·파싱 실패는 throw → 가드가 1회 재시도 후 전액 환불 + 503
+      const result = await askQuickQuery(enrichedBody, { apiKey });
+      return NextResponse.json(
+        { ...result, remaining: daily.remaining, limit: daily.limit, resetAt: daily.resetAt },
+        { headers: rateLimitHeaders(daily) }
       );
-      const insightContext = formatInsightContext(chunks);
-      if (insightContext) enrichedBody.insightContext = insightContext;
-    } catch (err) {
-      // RAG 실패는 답변 차단 사유가 아님 — 로그만 남기고 계속.
-      console.warn("[quick-query] insight retrieval skipped:", err instanceof Error ? err.message : err);
-    }
-  }
-
-  try {
-    const result = await askQuickQuery(enrichedBody, { apiKey });
-    return NextResponse.json(
-      { ...result, remaining: daily.remaining, limit: daily.limit, resetAt: daily.resetAt },
-      { headers: rateLimitHeaders(daily) }
-    );
-  } catch (err) {
-    console.error("[quick-query] error:", err);
-    return NextResponse.json(
-      { error: "답변 생성에 실패했습니다. 잠시 후 다시 시도해 주세요." },
-      { status: 500 },
-    );
-  }
+    },
+  );
 }
 
 /**
- * GET — 현재 남은 횟수만 조회 (UI 가 채팅창 열 때 표시용)
+ * GET — 현재 남은 횟수만 조회 (UI 가 채팅창 열 때 표시용). 차감 없음.
+ *  ai-guard 의 일일 카운터를 읽기만 한다 (Redis 키 → Supabase 원장 → 한도 그대로).
  */
 export async function GET(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-  const status = await peekRateLimit({
-    key: DAILY_KEY(auth.userId),
-    limit: DAILY_LIMIT,
-    windowMs: 24 * 60 * 60 * 1000,
-  });
+  const limit = limitsFor(FEATURE).daily;
+  const used = await peekDailyUsed(auth.userId);
+  const status = { remaining: Math.max(0, limit - used), limit, resetAt: nextKstMidnightMs() };
   return NextResponse.json(status, { headers: rateLimitHeaders(status) });
+}
+
+/** ai-guard consumePeriod("day") 와 동일한 저장소 순서로 오늘 사용량을 읽는다 (키 포맷: ai-guard periodKey 미러). */
+async function peekDailyUsed(userId: string): Promise<number> {
+  const day = new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);
+  const redis = getRedisClient();
+  if (redis) {
+    try {
+      const n = await redis.get<number | string | null>(`@buildup/aiq:day:${day}:${FEATURE}:${userId}`);
+      return Math.max(0, Number(n ?? 0) || 0);
+    } catch { /* fallthrough */ }
+  }
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    try {
+      const { data } = await sb.from("ai_daily_usage").select("count")
+        .eq("user_id", userId).eq("feature", FEATURE).eq("usage_date", day).maybeSingle();
+      return Math.max(0, Number((data as { count?: unknown } | null)?.count ?? 0) || 0);
+    } catch { /* fallthrough */ }
+  }
+  return 0;
+}
+
+function nextKstMidnightMs(): number {
+  const kst = new Date(Date.now() + 9 * 3_600_000);
+  const nextKst = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate() + 1);
+  return nextKst - 9 * 3_600_000;
 }
 
 function rateLimitHeaders(s: { remaining: number; limit: number; resetAt: number }): HeadersInit {

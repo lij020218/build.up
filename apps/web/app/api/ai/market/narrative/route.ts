@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { interpretMarketScore } from "@foundone/ai";
 import type { RecommendationItem } from "@foundone/shared";
-import { requireApiUser } from "../../../_lib/auth";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
 
 type RequestBody = {
   item?: unknown;
@@ -14,31 +13,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
-  const rateLimit = await checkSimpleRateLimit({
-    key: `market-narrative:${auth.userId}`,
-    limit: 10,
-    windowMs: 60_000,
-  });
-  if (!rateLimit.ok) {
-    return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
-  }
-
-  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "market-narrative",
-    limit: 3,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
-  }
-
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 요청은 절대 차감되지 않는다 (2026-08-19 ai-guard 이관)
   let body: RequestBody;
   try {
     body = (await request.json()) as RequestBody;
@@ -55,18 +30,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "AI가 설정되지 않았습니다." }, { status: 500 });
   }
 
-  try {
-    const narrative = await interpretMarketScore(
-      body.item as RecommendationItem,
-      { categoryId: body.categoryId, startupType: body.startupType },
-      { apiKey }
-    );
-
-    return NextResponse.json({ narrative });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "내러티브 생성에 실패했습니다." },
-      { status: 500 }
-    );
-  }
+  return runAiFeature(
+    { request, feature: "market-narrative", failMessage: "내러티브 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요." },
+    async () => {
+      // 실패(모델·파싱)는 throw → 가드가 1회 재시도 후 전액 환불 + 503
+      const narrative = await interpretMarketScore(
+        body.item as RecommendationItem,
+        { categoryId: body.categoryId, startupType: body.startupType },
+        { apiKey }
+      );
+      return NextResponse.json({ narrative });
+    },
+  );
 }

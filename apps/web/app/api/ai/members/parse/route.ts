@@ -1,8 +1,8 @@
 import { createAiClient } from "@foundone/ai/utils/client";
 import { NextResponse } from "next/server";
-import { requireApiUser } from "../../../_lib/auth";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
 
 type ParsedMember = {
   name: string;
@@ -16,38 +16,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request).catch(() => null);
-  if (!auth || !auth.ok) {
-    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
-  }
-
-  const rl = await checkSimpleRateLimit({
-    key: `ai-members-parse:${auth.userId}`,
-    limit: 30,
-    windowMs: 60 * 60 * 1000,
-  });
-  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
-
-  const dailyLimit = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "members-parse",
-    // 파일 파싱은 출력 8192 로 호출당 비용이 커, 하루 30번 할 일은 드묾 (2026-07: 30→10 하향).
-    limit: 10,
-    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!dailyLimit.ok) {
-    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
-  }
-
-  const apiKey = getAnthropicApiKey();
-  if (!apiKey) {
-    console.error("[members/parse] ANTHROPIC_API_KEY not found");
-    return NextResponse.json(
-      { error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." },
-      { status: 503 }
-    );
-  }
-
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 요청은 절대 차감되지 않는다 (2026-08-19 ai-guard 이관)
   let body: { text: string; language?: string };
   try {
     body = await request.json();
@@ -60,12 +29,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No data provided" }, { status: 400 });
   }
   if (text.length > 50_000) {
-    return NextResponse.json({ error: "Data too large (max 50KB)" }, { status: 400 });
+    return NextResponse.json({ error: "Data too large (max 50KB)" }, { status: 413 });
+  }
+
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    console.error("[members/parse] ANTHROPIC_API_KEY not found");
+    return NextResponse.json(
+      { error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." },
+      { status: 503 }
+    );
   }
 
   const ko = body.language !== "en";
 
-  try {
+  // 한도(분·일·주·월)·실패 환불 = ai-guard(AI_FEATURE_LIMITS "members-parse"). 모델·파싱 실패는 throw → 재시도 1회 후 환불+503.
+  return runAiFeature(
+    { request, feature: "members-parse", failMessage: "회원 데이터 파싱에 실패했어요. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요." },
+    async () => {
     const client = createAiClient(apiKey);
     const response = await client.messages.create({
       model: "gpt-5.6-luna", // 2026-07-27 luna — 파싱 전용, 중앙 가드가 effort none 처리
@@ -104,66 +85,34 @@ Rules:
 
     const content = response.content[0];
     if (content.type !== "text") {
-      return NextResponse.json({ error: "Unexpected AI response" }, { status: 502 });
+      throw new Error("Unexpected AI response (no text block)");
     }
 
-    let members: ParsedMember[];
-    try {
-      let cleaned = content.text
-        .replace(/```json\s*/gi, "")
-        .replace(/```\s*/gi, "")
-        .trim();
-
-      const start = cleaned.indexOf("[");
-      let end = cleaned.lastIndexOf("]");
-      if (start !== -1) {
-        if (end !== -1 && end > start) {
-          cleaned = cleaned.slice(start, end + 1);
-        } else {
-          cleaned = cleaned.slice(start);
-          const lastBrace = cleaned.lastIndexOf("}");
-          if (lastBrace > 0) {
-            cleaned = cleaned.slice(0, lastBrace + 1) + "]";
-          }
-        }
-      }
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[members/parse] Cleaned (first 300):", cleaned.slice(0, 300));
-      }
-      members = JSON.parse(cleaned);
-      if (!Array.isArray(members)) throw new Error("Not an array");
-      members = members
-        .filter((m) => m && typeof m.name === "string" && m.name.trim().length > 0)
-        .map((m) => ({
-          name: String(m.name).trim(),
-          plan: String(m.plan || "일반").trim(),
-          fee: Math.max(0, Math.round(Number(m.fee) || 0)),
-          startDate:
-            typeof m.startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.startDate)
-              ? m.startDate
-              : "",
-          endDate:
-            typeof m.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.endDate)
-              ? m.endDate
-              : "",
-        }));
-    } catch (parseErr) {
-      console.error(
-        "[members/parse] Parse error:",
-        parseErr instanceof Error ? parseErr.message : parseErr
-      );
-      console.error("[members/parse] AI text length:", content.text.length);
-      return NextResponse.json(
-        { error: `AI 응답 파싱 실패: ${content.text.slice(0, 100)}` },
-        { status: 502 }
-      );
+    // robust 4단계 파서(strict → loose → damage fix → truncated repair). 실패는 throw → 가드 재시도·환불.
+    let members = parseLlmJson<unknown>(content.text);
+    if (!Array.isArray(members)) {
+      // 객체로 감싸 온 경우({members:[...]}) 관용
+      const inner = members && typeof members === "object" ? Object.values(members as Record<string, unknown>).find(Array.isArray) : undefined;
+      if (!inner) throw new Error("AI 응답 파싱 실패: 배열이 아닙니다");
+      members = inner;
     }
+    const parsed: ParsedMember[] = (members as Array<Record<string, unknown>>)
+      .filter((m) => m && typeof m.name === "string" && m.name.trim().length > 0)
+      .map((m) => ({
+        name: String(m.name).trim(),
+        plan: String(m.plan || "일반").trim(),
+        fee: Math.max(0, Math.round(Number(m.fee) || 0)),
+        startDate:
+          typeof m.startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.startDate)
+            ? m.startDate
+            : "",
+        endDate:
+          typeof m.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.endDate)
+            ? m.endDate
+            : "",
+      }));
 
-    return NextResponse.json({ members });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[members/parse] Error:", message);
-    return NextResponse.json({ error: `회원 데이터 파싱 중 오류: ${message}` }, { status: 500 });
-  }
+    return NextResponse.json({ members: parsed });
+    },
+  );
 }

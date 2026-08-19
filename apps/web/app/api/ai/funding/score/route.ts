@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getOpenAIApiKey } from "../../../_lib/env";
-import { requireApiUser } from "../../../_lib/auth";
 import { normalizeBreakdown, toInt } from "../../../_lib/ios-contract";
-import { checkDailyRateLimit, checkSimpleRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
+import { isTransientLlmError, EmptyLlmResponseError } from "@foundone/ai/utils/client";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "@foundone/ai";
 import {
   formatKRW,
@@ -208,31 +209,22 @@ ${ANTI_HALLUCINATION_DIRECTIVE}
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout
 
-export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
-  const daily = await checkDailyRateLimit({
-    userId: auth.userId,
-    feature: "funding-score",
-    limit: 3,
-    message: "오늘의 AI 평가 횟수(20회)를 모두 사용하셨습니다. 내일 다시 시도해 주세요.",
-  });
-  if (!daily.ok) return NextResponse.json({ error: daily.error }, { status: 429 });
-
-  const burst = await checkSimpleRateLimit({
-    key: `funding-score-burst:${auth.userId}`,
-    limit: 5,
-    windowMs: 60_000,
-    message: "잠깐 너무 빠릅니다. 1분만 기다려 주세요.",
-  });
-  if (!burst.ok) return NextResponse.json({ error: burst.error }, { status: 429 });
-
-  const apiKey = getOpenAIApiKey();
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI not configured (OPENAI_API_KEY missing)" }, { status: 500 });
+/**
+ * OpenAI 직접 호출(response_format json_object 필요)용 로컬 폴백 — 일시 오류·빈 응답이면 gpt-5.4-mini 로 1회 재시도.
+ *  (LlmClient 는 response_format 미지원이라 이 라우트는 OpenAI 를 유지. 2026-08-19)
+ */
+async function withLlmFallback<T>(primaryModel: string, run: (model: string) => Promise<T>): Promise<T> {
+  try {
+    return await run(primaryModel);
+  } catch (e) {
+    if (!isTransientLlmError(e) && !(e instanceof EmptyLlmResponseError)) throw e;
+    console.warn(`[funding/score] ${primaryModel} transient failure → fallback gpt-5.4-mini:`, e instanceof Error ? e.message : String(e));
+    return run("gpt-5.4-mini");
   }
+}
 
+export async function POST(request: Request) {
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 입력은 절대 차감하지 않는다.
   let body: RequestBody;
   try {
     body = (await request.json()) as RequestBody;
@@ -240,10 +232,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  if (!body.program?.name || !body.program?.target) {
+  if (!body?.program?.name || !body.program?.target) {
     return NextResponse.json({ error: "program.name + program.target 필수" }, { status: 400 });
   }
 
+  const apiKey = getOpenAIApiKey();
+  if (!apiKey) {
+    return NextResponse.json({ error: "AI not configured (OPENAI_API_KEY missing)" }, { status: 500 });
+  }
+
+  // 2026-08-19 ai-guard: 분·일·주·월 한도(분당→일→주→월 순, 차감 후 burst 검사 버그 제거) + 실패 시 전액 환불.
+  return runAiFeature(
+    { request, feature: "funding-score", failMessage: "AI 평가에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요." },
+    async ({ limits, usage }) => scoreFunding(body, apiKey, Math.max(0, limits.daily - usage.dayUsed)),
+  );
+}
+
+async function scoreFunding(body: RequestBody, apiKey: string, remaining: number): Promise<NextResponse> {
   // ─── 프로그램 → Rubric 자동 매칭 ───
   const rubric = detectRubric(body.program.name, body.program.category);
 
@@ -373,10 +378,11 @@ ${userContext}
 
 🎯 위 평가표 기준으로 사장님의 합격 가능성을 점수화하세요. JSON only.`;
 
-  try {
-    const client = new OpenAI({ apiKey, timeout: 30_000 });
+  // 실패는 throw → 게이트가 1회 재시도 후 환불 + 503(failMessage)
+  const client = new OpenAI({ apiKey, timeout: 30_000, maxRetries: 3 });
+  const text = await withLlmFallback("gpt-5.4-mini", async (model) => {
     const r = await client.chat.completions.create({
-      model: "gpt-5.4-mini",
+      model,
       max_completion_tokens: 900,
       temperature: 0.3,
       response_format: { type: "json_object" },
@@ -385,43 +391,34 @@ ${userContext}
         { role: "user", content: userPrompt },
       ],
     });
+    const out = r.choices[0]?.message?.content ?? "";
+    if (!out.trim()) throw new EmptyLlmResponseError(model);
+    return out;
+  });
 
-    const text = r.choices[0]?.message?.content ?? "{}";
-    const m = text.match(/\{[\s\S]*\}/);
-    if (!m) {
-      return NextResponse.json({ error: "AI 응답 형식 오류" }, { status: 500 });
-    }
+  const parsed = parseLlmJson<Partial<FundingScore>>(text);
 
-    const parsed = JSON.parse(m[0]) as Partial<FundingScore>;
+  const score = typeof parsed.score === "number" && Number.isFinite(parsed.score)
+    ? Math.max(0, Math.min(100, Math.round(parsed.score)))
+    : 50;
+  const level: FundingScore["level"] =
+    score >= rubric.passingScore ? "high" : score >= 50 ? "medium" : "low";
 
-    const score = typeof parsed.score === "number" && Number.isFinite(parsed.score)
-      ? Math.max(0, Math.min(100, Math.round(parsed.score)))
-      : 50;
-    const level: FundingScore["level"] =
-      score >= rubric.passingScore ? "high" : score >= 50 ? "medium" : "low";
+  const result: FundingScore = {
+    score,
+    level: ["high", "medium", "low"].includes(parsed.level as string) ? (parsed.level as FundingScore["level"]) : level,
+    framework: rubric.framework,
+    passingScore: toInt(rubric.passingScore),
+    headline: typeof parsed.headline === "string" ? parsed.headline.trim() : "평가 진행됨",
+    // iOS 계약(2026-08-19): weight/itemScore 정수·reason 문자열 보장 (LLM 이 문자열/누락으로 줄 수 있음)
+    breakdown: normalizeBreakdown(parsed.breakdown, rubric.items.length),
+    strengths: Array.isArray(parsed.strengths) ? parsed.strengths.filter((s) => typeof s === "string").slice(0, 3) : [],
+    weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.filter((s) => typeof s === "string").slice(0, 3) : [],
+    improvements: Array.isArray(parsed.improvements) ? parsed.improvements.filter((s) => typeof s === "string").slice(0, 3) : [],
+    verdict: typeof parsed.verdict === "string" ? parsed.verdict.trim() : "",
+    bonusEligible: Array.isArray(parsed.bonusEligible) ? parsed.bonusEligible.filter((s) => typeof s === "string").slice(0, 5) : [],
+    disqualified: Array.isArray(parsed.disqualified) ? parsed.disqualified.filter((s) => typeof s === "string").slice(0, 3) : [],
+  };
 
-    const result: FundingScore = {
-      score,
-      level: ["high", "medium", "low"].includes(parsed.level as string) ? (parsed.level as FundingScore["level"]) : level,
-      framework: rubric.framework,
-      passingScore: toInt(rubric.passingScore),
-      headline: typeof parsed.headline === "string" ? parsed.headline.trim() : "평가 진행됨",
-      // iOS 계약(2026-08-19): weight/itemScore 정수·reason 문자열 보장 (LLM 이 문자열/누락으로 줄 수 있음)
-      breakdown: normalizeBreakdown(parsed.breakdown, rubric.items.length),
-      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.filter((s) => typeof s === "string").slice(0, 3) : [],
-      weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.filter((s) => typeof s === "string").slice(0, 3) : [],
-      improvements: Array.isArray(parsed.improvements) ? parsed.improvements.filter((s) => typeof s === "string").slice(0, 3) : [],
-      verdict: typeof parsed.verdict === "string" ? parsed.verdict.trim() : "",
-      bonusEligible: Array.isArray(parsed.bonusEligible) ? parsed.bonusEligible.filter((s) => typeof s === "string").slice(0, 5) : [],
-      disqualified: Array.isArray(parsed.disqualified) ? parsed.disqualified.filter((s) => typeof s === "string").slice(0, 3) : [],
-    };
-
-    return NextResponse.json({ ok: true, result, remaining: daily.remaining });
-  } catch (err) {
-    console.error("[funding/score] error:", err);
-    return NextResponse.json(
-      { error: "AI 평가에 실패했습니다. 잠시 후 다시 시도해 주세요." },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json({ ok: true, result, remaining });
 }

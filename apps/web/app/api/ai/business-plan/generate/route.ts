@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey, getRealAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit, checkDailyRateLimit, checkWeeklyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { buildPlanFacts, PLAN_HONESTY_RULES } from "../../../_lib/business-plan-facts";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 
@@ -182,7 +182,7 @@ async function generateWithClaude(
     throw new Error("claude_refusal");
   }
   const text = res.content?.find((b) => b.type === "text")?.text ?? "";
-  const parsed = JSON.parse(text) as BusinessPlanResponse;
+  const parsed = parseLlmJson<BusinessPlanResponse>(text);
   if (!Array.isArray(parsed.sections) || parsed.sections.length === 0) {
     throw new Error("claude_empty_sections");
   }
@@ -190,50 +190,15 @@ async function generateWithClaude(
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireApiUser(req);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
-  const rateLimit = await checkSimpleRateLimit({
-    key: `business-plan:${auth.userId}`,
-    limit: 5,
-    windowMs: 60_000,
-  });
-  if (!rateLimit.ok) {
-    return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
-  }
-
-  // body 를 먼저 파싱해야 공고 맞춤 모드 여부로 한도를 분기할 수 있다.
+  // body 를 먼저 파싱 — (1) 잘못된 입력은 차감 전에 400 (2) 공고 맞춤 모드 여부로 feature 키를 분기.
   let earlyInput: BusinessPlanInput;
   try {
     earlyInput = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
-
-  if (earlyInput.program) {
-    // 공고 맞춤 모드 — 주 2회 (2026-08-14 사장님 지시: 무료 개방이므로 주간 캡으로 비용 통제)
-    const weekly = await checkWeeklyRateLimit({
-      userId: auth.userId,
-      feature: "business-plan-program",
-      limit: 2,
-      message: "공고 맞춤 사업계획서는 주 2회까지예요. 다음 주 월요일에 초기화됩니다.",
-    });
-    if (!weekly.ok) {
-      return NextResponse.json({ error: weekly.error, remaining: 0, limit: weekly.limit, resetAt: weekly.resetAt }, { status: weekly.status });
-    }
-  } else {
-    // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
-    const dailyLimit = await checkDailyRateLimit({
-      userId: auth.userId,
-      feature: "business-plan-generate",
-      limit: 3,
-      message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
-    });
-    if (!dailyLimit.ok) {
-      return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
-    }
+  if (!earlyInput || typeof earlyInput !== "object" || typeof earlyInput.industry !== "string") {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   const apiKey = getAnthropicApiKey();
@@ -243,7 +208,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
   }
 
-  const input: BusinessPlanInput = earlyInput;
+  // 2026-08-19 ai-guard: 분·일·주·월 한도 + 실패 시 전액 환불.
+  //  · 공고 맞춤 모드 = business-plan-program, 주 2회 (2026-08-14 사장님 지시) → limits 로 명시.
+  //  · retryOnce=false: 핸들러 안에 Claude→gpt 폴백이 이미 있고(최대 110s+90s), 게이트 재시도까지 하면
+  //    maxDuration 240s 를 넘길 수 있다. 실패 시 환불은 그대로.
+  //  (feature 키는 문자열 리터럴로 — ai-cost-budget 테스트가 비용표 드리프트를 정적 추출한다)
+  const FAIL_MESSAGE = "사업계획서 생성에 실패했어요. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.";
+  const guardOpts = earlyInput.program
+    ? { request: req, feature: "business-plan-program", limits: { weekly: 2, daily: 2 }, retryOnce: false, failMessage: FAIL_MESSAGE }
+    : { request: req, feature: "business-plan-generate", retryOnce: false, failMessage: FAIL_MESSAGE };
+  return runAiFeature(guardOpts, async ({ userId }) => generatePlan(earlyInput, apiKey, userId));
+}
+
+async function generatePlan(input: BusinessPlanInput, apiKey: string, userId: string): Promise<NextResponse> {
 
   const ko = input.language === "ko";
   const isStartup = input.industry === "startup-tech";
@@ -395,7 +372,7 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
         systemPrompt,
         `아래 데이터를 기반으로 사업계획서를 작성해주세요.\n\n${userDataWithFacts}`,
       );
-      const draftId = await persistDraft(auth.userId, input, result, CLAUDE_MODEL);
+      const draftId = await persistDraft(userId, input, result, CLAUDE_MODEL);
       return NextResponse.json({ ...result, draftId });
     } catch (err) {
       // 폴백 사유를 남긴다 (침묵 강등 금지) — refusal·타임아웃·파싱 실패 등
@@ -454,34 +431,14 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
       data.content?.[0]?.text ||
       "";
 
-    // Parse JSON from response — Claude sometimes wraps in markdown or adds preamble
-    let cleaned = text.trim();
-    // Remove markdown code fences
-    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?\s*```\s*$/i, "").trim();
-    // Remove any text before the first {
-    const firstBrace = cleaned.indexOf("{");
-    if (firstBrace > 0) cleaned = cleaned.substring(firstBrace);
-    // Remove any text after the last }
-    const lastBrace = cleaned.lastIndexOf("}");
-    if (lastBrace >= 0 && lastBrace < cleaned.length - 1) cleaned = cleaned.substring(0, lastBrace + 1);
-
+    // parseLlmJson: 코드펜스·머리말·잘림까지 4단계 복구 (2026-08-19). 실패 시 throw → 게이트 환불 + 503.
     let parsed: BusinessPlanResponse;
     try {
-      parsed = JSON.parse(cleaned);
+      parsed = parseLlmJson<BusinessPlanResponse>(text);
     } catch (parseErr) {
-      console.error("[business-plan] JSON parse failed. First 500 chars:", cleaned.substring(0, 500));
+      console.error("[business-plan] JSON parse failed. First 500 chars:", String(text).substring(0, 500));
       console.error("[business-plan] Parse error:", parseErr instanceof Error ? parseErr.message : parseErr);
-      // Last resort: try to find JSON object pattern
-      const jsonMatch = cleaned.match(/\{[\s\S]*"sections"\s*:\s*\[[\s\S]*\]\s*\}/);
-      if (jsonMatch) {
-        try {
-          parsed = JSON.parse(jsonMatch[0]);
-        } catch {
-          return NextResponse.json({ error: "AI 응답을 파싱할 수 없습니다. 다시 시도해주세요." }, { status: 502 });
-        }
-      } else {
-        return NextResponse.json({ error: "AI 응답을 파싱할 수 없습니다. 다시 시도해주세요." }, { status: 502 });
-      }
+      return NextResponse.json({ error: "AI 응답을 파싱할 수 없습니다. 다시 시도해주세요." }, { status: 502 });
     }
 
     if (!parsed.sections || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
@@ -496,7 +453,7 @@ Never invent statistics. If a figure is not provided in the [검증된 데이터
       return NextResponse.json({ error: "AI response sections are empty or malformed" }, { status: 502 });
     }
 
-    const draftId = await persistDraft(auth.userId, input, parsed, "gpt-5.4-mini");
+    const draftId = await persistDraft(userId, input, parsed, "gpt-5.4-mini");
     return NextResponse.json({ ...parsed, draftId });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { resolveTrendGroup, TREND_GROUP_LABELS } from "@foundone/shared";
+import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { getOpenAIApiKey } from "../../../_lib/env";
-import { requireApiUser } from "../../../_lib/auth";
-import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
+import { runAiFeature } from "../../../_lib/ai-guard";
+import { withOpenAiFallback, OPENAI_SDK_MAX_RETRIES } from "../../../_lib/openai-fallback";
 
 /**
  * 인스타 카드뉴스 자동 제작 ("마케팅 작업하기" 신기능, 2026-07-21 사장님 지시).
@@ -19,7 +20,8 @@ import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-li
  *
  *  과금: 지금은 전면 무료(2026 6~8월 정책). 9월부터 프로 전용 예정 — UI 배지로만 고지,
  *        서버 게이팅 없음 (유료게이팅 금지 규칙 준수).
- *  인증: Supabase Bearer. 캐시 없음(주제별 온디맨드 생성) — 레이트리밋으로 비용 보호.
+ *  인증·한도(분·일·주·월)·실패 환불: ai-guard(AI_FEATURE_LIMITS "marketing-cardnews") — 2026-08-19 이관.
+ *  캐시 없음(주제별 온디맨드 생성). LLM 실패로 빈 카드를 돌려줄 때는 refunded:true + 카운터 환불.
  */
 
 export const runtime = "nodejs";
@@ -119,13 +121,7 @@ function sanitize(raw: unknown, topic: string, styleVariant: "photo" | "text"): 
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const userId = auth.userId;
-
-  const apiKey = getOpenAIApiKey();
-  if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 500 });
-
+  // 입력 검증은 게이트(차감) 전에 — 잘못된 요청은 절대 차감되지 않는다
   let body: RequestBody;
   try {
     body = await request.json();
@@ -134,16 +130,8 @@ export async function POST(request: Request) {
   }
   const ko = body.language !== "en";
 
-  // ── 레이트리밋 (LLM 비용 보호 — cases 와 동일 규율) ──
-  const burst = await checkSimpleRateLimit({ key: `ai-marketing-cardnews:${userId}`, limit: 10, windowMs: 60 * 60 * 1000 });
-  if (!burst.ok) return NextResponse.json({ error: burst.error }, { status: burst.status });
-  const daily = await checkDailyRateLimit({
-    userId,
-    feature: "marketing-cardnews",
-    limit: 20,
-    message: ko ? "오늘 카드뉴스 제작 사용량을 초과했습니다. 내일 다시 시도해 주세요." : "Daily limit reached. Try again tomorrow.",
-  });
-  if (!daily.ok) return NextResponse.json({ error: daily.error }, { status: daily.status });
+  const apiKey = getOpenAIApiKey();
+  if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 500 });
 
   const cardCount = Math.min(5, Math.max(3, Math.round(body.cardCount ?? 4)));
   const storeName = body.storeName?.trim() || (ko ? "내 가게" : "your business");
@@ -232,41 +220,48 @@ ${storeFacts}
 }`
     : `[STORE] ${storeName} / ${label}\n[TOPIC] ${topic}\n[CARDS] exactly ${cardCount}\nRespond ONLY with JSON: {"cards":[{"role":"cover|body|cta","title":"...","lines":["..."],"highlight":"..."}],"caption":"...","hashtags":["#..."]}`;
 
-  try {
-    const client = new OpenAI({ apiKey, timeout: 35_000 });
-    const r = await client.chat.completions.create({
-      // 2026-07-27 gpt-5.6-luna 전환 — 인터랙티브(사장님이 기다림)라 최속 티어 + effort none (실측 ~2s).
-      //  5.6 계열은 temperature 미지원(400) — 제거(기본 1.0 거동이 창의 작업에 무방).
-      model: "gpt-5.6-luna",
-      reasoning_effort: "none",
-      max_completion_tokens: 1800,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    });
+  return runAiFeature(
+    { request, feature: "marketing-cardnews" },
+    async (ctx) => {
+      const empty: CardNewsResult = { topic, cards: [], caption: "", hashtags: [], styleVariant };
+      try {
+        const client = new OpenAI({ apiKey, timeout: 35_000, maxRetries: OPENAI_SDK_MAX_RETRIES });
+        // 2026-07-27 gpt-5.6-luna 전환 — 인터랙티브(사장님이 기다림)라 최속 티어 + effort none (실측 ~2s).
+        //  5.6 계열은 temperature 미지원(400) — 제거(기본 1.0 거동이 창의 작업에 무방).
+        //  response_format json_object 가 필요해 OpenAI 직접 호출 유지 → SDK 재시도 3 + 일시 오류 시 mini 폴백.
+        const r = await withOpenAiFallback("gpt-5.6-luna", (model) => client.chat.completions.create({
+          model,
+          reasoning_effort: "none",
+          max_completion_tokens: 1800,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+        }), "[cardnews]");
 
-    console.info("[ai-cost] cardnews", JSON.stringify({ model: "gpt-5.6-luna", in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
-    const content = r.choices[0]?.message?.content ?? "{}";
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      // 1차 폴백: 코드블록/설명 섞임 → 첫 { ~ 마지막 } 추출 (LLM robust 파싱 규율)
-      const m = content.match(/\{[\s\S]*\}/);
-      if (m) {
-        try { parsed = JSON.parse(m[0]); } catch { parsed = null; }
+        console.info("[ai-cost] cardnews", JSON.stringify({ model: r.model, in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
+        const content = r.choices[0]?.message?.content ?? "";
+        let parsed: unknown = null;
+        try {
+          // robust 4단계 파서(strict → loose → damage fix → truncated repair)
+          parsed = content.trim() ? parseLlmJson(content) : null;
+        } catch {
+          parsed = null;
+        }
+        const result = sanitize(parsed, topic, styleVariant);
+        if (!result) {
+          // graceful empty — UI 는 재시도 안내. LLM 산출 불량 = 우리 책임 → 사용 횟수 환불 (2026-08-19 ③)
+          await ctx.refund();
+          return NextResponse.json({ ...empty, refunded: true }, { status: 200 });
+        }
+        return NextResponse.json(result);
+      } catch (e) {
+        console.error("[cardnews] generation failed", e);
+        // 모델 실패 → 빈 카드(200, UI 재시도 안내) + 사용 횟수 환불
+        await ctx.refund();
+        return NextResponse.json({ ...empty, refunded: true }, { status: 200 });
       }
-    }
-    const result = sanitize(parsed, topic, styleVariant);
-    if (!result) {
-      // graceful empty — UI 는 재시도 안내 (500 throw 금지 규율)
-      return NextResponse.json({ topic, cards: [], caption: "", hashtags: [], styleVariant } satisfies CardNewsResult, { status: 200 });
-    }
-    return NextResponse.json(result);
-  } catch (e) {
-    console.error("[cardnews] generation failed", e);
-    return NextResponse.json({ topic, cards: [], caption: "", hashtags: [], styleVariant } satisfies CardNewsResult, { status: 200 });
-  }
+    },
+  );
 }
