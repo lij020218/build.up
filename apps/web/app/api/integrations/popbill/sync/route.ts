@@ -15,6 +15,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
+import { toPopbillSummary } from "../../../_lib/ios-contract";
 import {
   PopbillClient,
   PopbillApiError,
@@ -169,6 +170,8 @@ export async function POST(request: Request) {
     ok: true,
     range: { startDate, endDate },
     results: summary,
+    // iOS 계약(2026-08-19): [{docType, collected}] 별칭
+    summary: toPopbillSummary(summary),
   });
 }
 

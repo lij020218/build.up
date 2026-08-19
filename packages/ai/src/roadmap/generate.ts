@@ -698,7 +698,7 @@ export async function generateRoadmap(
   input: RoadmapGenerationInput,
   options: AiCallOptions
 ): Promise<RoadmapGenerationResult> {
-  const client = createAiClient(options.apiKey); // 120초 — 프롬프트 축소 후에도 여유 확보
+  const client = createAiClient(options.apiKey); // SDK 기본 timeout 30s ×2 retries + 라우트 재시도 1회 ≈ ≤180s < maxDuration 300 (2026-08-19)
 
   // SDK 0.39 가 thinking 파라미터를 타입에 명시하지 않아 input cast 필요.
   // 응답은 단일 Message 타입으로 cast 하여 후속 .content/.usage 사용.

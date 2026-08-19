@@ -30,6 +30,8 @@ type ConnectBody = {
   secret_token?: unknown;
   funnel_mode?: unknown;
   label?: unknown;
+  /** iOS 클라이언트가 보내는 별칭 (2026-08-19) — label 과 동일 의미. */
+  connection_label?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -48,7 +50,8 @@ export async function POST(request: Request) {
   const endpointUrl = typeof body.endpoint_url === "string" ? body.endpoint_url.trim() : "";
   const secretToken = typeof body.secret_token === "string" ? body.secret_token : "";
   const funnelMode = typeof body.funnel_mode === "string" ? body.funnel_mode : "";
-  const label = typeof body.label === "string" ? body.label.trim() : "";
+  const rawLabel = body.connection_label ?? body.label;
+  const label = typeof rawLabel === "string" ? rawLabel.trim() : "";
 
   if (!endpointUrl) {
     return NextResponse.json({ ok: false, error: "endpoint_url 이 비어 있습니다." }, { status: 400 });
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error } = await supabase.from("saas_metrics_connections").upsert(
+  const { data: row, error } = await supabase.from("saas_metrics_connections").upsert(
     {
       user_id: auth.userId,
       source: "custom_pull",
@@ -111,7 +114,7 @@ export async function POST(request: Request) {
       last_sync_error: null,
     },
     { onConflict: "user_id,source" },
-  );
+  ).select("id").single();
 
   if (error) {
     return NextResponse.json(
@@ -122,6 +125,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    // iOS 계약(2026-08-19): 삽입/갱신된 row id (개별 해제 ?id= 에 사용)
+    id: (row as { id?: string } | null)?.id ?? null,
+    connection_label: label || null,
     source: "custom_pull",
     endpoint_url: endpointUrl,
     funnel_mode: funnelMode,
@@ -143,14 +149,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ ok: false, error: "DB 설정 오류" }, { status: 500 });
   }
 
-  const { error } = await supabase
+  // ?id= 가 있으면 그 row 만(본인 소유 한정) 해제, 없으면 기존 동작(이 사용자의 custom_pull 전체 해제).
+  const id = new URL(request.url).searchParams.get("id")?.trim() || null;
+  let q = supabase
     .from("saas_metrics_connections")
     .update({
       status: "revoked",
       last_sync_error: null,
     })
-    .eq("user_id", auth.userId)
-    .eq("source", "custom_pull");
+    .eq("user_id", auth.userId);
+  q = id ? q.eq("id", id) : q.eq("source", "custom_pull");
+  const { error } = await q;
 
   if (error) {
     return NextResponse.json(
@@ -159,5 +168,5 @@ export async function DELETE(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, status: "revoked" });
+  return NextResponse.json({ ok: true, status: "revoked", id });
 }

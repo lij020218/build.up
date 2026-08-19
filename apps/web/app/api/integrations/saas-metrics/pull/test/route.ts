@@ -18,11 +18,17 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../../_lib/auth";
 import { checkSimpleRateLimit } from "../../../../_lib/rate-limit";
 import { assertSafeHttpsUrl } from "../../../../_lib/url-guard";
+import { withIosContract } from "../../../../_lib/ios-contract";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
 
 const TIMEOUT_MS = 10_000;
+
+// iOS 계약(2026-08-19): 모든 응답에 success(=ok) · http_status(number, 미상=0) · httpStatus(alias) 추가.
+function json(payload: { ok: boolean; http_status?: number | null; [k: string]: unknown }, init?: ResponseInit) {
+  return NextResponse.json(withIosContract(payload), init);
+}
 
 type TestBody = {
   endpoint_url?: unknown;
@@ -65,7 +71,7 @@ function parseFunnelPayload(raw: unknown): {
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
-    return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+    return json({ ok: false, error: auth.error }, { status: auth.status });
   }
 
   // 인증된 사용자가 임의 https URL 로 서버발 GET 을 무제한 트리거(아웃바운드 증폭/스캔)하는 것을 차단.
@@ -73,28 +79,28 @@ export async function POST(request: Request) {
     key: `pull-test:${auth.userId}`, limit: 10, windowMs: 60_000,
     message: "잠시 후 다시 시도해 주세요.",
   });
-  if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
+  if (!rl.ok) return json({ ok: false, error: rl.error }, { status: rl.status });
 
   let body: TestBody;
   try {
     body = (await request.json()) as TestBody;
   } catch {
-    return NextResponse.json({ ok: false, error: "JSON 본문이 올바르지 않습니다." }, { status: 400 });
+    return json({ ok: false, error: "JSON 본문이 올바르지 않습니다." }, { status: 400 });
   }
 
   const endpointUrl = typeof body.endpoint_url === "string" ? body.endpoint_url.trim() : "";
   const secretToken = typeof body.secret_token === "string" ? body.secret_token : "";
 
   if (!endpointUrl) {
-    return NextResponse.json({ ok: false, error: "endpoint_url 이 비어 있습니다." }, { status: 400 });
+    return json({ ok: false, error: "endpoint_url 이 비어 있습니다." }, { status: 400 });
   }
   if (!secretToken) {
-    return NextResponse.json({ ok: false, error: "secret_token 이 비어 있습니다." }, { status: 400 });
+    return json({ ok: false, error: "secret_token 이 비어 있습니다." }, { status: 400 });
   }
   // fetch 직전 SSRF 재검증 — https 강제 + DNS resolve 후 사설 IP 차단(재바인딩 방어).
   const safe = await assertSafeHttpsUrl(endpointUrl);
   if (!safe.ok) {
-    return NextResponse.json(
+    return json(
       { ok: false, error: `endpoint_url 이 안전하지 않습니다 (https 필수, 사설 IP 차단): ${safe.reason}` },
       { status: 400 },
     );
@@ -124,7 +130,7 @@ export async function POST(request: Request) {
     clearTimeout(timer);
     const err = e as Error;
     const timedOut = err.name === "AbortError";
-    return NextResponse.json(
+    return json(
       {
         ok: false,
         error: timedOut
@@ -140,7 +146,7 @@ export async function POST(request: Request) {
   const text = await response.text();
 
   if (!response.ok) {
-    return NextResponse.json(
+    return json(
       {
         ok: false,
         http_status: httpStatus,
@@ -158,7 +164,7 @@ export async function POST(request: Request) {
   try {
     data = JSON.parse(text);
   } catch {
-    return NextResponse.json(
+    return json(
       {
         ok: false,
         http_status: httpStatus,
@@ -171,7 +177,7 @@ export async function POST(request: Request) {
 
   const parsed = parseFunnelPayload(data);
   if (!parsed) {
-    return NextResponse.json(
+    return json(
       {
         ok: false,
         http_status: httpStatus,
@@ -183,7 +189,7 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({
+  return json({
     ok: true,
     http_status: httpStatus,
     data,

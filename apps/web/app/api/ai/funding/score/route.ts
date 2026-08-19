@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getOpenAIApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
+import { normalizeBreakdown, toInt } from "../../../_lib/ios-contract";
 import { checkDailyRateLimit, checkSimpleRateLimit } from "../../../_lib/rate-limit";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "@foundone/ai";
 import {
@@ -403,13 +404,10 @@ ${userContext}
       score,
       level: ["high", "medium", "low"].includes(parsed.level as string) ? (parsed.level as FundingScore["level"]) : level,
       framework: rubric.framework,
-      passingScore: rubric.passingScore,
+      passingScore: toInt(rubric.passingScore),
       headline: typeof parsed.headline === "string" ? parsed.headline.trim() : "평가 진행됨",
-      breakdown: Array.isArray(parsed.breakdown)
-        ? (parsed.breakdown as FundingScore["breakdown"])
-            .filter((b) => b && typeof b.item === "string")
-            .slice(0, rubric.items.length)
-        : [],
+      // iOS 계약(2026-08-19): weight/itemScore 정수·reason 문자열 보장 (LLM 이 문자열/누락으로 줄 수 있음)
+      breakdown: normalizeBreakdown(parsed.breakdown, rubric.items.length),
       strengths: Array.isArray(parsed.strengths) ? parsed.strengths.filter((s) => typeof s === "string").slice(0, 3) : [],
       weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.filter((s) => typeof s === "string").slice(0, 3) : [],
       improvements: Array.isArray(parsed.improvements) ? parsed.improvements.filter((s) => typeof s === "string").slice(0, 3) : [],

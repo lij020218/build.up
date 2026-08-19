@@ -36,8 +36,11 @@ import { sbizInteriorFirmsNear } from "../../../_lib/sbiz-store";
 import { getEnvVar } from "../../../_lib/env";
 import { getSupplyBrands } from "../../../_lib/supply-brands";
 
-// Vercel serverless 함수 타임아웃: 120초 (Pro 플랜 필요)
-export const maxDuration = 120;
+// Vercel 함수 타임아웃: 300초 (2026-08-19 — prod 에서 Pass1+Pass2 합산 120s 초과로 504 발생).
+//   Pro 플랜은 300s 를 지원(Fluid Compute 기본 800s 까지 확장 가능): https://vercel.com/docs/functions/limitations
+//   Pass 1 LLM 호출은 packages/ai createAiClient (30s × SDK 재시도 3회) + 라우트 재시도 2회 = 최악 ~180s < 300s
+//   → 플랫폼 504 대신 아래 catch 에서 JSON 503 으로 응답한다.
+export const maxDuration = 300;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";

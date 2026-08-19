@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
+import { toDailySummary } from "../../../_lib/ios-contract";
 
 export const runtime = "nodejs";
 
@@ -73,6 +74,8 @@ export async function GET(request: Request) {
     ok: true,
     uploads: uploads ?? [],
     dailyEntries,
+    // iOS 계약(2026-08-19): 동일 데이터의 별칭 키 (dailyEntries 는 웹 하위 호환용 유지)
+    dailySummary: toDailySummary(dailyEntries),
     // 여러 파일에 걸친 날짜 — UI 가 "최신 업로드 기준 표시" 경고에 사용.
     overlapDates: Array.from(overlap).sort(),
   });

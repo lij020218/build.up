@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
+import { ensureStringKeys, INFLUENCER_REQUIRED_STRINGS, INFLUENCER_PLAY_REQUIRED_STRINGS } from "../../_lib/ios-contract";
 import {
   INFLUENCER_DIRECTORY_CHECKED_AT,
   influencersForCategory,
@@ -31,10 +32,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const categoryId = (url.searchParams.get("categoryId") ?? "").trim() || null;
 
-  const curated = influencersForCategory(categoryId).map((i) => ({
-    ...i,
-    profileUrl: influencerProfileUrl(i),
-  }));
+  // iOS 계약(2026-08-19): required string 키(name/handle/platform/regionKo/profileUrl/dmTemplateKo) 는 절대 null 금지.
+  const curated = influencersForCategory(categoryId).map((i) =>
+    ensureStringKeys({ ...i, profileUrl: influencerProfileUrl(i) }, INFLUENCER_REQUIRED_STRINGS),
+  );
   const plays = categoryId ? playsForIndustry(categoryId) : [];
   const notFit = categoryId ? INFLUENCER_NOT_FIT[categoryId] ?? null : null;
 
@@ -42,15 +43,20 @@ export async function GET(request: Request) {
     {
       checkedAt: INFLUENCER_DIRECTORY_CHECKED_AT,
       curated,
-      plays: plays.map((p) => ({
-        id: p.id,
-        titleKo: p.titleKo,
-        targetKo: p.targetKo,
-        practiceKo: p.practiceKo,
-        collabType: p.collabType,
-        instagramQueries: p.instagramQueries,
-        dmTemplateKo: p.dmTemplateKo,
-      })),
+      plays: plays.map((p) =>
+        ensureStringKeys(
+          {
+            id: p.id,
+            titleKo: p.titleKo,
+            targetKo: p.targetKo,
+            practiceKo: p.practiceKo,
+            collabType: p.collabType,
+            instagramQueries: Array.isArray(p.instagramQueries) ? p.instagramQueries.map(String) : [],
+            dmTemplateKo: p.dmTemplateKo,
+          },
+          INFLUENCER_PLAY_REQUIRED_STRINGS,
+        ),
+      ),
       notFit,
       feeRanges: INFLUENCER_FEE_RANGES,
       feeSources: FEE_SOURCES_KO,

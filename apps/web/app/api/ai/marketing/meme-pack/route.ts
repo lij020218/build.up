@@ -8,6 +8,7 @@ import {
   type MemeSource,
 } from "../../../_lib/marketing-memes";
 import { MEME_SEED_PACK } from "../../../_lib/marketing-meme-seed";
+import { ensureStringKeys, MEME_ITEM_REQUIRED_STRINGS } from "../../../_lib/ios-contract";
 
 /**
  * 주간 밈·챌린지 팩 서빙 (2026-07-24 신설).
@@ -35,7 +36,19 @@ type PackRow = {
   generated_at: string;
 };
 
-function orderForCategory(items: MemeItem[], categoryId: string | null): MemeItem[] {
+/** iOS 계약(2026-08-19): required string 키가 null/undefined 로 내려가지 않게 정규화 + industryFit 배열 보장. */
+function sanitizeMemeItems(items: unknown): MemeItem[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((it): it is MemeItem => !!it && typeof it === "object")
+    .map((it) => ({
+      ...ensureStringKeys(it, MEME_ITEM_REQUIRED_STRINGS),
+      industryFit: Array.isArray(it.industryFit) ? it.industryFit.map(String) : [],
+    }));
+}
+
+function orderForCategory(rawItems: unknown, categoryId: string | null): MemeItem[] {
+  const items = sanitizeMemeItems(rawItems);
   if (!categoryId) return items.slice(0, MAX_SERVED);
   const fit = items.filter((it) => it.industryFit.includes(categoryId));
   const generic = items.filter((it) => !it.industryFit.includes(categoryId) && it.industryFit.includes("all"));
@@ -71,7 +84,7 @@ export async function GET(request: Request) {
         weekKey: pick.week_key,
         stale: pick.week_key !== thisWeek,
         items: orderForCategory(pick.items, categoryId),
-        sources: pick.sources ?? [],
+        sources: (Array.isArray(pick.sources) ? pick.sources : []).map((src) => ensureStringKeys(src ?? {}, ["name", "url"] as const)),
         generatedAt: pick.generated_at,
       });
     }
