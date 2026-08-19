@@ -4,19 +4,28 @@
 //  웹 SSOT: apps/web/app/lib/components/my-store/BusinessDocumentsLibraryCard.tsx
 //
 //  Layer 2 (중앙 라이브러리). Layer 1 = StoreInfoState.businessDocuments (Supabase 동기화 완료).
-//  업로드 시트는 placeholder — 실 파일 업로드는 Storage 통합 후속 작업.
+//  2026-08-19: 실 파일 업로드(.fileImporter → BusinessDocumentUploader → Storage) + 열람·삭제 — 웹과 동일 버킷·경로.
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 import FoundOneDesignSystem
 import FoundOneData
 
 struct BusinessDocumentsCard: View {
 
     @ObservedObject var storeInfo: StoreInfoStore
+    /// nil 이면(데모·미로그인) 업로드 버튼 대신 안내만
+    var uploader: BusinessDocumentUploader? = nil
 
-    @State private var showUploadHint: Bool = false
-    @State private var selectedKindLabel: String = ""
+    @State private var importerKind: BusinessDocumentKind? = nil
+    @State private var showImporter: Bool = false
+    @State private var detailKind: KindBox? = nil
+    private struct KindBox: Identifiable { let kind: BusinessDocumentKind; var id: String { kind.rawValue } }
+    @State private var isUploading: Bool = false
+    @State private var uploadError: String? = nil
+
+    private static let allowedTypes: [UTType] = [.pdf, .jpeg, .png, .webP]
 
     private struct DocGroup: Identifiable {
         let id: String
@@ -80,10 +89,61 @@ struct BusinessDocumentsCard: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(BUColor.cardBorder, lineWidth: 1)
         )
-        .alert("문서 업로드", isPresented: $showUploadHint) {
+        .fileImporter(isPresented: $showImporter, allowedContentTypes: Self.allowedTypes, allowsMultipleSelection: false) { result in
+            guard let kind = importerKind else { return }
+            switch result {
+            case .success(let urls):
+                if let url = urls.first { Task { await upload(kind: kind, fileURL: url) } }
+            case .failure(let err):
+                uploadError = err.localizedDescription
+            }
+        }
+        .alert("업로드 실패", isPresented: Binding(get: { uploadError != nil }, set: { if !$0 { uploadError = nil } })) {
             Button("확인", role: .cancel) {}
         } message: {
-            Text("\"\(selectedKindLabel)\" 업로드는 곧 추가됩니다. 그 전엔 웹에서 업로드해주세요. (PDF/JPG/PNG, 10MB 이하)")
+            Text(uploadError ?? "")
+        }
+        .sheet(item: $detailKind) { box in
+            BusinessDocumentKindSheet(kind: box.kind, storeInfo: storeInfo, uploader: uploader) {
+                detailKind = nil
+                beginUpload(box.kind)
+            }
+        }
+        .overlay {
+            if isUploading {
+                ZStack {
+                    Color.black.opacity(0.08)
+                    ProgressView("업로드 중…").padding(16)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+        }
+    }
+
+    // MARK: - Upload flow
+
+    private func beginUpload(_ kind: BusinessDocumentKind) {
+        guard uploader != nil else {
+            uploadError = "로그인 후 업로드할 수 있어요. (PDF/JPG/PNG/WebP, 10MB 이하)"
+            return
+        }
+        importerKind = kind
+        showImporter = true
+    }
+
+    private func upload(kind: BusinessDocumentKind, fileURL: URL) async {
+        guard let uploader else { return }
+        isUploading = true
+        defer { isUploading = false }
+        let scoped = fileURL.startAccessingSecurityScopedResource()
+        defer { if scoped { fileURL.stopAccessingSecurityScopedResource() } }
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let doc = try await uploader.upload(kind: kind, filename: fileURL.lastPathComponent, data: data)
+            storeInfo.commit { $0.businessDocuments.append(doc) }
+        } catch {
+            uploadError = error.localizedDescription
         }
     }
 
@@ -157,8 +217,7 @@ struct BusinessDocumentsCard: View {
         }
 
         return Button {
-            selectedKindLabel = kind.labelKo
-            showUploadHint = true
+            if filled { detailKind = KindBox(kind: kind) } else { beginUpload(kind) }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: filled ? "checkmark.circle.fill" : "doc.text")
@@ -208,5 +267,78 @@ struct BusinessDocumentsCard: View {
         f.timeZone = TimeZone(identifier: "Asia/Seoul")
         if let d = f.date(from: s) { return d }
         return ISO8601DateFormatter().date(from: s)
+    }
+}
+
+
+// MARK: - Kind detail sheet (보관 문서 열람·삭제·추가)
+
+private struct BusinessDocumentKindSheet: View {
+    let kind: BusinessDocumentKind
+    @ObservedObject var storeInfo: StoreInfoStore
+    let uploader: BusinessDocumentUploader?
+    let onAddMore: () -> Void
+
+    @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
+    @State private var opening: String? = nil
+
+    private var docs: [BusinessDocument] { storeInfo.state.businessDocuments.filter { $0.kind == kind } }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(docs) { doc in
+                        Button { open(doc) } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: doc.filename.lowercased().hasSuffix(".pdf") ? "doc.richtext" : "photo")
+                                    .foregroundStyle(BUColor.midnight)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(doc.filename).font(.system(size: 14, weight: .semibold)).foregroundStyle(BUColor.ink).lineLimit(1)
+                                    Text(metaLine(doc)).font(.system(size: 11)).foregroundStyle(BUColor.inkMuted)
+                                }
+                                Spacer()
+                                if opening == doc.id { ProgressView().controlSize(.small) }
+                            }
+                        }
+                    }
+                    .onDelete { idx in
+                        let targets = idx.map { docs[$0] }
+                        storeInfo.commit { st in st.businessDocuments.removeAll { d in targets.contains { $0.id == d.id } } }
+                        if let uploader { Task { for t in targets { await uploader.remove(t) } } }
+                    }
+                } footer: {
+                    Text("왼쪽으로 밀어 삭제. 열람 링크는 1시간마다 새로 발급돼요.")
+                }
+                Section {
+                    Button { onAddMore() } label: {
+                        Label("\(kind.labelKo) 추가 업로드", systemImage: "plus.circle.fill")
+                    }
+                    .disabled(uploader == nil)
+                }
+            }
+            .navigationTitle(kind.labelKo)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func metaLine(_ doc: BusinessDocument) -> String {
+        var parts: [String] = []
+        if let b = doc.sizeBytes { parts.append(ByteCountFormatter.string(fromByteCount: Int64(b), countStyle: .file)) }
+        parts.append("업로드 " + String(doc.uploadedAt.prefix(10)))
+        if let e = doc.expiresAt { parts.append("만료 " + String(e.prefix(10))) }
+        return parts.joined(separator: " · ")
+    }
+
+    private func open(_ doc: BusinessDocument) {
+        opening = doc.id
+        Task {
+            defer { opening = nil }
+            if let uploader, let url = await uploader.signedURL(for: doc) { openURL(url); return }
+            if let url = URL(string: doc.url), !doc.url.isEmpty { openURL(url) }
+        }
     }
 }

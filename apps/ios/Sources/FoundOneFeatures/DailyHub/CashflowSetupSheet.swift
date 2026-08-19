@@ -70,7 +70,7 @@ public struct CashflowSetupSheet: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         balanceSection

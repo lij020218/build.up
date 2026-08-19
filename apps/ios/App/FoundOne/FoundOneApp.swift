@@ -4,6 +4,7 @@
 
 import SwiftUI
 import FoundOneFeatures
+import FoundOneCore
 
 // 카카오 SDK 는 Package 의존성 추가 후 자동 활성화.
 #if canImport(KakaoSDKCommon)
@@ -30,6 +31,10 @@ struct FoundOneApp: App {
     var body: some Scene {
         WindowGroup {
             AppRoot()
+                // 무거운 번들 레지스트리(프랜차이즈 1,600건 등) 백그라운드 선로딩 — 탭 첫 진입 끊김 방지 (2026-08-19).
+                .task(priority: .utility) {
+                    await Task.detached(priority: .utility) { RegistryWarmup.warmAll() }.value
+                }
                 #if canImport(KakaoSDKAuth)
                 .onOpenURL { url in
                     if AuthApi.isKakaoTalkLoginUrl(url) {

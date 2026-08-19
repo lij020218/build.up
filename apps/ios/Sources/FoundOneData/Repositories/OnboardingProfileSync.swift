@@ -42,6 +42,7 @@ public enum OnboardingProfileSync {
             || payload.startup_type != nil || payload.capital != nil else { return }
         Task.detached {
             _ = try? await client.from("business_profiles").upsert(payload, onConflict: "user_id").execute()
+            RealtimeEcho.markLocalWrite(table: "business_profiles")
         }
     }
 
@@ -60,6 +61,7 @@ public enum OnboardingProfileSync {
         )
         Task.detached {
             _ = try? await client.from("business_profiles").upsert(payload, onConflict: "user_id").execute()
+            RealtimeEcho.markLocalWrite(table: "business_profiles")
         }
     }
 
@@ -81,6 +83,7 @@ public enum OnboardingProfileSync {
         )
         Task.detached {
             _ = try? await client.from("user_store_data").upsert(payload, onConflict: "user_id").execute()
+            RealtimeEcho.markLocalWrite(table: "user_store_data")
         }
     }
 

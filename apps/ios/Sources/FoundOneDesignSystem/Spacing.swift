@@ -102,37 +102,33 @@ public enum BURadius {
     public static let capsule: CGFloat = .infinity
 }
 
-// MARK: - Shadow (웹 1:1 dual layer)
+// MARK: - Shadow (단일 레이어 — 성능 개정 2026-08-19)
+//
+//  웹 dual layer(0 1px 3px + 0 12px 24px -12px)를 iOS 에서 두 겹 .shadow 로 미러했으나,
+//  .shadow 는 매 레이어마다 오프스크린 블러 패스라 카드 수십 장 스크롤 시 비용이 큼.
+//  → 한 겹(radius ≤ 12, 낮은 opacity)으로 통합. 카드 부유감은 유지.
 
 public struct BUShadow: Sendable {
-    public let layers: [Layer]
+    public let color: Color
+    public let radius: CGFloat
+    public let x: CGFloat
+    public let y: CGFloat
 
-    public struct Layer: Sendable {
-        public let color: Color
-        public let radius: CGFloat
-        public let x: CGFloat
-        public let y: CGFloat
-    }
+    /// heroPanel/opsCard/activityCard 표준 — 웹 dual layer 근사(한 겹).
+    public static let card = BUShadow(color: BUColor.midnight.opacity(0.08), radius: 10, x: 0, y: 4)
 
-    /// heroPanel/opsCard/activityCard 표준 (웹 dual layer):
-    ///   0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)
-    public static let card = BUShadow(layers: [
-        Layer(color: BUColor.midnight.opacity(0.04), radius: 3, x: 0, y: 1),
-        Layer(color: BUColor.midnight.opacity(0.10), radius: 24, x: 0, y: 12),
-    ])
+    /// CEOMorningHero outer — 웹 0 8px 32px rgba(25,25,112,0.06) 근사(한 겹, radius 12).
+    /// inset 하이라이트는 BUCard 의 overlay 로 처리.
+    public static let hero = BUShadow(color: BUColor.midnight.opacity(0.07), radius: 12, x: 0, y: 5)
 
-    /// CEOMorningHero outer (inset + outer):
-    ///   inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 32px rgba(25,25,112,0.06)
-    /// inset 은 SwiftUI 에선 overlay highlight 로 처리 (BUCard 안에서).
-    public static let hero = BUShadow(layers: [
-        Layer(color: BUColor.midnight.opacity(0.06), radius: 32, x: 0, y: 8),
-    ])
+    /// 그림자 없음 (radius 0 · 투명).
+    public static let none = BUShadow(color: .clear, radius: 0, x: 0, y: 0)
 
-    public static let none = BUShadow(layers: [])
+    var isNone: Bool { radius == 0 }
 }
 
 public extension View {
-    /// dual-layer shadow 적용 (웹 box-shadow 정확 미러)
+    /// 단일 레이어 shadow 적용 (웹 box-shadow 근사)
     func buShadow(_ shadow: BUShadow) -> some View {
         self.modifier(BUShadowModifier(shadow: shadow))
     }
@@ -142,8 +138,10 @@ private struct BUShadowModifier: ViewModifier {
     let shadow: BUShadow
 
     func body(content: Content) -> some View {
-        shadow.layers.reduce(AnyView(content)) { acc, layer in
-            AnyView(acc.shadow(color: layer.color, radius: layer.radius, x: layer.x, y: layer.y))
+        if shadow.isNone {
+            content
+        } else {
+            content.shadow(color: shadow.color, radius: shadow.radius, x: shadow.x, y: shadow.y)
         }
     }
 }

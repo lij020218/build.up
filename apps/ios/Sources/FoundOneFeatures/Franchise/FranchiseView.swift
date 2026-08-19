@@ -71,6 +71,11 @@ private struct FranchiseBrandView: Identifiable, Equatable {
     // 공정위 공개데이터 자동 수록 브랜드 (tier "kftc") — 배지·정렬용
     let isKftc: Bool
 
+    /// 검색용 소문자 haystack (name + tagline + category) — 브랜드당 1회 계산 (성능 2026-08-19).
+    let searchHaystack: String
+    /// overall score — 정렬용, 1회 계산.
+    let overall: Double
+
     init(_ b: FranchiseBrand) {
         self.id = b.id
         self.name = b.name.ko
@@ -99,6 +104,10 @@ private struct FranchiseBrandView: Identifiable, Equatable {
         self.confidence = b.confidence
         self.officialStats = b.officialStats
         self.isKftc = b.tier == "kftc"
+        self.searchHaystack = "\(b.name.ko) \(b.tagline.ko) \(Self.categoryLabel(b.categoryId))".lowercased()
+        // 웹 overallScore 미러 (profitability 2회 가중 포함 — 기존 overallScore(_:) 와 동일식)
+        let sum = b.scores.accessibility + b.scores.profitability + b.scores.profitability + b.scores.brandPower + b.scores.stability
+        self.overall = Double(sum) / 5.0
     }
 
     private static func categoryLabel(_ id: String) -> String {
@@ -135,6 +144,30 @@ private let franchiseCategories: [FranchiseCategory] = [
 
 private let franchiseSampleBrands: [FranchiseBrandView] = FranchiseBrandRegistry.all.map { FranchiseBrandView($0) }
 
+/// 정렬 1회 — 큐레이션(편집 검증) 우선 → overall score 내림차순 (웹 franchiseBrandsAll 과 동일).
+///   필터는 순서를 보존하므로 검색·카테고리 변경 시 재정렬 불필요 (성능 2026-08-19).
+private let franchiseSortedBrands: [FranchiseBrandView] = franchiseSampleBrands.sorted { a, b in
+    if a.isKftc != b.isKftc { return !a.isKftc }
+    return a.overall > b.overall
+}
+
+/// 카테고리별 개수 — 1회 집계.
+private let franchiseCategoryCounts: [String: Int] = {
+    var counts: [String: Int] = ["all": franchiseSampleBrands.count]
+    for b in franchiseSampleBrands { counts[b.categoryId, default: 0] += 1 }
+    return counts
+}()
+
+/// 필터 계산 (순수 함수) — 정렬된 원본에서 카테고리·검색어만 적용.
+private func filterFranchiseBrands(categoryId: String, query: String) -> [FranchiseBrandView] {
+    let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+    return franchiseSortedBrands.filter { b in
+        if categoryId != "all" && b.categoryId != categoryId { return false }
+        if !q.isEmpty && !b.searchHaystack.contains(q) { return false }
+        return true
+    }
+}
+
 // MARK: - FranchiseView
 
 public struct FranchiseView: View {
@@ -145,29 +178,15 @@ public struct FranchiseView: View {
     /// BudgetSetup 단계에서 프랜차이즈 비용 패널을 표시하기 위해 선택한 브랜드를 영속.
     @AppStorage("stage.franchise.selectedBrandId") private var selectedBrandIdStorage: String = ""
 
+    /// 필터 결과 메모 — body 마다 재계산하지 않고 검색어(150ms 디바운스)·카테고리 변경 시에만 갱신.
+    @State private var filteredBrands: [FranchiseBrandView] = franchiseSortedBrands
+
     public init() {}
 
-    private var filteredBrands: [FranchiseBrandView] {
-        let q = searchQuery.trimmingCharacters(in: .whitespaces).lowercased()
-        let base = franchiseSampleBrands.filter { b in
-            if selectedCategoryId != "all" && b.categoryId != selectedCategoryId { return false }
-            if !q.isEmpty {
-                let hay = "\(b.name) \(b.tagline) \(b.category)".lowercased()
-                if !hay.contains(q) { return false }
-            }
-            return true
-        }
-        // 큐레이션(편집 검증) 우선 → 그 다음 overall score 내림차순 (웹 franchiseBrandsAll 과 동일)
-        return base.sorted { a, b in
-            if a.isKftc != b.isKftc { return !a.isKftc }
-            return overallScore(a) > overallScore(b)
-        }
-    }
+    private func categoryCount(_ id: String) -> Int { franchiseCategoryCounts[id] ?? 0 }
 
-    private func categoryCount(_ id: String) -> Int {
-        id == "all"
-            ? franchiseSampleBrands.count
-            : franchiseSampleBrands.filter { $0.categoryId == id }.count
+    private func recomputeFiltered() {
+        filteredBrands = filterFranchiseBrands(categoryId: selectedCategoryId, query: searchQuery)
     }
 
     public var body: some View {
@@ -193,6 +212,16 @@ public struct FranchiseView: View {
         #endif
         .sheet(item: $selectedBrand) { brand in
             FranchiseDetailSheet(brand: brand)
+        }
+        .onChange(of: selectedCategoryId) { _, _ in recomputeFiltered() }
+        // 검색어 디바운스 150ms — 타이핑마다 1,600개 필터 방지 (id 변경 시 이전 task 자동 취소).
+        .task(id: searchQuery) {
+            let trimmed = searchQuery.trimmingCharacters(in: .whitespaces)
+            if !trimmed.isEmpty {
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                guard !Task.isCancelled else { return }
+            }
+            recomputeFiltered()
         }
     }
 
@@ -380,10 +409,7 @@ extension URL: @retroactive Identifiable {
 
 // MARK: - Overall score (5-bar 평균 — 웹 computeOverallScore 미러)
 
-private func overallScore(_ b: FranchiseBrandView) -> Double {
-    let sum = b.scoreAccessibility + b.scoreProfitability + b.scoreProfitability + b.scoreBrandPower + b.scoreStability
-    return Double(sum) / 5.0
-}
+private func overallScore(_ b: FranchiseBrandView) -> Double { b.overall }
 
 // MARK: - Brand card
 

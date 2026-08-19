@@ -272,23 +272,37 @@ public final class AuthCoordinator {
         state = .unauthenticated
     }
 
-    public func deleteAccount() async {
+    /// 계정 삭제 실패 메시지 — 서버 삭제가 실패하면 세션은 그대로(.authenticated) 두고 이 값만 채운다.
+    ///   ProfileView 가 alert 로 표시하고 확인 시 clearDeleteError(). (2026-08-19: 종전엔 state=.failed 로
+    ///   전환해 로그인 화면으로 튕기면서도 서버 데이터는 남는, 거짓 실패 화면이었다.)
+    public private(set) var deleteError: String?
+
+    public func clearDeleteError() { deleteError = nil }
+
+    /// 계정 삭제. 성공 시에만 signOut + LocalDataWipe + .unauthenticated. 실패 시 세션 유지 + deleteError.
+    /// - Returns: 성공 여부
+    @discardableResult
+    public func deleteAccount() async -> Bool {
         let provider = currentSession?.provider
+        deleteError = nil
         do {
             // 1. 서버에서 데이터 + auth 계정 완전 삭제 (토큰 유효한 동안 먼저).
             try await deleteAccountOnServer()
-            // 2. 로컬 세션 정리 (provider 별 signOut — 서버에서 이미 계정 삭제됨).
-            switch provider {
-            case .apple: try? await appleProvider.signOut()
-            case .kakao: try? await kakaoProvider.signOut()
-            default:     try? await supabase.auth.signOut()
-            }
-            // 서버 삭제에 더해 로컬 캐시도 전면 제거.
-            LocalDataWipe.wipeAllLocalUserData()
-            state = .unauthenticated
         } catch {
-            state = .failed("계정 삭제 실패: \(error.localizedDescription)")
+            // 서버 실패 — 계정·세션·로컬 데이터 모두 그대로. 화면은 로그인 상태 유지 + 에러 alert.
+            deleteError = "계정 삭제에 실패했어요. 계정과 데이터는 그대로 남아 있습니다.\n\n\(error.localizedDescription)"
+            return false
         }
+        // 2. 로컬 세션 정리 (provider 별 signOut — 서버에서 이미 계정 삭제됨).
+        switch provider {
+        case .apple: try? await appleProvider.signOut()
+        case .kakao: try? await kakaoProvider.signOut()
+        default:     try? await supabase.auth.signOut()
+        }
+        // 서버 삭제에 더해 로컬 캐시도 전면 제거.
+        LocalDataWipe.wipeAllLocalUserData()
+        state = .unauthenticated
+        return true
     }
 
     /// 웹 API `/api/account/delete` 호출 — 데이터 + auth 계정 본체 삭제.

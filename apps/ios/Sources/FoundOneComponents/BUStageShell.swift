@@ -155,7 +155,7 @@ public struct BUStageShell<Content: View>: View {
         //   • BUStageShell 은 자체 NavigationStack 을 만들지 않고, .navigationTitle 등 만 부착.
         //   • 시스템 back 버튼(왼쪽 chevron) 이 자동 노출 — "닫기" 는 보조적으로 우측 유지.
         ZStack {
-            BUBackgroundSurface()
+            BUFlatBackground()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {

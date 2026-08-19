@@ -126,6 +126,7 @@ public actor CoachingHistoryRepository {
                 onConflict: "user_id,date,brief"
             )
             .execute()
+        RealtimeEcho.markLocalWrite(table: "coaching_history")   // 자기 에코 억제
     }
 
     // MARK: - DTOs

@@ -24,9 +24,17 @@ public struct MyStoreView: View {
     @Bindable private var store: DashboardStore
     @ObservedObject private var storeInfo: StoreInfoStore
 
-    public init(store: DashboardStore, storeInfo: StoreInfoStore) {
+    /// 2026-08-19: 사진·서류 업로더 주입 (nil = 데모/미로그인 → 업로드 UI 비활성)
+    private let photoUploader: StorePhotoUploader?
+    private let documentUploader: BusinessDocumentUploader?
+
+    public init(store: DashboardStore, storeInfo: StoreInfoStore,
+                photoUploader: StorePhotoUploader? = nil,
+                documentUploader: BusinessDocumentUploader? = nil) {
         self.store = store
         self.storeInfo = storeInfo
+        self.photoUploader = photoUploader
+        self.documentUploader = documentUploader
     }
 
     public var body: some View {
@@ -34,7 +42,7 @@ public struct MyStoreView: View {
         //   중복 Aurora 두 인스턴스가 독립 애니메이션 → 배경 분리감 발생.
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HeroAtAGlance(store: storeInfo)
+                HeroAtAGlance(store: storeInfo, photoUploader: photoUploader)
                     .padding(.horizontal, 16)
 
                 FinancialSnapshotCard(store: store)
@@ -46,7 +54,7 @@ public struct MyStoreView: View {
                 ddayCard
                     .padding(.horizontal, 16)
 
-                BusinessDocumentsCard(storeInfo: storeInfo)
+                BusinessDocumentsCard(storeInfo: storeInfo, uploader: documentUploader)
                     .padding(.horizontal, 16)
 
                 ForEach(allSections, id: \.id) { spec in

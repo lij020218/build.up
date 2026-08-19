@@ -21,16 +21,31 @@ import FoundOneCore
 
 /// Pull endpoint 테스트 결과 — 서버가 사장님 endpoint 를 한 번 호출해 보고 응답을 그대로 forward.
 public struct PullConnectionTestResult: Sendable, Decodable {
-    public let success: Bool
-    public let httpStatus: Int
+    /// 서버 응답 키는 `ok` (웹 /pull/test). 하위호환으로 `success` 도 받는다 — 둘 중 하나가 true 면 성공.
+    public let ok: Bool
+    /// `http_status` 는 서버가 사장님 endpoint 를 못 부른 경우(네트워크 오류) 생략될 수 있어 optional.
+    public let httpStatus: Int?
     public let data: PulledFunnelData?
     public let error: String?
 
+    public var success: Bool { ok }
+
     enum CodingKeys: String, CodingKey {
+        case ok
         case success
         case httpStatus = "http_status"
         case data
         case error
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let okValue = try c.decodeIfPresent(Bool.self, forKey: .ok)
+        let successValue = try c.decodeIfPresent(Bool.self, forKey: .success)
+        self.ok = (okValue ?? false) || (successValue ?? false)
+        self.httpStatus = try c.decodeIfPresent(Int.self, forKey: .httpStatus)
+        self.data = try c.decodeIfPresent(PulledFunnelData.self, forKey: .data)
+        self.error = try c.decodeIfPresent(String.self, forKey: .error)
     }
 }
 
@@ -61,7 +76,7 @@ public struct SaasConnection: Sendable, Decodable, Identifiable, Hashable {
     public let endpointUrl: String?
     public let funnelMode: String?         // "commerce" | "saas"
     public let status: String?             // "active" | "paused" | "error"
-    public let lastSyncedAt: String?       // ISO timestamp
+    public let lastSyncedAt: String?       // ISO timestamp — DB 컬럼명은 last_sync_at
     public let createdAt: String?
 
     enum CodingKeys: String, CodingKey {
@@ -71,7 +86,7 @@ public struct SaasConnection: Sendable, Decodable, Identifiable, Hashable {
         case endpointUrl = "endpoint_url"
         case funnelMode = "funnel_mode"
         case status
-        case lastSyncedAt = "last_synced_at"
+        case lastSyncedAt = "last_sync_at"     // ⚠️ 컬럼은 last_sync_at (last_synced_at 아님, 2026-08-19 수정)
         case createdAt = "created_at"
     }
 }
@@ -167,21 +182,25 @@ public actor FunnelConnectionRepository {
         secretToken: String,
         mode: String,
         label: String
-    ) async throws -> UUID {
+    ) async throws -> UUID? {
         struct Body: Encodable {
             let endpoint_url: String
             let secret_token: String
             let funnel_mode: String
             let connection_label: String
+            let label: String              // 웹 API 가 읽는 키(label) — connection_label 과 둘 다 전송
         }
+        /// 2xx 면 성공으로 간주 — id 는 서버 버전에 따라 생략될 수 있어 optional.
         struct Resp: Decodable {
-            let id: UUID
+            let id: UUID?
+            let success: Bool?
         }
         let body = Body(
             endpoint_url: endpointURL,
             secret_token: secretToken,
             funnel_mode: mode,
-            connection_label: label
+            connection_label: label,
+            label: label
         )
         let req = try await authedRequest(
             path: "/api/integrations/saas-metrics/pull/connect",
@@ -210,7 +229,8 @@ public actor FunnelConnectionRepository {
     public func listConnections() async throws -> [SaasConnection] {
         let rows: [SaasConnection] = try await supabase
             .from("saas_metrics_connections")
-            .select("id, source, connection_label, endpoint_url, funnel_mode, status, last_synced_at, created_at")
+            .select("id, source, connection_label, endpoint_url, funnel_mode, status, last_sync_at, created_at")
+            .neq("status", value: "revoked")   // 해제된 연결은 목록에서 제외
             .order("created_at", ascending: false)
             .execute()
             .value
@@ -280,7 +300,9 @@ public actor FunnelConnectionRepository {
             return EmptyResponse() as! T
         }
         do {
-            return try JSONDecoder().decode(T.self, from: data)
+            // 2xx + 빈 본문 → 빈 객체로 디코딩 시도 (모든 필드가 optional 인 응답 타입은 성공으로 처리)
+            let payload = data.isEmpty ? Data("{}".utf8) : data
+            return try JSONDecoder().decode(T.self, from: payload)
         } catch {
             throw FunnelConnectionError.decoding(error.localizedDescription)
         }

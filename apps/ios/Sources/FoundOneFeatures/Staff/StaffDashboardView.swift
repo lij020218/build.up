@@ -23,9 +23,19 @@ private let LEAVE_COLOR = Color(red: 139 / 255, green: 127 / 255, blue: 212 / 25
 extension StaffScheduleException: BUWorkException {}
 private let WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
 
-private func ymd(_ d: Date) -> String {
-    let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: d)
+/// 재사용 포매터 — 1초 tick·body 마다 DateFormatter() 생성 방지 (성능 2026-08-19).
+private enum StaffFormatters {
+    static let ymd: DateFormatter = { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f }()
+    static let hm: DateFormatter = { let f = DateFormatter(); f.dateFormat = "HH:mm"; return f }()
+    nonisolated(unsafe) static let isoFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return f
+    }()
+    nonisolated(unsafe) static let isoPlain: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime]; return f
+    }()
 }
+
+private func ymd(_ d: Date) -> String { StaffFormatters.ymd.string(from: d) }
 
 /// 특정 날짜의 실제 근무 = 예외행 우선(휴무/다른시간), 없으면 그 요일 반복 규칙 (웹 resolveShift 미러)
 // 근무 해석은 BUWorkSchedule SSOT 사용 — 사장 캘린더와 같은 규칙 (FoundOneCore/WorkScheduleResolver)
@@ -75,11 +85,9 @@ public struct StaffDashboardView: View {
     // 정규 시간 초과 근무 자동 감지 (웹 overtimeCandidates 미러) — 이미 신청한 날짜 제외, 10분↑만
     private var overtimeCandidates: [OvertimeCandidate] {
         let requested = Set(allowances.map(\.workDate))
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoPlain = ISO8601DateFormatter()
-        isoPlain.formatOptions = [.withInternetDateTime]
+        let f = StaffFormatters.ymd
+        let iso = StaffFormatters.isoFractional
+        let isoPlain = StaffFormatters.isoPlain
         func parseClockOut(_ s: String) -> Date? { iso.date(from: s) ?? isoPlain.date(from: s) }
         var out: [OvertimeCandidate] = []
         for a in monthAtt {
@@ -390,7 +398,7 @@ public struct StaffDashboardView: View {
     private func tenure(_ ctx: StaffStoreContext) -> Int? {
         let base = ctx.hireDate ?? ctx.joinedAt.map { String($0.prefix(10)) }
         guard let base else { return nil }
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        let f = StaffFormatters.ymd
         guard let d = f.date(from: String(base.prefix(10))) else { return nil }
         return max(1, (Calendar.current.dateComponents([.day], from: d, to: Date()).day ?? 0) + 1)
     }
@@ -405,7 +413,7 @@ public struct StaffDashboardView: View {
         let workedSet = Set(monthAtt.map(\.workDate))
         var leaveSet = Set<String>()
         for l in leaves where l.status != "rejected" {
-            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+            let f = StaffFormatters.ymd
             if var d = f.date(from: l.startDate), let e = f.date(from: l.endDate) {
                 while d <= e { leaveSet.insert(ymd(d)); d = cal.date(byAdding: .day, value: 1, to: d) ?? e.addingTimeInterval(1) }
             }
@@ -814,20 +822,14 @@ private struct StaffTodayCard: View {
     }
 
     private func hhmm(_ t: String) -> String { String(t.prefix(5)) }
-    private func hm(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
-    }
+    private func hm(_ d: Date) -> String { StaffFormatters.hm.string(from: d) }
     private func timeToday(_ t: String, base: Date) -> Date? {
         let parts = t.split(separator: ":").compactMap { Int($0) }
         guard parts.count >= 2 else { return nil }
         return Calendar.current.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: base)
     }
     private func isoDate(_ s: String) -> Date? {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = f.date(from: s) { return d }
-        f.formatOptions = [.withInternetDateTime]
-        return f.date(from: s)
+        StaffFormatters.isoFractional.date(from: s) ?? StaffFormatters.isoPlain.date(from: s)
     }
     private func fmtDur(_ min: Int) -> String {
         let h = min / 60, m = min % 60
@@ -854,7 +856,7 @@ private struct StaffLeaveSheet: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         HStack(spacing: 8) {
@@ -945,7 +947,7 @@ private struct StaffRightsCard: View {
     private var daysSinceHire: Int {
         let base = hireDate ?? joinedAt.map { String($0.prefix(10)) }
         guard let base else { return 0 }
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        let f = StaffFormatters.ymd
         guard let d = f.date(from: String(base.prefix(10))) else { return 0 }
         return max(0, Calendar.current.dateComponents([.day], from: d, to: Date()).day ?? 0)
     }
@@ -1192,7 +1194,7 @@ private struct StaffAllowanceSheet: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         HStack(spacing: 8) {
@@ -1229,7 +1231,7 @@ private struct StaffAllowanceSheet: View {
                         Button {
                             submitting = true
                             Task {
-                                let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+                                let f = StaffFormatters.ymd
                                 await onSubmit(f.string(from: date), type, totalMin, reason)
                                 submitting = false
                                 dismiss()

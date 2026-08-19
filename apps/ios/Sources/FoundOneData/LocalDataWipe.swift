@@ -16,7 +16,7 @@ public enum LocalDataWipe {
     ///   - 로드맵/스테이지 @AppStorage 집합은 RoadmapStore.clearAllAppStorage 와 동일하게 유지.
     ///   - "owner." 은 birthYear·ncbScore·consideringClosure·isDisabledOwner (민감 프로필).
     ///   - "foundone." 은 로드맵 decisions/cluster 등 — 로그아웃 시 함께 비운다(재온보딩 허용).
-    static let userDataPrefixes: [String] = [
+    public static let userDataPrefixes: [String] = [
         "biz.", "bom.", "cd.", "cert.", "construction.", "contract.", "cs.",
         "eda.", "fct.", "fin.", "fr.", "ge.", "gl.", "gtm.", "hiring.", "hp.",
         "insTax.", "lab.", "loan.", "loc.", "mfg.", "mpw.", "mvp.", "om.",
@@ -24,6 +24,8 @@ public enum LocalDataWipe {
         "ps.", "regsub.", "roadmap.", "sf.", "src.", "stage.", "sto.",
         "taxGuide.", "vc.", "foundone.",
         "owner.",
+        // 전환 funnel 수동 입력(ConversionFunnelFocusCard @AppStorage) + 프로필 알림 토글 (2026-08-19 추가)
+        "funnel.commerce.", "funnel.saas.", "profile.notif.",
     ]
 
     /// 모든 사용자 데이터 키 제거. AuthCoordinator.signOut/deleteAccount 에서 호출.

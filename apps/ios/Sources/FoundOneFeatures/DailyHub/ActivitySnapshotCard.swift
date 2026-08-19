@@ -70,11 +70,24 @@ public struct ActivitySnapshotCard: View {
     /// 오늘 기준 최근 7일 슬롯 (-6, -5, …, 0=오늘).
     /// 데이터가 없는 날도 슬롯은 유지 → 차트가 항상 7칸 출력.
     /// 사장님 피드백 (2026-05-14): "매출 흐름 카드를 7일(7칸으로)" — 캘린더처럼.
+    /// 재사용 포매터 — body 마다 DateFormatter() 생성 방지 (성능 2026-08-19).
+    private static let isoKST: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return f
+    }()
+    private static let weekdayKo: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale(identifier: "ko_KR"); f.dateFormat = "E"; return f
+    }()
+    private static let weekdayEn: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US"); f.dateFormat = "E"; return f
+    }()
+
     private var weekSlots: [WeekSlot] {
         let cal = Calendar(identifier: .gregorian)
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
-        df.timeZone = TimeZone(identifier: "Asia/Seoul")
+        let df = Self.isoKST
         let today = Date()
         let byDate = Dictionary(uniqueKeysWithValues: entries.map { ($0.date, $0) })
 
@@ -323,9 +336,7 @@ public struct ActivitySnapshotCard: View {
 
     /// 7 슬롯 → 7 막대. 데이터 없는 슬롯은 value 0 (빈 막대 자리표시).
     private func makeBars() -> [BUBarChart.Bar] {
-        let df = DateFormatter()
-        df.locale = Locale(identifier: ko ? "ko_KR" : "en_US")
-        df.dateFormat = "E"
+        let df = ko ? Self.weekdayKo : Self.weekdayEn
 
         return weekSlots.map { slot in
             let label = df.string(from: slot.date)

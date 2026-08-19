@@ -33,7 +33,7 @@ public struct MenuRecipeSheet: View {
     public var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(spacing: BUSpacing.sm) {
                         if menus.isEmpty {
@@ -206,7 +206,7 @@ struct RecipeEditorView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            BUBackgroundSurface()
+            BUFlatBackground()
             ScrollView {
                 VStack(spacing: BUSpacing.md) {
                     summaryCard

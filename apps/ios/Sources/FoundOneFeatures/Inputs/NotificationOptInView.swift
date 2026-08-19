@@ -57,10 +57,18 @@ public struct NotificationOptInView: View {
 
                 // ── 액션 버튼 ──
                 VStack(spacing: BUSpacing.xs) {
+                    // 시스템 권한이 이미 거절된 상태면 앱 내 다이얼로그를 다시 띄울 수 없다 →
+                    //   「설정에서 켜기」로 iOS 설정(이 앱 페이지)을 연다. (2026-08-19 nag 방지)
+                    let isDenied = flow.status == .denied
                     Button {
-                        Task {
-                            await flow.requestAndSchedule()
+                        if isDenied {
+                            flow.openSystemSettings()
                             onDone()
+                        } else {
+                            Task {
+                                await flow.requestAndSchedule()
+                                onDone()
+                            }
                         }
                     } label: {
                         HStack {
@@ -68,9 +76,9 @@ public struct NotificationOptInView: View {
                                 ProgressView()
                                     .tint(.white)
                             } else {
-                                Image(systemName: "bell.fill")
+                                Image(systemName: isDenied ? "gearshape.fill" : "bell.fill")
                             }
-                            Text("알림 받기")
+                            Text(isDenied ? "설정에서 켜기" : "알림 받기")
                         }
                         .font(BUFont.label)
                         .foregroundStyle(.white)
@@ -81,6 +89,8 @@ public struct NotificationOptInView: View {
                     .disabled(flow.status == .requesting)
 
                     Button {
+                        // 「나중에」 — 14일 동안 자동 재표시 안 함 (UserDefaults notif.optin.dismissedAt).
+                        flow.markDismissed()
                         onDone()
                     } label: {
                         Text("나중에")

@@ -215,6 +215,7 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
             .update(RoadmapTouchDTO(updated_at: nowIso))
             .eq("id", value: roadmapId)
             .execute()
+        RealtimeEcho.markLocalWrite(table: "roadmaps")   // 자기 에코 억제 (roadmaps user_id 구독)
     }
 
     public func delete(stageId: String) async throws {

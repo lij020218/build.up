@@ -54,51 +54,58 @@ public struct RoadmapView: View {
         BusinessCluster(rawValue: clusterRaw) ?? .offlineFood
     }
 
-    private var stages: [RoadmapStage] {
-        RoadmapSampleData.stages(for: cluster) { stageId in
+    /// 로드맵 스냅샷 — body 당 1회 계산 (stages 배열 + 파생 카운트). 성능 2026-08-19:
+    ///   종전엔 header/progress/timeline 이 각각 `stages` computed 를 재호출해 path 를 3~4회 재구성했다.
+    private struct Snapshot {
+        let stages: [RoadmapStage]
+        let completedCount: Int
+        var totalCount: Int { stages.count }
+        var percent: Int {
+            totalCount > 0 ? Int((Double(completedCount) / Double(totalCount)) * 100) : 0
+        }
+    }
+
+    private func makeSnapshot() -> Snapshot {
+        let stages = RoadmapSampleData.stages(for: cluster) { stageId in
             switch store.status(for: stageId) {
             case .completed: return .completed
             case .current:   return .current
             case .upcoming:  return .upcoming
             }
         }
+        return Snapshot(stages: stages, completedCount: stages.filter { $0.status == .completed }.count)
     }
 
     public init() {}
-
-    private var completedCount: Int { stages.filter { $0.status == .completed }.count }
-    private var totalCount: Int     { stages.count }
-    private var percent: Int {
-        totalCount > 0 ? Int((Double(completedCount) / Double(totalCount)) * 100) : 0
-    }
 
     public var body: some View {
         // 2026-05-19 사장님 결정: stage 는 sheet 가 아니라 navigation push.
         //   RoadmapView 가 NavigationStack 을 제공 → StageRow 는 NavigationLink 로 push.
         //   로드맵 과정 중에 stage 가 중심이라 popup 보다는 화면 전환이 자연스러움.
+        let snap = makeSnapshot()
         NavigationStack(path: $stagePath) {
             // ⚠️ 2026-08-06 되돌림: NavigationStack 은 자체 불투명 배경을 칠하므로
             //   MobileShell 의 풀스크린 Aurora 가 가려져 로드맵만 흰 화면이 됐다.
-            //   (2026-05-25 에 "중복"이라 판단해 지웠던 것이 원인 — TodayView 의
-            //    NavigationStack 도 안쪽에 BUBackgroundSurface 를 둔다.)
+            //   (2026-05-25 에 "중복"이라 판단해 지웠던 것이 원인.)
+            //   2026-08-19: Aurora 는 정적 래스터(1회)라 여기 1장 추가는 저비용 — 홈과 동일 룩 유지.
             ZStack {
                 BUBackgroundSurface()
                     .ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         // ── 헤더: eyebrow + 타이틀 + 우측 큰 % ──
-                        header
+                        header(snap)
                             .padding(.horizontal, BUSpacing.md)
                             .padding(.top, BUSpacing.md)
                             .padding(.bottom, 12)
 
                         // ── 세그먼트 진행 바 ──
-                        segmentedProgress
+                        segmentedProgress(snap)
                             .padding(.horizontal, BUSpacing.md)
                             .padding(.bottom, 20)
 
                         // ── 평면 stage 리스트 + 수직 타임라인 ──
-                        timeline
+                        timeline(snap)
                             .padding(.horizontal, BUSpacing.md)
 
                         Spacer(minLength: BUSpacing.xxxl)
@@ -164,7 +171,7 @@ public struct RoadmapView: View {
 
     // MARK: - Header
 
-    private var header: some View {
+    private func header(_ snap: Snapshot) -> some View {
         HStack(alignment: .top, spacing: BUSpacing.md) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("창업 로드맵")
@@ -205,17 +212,17 @@ public struct RoadmapView: View {
                 // 진행 0일 때 거대한 "0%" 가 화면을 지배하며 실패처럼 읽혔다 →
                 //   숫자 무게를 낮추고, 시작 전에는 회색으로 물러나게 한다 (2026-08-06).
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text("\(percent)")
+                    Text("\(snap.percent)")
                         .font(.system(size: 30, weight: .semibold))
                         .tracking(-1.2)
-                        .foregroundStyle(completedCount > 0 ? BUColor.ink : BUColor.inkMuted.opacity(0.55))
+                        .foregroundStyle(snap.completedCount > 0 ? BUColor.ink : BUColor.inkMuted.opacity(0.55))
                         .monospacedDigit()
                     Text("%")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(BUColor.inkMuted.opacity(0.6))
                 }
                 .lineLimit(1)
-                Text(completedCount > 0 ? "\(completedCount) / \(totalCount) 완료" : "\(totalCount)단계 · 시작 전")
+                Text(snap.completedCount > 0 ? "\(snap.completedCount) / \(snap.totalCount) 완료" : "\(snap.totalCount)단계 · 시작 전")
                     .font(.system(size: 11.5, weight: .semibold))
                     .foregroundStyle(BUColor.inkMuted.opacity(0.8))
                 if showAiHandoffHint {
@@ -266,15 +273,15 @@ public struct RoadmapView: View {
 
     /// 연속 트랙 하나. 종전에는 단계 수만큼(오프라인 21칸) 조각을 늘어놨는데,
     /// 진행 0일 때 회색 부스러기처럼 보이고 단계가 많을수록 지저분했다 (2026-08-06 정리).
-    private var segmentedProgress: some View {
+    private func segmentedProgress(_ snap: Snapshot) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(BUColor.midnight.opacity(0.08))
                 Capsule()
                     .fill(BUColor.midnight)
-                    .frame(width: max(completedCount > 0 ? 8 : 0,
-                                      geo.size.width * CGFloat(completedCount) / CGFloat(max(1, totalCount))))
-                    .animation(.easeOut(duration: 0.4), value: completedCount)
+                    .frame(width: max(snap.completedCount > 0 ? 8 : 0,
+                                      geo.size.width * CGFloat(snap.completedCount) / CGFloat(max(1, snap.totalCount))))
+                    .animation(.easeOut(duration: 0.4), value: snap.completedCount)
             }
         }
         .frame(height: 4)
@@ -282,7 +289,7 @@ public struct RoadmapView: View {
 
     // MARK: - Timeline (평면 리스트 + 단일 vertical line)
 
-    private var timeline: some View {
+    private func timeline(_ snap: Snapshot) -> some View {
         ZStack(alignment: .topLeading) {
             // 수직 라인 (web: linear-gradient primary → fade)
             // left:10px (paddingLeft:28px 기준), top:20px, bottom:20px
@@ -298,8 +305,8 @@ public struct RoadmapView: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                let currentIdx = stages.firstIndex { $0.status == .current }
-                ForEach(Array(stages.enumerated()), id: \.element.id) { idx, stage in
+                let currentIdx = snap.stages.firstIndex { $0.status == .current }
+                ForEach(Array(snap.stages.enumerated()), id: \.element.id) { idx, stage in
                     StageRow(
                         stage: stage,
                         index: idx,

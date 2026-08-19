@@ -37,6 +37,32 @@ private let logger = Logger(subsystem: "com.foundone.ios", category: "TodayView"
 
 // MARK: - TodayView
 
+/// 재사용 DateFormatter — body 마다 DateFormatter() 생성은 비용이 큼(성능 2026-08-19).
+enum TodayFormatters {
+    /// "yyyy-MM-dd" UTC — 달력 날짜 문자열 → 요일 계산용.
+    static let isoUTC: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f
+    }()
+    /// "yyyy-MM" — 이번 달 prefix 필터.
+    static let yearMonth: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM"
+        return f
+    }()
+    /// "M월 d일 EEE" ko_KR — 헤더 날짜.
+    static let koMonthDayWeekday: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        f.dateFormat = "M월 d일 EEE"
+        return f
+    }()
+}
+
 public struct TodayView: View {
 
     let mock: MockData
@@ -66,7 +92,9 @@ public struct TodayView: View {
     @State private var showCustomerSheet = false
     @State private var showBasisSheet = false
     /// 인앱 알림함 (출근·초대·연차·수당) — 헤더 벨. 데모/비로그인은 자동 비활성(빈 목록). 2026-07-14
-    @StateObject private var notifStore = NotificationsStore(client: BUSupabase.shared.client)
+    ///   성능(2026-08-19): 소유자는 MainTabs(탭 전환에도 생존·재구독 없음). 미주입(프리뷰·데모)은 공용 fallback.
+    @ObservedObject private var notifStore: NotificationsStore
+    private static let fallbackNotifStore = NotificationsStore(client: BUSupabase.shared.client)
     /// 가게 세팅 미션 카드 — 기존 등록 판정 휴리스틱에 decisions 필요
     @Environment(RoadmapStore.self) private var roadmapStore
     @State private var showNotifications = false
@@ -89,9 +117,11 @@ public struct TodayView: View {
         coaching: CoachingHistoryStore? = nil,
         saas: SaasMetricsStore? = nil,
         subscription: SubscriptionStore? = nil,
+        notifStore: NotificationsStore? = nil,
         onSwitchTab: ((AppRoot.Tab) -> Void)? = nil
     ) {
         self.mock = mock
+        self._notifStore = ObservedObject(wrappedValue: notifStore ?? Self.fallbackNotifStore)
         self.healthResult = HealthScore.calculate(
             entries: mock.entries,
             costs: mock.costs,
@@ -120,7 +150,8 @@ public struct TodayView: View {
 
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: BUSpacing.shellGap) {
+            // 성능(2026-08-19): 카드 수십 장 — LazyVStack 으로 화면 밖 카드 지연 생성.
+            LazyVStack(spacing: BUSpacing.shellGap) {
                 // Header (사장님 추가 — 카드 아님) + 알림 벨 (2026-07-14)
                 StoreStatusHeader(mock: mock, notifUnread: notifStore.unreadCount, onBell: { showNotifications = true })
                 HomeRitualBanner()
@@ -316,9 +347,9 @@ public struct TodayView: View {
             NotificationsSheet(store: notifStore)
         }
         // 인앱 알림 로드 + 실시간 구독 (2026-07-14). 데모/비로그인은 store 가 자동 no-op.
+        //   start() 는 멱등(채널 있으면 skip). stop 은 소유자(MainTabs) 가 담당 — 탭 전환마다 재구독 방지.
         .task { await notifStore.start() }
         .task { await loadInvitedStaff() }
-        .onDisappear { Task { await notifStore.stop() } }
         .sheet(isPresented: $showCustomerSheet) {
             if let si = storeInfo {
                 let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
@@ -435,9 +466,7 @@ public struct TodayView: View {
         let weakestDayPct: Int? = {
             let withSales = sortedEntries.filter { $0.sales > 0 }
             guard withSales.count >= 14 else { return nil }
-            let df = DateFormatter()
-            df.dateFormat = "yyyy-MM-dd"
-            df.timeZone = TimeZone(identifier: "UTC")
+            let df = TodayFormatters.isoUTC
             var cal = Calendar(identifier: .gregorian)
             cal.timeZone = TimeZone(identifier: "UTC")!
             var sums = [Double](repeating: 0, count: 7)
@@ -512,12 +541,7 @@ public struct TodayView: View {
 
     /// 이번 달 누적 고객 (실데이터) — 현재 월 entry 의 고객 수 합.
     private var thisMonthCustomers: Int {
-        let ym: String = {
-            let df = DateFormatter()
-            df.locale = Locale(identifier: "en_US_POSIX")
-            df.dateFormat = "yyyy-MM"
-            return df.string(from: Date())
-        }()
+        let ym = TodayFormatters.yearMonth.string(from: Date())
         return mock.entries.filter { $0.date.hasPrefix(ym) }.reduce(0) { $0 + $1.customers }
     }
 
@@ -532,10 +556,7 @@ public struct TodayView: View {
     private func monthPrefix(offset: Int) -> String {
         let cal = Calendar.current
         let base = cal.date(byAdding: .month, value: offset, to: Date()) ?? Date()
-        let df = DateFormatter()
-        df.locale = Locale(identifier: "en_US_POSIX")
-        df.dateFormat = "yyyy-MM"
-        return df.string(from: base)
+        return TodayFormatters.yearMonth.string(from: base)
     }
     private var thisMonthSales: Double {
         let ym = monthPrefix(offset: 0)
@@ -853,10 +874,7 @@ private struct Row1Greeting: View {
     }
 
     private var dateString: String {
-        let df = DateFormatter()
-        df.locale = Locale(identifier: "ko_KR")
-        df.dateFormat = "M월 d일 EEE"
-        return df.string(from: Date())
+        TodayFormatters.koMonthDayWeekday.string(from: Date())
     }
 
     private var modeLabel: String {
@@ -1209,7 +1227,7 @@ private struct AIActionsSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         // 안내 텍스트

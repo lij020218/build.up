@@ -472,7 +472,9 @@ public struct CustomPullSetupSheet: View {
             if result.success, let data = result.data {
                 phase = .testSucceeded(data)
             } else {
-                let msg = result.error ?? "사장님 서버가 \(result.httpStatus) 로 응답했습니다."
+                let msg = result.error
+                    ?? result.httpStatus.map { "사장님 서버가 \($0) 로 응답했습니다." }
+                    ?? "사장님 서버에 연결하지 못했습니다."
                 phase = .testFailed(msg)
             }
         } catch let e as FunnelConnectionError {

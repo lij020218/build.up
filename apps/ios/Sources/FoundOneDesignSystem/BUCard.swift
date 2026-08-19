@@ -6,13 +6,13 @@
 //   Hero outer (CEOMorningHero):
 //     radius 24 / padding 28-28-24 / 3-stop diagonal gradient (#F7F8FE → #EEF0FB → #E5E8F7)
 //     border 1px rgba(25,25,112,0.08)
-//     shadow: inset highlight + 0 8px 32px rgba(25,25,112,0.06)
+//     shadow: inset highlight + 단일 soft shadow(BUShadow.hero, radius 12) — 웹 0 8px 32px 근사
 //     + 2 radial ambient glows (right-top blue / left-bottom midnight)
 //
 //   Outer card (heroPanel/opsCard/activityCard):
 //     radius 20 / padding 22 / 180deg gradient (#fff → #f7f8fe)
 //     border 1px rgba(25,25,112,0.10)
-//     shadow: 0 1px 3px + 0 12px 24px -12px (dual layer)
+//     shadow: 단일 레이어(BUShadow.card, radius 10) — 웹 dual layer 근사(성능 2026-08-19)
 //
 //   Headline (KPI 미니카드):
 //     radius 16 / padding 20 / 동일 gradient + border + shadow

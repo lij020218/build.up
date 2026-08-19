@@ -20,6 +20,7 @@
 
 import SwiftUI
 import Combine
+import OSLog
 import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneComponents
@@ -56,6 +57,14 @@ public struct AppRoot: View {
     @State private var selectedTab: Tab = .home
     @Environment(\.scenePhase) private var scenePhase   // 포그라운드 복귀 시 원격 재동기화 트리거
     @State private var realtimeSync: RealtimeSyncManager? = nil   // 2단계 실시간 동기화 구독
+    /// loadDashboardIfNeeded 재진입 가드 (root 인증 관측자 + AuthenticatedLoadingView.task 동시 호출 방지)
+    @State private var dashboardLoadInFlight = false
+    /// refreshAllFromRemote 가 마지막으로 적용한 대시보드 스냅샷 — 동일하면 재주입 skip.
+    @State private var lastAppliedDashboardSnapshot: UserDashboardSnapshot? = nil
+    /// 동기화 계측 (Console.app: subsystem "foundone", category "sync").
+    private static let syncLogger = Logger(subsystem: "foundone", category: "sync")
+    private static let syncSignpostLog = OSLog(subsystem: "foundone", category: "sync")
+    nonisolated(unsafe) private static var refreshCallCount: Int = 0
     /// 전역 "진행 초기화" 코디네이터 — ProfileView 가 트리거, AppRoot 가 오버레이 표시.
     @State private var resetCoordinator = ResetCoordinator()
     /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
@@ -186,7 +195,7 @@ public struct AppRoot: View {
                         MainTabs(
                             store: store,
                             subIndustryId: profileSubIndustryId,
-                            storeInfo: storeInfoStore ?? Self.makeFallbackStoreInfo(),
+                            storeInfo: storeInfoStore ?? storeInfoFallback,
                             cashflow: cashflowStore,
                             coaching: coachingStore,
                             saas: saasStore,
@@ -208,7 +217,10 @@ public struct AppRoot: View {
                                 || ProcessInfo.processInfo.environment["BU_DEMO_STAGE"] != nil
                             if demoMode { return }
                             #endif
-                            if notificationFlow.status != .granted {
+                            // 자동 sheet 는 14일에 한 번만 — 「나중에」 쿨다운(notif.optin.dismissedAt) 존중.
+                            //   .denied 상태면 sheet 안의 주 버튼이 「설정에서 켜기」로 바뀐다. (2026-08-19 nag 방지)
+                            if notificationFlow.shouldAutoPrompt {
+                                notificationFlow.markDismissed()   // 표시 자체를 1회로 카운트 → 닫는 방법과 무관하게 14일 쿨다운
                                 showNotificationSheet = true
                             }
                         }
@@ -241,38 +253,17 @@ public struct AppRoot: View {
                         .padding(.trailing, BUSpacing.sm)
                         #endif
                     }
-                    .task {
-                        // 인증 상태를 *지속* 관측 + 계정 전환 격리.
-                        //   세션 uid 가 직전 영구저장된 계정과 다르면(다른 계정 로그인·앱 재실행 후 전환)
-                        //   이전 계정의 로컬 데이터(@AppStorage 로드맵·스테이지·PII)를 *먼저 wipe* 하고
-                        //   dashboardStore(메모리 매출·비용)도 리셋해 강제 재로드 → cross-account 누출 차단.
-                        //   (웹 hydrateStoresForUser/__foundone_uid 대응. 2026-06-22 P0: 동명이인 누출 신고.)
-                        var loadedUid: String? = nil
-                        for await change in BUSupabase.shared.authStateChanges {
-                            if let uid = change.session?.user.id.uuidString {
-                                if loadedUid != uid {
-                                    let lastKey = "__foundone_last_uid"  // wipe prefix 에 안 걸리는 키
-                                    if UserDefaults.standard.string(forKey: lastKey) != uid {
-                                        // 다른 계정 — 이전 계정 로컬 데이터 제거(서버 로드로만 다시 채워짐).
-                                        LocalDataWipe.wipeAllLocalUserData()
-                                        UserDefaults.standard.set(uid, forKey: lastKey)
-                                    }
-                                    dashboardStore = nil  // 새 계정 데이터로 강제 재로드(가드 해제)
-                                    userRole = nil        // 역할 게이트 재확정 (계정 전환 시 직원↔사장 누출 방지)
-                                    loadedUid = uid
-                                    await loadDashboardIfNeeded(coordinator: coordinator)
-                                }
-                            } else {
-                                // signedOut / tokenRefreshFailed — 비인증 전환 + 로컬 정리(self-gated)
-                                loadedUid = nil
-                                userRole = nil
-                                coordinator.handleSessionLost()
-                            }
-                        }
-                    }
             }
         }
         .environment(roadmapStore)
+        // 인증 상태 *앱 수명 내내* 관측 + 계정 전환 격리 (2026-08-19: 종전엔 SignInView 의 .task 라
+        //   로그인 직후 뷰가 사라지며 관측이 끊겨, 세션 만료·토큰 refresh 실패·다른 기기 로그아웃을
+        //   메인 화면에서 감지하지 못했다. 이제 root .task 라 로그인 뒤에도 계속 돈다.)
+        //   세션 uid 가 직전 영구저장된 계정과 다르면(다른 계정 로그인·앱 재실행 후 전환)
+        //   이전 계정의 로컬 데이터(@AppStorage 로드맵·스테이지·PII)를 *먼저 wipe* 하고
+        //   dashboardStore(메모리 매출·비용)도 리셋해 강제 재로드 → cross-account 누출 차단.
+        //   (웹 hydrateStoresForUser/__foundone_uid 대응. 2026-06-22 P0: 동명이인 누출 신고.)
+        .task { await observeAuthStateForAppLifetime() }
         // 포그라운드 복귀 시 원격 재동기화 — 웹에서 저장한 내용이 앱에 바로 반영되게.
         //   초기 로드(dashboardStore==nil) 전에는 skip — loadDashboardIfNeeded 가 담당.
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -398,8 +389,55 @@ public struct AppRoot: View {
         }
     }
 
+    /// 인증 스트림 관측 — 세션 소실(signedOut·userDeleted·refresh 실패로 인한 nil 세션) → handleSessionLost,
+    ///   uid 변경 → 로컬 wipe + 스토어 재로드. root .task 에서 호출되어 앱 수명 동안 유지된다.
+    ///   (기존 SignInView.task 의 wipe 로직을 그대로 옮김 — 중복 금지)
+    @MainActor
+    private func observeAuthStateForAppLifetime() async {
+        var loadedUid: String? = nil
+        for await change in BUSupabase.shared.authStateChanges {
+            if let uid = change.session?.user.id.uuidString {
+                guard loadedUid != uid else { continue }
+                let lastKey = "__foundone_last_uid"  // wipe prefix 에 안 걸리는 키
+                if UserDefaults.standard.string(forKey: lastKey) != uid {
+                    // 다른 계정 — 이전 계정 로컬 데이터 제거(서버 로드로만 다시 채워짐).
+                    LocalDataWipe.wipeAllLocalUserData()
+                    UserDefaults.standard.set(uid, forKey: lastKey)
+                }
+                // 콜드 스타트: AuthenticatedLoadingView.task 가 이미 같은 계정을 로드(중)이면 버리지 않는다.
+                //   그 외(계정 전환·재로그인)는 스토어를 비워 새 계정 데이터로 강제 재로드(가드 해제).
+                let sameAccountAlreadyLoaded = dashboardStore != nil
+                    && coordinator.currentSession?.userId.uuidString == uid
+                if !sameAccountAlreadyLoaded {
+                    dashboardStore = nil
+                    userRole = nil        // 역할 게이트 재확정 (계정 전환 시 직원↔사장 누출 방지)
+                }
+                loadedUid = uid
+                await loadDashboardIfNeeded(coordinator: coordinator)
+            } else {
+                // 세션 없음 — signedOut / userDeleted / (SDK 가 refresh 실패를 signedOut 으로 보고) /
+                //   콜드 스타트 initialSession(nil). handleSessionLost 는 self-gated(이미 비인증이면 no-op).
+                loadedUid = nil
+                userRole = nil
+                coordinator.handleSessionLost()
+                // 이전 계정 스토어·실시간 채널 해제 — 다음 로그인이 반드시 fresh 로드를 타게 (계정 격리).
+                if change.event != .initialSession {
+                    dashboardStore = nil
+                    if let rt = realtimeSync {
+                        await rt.stop()
+                        realtimeSync = nil
+                    }
+                }
+            }
+        }
+    }
+
     private func loadDashboardIfNeeded(coordinator: AuthCoordinator) async {
         guard let session = coordinator.currentSession, dashboardStore == nil else { return }
+        // 재진입 가드 — 콜드 스타트에 AuthenticatedLoadingView.task 와 root 인증 관측자가 동시에 호출할 수 있다.
+        guard !dashboardLoadInFlight else { return }
+        dashboardLoadInFlight = true
+        defer { dashboardLoadInFlight = false }
 
         // 콜드 런치 시에도 다른 기기 초기화를 감지해 stale 로컬을 비운다(이후 빈 서버 로드 → 온보딩).
         //   dashboardStore 생성 전이라 roadmapStore.decisions(@AppStorage)로 hasLocalData 판단.
@@ -608,12 +646,19 @@ public struct AppRoot: View {
 
     private func refreshAllFromRemote() async {
         guard let session = coordinator.currentSession else { return }
+        // 호출 계측 — realtime 자기 에코 루프·중복 트리거 진단용 (Console: subsystem foundone / category sync).
+        Self.refreshCallCount &+= 1
+        let refreshSeq = Self.refreshCallCount
+        let signpostID = OSSignpostID(log: Self.syncSignpostLog)
+        os_signpost(.begin, log: Self.syncSignpostLog, name: "refreshAllFromRemote", signpostID: signpostID, "seq=%d", refreshSeq)
+        defer { os_signpost(.end, log: Self.syncSignpostLog, name: "refreshAllFromRemote", signpostID: signpostID) }
+        Self.syncLogger.info("refreshAllFromRemote #\(refreshSeq, privacy: .public)")
         // 다른 기기 초기화 표식 확인 — 감지 시 로컬 wipe 후 flush-우선 refresh 스킵(stale 부활 차단).
         if await checkResetMarkerAndWipe() { return }
         let supabase = BUSupabase.shared.client
         let userId = session.userId
 
-        // 1. 내 가게 — 미저장분 flush 후 재조회 (웹에서 바꾼 상호명·주소·서류 등 반영)
+        // 1. 내 가게 — 미저장분(isDirty)이 있을 때만 flush 후 재조회 (웹에서 바꾼 상호명·주소·서류 등 반영)
         await storeInfoStore?.refresh()
 
         // 2. 로드맵 decisions/stage 입력 — 원격과 key-merge (웹에서 완료한 단계 반영)
@@ -628,15 +673,22 @@ public struct AppRoot: View {
                     fallbackUserName: session.displayName ?? session.email ?? "사장님"
                 )
                 let snapshot = try await repo.fetchSnapshot()
-                store.applyRemoteData(
-                    profile: snapshot.profile,
-                    entries: snapshot.entries,
-                    costs: snapshot.costs
-                )
-                // 업종 변경(웹·다른 기기)도 로드맵 경로에 반영 — cluster re-hydrate.
-                Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, startupType: snapshot.startupType, into: roadmapStore)
+                // 스냅샷이 직전 적용값과 동일(Hashable)하면 store 재주입·hydrate 를 건너뛴다 —
+                //   자기 에코·중복 트리거로 인한 불필요한 @Published 발행(전 화면 리렌더) 방지 (2026-08-19).
+                if snapshot != lastAppliedDashboardSnapshot {
+                    store.applyRemoteData(
+                        profile: snapshot.profile,
+                        entries: snapshot.entries,
+                        costs: snapshot.costs
+                    )
+                    // 업종 변경(웹·다른 기기)도 로드맵 경로에 반영 — cluster re-hydrate.
+                    Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, startupType: snapshot.startupType, into: roadmapStore)
+                    lastAppliedDashboardSnapshot = snapshot
+                } else {
+                    Self.syncLogger.debug("dashboard snapshot unchanged — skip apply")
+                }
                 // 오퍼링 탭 라벨도 세부업종 변경을 따라오도록 갱신 (nil 이면 기존 값 보존 — hydrate 와 동일 방침).
-                if let sub = snapshot.subIndustryId { profileSubIndustryId = sub }
+                if let sub = snapshot.subIndustryId, sub != profileSubIndustryId { profileSubIndustryId = sub }
             } catch { /* best-effort — 기존 값 유지 */ }
         }
 
@@ -673,13 +725,6 @@ public struct AppRoot: View {
                 hasPopbill: unified.sources.popbill, basis: unified.basis
             )
         }
-    }
-
-    /// 로딩 완료 전 임시 — 빈 state. load() 가 끝나면 즉시 storeInfoStore 가 set 되어
-    /// MainTabs 가 새 store 로 리렌더됨. (FallbackRepo 는 read 시 즉시 빈 state 반환.)
-    @MainActor
-    private static func makeFallbackStoreInfo() -> StoreInfoStore {
-        StoreInfoStore(repository: FallbackStoreInfoRepository())
     }
 
     /// 원격 업종(business_profiles)에서 로드맵 cluster/selectedIndustryId 를 hydrate.
@@ -1117,6 +1162,12 @@ struct AuthenticatedLoadingView: View {
 // MARK: - MainTabs
 
 private struct MainTabs: View {
+    /// 업로더용 — 로그인 사용자 id (미로그인 시 throw → 업로더가 authRequired 로 변환)
+    @Sendable static func requireUserId() async throws -> UUID {
+        if let id = await BUSupabase.shared.currentUser?.id { return id }
+        throw URLError(.userAuthenticationRequired)
+    }
+
     let store: DashboardStore
     /// 프로필 세부업종 — 오퍼링 탭 라벨 정밀 해석 (AppRoot 원격 스냅샷에서 주입, nil=미로드).
     let subIndustryId: String?
@@ -1128,6 +1179,8 @@ private struct MainTabs: View {
     let subscription: SubscriptionStore?
     let coordinator: AuthCoordinator
     @Binding var selectedTab: AppRoot.Tab
+    /// 인앱 알림함 — 탭 전환에도 생존(TodayView 재생성 시 재구독·재로드 방지, 성능 2026-08-19).
+    @StateObject private var notifStore = NotificationsStore(client: BUSupabase.shared.client)
 
     private var mockData: MockData {
         // 스타트업 신호용 — 모두 실데이터 기반(가짜 금지).
@@ -1180,10 +1233,12 @@ private struct MainTabs: View {
             }
             return subIndustryId
         }()
+        // 성능(2026-08-19): mockData 는 entries 정렬·합산을 포함 — body 당 1회만 계산해 전달.
+        let mock = mockData
         FoundOneMobileShell(
             selectedTab: $selectedTab,
-            tabs: webSurfaceTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
-            bottomTabs: bottomQuickTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
+            tabs: webSurfaceTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mock.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
+            bottomTabs: bottomQuickTabs(businessLaunched: store.businessLaunched, offeringCategoryId: mock.resolverInput.categoryId, offeringSubIndustryId: resolvedSubIndustryId),
             // 사이드바 푸터 — 계정 정보 + 로그아웃 (웹 .bup-sidebar-footer 미러, 2026-08-14)
             accountName: coordinator.currentSession?.displayName,
             accountEmail: coordinator.currentSession?.email,
@@ -1192,7 +1247,7 @@ private struct MainTabs: View {
             switch selectedTab {
             case .home:
                 if store.businessLaunched {
-                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow, coaching: coaching, saas: saas, subscription: subscription, onSwitchTab: { selectedTab = $0 })
+                    TodayView(mock: mock, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow, coaching: coaching, saas: saas, subscription: subscription, notifStore: notifStore, onSwitchTab: { selectedTab = $0 })
                 } else {
                     PreLaunchHomeView(
                         store: store,
@@ -1208,17 +1263,21 @@ private struct MainTabs: View {
             case .franchise:
                 FranchiseView()
             case .marketing:
-                MarketingView(store: store, mock: mockData)
+                MarketingView(store: store, mock: mock)
             case .tax:
                 TaxView(store: store)
             case .reports:
-                ReportsView(mock: mockData)
+                ReportsView(mock: mock)
             case .finance:
-                FinanceView(mock: mockData)
+                FinanceView(mock: mock)
             case .offerings:
-                OfferingsView(storeInfoStore: storeInfo, fallbackCategoryId: mockData.resolverInput.categoryId)
+                OfferingsView(storeInfoStore: storeInfo, fallbackCategoryId: mock.resolverInput.categoryId)
             case .analytics:
-                MyStoreView(store: store, storeInfo: storeInfo)
+                MyStoreView(
+                    store: store, storeInfo: storeInfo,
+                    photoUploader: StorePhotoUploader(supabase: BUSupabase.shared.client, getUserId: Self.requireUserId),
+                    documentUploader: BusinessDocumentUploader(supabase: BUSupabase.shared.client, getUserId: Self.requireUserId)
+                )
             case .team:
                 TeamManagementView(storeInfoStore: storeInfo)
             case .profile:
@@ -1242,6 +1301,8 @@ private struct MainTabs: View {
                     .padding(.bottom, 12)
             }
         }
+        .task { await notifStore.start() }
+        .onDisappear { Task { await notifStore.stop() } }
     }
 }
 
@@ -1464,9 +1525,11 @@ private struct FoundOneBottomTabBar: View {
             }
         }
         .padding(6)
+        // 성능(2026-08-19): material 위에 .shadow 를 직접 얹으면 매 프레임 오프스크린 합성.
+        //   그림자 제거 → 얇은 이중 스트로크(안 흰색 / 바깥 네이비 6%)로 부유감만 유지.
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(Color.white.opacity(0.55), lineWidth: 0.7))
-        .shadow(color: BUColor.midnight.opacity(0.12), radius: 18, y: 8)
+        .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.06), lineWidth: 0.7).padding(-0.7))
     }
 }
 
@@ -1794,67 +1857,6 @@ private struct NativeSurfacePlaceholder: View {
                 .padding(.horizontal, BUSpacing.md)
                 .padding(.top, BUSpacing.md)
             }
-        }
-    }
-}
-
-// MARK: - SettingsView
-
-private struct SettingsView: View {
-    let coordinator: AuthCoordinator
-    @State private var showDeleteConfirm = false
-
-    var body: some View {
-        ZStack {
-            BUBackgroundSurface()
-            ScrollView {
-                VStack(spacing: BUSpacing.cardGap) {
-                    if let session = coordinator.currentSession {
-                        BUCard(.card) {
-                            VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                                BUEyebrow("계정")
-                                Text(session.displayName ?? session.email ?? "사용자")
-                                    .font(BUFont.cardTitleSmall)
-                                Text("로그인: \(session.provider.rawValue)")
-                                    .font(BUFont.bodyCaption)
-                                    .foregroundStyle(BUColor.inkSecondary)
-                            }
-                        }
-                    }
-
-                    Button {
-                        Task { await coordinator.signOut() }
-                    } label: {
-                        Text("로그아웃")
-                            .font(BUFont.label)
-                            .foregroundStyle(BUColor.inkSecondary)
-                            .frame(maxWidth: .infinity, minHeight: 52)
-                            .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.md, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        showDeleteConfirm = true
-                    } label: {
-                        Text("계정 삭제")
-                            .font(BUFont.label)
-                            .foregroundStyle(BUColor.danger)
-                            .frame(maxWidth: .infinity, minHeight: 52)
-                            .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.md, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, BUSpacing.lg)
-                }
-                .padding(BUSpacing.md)
-            }
-        }
-        .alert("계정을 삭제하시겠어요?", isPresented: $showDeleteConfirm) {
-            Button("취소", role: .cancel) {}
-            Button("삭제", role: .destructive) {
-                Task { await coordinator.deleteAccount() }
-            }
-        } message: {
-            Text("모든 데이터가 영구 삭제됩니다. 되돌릴 수 없습니다.")
         }
     }
 }

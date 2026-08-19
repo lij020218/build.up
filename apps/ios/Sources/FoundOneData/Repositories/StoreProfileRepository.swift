@@ -137,6 +137,7 @@ public actor StoreProfileRepository {
         for (k, v) in updates { merged[k] = v }
         let payload = OpsSelectionsUpsert(user_id: userId, ops_selections: merged, updated_at: ISO8601DateFormatter().string(from: Date()))
         _ = try await supabase.from("user_store_data").upsert(payload, onConflict: "user_id").execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     /// ops_pos_checks jsonb dict 에 키 병합.
@@ -149,6 +150,7 @@ public actor StoreProfileRepository {
         for (k, v) in updates { merged[k] = v }
         let payload = OpsPosChecksUpsert(user_id: userId, ops_pos_checks: merged, updated_at: ISO8601DateFormatter().string(from: Date()))
         _ = try await supabase.from("user_store_data").upsert(payload, onConflict: "user_id").execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     /// tax_settings jsonb 의 vatType 만 갱신, hasEmployees 등 기존 키 보존.
@@ -173,6 +175,7 @@ public actor StoreProfileRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     /// 세무 처리 방식 단독 저장.
@@ -187,6 +190,7 @@ public actor StoreProfileRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     /// 구독 운영 여부(uses_subscriptions) 단독 저장. 웹 setSelectedRevenueModelId 의 usesSubscriptions 미러.
@@ -200,6 +204,7 @@ public actor StoreProfileRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     /// 구독 운영 여부를 현재 로그인 사용자에 저장 (StageInputProjector revenueModel 투영용).
@@ -281,6 +286,7 @@ public actor StoreProfileRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     public func updateBusinessHours(open: String?, close: String?) async throws {
@@ -297,6 +303,7 @@ public actor StoreProfileRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     /// 가게 이름 + 영업시간 동시 저장 (시트 [저장] 액션).
@@ -315,6 +322,7 @@ public actor StoreProfileRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")
     }
 
     // MARK: - Supabase row DTOs

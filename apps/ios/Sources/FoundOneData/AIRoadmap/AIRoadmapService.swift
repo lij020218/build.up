@@ -3,7 +3,7 @@
 //
 //  웹 API: POST /api/ai/roadmap/generate
 //  Pass 1 (Claude) + Pass 2 (풀 매칭) 총 30~70초 소요.
-//  타임아웃은 넉넉하게 120초 설정 (Vercel Pro maxDuration=120 과 동일).
+//  타임아웃 300초 (2026-08-19: prod 실측 120초 초과 504 발생 → 서버 maxDuration 300 과 동일).
 //
 
 import Foundation
@@ -43,7 +43,7 @@ public actor AIRoadmapService {
     public func generate(input: AIRoadmapInput) async throws -> AIRoadmapResult {
         let endpoint = webAppURL.appendingPathComponent("/api/ai/roadmap/generate")
 
-        var request = URLRequest(url: endpoint, timeoutInterval: 120)
+        var request = URLRequest(url: endpoint, timeoutInterval: 300)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 

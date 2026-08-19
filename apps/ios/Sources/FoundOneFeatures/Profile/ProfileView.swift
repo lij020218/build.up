@@ -48,6 +48,8 @@ public struct ProfileView: View {
     @Environment(ResetCoordinator.self) private var resetCoordinator
 
     @State private var showDeleteConfirm: Bool = false
+    /// 계정 삭제 실패 메시지 (AuthCoordinator.deleteError 미러) — alert 표시용.
+    @State private var deleteFailedMsg: String? = nil
     @State private var showResetConfirm: Bool = false
     // 서버 초기화 실패 시 — 로컬을 지우지 않고 사장님께 명확히 알림(가짜 "완료" 금지).
     @State private var resetFailedMsg: String?
@@ -122,10 +124,22 @@ public struct ProfileView: View {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
                 guard let coordinator else { return }
-                Task { await coordinator.deleteAccount() }
+                Task {
+                    let ok = await coordinator.deleteAccount()
+                    if !ok { deleteFailedMsg = coordinator.deleteError }
+                }
             }
         } message: {
             Text("모든 데이터가 영구 삭제됩니다. 되돌릴 수 없습니다.")
+        }
+        // 삭제 실패 — 세션·데이터는 그대로 유지된 채 alert 만 (거짓 실패 화면 금지: 로그인 화면으로 튕기지 않는다).
+        .alert("계정 삭제에 실패했습니다", isPresented: Binding(get: { deleteFailedMsg != nil }, set: { if !$0 { deleteFailedMsg = nil } })) {
+            Button("확인", role: .cancel) {
+                deleteFailedMsg = nil
+                coordinator?.clearDeleteError()
+            }
+        } message: {
+            Text(deleteFailedMsg ?? "")
         }
         .alert("진행을 초기화하시겠어요?", isPresented: $showResetConfirm) {
             Button("취소", role: .cancel) {}

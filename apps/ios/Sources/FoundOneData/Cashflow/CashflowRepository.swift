@@ -47,6 +47,7 @@ public actor CashflowRepository {
             .from("user_store_data")
             .upsert(payload, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")   // 자기 에코 억제
     }
 
     /// 업종 기본 채널 믹스 — 공유 SSOT(CashflowPresetsRegistry) 에서 빌드.

@@ -62,6 +62,7 @@ public actor StoreInfoRepository: StoreInfoRepositoryProtocol {
             .from("user_store_data")
             .upsert(dto, onConflict: "user_id")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "user_store_data")   // 자기 에코 억제
     }
 
     private static let selectColumns = """

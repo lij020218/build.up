@@ -168,6 +168,7 @@ public actor FunnelMetricsRepository: FunnelMetricsRepositoryProtocol {
             .from("saas_funnel_manual_weekly")
             .upsert(row, onConflict: "user_id,week_start,mode")
             .execute()
+        RealtimeEcho.markLocalWrite(table: "saas_funnel_manual_weekly")   // 자기 에코 억제
     }
 }
 

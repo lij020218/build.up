@@ -18,8 +18,21 @@ public struct BUBackgroundSurface: View {
     public init() {}
 
     public var body: some View {
-        // 진짜 Aurora — globals.css 1:1 (TimelineView + 다중 ellipse + blur)
+        // 정적 Aurora — globals.css 근사 (drawingGroup 1회 래스터, 애니메이션 없음).
+        //   앱 전역 1개(FoundOneMobileShell)만 유지. 시트·푸시 화면은 BUFlatBackground 사용.
         AuroraBackground()
+    }
+}
+
+// MARK: - BUFlatBackground (시트 · 푸시 화면용 평면 배경)
+
+/// 시트(NavigationStack 내부)·푸시 화면 전용 — Aurora 대신 평면 베이지(#f7f6f3).
+///   NavigationStack 은 불투명 배경이라 셸의 Aurora 가 비치지 않고, 화면마다 Aurora 를
+///   다시 그리면 풀스크린 래스터가 중첩되어 성능 비용. 2026-08-19 성능 개정.
+public struct BUFlatBackground: View {
+    public init() {}
+    public var body: some View {
+        BUColor.appBackground.ignoresSafeArea()
     }
 }
 

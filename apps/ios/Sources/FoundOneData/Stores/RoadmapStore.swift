@@ -80,7 +80,21 @@ public final class RoadmapStore {
 
     /// cluster path 의 stageId 순서 — RoadmapSampleData 에 위임.
     /// 외부 (RoadmapView) 가 주입하지 않으면 빈 배열.
-    public var pathProvider: (@MainActor (String) -> [String])? = nil
+    public var pathProvider: (@MainActor (String) -> [String])? = nil {
+        didSet { pathCache = nil }
+    }
+
+    /// pathStageIds 캐시 — cluster 별 1회 계산 (RoadmapView 가 stage 마다 status(for:) 호출 →
+    ///   매번 pathFor(cluster) 재구성하던 비용 제거, 성능 2026-08-19). cluster/provider 변경 시 무효화.
+    @ObservationIgnored private var pathCache: (cluster: String, ids: [String], set: Set<String>)? = nil
+
+    private func resolvedPath() -> (ids: [String], set: Set<String>) {
+        if let c = pathCache, c.cluster == cluster { return (c.ids, c.set) }
+        let ids = pathProvider?(cluster) ?? []
+        let set = Set(ids)
+        pathCache = (cluster, ids, set)
+        return (ids, set)
+    }
 
     /// 현재 진행 중인 stageId — path 중 첫 번째 미완료 stage.
     public var currentStageId: String? {
@@ -98,13 +112,14 @@ public final class RoadmapStore {
     public var totalCount: Int { pathStageIds.count }
 
     /// path stageId 배열.
-    public var pathStageIds: [String] {
-        pathProvider?(cluster) ?? []
-    }
+    public var pathStageIds: [String] { resolvedPath().ids }
+
+    /// path 포함 여부 — Set 기반 O(1).
+    private func pathContains(_ stageId: String) -> Bool { resolvedPath().set.contains(stageId) }
 
     /// 특정 stage 가 완료되었는지 — path 에 없으면 false (좀비 차단).
     public func isStageCompleted(_ stageId: String) -> Bool {
-        guard pathStageIds.contains(stageId) else { return false }
+        guard pathContains(stageId) else { return false }
         return decisions[stageId]?.isCompleted ?? false
     }
 
@@ -112,7 +127,7 @@ public final class RoadmapStore {
     public enum Status: String, Sendable { case completed, current, upcoming }
 
     public func status(for stageId: String) -> Status {
-        guard pathStageIds.contains(stageId) else { return .upcoming }
+        guard pathContains(stageId) else { return .upcoming }
         if isStageCompleted(stageId) { return .completed }
         if currentStageId == stageId { return .current }
         return .upcoming
@@ -164,6 +179,7 @@ public final class RoadmapStore {
     public func setCluster(_ raw: String) {
         guard cluster != raw else { return }
         cluster = raw
+        pathCache = nil
         persist()
     }
 

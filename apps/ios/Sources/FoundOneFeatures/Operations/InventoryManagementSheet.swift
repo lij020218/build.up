@@ -81,7 +81,7 @@ public struct InventoryManagementSheet: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         headerBlock
@@ -432,7 +432,7 @@ private struct InventoryImportPreviewSheet: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(spacing: 8) {
                         BUCard(.outer) {
@@ -565,7 +565,7 @@ private struct InventoryItemForm: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                BUBackgroundSurface()
+                BUFlatBackground()
                 ScrollView {
                     VStack(spacing: BUSpacing.md) {
                         BUCard(.outer) {

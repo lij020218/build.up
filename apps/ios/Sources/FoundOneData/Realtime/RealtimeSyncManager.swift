@@ -79,6 +79,9 @@ public final class RealtimeSyncManager {
                 if isCore, case .delete = action {
                     // 다른 기기에서 초기화 → 이 기기도 따라서 초기화 (부활 차단).
                     Task { @MainActor in NotificationCenter.default.post(name: .buildupRemoteWipe, object: nil) }
+                } else if RealtimeEcho.isSelfEcho(table: table) {
+                    // 이 기기의 upsert 가 되돌아온 자기 에코 — 재조회 루프 차단 (RealtimeEcho.window 이내).
+                    return
                 } else {
                     Task { @MainActor in self.scheduleFire() }
                 }

@@ -70,12 +70,9 @@
   <key>NSSupportsLiveActivitiesFrequentUpdates</key>
   <true/>
 
-  <!-- ───────────── 카메라 권한 (영수증 OCR — Phase 11+) ───────────── -->
-  <key>NSCameraUsageDescription</key>
-  <string>영수증을 촬영해 비용을 자동으로 기록하기 위해 카메라 권한이 필요합니다.</string>
 
   <key>NSPhotoLibraryUsageDescription</key>
-  <string>이미 찍은 영수증을 가져오기 위해 사진 권한이 필요합니다.</string>
+  <string>가게 대표 사진과 인스타 카드뉴스 슬라이드 배경으로 쓸 사진을 고르기 위해 사진 보관함 접근이 필요합니다. 예: 매장 외관 사진을 골라 내 가게 화면과 카드뉴스에 넣습니다. 선택한 사진만 사용하며 다른 사진은 읽지 않습니다.</string>
 
   <!-- ───────────── 한국어 우선 ───────────── -->
   <key>CFBundleDevelopmentRegion</key>
