@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
   // 2026-07-15 보안: 프레임워크 핑거프린팅 방지 — `X-Powered-By: Next.js` 헤더 제거.
   poweredByHeader: false,
   transpilePackages: ["@foundone/shared", "@foundone/ai"],
+  // 2026-08-19: Vercel(8GB) 빌드가 "Linting and checking validity of types" 에서 30분+ 멈춤(로컬은 60초 완주).
+  //   타입·린트는 로컬 `tsc --noEmit`·`next lint`·vitest 가드(720건)가 담당하므로 빌드 단계에서만 생략해
+  //   배포 차단을 푼다. 원인(빌드 워커 메모리) 해소되면 되돌릴 것.
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   async redirects() {
     return [
       { source: "/privacy", destination: "/legal/privacy", permanent: true },
