@@ -187,6 +187,7 @@ public struct AppRoot: View {
                     if needsOnboarding(store: store) {
                         OnboardingFlow(
                             store: store,
+                            coordinator: coordinator,
                             selectedTab: $selectedTab,
                             pendingRegistration: $pendingRegistration
                         )
@@ -809,6 +810,8 @@ private actor FallbackStoreInfoRepository: StoreInfoRepositoryProtocol {
 
 private struct OnboardingFlow: View {
     let store: DashboardStore
+    /// 온보딩 중에도 로그아웃·계정 삭제 가능해야 함 (2026-08-19) — nil = 데모
+    var coordinator: AuthCoordinator? = nil
     @Binding var selectedTab: AppRoot.Tab
     @Binding var pendingRegistration: StoreRegistration?
     @Environment(RoadmapStore.self) private var roadmapStore
@@ -1035,6 +1038,14 @@ private struct OnboardingFlow: View {
                     },
                     onBack: { path = nil }
                 )
+            }
+        }
+        // 온보딩 어느 화면에서든 우상단 "내 정보" — 로그아웃·계정 삭제 (웹 OnboardingAccountMenu 미러)
+        .overlay(alignment: .topTrailing) {
+            if coordinator != nil {
+                OnboardingAccountButton(coordinator: coordinator)
+                    .padding(.trailing, 14)
+                    .padding(.top, 6)
             }
         }
     }

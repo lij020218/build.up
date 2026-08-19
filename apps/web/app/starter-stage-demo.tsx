@@ -99,6 +99,7 @@ import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
 import { ResetAnimationOverlay } from "./lib/components/reset/ResetAnimationOverlay";
 import { ConfirmModal } from "./lib/components/ConfirmModal";
 import { OnboardingChoiceScreen } from "./lib/components/onboarding/OnboardingChoiceScreen";
+import { OnboardingAccountMenu } from "./lib/components/onboarding/OnboardingAccountMenu";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
 import { ReportsSurface } from "./lib/components/surfaces/ReportsSurface";
@@ -724,35 +725,52 @@ export default function StarterStageDemo({
   }
   if (shouldShowExistingOnboarding) {
     return (
-      <ExistingBusinessOnboarding
-        language={language}
-        onComplete={handleExistingBusinessComplete}
-        onBack={() => { setShowExistingOnboarding(false); setShowOnboardingChoice(true); }}
-      />
+      <>
+        <ExistingBusinessOnboarding
+          language={language}
+          onComplete={handleExistingBusinessComplete}
+          onBack={() => { setShowExistingOnboarding(false); setShowOnboardingChoice(true); }}
+        />
+        <OnboardingAccountMenu ko={language === "ko"} />
+      </>
     );
   }
   if (shouldShowAIRoadmap) {
     return (
-      <AIRoadmapWizard
-        language={language}
-        onComplete={handleAIRoadmapComplete}
-        onBack={() => { setShowAIRoadmapWizard(false); setShowOnboardingChoice(true); }}
-      />
+      <>
+        <AIRoadmapWizard
+          language={language}
+          onComplete={handleAIRoadmapComplete}
+          onBack={() => { setShowAIRoadmapWizard(false); setShowOnboardingChoice(true); }}
+        />
+        <OnboardingAccountMenu ko={language === "ko"} />
+      </>
     );
   }
   if (isResetting) {
     return <ResetAnimationOverlay progress={resetProgress} ko={language === "ko"} />;
   }
+  // 온보딩 어느 화면이든 우상단 "내 정보"(로그아웃·계정 삭제) — 2026-08-19, iOS OnboardingAccountSheet 미러
   if (shouldShowOnboardingChoice && !welcomed) {
-    return <WelcomeOnboarding language={language} onComplete={() => setWelcomed(true)} />;
+    return (
+      <>
+        <WelcomeOnboarding language={language} onComplete={() => setWelcomed(true)} />
+        <OnboardingAccountMenu ko={language === "ko"} />
+      </>
+    );
   }
   if (shouldShowOnboardingChoice) {
-    return <OnboardingChoiceScreen
-      ko={language === "ko"}
-      onChooseManual={() => { setOnboardingDismissed(true); localStorage.setItem("foundone_onboarding_dismissed", "true"); setShowOnboardingChoice(false); navigateToSurface("current"); }}
-      onChooseAI={() => { setShowOnboardingChoice(false); setShowAIRoadmapWizard(true); }}
-      onChooseExisting={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }}
-    />;
+    return (
+      <>
+        <OnboardingChoiceScreen
+          ko={language === "ko"}
+          onChooseManual={() => { setOnboardingDismissed(true); localStorage.setItem("foundone_onboarding_dismissed", "true"); setShowOnboardingChoice(false); navigateToSurface("current"); }}
+          onChooseAI={() => { setShowOnboardingChoice(false); setShowAIRoadmapWizard(true); }}
+          onChooseExisting={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }}
+        />
+        <OnboardingAccountMenu ko={language === "ko"} />
+      </>
+    );
   }
 
   return (
