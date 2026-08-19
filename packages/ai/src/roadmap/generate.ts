@@ -438,6 +438,26 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
   const validGrades = ["S", "A", "B", "C", "D"];
   const rawGrade = String(ma.grade ?? "B").toUpperCase();
 
+  // monthlyCosts 는 budgetAllocation.monthlyFixedCost 파생에 먼저 필요 → result 리터럴 앞에서 계산.
+  const monthlyCosts = (() => {
+    const nn = (v: unknown) => Math.max(0, Number(v) || 0);
+    const mc = (obj.monthlyCosts as Record<string, unknown>) ?? {};
+    let ingredients = nn(mc.ingredients);
+    let labor = nn(mc.labor);
+    let rent = nn(mc.rent);
+    let utilities = nn(mc.utilities);
+    let other = nn(mc.other);
+    // budgetAllocation 과 동일한 원 단위 오염 가드 — 월비용 합 100억(만원 단위) 초과 = 원 단위로 판단.
+    if (ingredients + labor + rent + utilities + other >= 1_000_000) {
+      const toMan = (v: number) => Math.round(v / 10_000);
+      ingredients = toMan(ingredients); labor = toMan(labor);
+      rent = toMan(rent); utilities = toMan(utilities); other = toMan(other);
+    }
+    return { ingredients, labor, rent, utilities, other };
+  })();
+  // 월 고정비(만원) — 재료비(변동비) 제외. iOS 디코딩 계약(non-optional) 필드.
+  const monthlyFixedCost = monthlyCosts.labor + monthlyCosts.rent + monthlyCosts.utilities + monthlyCosts.other;
+
   // 기본값 채우기
   const result: RoadmapGenerationResult = {
     conceptSummary: String(obj.conceptSummary ?? "").trim(),
@@ -490,24 +510,9 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
       // total 이 명시되지 않았거나 명백히 잘못된 경우 합계로 자동 계산.
       const sum = deposit + interior + equipment + workingCapital;
       const total = rawTotal > 0 && Math.abs(rawTotal - sum) < sum * 0.1 ? rawTotal : sum;
-      return { deposit, interior, equipment, workingCapital, total };
+      return { deposit, interior, equipment, workingCapital, total, monthlyFixedCost };
     })(),
-    monthlyCosts: (() => {
-      const nn = (v: unknown) => Math.max(0, Number(v) || 0);
-      const mc = (obj.monthlyCosts as Record<string, unknown>) ?? {};
-      let ingredients = nn(mc.ingredients);
-      let labor = nn(mc.labor);
-      let rent = nn(mc.rent);
-      let utilities = nn(mc.utilities);
-      let other = nn(mc.other);
-      // budgetAllocation 과 동일한 원 단위 오염 가드 — 월비용 합 100억(만원 단위) 초과 = 원 단위로 판단.
-      if (ingredients + labor + rent + utilities + other >= 1_000_000) {
-        const toMan = (v: number) => Math.round(v / 10_000);
-        ingredients = toMan(ingredients); labor = toMan(labor);
-        rent = toMan(rent); utilities = toMan(utilities); other = toMan(other);
-      }
-      return { ingredients, labor, rent, utilities, other };
-    })(),
+    monthlyCosts,
     recommendations: {
       suppliers: Array.isArray((obj.recommendations as Record<string, unknown>)?.suppliers)
         ? ((obj.recommendations as Record<string, unknown>).suppliers as Array<Record<string, unknown>>).map(s => {

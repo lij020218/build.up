@@ -249,6 +249,9 @@ export type RoadmapGenerationResult = {
     equipment: number;
     workingCapital: number;
     total: number;
+    /** 월 고정비(만원) = monthlyCosts.labor+rent+utilities+other. LLM 출력 아님 — parseResponse 파생.
+     *  iOS 1.0.0(4) AIRoadmapResult.BudgetAllocation 이 non-optional 로 요구 → 누락 시 앱 디코딩 실패(2026-08-19 실측). */
+    monthlyFixedCost: number;
   };
   monthlyCosts: {   // ⚠️ 모든 숫자 = 만원 단위 정수 (예: 월세 200만원 → 200). 원 단위 금지.
     ingredients: number;
