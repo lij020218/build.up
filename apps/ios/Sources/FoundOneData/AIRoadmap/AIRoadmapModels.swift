@@ -88,7 +88,9 @@ public struct AIRoadmapResult: Decodable, Sendable {
         public let interior: Int
         public let equipment: Int
         public let workingCapital: Int
-        public let monthlyFixedCost: Int
+        /// 월 고정비(만원). 2026-08-19: 서버가 파생값으로 항상 보내지만, 빌드 4가 non-optional 이라
+        /// 누락 시 생성 전멸했던 이력 → 빌드 5부터 optional (미사용 필드가 디코딩을 깨지 않게).
+        public let monthlyFixedCost: Int?
 
         public var displayTotal: Int {
             total ?? (deposit + interior + equipment + workingCapital)

@@ -104,5 +104,9 @@
     <!-- 한국어 우선 -->
     <key>CFBundleAllowMixedLocalizations</key>
     <true/>
+
+    <!-- ProMotion: iPhone Pro에서 CADisplayLink/TimelineView 애니메이션 120Hz 허용 -->
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
 </dict>
 </plist>
