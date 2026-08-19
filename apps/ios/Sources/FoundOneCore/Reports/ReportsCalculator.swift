@@ -138,9 +138,15 @@ public enum ReportsCalculator {
         let sortedEntries = entries.sorted { $0.date < $1.date }
 
         // ── Hero + delta ──
-        let (heroVal, prevVal, deltaPct) = aggregateHero(period: period, entries: sortedEntries, today: today)
+        var (heroVal, prevVal, deltaPct) = aggregateHero(period: period, entries: sortedEntries, today: today)
         let heroLabel = heroLabel(for: period)
-        let headline = makeHeadline(period: period, current: heroVal, prev: prevVal, deltaPct: deltaPct)
+        // 2026-08-19 정직성: '일' 기간에 오늘 입력이 아직 없으면 0원·-100% 가 아니라 "미입력" (매일 아침 거짓 경보 방지)
+        let todayStr = isoFormatter.string(from: today)
+        let todayMissing = period == .day && !sortedEntries.contains { $0.date == todayStr }
+        if todayMissing { deltaPct = 0 }
+        let headline = todayMissing
+            ? (prevVal > 0 ? "오늘 매출이 아직 입력되지 않았어요. 입력하면 최근 7일 평균(\(Int(prevVal).formatted())원)과 바로 비교돼요." : "오늘 매출을 입력하면 분석이 시작돼요.")
+            : makeHeadline(period: period, current: heroVal, prev: prevVal, deltaPct: deltaPct)
 
         // ── KPI 보조 (비용·마진·프라임코스트) ──
         let costForPeriod = costs.total * period.costMultiplier

@@ -1404,6 +1404,8 @@ private func bottomQuickTabs(businessLaunched: Bool, offeringCategoryId: String?
 private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
     @Binding var selectedTab: AppRoot.Tab
     @State private var sidebarOpen = false
+    /// 단계 상세 push 중엔 하단 탭바 숨김 (RoadmapView 가 BUHideBottomTabsKey 로 알림)
+    @State private var hideBottomTabs = false
     let tabs: [FoundOneSurfaceTab]
     /// 하단 고정 탭 (비어 있으면 미표시) — 전체 내비는 사이드바(tabs), 자주 쓰는 4개만 하단 상시.
     let bottomTabs: [FoundOneSurfaceTab]
@@ -1488,14 +1490,17 @@ private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
         .overlay(alignment: .bottom) {
             // 하단 고정 탭 바 — HIG: "floats above content … Liquid Glass background
             //   that allows content beneath to peek through". 사이드바 열림 중엔 숨김(모달 예외 규칙).
-            if !bottomTabs.isEmpty && !sidebarOpen {
+            if !bottomTabs.isEmpty && !sidebarOpen && !hideBottomTabs {
                 FoundOneBottomTabBar(tabs: bottomTabs, selectedTab: $selectedTab)
                     .padding(.horizontal, 28)
                     .padding(.bottom, 6)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .onPreferenceChange(BUHideBottomTabsKey.self) { hideBottomTabs = $0 }
         .tint(BUColor.midnightInk)
         .animation(.snappy(duration: 0.24), value: sidebarOpen)
+        .animation(.snappy(duration: 0.24), value: hideBottomTabs)
     }
 }
 

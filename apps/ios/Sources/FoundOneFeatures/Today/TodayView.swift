@@ -1201,7 +1201,7 @@ private struct Row3CoachingNested: View {
                         .foregroundStyle(BUColor.ink)
                         .lineSpacing(2)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(3)
+                        .lineLimit(6)   // 2026-08-19: 3줄에서 문장 중간 잘림(실렌더) → 여유. 긴 진단은 '+N개 더' 시트에서 전체
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
 

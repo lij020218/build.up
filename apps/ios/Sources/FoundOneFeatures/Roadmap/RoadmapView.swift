@@ -146,6 +146,8 @@ public struct RoadmapView: View {
             }
             #endif
         }
+        // 단계 상세 push 중 쉘 하단 탭바 숨김 — 탭바가 '다음 단계로' CTA 를 가리던 문제 (2026-08-19)
+        .preference(key: BUHideBottomTabsKey.self, value: !stagePath.isEmpty)
     }
 
     /// "다음 단계로" 클릭 시 호출:
@@ -578,3 +580,10 @@ private struct StageDetailSheet: View {
 }
 #endif
 
+
+
+/// 단계 상세가 push 된 동안 쉘의 하단 탭바를 숨기는 신호 (2026-08-19 심사 전 실렌더: 탭바가 "다음 단계로" CTA 를 가림)
+struct BUHideBottomTabsKey: PreferenceKey {
+    static let defaultValue: Bool = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+}

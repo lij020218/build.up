@@ -53,7 +53,8 @@ public struct DataConnectionSheet: View {
                         introBlock
                         existingConnectionsBlock
                         availableSection
-                        comingSoonSection
+                        // 2026-08-19 심사 대비: 15개 "곧 출시" 타일(탭→준비 중 알림)은 2.1 placeholder 지적 요인 → 한 줄 안내로 축소
+                        comingSoonNote
                         Color.clear.frame(height: 60)
                     }
                     .padding(.horizontal, BUSpacing.md)
@@ -619,7 +620,16 @@ public struct DataConnectionSheet: View {
         .init(id: "stripe",     title: "Stripe Connect",    subtitle: "글로벌 SaaS",                      icon: "globe.americas"),
     ]
 
-    private var comingSoonSection: some View {
+    private var comingSoonNote: some View {
+        Text("Cafe24·GA4·쿠팡·네이버·PG 등 추가 연동은 순차 지원 예정이에요. 그 전까진 CSV·내 서버 URL 연결을 이용해 주세요.")
+            .font(.system(size: 12))
+            .foregroundStyle(BUColor.inkMuted)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .padding(.top, 4)
+    }
+
+    @ViewBuilder private var comingSoonSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionEyebrow("곧 출시")
             VStack(spacing: 0) {

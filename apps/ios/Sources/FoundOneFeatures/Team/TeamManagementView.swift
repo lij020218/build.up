@@ -452,11 +452,17 @@ public struct TeamManagementView: View {
 
     private var loadErrorCard: some View {
         BUCard(.outer) {
-            Text("직원 목록을 불러오지 못했어요. 네트워크 확인 후 다시 열어주세요.")
-                .font(.system(size: 13))
-                .foregroundStyle(BUColor.inkSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+            VStack(spacing: 10) {
+                Text("직원 목록을 불러오지 못했어요. 네트워크 확인 후 다시 시도해 주세요.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .frame(maxWidth: .infinity)
+                Button("다시 시도") { Task { await load() } }
+                    .font(.system(size: 13, weight: .bold))
+                    .buttonStyle(.borderedProminent)
+                    .tint(BUColor.midnight)
+            }
+            .padding(.vertical, 6)
         }
     }
 
