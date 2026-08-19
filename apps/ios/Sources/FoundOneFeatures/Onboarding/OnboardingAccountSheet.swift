@@ -76,7 +76,7 @@ struct OnboardingAccountSheet: View {
                     }
                     .disabled(coordinator == nil || isDeleting)
                 } footer: {
-                    Text("계정 삭제는 즉시·영구 처리되며 서버의 모든 데이터가 함께 지워져요. 다시 가입하면 처음부터 시작합니다.")
+                    Text("계정 삭제는 즉시·영구 처리되며 서버의 모든 데이터·업로드 문서가 함께 지워져요. 직원 근로 기록만 법정 보존(근로기준법 3년)을 위해 계정과 분리해 보관 후 자동 파기됩니다.")
                 }
             }
             .navigationTitle("내 정보")

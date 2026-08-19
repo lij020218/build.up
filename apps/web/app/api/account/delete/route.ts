@@ -14,9 +14,10 @@ import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { wipeUserData, SUBSCRIPTION_TABLES } from "../../_lib/account-wipe";
+import { archiveLaborRecords, wipeUserStorage, revokeAppleTokens, type ComplianceStep } from "../../_lib/account-delete-compliance";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +39,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "DB 설정 오류" }, { status: 500 });
     }
 
+    // 0. 컴플라이언스 (2026-08-19) — 전부 best-effort, 실패해도 삭제 진행
+    //    ① 근로기록 분리 보관(근로기준법 §42 3년): auth 삭제 CASCADE 로 사장·직원 기록이 소멸하기 전에 복사
+    //    ② Storage 개인정보 문서·사진 삭제 (auth 삭제 후엔 소유자 없는 고아 파일이 됨)
+    //    ③ Sign in with Apple refresh_token revoke (App Store 5.1.1(v))
+    const compliance: ComplianceStep[] = [];
+    compliance.push(await archiveLaborRecords(supabase, auth.userId, "owner-or-member-deleted"));
+    compliance.push(...(await wipeUserStorage(supabase, auth.userId)));
+    compliance.push(await revokeAppleTokens(supabase, auth.userId));
+    for (const c of compliance) {
+      if (!c.ok) console.warn(`[/api/account/delete] compliance step failed — ${c.step}: ${c.note ?? ""}`);
+    }
+
     // 1. 데이터 전체 삭제 (구독·결제 포함)
     const wipe = await wipeUserData(supabase, auth.userId, {
       extraUserTables: SUBSCRIPTION_TABLES,
@@ -55,8 +68,9 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`[/api/account/delete] 계정 삭제 완료 — userId=${auth.userId.slice(0, 8)} dataFailures=${wipe.failures.length}`);
-    return NextResponse.json({ ok: true, deletedData: wipe.totalDeleted });
+    // 삭제 로그(개인정보 없이 — uid 앞 8자·시각·건수): 파기 기록 (개인정보 보호법 §21 파기 증빙)
+    console.log(`[/api/account/delete] 계정 삭제 완료 — userId=${auth.userId.slice(0, 8)} at=${new Date().toISOString()} deleted=${wipe.totalDeleted} dataFailures=${wipe.failures.length} compliance=${JSON.stringify(compliance)}`);
+    return NextResponse.json({ ok: true, deletedData: wipe.totalDeleted, compliance });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     // 내부 오류 상세(Supabase 쿼리 오류 등)는 서버 로그에만 — 클라이언트엔 고정 문자열.

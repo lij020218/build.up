@@ -144,7 +144,7 @@ export function ProfileView() {
       title={ko ? "계정을 삭제하시겠어요?" : "Delete your account?"}
       message={
         ko
-          ? "모든 데이터와 구독이 영구 삭제되며, 되돌릴 수 없습니다."
+          ? "계정·가게 데이터·업로드한 문서와 구독이 즉시 영구 삭제되며 되돌릴 수 없습니다. 직원 근로 기록만 법정 보존(근로기준법 3년)을 위해 계정과 분리해 보관 후 자동 파기됩니다."
           : "All data and subscriptions are permanently removed. This cannot be undone."
       }
       confirmLabel={ko ? "삭제" : "Delete"}

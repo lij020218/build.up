@@ -125,6 +125,7 @@ extension AppleAuthProvider: ASAuthorizationControllerDelegate {
             return combined.isEmpty ? nil : combined
         }()
         let email = credential.email
+        let authorizationCode = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
 
         Task { @MainActor in
             do {
@@ -135,7 +136,8 @@ extension AppleAuthProvider: ASAuthorizationControllerDelegate {
                     userId: session.user.id,
                     email: email ?? session.user.email,
                     displayName: displayName,
-                    provider: .apple
+                    provider: .apple,
+                    appleAuthorizationCode: authorizationCode
                 )
                 continuation?.resume(returning: authSession)
             } catch {

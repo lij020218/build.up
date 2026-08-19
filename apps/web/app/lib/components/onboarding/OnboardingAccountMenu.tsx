@@ -122,7 +122,7 @@ export function OnboardingAccountMenu({ ko = true }: { ko?: boolean }) {
         open={confirmOpen}
         title={ko ? "계정을 삭제하시겠어요?" : "Delete your account?"}
         message={ko
-          ? "되돌릴 수 없어요. 로그인 정보와 지금까지 입력한 내용이 모두 즉시·영구 삭제됩니다."
+          ? "되돌릴 수 없어요. 로그인 정보와 지금까지 입력한 내용이 모두 즉시·영구 삭제됩니다. (직원 근로 기록이 있다면 법정 보존을 위해 계정과 분리해 3년 보관 후 자동 파기)"
           : "This cannot be undone. Your login and everything entered so far are permanently deleted."}
         confirmLabel={ko ? "삭제" : "Delete"}
         cancelLabel={ko ? "취소" : "Cancel"}

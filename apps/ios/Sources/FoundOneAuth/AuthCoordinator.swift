@@ -85,6 +85,8 @@ public final class AuthCoordinator {
         state = .authenticating
         do {
             let session = try await appleProvider.signIn()
+            // 삭제 시 Apple revoke 용 refresh_token 확보 — 실패해도 로그인엔 영향 없음(best-effort)
+            if let code = session.appleAuthorizationCode { Task.detached { await Self.linkAppleAuthorizationCode(code) } }
             // ⚠️ 2026-06-05: 이메일 경로와 동일하게 워크스페이스 부트스트랩(business_profiles 행 보장).
             //   누락 시 OAuth 신규 사용자는 role/profile 미초기화로 웹·앱 정합성이 비대칭이 됨.
             try? await bootstrapAccountWorkspace(for: session.userId)
@@ -303,6 +305,19 @@ public final class AuthCoordinator {
         LocalDataWipe.wipeAllLocalUserData()
         state = .unauthenticated
         return true
+    }
+
+    /// POST /api/account/apple-link { authorizationCode } — 서버가 Apple refresh_token 교환·암호화 보관.
+    ///   App Store 5.1.1(v): 계정 삭제 시 Apple 토큰 revoke 필수. 서버 미설정이면 { skipped } 로 무해.
+    nonisolated private static func linkAppleAuthorizationCode(_ code: String) async {
+        guard let token = await BUSupabase.shared.client.auth.currentSession?.accessToken else { return }
+        let base = await BUSupabase.shared.env.webAppURL
+        var req = URLRequest(url: base.appendingPathComponent("/api/account/apple-link"), timeoutInterval: 15)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: ["authorizationCode": code])
+        _ = try? await URLSession.shared.data(for: req)
     }
 
     /// 웹 API `/api/account/delete` 호출 — 데이터 + auth 계정 본체 삭제.

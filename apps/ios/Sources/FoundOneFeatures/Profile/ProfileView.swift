@@ -133,7 +133,7 @@ public struct ProfileView: View {
                 }
             }
         } message: {
-            Text("모든 데이터가 영구 삭제됩니다. 되돌릴 수 없습니다.")
+            Text("계정·가게 데이터·업로드 문서·구독이 즉시 영구 삭제되며 되돌릴 수 없습니다. 직원 근로 기록만 법정 보존(근로기준법 3년)을 위해 계정과 분리해 보관 후 자동 파기됩니다.")
         }
         // 삭제 실패 — 세션·데이터는 그대로 유지된 채 alert 만 (거짓 실패 화면 금지: 로그인 화면으로 튕기지 않는다).
         .alert("계정 삭제에 실패했습니다", isPresented: Binding(get: { deleteFailedMsg != nil }, set: { if !$0 { deleteFailedMsg = nil } })) {

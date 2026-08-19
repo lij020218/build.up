@@ -45,6 +45,10 @@ const INTENTIONALLY_RETAINED: Record<string, string> = {
   foundone_subscriptions: "구독 유지가 reset 정책(계정 삭제 시엔 SUBSCRIPTION_TABLES 로 삭제).",
   foundone_payments: "결제 이력(세무·분쟁 대비). 계정 삭제 시엔 SUBSCRIPTION_TABLES 로 삭제.",
 
+  // ── 계정 삭제 컴플라이언스 (2026-08-19, 마이그 20260819_000001) ──
+  apple_auth_tokens: "Sign in with Apple refresh_token(암호화). 초기화는 로그인 유지라 보존. 계정 삭제 시 revokeAppleTokens 가 revoke 후 삭제(+auth FK CASCADE).",
+  labor_records_archive: "근로기준법 §42 3년 분리 보관 아카이브(auth FK 없음). 계정 삭제 직전 archive_labor_records 가 채우는 곳이라 초기화·삭제 대상이 아님. retain_until 지나면 purge_expired_labor_archive 가 자동 파기.",
+
   // ── 남용 방지 / 자동 정리 ──
   ai_daily_usage: "AI 일일 쿼터 카운터. 초기화로 리셋되면 무한 우회가 된다.",
   ai_monthly_spend: "월간 AI 비용 예산(₩6,000) 카운터. 초기화로 리셋되면 예산 우회가 된다.",

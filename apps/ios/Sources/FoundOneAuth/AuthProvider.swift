@@ -15,12 +15,24 @@ public struct AuthSession: Sendable, Hashable {
     public let email: String?
     public let displayName: String?
     public let provider: AuthProviderKind
+    /// Sign in with Apple 1회용 authorizationCode — 서버(/api/account/apple-link)가 refresh_token 으로 교환·보관해
+    /// 계정 삭제 시 Apple revoke 에 쓴다 (App Store 5.1.1(v)). 세션 비교엔 무관.
+    public let appleAuthorizationCode: String?
 
-    public init(userId: UUID, email: String? = nil, displayName: String? = nil, provider: AuthProviderKind) {
+    public init(userId: UUID, email: String? = nil, displayName: String? = nil, provider: AuthProviderKind,
+                appleAuthorizationCode: String? = nil) {
         self.userId = userId
         self.email = email
         self.displayName = displayName
         self.provider = provider
+        self.appleAuthorizationCode = appleAuthorizationCode
+    }
+
+    public static func == (lhs: AuthSession, rhs: AuthSession) -> Bool {
+        lhs.userId == rhs.userId && lhs.email == rhs.email && lhs.displayName == rhs.displayName && lhs.provider == rhs.provider
+    }
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(userId); hasher.combine(email); hasher.combine(displayName); hasher.combine(provider)
     }
 }
 
