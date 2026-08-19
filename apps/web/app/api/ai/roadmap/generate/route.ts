@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkRoadmapGenerationQuota, refundRoadmapGenerationUse } from "../../../_lib/rate-limit";
+import { checkRoadmapGenerationQuota } from "../../../_lib/rate-limit";
 import { runAiFeature } from "../../../_lib/ai-guard";
 import { generateRoadmap, selectFromPool } from "@foundone/ai";
 import type {
@@ -469,17 +469,13 @@ export async function POST(request: Request) {
       request,
       feature: "roadmap-generate",
       limits: { daily: 3, weekly: 6 },
+      // Pass1 은 핸들러 안에서 이미 1회 재시도(타임아웃) — 가드 재시도까지 겹치면 한 요청이 4회 LLM 호출·수 분 지연
+      retryOnce: false,
       failMessage: "로드맵 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.",
     },
     async () => runRoadmapGeneration(body, apiKey),
   );
-
-  // 가드 한도(429)·서버/모델 실패(≥500)면 평생/주 쿼터도 되돌린다 — 실패·거부가 크레딧을 먹지 않게
-  if (res.status === 429) {
-    await refundRoadmapGenerationUse(auth.userId);   // 가드 한도 거부 — 쿼터 소비 취소
-  } else if (res.status >= 500) {
-    await refundRoadmapGenerationUse(auth.userId);   // 서버 오류가 크레딧을 먹지 않게
-  }
+  // 원장 기록·환불은 가드가 단 한 번 수행 (2026-08-19: 종전 이중 기록/이중 환불 제거). 평생 3회 판정은 같은 원장을 읽는다.
   return res;
 }
 

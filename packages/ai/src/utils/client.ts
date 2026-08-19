@@ -32,7 +32,7 @@ const MODEL_MAP: Record<string, string> = {
  *  3) 폴백 대상이 없는 모델(이미 mini)은 같은 모델로 1회 재호출.
  *  ⚠️ 폴백은 4xx 입력 오류(400 invalid_request 등)에는 적용하지 않는다 — 같은 입력이면 같은 400.
  */
-const SDK_MAX_RETRIES = 3;
+const SDK_MAX_RETRIES = 2;   // 2026-08-19: 3→2 (타임아웃 30s 호출이 4회 반복되면 120s — 폴백이 더 낫다)
 const FALLBACK_MODEL: Record<string, string> = {
   "gpt-5.6-sol":   "gpt-5.6-terra",
   "gpt-5.6-terra": "gpt-5.6-luna",
@@ -196,11 +196,11 @@ function flattenSystem(system?: string | ASystemBlock[]): string {
  */
 class LlmClient {
   private readonly openai: OpenAI;
-  constructor(apiKey: string, options: { timeout?: number } = {}) {
+  constructor(apiKey: string, options: { timeout?: number; maxRetries?: number } = {}) {
     this.openai = new OpenAI({
       apiKey,
       timeout: options.timeout ?? DEFAULT_TIMEOUT_MS,
-      maxRetries: SDK_MAX_RETRIES,
+      maxRetries: options.maxRetries ?? SDK_MAX_RETRIES,
     });
   }
 
@@ -405,8 +405,8 @@ class LlmClient {
   };
 }
 
-export function createAiClient(apiKey: string): LlmClient {
-  return new LlmClient(apiKey, { timeout: DEFAULT_TIMEOUT_MS });
+export function createAiClient(apiKey: string, options: { timeout?: number; maxRetries?: number } = {}): LlmClient {
+  return new LlmClient(apiKey, { timeout: options.timeout ?? DEFAULT_TIMEOUT_MS, maxRetries: options.maxRetries });
 }
 
 export function createLongAiClient(apiKey: string): LlmClient {

@@ -700,7 +700,9 @@ export async function generateRoadmap(
   input: RoadmapGenerationInput,
   options: AiCallOptions
 ): Promise<RoadmapGenerationResult> {
-  const client = createAiClient(options.apiKey); // SDK 기본 timeout 30s ×2 retries + 라우트 재시도 1회 ≈ ≤180s < maxDuration 300 (2026-08-19)
+  // 2026-08-19 실측: Pass1(terra, 16k out) 이 30s 를 자주 넘어 SDK 재시도 3회 × 30s = 120s 허비 후 폴백 → 165s.
+  //   → 타임아웃 110s·재시도 1회: 정상은 30~60s 에 끝나고, 진짜 장애만 폴백(luna)으로. 최악 220s < maxDuration 300.
+  const client = createAiClient(options.apiKey, { timeout: 110_000, maxRetries: 1 });
 
   // SDK 0.39 가 thinking 파라미터를 타입에 명시하지 않아 input cast 필요.
   // 응답은 단일 Message 타입으로 cast 하여 후속 .content/.usage 사용.

@@ -363,10 +363,10 @@ export async function checkRoadmapGenerationQuota(userId: string): Promise<RateL
     return { ok: false, status: 503, error: "사용량을 확인할 수 없어요. 잠시 후 다시 시도해 주세요.", remaining: 0, limit: 3, resetAt: 0 };
   }
 
-  // 통과 → 원장 기록(+월간 AI 예산 차감은 기존 미터 그대로)
-  await recordDailyUsageLedger(userId, "roadmap-generate");
-  const monthly = await consumeMonthlyAiBudget(userId, "roadmap-generate");
-  return monthly ?? { ok: true, remaining: 3, limit: 3, resetAt: 0 };
+  // 통과 — 원장 기록·월 예산 차감은 ai-guard(runAiFeature)가 한 번만 한다.
+  //   2026-08-19 실사고: 여기서도 기록해 한 번 생성에 원장 +2 → 일일 한도 3회가 사실상 1.5회가 되어 사용자가 차단됨.
+  //   평생/주 3회 판정은 위의 원장 합산으로 계속 동작(가드가 성공 시 기록·실패 시 환불).
+  return { ok: true, remaining: 3, limit: 3, resetAt: 0 };
 }
 
 /**

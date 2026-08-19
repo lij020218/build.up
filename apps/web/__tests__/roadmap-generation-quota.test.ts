@@ -84,12 +84,12 @@ describe("무료 — 계정당 총 3회 (평생)", () => {
     }
   });
 
-  it("누적 2회면 통과 + 원장 기록·월예산 차감", async () => {
+  it("누적 2회면 통과 — 원장 기록·월예산 차감은 하지 않는다(ai-guard 가 단 한 번 수행, 2026-08-19 이중 기록 사고)", async () => {
     state.usageRows = [{ count: 2, usage_date: "2026-06-01" }];
     const r = await checkRoadmapGenerationQuota("u1");
     expect(r.ok).toBe(true);
-    expect(state.rpcCalls.some((c) => c.fn === "consume_ai_daily_quota")).toBe(true);
-    expect(state.rpcCalls.some((c) => c.fn === "consume_ai_monthly_budget")).toBe(true);
+    expect(state.rpcCalls.some((c) => c.fn === "consume_ai_daily_quota")).toBe(false);
+    expect(state.rpcCalls.some((c) => c.fn === "consume_ai_monthly_budget")).toBe(false);
   });
 });
 
@@ -153,8 +153,9 @@ describe("라우트 배선 — 게이트 교체 + 실패 환불", () => {
     expect(route).not.toContain('feature: "roadmap-generate",\n    limit: 3');
   });
 
-  it("서버 오류 경로 2곳에서 차감을 환불한다 (평생 3회에서 실패가 크레딧을 먹지 않게)", () => {
-    const refunds = route.match(/refundRoadmapGenerationUse\(auth\.userId\)/g) ?? [];
-    expect(refunds.length).toBeGreaterThanOrEqual(2);
+  it("환불은 ai-guard 가 단 한 번 — 라우트의 별도 refundRoadmapGenerationUse 호출 없음(이중 환불 방지), retryOnce:false", () => {
+    expect(route.includes("refundRoadmapGenerationUse(")).toBe(false);
+    expect(route.includes("runAiFeature(")).toBe(true);
+    expect(route.includes("retryOnce: false")).toBe(true);
   });
 });
