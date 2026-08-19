@@ -178,11 +178,11 @@ public struct GuidesView: View {
     // MARK: - Header subtitle (종전 큰 제목 "지금 받을 수 있는 자금/내 가게에 맞는 펀딩"은 부제로 합침)
 
     private var headerSubtitle: String {
-        if state.recommendMode { return "내 가게에 맞는 펀딩 — 업종·매출·런웨이에 맞춘 TOP 6" }
+        if state.recommendMode { return "내 가게 맞춤 TOP 6" }
         if let snapshot = state.profileSnapshot, !snapshot.businessLaunched {
-            return "사업 정보를 입력하면 맞춤 매칭이 시작됩니다"
+            return "사업 정보 입력 후 맞춤 매칭"
         }
-        return "지금 받을 수 있는 자금 — 전체 매칭, 마감 임박·모집중 우선"
+        return "전체 매칭 · 마감 임박 우선"
     }
 
     // MARK: - States

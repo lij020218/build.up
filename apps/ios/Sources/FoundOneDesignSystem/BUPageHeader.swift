@@ -52,7 +52,7 @@ public struct BUPageHeader<Trailing: View, Accessory: View>: View {
                 Text(subtitle)
                     .font(.system(size: 13.5, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 4)

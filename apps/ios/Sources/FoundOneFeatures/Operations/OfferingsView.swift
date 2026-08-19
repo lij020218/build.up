@@ -75,7 +75,7 @@ public struct OfferingsView: View {
                     // 공통 페이지 헤더 (2026-08-19 통일) — 업종별 오퍼링 라벨(offering-kinds SSOT) + 한 줄 설명
                     BUPageHeader(
                         title: meta?.tabLabelKo ?? "내가 파는 것",
-                        subtitle: meta?.pageSubKo
+                        subtitle: (meta?.pageSubKo).flatMap { $0.split(separator: ".").first.map(String.init) }
                     )
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         if kind == "hidden" {

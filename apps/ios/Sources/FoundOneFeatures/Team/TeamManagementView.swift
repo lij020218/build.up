@@ -86,7 +86,7 @@ public struct TeamManagementView: View {
                         if !isSheet {
                             BUPageHeader(
                                 title: "직원",
-                                subtitle: "근무표·연차 관리 — 직원별 근무 요일·시간을 정하고 연차 신청을 승인/반려하세요. 직원 화면에 그대로 표시됩니다."
+                                subtitle: "근무표 · 연차 · 급여"
                             )
                         }
                         VStack(alignment: .leading, spacing: BUSpacing.md) {

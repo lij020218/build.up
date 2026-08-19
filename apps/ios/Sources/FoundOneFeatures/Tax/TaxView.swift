@@ -47,7 +47,7 @@ public struct TaxView: View {
                 // 공통 페이지 헤더 (2026-08-19 통일)
                 BUPageHeader(
                     title: "세금",
-                    subtitle: "과세유형·부가세 예상, 세액공제, 신고 일정을 한곳에 — 모든 값은 예상치예요. 정확한 세액은 홈택스·세무사로 확정하세요."
+                    subtitle: "예상 세금 · 세액공제 · 신고 일정"
                 )
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     // 국세청 바로가기 — 다음 행동(신고·납부)은 홈택스 (2026-07-24 사장님 지시, 웹 정합)

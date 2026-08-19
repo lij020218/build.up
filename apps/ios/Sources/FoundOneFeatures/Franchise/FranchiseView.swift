@@ -197,7 +197,7 @@ public struct FranchiseView: View {
                     // 공통 페이지 헤더 (2026-08-19 통일) — 검색 + 카테고리 칩은 accessory
                     BUPageHeader(
                         title: "프랜차이즈",
-                        subtitle: "초기 비용 · 운영 난이도 · 폐점률 — 본사가 안 알려주는 진짜 데이터",
+                        subtitle: "초기 비용 · 운영 난이도 · 폐점률",
                         accessory: {
                             VStack(alignment: .leading, spacing: 10) {
                                 searchBar

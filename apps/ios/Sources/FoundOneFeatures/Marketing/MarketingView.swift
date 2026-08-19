@@ -119,7 +119,7 @@ public struct MarketingView: View {
                     BUPageHeader(
                         title: "마케팅",
                         // 웹 MarketingSurface.tsx 헤더 카피와 통일 (2026-07-24 개편).
-                        subtitle: "이번 주에 딱 하나. 읽을 건 줄이고, 바로 쓸 것만 드려요.",
+                        subtitle: "이번 주에 딱 하나만",
                         accessory: { segmentedTabs }
                     )
                     VStack(alignment: .leading, spacing: BUSpacing.md) {

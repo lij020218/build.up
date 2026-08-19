@@ -25,7 +25,7 @@ public struct FinanceView: View {
                 // 공통 페이지 헤더 (2026-08-19 통일)
                 BUPageHeader(
                     title: "재무",
-                    subtitle: "이번 달 손익분기 · 13주 자금흐름 · 12개월 시뮬레이션 — 모든 수치는 사장님 입력 데이터 기반"
+                    subtitle: "손익분기 · 13주 자금흐름 · 시뮬레이션"
                 )
                 VStack(spacing: BUSpacing.shellGap) {
                     bepTracker

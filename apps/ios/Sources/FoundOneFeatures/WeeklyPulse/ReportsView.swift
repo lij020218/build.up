@@ -114,10 +114,10 @@ public struct ReportsView: View {
     /// 기간 문맥은 부제에 합친다.
     private var reportSubtitle: String {
         switch period {
-        case .day:     return "오늘의 매출 — 지난 7일 평균과 비교"
-        case .week:    return "이번 주 점검 — 주간 매출·비용·이상 신호"
-        case .month:   return "이번 달 흐름 — 월간 P&L 및 추세"
-        case .quarter: return "분기 회고 — 분기별 성과 + 다음 우선순위"
+        case .day:     return "오늘 매출 · 7일 평균 비교"
+        case .week:    return "주간 매출 · 비용 · 이상 신호"
+        case .month:   return "월간 손익 · 추세"
+        case .quarter: return "분기 성과 · 다음 우선순위"
         }
     }
 

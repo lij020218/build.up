@@ -218,7 +218,7 @@ public struct ProfileView: View {
 
     /// 헤더 부제 — 로그인 상태 한 줄 (계정 상세는 아래 카드).
     private var profileSubtitle: String {
-        coordinator?.currentSession == nil ? "로그인하면 계정·가게 정보를 관리할 수 있어요" : "계정 · 가게 · 알림 · 데이터 연결"
+        coordinator?.currentSession == nil ? "로그인하면 계정을 관리할 수 있어요" : "계정 · 가게 · 알림 · 데이터 연결"
     }
 
     // MARK: - 2. accountCard
