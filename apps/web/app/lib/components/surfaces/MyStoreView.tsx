@@ -6,18 +6,25 @@
  * 회계·정적 정보 관점 — 운영 대시보드와 분리.
  * AI 호출 0 — 모두 사장 입력 + 정적 schema lookup + 산수.
  *
- * 구성:
- *   1) Hero At-a-Glance (사진 + 업종 + 위치 + 운영 N일째 + 핵심 6숫자)
- *   2) D-Day 통합 위젯 (sticky 우상단)
- *   3) Financial Snapshot (누적·분기·잔고·런웨이)
- *   4) 공통 코어 5섹션 (Identity / Legal / Money / People / Insurance)
- *   5) Footprint (오프라인=임대차, 온라인=도메인, 출장형=차량)
- *   6) 카테고리별 동적 섹션 (11개 카테고리)
- *   7) Sticky 좌측 TOC
+ * 구성 (2026-08-19 IA — 세그먼트 3탭, iOS MyStoreView 동일):
+ *   「현황」  1) Hero At-a-Glance (사진 + 업종 + 위치 + 운영 N일째 + 핵심 6숫자 + D-Day)
+ *            2) Financial Snapshot — 3숫자 스트립(누적·잔고·런웨이) + [자세히] 분기·게이지
+ *            3) 비용 관리 (읽기 전용 + 수정/저장)
+ *   「가게 정보」 공통 코어 5섹션 + Footprint + 카테고리별 동적 섹션 — 접힌 행(제목 + 입력 n/m), 클릭하면 펼침
+ *   「서류」  사업 서류 라이브러리
+ *   Sticky 좌측 TOC 는 「가게 정보」 탭에서만 (섹션 앵커가 그 탭에 있음)
  */
 
-import { useMemo } from "react";
+type MyStoreSegment = "status" | "info" | "docs";
+const MY_STORE_SEGMENTS: Array<{ key: MyStoreSegment; label: string }> = [
+  { key: "status", label: "현황" },
+  { key: "info", label: "가게 정보" },
+  { key: "docs", label: "서류" },
+];
+
+import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { SegmentedTabs } from "../SegmentedTabs";
 import { useStoreInfoStore } from "../../stores/store-info-store";
 import { HeroAtAGlance } from "../my-store/HeroAtAGlance";
 import { FinancialSnapshotSection } from "../my-store/FinancialSnapshotSection";
@@ -39,6 +46,13 @@ import { PALETTE } from "../my-store/styles";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
+function daysUntil(dateStr: string): number | null {
+  const t = new Date(`${dateStr}T00:00:00`);
+  if (isNaN(t.getTime())) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((t.getTime() - today.getTime()) / 86400000);
+}
+
 function fmtWonShort(n: number): string {
   if (!isFinite(n)) return "—";
   const abs = Math.abs(n);
@@ -51,6 +65,7 @@ export function MyStoreView() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
   const si = useStoreInfoStore();
+  const [segment, setSegment] = useState<MyStoreSegment>("status");
 
   // 모든 변경 → 600ms debounce → flushStoreDataImmediate (Supabase 즉시 저장).
   // persistStatus 가 saving → saved/error 로 사용자에게 자동 노출.
@@ -151,12 +166,9 @@ export function MyStoreView() {
     return out;
   }, [footprintSection, categorySections]);
 
-  // TOC items — "정체성" 은 한국어로 부자연스럽고 Identity 섹션과 중복되어 "한눈에 보기"로 변경
+  // TOC items — 「가게 정보」 탭의 섹션 앵커만 (2026-08-19 세그먼트: 히어로·재무는 「현황」 탭)
   const tocItems = useMemo(() => {
-    const items: Array<{ id: string; label: string }> = [
-      { id: "hero", label: ko ? "한눈에 보기" : "At a glance" },
-      { id: "financial", label: ko ? "재무 현황" : "Financial" },
-    ];
+    const items: Array<{ id: string; label: string }> = [];
     for (const s of allSections) {
       items.push({ id: s.id, label: ko ? s.title : s.titleEn ?? s.title });
     }
@@ -277,66 +289,86 @@ export function MyStoreView() {
 
   return (
     <div style={{ display: "flex", gap: 24, alignItems: "flex-start", maxWidth: 1400, margin: "0 auto", padding: "0 16px" }}>
-      {/* 좌측 sticky TOC (1100+ 만 노출) */}
-      <div className="my-store-toc" style={{ display: "none" }}>
-        <StickyTOC items={tocItems} ko={ko} />
-      </div>
+      {/* 좌측 sticky TOC (1100+ 만 노출) — 「가게 정보」 탭에서만 */}
+      {segment === "info" && (
+        <div className="my-store-toc" style={{ display: "none" }}>
+          <StickyTOC items={tocItems} ko={ko} />
+        </div>
+      )}
 
       {/* 메인 컨텐츠 */}
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" as const, gap: 18 }}>
-        {/* Hero — 저장 상태 + D-Day 모두 Hero 카드 안 우상단으로 통합 (TOC 와 같은 y=0 시작) */}
-        <div id="hero">
-          <HeroAtAGlance
-            ko={ko}
-            storeName={(d.storeName as string) ?? ""}
-            mission={si.mission}
-            shortDescription={si.shortDescription}
-            categoryLabel={categoryLabel}
-            subIndustryLabel={subIndustryLabel}
-            businessModelLabel={businessModelId}
-            addressRoad={si.addressRoad}
-            addressDetail={si.addressDetail}
-            openTime={(d.businessOpenTime as string | null | undefined) ?? null}
-            closeTime={(d.businessCloseTime as string | null | undefined) ?? null}
-            daysOperating={daysOperating}
-            launchDate={launchDate}
-            storePhotos={si.storePhotos}
-            metrics={heroMetrics}
-            saveStatus={d.persistStatus as "idle" | "saving" | "saved" | "error" | undefined}
-            saveLastSavedAt={d.persistLastSavedAt as string | null | undefined}
-            saveError={d.persistError as string | null | undefined}
-            ddayItems={ddayItems}
-          />
-        </div>
-
-        {/* Financial Snapshot */}
-        <FinancialSnapshotSection
-          ko={ko}
-          dailyEntries={dailyEntries}
-          monthlyCosts={monthlyCosts}
-          totalCapitalKrw={totalCapital}
-          currentBalanceManualKrw={si.currentBalanceManualKrw}
-          currentBalanceUpdatedAt={si.currentBalanceUpdatedAt}
-          launchDate={launchDate}
-          onUpdateBalance={(krw) => {
-            si.setField("currentBalanceManualKrw", krw);
-            si.setField("currentBalanceUpdatedAt", new Date().toISOString());
-          }}
+        {/* 세그먼트 — 현황 · 가게 정보 · 서류 (iOS MyStoreView 동일) */}
+        <SegmentedTabs<MyStoreSegment>
+          items={MY_STORE_SEGMENTS.map((t) => (
+            t.key === "status" && ddayItems.some((it) => { const dd = daysUntil(it.date); return dd != null && dd <= 7; })
+              ? { ...t, dot: true }
+              : t
+          ))}
+          value={segment}
+          onChange={setSegment}
+          ariaLabel={ko ? "내 가게 세그먼트" : "My store segments"}
         />
 
-        {/* 비용 관리 — 월 평균 비용 + 고정 지출 D-day (대시보드 도넛 카드의 데이터 출처) */}
-        <CostManagementCard
-          ko={ko}
-          expenseFields={d.businessCtx?.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
-        />
+        {/* ═══════════ 「현황」 = 한눈에 보기 → 재무 스트립 → 비용 관리 ═══════════ */}
+        {segment === "status" && (
+          <>
+            {/* Hero — 저장 상태 + D-Day 모두 Hero 카드 안 우상단으로 통합 */}
+            <div id="hero">
+              <HeroAtAGlance
+                ko={ko}
+                storeName={(d.storeName as string) ?? ""}
+                mission={si.mission}
+                shortDescription={si.shortDescription}
+                categoryLabel={categoryLabel}
+                subIndustryLabel={subIndustryLabel}
+                businessModelLabel={businessModelId}
+                addressRoad={si.addressRoad}
+                addressDetail={si.addressDetail}
+                openTime={(d.businessOpenTime as string | null | undefined) ?? null}
+                closeTime={(d.businessCloseTime as string | null | undefined) ?? null}
+                daysOperating={daysOperating}
+                launchDate={launchDate}
+                storePhotos={si.storePhotos}
+                metrics={heroMetrics}
+                saveStatus={d.persistStatus as "idle" | "saving" | "saved" | "error" | undefined}
+                saveLastSavedAt={d.persistLastSavedAt as string | null | undefined}
+                saveError={d.persistError as string | null | undefined}
+                ddayItems={ddayItems}
+              />
+            </div>
 
-        {/* 2026-05-12 P1 #13: 사업 서류 라이브러리 — 중앙 보관소.
-            단계별 inline 업로드와 같은 SSOT 공유 (store-info-store.businessDocuments).
-            사장님이 한 곳에서 사업자등록증·영업신고증·위생교육·상표등록증 등 모두 관리. */}
-        <BusinessDocumentsLibraryCard ko={ko} />
+            {/* Financial Snapshot — 3숫자 스트립 (손익·재무 탭과 겹치는 지표라 축약, [자세히] 로 분기·게이지) */}
+            <FinancialSnapshotSection
+              ko={ko}
+              dailyEntries={dailyEntries}
+              monthlyCosts={monthlyCosts}
+              totalCapitalKrw={totalCapital}
+              currentBalanceManualKrw={si.currentBalanceManualKrw}
+              currentBalanceUpdatedAt={si.currentBalanceUpdatedAt}
+              launchDate={launchDate}
+              onUpdateBalance={(krw) => {
+                si.setField("currentBalanceManualKrw", krw);
+                si.setField("currentBalanceUpdatedAt", new Date().toISOString());
+              }}
+            />
 
-        {/* 모든 섹션 동적 렌더 */}
-        {allSections.map((section) => {
+            {/* 비용 관리 — 월 평균 비용 + 고정 지출 D-day (읽기 전용 요약 + [수정] 토글, flushStoreDataImmediate 저장) */}
+            <CostManagementCard
+              ko={ko}
+              expenseFields={d.businessCtx?.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
+            />
+          </>
+        )}
+
+        {/* ═══════════ 「서류」 = 사업 서류 라이브러리 ═══════════ */}
+        {segment === "docs" && (
+          /* 2026-05-12 P1 #13: 중앙 보관소 — 단계별 inline 업로드와 같은 SSOT (store-info-store.businessDocuments) */
+          <BusinessDocumentsLibraryCard ko={ko} />
+        )}
+
+        {/* ═══════════ 「가게 정보」 = 모든 섹션 — 접힌 행, 클릭하면 펼침 ═══════════ */}
+        {segment === "info" && allSections.map((section) => {
           const isObj = !!section.fields;
           const isArr = !!section.arrayItem;
           const objMap = objectSectionMap[section.id];
@@ -358,6 +390,7 @@ export function MyStoreView() {
                 key={section.id}
                 section={section}
                 ko={ko}
+                collapsible
                 objectValue={objMap.get()}
                 onObjectFieldChange={(k, v) => objMap.set(k, v)}
               />
@@ -371,6 +404,7 @@ export function MyStoreView() {
                 key={section.id}
                 section={section}
                 ko={ko}
+                collapsible
                 arrayValue={value}
                 onArrayAdd={(item) => si.addArrayItem(arrKey, item as never)}
                 onArrayUpdate={(id, patch) => si.updateArrayItem(arrKey, id, patch as never)}
@@ -387,6 +421,7 @@ export function MyStoreView() {
                 key={section.id}
                 section={section}
                 ko={ko}
+                collapsible
                 arrayValue={value}
                 onArrayAdd={(item) => si.addIndustryArrayItem(section.id, item)}
                 onArrayUpdate={(id, patch) => si.updateIndustryArrayItem(section.id, id, patch)}
@@ -403,6 +438,7 @@ export function MyStoreView() {
                 key={section.id}
                 section={section}
                 ko={ko}
+                collapsible
                 objectValue={value}
                 onObjectFieldChange={(k, v) => si.setIndustrySpecific(section.id, { ...value, [k]: v })}
               />

@@ -74,6 +74,20 @@ public struct StaffDashboardView: View {
     @State private var showProfileSheet = false   // 내 정보 시트 (2026-07-13)
     @Environment(\.scenePhase) private var scenePhase   // 포그라운드 복귀 재조회 트리거
 
+    // ── 세그먼트 (2026-08-19 IA 정리, 웹 StaffDashboard 와 동일 3탭) ──
+    //   「오늘」= 출퇴근 → 출근 캘린더  /  「신청」= 희망 근무 → 연차 → 수당  /  「권리·급여」= 급여일 → 내 근로 권리
+    enum StaffSegment: String, CaseIterable, Hashable {
+        case today, requests, rightsPay
+        var label: String {
+            switch self {
+            case .today: return "오늘"
+            case .requests: return "신청"
+            case .rightsPay: return "권리·급여"
+            }
+        }
+    }
+    @State private var segment: StaffSegment = .today
+
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var today: String { ymd(Date()) }
     private var todayAtt: StaffAttendance? { monthAtt.first(where: { $0.workDate == today }) }
@@ -122,56 +136,66 @@ public struct StaffDashboardView: View {
         ZStack(alignment: .top) {
             BUBackgroundSurface()
             ScrollView {
-                VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    // 로고 + 내 정보 헤더 바 (2026-07-13, 웹 미러) — 연결됐을 때만 내 정보 노출
-                    logoHeaderBar(showProfileBtn: ctx?.connected == true)
-                    if loading {
-                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 60)
-                    } else if loadFailed {
-                        loadFailedCard
-                    } else if let ctx, ctx.connected {
-                        if let actionError {
-                            Text(actionError)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(BUColor.danger)
-                                .padding(11)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                VStack(spacing: 0) {
+                    // 공통 페이지 헤더 (2026-08-19 통일, 사장 화면 BUPageHeader 와 정렬)
+                    //   title = 가게명(미연결/로딩 = "내 근무"), subtitle = 역할 · 가게, trailing = 내 정보,
+                    //   accessory = 3 세그먼트 (연결됐을 때만)
+                    pageHeader
+                    VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        if loading {
+                            ProgressView().frame(maxWidth: .infinity).padding(.vertical, 60)
+                        } else if loadFailed {
+                            loadFailedCard
+                        } else if let ctx, ctx.connected {
+                            if let actionError {
+                                Text(actionError)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(BUColor.danger)
+                                    .padding(11)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                            }
+                            switch segment {
+                            case .today:
+                                // 가게 컨텍스트(역할·근속·직무·근무 요일) — 헤더 부제에 가게·역할이 흡수됐고,
+                                //   직무 칩·근무 요일 스트립은 이 카드가 계속 보여준다.
+                                headerCard(ctx)
+                                StaffTodayCard(
+                                    shift: todayShift, att: todayAtt, busy: busy,
+                                    onClockIn: { Task { await clockIn() } },
+                                    onClockOut: { Task { await clockOut() } }
+                                )
+                                calendarCard
+                            case .requests:
+                                // 다음 달 희망 근무 신청 (웹 StaffDashboard 와 같은 순서) → 연차 → 수당
+                                ShiftAvailabilityCard(mode: .staff, ownerUserId: ctx.ownerUserId, repo: repo)
+                                leaveCard
+                                // 추가 수당 신청 — 연장·야간·휴일근로 (2026-07-13)
+                                StaffAllowanceCard(
+                                    allowances: allowances,
+                                    candidates: overtimeCandidates,
+                                    onQuickRequest: { c in Task { await submitAllowance(workDate: c.workDate, type: "overtime", minutes: c.minutes, reason: "") } },
+                                    onOpenForm: { showAllowanceSheet = true },
+                                    onCancel: { id in Task { await cancelAllowance(id: id) } }
+                                )
+                            case .rightsPay:
+                                // 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 노출.
+                                //   미설정이면 카드 자체를 숨긴다(추측값 표시 금지 = 가짜 숫자 금지 원칙).
+                                if let payday = ctx.paydayDay {
+                                    StaffPaydayCard(paydayDay: payday) { await reportUnpaid() }
+                                }
+                                // 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장 판정과 동일 SSOT, 2026-07-13)
+                                //   접힘 요약(배지 3개) + 펼치기
+                                StaffRightsCard(hourlyWage: ctx.hourlyWage, hireDate: ctx.hireDate, joinedAt: ctx.joinedAt, weeklyMinutes: weeklyMinutes)
+                            }
+                            // 로그아웃은 「내 정보」 시트로 통합 (2026-07-13)
+                        } else {
+                            notConnectedCard
                         }
-                        headerCard(ctx)
-                        StaffTodayCard(
-                            shift: todayShift, att: todayAtt, busy: busy,
-                            onClockIn: { Task { await clockIn() } },
-                            onClockOut: { Task { await clockOut() } }
-                        )
-                        calendarCard
-                        // 다음 달 희망 근무 신청 — 캘린더 바로 뒤 (웹 StaffDashboard 와 같은 순서).
-                        //   "동료가 이미 낸 시간을 보면서 조정" 이 핵심이라 같은 화면에 붙여 둔다.
-                        ShiftAvailabilityCard(mode: .staff, ownerUserId: ctx.ownerUserId, repo: repo)
-                        leaveCard
-                        // 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장 판정과 동일 SSOT, 2026-07-13)
-                        StaffRightsCard(hourlyWage: ctx.hourlyWage, hireDate: ctx.hireDate, joinedAt: ctx.joinedAt, weeklyMinutes: weeklyMinutes)
-                        // 추가 수당 신청 — 연장·야간·휴일근로 (2026-07-13)
-                        StaffAllowanceCard(
-                            allowances: allowances,
-                            candidates: overtimeCandidates,
-                            onQuickRequest: { c in Task { await submitAllowance(workDate: c.workDate, type: "overtime", minutes: c.minutes, reason: "") } },
-                            onOpenForm: { showAllowanceSheet = true },
-                            onCancel: { id in Task { await cancelAllowance(id: id) } }
-                        )
-                        // 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 노출.
-                        //   미설정이면 카드 자체를 숨긴다(추측값 표시 금지 = 가짜 숫자 금지 원칙).
-                        if let payday = ctx.paydayDay {
-                            StaffPaydayCard(paydayDay: payday) { await reportUnpaid() }
-                        }
-                        // 로그아웃은 「내 정보」 시트로 통합 (2026-07-13)
-                    } else {
-                        notConnectedCard
+                        Color.clear.frame(height: 40)
                     }
-                    Color.clear.frame(height: 40)
+                    .padding(.horizontal, BUSpacing.md)
                 }
-                .padding(.horizontal, BUSpacing.md)
-                .padding(.top, BUSpacing.sm)
             }
         }
         .task { await load() }
@@ -213,27 +237,37 @@ public struct StaffDashboardView: View {
         }
     }
 
-    // ── 로고 + 내 정보 헤더 바 ──
-    private func logoHeaderBar(showProfileBtn: Bool) -> some View {
-        HStack(spacing: 10) {
-            FoundOneSpiralLogo(size: 26, color: BUColor.midnightBright)
-            (Text("Found").foregroundColor(BUColor.ink)
-             + Text(".").foregroundColor(BUColor.midnight)
-             + Text("One").fontWeight(.heavy).foregroundColor(BUColor.ink))
-                .font(.system(size: 15, weight: .bold))
-            Spacer(minLength: 0)
-            if showProfileBtn {
-                Button { showProfileSheet = true } label: {
-                    Label("내 정보", systemImage: "person.crop.circle")
-                        .font(.system(size: 12.5, weight: .heavy))
-                        .foregroundStyle(BUColor.midnight)
-                        .padding(.horizontal, 14).padding(.vertical, 7)
-                        .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+    // ── 페이지 헤더 (BUPageHeader — 사장 화면과 동일 상단, 2026-08-19) ──
+    private var storeTitle: String {
+        let name = ctx?.storeName?.trimmingCharacters(in: .whitespaces) ?? ""
+        return (ctx?.connected == true && !name.isEmpty) ? name : "내 근무"
+    }
+    private var headerSubtitle: String? {
+        guard let ctx, ctx.connected else { return nil }
+        let role = ctx.role == "manager" ? "매니저" : "직원"
+        let name = ctx.storeName?.trimmingCharacters(in: .whitespaces) ?? ""
+        return name.isEmpty ? role : "\(role) · \(name)"
+    }
+    @ViewBuilder
+    private var pageHeader: some View {
+        let connected = ctx?.connected == true
+        BUPageHeader(
+            title: storeTitle,
+            subtitle: headerSubtitle,
+            trailing: {
+                if connected {
+                    BUHeaderIconButton(systemName: "person.crop.circle", accessibilityLabel: "내 정보") { showProfileSheet = true }
                 }
-                .buttonStyle(.plain)
+            },
+            accessory: {
+                if connected {
+                    BUSegmentedControl(
+                        items: StaffSegment.allCases.map { BUSegmentItem(id: $0, label: $0.label) },
+                        selection: $segment
+                    )
+                }
             }
-        }
-        .padding(.horizontal, 4)
+        )
     }
 
     // ── 데이터 로드 (웹 loadAll 미러) ──
@@ -327,17 +361,12 @@ public struct StaffDashboardView: View {
     private func headerCard(_ ctx: StaffStoreContext) -> some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("FOUND.ONE · 직원 대시보드")
-                    .font(.system(size: 11, weight: .heavy))
-                    .foregroundStyle(BUColor.inkMuted)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-                (Text(ctx.storeName?.trimmingCharacters(in: .whitespaces).isEmpty == false ? ctx.storeName! : "가게")
-                    .foregroundColor(BUColor.midnight)
-                 + Text("에서 일하고 있어요").foregroundColor(BUColor.ink))
-                    .font(.system(size: 19, weight: .heavy))
+                // 가게명·역할은 페이지 헤더(제목·부제)로 흡수 (2026-08-19) — 여기는 근속·직무·근무 요일만
                 HStack(spacing: 6) {
-                    chip(ctx.role == "manager" ? "역할 · 매니저" : "역할 · 직원")
+                    Text("내 근무 정보")
+                        .font(.system(size: 15, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    Spacer(minLength: 0)
                     if let t = tenure(ctx), t >= 1 { chip("근속 · \(t)일차") }
                 }
                 // 고용형태 · 직무 (사장 설정, 2026-07-13)
@@ -621,7 +650,6 @@ public struct StaffDashboardView: View {
     private var loadFailedCard: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("FOUND.ONE · 직원").font(.system(size: 11, weight: .heavy)).foregroundStyle(BUColor.inkMuted).textCase(.uppercase).tracking(0.5)
                 Text("연결 정보를 불러오지 못했어요").font(.system(size: 17, weight: .heavy)).foregroundStyle(BUColor.ink)
                 Text("일시적인 오류일 수 있어요. 잠시 후 다시 시도해 주세요. 연결은 그대로 유지됩니다.")
                     .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
@@ -648,7 +676,6 @@ public struct StaffDashboardView: View {
     private var notConnectedCard: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("FOUND.ONE · 직원").font(.system(size: 11, weight: .heavy)).foregroundStyle(BUColor.inkMuted).textCase(.uppercase).tracking(0.5)
                 Text("아직 가게에 연결되지 않았어요").font(.system(size: 17, weight: .heavy)).foregroundStyle(BUColor.ink)
                 Text("사장님께 받은 초대 링크를 다시 열거나, 초대 코드를 다시 확인해 주세요. 초대는 7일간 유효합니다.")
                     .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
@@ -958,14 +985,48 @@ private struct StaffRightsCard: View {
     private var belowMinimum: Bool { (hourlyWage ?? 0) > 0 && (hourlyWage ?? 0) < Self.minimumWage2026 }
     private var dDay: Int { max(0, 365 - daysSinceHire) }
 
+    /// 접힘 요약(배지 3개) + 펼치기 (2026-08-19 IA 정리, 웹 StaffRightsCard 미러). 최저임금 경고는 항상 노출.
+    @State private var expanded = false
+
+    private var juhyuBadge: String { juhyuEligible ? "대상" : "비대상" }
+    private var severanceBadge: String { severanceEligible ? "대상 도달" : (severanceApproaching ? "임박" : "미도달") }
+    private var leaveBadge: String { daysSinceHire >= 365 ? "15일 발생" : "1년 미만" }
+
     var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.shield")
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
-                    Text("내 근로 권리").font(.system(size: 15, weight: .heavy)).foregroundStyle(BUColor.ink)
+                Button {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { expanded.toggle() }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.shield")
+                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                        Text("내 근로 권리").font(.system(size: 15, weight: .heavy)).foregroundStyle(BUColor.ink)
+                        Spacer(minLength: 0)
+                        Text(expanded ? "접기" : "펼치기").font(.system(size: 11.5, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.midnight)
+                            .rotationEffect(.degrees(expanded ? 180 : 0))
+                    }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityValue(expanded ? "펼침" : "접힘")
+
+                if !expanded {
+                    // 요약 배지 3개 — 펼치지 않아도 자격 상태가 한눈에
+                    HStack(spacing: 6) {
+                        summaryBadge("주휴수당", value: juhyuBadge, on: juhyuEligible)
+                        summaryBadge("퇴직금", value: severanceBadge, on: severanceEligible)
+                        summaryBadge("연차", value: leaveBadge, on: daysSinceHire >= 365)
+                    }
+                    if hourlyWage == nil {
+                        Text("사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 표시됩니다.")
+                            .font(.system(size: 11.5)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                    }
+                }
+
+                if expanded {
                 if hourlyWage == nil {
                     Text("사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 여기 표시됩니다.")
                         .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
@@ -1006,8 +1067,9 @@ private struct StaffRightsCard: View {
                         : "근속 1년 도달 시 연차 15일이 발생합니다. D-\(dDay)",
                     law: "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)."
                 )
+                } // expanded
 
-                // 최저임금 미달 경고
+                // 최저임금 미달 경고 — 접혀 있어도 항상 노출 (권리 침해 신호는 숨기지 않는다)
                 if belowMinimum {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("⚠ 현재 시급 \((hourlyWage ?? 0).formatted())원 — 2026 최저시급 \(Self.minimumWage2026.formatted())원 미달")
@@ -1026,6 +1088,18 @@ private struct StaffRightsCard: View {
                 }
             }
         }
+    }
+
+    /// 접힘 요약 배지 — 라벨 + 상태 (자격 충족 = ok 톤, 미충족 = 뮤트)
+    private func summaryBadge(_ label: String, value: String, on: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.system(size: 10.5, weight: .heavy)).foregroundStyle(BUColor.inkMuted)
+            Text(value).font(.system(size: 12, weight: .heavy)).foregroundStyle(on ? ok : BUColor.inkSecondary).lineLimit(1).minimumScaleFactor(0.85)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background((on ? ok.opacity(0.06) : BUColor.midnight.opacity(0.05)), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(on ? ok.opacity(0.25) : Color.clear, lineWidth: 1))
     }
 
     @ViewBuilder

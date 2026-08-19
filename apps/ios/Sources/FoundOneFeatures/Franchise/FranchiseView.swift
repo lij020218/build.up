@@ -180,6 +180,8 @@ public struct FranchiseView: View {
 
     /// 필터 결과 메모 — body 마다 재계산하지 않고 검색어(150ms 디바운스)·카테고리 변경 시에만 갱신.
     @State private var filteredBrands: [FranchiseBrandView] = franchiseSortedBrands
+    /// 페이지네이션 — 20행씩 "더 보기" (2026-08-19 밀도 정리, 웹 FranchiseView 동일). 필터 변경 시 리셋.
+    @State private var visibleCount: Int = franchisePageSize
 
     public init() {}
 
@@ -187,6 +189,7 @@ public struct FranchiseView: View {
 
     private func recomputeFiltered() {
         filteredBrands = filterFranchiseBrands(categoryId: selectedCategoryId, query: searchQuery)
+        visibleCount = franchisePageSize
     }
 
     public var body: some View {
@@ -207,7 +210,7 @@ public struct FranchiseView: View {
                     )
                     VStack(alignment: .leading, spacing: 16) {
                         brandCards
-                        disclaimerCard
+                        disclaimerFootnote
                         Color.clear.frame(height: 110)
                     }
                     .padding(.horizontal, BUSpacing.screenMargin)
@@ -315,13 +318,33 @@ public struct FranchiseView: View {
     // MARK: - Brand cards (vertical stack — mobile 1-col)
 
     private var brandCards: some View {
-        // 공정위 자동 브랜드 합류로 최대 ~1,600개 → LazyVStack 으로 on-demand 렌더(성능).
-        LazyVStack(spacing: 12) {
-            ForEach(filteredBrands) { brand in
+        // 공정위 자동 브랜드 합류로 최대 ~1,600개 → LazyVStack + 20행 페이지네이션.
+        let shown = filteredBrands.prefix(visibleCount)
+        return LazyVStack(spacing: 8) {
+            ForEach(shown) { brand in
                 FranchiseBrandCard(brand: brand) {
                     selectedBrand = brand
                     selectedBrandIdStorage = brand.id
                 }
+            }
+
+            if filteredBrands.count > shown.count {
+                Button {
+                    withAnimation { visibleCount += franchisePageSize }
+                } label: {
+                    HStack(spacing: 5) {
+                        Text("더 보기 \(min(franchisePageSize, filteredBrands.count - shown.count))개 (\(shown.count)/\(filteredBrands.count))")
+                            .font(.system(size: 13, weight: .heavy))
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 11, weight: .heavy))
+                    }
+                    .foregroundStyle(BUColor.midnight)
+                    .frame(maxWidth: .infinity, minHeight: BUSpacing.minTapTarget)
+                    .background(Color.white.opacity(0.72), in: Capsule())
+                    .overlay(Capsule().strokeBorder(BUColor.cardBorder, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
             }
 
             if filteredBrands.isEmpty {
@@ -336,52 +359,21 @@ public struct FranchiseView: View {
         }
     }
 
-    // MARK: - Disclaimer card
+    // MARK: - Disclaimer footnote (한 줄 — 2026-08-19 밀도 정리; 상세 검증 항목은 상세 시트 정직성 푸터)
 
-    private var disclaimerCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(BUColor.warn)
-                Text("프랜차이즈 진입 전 필수")
-                    .font(.system(size: 12, weight: .bold))
-                    .tracking(0.4)
-                    .textCase(.uppercase)
-                    .foregroundStyle(BUColor.warn)
-            }
-
-            VStack(alignment: .leading, spacing: 5) {
-                disclaimerRow("공정위 정보공개서(franchise.ftc.go.kr) 본사명·점포수·매출 직접 확인")
-                disclaimerRow("폐점률 20% 이상 → 위험 신호")
-                disclaimerRow("점주 평균 운영기간 5년 미만 → 재계약 단절 의심")
-                disclaimerRow("본 화면 데이터는 비교 예시 — 실제 계약 전 정보공개서 기반 검증 필수")
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(BUColor.warn.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(BUColor.warn.opacity(0.20), lineWidth: 1)
-        )
-    }
-
-    private func disclaimerRow(_ text: String) -> some View {
+    private var disclaimerFootnote: some View {
         HStack(alignment: .top, spacing: 6) {
-            Text("·")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(BUColor.warn.opacity(0.7))
-            Text(text)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(BUColor.ink.opacity(0.78))
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(BUColor.warn.opacity(0.8))
+                .padding(.top, 2)
+            Text("비교 예시 데이터 — 계약 전 공정위 정보공개서(franchise.ftc.go.kr)로 본사명·점포수·매출·폐점률(20%+ 위험) 직접 확인")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted.opacity(0.75))
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.top, 4)
     }
 }
 
@@ -390,6 +382,9 @@ public struct FranchiseView: View {
 extension URL: @retroactive Identifiable {
     public var id: String { absoluteString }
 }
+
+/// 목록 페이지 크기 — 20행씩 "더 보기" (웹 FranchiseView PAGE_SIZE 동일)
+private let franchisePageSize = 20
 
 // MARK: - Overall score (5-bar 평균 — 웹 computeOverallScore 미러)
 
@@ -401,17 +396,24 @@ private struct FranchiseBrandCard: View {
     let brand: FranchiseBrandView
     let onTapInfoDisclosure: () -> Void
 
+    // 2026-08-19 밀도 정리: 컴팩트 한 줄 행(브랜드 · 카테고리 · 종합 · 초기비용 · 폐점률 + chevron).
+    //   2×2 지표 그리드 + 5 점수 바는 상세 시트(FranchiseDetailSheet)에 이미 존재 → 카드에서 제거.
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Row 1: Name + category chip
-            HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 3) {
+        Button(action: onTapInfoDisclosure) {
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {
                         Text(brand.name)
-                            .font(.system(size: 18, weight: .bold))
-                            .tracking(-0.36)
+                            .font(.system(size: 15, weight: .bold))
+                            .tracking(-0.3)
                             .foregroundStyle(BUColor.ink)
                             .lineLimit(1)
+                        Text(brand.category)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(BUColor.midnight.opacity(0.06), in: Capsule())
                         if brand.isKftc {
                             Text("공정위")
                                 .font(.system(size: 9.5, weight: .heavy))
@@ -420,89 +422,53 @@ private struct FranchiseBrandCard: View {
                                 .background(BUColor.midnight.opacity(0.06), in: Capsule())
                         }
                     }
-                    Text(brand.tagline)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 8) {
+                        metric("초기", formatTotalCost(brand.totalInitialManwon))
+                        metric("폐점률", brand.closureRatePct.map { String(format: "%.1f%%", $0) } ?? "-",
+                               tint: brand.closureRatePct.map { $0 >= 20 ? BUColor.danger : $0 >= 10 ? BUColor.warn : BUColor.ink } ?? BUColor.ink)
+                    }
                 }
-                Spacer(minLength: 0)
-                Text(brand.category)
-                    .font(.system(size: 10.5, weight: .semibold))
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(BUColor.midnight.opacity(0.06), in: Capsule())
-            }
-
-            // Row 2: 2x2 metric grid
-            metricGrid
-
-            // Row 3: 5-bar score row
-            scoreRow
-
-            // Row 4: 공정위 link
-            Button(action: onTapInfoDisclosure) {
-                HStack(spacing: 4) {
-                    Text("공정위 정보공개서")
-                        .font(.system(size: 11.5, weight: .semibold))
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 10, weight: .bold))
+                Spacer(minLength: 6)
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(String(format: "%.0f", brand.overall))
+                        .font(.system(size: 17, weight: .heavy))
+                        .foregroundStyle(scoreColor(Int(brand.overall)))
+                        .monospacedDigit()
+                    Text("종합")
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.7))
                 }
-                .foregroundStyle(BUColor.midnight)
-                .padding(.vertical, 6)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .contentShape(Rectangle())
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
             }
-            .buttonStyle(.plain)
-            .frame(minHeight: 44, alignment: .trailing)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: BUSpacing.minTapTarget)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.72))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-        )
+        .buttonStyle(.plain)
     }
 
-    // MARK: - Metric grid (2x2)
-
-    private var metricGrid: some View {
-        let cells: [(label: String, value: String)] = [
-            ("가맹비",      "\(brand.franchiseFeeManwon.formatted())만원"),
-            ("초기 총비용", formatTotalCost(brand.totalInitialManwon)),
-            ("연 매출",     brand.avgRevenueOku.map { String(format: "%.1f억", $0) } ?? "-"),
-            ("폐점률",      brand.closureRatePct.map { String(format: "%.1f%%", $0) } ?? "-"),
-        ]
-        return LazyVGrid(
-            columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)],
-            spacing: 6
-        ) {
-            ForEach(cells, id: \.label) { cell in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(cell.label)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
-                    Text(cell.value)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(BUColor.ink)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(BUColor.ink.opacity(0.03))
-                )
-            }
+    private func metric(_ label: String, _ value: String, tint: Color = BUColor.ink) -> some View {
+        HStack(spacing: 3) {
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+            Text(value)
+                .font(.system(size: 11.5, weight: .bold))
+                .foregroundStyle(tint)
+                .monospacedDigit()
+                .lineLimit(1)
         }
     }
 
@@ -512,44 +478,6 @@ private struct FranchiseBrandCard: View {
             return String(format: "%.1f억", eok)
         } else {
             return "\(manwon.formatted())만원"
-        }
-    }
-
-    // MARK: - 5 score bars
-
-    private var scoreRow: some View {
-        let scores: [(label: String, value: Int)] = [
-            ("수익성",   brand.scoreAccessibility),
-            ("안정성",     brand.scoreProfitability),
-            ("접근성",     brand.scoreProfitability),
-            ("브랜드", brand.scoreBrandPower),
-            ("지원", brand.scoreStability),
-        ]
-        return HStack(spacing: 6) {
-            ForEach(scores, id: \.label) { s in
-                VStack(spacing: 4) {
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(BUColor.ink.opacity(0.05))
-                            Capsule()
-                                .fill(scoreColor(s.value))
-                                .frame(width: geo.size.width * CGFloat(s.value) / 100)
-                        }
-                    }
-                    .frame(height: 3)
-
-                    Text("\(s.value)")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(scoreColor(s.value))
-                        .monospacedDigit()
-                    Text(s.label)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-            }
         }
     }
 

@@ -33,6 +33,7 @@ import { useProfileStore } from "../../stores/profile-store";
 import { useFinanceStore } from "../../stores/finance-store";
 import { ReportChart } from "./ReportChart";
 import { ReportDonut } from "./ReportDonut";
+import { CollapsibleSection } from "../CollapsibleSection";
 import { ReportEmptyState } from "./ReportEmptyState";
 import { pickReportWisdom } from "./report-wisdom";
 import {
@@ -241,15 +242,20 @@ export function ReportView({ period }: Props) {
       {/* ── 3. Chart ── */}
       <ReportChart ko={ko} period={period} series={snap.chartSeries} />
 
-      {/* ── 4. ReportDonut (도넛 + bar + sparkline + delta) ── */}
+      {/* ── 4. 비용 구성 — 접힘 (ReportDonut: 도넛 + bar + sparkline + delta). iOS ReportsView 동일 ── */}
       {snap.costsKrw > 0 && (
-        <ReportDonut
-          ko={ko}
-          current={snap.costBreakdown}
-          prev={prevCostBreakdown}
-          trend={costTrend}
-          label={snap.label}
-        />
+        <CollapsibleSection
+          title={ko ? "비용 구성" : "Cost breakdown"}
+          summary={`${ko ? "비용" : "Costs"} ${fmtKrw(snap.costsKrw)}`}
+        >
+          <ReportDonut
+            ko={ko}
+            current={snap.costBreakdown}
+            prev={prevCostBreakdown}
+            trend={costTrend}
+            label={snap.label}
+          />
+        </CollapsibleSection>
       )}
 
       {/* ── 5. 이상 신호 ── */}

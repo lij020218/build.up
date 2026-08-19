@@ -27,10 +27,14 @@ private let WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
 
 struct ShiftAvailabilityCard: View {
     enum Mode { case staff, owner }
+    /// 펼침 방식 (2026-08-19 IA 정리) — .inline = 카드 안에서 펼침(기존), .sheet = 요약 카드만 두고
+    ///   탭하면 시트로 전체 캘린더. 사장 「근무표」 세그먼트처럼 한 화면 밀도를 낮출 때 쓴다.
+    enum Presentation { case inline, sheet }
 
     let mode: Mode
     let ownerUserId: UUID?
     let repo: TeamRepository
+    var presentation: Presentation = .inline
 
     @State private var deadlineDay = BU_DEFAULT_SHIFT_REQUEST_DEADLINE_DAY
     @State private var period = BUShiftRequest.currentWindow().period
@@ -50,6 +54,7 @@ struct ShiftAvailabilityCard: View {
     /// 고정 근무표로만 돌아가는 업장도 있어 기본은 접힘 (사장님 지적 2026-07-30)
     @State private var open = false
     @State private var openTouched = false
+    @State private var sheetOpen = false   // presentation == .sheet 전용
     @State private var customStart = ""
     @State private var customEnd = ""
 
@@ -61,28 +66,11 @@ struct ShiftAvailabilityCard: View {
     }
 
     var body: some View {
-        let byDate = BUShiftRequest.groupByDate(rows)
         BUCard(.outer) {
-            if !open {
+            if presentation == .sheet || !open {
                 collapsedBar
             } else {
-            VStack(alignment: .leading, spacing: 12) {
-                header
-                if failed {
-                    failureNotice
-                } else {
-                    guide
-                    if mode == .owner { ownerStatusBar } else { staffStatusBar }
-                    calendarGrid(byDate)
-                    if let sel = selected { detail(for: sel, byDate: byDate) }
-                    if mode == .staff && !editable { closedNotice }
-                }
-                if let toast {
-                    Text(toast)
-                        .font(.system(size: 11.5, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                }
-            }
+                expandedContent
             }
         }
         // 🔴 ownerId 도 트리거에 포함 (2026-08-01): 부모가 members 를 먼저 세팅하고 ownerId 를
@@ -91,15 +79,62 @@ struct ShiftAvailabilityCard: View {
         .task(id: "\(ownerUserId?.uuidString ?? "-")|\(period)") { await load() }
         .onChange(of: reqWindow.urgent) { _, urgent in autoOpenIfUrgent(urgent) }
         .onAppear { autoOpenIfUrgent(reqWindow.urgent) }
+        .sheet(isPresented: $sheetOpen) {
+            NavigationStack {
+                ZStack(alignment: .top) {
+                    BUBackgroundSurface()
+                    ScrollView {
+                        BUCard(.outer) { expandedContent }
+                            .padding(.horizontal, BUSpacing.md)
+                            .padding(.vertical, BUSpacing.sm)
+                    }
+                }
+                .navigationTitle("희망 근무 취합")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("닫기") { sheetOpen = false }.foregroundStyle(BUColor.midnight)
+                    }
+                }
+            }
+        }
     }
 
-    /// 마감이 임박했을 때만 스스로 펼친다 — 평소엔 접힌 채 자리를 차지하지 않는다
+    /// 펼친 본문 — 인라인 펼침과 시트가 같은 뷰를 공유한다 (상태 @State 공유).
+    private var expandedContent: some View {
+        let byDate = BUShiftRequest.groupByDate(rows)
+        return VStack(alignment: .leading, spacing: 12) {
+            header
+            if failed {
+                failureNotice
+            } else {
+                guide
+                if mode == .owner { ownerStatusBar } else { staffStatusBar }
+                calendarGrid(byDate)
+                if let sel = selected { detail(for: sel, byDate: byDate) }
+                if mode == .staff && !editable { closedNotice }
+            }
+            if let toast {
+                Text(toast)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+            }
+        }
+    }
+
+    /// 마감이 임박했을 때만 스스로 펼친다 — 평소엔 접힌 채 자리를 차지하지 않는다.
+    ///   시트 방식은 자동으로 띄우지 않는다(요약 카드의 D-day 강조로 충분, 시트 자동 팝업은 방해).
     private func autoOpenIfUrgent(_ urgent: Bool) {
-        guard !openTouched, urgent, period == reqWindow.period else { return }
+        guard presentation == .inline, !openTouched, urgent, period == reqWindow.period else { return }
         open = true
     }
 
-    private func toggle() { openTouched = true; open.toggle() }
+    private func toggle() {
+        openTouched = true
+        if presentation == .sheet { sheetOpen.toggle() } else { open.toggle() }
+    }
 
     /// 접힌 상태 한 줄 요약 — 열지 않고도 "지금 뭘 해야 하나"가 보여야 접어둘 수 있다
     private var collapsedSummary: String {
@@ -129,8 +164,8 @@ struct ShiftAvailabilityCard: View {
                 }
                 Spacer(minLength: 0)
                 HStack(spacing: 4) {
-                    Text("열기").font(.system(size: 11.5, weight: .heavy))
-                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold))
+                    Text(presentation == .sheet ? "자세히" : "열기").font(.system(size: 11.5, weight: .heavy))
+                    Image(systemName: presentation == .sheet ? "chevron.right" : "chevron.down").font(.system(size: 11, weight: .bold))
                 }
                 .foregroundStyle(BUColor.midnight)
             }

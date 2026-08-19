@@ -6,14 +6,12 @@
 //   → iOS 는 /api/funding/match 경유 (FundingRepository), 매칭 결과 + 점수 + 매칭 이유 + D-day
 //   → AI 점수 평가는 /api/ai/funding/score (FundingScoreSheet)
 //
-//  레이아웃 (1-컬럼, 모바일 최적):
-//   1. Header — eyebrow + title + subtitle
-//   2. KPI 요약 — 전체/자격/모집중/예정 (API stats)
-//   3. 추천 매칭 토글 — ON → personalFit 상위 6개만
-//   4. 카테고리 필터 (정부/민간/지역/대기업/콘테스트)
-//   5. 상태 필터 (모집중/예정)
-//   6. 프로그램 카드 리스트
-//   7. 빈 상태 / 푸터
+//  레이아웃 (2026-08-19 세그먼트 재편, 웹 GuidesView 동일):
+//   Header — "정책자금" + 세그먼트 [추천 / 전체 / 내 계획서]
+//   「추천」 = KPI 요약 + 내 조건 설정(접힘, 출생연도 미입력 시 자동 펼침) + 추천 TOP 6 카드
+//   「전체」 = 내 조건 설정(접힘) + 필터 한 줄(카테고리 칩 + 「필터」시트=상태) + 카드 10개씩 더 보기
+//   「내 계획서」 = FundingPlansList 인라인 (생성은 카드의 「맞춤 계획서」 그대로)
+//   ProgramCard 접힘 기본 = 제목·기관·마감·금액 + CTA 1개, 나머지는 「자세히」 펼침
 //
 
 import SwiftUI
@@ -48,6 +46,22 @@ private enum CategoryFilter: String, CaseIterable, Identifiable {
         CategoryFilter(rawValue: apiValue) ?? .all
     }
 }
+
+/// 상단 세그먼트 — 웹 GuidesView `GuidesTab` 미러
+private enum GuidesTab: String, CaseIterable, Identifiable {
+    case recommend, all, plans
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .recommend: return "추천"
+        case .all:       return "전체"
+        case .plans:     return "내 계획서"
+        }
+    }
+}
+
+/// 「전체」 목록 페이지 크기 — 10개씩 "더 보기"
+private let guidesPageSize = 10
 
 private enum StatusFilter: String, CaseIterable, Identifiable {
     case all, open, upcoming
@@ -112,8 +126,14 @@ public struct GuidesView: View {
     @State private var applyTarget: FundingProgram? = nil
     /// 공고 맞춤 사업계획서 시트 (2026-08-14, 주 2회 — 웹 FundingPlanModal 미러)
     @State private var planTarget: FundingProgram? = nil
-    /// 내 사업계획서 목록 시트 (서버 저장 원장 — 웹 FundingPlansListModal 미러)
-    @State private var plansListOpen: Bool = false
+    /// 세그먼트 (기본 = 추천). recommendMode 는 여기서 파생 → API recommend/matchAll 분기
+    @State private var tab: GuidesTab = .recommend
+    /// 「전체」 페이지네이션 — 필터 변경 시 첫 페이지로
+    @State private var visibleCount: Int = guidesPageSize
+    /// 「전체」 상세 필터(상태) 시트
+    @State private var filterSheetOpen: Bool = false
+    /// 내 조건 설정 자동 펼침 조건 — 출생연도 미입력(OwnerProfileChips 넛지와 동일 키)
+    @AppStorage("owner.birthYear") private var ownerBirthYear: Int = 0
     @Environment(\.openURL) private var openURL
 
     public init(store: DashboardStore) {
@@ -125,21 +145,32 @@ public struct GuidesView: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    // 공통 페이지 헤더 (2026-08-19 통일) — "정책자금" + 매칭 모드 한 줄
-                    BUPageHeader(title: "정책자금", subtitle: headerSubtitle)
+                    // 공통 페이지 헤더 (2026-08-19 통일) — "정책자금" + 부제 + 세그먼트
+                    BUPageHeader(title: "정책자금", subtitle: headerSubtitle, accessory: { segmentTabs })
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
-                        if state.loading {
-                            loadingState
-                        } else if let err = state.error {
-                            errorState(err)
-                        } else {
-                            kpiSummary
-                            recommendToggle
-                            myPlansButton
-                            OwnerProfileChips(onChange: { Task { await loadPrograms() } }, showNudge: true)
-                            categoryChips
-                            statusChips
-                            programList
+                        switch tab {
+                        case .recommend:
+                            if state.loading {
+                                loadingState
+                            } else if let err = state.error {
+                                errorState(err)
+                            } else {
+                                kpiSummary
+                                ownerConditions
+                                programList
+                            }
+                        case .all:
+                            if state.loading {
+                                loadingState
+                            } else if let err = state.error {
+                                errorState(err)
+                            } else {
+                                ownerConditions
+                                filterRow
+                                programList
+                            }
+                        case .plans:
+                            FundingPlansList()
                         }
 
                         footnote
@@ -153,7 +184,21 @@ public struct GuidesView: View {
             }
         }
         .task {
+            state.recommendMode = (tab == .recommend)
             await loadPrograms()
+        }
+        .onChange(of: tab) { _, newTab in
+            visibleCount = guidesPageSize
+            let wantRecommend = (newTab == .recommend)
+            if newTab != .plans, state.recommendMode != wantRecommend {
+                state.recommendMode = wantRecommend
+                Task { await loadPrograms() }
+            }
+        }
+        .onChange(of: state.categoryFilter) { _, _ in visibleCount = guidesPageSize }
+        .onChange(of: state.statusFilter) { _, _ in visibleCount = guidesPageSize }
+        .sheet(isPresented: $filterSheetOpen) {
+            filterSheet
         }
         .sheet(item: $scoreTarget) { program in
             if let snapshot = state.profileSnapshot {
@@ -170,19 +215,29 @@ public struct GuidesView: View {
                 FundingPlanSheet(program: program, profile: snapshot)
             }
         }
-        .sheet(isPresented: $plansListOpen) {
-            FundingPlansListSheet()
-        }
+    }
+
+    // MARK: - Segment
+
+    private var segmentTabs: some View {
+        BUSegmentedControl(
+            items: GuidesTab.allCases.map { BUSegmentItem(id: $0, label: $0.label) },
+            selection: $tab
+        )
     }
 
     // MARK: - Header subtitle (종전 큰 제목 "지금 받을 수 있는 자금/내 가게에 맞는 펀딩"은 부제로 합침)
 
     private var headerSubtitle: String {
-        if state.recommendMode { return "내 가게 맞춤 TOP 6" }
-        if let snapshot = state.profileSnapshot, !snapshot.businessLaunched {
-            return "사업 정보 입력 후 맞춤 매칭"
+        switch tab {
+        case .plans: return "생성한 사업계획서 초안 · 어디서든 열람"
+        case .recommend: return "내 가게 맞춤 TOP 6"
+        case .all:
+            if let snapshot = state.profileSnapshot, !snapshot.businessLaunched {
+                return "사업 정보 입력 후 맞춤 매칭"
+            }
+            return "전체 매칭 · 마감 임박 우선"
         }
-        return "전체 매칭 · 마감 임박 우선"
     }
 
     // MARK: - States
@@ -269,80 +324,70 @@ public struct GuidesView: View {
         }
     }
 
-    // MARK: - Recommend toggle
+    // MARK: - 내 조건 설정 (접힘 — 출생연도 미입력 시 자동 펼침)
 
-    private var recommendToggle: some View {
-        Button {
-            state.recommendMode.toggle()
-            Task { await loadPrograms() }
-        } label: {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: state.recommendMode ? "sparkles" : "magnifyingglass")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(state.recommendMode ? .white : BUColor.midnight)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(state.recommendMode ? "추천 매칭 ON" : "추천 매칭 보기")
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(state.recommendMode ? .white : BUColor.ink)
-                    Text(state.recommendMode ? "TOP 6 자격 충족 + 적합도 높은 순" : "내 가게에 가장 적합한 6개만")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(state.recommendMode ? Color.white.opacity(0.82) : BUColor.inkMuted)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: BUSpacing.minTapTarget)
-            .background(
-                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
-                    .fill(state.recommendMode ? BUColor.midnight : Color.white.opacity(0.72))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
-                    .strokeBorder(state.recommendMode ? Color.clear : BUColor.cardBorder, lineWidth: 1)
-            )
+    private var ownerConditions: some View {
+        BUCollapsibleSection(
+            title: "내 조건 설정",
+            summary: ownerBirthYear > 0 ? "\(ownerBirthYear)년생 · 더 정확한 추천" : "출생연도 · 폐업 검토 · 장애 · NCB",
+            isExpanded: ownerBirthYear == 0
+        ) {
+            OwnerProfileChips(onChange: { Task { await loadPrograms() } }, showNudge: true)
         }
-        .buttonStyle(.plain)
     }
 
-    // MARK: - My plans (서버 저장 사업계획서 목록, 2026-08-14)
+    // MARK: - 「전체」 필터 한 줄 (카테고리 칩 + 「필터」 시트)
 
-    private var myPlansButton: some View {
-        Button {
-            plansListOpen = true
-        } label: {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: "doc.text")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(BUColor.midnight)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("내 사업계획서 보기")
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("생성한 초안 목록 · 어디서든 열람")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
+    private var filterRow: some View {
+        HStack(spacing: 8) {
+            categoryChips
+            Button {
+                filterSheetOpen = true
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 11, weight: .heavy))
+                    Text(state.statusFilter == .all ? "필터" : state.statusFilter.label)
+                        .font(.system(size: 12, weight: .heavy))
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
+                .foregroundStyle(state.statusFilter == .all ? BUColor.midnight : .white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(minHeight: BUSpacing.minTapTarget)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(state.statusFilter == .all ? Color.white.opacity(0.72) : BUColor.midnight)
+                )
+                .overlay(
+                    Capsule(style: .continuous)
+                        .strokeBorder(BUColor.midnight.opacity(0.35), lineWidth: 1)
+                )
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: BUSpacing.minTapTarget)
-            .background(
-                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous)
-                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-            )
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+    }
+
+    private var filterSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("모집 상태")
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(BUColor.inkMuted)
+                statusChips
+                Spacer()
+            }
+            .padding(BUSpacing.screenMargin)
+            .navigationTitle("필터")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("완료") { filterSheetOpen = false }
+                }
+            }
+        }
+        .presentationDetents([.fraction(0.3), .medium])
     }
 
     // MARK: - Filter chips
@@ -388,14 +433,33 @@ public struct GuidesView: View {
         if list.isEmpty {
             emptyState
         } else {
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(list) { program in
+            // 추천 = TOP N 전부 / 전체 = 10개씩 더 보기
+            let shown = state.recommendMode ? list : Array(list.prefix(visibleCount))
+            LazyVStack(alignment: .leading, spacing: 12) {
+                ForEach(shown) { program in
                     ProgramCard(
                         program: program,
                         onApply: { applyTo(program) },
                         onScore: { scoreTarget = program },
                         onPlan: { planTarget = program }
                     )
+                }
+                if !state.recommendMode, list.count > shown.count {
+                    Button {
+                        withAnimation { visibleCount += guidesPageSize }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text("더 보기 \(min(guidesPageSize, list.count - shown.count))개 (\(shown.count)/\(list.count))")
+                                .font(.system(size: 13, weight: .heavy))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .heavy))
+                        }
+                        .foregroundStyle(BUColor.midnight)
+                        .frame(maxWidth: .infinity, minHeight: BUSpacing.minTapTarget)
+                        .background(Color.white.opacity(0.72), in: Capsule())
+                        .overlay(Capsule().strokeBorder(BUColor.cardBorder, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -547,6 +611,8 @@ private struct ProgramCard: View {
 
     @State private var docsExpanded: Bool = false
     @State private var reasonsExpanded: Bool = false
+    /// 2026-08-19 밀도 정리: 접힘 기본 = 제목·기관·마감·금액 + CTA 1개. 나머지는 「자세히」 펼침 (웹 ProgramCard 미러)
+    @State private var expanded: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -556,6 +622,7 @@ private struct ProgramCard: View {
                 if let dday = program.daysUntilDeadline, dday >= 0 {
                     DDayBadge(days: dday)
                 }
+                CategoryChip(category: CategoryFilter.from(program.category))
                 if program.highlight {
                     Image(systemName: "star.fill")
                         .font(.system(size: 9, weight: .heavy))
@@ -573,10 +640,33 @@ private struct ProgramCard: View {
                 }
             }
 
-            // ── Category chip + amount ──
-            HStack(alignment: .center, spacing: 8) {
-                CategoryChip(category: CategoryFilter.from(program.category))
-                Spacer(minLength: 6)
+            // ── Program name ──
+            Text(program.name)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(BUColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // ── 접힘 요약 행: 기관 · 마감 · 금액 ──
+            HStack(alignment: .center, spacing: 10) {
+                HStack(spacing: 4) {
+                    Image(systemName: "building.2")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
+                    Text(program.organizer)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.85))
+                        .lineLimit(1)
+                }
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
+                    Text(program.season)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
                 if let amount = program.amount, !amount.isEmpty {
                     Text(amount)
                         .font(.system(size: 13, weight: .heavy))
@@ -586,35 +676,20 @@ private struct ProgramCard: View {
                 }
             }
 
-            // ── Program name ──
-            Text(program.name)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(BUColor.ink)
-                .fixedSize(horizontal: false, vertical: true)
+            if expanded {
+                // ── Benefit ──
+                Text(program.benefit)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.85))
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            // ── Benefit ──
-            Text(program.benefit)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted.opacity(0.85))
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-
-            // ── Match reasons (collapsible) ──
-            if !program.matchReasons.isEmpty {
-                MatchReasonsView(reasons: program.matchReasons, expanded: $reasonsExpanded)
-            }
-
-            // ── Organizer + target ──
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 5) {
-                    Image(systemName: "building.2")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
-                    Text(program.organizer)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.85))
-                        .lineLimit(1)
+                // ── Match reasons (collapsible) ──
+                if !program.matchReasons.isEmpty {
+                    MatchReasonsView(reasons: program.matchReasons, expanded: $reasonsExpanded)
                 }
+
+                // ── Target ──
                 HStack(spacing: 5) {
                     Image(systemName: "target")
                         .font(.system(size: 9, weight: .bold))
@@ -624,51 +699,65 @@ private struct ProgramCard: View {
                         .foregroundStyle(BUColor.inkMuted)
                         .lineLimit(2)
                 }
-                HStack(spacing: 5) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
-                    Text(program.season)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .lineLimit(1)
+
+                // ── Required docs (collapsible) ──
+                if !program.requiredDocs.isEmpty {
+                    RequiredDocsView(docs: program.requiredDocs, expanded: $docsExpanded)
+                }
+
+                // ── 보조 CTA: AI 점수 · 맞춤 계획서 ──
+                HStack(spacing: 8) {
+                    Button(action: onScore) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 10, weight: .heavy))
+                            Text("AI 점수")
+                                .font(.system(size: 12, weight: .heavy))
+                        }
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(minHeight: BUSpacing.minTapTarget)
+                        .background(BUColor.midnight.opacity(0.10), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: onPlan) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 10, weight: .heavy))
+                            Text("맞춤 계획서")
+                                .font(.system(size: 12, weight: .heavy))
+                        }
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(minHeight: BUSpacing.minTapTarget)
+                        .background(BUColor.midnight.opacity(0.10), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    Spacer(minLength: 0)
                 }
             }
 
-            // ── Required docs (collapsible) ──
-            if !program.requiredDocs.isEmpty {
-                RequiredDocsView(docs: program.requiredDocs, expanded: $docsExpanded)
-            }
-
-            // ── Bottom: AI score + Apply ──
+            // ── Bottom: 자세히 토글 + CTA 1개(신청) ──
             HStack(spacing: 8) {
-                Button(action: onScore) {
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) { expanded.toggle() }
+                } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 10, weight: .heavy))
-                        Text("AI 점수")
+                        Text(expanded ? "접기" : "자세히")
                             .font(.system(size: 12, weight: .heavy))
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 10, weight: .heavy))
+                            .rotationEffect(.degrees(expanded ? 180 : 0))
                     }
                     .foregroundStyle(BUColor.midnight)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(minHeight: BUSpacing.minTapTarget)
-                    .background(BUColor.midnight.opacity(0.10), in: Capsule())
-                }
-                .buttonStyle(.plain)
-
-                Button(action: onPlan) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "doc.text")
-                            .font(.system(size: 10, weight: .heavy))
-                        Text("맞춤 계획서")
-                            .font(.system(size: 12, weight: .heavy))
-                    }
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .frame(minHeight: BUSpacing.minTapTarget)
-                    .background(BUColor.midnight.opacity(0.10), in: Capsule())
+                    .background(Color.white.opacity(0.72), in: Capsule())
+                    .overlay(Capsule().strokeBorder(BUColor.cardBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
 

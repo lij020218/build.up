@@ -16,11 +16,13 @@ import {
   type ApplicationStatus,
   type MatchCriteria,
 } from "@foundone/shared";
-import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb, Search, FileText } from "lucide-react";
+import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb, Search, FileText, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";
 import { FundingPlanModal, type PlanUserPayload } from "./FundingPlanModal";
-import { FundingPlansListModal } from "./FundingPlansListModal";
+import { FundingPlansList } from "./FundingPlansListModal";
+import { SegmentedTabs } from "../SegmentedTabs";
+import { CollapsibleSection } from "../CollapsibleSection";
 
 /**
  * GuidesView — 펀딩 페이지 (Midnight Blue 디자인 철학)
@@ -47,6 +49,10 @@ const RED = "#b64c4c";
 
 type CategoryFilter = "all" | ProgramCategory;
 type StatusFilter = "all" | ApplicationStatus;
+/** 상단 세그먼트 — iOS GuidesView 와 동일 (추천 / 전체 / 내 계획서) */
+type GuidesTab = "recommend" | "all" | "plans";
+/** 「전체」 목록 페이지 크기 — 10개씩 "더 보기" */
+const PAGE_SIZE = 10;
 
 // 검색 별칭 — 한글로 쳐도 영문 표기 기관/사업이 잡히도록 (예: "카이스트" → "kaist")
 const SEARCH_ALIASES: Record<string, string> = {
@@ -160,8 +166,14 @@ export function GuidesView() {
    *  "사용자의 업종, 현 상황, 매출, 사업 규모 크기 등을 고려해서 사용자에게 적합한 지원 프로그램을
    *   추천하는 버튼을 만들라. AI 필요없이 코딩으로만." → 토글 형태. ON 시 matchScore 상위 N개만 노출.
    */
-  const [recommendMode, setRecommendMode] = useState(false);
+  // 2026-08-19: 별도 토글 → 세그먼트 「추천」 탭으로 흡수 (recommendMode 는 탭에서 파생)
+  const [tab, setTab] = useState<GuidesTab>("recommend");
+  const recommendMode = tab === "recommend";
   const RECOMMEND_TOP_N = 6;
+  // 「전체」 페이지네이션 — 필터 변경 시 첫 페이지로
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // 「전체」 상세 필터(상태·연령·지역·업종) 접힘 패널
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   // ── 사장님 상황 신호 — 위기 시 운영자금 우선, 성장 시 투자 우선 ──
   const employees = (d.employees as { id: string }[] | undefined) ?? [];
@@ -301,8 +313,7 @@ export function GuidesView() {
 
   // ─── 공고 맞춤 사업계획서 모달 (2026-08-14, 주 2회) ───
   const [planModalProgram, setPlanModalProgram] = useState<StartupProgram | null>(null);
-  // ─── 내 사업계획서 목록 팝업 (서버 저장 원장, 2026-08-14) ───
-  const [plansListOpen, setPlansListOpen] = useState(false);
+  // 내 사업계획서 목록 — 「내 계획서」 세그먼트에 인라인 (FundingPlansList, 2026-08-19)
   const planUserPayload = useMemo<PlanUserPayload>(() => ({
     industry: industryCategoryId || "",
     subIndustry: selectedIndustryId || selectedSpecialtyId || "",
@@ -497,6 +508,8 @@ export function GuidesView() {
     return base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchedAll, recommended, categoryFilter, statusFilter, regionFilter, industryFilter, ageFilter, recommendMode, searchTerms]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [categoryFilter, statusFilter, regionFilter, industryFilter, ageFilter, searchTerms, tab]);
+  const activeDetailFilters = [statusFilter !== "all", ageFilter !== "all", regionFilter !== "all", industryFilter !== "all"].filter(Boolean).length;
 
   const stats = useMemo(() => {
     // matchedAll 단계에서 이미 마감 제외됨. open + upcoming 합이 total 과 일치하도록
@@ -560,186 +573,171 @@ export function GuidesView() {
           </p>
         </header>
 
-        {/* ── 2. Stats KPI ── */}
-        <div style={kpiGridStyle}>
-          <KpiCard
-            label={ko ? "전체" : "Total"}
-            value={String(stats.total)}
-            sub={ko ? "등록된 프로그램" : "Registered"}
-            tone="neutral"
-          />
-          <KpiCard
-            label={ko ? "신청 가능" : "Open"}
-            value={String(stats.open)}
-            sub={ko ? "지금 접수 중" : "Accepting now"}
-            tone="success"
-          />
-          <KpiCard
-            label={ko ? "공고 예정" : "Upcoming"}
-            value={String(stats.upcoming)}
-            sub={ko ? "일정 확인" : "Check schedule"}
-            tone="warning"
-          />
-          <KpiCard
-            label={ko ? "내게 적합" : "Eligible"}
-            value={String(stats.eligible)}
-            sub={ko ? "자격 조건 만족" : "You qualify"}
-            tone="primary"
-          />
-        </div>
+        {/* ── 세그먼트 (iOS GuidesView 미러): 추천 / 전체 / 내 계획서 ── */}
+        <SegmentedTabs<GuidesTab>
+          ariaLabel={ko ? "정책자금 보기" : "Funding view"}
+          items={[
+            { key: "recommend", label: ko ? "추천" : "For you" },
+            { key: "all", label: ko ? "전체" : "All" },
+            { key: "plans", label: ko ? "내 계획서" : "My plans" },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
 
-        {/* ── 3. 추천 버튼 — 사장님 업종·상황·매출·규모 기반 상위 N개 자동 선별 ── */}
-        <div style={recommendBarStyle}>
-          <button
-            type="button"
-            onClick={() => setRecommendMode((v) => !v)}
-            aria-pressed={recommendMode}
-            style={{
-              ...recommendBtnStyle,
-              background: recommendMode ? "#191970" : "#fff",
-              color: recommendMode ? "#fff" : "#191970",
-              boxShadow: recommendMode
-                ? "0 4px 12px rgba(25,25,112,0.28)"
-                : "0 1px 3px rgba(15,23,42,0.06)",
-            }}
-          >
-            <Sparkles size={14} strokeWidth={1.8} />
-            <span>
-              {recommendMode
-                ? (ko ? `추천 모드 · TOP ${RECOMMEND_TOP_N}` : `Recommend mode · TOP ${RECOMMEND_TOP_N}`)
-                : (ko ? "내게 가장 잘 맞는 프로그램 추천" : "Recommend best-fit programs")}
-            </span>
-          </button>
-          {/* 내 사업계획서 보기 — 서버 저장 원장 목록 → 터치 → 열람 (2026-08-14) */}
-          <button
-            type="button"
-            onClick={() => setPlansListOpen(true)}
-            style={{ ...recommendBtnStyle, background: "#fff", color: "#191970", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" }}
-          >
-            <FileText size={14} strokeWidth={1.8} />
-            <span>{ko ? "내 사업계획서 보기" : "My business plans"}</span>
-          </button>
-          {recommendMode && (
+        {tab === "recommend" && (
+          <>
+            {/* ── KPI compact ── */}
+            <div style={kpiGridStyle}>
+              <KpiCard label={ko ? "전체" : "Total"} value={String(stats.total)} sub={ko ? "등록된 프로그램" : "Registered"} tone="neutral" />
+              <KpiCard label={ko ? "신청 가능" : "Open"} value={String(stats.open)} sub={ko ? "지금 접수 중" : "Accepting now"} tone="success" />
+              <KpiCard label={ko ? "공고 예정" : "Upcoming"} value={String(stats.upcoming)} sub={ko ? "일정 확인" : "Check schedule"} tone="warning" />
+              <KpiCard label={ko ? "내게 적합" : "Eligible"} value={String(stats.eligible)} sub={ko ? "자격 조건 만족" : "You qualify"} tone="primary" />
+            </div>
+
+            {/* ── 내 조건 설정 — 접힘, 출생연도 미입력(넛지)일 때만 자동 펼침 ── */}
+            <OwnerConditionsSection ko={ko} nudge={ownerBirthYear == null} />
+
             <div style={recommendNoteStyle}>
               {ko
                 ? `업종(${industryCategoryId || "—"}) · 단계(${criteria.businessStage}) · 매출/규모 · 런웨이 종합 점수 기준 상위 ${RECOMMEND_TOP_N}개`
                 : `Top ${RECOMMEND_TOP_N} by industry · stage · revenue / size · runway match score`}
             </div>
-          )}
-        </div>
+          </>
+        )}
 
-        {/* ── 3.5 매칭 보강 입력 — 출생연도·신용·폐업·장애 (로컬 저장, 청년/시니어/신용취약/폐업 매칭) ── */}
-        <div style={{ display: "grid", gap: "6px", padding: "0 2px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A6BAE", letterSpacing: "0.02em" }}>
-            {ko ? "내 정보 추가 (선택) — 더 정확한 추천 · 기기에만 저장" : "Add your info (optional) — better matches, stored on device"}
-          </div>
-          {/* 넛지 — 출생연도 미입력 시 청년·시니어 매칭 가치 안내 (미드나이트 톤·라인 아이콘) */}
-          {ownerBirthYear == null && (
-            <div style={{
-              display: "flex", alignItems: "flex-start", gap: 8,
-              fontSize: "12px", color: MIDNIGHT, fontWeight: 500, lineHeight: 1.5,
-              padding: "9px 12px", borderRadius: "10px",
-              background: MIDNIGHT_TINT, border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
-            }}>
-              <Lightbulb size={14} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 1, color: MIDNIGHT, opacity: 0.7 }} />
-              <span>{ko
-                ? "출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원사업을 더 정확히 찾아드려요"
-                : "Add your birth year to surface youth (≤39) and senior (40+) programs"}</span>
+        {tab === "all" && (
+          <>
+            {/* ── 내 조건 설정 — 접힘 (넛지 시 자동 펼침) ── */}
+            <OwnerConditionsSection ko={ko} nudge={ownerBirthYear == null} />
+
+            {/* ── 필터 한 줄: 검색 + 분류 칩 + 「필터」(상태·연령·지역·업종 접힘) ── */}
+            <div style={filterCardStyle} className="bento-card">
+              <div style={searchWrapStyle}>
+                <Search size={15} strokeWidth={1.8} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={ko ? "사업명·기관 검색 (예: 카이스트, 서울시, TIPS)" : "Search by program or organizer"}
+                  style={searchInputStyle}
+                  aria-label={ko ? "펀딩 검색" : "Search funding"}
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery("")} style={searchClearStyle} aria-label={ko ? "검색어 지우기" : "Clear"}>✕</button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ ...filterRowStyle, flex: 1 }}>
+                  {categoryOptions.map((opt) => {
+                    const isActive = opt.id === categoryFilter;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setCategoryFilter(opt.id)}
+                        style={{
+                          ...chipStyle,
+                          background: isActive ? MIDNIGHT : "white",
+                          color: isActive ? "white" : TEXT_PRIMARY,
+                          borderColor: isActive ? MIDNIGHT : "rgba(15,23,42,0.10)",
+                          fontWeight: isActive ? 700 : 600,
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFilterPanelOpen((v) => !v)}
+                  aria-expanded={filterPanelOpen}
+                  style={{
+                    ...chipStyle,
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    background: activeDetailFilters > 0 ? MIDNIGHT : "white",
+                    color: activeDetailFilters > 0 ? "white" : MIDNIGHT,
+                    borderColor: MIDNIGHT,
+                    fontWeight: 700,
+                  }}
+                >
+                  <SlidersHorizontal size={12} strokeWidth={2} />
+                  {ko ? "필터" : "Filters"}{activeDetailFilters > 0 ? ` ${activeDetailFilters}` : ""}
+                  <ChevronDown size={12} strokeWidth={2} style={{ transform: filterPanelOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+                </button>
+              </div>
+              {filterPanelOpen && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 4, borderTop: `1px solid ${MIDNIGHT_BORDER_LIGHT}` }}>
+                  <FilterGroup label={ko ? "상태" : "Status"} options={statusOptions} active={statusFilter} onChange={(v) => setStatusFilter(v as StatusFilter)} />
+                  <FilterGroup label={ko ? "연령" : "Age"} options={ageOptions} active={ageFilter} onChange={(v) => setAgeFilter(v as "all" | "youth" | "senior")} />
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#5A6BAE" }}>{ko ? "지역" : "Region"}</span>
+                      <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)} style={selectStyle}>
+                        <option value="all">{ko ? "전국" : "Nationwide"}</option>
+                        {REGIONS_KO.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </label>
+                    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#5A6BAE" }}>{ko ? "업종" : "Industry"}</span>
+                      <select value={industryFilter} onChange={(e) => setIndustryFilter(e.target.value)} style={selectStyle}>
+                        {industryOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          <OwnerProfileChips ko={ko} />
-        </div>
+          </>
+        )}
 
-        {/* ── 4. Filters ── */}
-        <div style={filterCardStyle} className="bento-card">
-          {/* 검색 — 사업명·기관명(예: 카이스트, 서울시, TIPS) */}
-          <div style={searchWrapStyle}>
-            <Search size={15} strokeWidth={1.8} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={ko ? "사업명·기관 검색 (예: 카이스트, 서울시, TIPS)" : "Search by program or organizer"}
-              style={searchInputStyle}
-              aria-label={ko ? "펀딩 검색" : "Search funding"}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                style={searchClearStyle}
-                aria-label={ko ? "검색어 지우기" : "Clear"}
-              >✕</button>
-            )}
-          </div>
-          <FilterGroup
-            label={ko ? "분류" : "Category"}
-            options={categoryOptions}
-            active={categoryFilter}
-            onChange={(v) => setCategoryFilter(v as CategoryFilter)}
-          />
-          <FilterGroup
-            label={ko ? "상태" : "Status"}
-            options={statusOptions}
-            active={statusFilter}
-            onChange={(v) => setStatusFilter(v as StatusFilter)}
-          />
-          <FilterGroup
-            label={ko ? "연령" : "Age"}
-            options={ageOptions}
-            active={ageFilter}
-            onChange={(v) => setAgeFilter(v as "all" | "youth" | "senior")}
-          />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#5A6BAE" }}>{ko ? "지역" : "Region"}</span>
-              <select
-                value={regionFilter}
-                onChange={(e) => setRegionFilter(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="all">{ko ? "전국" : "Nationwide"}</option>
-                {REGIONS_KO.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#5A6BAE" }}>{ko ? "업종" : "Industry"}</span>
-              <select
-                value={industryFilter}
-                onChange={(e) => setIndustryFilter(e.target.value)}
-                style={selectStyle}
-              >
-                {industryOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
-            </label>
-          </div>
-        </div>
-
-        {/* ── 4. Program list ── */}
-        {filtered.length === 0 ? (
-          <div style={emptyBoxStyle}>
-            <AlertCircle size={18} strokeWidth={1.5} style={{ color: TEXT_MUTED, marginBottom: 8 }} />
-            <div style={{ fontSize: 13, color: TEXT_MUTED }}>
-              {ko
-                ? "조건에 맞는 펀딩이 없습니다. 필터를 조정해보세요."
-                : "No funding matches the current filters."}
+        {/* ── Program list (추천 = TOP N 전부 / 전체 = 10개씩 더 보기) ── */}
+        {tab !== "plans" && (
+          filtered.length === 0 ? (
+            <div style={emptyBoxStyle}>
+              <AlertCircle size={18} strokeWidth={1.5} style={{ color: TEXT_MUTED, marginBottom: 8 }} />
+              <div style={{ fontSize: 13, color: TEXT_MUTED }}>
+                {ko
+                  ? "조건에 맞는 펀딩이 없습니다. 필터를 조정해보세요."
+                  : "No funding matches the current filters."}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div style={listGridStyle}>
-            {filtered.map((program, idx) => (
-              <ProgramCard
-                key={program.id}
-                program={program}
-                ko={ko}
-                onScoreClick={() => handleScoreClick(program)}
-                onPlanClick={() => setPlanModalProgram(program)}
-                onApplyClick={() => setApplyModalProgram(program)}
-                applyState={{ windowState: grantWindowState(), applied: grantApplied === true }}
-                rank={recommendMode ? idx + 1 : undefined}
-                showReasons={recommendMode}
-              />
-            ))}
+          ) : (
+            <>
+              <div style={listGridStyle}>
+                {(recommendMode ? filtered : filtered.slice(0, visibleCount)).map((program, idx) => (
+                  <ProgramCard
+                    key={program.id}
+                    program={program}
+                    ko={ko}
+                    onScoreClick={() => handleScoreClick(program)}
+                    onPlanClick={() => setPlanModalProgram(program)}
+                    onApplyClick={() => setApplyModalProgram(program)}
+                    applyState={{ windowState: grantWindowState(), applied: grantApplied === true }}
+                    rank={recommendMode ? idx + 1 : undefined}
+                    showReasons={recommendMode}
+                  />
+                ))}
+              </div>
+              {!recommendMode && filtered.length > visibleCount && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                  style={loadMoreStyle}
+                >
+                  {ko ? `더 보기 ${Math.min(PAGE_SIZE, filtered.length - visibleCount)}개 (${visibleCount}/${filtered.length})` : `Show ${Math.min(PAGE_SIZE, filtered.length - visibleCount)} more (${visibleCount}/${filtered.length})`}
+                  <ChevronDown size={13} strokeWidth={2} />
+                </button>
+              )}
+            </>
+          )
+        )}
+
+        {/* ── 내 계획서 — 서버 저장 원장 목록 인라인 (생성은 카드의 「맞춤 계획서」 그대로) ── */}
+        {tab === "plans" && (
+          <div style={{ ...filterCardStyle, background: "white" }} className="bento-card">
+            <FundingPlansList ko={ko} />
           </div>
         )}
 
@@ -761,9 +759,6 @@ export function GuidesView() {
         result={scoreResult}
         ko={ko}
       />
-
-      {/* 내 사업계획서 목록 팝업 */}
-      <FundingPlansListModal open={plansListOpen} ko={ko} onClose={() => setPlansListOpen(false)} />
 
       {/* 공고 맞춤 사업계획서 모달 */}
       <FundingPlanModal
@@ -791,6 +786,37 @@ export function GuidesView() {
 // ═══════════════════════════════════════════════════════════════════════
 // Sub-components
 // ═══════════════════════════════════════════════════════════════════════
+
+/** 「내 조건 설정 ▸」 — 접힘 행. 출생연도 미입력(넛지)일 때만 자동 펼침. iOS GuidesView 미러 */
+function OwnerConditionsSection({ ko, nudge }: { ko: boolean; nudge: boolean }) {
+  return (
+    <CollapsibleSection
+      title={ko ? "내 조건 설정" : "My conditions"}
+      summary={ko ? "출생연도 · 폐업 검토 · 장애 · NCB — 더 정확한 추천" : "Birth year · closure · disability · NCB"}
+      defaultOpen={nudge}
+    >
+      <div style={{ display: "grid", gap: "6px" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A6BAE", letterSpacing: "0.02em" }}>
+          {ko ? "내 정보 추가 (선택) — 더 정확한 추천 · 기기에만 저장" : "Add your info (optional) — better matches, stored on device"}
+        </div>
+        {nudge && (
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 8,
+            fontSize: "12px", color: MIDNIGHT, fontWeight: 500, lineHeight: 1.5,
+            padding: "9px 12px", borderRadius: "10px",
+            background: MIDNIGHT_TINT, border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
+          }}>
+            <Lightbulb size={14} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 1, color: MIDNIGHT, opacity: 0.7 }} />
+            <span>{ko
+              ? "출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원사업을 더 정확히 찾아드려요"
+              : "Add your birth year to surface youth (≤39) and senior (40+) programs"}</span>
+          </div>
+        )}
+        <OwnerProfileChips ko={ko} />
+      </div>
+    </CollapsibleSection>
+  );
+}
 
 function KpiCard({
   label,
@@ -891,6 +917,8 @@ function ProgramCard({
   const catLabel = getProgramCategoryLabel(program.category, lang);
   // 피칭형 자금지원만 AI 점수·유리점 노출 (행사·교육·시설형은 점수 무의미 → 일관성·정확성)
   const fundable = isFundableProgram(program.name.ko, program.category);
+  // 2026-08-19 밀도 정리: 접힘 기본 = 제목·기관·마감·금액 + CTA 1개. 나머지는 「자세히」 펼침. iOS ProgramCard 미러
+  const [expanded, setExpanded] = useState(false);
 
   // 상태별 미드나이트 톤 매핑 (다채로운 컬러 → midnight 통일, 상태만 의미 컬러)
   const statusColor = program.applicationStatus === "open" ? GREEN
@@ -969,6 +997,25 @@ function ProgramCard({
       {/* Name */}
       <h3 style={progNameStyle}>{program.name[lang]}</h3>
 
+      {/* 접힘 요약 행 — 기관 · 마감 · 금액 */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontSize: 12, color: TEXT_MUTED }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}>
+          <Building2 size={12} strokeWidth={1.5} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 220 }}>{program.organizer[lang]}</span>
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <Calendar size={12} strokeWidth={1.5} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
+          <span>{program.season[lang]}</span>
+        </span>
+        {program.amount && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: MIDNIGHT, fontWeight: 700 }}>
+            <Award size={12} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+            {program.amount}
+          </span>
+        )}
+      </div>
+
+      {expanded && (<>
       {/* "왜 추천?" — 추천 모드에서만, 매칭 사유 칩 */}
       {showReasons && program.matchReasons && program.matchReasons.length > 0 && (
         <div style={reasonChipsWrapStyle}>
@@ -980,12 +1027,6 @@ function ProgramCard({
           ))}
         </div>
       )}
-
-      {/* Organizer */}
-      <div style={progMetaRowStyle}>
-        <Building2 size={12} strokeWidth={1.5} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
-        <span>{program.organizer[lang]}</span>
-      </div>
 
       {/* Target */}
       <div style={progMetaRowStyle}>
@@ -1015,18 +1056,6 @@ function ProgramCard({
       <div style={benefitBoxStyle}>
         <div style={benefitLabelStyle}>{ko ? "지원 내용" : "Benefit"}</div>
         <div style={benefitTextStyle}>{program.benefit[lang]}</div>
-        {program.amount && (
-          <div style={amountRowStyle}>
-            <Award size={13} strokeWidth={1.5} style={{ color: MIDNIGHT, flexShrink: 0 }} />
-            <span style={amountTextStyle}>{program.amount}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Season / deadline */}
-      <div style={progMetaRowStyle}>
-        <Calendar size={12} strokeWidth={1.5} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
-        <span>{program.season[lang]}</span>
       </div>
 
       {/* 유리한 점 — 이 지원사업 가점 요소(비수도권·청년·특허·벤처인증 등). 자금지원형만. */}
@@ -1053,33 +1082,44 @@ function ProgramCard({
         </div>
       )}
 
-      {/* CTA — AI 점수 보기(자금지원형만) + 공식 사이트 */}
-      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-        {fundable && (
+      {/* 보조 CTA — AI 점수 보기 · 맞춤 계획서 (자금지원형만, 펼침에서만) */}
+      {fundable && (
+        <div style={{ display: "flex", gap: 8 }}>
           <button
             type="button"
             onClick={onScoreClick}
-            style={{
-              ...ctaSecondaryStyle,
-              flexShrink: 0,
-            }}
+            style={{ ...ctaSecondaryStyle, flexShrink: 0 }}
             aria-label={ko ? "AI 점수 보기" : "View AI score"}
           >
             <Wand2 size={13} strokeWidth={1.6} />
             {ko ? "AI 점수 보기" : "AI score"}
           </button>
-        )}
-        {fundable && onPlanClick && (
-          <button
-            type="button"
-            onClick={onPlanClick}
-            style={{ ...ctaSecondaryStyle, flexShrink: 0 }}
-            aria-label={ko ? "공고 맞춤 사업계획서" : "Tailored business plan"}
-          >
-            <FileText size={13} strokeWidth={1.6} />
-            {ko ? "맞춤 계획서" : "Plan draft"}
-          </button>
-        )}
+          {onPlanClick && (
+            <button
+              type="button"
+              onClick={onPlanClick}
+              style={{ ...ctaSecondaryStyle, flexShrink: 0 }}
+              aria-label={ko ? "공고 맞춤 사업계획서" : "Tailored business plan"}
+            >
+              <FileText size={13} strokeWidth={1.6} />
+              {ko ? "맞춤 계획서" : "Plan draft"}
+            </button>
+          )}
+        </div>
+      )}
+      </>)}
+
+      {/* CTA 1개 + 자세히 토글 */}
+      <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          style={{ ...ctaSecondaryStyle, flexShrink: 0, background: "white", border: `1px solid ${MIDNIGHT_BORDER}`, boxShadow: "none" }}
+        >
+          {expanded ? (ko ? "접기" : "Less") : (ko ? "자세히" : "Details")}
+          <ChevronDown size={12} strokeWidth={2} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+        </button>
         {program.internalApply ? (() => {
           // 앱 내부 신청 — 외부 URL 없이 현 사업체로 바로 신청.
           const ws = applyState?.windowState ?? "open";
@@ -1503,27 +1543,22 @@ const listGridStyle: React.CSSProperties = {
   gap: 12,
 };
 
-// ─── 추천 버튼 ─────────────────────────────────────────────────
-const recommendBarStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
-  flexWrap: "wrap",
-};
-
-const recommendBtnStyle: React.CSSProperties = {
+// ─── 「전체」 더 보기 ─────────────────────────────────────────────
+const loadMoreStyle: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
-  gap: 8,
-  padding: "11px 18px",
+  justifyContent: "center",
+  gap: 6,
+  alignSelf: "center",
+  padding: "11px 20px",
   borderRadius: 999,
-  border: "1px solid rgba(25,25,112,0.18)",
-  fontSize: 13.5,
-  fontWeight: 650,
-  letterSpacing: "-0.005em",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  background: "white",
+  color: MIDNIGHT,
+  fontSize: 13,
+  fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  transition: "background .15s, color .15s, transform .12s, box-shadow .2s",
 };
 
 const recommendNoteStyle: React.CSSProperties = {
@@ -1634,19 +1669,7 @@ const benefitTextStyle: React.CSSProperties = {
   color: TEXT_PRIMARY,
 };
 
-const amountRowStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 5,
-  marginTop: 2,
-};
 
-const amountTextStyle: React.CSSProperties = {
-  fontSize: 13,
-  fontWeight: 700,
-  color: MIDNIGHT_DEEP,
-  letterSpacing: "-0.01em",
-};
 
 const docsRowStyle: React.CSSProperties = {
   display: "flex",

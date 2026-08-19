@@ -109,6 +109,20 @@ public struct TodayView: View {
     @State private var aiActions: [AiAction]?
     @State private var aiFetchError: String?
 
+    /// 홈 세그먼트 (2026-08-19 IA — 웹 OperationalDashboard 동일 3탭: 오늘 · 운영 · 더보기).
+    ///   한 화면에 카드 수십 장이 동시에 뜨지 않게 progressive disclosure. 카드는 삭제 0 — 탭으로 분산만.
+    enum HomeSegment: String, CaseIterable, Hashable {
+        case today, ops, more
+        var labelKo: String {
+            switch self {
+            case .today: return "오늘"
+            case .ops:   return "운영"
+            case .more:  return "더보기"
+            }
+        }
+    }
+    @State private var segment: HomeSegment = .today
+
     public init(
         mock: MockData,
         dashboardStore: DashboardStore? = nil,
@@ -157,158 +171,21 @@ public struct TodayView: View {
                     subtitle: mock.resolverInput.businessLaunched
                         ? (mock.daysSinceLaunch > 0 ? "운영 중 · \(mock.daysSinceLaunch + 1)일째" : "운영 중")
                         : "오픈 준비 중",
-                    trailing: { NotificationBell(unread: notifStore.unreadCount, action: { showNotifications = true }) }
+                    trailing: { NotificationBell(unread: notifStore.unreadCount, action: { showNotifications = true }) },
+                    accessory: {
+                        BUSegmentedControl(
+                            items: HomeSegment.allCases.map { BUSegmentItem(id: $0, label: $0.labelKo) },
+                            selection: $segment
+                        )
+                    }
                 )
                 // 성능(2026-08-19): 카드 수십 장 — LazyVStack 으로 화면 밖 카드 지연 생성.
                 LazyVStack(spacing: BUSpacing.shellGap) {
-                    HomeRitualBanner()
-
-                    // 가게 세팅 미션 — 기존 가게 등록자만 (로드맵·AI 로드맵 유저 미노출, 완료 시 자동 소멸)
-                    if let storeInfo {
-                        BUStoreSetupMissionsCard(
-                            storeInfo: storeInfo,
-                            decisions: roadmapStore.decisions,
-                            entriesCount: mock.entries.count,
-                            costsTotal: dashboardStore?.costs.total ?? 0,
-                            categoryId: Self.starterCategoryId(for: mock.category),
-                            subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"),
-                            onRevenue: { showInputSheet = true },
-                            onCosts: { onSwitchTab?(.analytics) },
-                            onOfferings: { onSwitchTab?(.offerings) },
-                            onVerifyBiz: { onSwitchTab?(.roadmap) }
-                        )
+                    switch segment {
+                    case .today: todaySegment
+                    case .ops:   opsSegment
+                    case .more:  moreSegment
                     }
-
-                    // ─ 모바일 홈 = 공통 6장 + 업종 핵심 (2026-06-04 사장님 결정) ─
-                    //   원칙: 홈은 가장 중요한 카드만. 강등(KPI 스트립·고객·운영의식)은 "더 알아보기 > 오늘 상세"
-                    //         팝업으로 — 카드 종류는 펼치면 도달(누락 0).
-
-                    // ① AI 모닝 히어로 — 인사 + 위험신호(+스타트업 신호) + NSM + AI 코칭
-                    HeroOuterCard(
-                        mock: mock,
-                        healthResult: healthResult,
-                        hero: hero,
-                        aiActions: aiActions
-                    )
-
-                    // ② 매출 흐름 (PortOne·TossPlace 등 자동수집 매출 합산 — autoSourceCount 배지)
-                    ActivitySnapshotCard(
-                        entries: mock.entries,
-                        bepDailySales: bepDailySales,
-                        autoSourceCount: dashboardStore?.autoSourceCount ?? 0,
-                        autoBreakdown: dashboardStore?.autoBreakdown ?? [],
-                        onTapBasis: ((dashboardStore?.autoCardOverlap ?? false) || (dashboardStore?.autoHasPopbill ?? false))
-                            ? { showBasisSheet = true } : nil,
-                        // 막대·"기록" 탭 → 그 날짜로 입력 시트 (웹 패리티)
-                        onSelectDate: { date in
-                            inputSheetDate = date
-                            showInputSheet = true
-                        }
-                    )
-
-                    // ③ 사용자수(고객 변화) — 성장 선행지표라 매출 직하 always-on.
-                    //   2026-07-14 웹 UserActivityCard 정확 미러 (웹 Tier1DailyHub 순서 매출→사용자수→손익→현금 일치).
-                    //   회원 로스터(CustomerSummary, ⑥)와 다른 *지표* 카드 — 웹도 둘을 공존시킴(이중 아님).
-                    //   데이터 0 이면 마일스톤 '첫 10명' 온보딩 empty (가짜 없음).
-                    UserActivityCard(
-                        totalCustomers: totalCustomers,
-                        thisMonthCustomers: thisMonthCustomers,
-                        dailyAvgCustomers: dailyAvgCustomers,
-                        avgTicket: avgTicket
-                    )
-
-                    // ④ 손익 (2026-06-04 홈 신규 편입) — 월 환산 매출 vs 월 비용 (실데이터).
-                    //   웹 순서 손익→현금 미러 (2026-07-14: 종전 현금→손익 에서 스왑).
-                    PLHeroCard(
-                        totalSales: ratios.monthlyRevenueEquivalent,
-                        totalCosts: mock.costs.total,
-                        ingredientRatio: ratios.ingredientRatio,
-                        laborRatio: ratios.laborRatio,
-                        rentRatio: ratios.rentRatio,
-                        thresholds: IndustryThresholds.thresholds(for: mock.category),
-                        categoryId: mock.category.benchmarkCategoryId
-                    )
-
-                    // ⑤ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
-                    if let cs = cashflowStore {
-                        CashflowSection(
-                            store: cs,
-                            recentDailyEntries: mock.entries.map { CashflowDailyEntry(date: $0.date, sales: $0.sales) },
-                            fallbackMonthlyCostsTotal: mock.costs.total
-                        )
-                    } else {
-                        CashflowHeroCard(
-                            currentBalance: mock.currentCash ?? 0,
-                            projectedBalances: projected14,
-                            isCrisis: (projected14.last ?? 0) < 0,
-                            crisisDaysUntil: crisisDaysUntil()
-                        )
-                    }
-
-                    // ⑥ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
-                    if mock.category.showsCustomerCardInsteadOfInventory {
-                        let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
-                        CustomerSummaryCard(
-                            members: realMembers,
-                            mode: mode,
-                            label: mock.category.customerLabelKo,
-                            onManage: { showCustomerSheet = true }
-                        )
-                    } else if mock.category != .startupTech {
-                        // 통합 '메뉴·재료 관리' (2026-07-22 사장님 지시, 웹 정합):
-                        //   메뉴 업종은 메뉴 섹션(→ MenuRecipeSheet: 원가율·판매 ±·레시피·재고 자동차감) 동봉.
-                        InventoryOpsCard(
-                            items: inventoryForCard,
-                            onManage: { showInventorySheet = true },
-                            menuItems: isMenuCardIndustry ? menuProducts : [],
-                            onManageMenus: (isMenuCardIndustry && storeInfo != nil) ? { showRecipeSheet = true } : nil
-                        )
-                    }
-
-                    // ⑦ 직원 관리 (전 업종) — 웹은 재고·팀을 한 관리 그룹으로 묶음 → 팀을 재고 직후로 올림
-                    //   (2026-07-14: 종전 메뉴 뒤 → 재고 옆. 웹 opsCards 그룹 미러).
-                    TeamCard(
-                        employees: realEmployees,
-                        invitedNames: invitedStaff.map(\.name),
-                        manualLaborCost: mock.costs.labor,
-                        onManage: { showTeamSheet = true }
-                    )
-
-                    // ⑧ 메뉴 수익성 카드 → '메뉴·재료 관리'(InventoryOpsCard 메뉴 섹션 → MenuRecipeSheet)로
-                    //   흡수 (2026-07-22 통합, 웹 정합 — 추가 폼은 재고 카드인데 관리 카드가 없던 모순 해소).
-
-                    // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
-                    IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)
-
-                    // 스타트업 핵심 지표 점수판 (런웨이·순burn·성장률·ARR/직원·총이익률·Burn Multiple, 전부 실데이터)
-                    if mock.category == .startupTech {
-                        StartupHealthCard(metrics: startupHealthMetrics)
-                    }
-
-                    // 외식·카페 위생점검 — 원가율(IndustryFocus)과 나란히 홈에 (사장님: "둘 다")
-                    if mock.category == .restaurant || mock.category == .cafe {
-                        FoodSafetyCard()
-                    }
-
-                    // 빠른 매출 입력
-                    QuickInputButton(action: { showInputSheet = true })
-
-                    // ─ 더 알아보기 — 팝업 (오늘 상세[KPI·고객·운영의식] · 주간점검 · 성장 · 내 가게 · 로드맵) ─
-                    MoreInsightsStrip(
-                        mock: mock,
-                        dailyKpiCells: dailyKpiCells,
-                        userActivity: UserActivitySummary(
-                            total: totalCustomers,
-                            thisMonth: thisMonthCustomers,
-                            dailyAvg: dailyAvgCustomers,
-                            avgTicket: avgTicket
-                        ),
-                        dashboardStore: dashboardStore,
-                        storeInfo: storeInfo,
-                        coaching: coaching,
-                        saas: saas,
-                        subscription: subscription
-                    )
 
                     // 하단 탭바 회피
                     Color.clear.frame(height: 110)
@@ -396,6 +273,157 @@ public struct TodayView: View {
         .task(id: "ai-actions") {
             await loadAIActions()
         }
+    }
+
+    // MARK: - Segments (2026-08-19 IA) — 웹 OperationalDashboard 3탭 1:1 미러
+    //   「오늘」= 리추얼 스트립 → 세팅 미션 → 히어로 → 매출 흐름 → 빠른 입력 → 손익 → 현금 (≤ 6장)
+    //   「운영」= 재고/고객(업종 분기) → 팀 → 업종 핵심 → 위생/스타트업 → 사용자수
+    //   「더보기」= 오늘 상세(KPI 스트립·코칭 일지·운영 의식) 인라인 + 주간 점검·성장 도구 시트
+    //   카드 삭제 0 — 종전 홈 카드는 전부 어느 한 탭에서 도달. 내 가게·로드맵 진입점은 하단 탭과 중복이라 제거.
+
+    @ViewBuilder
+    private var todaySegment: some View {
+        // 주간 리추얼 — 슬림 스트립, 이번 주 한 번 닫으면 다음 주까지 비표시 (히어로 Row1 과 중복 안 함)
+        HomeRitualBanner()
+
+        // 가게 세팅 미션 — 기존 가게 등록자만 (로드맵·AI 로드맵 유저 미노출, 완료 시 자동 소멸)
+        if let storeInfo {
+            BUStoreSetupMissionsCard(
+                storeInfo: storeInfo,
+                decisions: roadmapStore.decisions,
+                entriesCount: mock.entries.count,
+                costsTotal: dashboardStore?.costs.total ?? 0,
+                categoryId: Self.starterCategoryId(for: mock.category),
+                subIndustryId: UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId"),
+                onRevenue: { showInputSheet = true },
+                onCosts: { onSwitchTab?(.analytics) },
+                onOfferings: { onSwitchTab?(.offerings) },
+                onVerifyBiz: { onSwitchTab?(.roadmap) }
+            )
+        }
+
+        // ① AI 모닝 히어로 — 인사 + 위험신호(+스타트업 신호) + NSM + AI 코칭 (한 장 유지)
+        HeroOuterCard(
+            mock: mock,
+            healthResult: healthResult,
+            hero: hero,
+            aiActions: aiActions
+        )
+
+        // ② 매출 흐름 (PortOne·TossPlace 등 자동수집 매출 합산 — autoSourceCount 배지)
+        ActivitySnapshotCard(
+            entries: mock.entries,
+            bepDailySales: bepDailySales,
+            autoSourceCount: dashboardStore?.autoSourceCount ?? 0,
+            autoBreakdown: dashboardStore?.autoBreakdown ?? [],
+            onTapBasis: ((dashboardStore?.autoCardOverlap ?? false) || (dashboardStore?.autoHasPopbill ?? false))
+                ? { showBasisSheet = true } : nil,
+            // 막대·"기록" 탭 → 그 날짜로 입력 시트 (웹 패리티)
+            onSelectDate: { date in
+                inputSheetDate = date
+                showInputSheet = true
+            }
+        )
+
+        // ③ 빠른 매출 입력 — 매출 흐름 바로 아래 (2026-08-19: 종전 홈 최하단 → 매출 직하)
+        QuickInputButton(action: { showInputSheet = true })
+
+        // ④ 손익 — 월 환산 매출 vs 월 비용 (실데이터). 웹 Tier1DailyHub 순서 손익→현금 미러.
+        PLHeroCard(
+            totalSales: ratios.monthlyRevenueEquivalent,
+            totalCosts: mock.costs.total,
+            ingredientRatio: ratios.ingredientRatio,
+            laborRatio: ratios.laborRatio,
+            rentRatio: ratios.rentRatio,
+            thresholds: IndustryThresholds.thresholds(for: mock.category),
+            categoryId: mock.category.benchmarkCategoryId
+        )
+
+        // ⑤ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
+        //   (손익과 2-up 은 폰 폭에서 숫자·차트가 깨져 스택 유지 — 웹은 .dash-2col)
+        if let cs = cashflowStore {
+            CashflowSection(
+                store: cs,
+                recentDailyEntries: mock.entries.map { CashflowDailyEntry(date: $0.date, sales: $0.sales) },
+                fallbackMonthlyCostsTotal: mock.costs.total
+            )
+        } else {
+            CashflowHeroCard(
+                currentBalance: mock.currentCash ?? 0,
+                projectedBalances: projected14,
+                isCrisis: (projected14.last ?? 0) < 0,
+                crisisDaysUntil: crisisDaysUntil()
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var opsSegment: some View {
+        // ① 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
+        if mock.category.showsCustomerCardInsteadOfInventory {
+            let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
+            CustomerSummaryCard(
+                members: realMembers,
+                mode: mode,
+                label: mock.category.customerLabelKo,
+                onManage: { showCustomerSheet = true }
+            )
+        } else if mock.category != .startupTech {
+            // 통합 '메뉴·재료 관리' (2026-07-22 사장님 지시, 웹 정합):
+            //   메뉴 업종은 메뉴 섹션(→ MenuRecipeSheet: 원가율·판매 ±·레시피·재고 자동차감) 동봉.
+            InventoryOpsCard(
+                items: inventoryForCard,
+                onManage: { showInventorySheet = true },
+                menuItems: isMenuCardIndustry ? menuProducts : [],
+                onManageMenus: (isMenuCardIndustry && storeInfo != nil) ? { showRecipeSheet = true } : nil
+            )
+        }
+
+        // ② 직원 관리 (전 업종) — 웹 TodayManagementSection 재고·팀 그룹 미러
+        TeamCard(
+            employees: realEmployees,
+            invitedNames: invitedStaff.map(\.name),
+            manualLaborCost: mock.costs.labor,
+            onManage: { showTeamSheet = true }
+        )
+
+        // 메뉴 수익성 카드 → '메뉴·재료 관리'(InventoryOpsCard 메뉴 섹션 → MenuRecipeSheet)로 흡수 (2026-07-22).
+
+        // ③ 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
+        IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)
+
+        // ④ 스타트업 핵심 지표 점수판 (런웨이·순burn·성장률·ARR/직원·총이익률·Burn Multiple, 전부 실데이터)
+        if mock.category == .startupTech {
+            StartupHealthCard(metrics: startupHealthMetrics)
+        }
+
+        // ④' 외식·카페 위생점검 — 원가율(IndustryFocus)과 나란히 (사장님: "둘 다")
+        if mock.category == .restaurant || mock.category == .cafe {
+            FoodSafetyCard()
+        }
+
+        // ⑤ 사용자수(고객 변화) — 성장 선행지표. 홈 전체에서 이 한 곳만 (더보기 오늘 상세 중복 제거 2026-08-19).
+        //   회원 로스터(CustomerSummary)와 다른 *지표* 카드. 데이터 0 이면 '첫 10명' 온보딩 empty (가짜 없음).
+        UserActivityCard(
+            totalCustomers: totalCustomers,
+            thisMonthCustomers: thisMonthCustomers,
+            dailyAvgCustomers: dailyAvgCustomers,
+            avgTicket: avgTicket
+        )
+    }
+
+    @ViewBuilder
+    private var moreSegment: some View {
+        // 종전 MoreInsightsStrip 내용. 오늘 상세(KPI 스트립·코칭 일지·운영 의식)는 인라인(데이터 먼저),
+        // 주간 점검·성장 도구는 전용 뷰라 시트로. '내 가게'·'로드맵' 진입점은 하단 탭 중복 → 제거.
+        MoreInsightsStrip(
+            mock: mock,
+            dailyKpiCells: dailyKpiCells,
+            storeInfo: storeInfo,
+            coaching: coaching,
+            saas: saas,
+            subscription: subscription
+        )
     }
 
     // MARK: - AI Morning Briefing (P0-A)
@@ -717,18 +745,30 @@ public struct TodayView: View {
 // MARK: - Tier 0 — ritual banner (헤더는 BUPageHeader 공통, 2026-08-19)
 
 private struct HomeRitualBanner: View {
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(BUColor.midnight.opacity(0.08))
-                    .frame(width: 32, height: 32)
-                Image(systemName: "calendar")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(BUColor.midnight)
-            }
+    /// 2026-08-19 IA: 슬림 · 닫기 가능. 닫으면 해당 ISO 주(yyyy-Www) 동안 비표시 → 다음 주 자동 복귀 (주간 리추얼 성격).
+    @AppStorage("home.ritualBanner.dismissedWeek") private var dismissedWeek = ""
 
-            VStack(alignment: .leading, spacing: 2) {
+    private static var currentWeekKey: String {
+        let cal = Calendar(identifier: .iso8601)
+        let c = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        return "\(c.yearForWeekOfYear ?? 0)-W\(c.weekOfYear ?? 0)"
+    }
+
+    var body: some View {
+        if dismissedWeek != Self.currentWeekKey {
+            banner
+        }
+    }
+
+    private var banner: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: "calendar")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(BUColor.midnight)
+                .frame(width: 26, height: 26)
+                .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 1) {
                 Text("이번 주 목표를 세워보세요")
                     .font(.system(size: 12.5, weight: .semibold))
                     .foregroundStyle(BUColor.ink)
@@ -736,13 +776,23 @@ private struct HomeRitualBanner: View {
                 Text("지난주 하이라이트를 돌아보고 한 가지 집중 목표를 정합니다.")
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(BUColor.inkMuted)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
             }
             Spacer(minLength: 0)
+            Button {
+                withAnimation(.easeInOut(duration: 0.18)) { dismissedWeek = Self.currentWeekKey }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .frame(width: 26, height: 26)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("이번 주 리추얼 배너 닫기")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -1686,66 +1736,27 @@ private struct ChipTrend: View {
 //   • 별도 탭 이동 시 사장님이 다른 surface 로 떠난 느낌 → 혼동 발생
 //
 /// 홈에서 강등된 고객 지표 — "오늘 상세" 팝업에 전달 (실데이터).
-struct UserActivitySummary {
-    let total: Int
-    let thisMonth: Int
-    let dailyAvg: Double
-    let avgTicket: Double
-}
-
-/// "오늘 상세" 팝업 — 홈에서 내린 KPI 스트립·고객·운영 의식 (카드 종류 누락 0).
-private struct DailyDetailView: View {
-    let mock: MockData
-    let dailyKpiCells: [KpiCellData]
-    let userActivity: UserActivitySummary
-    var coaching: CoachingHistoryStore? = nil
-
-    var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: BUSpacing.shellGap) {
-                DailyKpiStrip(cells: dailyKpiCells)
-                UserActivityCard(
-                    totalCustomers: userActivity.total,
-                    thisMonthCustomers: userActivity.thisMonth,
-                    dailyAvgCustomers: userActivity.dailyAvg,
-                    avgTicket: userActivity.avgTicket
-                )
-                // 코칭 14일 누적 일지 (웹과 동일 Supabase) — 매일 히어로 신호 + 사장님 대응 시간선
-                if let coaching {
-                    CoachingHistoryCard(store: coaching)
-                }
-                DailyOpsRitualCard(category: mock.category)
-                Color.clear.frame(height: 24)
-            }
-            .padding(.horizontal, BUSpacing.screenMargin)
-            .padding(.top, BUSpacing.sm)
-        }
-    }
-}
-
+/// 「더보기」 세그먼트 본문 (2026-08-19 IA — 종전 가로 스트립 → 세로 인라인).
+///   오늘 상세(KPI 스트립·코칭 일지·운영 의식)는 카드 그대로 인라인(데이터 먼저),
+///   주간 점검·성장 도구는 전용 풀뷰라 행 → 시트. 사용자수 카드는 「운영」에만 (중복 제거).
+///   '내 가게'·'로드맵' 진입점은 하단 탭과 중복 → 제거.
 private struct MoreInsightsStrip: View {
 
     let mock: MockData
-    // 2026-06-04: 홈에서 강등된 KPI 스트립·고객 지표를 "오늘 상세" 팝업으로 전달 (누락 0).
     let dailyKpiCells: [KpiCellData]
-    let userActivity: UserActivitySummary
-    let dashboardStore: DashboardStore?
     let storeInfo: StoreInfoStore?
     var coaching: CoachingHistoryStore? = nil
     var saas: SaasMetricsStore? = nil
     var subscription: SubscriptionStore? = nil
 
     enum SheetID: String, Identifiable {
-        case dailyDetail, weeklyPulse, growth, myStore, roadmap
+        case weeklyPulse, growth
         var id: String { rawValue }
 
         var title: String {
             switch self {
-            case .dailyDetail: return "오늘 상세"
             case .weeklyPulse: return "주간 점검"
             case .growth:      return "성장 도구"
-            case .myStore:     return "내 가게"
-            case .roadmap:     return "로드맵"
             }
         }
     }
@@ -1759,20 +1770,23 @@ private struct MoreInsightsStrip: View {
         let subtitle: String
     }
 
-    private var insights: [Insight] {
-        var items: [Insight] = [
-            .init(id: .dailyDetail, icon: "square.grid.2x2.fill", label: "오늘 상세", subtitle: "KPI · 고객 · 의식"),
-            .init(id: .weeklyPulse, icon: "doc.richtext",   label: "주간 점검",  subtitle: "WoW · BEP"),
-            .init(id: .growth,      icon: "megaphone.fill", label: "성장 도구",  subtitle: "고객 · 마케팅"),
-        ]
-        if dashboardStore != nil && storeInfo != nil {
-            items.append(.init(id: .myStore, icon: "chart.bar.fill", label: "내 가게", subtitle: "재무 · 정보"))
-        }
-        items.append(.init(id: .roadmap, icon: "list.bullet", label: "로드맵", subtitle: "단계 진행"))
-        return items
-    }
+    private let insights: [Insight] = [
+        .init(id: .weeklyPulse, icon: "doc.richtext",   label: "주간 점검",  subtitle: "WoW · BEP · 벤치마크"),
+        .init(id: .growth,      icon: "megaphone.fill", label: "성장 도구",  subtitle: "고객 · 마케팅 · 정책자금"),
+    ]
 
     var body: some View {
+        // ── 오늘 상세 — 인라인 ──
+        DailyKpiStrip(cells: dailyKpiCells)
+
+        // 코칭 14일 누적 일지 (웹과 동일 Supabase) — 매일 히어로 신호 + 사장님 대응 시간선
+        if let coaching {
+            CoachingHistoryCard(store: coaching)
+        }
+
+        DailyOpsRitualCard(category: mock.category)
+
+        // ── 주간 점검 · 성장 도구 — 행 → 시트 ──
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Text("더 알아보기")
@@ -1787,47 +1801,45 @@ private struct MoreInsightsStrip: View {
             }
             .padding(.horizontal, 4)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(insights) { item in
-                        Button { openSheet = item.id } label: {
-                            HStack(spacing: 10) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                        .fill(BUColor.midnight.opacity(0.08))
-                                        .frame(width: 36, height: 36)
-                                    Image(systemName: item.icon)
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundStyle(BUColor.midnight)
-                                }
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(item.label)
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundStyle(BUColor.ink)
-                                    Text(item.subtitle)
-                                        .font(.system(size: 11, weight: .medium))
-                                        .foregroundStyle(BUColor.inkMuted)
-                                        .lineLimit(1)
-                                }
-                                Image(systemName: "arrow.up.right.square")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(BUColor.inkSubtle)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(
-                                Color.white.opacity(0.72),
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
-                            )
-                            .fixedSize(horizontal: true, vertical: false)
+            ForEach(insights) { item in
+                Button { openSheet = item.id } label: {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                .fill(BUColor.midnight.opacity(0.08))
+                                .frame(width: 36, height: 36)
+                            Image(systemName: item.icon)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(BUColor.midnight)
                         }
-                        .buttonStyle(.plain)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(item.label)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(BUColor.ink)
+                            Text(item.subtitle)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(BUColor.inkSubtle)
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        Color.white.opacity(0.72),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                    )
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
         .sheet(item: $openSheet) { id in
@@ -1840,8 +1852,6 @@ private struct MoreInsightsStrip: View {
     @ViewBuilder
     private func sheetContent(for id: SheetID) -> some View {
         switch id {
-        case .dailyDetail:
-            DailyDetailView(mock: mock, dailyKpiCells: dailyKpiCells, userActivity: userActivity, coaching: coaching)
         case .weeklyPulse:
             WeeklyPulseView(mock: mock, saas: saas, subscription: subscription)
         case .growth:
@@ -1850,17 +1860,10 @@ private struct MoreInsightsStrip: View {
                 // 실데이터 직원 수 — 두루누리 자격(10인 미만)·게이팅에 사용 (storeInfo 미로드 시 0)
                 currentEmployeeCount: (storeInfo?.isLoaded == true) ? (storeInfo?.state.employees.count ?? 0) : 0
             )
-        case .myStore:
-            if let dashboardStore, let storeInfo {
-                MyStoreView(store: dashboardStore, storeInfo: storeInfo)
-            } else {
-                EmptyView()
-            }
-        case .roadmap:
-            RoadmapView()
         }
     }
 }
+
 
 // MARK: - InsightSheet — popup wrapper (close button + drag indicator)
 

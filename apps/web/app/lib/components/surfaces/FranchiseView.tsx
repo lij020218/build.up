@@ -10,7 +10,10 @@ import {
   getScoreLabel,
 } from "@foundone/shared";
 import { FranchiseDetailModal } from "./FranchiseDetailModal";
-import { Search } from "lucide-react";
+import { Search, ChevronRight, ChevronDown, AlertTriangle } from "lucide-react";
+
+/** 목록 페이지 크기 — 20행씩 "더 보기" (iOS FranchiseView franchisePageSize 동일, 2026-08-19) */
+const PAGE_SIZE = 20;
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.16)";
@@ -37,9 +40,10 @@ export function FranchiseView() {
     { id: "space", label: ko ? "공간" : "Space" },
   ];
   const [filterCat, setFilterCat] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQueryRaw] = useState("");
+  const setSearchQuery = (v: string) => { setSearchQueryRaw(v); setVisibleCount(PAGE_SIZE); };
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(60);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const q = searchQuery.trim().toLowerCase();
   const filtered = allBrands.filter(b => {
     if (filterCat !== "all" && b.categoryId !== filterCat) return false;
@@ -98,7 +102,7 @@ export function FranchiseView() {
             <button
               key={cat.id}
               type="button"
-              onClick={() => setFilterCat(cat.id)}
+              onClick={() => { setFilterCat(cat.id); setVisibleCount(PAGE_SIZE); }}
               style={{
                 padding: "8px 16px",
                 borderRadius: 9999,
@@ -118,12 +122,14 @@ export function FranchiseView() {
         })}
       </div>
 
-      {/* Brand cards grid */}
-      <div className="bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+      {/* Brand rows — 컴팩트 한 줄(브랜드 · 카테고리 · 종합 · 창업비용 · 폐점률 + chevron).
+          2026-08-19 밀도 정리: 4 지표 그리드 + 5 점수 바는 FranchiseDetailModal 에 이미 있음 → 행에서 제거. iOS 동일 */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {visible.map(fb => {
           const overall = computeOverallScore(fb.scores);
           const isKftc = fb.tier === "kftc";
-          const hasDetailedData = !isKftc && !!(fb.sources?.length || fb.pros || fb.cons);
+          const catLabel = categories.find(c => c.id === fb.categoryId)?.label ?? fb.categoryId;
+          const closureColor = fb.closureRate >= 20 ? "#b64c4c" : fb.closureRate >= 10 ? MIDNIGHT : TEXT_PRIMARY;
 
           return (
             <button
@@ -131,117 +137,50 @@ export function FranchiseView() {
               type="button"
               onClick={() => setSelectedBrandId(fb.id)}
               className="bento-card"
-              style={{
-                display: "grid",
-                gap: 10,
-                padding: "20px 20px 18px",
-                borderRadius: 18,
-                border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
-                background: "white",
-                cursor: "pointer",
-                textAlign: "left" as const,
-                transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
-                fontFamily: "inherit",
-              }}
+              style={rowStyle}
             >
-              {/* Row 1: Name + score */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "3px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.015em", color: TEXT_PRIMARY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {fb.name[language]}
-                    {hasDetailedData && (
-                      <span title={ko ? "상세 데이터 보강" : "Detailed data available"} style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "999px", background: "rgba(25,25,112,0.1)", color: "#1d3557", fontWeight: 600 }}>
-                        ✓
-                      </span>
-                    )}
-                    {isKftc && (
-                      <span title={ko ? "공정위 공개데이터 자동 수록 · 점수는 실데이터 산출" : "Auto-listed from KFTC open data"} style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "999px", background: "rgba(25,25,112,0.06)", color: "rgba(25,25,112,0.7)", fontWeight: 600 }}>
-                        {ko ? "공정위" : "KFTC"}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{
-                    fontSize: "13px", color: "var(--muted)", lineHeight: 1.4,
-                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
-                  }}>{fb.tagline[language]}</div>
+                  </span>
+                  <span style={rowChipStyle}>{catLabel}</span>
+                  {isKftc && (
+                    <span title={ko ? "공정위 공개데이터 자동 수록 · 점수는 실데이터 산출" : "Auto-listed from KFTC open data"} style={{ ...rowChipStyle, color: "rgba(25,25,112,0.7)" }}>
+                      {ko ? "공정위" : "KFTC"}
+                    </span>
+                  )}
                 </div>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 24,
-                  background: `conic-gradient(${getScoreColor(overall)} ${overall * 3.6}deg, rgba(0,0,0,0.04) 0deg)`,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 19, background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "15px", fontWeight: 700, lineHeight: 1, color: getScoreColor(overall) }}>{overall}</span>
-                    <span style={{ fontSize: "7px", color: "var(--muted)" }}>{getScoreLabel(overall, language)}</span>
-                  </div>
+                <div style={{ display: "flex", gap: 12, fontSize: 11.5, color: TEXT_MUTED, flexWrap: "wrap" }}>
+                  <span>{ko ? "창업비용" : "Startup"} <strong style={{ color: TEXT_PRIMARY, fontWeight: 700 }}>{fb.startupCostWon > 0 ? formatFranchiseCost(fb.startupCostWon) : "—"}</strong></span>
+                  <span>{ko ? "폐점률" : "Closure"} <strong style={{ color: closureColor, fontWeight: 700 }}>{fb.closureRate > 0 ? `${fb.closureRate}%` : "—"}</strong></span>
                 </div>
               </div>
-
-              {/* Row 2: Key metrics */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
-                {[
-                  { l: ko ? "창업비용" : "Startup", v: fb.startupCostWon > 0 ? formatFranchiseCost(fb.startupCostWon) : "—" },
-                  { l: ko ? "연매출" : "Revenue", v: fb.avgAnnualRevenueWon > 0 ? formatFranchiseCost(fb.avgAnnualRevenueWon) : "—" },
-                  { l: ko ? "폐점률" : "Closure", v: fb.closureRate > 0 ? `${fb.closureRate}%` : "—" },
-                  { l: ko ? "매장수" : "Stores", v: fb.storeCount > 0 ? fb.storeCount.toLocaleString() : "—" },
-                ].map(m => (
-                  <div key={m.l} style={{ padding: "6px 4px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", textAlign: "center" }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700 }}>{m.v}</div>
-                    <div style={{ fontSize: "9px", color: "var(--muted)" }}>{m.l}</div>
-                  </div>
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: getScoreColor(overall) }}>{overall}</span>
+                <span style={{ fontSize: 9, color: "var(--muted)", marginTop: 2 }}>{getScoreLabel(overall, language)}</span>
               </div>
-
-              {/* Row 3: Score bars */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "4px" }}>
-                {[
-                  { l: ko ? "수익" : "Profit", v: fb.scores.profitability },
-                  { l: ko ? "안정" : "Stable", v: fb.scores.stability },
-                  { l: ko ? "진입" : "Access", v: fb.scores.accessibility },
-                  { l: ko ? "브랜드" : "Brand", v: fb.scores.brandPower },
-                  { l: ko ? "지원" : "Support", v: fb.scores.support },
-                ].map(s => (
-                  <div key={s.l} style={{ textAlign: "center" }}>
-                    <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.04)", marginBottom: "3px", overflow: "hidden" }}>
-                      <div style={{ width: `${s.v}%`, height: "100%", borderRadius: "2px", background: getScoreColor(s.v) }} />
-                    </div>
-                    <div style={{ fontSize: "9px", color: "var(--muted)" }}>{s.l}</div>
-                    <div style={{ fontSize: "11px", fontWeight: 600, color: getScoreColor(s.v) }}>{s.v}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Row 4: Click hint */}
-              <div style={{ marginTop: 2, fontSize: 11, color: TEXT_MUTED, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>
-                  {ko ? `가맹비 ${formatFranchiseCost(fb.franchiseFee)}` : `Fee ${formatFranchiseCost(fb.franchiseFee)}`}
-                  {fb.monthlyRoyalty > 0 && (ko ? ` · 로열티 ${fb.monthlyRoyalty}만/월` : ` · ${fb.monthlyRoyalty}K/mo`)}
-                </span>
-                <span style={{ color: MIDNIGHT, fontWeight: 700 }}>
-                  {ko ? "상세보기 →" : "View detail →"}
-                </span>
-              </div>
+              <ChevronRight size={16} strokeWidth={2} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
             </button>
           );
         })}
       </div>
 
       {visibleCount < sorted.length && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 6 }}>
           <button
             type="button"
-            onClick={() => setVisibleCount(c => c + 60)}
+            onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
             style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
               padding: "11px 26px", borderRadius: 999, border: `1px solid ${MIDNIGHT_BORDER}`,
-              background: MIDNIGHT_TINT, color: MIDNIGHT, fontSize: 13, fontWeight: 700,
+              background: "white", color: MIDNIGHT, fontSize: 13, fontWeight: 700,
               cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            {ko ? `더 보기 (${sorted.length - visibleCount}개 남음)` : `Show more (${sorted.length - visibleCount} left)`}
+            {ko ? `더 보기 ${Math.min(PAGE_SIZE, sorted.length - visibleCount)}개 (${visible.length}/${sorted.length})` : `Show ${Math.min(PAGE_SIZE, sorted.length - visibleCount)} more (${visible.length}/${sorted.length})`}
+            <ChevronDown size={13} strokeWidth={2} />
           </button>
-          <span style={{ fontSize: 11, color: TEXT_SUBTLE }}>
-            {ko ? `${visible.length} / 총 ${sorted.length}개 브랜드` : `${visible.length} / ${sorted.length} brands`}
-          </span>
         </div>
       )}
 
@@ -254,6 +193,16 @@ export function FranchiseView() {
           </div>
         </div>
       )}
+
+      {/* 한 줄 각주 — iOS disclaimerFootnote 미러 */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 11.5, color: TEXT_MUTED, lineHeight: 1.5 }}>
+        <AlertTriangle size={12} strokeWidth={1.8} style={{ color: MIDNIGHT, opacity: 0.7, flexShrink: 0, marginTop: 2 }} />
+        <span>
+          {ko
+            ? "비교 예시 데이터 — 계약 전 공정위 정보공개서(franchise.ftc.go.kr)로 본사명·점포수·매출·폐점률(20%+ 위험) 직접 확인"
+            : "Comparison data only — verify HQ, store count, revenue and closure rate (20%+ = risk) on the KFTC disclosure site before signing."}
+        </span>
+      </div>
 
       {/* Detail modal */}
       {selectedBrand && (
@@ -307,6 +256,32 @@ const subtitleStyle: React.CSSProperties = {
   lineHeight: 1.55,
   margin: 0,
   maxWidth: 640,
+};
+
+const rowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
+  background: "white",
+  cursor: "pointer",
+  textAlign: "left" as const,
+  transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+  fontFamily: "inherit",
+  width: "100%",
+};
+
+const rowChipStyle: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 600,
+  padding: "2px 7px",
+  borderRadius: 999,
+  background: "rgba(25,25,112,0.06)",
+  color: MIDNIGHT,
+  whiteSpace: "nowrap",
+  flexShrink: 0,
 };
 
 const emptyBoxStyle: React.CSSProperties = {

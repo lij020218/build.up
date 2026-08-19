@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * FundingPlansListModal — 내 사업계획서 목록 → 터치 → 상세 열람 팝업 (2026-08-14)
+ * FundingPlansList — 내 사업계획서 목록 → 터치 → 상세 열람 (2026-08-14)
  *
- * GuidesView 상단 "사업계획서 보기" 버튼 → 목록(최신순) → 항목 터치 → 섹션 뷰 + 복사 + 삭제.
+ * 2026-08-19: GuidesView 「내 계획서」 세그먼트에 인라인 렌더(FundingPlansList).
+ *   팝업 래퍼(FundingPlansListModal)는 유지 — 다른 진입점용. iOS FundingPlansListSheet/FundingPlansList 미러.
+ * 목록(최신순) → 항목 터치 → 섹션 뷰 + 복사 + 삭제.
  * 데이터: GET /api/funding/plans (서버 저장 원장 business_plan_drafts — 웹·iOS 공용).
- *
- * 접근성: ESC + 배경 클릭 닫힘, body scroll lock (FundingPlanModal 과 동일 패턴).
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -38,14 +38,14 @@ async function authHeader(): Promise<Record<string, string> | null> {
   return token ? { Authorization: `Bearer ${token}` } : null;
 }
 
-export function FundingPlansListModal({
-  open,
+/** 인라인 목록·상세 (세그먼트 본문용). 마운트 시 로드. */
+export function FundingPlansList({
   ko,
   onClose,
 }: {
-  open: boolean;
   ko: boolean;
-  onClose: () => void;
+  /** 팝업 래퍼에서만 전달 — 우상단 닫기 버튼 노출 */
+  onClose?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,25 +78,19 @@ export function FundingPlansListModal({
   }, [ko]);
 
   useEffect(() => {
-    if (!open) return;
     setSelected(null);
     setCopied(false);
     void load();
-  }, [open, load]);
+  }, [load]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!onClose) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") (selected ? setSelected(null) : onClose());
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose, selected]);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, selected]);
 
   const copyAll = useCallback(async () => {
     if (!selected) return;
@@ -129,24 +123,13 @@ export function FundingPlansListModal({
     }
   }, [selected, ko]);
 
-  if (!open || typeof document === "undefined") return null;
-
   const fmtDate = (iso: string) => {
     const d = new Date(iso);
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  return createPortal(
-    <div
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.45)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        style={{ width: "min(720px, 100%)", maxHeight: "86vh", overflow: "auto", background: "white", borderRadius: 20, padding: "22px 22px 18px", boxShadow: "0 24px 64px rgba(15,23,42,0.28)" }}
-      >
+  return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {/* 헤더 */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           {selected ? (
@@ -166,9 +149,11 @@ export function FundingPlansListModal({
               {selected ? `${fmtDate(selected.createdAt)} 생성` : ko ? `${plans.length}건 · 최신순` : `${plans.length} saved`}
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="닫기" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: TEXT_MUTED }}>
-            <X size={18} />
-          </button>
+          {onClose && (
+            <button type="button" onClick={onClose} aria-label="닫기" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: TEXT_MUTED }}>
+              <X size={18} />
+            </button>
+          )}
         </div>
 
         {/* 목록 */}
@@ -257,6 +242,41 @@ export function FundingPlansListModal({
             </div>
           </div>
         )}
+      </div>
+  );
+}
+
+/** 팝업 래퍼 — 배경 클릭·ESC 닫힘, body scroll lock (FundingPlanModal 과 동일 패턴). */
+export function FundingPlansListModal({
+  open,
+  ko,
+  onClose,
+}: {
+  open: boolean;
+  ko: boolean;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.45)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        style={{ width: "min(720px, 100%)", maxHeight: "86vh", overflow: "auto", background: "white", borderRadius: 20, padding: "22px 22px 18px", boxShadow: "0 24px 64px rgba(15,23,42,0.28)" }}
+      >
+        <FundingPlansList ko={ko} onClose={onClose} />
       </div>
     </div>,
     document.body,

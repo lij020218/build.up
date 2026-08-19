@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useEffect, useState, useRef } from "react";
+import { requestHomeFocus } from "./homeSegments";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, MoveRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Settings2, Check } from "lucide-react";
@@ -537,7 +538,8 @@ export function CEOMorningHero({ d }: Props) {
   // 모든 분기에서 fallback 보장 — 클릭이 무반응으로 끝나지 않게 (거짓 기능 금지).
   const focusBySelector = (selector: string, opts: { focusInput?: boolean } = {}) => {
     const el = document.querySelector<HTMLElement>(selector);
-    if (!el) return false;
+    // 홈 세그먼트 IA (2026-08-19): 카드가 다른 탭(운영·더보기)에 있으면 DOM 에 없다 → 탭 전환 + 스크롤 요청.
+    if (!el) return requestHomeFocus(selector, opts);
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     if (opts.focusInput) {
       window.setTimeout(() => {

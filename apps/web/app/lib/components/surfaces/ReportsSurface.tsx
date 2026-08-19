@@ -15,13 +15,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Calendar, CalendarRange, CalendarDays, CalendarCheck, ShieldCheck, Eye, Heart } from "lucide-react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { ReportView } from "../reports/ReportView";
+import { SegmentedTabs } from "../SegmentedTabs";
+import { CollapsibleSection } from "../CollapsibleSection";
 import type { ReportPeriod } from "../../hooks/useReportSnapshot";
 import { isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
 import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
-const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
 
 const PERIOD_LABELS: Record<ReportPeriod, { ko: string; en: string }> = {
   day: { ko: "일일", en: "Daily" },
@@ -87,28 +88,16 @@ export function ReportsSurface() {
         )}
       </AnimatePresence>
 
-      {/* Period tabs */}
-      <div style={tabsRow}>
-        {(["day", "week", "month", "quarter"] as ReportPeriod[]).map((p) => {
-          const sel = period === p;
-          return (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPeriod(p)}
-              style={{
-                ...tabStyle,
-                borderColor: sel ? MIDNIGHT : "rgba(15,23,42,0.08)",
-                background: sel ? MIDNIGHT : "white",
-                color: sel ? "white" : "#0f172a",
-                fontWeight: sel ? 700 : 600,
-              }}
-            >
-              {ko ? PERIOD_LABELS[p].ko : PERIOD_LABELS[p].en}
-            </button>
-          );
-        })}
-      </div>
+      {/* Period tabs — 공용 SegmentedTabs (iOS BUSegmentedControl 미러) */}
+      <SegmentedTabs<ReportPeriod>
+        ariaLabel={ko ? "보고서 기간" : "Report period"}
+        items={(["day", "week", "month", "quarter"] as ReportPeriod[]).map((p) => ({
+          key: p,
+          label: ko ? PERIOD_LABELS[p].ko : PERIOD_LABELS[p].en,
+        }))}
+        value={period}
+        onChange={setPeriod}
+      />
 
       {/* Period 별 본문 — Apple 스프링 fade */}
       <AnimatePresence mode="wait">
@@ -123,8 +112,13 @@ export function ReportsSurface() {
         </motion.div>
       </AnimatePresence>
 
-      {/* ── 보고서 정보 footer — 왜 중요한가 / 무엇이 담기는가 ── */}
-      <ReportsAboutSection ko={ko} />
+      {/* ── 보고서 정보 footer — 정적 안내는 접힘(2026-08-19 밀도 정리) ── */}
+      <CollapsibleSection
+        title={ko ? "보고서 안내" : "About reports"}
+        summary={ko ? "왜 중요한가 · 각 기간의 질문 · 담기는 정보" : "Why · what each answers · what's inside"}
+      >
+        <ReportsAboutSection ko={ko} />
+      </CollapsibleSection>
     </main>
   );
 }
@@ -287,28 +281,11 @@ const arrivedChipStyle: React.CSSProperties = {
   boxShadow: "0 4px 16px rgba(25,25,112,0.22)",
 };
 
-const tabsRow: React.CSSProperties = {
-  display: "flex",
-  gap: 6,
-  flexWrap: "wrap",
-  marginBottom: 6,
-};
 
-const tabStyle: React.CSSProperties = {
-  padding: "10px 18px",
-  borderRadius: 12,
-  border: `1.5px solid ${MIDNIGHT_BORDER}`,
-  fontSize: 13.5,
-  cursor: "pointer",
-  transition: "all 0.18s cubic-bezier(0.22, 1, 0.36, 1)",
-};
 
 // ── About section styles ────────────────────────────────
 
 const aboutSectionStyle: React.CSSProperties = {
-  marginTop: 32,
-  paddingTop: 28,
-  borderTop: "1px solid rgba(15,23,42,0.06)",
   display: "flex",
   flexDirection: "column",
   gap: 14,

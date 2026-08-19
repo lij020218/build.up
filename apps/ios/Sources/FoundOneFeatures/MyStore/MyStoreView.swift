@@ -6,12 +6,11 @@
 //  회계·정적 데이터 관점 — 운영 대시보드와 분리.
 //  AI 호출 0 — 모두 사장 입력 + 정적 schema + 산수.
 //
-//  구성 (모바일 최적화):
-//    1) Hero At-a-Glance (가게명·미션·주소·전화 + 6지표 + D-Day pill)
-//    2) Financial Snapshot (누적·잔고·런웨이 + 잔고 인라인 수정)
-//    3) D-Day 위젯 (만료 임박 — 실 데이터 from StoreInfoStore.expiry items)
-//    4) 공통 5섹션 (Identity / Legal / Money / People / Insurance) — SectionCard 로 진입
-//    5) Footer 안내문
+//  구성 (2026-08-19 IA — 세그먼트 3탭, 웹 MyStoreView 동일):
+//    「현황」  1) Hero At-a-Glance  2) Financial 3숫자 스트립  3) 월 비용(읽기+수정)  4) D-Day(항목 있을 때만)
+//    「가게 정보」 공통 5섹션 + 거점 + 업종 섹션 — 접힌 행, 탭하면 펼침 (SectionCard collapsible)
+//    「서류」  사업 서류 라이브러리
+//    Footer 안내문은 공통
 //
 
 import SwiftUI
@@ -37,32 +36,42 @@ public struct MyStoreView: View {
         self.documentUploader = documentUploader
     }
 
+    /// 내 가게 세그먼트 (2026-08-19 IA — 웹 MyStoreView 동일 3탭: 현황 · 가게 정보 · 서류)
+    enum Segment: String, CaseIterable, Hashable {
+        case status, info, docs
+        var labelKo: String {
+            switch self {
+            case .status: return "현황"
+            case .info:   return "가게 정보"
+            case .docs:   return "서류"
+            }
+        }
+    }
+    @State private var segment: Segment = .status
+
     public var body: some View {
         // ⚠️ 2026-05-25: ZStack + BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
         //   중복 Aurora 두 인스턴스가 독립 애니메이션 → 배경 분리감 발생.
         ScrollView {
             VStack(spacing: 0) {
-                // 공통 페이지 헤더 (2026-08-19 통일) — 히어로 카드 위에 "내 가게" + 상태 한 줄
-                BUPageHeader(title: "내 가게", subtitle: myStoreSubtitle)
+                // 공통 페이지 헤더 (2026-08-19 통일) — 히어로 카드 위에 "내 가게" + 상태 한 줄 + 세그먼트
+                BUPageHeader(
+                    title: "내 가게",
+                    subtitle: myStoreSubtitle,
+                    accessory: {
+                        BUSegmentedControl(
+                            items: Segment.allCases.map {
+                                BUSegmentItem(id: $0, label: $0.labelKo, showsDot: $0 == .status && hasUrgentDday)
+                            },
+                            selection: $segment
+                        )
+                    }
+                )
                 VStack(alignment: .leading, spacing: 16) {
-                    HeroAtAGlance(store: storeInfo, photoUploader: photoUploader)
-                        .padding(.horizontal, 16)
-
-                    FinancialSnapshotCard(store: store)
-                        .padding(.horizontal, 16)
-
-                    CostManagementCard(store: store)
-                        .padding(.horizontal, 16)
-
-                    ddayCard
-                        .padding(.horizontal, 16)
-
-                    BusinessDocumentsCard(storeInfo: storeInfo, uploader: documentUploader)
-                        .padding(.horizontal, 16)
-
-                    ForEach(allSections, id: \.id) { spec in
-                        SectionCard(spec: spec, store: storeInfo)
-                            .padding(.horizontal, 16)
+                    switch segment {
+                    case .status: statusSegment
+                    case .info:   infoSegment
+                    case .docs:   docsSegment
                     }
 
                     footer
@@ -76,6 +85,46 @@ public struct MyStoreView: View {
         .task {
             await storeInfo.load()
         }
+    }
+
+    // MARK: - Segments
+
+    /// 「현황」 = 한눈에 보기 → 재무 3숫자 스트립 → 월 비용(읽기 전용 + 수정) → D-Day(항목 있을 때만)
+    @ViewBuilder
+    private var statusSegment: some View {
+        HeroAtAGlance(store: storeInfo, photoUploader: photoUploader)
+            .padding(.horizontal, 16)
+
+        FinancialSnapshotCard(store: store)
+            .padding(.horizontal, 16)
+
+        CostManagementCard(store: store)
+            .padding(.horizontal, 16)
+
+        if !ddayItems.isEmpty {
+            ddayCard
+                .padding(.horizontal, 16)
+        }
+    }
+
+    /// 「가게 정보」 = 공통 5섹션 + 거점 + 업종 섹션 — 접힌 행(제목 + 입력 n/m), 탭하면 펼침
+    @ViewBuilder
+    private var infoSegment: some View {
+        ForEach(allSections, id: \.id) { spec in
+            SectionCard(spec: spec, store: storeInfo, collapsible: true)
+                .padding(.horizontal, 16)
+        }
+    }
+
+    /// 「서류」 = 사업 서류 라이브러리
+    @ViewBuilder
+    private var docsSegment: some View {
+        BusinessDocumentsCard(storeInfo: storeInfo, uploader: documentUploader)
+            .padding(.horizontal, 16)
+    }
+
+    private var hasUrgentDday: Bool {
+        ddayItems.contains { $0.urgency == .overdue || $0.urgency == .urgent }
     }
 
     /// 헤더 부제 — 운영 상태 + 상호 (가짜 숫자 없음, 상태 문구만).

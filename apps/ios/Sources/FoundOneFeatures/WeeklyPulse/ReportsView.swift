@@ -7,11 +7,12 @@
 //   • Hero (대표 매출 + 변화율 + headline)
 //   • KPI 3 (비용 / 마진 / 프라임코스트)
 //   • ReportChart (시리즈 — day 라인 / week·month·quarter 바)
-//   • ReportDonut (비용 도넛 + slice 리스트 + 6개월 sparkline)
+//   • 「비용 구성」 접힘 섹션 (ReportDonut — 비용 도넛 + slice 리스트)
 //   • 이상 신호 (있을 때만)
 //   • 다음 액션 + 거장 인용
 //
-//  week period 에서만 iOS 고유 블록 5개 추가 (Cashflow13W / CostStructure / Checklist / MonthlyPnL / Insights).
+//  week period 에서만 「주간 점검」 접힘 섹션 (Checklist / MonthlyPnL / Insights).
+//  생존보드·13주 현금흐름·비용구조 카드는 재무 탭과 중복 → 2026-08-19 제거.
 //
 
 import SwiftUI
@@ -23,7 +24,8 @@ public struct ReportsView: View {
 
     let mock: MockData
 
-    @State private var period: ReportPeriod = .week
+    // 기본 = 첫 탭(일) — 웹 ReportsSurface(useState("day")) 와 동일
+    @State private var period: ReportPeriod = .day
 
     public init(mock: MockData) {
         self.mock = mock
@@ -43,10 +45,15 @@ public struct ReportsView: View {
                 // 공통 페이지 헤더 (2026-08-19 통일) — "보고서" + 기간별 부제 + 일/주/월/분기 세그먼트
                 BUPageHeader(title: "보고서", subtitle: reportSubtitle, accessory: { periodTabs })
                 VStack(spacing: BUSpacing.shellGap) {
+                    // 기본 펼침 블록 ≤5: Hero · KPI · Chart · (이상 신호) · 다음 액션
                     ReportHeroCard(data: data)
                     ReportKpiRow(data: data)
                     ReportChartCard(data: data)
-                    ReportDonutCard(data: data)
+
+                    // 비용 구성 — 차트 아래 접힘 (2026-08-19 밀도 정리, 웹 ReportView 동일)
+                    BUCollapsibleSection(title: "비용 구성", summary: costSummary) {
+                        ReportDonutCard(data: data)
+                    }
 
                     if !data.anomalies.isEmpty {
                         AnomalySignalsCard(anomalies: data.anomalies)
@@ -54,49 +61,19 @@ public struct ReportsView: View {
 
                     NextActionCard(actionText: data.nextActionText, wisdom: data.wisdom)
 
-                    // iOS 고유 — 주간 점검 전용 블록은 week period 에서만 노출
+                    // 주간 점검 — week 에서만, 기본 접힘.
+                    // 생존보드·13주 현금흐름·비용구조 카드는 재무 탭(FinanceView)과 중복이라 제거(2026-08-19).
                     if period == .week {
                         let ratios = CostRatios.calculate(
                             costs: mock.costs,
                             totalRevenue: mock.entries.reduce(0) { $0 + $1.sales },
                             days: mock.entries.count
                         )
-                        let healthResult = HealthScore.calculate(
-                            entries: mock.entries,
-                            costs: mock.costs,
-                            category: mock.category,
-                            stage: mock.stage,
-                            currentCash: mock.currentCash
-                        )
-                        let weeklyBalances: [Double] = {
-                            guard let cash = mock.currentCash else { return [] }
-                            let weeklyNet = (ratios.monthlyRevenueEquivalent - mock.costs.total) / 4.33
-                            return (0..<13).map { week in cash + weeklyNet * Double(week) }
-                        }()
-                        let isCrisis = weeklyBalances.contains(where: { $0 < 0 })
-
-                        weeklyOnlyEyebrow
-
-                        SurvivalBoardCard(mock: mock, healthResult: healthResult)
-                        if !weeklyBalances.isEmpty {
-                            Cashflow13WeekCard(
-                                currentBalance: mock.currentCash ?? 0,
-                                weeklyBalances: weeklyBalances,
-                                isCrisis: isCrisis
-                            )
+                        BUCollapsibleSection(title: "주간 점검", summary: "체크리스트 · 월 매출 진행 · 인사이트") {
+                            WeeklyChecklistBlock()
+                            MonthlyRevenueProgressBlock(entries: mock.entries)
+                            WeeklyInsightsBlock(entries: mock.entries, ratios: ratios, category: mock.category)
                         }
-                        if ratios.ready && mock.category != .startupTech {
-                            CostStructureCard(
-                                ingredientRatio: ratios.ingredientRatio,
-                                laborRatio: ratios.laborRatio,
-                                rentRatio: ratios.rentRatio,
-                                primeCostRatio: ratios.primeCostRatio,
-                                thresholds: IndustryThresholds.thresholds(for: mock.category)
-                            )
-                        }
-                        WeeklyChecklistBlock()
-                        MonthlyRevenueProgressBlock(entries: mock.entries)
-                        WeeklyInsightsBlock(entries: mock.entries, ratios: ratios, category: mock.category)
                     }
 
                     Color.clear.frame(height: 110)
@@ -128,16 +105,9 @@ public struct ReportsView: View {
         )
     }
 
-    private var weeklyOnlyEyebrow: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 12, weight: .heavy))
-                .foregroundStyle(BUColor.midnight.opacity(0.7))
-            Text("주간 전용 · WEEKLY DEEP DIVE")
-                .buSectionEyebrowStyle()
-            Spacer()
-        }
-        .padding(.top, 8)
+    /// 접힘 헤더 요약 — 슬라이스 수 (없으면 입력 유도)
+    private var costSummary: String {
+        data.costSlices.isEmpty ? "월 비용 입력 필요" : "\(data.costSlices.count)개 항목"
     }
 }
 

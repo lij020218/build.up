@@ -45,6 +45,16 @@ function saveOpenState(state: Record<string, boolean>) {
   } catch { /* quota */ }
 }
 
+/**
+ * 아직 마운트되지 않은 DeepDive 를 "펼침" 으로 예약 (2026-08-19 세그먼트 IA).
+ *  홈이 오늘/운영/더보기 세그먼트로 나뉘어 대상 섹션이 다른 탭에 있으면 이벤트 리스너가 없다.
+ *  orchestrator 가 탭을 바꾸면서 이 함수로 저장 상태만 true 로 두면 마운트 시 loadOpenState 로 펼쳐진다.
+ */
+export function markDeepDiveOpen(id: string) {
+  const saved = loadOpenState();
+  saveOpenState({ ...saved, [id]: true });
+}
+
 export function DeepDiveSection({ id, title, subtitle, defaultOpen = false, children, ko = true }: DeepDiveSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [hover, setHover] = useState(false);

@@ -5,6 +5,8 @@
 //  서버:     GET/DELETE /api/funding/plans (business_plan_drafts 원장, RLS 본인 스코프)
 //
 //  목록(최신순) → 항목 탭 → 섹션 뷰 + 전체 복사 + 삭제.
+//  2026-08-19: 본문을 FundingPlansList(인라인) 로 분리 — GuidesView 「내 계획서」 세그먼트에 직접 렌더.
+//              FundingPlansListSheet 는 NavigationStack 래퍼로 유지(다른 진입점용).
 //
 
 import SwiftUI
@@ -15,8 +17,34 @@ import UIKit
 #endif
 
 struct FundingPlansListSheet: View {
-
     @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                BUBackgroundSurface()
+                ScrollView {
+                    FundingPlansList()
+                        .padding(.horizontal, BUSpacing.screenMargin)
+                        .padding(.top, BUSpacing.md)
+                    Color.clear.frame(height: 32)
+                }
+            }
+            .navigationTitle("내 사업계획서")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+/// 인라인 목록·상세 (세그먼트 본문용). 상세 진입 시 자체 「목록」 뒤로가기 행을 그린다.
+struct FundingPlansList: View {
 
     @State private var loading: Bool = true
     @State private var error: String? = nil
@@ -28,39 +56,12 @@ struct FundingPlansListSheet: View {
     private static let notice = "생성 결과는 초안입니다. 반드시 공고에 첨부된 공식 양식(HWP)에 옮겨 제출하세요."
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: BUSpacing.md) {
-                        if let plan = selected {
-                            detailView(plan)
-                        } else {
-                            listView
-                        }
-                        Color.clear.frame(height: 32)
-                    }
-                    .padding(.horizontal, BUSpacing.screenMargin)
-                    .padding(.top, BUSpacing.md)
-                }
-            }
-            .navigationTitle(selected == nil ? "내 사업계획서" : (selected?.programName ?? "사업계획서"))
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                if selected != nil {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button {
-                            withAnimation { selected = nil }
-                        } label: {
-                            Label("목록", systemImage: "chevron.left")
-                        }
-                    }
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
-                }
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            headerRow
+            if let plan = selected {
+                detailView(plan)
+            } else {
+                listView
             }
         }
         .task { await load() }
@@ -69,6 +70,37 @@ struct FundingPlansListSheet: View {
             Button("취소", role: .cancel) {}
         } message: {
             Text("되돌릴 수 없어요.")
+        }
+    }
+
+    // MARK: - Header (목록 ↔ 상세)
+
+    private var headerRow: some View {
+        HStack(spacing: 10) {
+            if selected != nil {
+                Button {
+                    withAnimation { selected = nil }
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .heavy))
+                        Text("목록")
+                            .font(.system(size: 13, weight: .heavy))
+                    }
+                    .foregroundStyle(BUColor.midnight)
+                    .frame(minHeight: BUSpacing.minTapTarget)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+            }
+            Text(selected?.programName ?? (selected == nil ? "내 사업계획서" : "사업계획서"))
+                .font(.system(size: 15, weight: .heavy))
+                .foregroundStyle(BUColor.ink)
+                .lineLimit(1)
+            Spacer(minLength: 0)
         }
     }
 

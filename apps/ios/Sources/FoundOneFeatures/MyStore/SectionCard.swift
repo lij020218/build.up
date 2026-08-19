@@ -22,18 +22,26 @@ public struct SectionCard: View {
     public let spec: SectionSpec
     @ObservedObject var store: StoreInfoStore
     @State private var showEdit = false
+    /// 2026-08-19 IA: 접힌 행 모드 — 헤더(제목 + 입력 n/m) 만 보이고 탭하면 펼침 (웹 SectionRenderer collapsible 미러).
+    private let collapsible: Bool
+    @State private var isExpanded: Bool
 
-    public init(spec: SectionSpec, store: StoreInfoStore) {
+    public init(spec: SectionSpec, store: StoreInfoStore, collapsible: Bool = false) {
         self.spec = spec
         self.store = store
+        self.collapsible = collapsible
+        self._isExpanded = State(initialValue: !collapsible)
     }
 
     public var body: some View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
                 header
-                Divider().background(BUColor.midnight.opacity(0.06))
-                content
+                if isExpanded {
+                    Divider().background(BUColor.midnight.opacity(0.06))
+                    content
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
         }
         .sheet(isPresented: $showEdit) {
@@ -54,7 +62,13 @@ public struct SectionCard: View {
                         .tracking(-0.1)
                     expiryDot
                 }
-                if let sub = spec.subtitle {
+                if collapsible, !isExpanded {
+                    // 접힌 상태 요약 — 입력 n/m (필드 섹션) · N건 (배열 섹션)
+                    Text(collapsedSummary)
+                        .font(.system(size: 11))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .lineLimit(1)
+                } else if let sub = spec.subtitle {
                     Text(sub)
                         .font(.system(size: 11))
                         .foregroundStyle(BUColor.inkMuted)
@@ -62,8 +76,39 @@ public struct SectionCard: View {
                 }
             }
             Spacer()
-            editButton
+            if collapsible {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    .padding(.trailing, 2)
+            }
+            if isExpanded { editButton }
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard collapsible else { return }
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { isExpanded.toggle() }
+        }
+        .accessibilityAddTraits(collapsible ? .isButton : [])
+        .accessibilityValue(collapsible ? (isExpanded ? "펼침" : "접힘") : "")
+    }
+
+    /// 접힌 헤더의 한 줄 요약 — 필수 필드 입력 n/m + 배열 N건.
+    private var collapsedSummary: String {
+        var parts: [String] = []
+        let required = spec.fields.filter { !$0.optional }
+        if !required.isEmpty {
+            let filled = required.filter {
+                !StoreInfoAccessor.value(from: store.state, sectionId: spec.id, key: $0.key).isEmpty
+            }.count
+            parts.append("입력 \(filled)/\(required.count)")
+        }
+        if spec.arrayItem != nil {
+            parts.append("\(currentArrayItems.count)건")
+        }
+        if parts.isEmpty { parts.append(isFullyEmpty ? "미입력" : "입력됨") }
+        return parts.joined(separator: " · ")
     }
 
     private var sectionIcon: some View {

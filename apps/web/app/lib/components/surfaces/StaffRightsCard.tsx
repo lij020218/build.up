@@ -16,7 +16,8 @@
  *   — 사장 알림과 동일 계산 → 사장·직원이 같은 판정을 봄 (분쟁 방지 핵심).
  */
 
-import { ShieldCheck, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { ShieldCheck, ExternalLink, ChevronDown } from "lucide-react";
 import { checkSeveranceObligation, checkAnnualLeaveAccrual, MINIMUM_WAGE_2026 } from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
@@ -49,6 +50,16 @@ export function StaffRightsCard({ ko, hourlyWage, hireDate, joinedAt, weeklyMinu
   const severanceEligible = sev?.level === "eligible";
   const severanceApproaching = sev?.level === "approaching";
   const belowMinimum = hourlyWage != null && hourlyWage > 0 && hourlyWage < MINIMUM_WAGE_2026;
+  // 접힘 요약(배지 3개) + 펼치기 (2026-08-19 IA 정리, iOS StaffRightsCard 미러). 최저임금 경고는 항상 노출.
+  const [expanded, setExpanded] = useState(false);
+  const juhyuBadge = juhyuEligible ? (ko ? "대상" : "Eligible") : (ko ? "비대상" : "Not eligible");
+  const severanceBadge = severanceEligible ? (ko ? "대상 도달" : "Eligible") : severanceApproaching ? (ko ? "임박" : "Soon") : (ko ? "미도달" : "Not yet");
+  const leaveBadge = daysSinceHire >= 365 ? (ko ? "15일 발생" : "15 days") : (ko ? "1년 미만" : "<1yr");
+  const summaryTile = (on: boolean): React.CSSProperties => ({
+    flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: 10,
+    background: on ? "rgba(26,122,54,0.06)" : "rgba(25,25,112,0.05)",
+    border: `1px solid ${on ? "rgba(26,122,54,0.25)" : "transparent"}`,
+  });
 
   const sectionTitle: React.CSSProperties = { display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 750, color: MIDNIGHT, marginBottom: 4 };
   const itemBox = (highlight: boolean): React.CSSProperties => ({
@@ -67,18 +78,51 @@ export function StaffRightsCard({ ko, hourlyWage, hireDate, joinedAt, weeklyMinu
 
   return (
     <section style={{ background: "white", borderRadius: 22, padding: "22px 22px", boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((v) => !v)}
+        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", marginBottom: 12, padding: 0, background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+      >
         <ShieldCheck size={17} strokeWidth={1.9} style={{ color: MIDNIGHT }} />
         <div style={{ fontSize: 15, fontWeight: 800, color: INK, letterSpacing: "-0.01em" }}>{ko ? "내 근로 권리" : "My rights"}</div>
-      </div>
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: MIDNIGHT }}>
+          {expanded ? (ko ? "접기" : "Collapse") : (ko ? "펼치기" : "Expand")}
+          <ChevronDown size={13} strokeWidth={2.2} style={{ transition: "transform 0.18s", transform: expanded ? "rotate(180deg)" : "none" }} />
+        </span>
+      </button>
 
-      {hourlyWage == null && (
+      {!expanded && (
+        <>
+          {/* 요약 배지 3개 — 펼치지 않아도 자격 상태가 한눈에 */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {[
+              { label: ko ? "주휴수당" : "Holiday pay", value: juhyuBadge, on: juhyuEligible },
+              { label: ko ? "퇴직금" : "Severance", value: severanceBadge, on: severanceEligible },
+              { label: ko ? "연차" : "Leave", value: leaveBadge, on: daysSinceHire >= 365 },
+            ].map((t) => (
+              <div key={t.label} style={summaryTile(t.on)}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED }}>{t.label}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: t.on ? OK : "rgba(15,23,42,0.7)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.value}</div>
+              </div>
+            ))}
+          </div>
+          {hourlyWage == null && (
+            <div style={{ fontSize: 11.5, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>
+              {ko ? "사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 표시됩니다." : "Once your hourly wage is set, your entitlements appear here."}
+            </div>
+          )}
+        </>
+      )}
+
+      {expanded && hourlyWage == null && (
         <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 12, lineHeight: 1.5 }}>
           {ko ? "사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 여기 표시됩니다." : "Once your hourly wage is set, your entitlements appear here."}
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: expanded ? 0 : (belowMinimum ? 10 : 0) }}>
+        {expanded && (<>
         {/* ① 주휴수당 */}
         <div style={itemBox(juhyuEligible)}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -133,8 +177,9 @@ export function StaffRightsCard({ ko, hourlyWage, hireDate, joinedAt, weeklyMinu
           </div>
           <div style={lawRef}>{ko ? "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)." : "Labor Standards Act §60 · workplaces with 5+ staff."}</div>
         </div>
+        </>)}
 
-        {/* 최저임금 미달 경고 */}
+        {/* 최저임금 미달 경고 — 접혀 있어도 항상 노출 (권리 침해 신호는 숨기지 않는다) */}
         {belowMinimum && (
           <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(182,76,76,0.06)", border: "1px solid rgba(182,76,76,0.22)" }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: "#b64c4c" }}>

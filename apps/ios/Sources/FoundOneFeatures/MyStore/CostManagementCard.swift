@@ -115,9 +115,14 @@ struct CostManagementCard: View {
 
     // MARK: - Read-only rows
 
+    /// 읽기 전용 요약 (2026-08-19 IA): 입력된 항목만 행으로, 미입력은 한 줄 힌트 — 8행 상시 노출 대신 컴팩트.
+    ///   전부 미입력이면 8행 그대로(무엇을 넣어야 하는지 보이게).
     private var readonlyRows: some View {
-        VStack(spacing: 6) {
-            ForEach(Array(fields.enumerated()), id: \.offset) { _, f in
+        let entered = fields.filter { currentCosts.value(forKey: $0.label) > 0 }
+        let visible = entered.isEmpty ? fields : entered
+        let missing = fields.count - entered.count
+        return VStack(spacing: 6) {
+            ForEach(Array(visible.enumerated()), id: \.offset) { _, f in
                 let value = currentCosts.value(forKey: f.label)
                 HStack(spacing: 10) {
                     Image(systemName: f.icon)
@@ -134,6 +139,14 @@ struct CostManagementCard: View {
                 }
                 .padding(.horizontal, 10).padding(.vertical, 7)
                 .background(BUColor.inkMuted.opacity(0.02), in: RoundedRectangle(cornerRadius: 10))
+            }
+            if !entered.isEmpty && missing > 0 {
+                Text("미입력 \(missing)항목 — 수정에서 입력")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 10)
+                    .padding(.top, 2)
             }
         }
     }

@@ -56,6 +56,24 @@ public struct TeamManagementView: View {
     /// 직원 상세 시트 (시급·근태·연차 — 2026-07-13)
     @State private var detailMember: TeamMember? = nil
 
+    // ── 세그먼트 (2026-08-19 IA 정리, 웹 TeamSurface 와 동일 3탭) ──
+    //   「직원」= 처리할 일 요약 → 급여일 → 명단 → 퇴사 → (접힘) 직원 구하기
+    //   「근무표」= 근무 캘린더 → 희망 근무 취합(요약 카드 → 시트)
+    //   「연차·급여」= 연차 승인 → 수당 승인 → 연차 관리 → 급여 명단
+    enum TeamSegment: String, CaseIterable, Hashable {
+        case staff, schedule, leavePay
+        var label: String {
+            switch self {
+            case .staff: return "직원"
+            case .schedule: return "근무표"
+            case .leavePay: return "연차·급여"
+            }
+        }
+    }
+    @State private var segment: TeamSegment = .staff
+    /// 「직원 추가」— 우상단 + 버튼 → 시트 (본문 카드에서 승격)
+    @State private var showInviteSheet = false
+
     private var repo: TeamRepository { TeamRepository(supabase: BUSupabase.shared.client) }
     private var pendingLeaves: [TeamLeaveRequest] { leaves.filter { $0.status == "pending" } }
     private var pendingAllowances: [TeamAllowanceRequest] { allowances.filter { $0.status == "pending" } }
@@ -83,34 +101,22 @@ public struct TeamManagementView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         // 공통 페이지 헤더 (2026-08-19 통일) — 시트로 열릴 땐 내비 바 타이틀이 있으므로 생략
+                        //   trailing = 「직원 추가」 + 버튼, accessory = 3 세그먼트 (웹 SegmentedTabs 미러)
                         if !isSheet {
                             BUPageHeader(
                                 title: "직원",
-                                subtitle: "근무표 · 연차 · 급여"
+                                subtitle: "근무표 · 연차 · 급여",
+                                trailing: {
+                                    BUHeaderIconButton(systemName: "plus", accessibilityLabel: "직원 추가") { showInviteSheet = true }
+                                },
+                                accessory: { segmentControl }
                             )
                         }
                         VStack(alignment: .leading, spacing: BUSpacing.md) {
-                            if isSheet { headerBlock }
-
-                            // 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동
-                            // (2026-07-24 사장님 지시, 웹 TeamSurface 정합. URL 공식 도메인만)
-                            // ⚠️ SSOT = packages/shared/src/team/hiring-channels.ts HIRING_QUICK_CHANNELS —
-                            //    목록·순서·배지 1:1 수동 미러. 드리프트는 hiring-channels-ios-sync.test.ts 가 차단.
-                            // 2026-07-25: 당근알바 추가(2순위) + "당근으로 구하는 법" 가이드 시트.
-                            BUQuickLinksCard(
-                                title: "직원 구인 바로가기",
-                                caption: "공고 등록·지원자 관리는 각 사이트에서 하세요.",
-                                links: [
-                                    BUQuickLink(label: "알바몬", url: "https://www.albamon.com"),
-                                    BUQuickLink(label: "당근알바", url: "https://www.daangn.com/kr/jobs/", badge: "동네 기반"),
-                                    BUQuickLink(label: "알바천국", url: "https://www.alba.co.kr"),
-                                    BUQuickLink(label: "사람인", url: "https://www.saramin.co.kr"),
-                                    BUQuickLink(label: "잡코리아", url: "https://www.jobkorea.co.kr"),
-                                    BUQuickLink(label: "고용24", url: "https://www.work24.go.kr", badge: "정부·무료"),
-                                ],
-                                actionLabel: "당근으로 구하는 법 →",
-                                onAction: { showDaangnGuide = true }
-                            )
+                            if isSheet {
+                                headerBlock
+                                segmentControl
+                            }
 
                             if let actionError {
                                 Text(actionError)
@@ -124,33 +130,13 @@ public struct TeamManagementView: View {
                             if let members {
                                 if members.isEmpty {
                                     emptyState
+                                    if segment == .staff { hiringSection }
                                 } else {
-                                    // 시간에 걸린 액션이라 맨 위 (웹 TeamSurface 와 동일 순서)
-                                    paydayCard
-                                    if !leavers.isEmpty { offboardingCard }
-                                    if !pendingLeaves.isEmpty { leaveApprovalCard }
-                                    if !pendingAllowances.isEmpty { allowanceApprovalCard }
-                                    // 연차 관리 — 법정 일수(제60조) + 직원별 잔여 (웹 TeamSurface 미러)
-                                    AnnualLeaveCard(
-                                        members: activeMembers,
-                                        leaves: leaveLedger,
-                                        basis: leaveBasis,
-                                        onChangeBasis: { b in
-                                            let prev = leaveBasis
-                                            leaveBasis = b
-                                            Task {
-                                                do { try await repo.setLeaveBasis(b.rawValue) }
-                                                catch { leaveBasis = prev }   // 실패 시 되돌림
-                                            }
-                                        }
-                                    )
-                                    // 근무 캘린더 — 어느 날 누가 나오는지 (웹 TeamSurface 미러).
-                                    //   배정 편집보다 앞 — 현황 파악이 편집보다 먼저.
-                                    OwnerShiftCalendarCard(members: activeMembers, rules: rules, repo: repo)
-
-                                    // 희망 근무 취합 — 확정 캘린더 뒤, 배정 편집 앞 (웹 TeamSurface 와 같은 순서)
-                                    ShiftAvailabilityCard(mode: .owner, ownerUserId: ownerId, repo: repo)
-                                    memberScheduleList(activeMembers)
+                                    switch segment {
+                                    case .staff: staffSegment
+                                    case .schedule: scheduleSegment
+                                    case .leavePay: leavePaySegment
+                                    }
                                 }
                             } else if loadFailed {
                                 loadErrorCard
@@ -158,10 +144,6 @@ public struct TeamManagementView: View {
                                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 30)
                             }
 
-                            // 직원 추가 초대 — 웹 TeamSurface 하단 「직원 추가」 섹션 미러
-                            InviteCreateCard(onInviteCreated: { Task { await load() } })
-
-                            if storeInfoStore != nil { payrollLinkCard }
                             Color.clear.frame(height: 40)
                         }
                         .padding(.horizontal, BUSpacing.md)
@@ -170,7 +152,7 @@ public struct TeamManagementView: View {
                 }
             }
             // 탭 화면: 센터 내비 타이틀 제거 — 타이틀은 BUPageHeader 하나만 (2026-08-19).
-            //   시트: 기존 내비 바(닫기 + "직원 관리") 유지.
+            //   시트: 기존 내비 바(닫기 + "직원 관리" + 우측 「직원 추가」) 유지.
             .navigationTitle(isSheet ? "직원 관리" : "")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -182,11 +164,21 @@ public struct TeamManagementView: View {
                     ToolbarItem(placement: .topBarLeading) {
                         Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
                     }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { showInviteSheet = true } label: {
+                            Image(systemName: "plus").font(.system(size: 15, weight: .semibold))
+                        }
+                        .foregroundStyle(BUColor.midnight)
+                        .accessibilityLabel("직원 추가")
+                    }
                 }
                 #endif
             }
             .sheet(isPresented: $showPayrollSheet) {
                 if let si = storeInfoStore { TeamManagementSheet(storeInfoStore: si) }
+            }
+            .sheet(isPresented: $showInviteSheet) {
+                inviteSheet
             }
             .sheet(isPresented: $showDaangnGuide) {
                 DaangnHiringGuideSheet()
@@ -273,6 +265,161 @@ public struct TeamManagementView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    // ── 세그먼트 컨트롤 (헤더 accessory / 시트 상단) ──
+    //   경고 점 = 처리 대기 건이 있는 탭 (연차·수당 → 연차·급여, 퇴사 정산 → 직원)
+    private var segmentControl: some View {
+        BUSegmentedControl(
+            items: TeamSegment.allCases.map { seg in
+                BUSegmentItem(
+                    id: seg,
+                    label: seg.label,
+                    showsDot: (seg == .staff && !leavers.isEmpty)
+                        || (seg == .leavePay && (!pendingLeaves.isEmpty || !pendingAllowances.isEmpty))
+                )
+            },
+            selection: $segment
+        )
+    }
+
+    // ── 「직원」 세그먼트 ──
+    @ViewBuilder
+    private var staffSegment: some View {
+        todoSummaryCard
+        paydayCard
+        memberScheduleList(activeMembers)
+        if !leavers.isEmpty { offboardingCard }
+        hiringSection
+    }
+
+    // ── 「근무표」 세그먼트 ──
+    @ViewBuilder
+    private var scheduleSegment: some View {
+        // 근무 캘린더 — 어느 날 누가 나오는지 (웹 TeamSurface 미러). 현황 파악이 먼저.
+        OwnerShiftCalendarCard(members: activeMembers, rules: rules, repo: repo)
+        // 희망 근무 취합 — 요약 카드 + 「자세히」 시트 (881줄 카드를 한 화면에서 덜어냄)
+        ShiftAvailabilityCard(mode: .owner, ownerUserId: ownerId, repo: repo, presentation: .sheet)
+    }
+
+    // ── 「연차·급여」 세그먼트 ──
+    @ViewBuilder
+    private var leavePaySegment: some View {
+        if !pendingLeaves.isEmpty { leaveApprovalCard }
+        if !pendingAllowances.isEmpty { allowanceApprovalCard }
+        // 연차 관리 — 법정 일수(제60조) + 직원별 잔여 (웹 TeamSurface 미러)
+        AnnualLeaveCard(
+            members: activeMembers,
+            leaves: leaveLedger,
+            basis: leaveBasis,
+            onChangeBasis: { b in
+                let prev = leaveBasis
+                leaveBasis = b
+                Task {
+                    do { try await repo.setLeaveBasis(b.rawValue) }
+                    catch { leaveBasis = prev }   // 실패 시 되돌림
+                }
+            }
+        )
+        if storeInfoStore != nil { payrollLinkCard }
+    }
+
+    // ── 처리할 일 요약 (연차 대기 · 수당 대기 · 퇴사 정산) — 탭하면 해당 세그먼트로 ──
+    private var todoSummaryCard: some View {
+        let items: [(label: String, count: Int, target: TeamSegment)] = [
+            ("연차 대기", pendingLeaves.count, .leavePay),
+            ("수당 대기", pendingAllowances.count, .leavePay),
+            ("퇴사 정산", leavers.count, .staff),
+        ]
+        let total = items.reduce(0) { $0 + $1.count }
+        return BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checklist")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                    Text("처리할 일")
+                        .font(.system(size: 15, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    if total > 0 {
+                        Text("\(total)")
+                            .font(.system(size: 11, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .background(BUColor.midnight, in: Capsule())
+                    }
+                }
+                if total == 0 {
+                    Text("지금 처리할 일이 없어요.")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(BUColor.inkSecondary)
+                } else {
+                    HStack(spacing: 8) {
+                        ForEach(items.filter { $0.count > 0 }, id: \.label) { item in
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.15)) { segment = item.target }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Text(item.label).font(.system(size: 12, weight: .heavy))
+                                    Text("\(item.count)").font(.system(size: 12, weight: .heavy)).monospacedDigit()
+                                    Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold))
+                                }
+                                .foregroundStyle(BUColor.midnight)
+                                .padding(.horizontal, 11).padding(.vertical, 8)
+                                .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+        }
+    }
+
+    // ── 직원 구하기 (접힘) — 구인 바로가기 6종 + 당근 가이드 (탭 맨 아래) ──
+    //   ⚠️ SSOT = packages/shared/src/team/hiring-channels.ts HIRING_QUICK_CHANNELS —
+    //      목록·순서·배지 1:1 수동 미러. 드리프트는 hiring-channels-ios-sync.test.ts 가 차단.
+    private var hiringSection: some View {
+        BUCollapsibleSection(title: "직원 구하기", summary: "알바몬 · 당근알바 · 고용24 등") {
+            BUQuickLinksCard(
+                title: "직원 구인 바로가기",
+                caption: "공고 등록·지원자 관리는 각 사이트에서 하세요.",
+                links: [
+                    BUQuickLink(label: "알바몬", url: "https://www.albamon.com"),
+                    BUQuickLink(label: "당근알바", url: "https://www.daangn.com/kr/jobs/", badge: "동네 기반"),
+                    BUQuickLink(label: "알바천국", url: "https://www.alba.co.kr"),
+                    BUQuickLink(label: "사람인", url: "https://www.saramin.co.kr"),
+                    BUQuickLink(label: "잡코리아", url: "https://www.jobkorea.co.kr"),
+                    BUQuickLink(label: "고용24", url: "https://www.work24.go.kr", badge: "정부·무료"),
+                ],
+                actionLabel: "당근으로 구하는 법 →",
+                onAction: { showDaangnGuide = true }
+            )
+        }
+    }
+
+    // ── 「직원 추가」 시트 (우상단 + 버튼) ──
+    private var inviteSheet: some View {
+        NavigationStack {
+            ZStack(alignment: .top) {
+                BUBackgroundSurface()
+                ScrollView {
+                    InviteCreateCard(onInviteCreated: { Task { await load() } })
+                        .padding(.horizontal, BUSpacing.md)
+                        .padding(.vertical, BUSpacing.sm)
+                }
+            }
+            .navigationTitle("직원 추가")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기") { showInviteSheet = false }.foregroundStyle(BUColor.midnight)
+                }
+            }
+        }
+    }
+
     // ── 빈 상태 (웹 미러: 초대 유도) ──
     private var emptyState: some View {
         BUCard(.outer) {
@@ -283,11 +430,20 @@ public struct TeamManagementView: View {
                 Text("아직 연결된 직원이 없어요")
                     .font(.system(size: 15, weight: .heavy))
                     .foregroundStyle(BUColor.ink)
-                Text("아래에서 초대를 만들어 직원에게 보내세요.\n직원이 연결되면 여기서 근무표·연차·출퇴근을 관리할 수 있어요.")
+                Text("초대를 만들어 직원에게 보내세요.\n직원이 연결되면 여기서 근무표·연차·출퇴근을 관리할 수 있어요.")
                     .font(.system(size: 13))
                     .foregroundStyle(BUColor.inkSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
+                Button { showInviteSheet = true } label: {
+                    Label("직원 초대 만들기", systemImage: "plus")
+                        .font(.system(size: 13, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 18).padding(.vertical, 10)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
@@ -604,12 +760,21 @@ public struct TeamManagementView: View {
     private func memberScheduleList(_ members: [TeamMember]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
-                Image(systemName: "calendar.badge.clock")
+                Image(systemName: "person.2")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(BUColor.midnight)
-                Text("근무표 배정")
+                Text("직원 명단")
                     .font(.system(size: 15, weight: .heavy))
                     .foregroundStyle(BUColor.ink)
+                Text("\(members.count)")
+                    .font(.system(size: 11, weight: .heavy))
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(BUColor.midnight.opacity(0.07), in: Capsule())
+                Spacer(minLength: 0)
+                Text("이름 탭 = 상세 · 수정 = 근무표")
+                    .font(.system(size: 11))
+                    .foregroundStyle(BUColor.inkMuted)
             }
             ForEach(members) { member in
                 MemberScheduleCard(

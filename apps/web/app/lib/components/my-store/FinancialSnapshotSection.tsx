@@ -14,7 +14,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { Wallet, TrendingDown, TrendingUp, RefreshCw } from "lucide-react";
+import { Wallet, TrendingDown, TrendingUp, RefreshCw, ChevronDown } from "lucide-react";
 import { card, sectionHeader, sectionTitle, sectionSubtitle, fieldLabel, textareaInput, PALETTE, subtleButton } from "./styles";
 
 type DailyEntry = { date: string; sales: number; customers: number };
@@ -49,6 +49,9 @@ export function FinancialSnapshotSection(p: Props) {
   const ko = p.ko;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<string>(p.currentBalanceManualKrw != null ? String(p.currentBalanceManualKrw) : "");
+  // 2026-08-19 IA: 기본은 3숫자 스트립(누적 매출·현재 잔고·런웨이)만 — 손익·재무 탭과 겹치는 지표라 축약.
+  //   누적 손익·분기 막대·잔고÷자본 게이지는 [자세히] 로 펼침 (삭제 0).
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const cumulativeSales = useMemo(
     () => p.dailyEntries.reduce((s, e) => s + (e.sales ?? 0), 0),
@@ -104,20 +107,36 @@ export function FinancialSnapshotSection(p: Props) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={sectionTitle}>{ko ? "재무 현황" : "Financial Snapshot"}</div>
           <div style={sectionSubtitle}>
-            {ko ? "누적·분기·연간 회계 관점 — 운영 대시보드와 별개" : "Cumulative·quarterly·annual — separate from ops dashboard"}
+            {ko ? "누적 매출 · 잔고 · 런웨이 — 운영 대시보드와 별개" : "Cumulative · balance · runway — separate from ops dashboard"}
           </div>
         </div>
       </header>
 
       {/* Financial 카드 본문 — settings card 가 padding:0 이라 wrapper 로 감쌈 */}
-      <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column" as const, gap: 18 }}>
+      <div style={{ padding: "16px 24px 18px", display: "flex", flexDirection: "column" as const, gap: 14 }}>
 
-      {/* 4-up KPI grid */}
+      {/* 3숫자 스트립 — 누적 매출 · 현재 잔고 · 런웨이 */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 0, border: `1px solid ${PALETTE.MIDNIGHT_BORDER}`, borderRadius: 14, background: "white", overflow: "hidden" }}>
+        <StripCell label={ko ? "누적 매출" : "Cumulative sales"} value={`₩${fmtWon(cumulativeSales)}`} sub={ko ? `${daysOperating}일간` : `${daysOperating} days`} />
+        <StripCell label={ko ? "현재 잔고" : "Current balance"} value={`₩${fmtWon(balance)}`} sub={p.currentBalanceUpdatedAt ? `${ko ? "업데이트" : "Updated"} ${p.currentBalanceUpdatedAt.slice(0, 10)}` : ko ? "수동 입력 필요" : "Manual input"} divider />
+        <StripCell label={ko ? "런웨이" : "Runway"} value={runwayMonths != null ? `${runwayMonths.toFixed(1)}${ko ? "개월" : " mo"}` : "—"} tone={runwayMonths != null && runwayMonths < 6 ? "bad" : runwayMonths != null && runwayMonths < 12 ? "warn" : "good"} sub={ko ? "잔고 ÷ 월 burn" : "Balance ÷ burn"} divider />
+      </div>
+
+      {/* [자세히] — 누적 손익 · 분기 매출 · 잔고÷자본 */}
+      <button
+        type="button"
+        onClick={() => setDetailOpen((v) => !v)}
+        aria-expanded={detailOpen}
+        style={{ ...subtleButton, display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start" }}
+      >
+        <ChevronDown size={12} strokeWidth={2} style={{ transition: "transform 0.18s", transform: detailOpen ? "rotate(180deg)" : "none" }} />
+        {detailOpen ? (ko ? "간단히" : "Less") : (ko ? "자세히 — 누적 손익 · 분기 매출 · 잔고÷자본" : "More — cumulative P&L · quarterly · balance÷capital")}
+      </button>
+
+      {detailOpen && (
+        <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KpiTile label={ko ? "누적 매출" : "Cumulative sales"} value={`₩${fmtWon(cumulativeSales)}`} sub={ko ? `${daysOperating}일간` : `${daysOperating} days`} />
         <KpiTile label={ko ? "누적 손익" : "Cumulative P&L"} value={`${cumulativeProfit >= 0 ? "+" : ""}₩${fmtWon(cumulativeProfit)}`} tone={cumulativeProfit >= 0 ? "good" : "bad"} sub={ko ? `월 burn ₩${fmtWon(monthlyBurn)}` : `Monthly burn ₩${fmtWon(monthlyBurn)}`} />
-        <KpiTile label={ko ? "현재 잔고" : "Current balance"} value={`₩${fmtWon(balance)}`} sub={p.currentBalanceUpdatedAt ? `${ko ? "업데이트:" : "Updated:"} ${p.currentBalanceUpdatedAt.slice(0, 10)}` : ko ? "수동 입력 필요" : "Manual input"} />
-        <KpiTile label={ko ? "런웨이" : "Runway"} value={runwayMonths != null ? `${runwayMonths.toFixed(1)}${ko ? "개월" : " mo"}` : "—"} tone={runwayMonths != null && runwayMonths < 6 ? "bad" : runwayMonths != null && runwayMonths < 12 ? "warn" : "good"} sub={ko ? "잔고 ÷ 월 burn" : "Balance ÷ burn"} />
       </div>
 
       {/* 분기별 매출 막대 */}
@@ -168,6 +187,8 @@ export function FinancialSnapshotSection(p: Props) {
             }} />
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* 잔고 수동 갱신 */}
@@ -220,6 +241,25 @@ export function FinancialSnapshotSection(p: Props) {
       </div>
       </div>{/* /Financial 본문 wrapper */}
     </section>
+  );
+}
+
+function StripCell({ label, value, sub, tone, divider }: { label: string; value: string; sub?: string; tone?: "good" | "warn" | "bad"; divider?: boolean }) {
+  const color = tone === "bad" ? PALETTE.DANGER : tone === "warn" ? PALETTE.WARN : tone === "good" ? PALETTE.SUCCESS : PALETTE.MIDNIGHT_DEEP;
+  return (
+    <div style={{
+      padding: "12px 14px", minWidth: 0,
+      borderLeft: divider ? `1px solid ${PALETTE.MIDNIGHT_BORDER}` : "none",
+      display: "flex", flexDirection: "column" as const, gap: 3,
+    }}>
+      <span style={{ fontSize: 10.5, fontWeight: 700, color: PALETTE.MIDNIGHT, opacity: 0.65, letterSpacing: "0.05em", textTransform: "uppercase" as const, whiteSpace: "nowrap" as const }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 18, fontWeight: 700, color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" as const, lineHeight: 1.1, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+        {value}
+      </span>
+      {sub && <span style={{ fontSize: 10.5, color: PALETTE.HINT, fontWeight: 500, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</span>}
+    </div>
   );
 }
 

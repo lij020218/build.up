@@ -75,18 +75,23 @@ public struct FinancialSnapshotCard: View {
     // MARK: - Body
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        // 2026-08-19 IA: 컴팩트 3숫자 스트립 (누적 매출 · 현재 잔고 · 런웨이) — 손익·재무 탭과 겹치는 지표라 축약.
+        //   잔고 수정은 스트립 아래 인라인 (수정/저장 패턴 유지).
+        VStack(alignment: .leading, spacing: 12) {
             header
-            statRow(label: "누적 매출", value: "₩\(fmtWonShort(cumulativeSales))", tone: .neutral)
-            divider
-            statRow(label: "총 자본금", value: "—", tone: .neutral)
-            divider
-            balanceRow
-            divider
-            statRow(label: "런웨이", value: runwayLabel, valueColor: runwayColor, tone: .neutral)
+            HStack(spacing: 0) {
+                stripCell(label: "누적 매출", value: "₩\(fmtWonShort(cumulativeSales))")
+                stripDivider
+                stripCell(label: "현재 잔고", value: "₩\(fmtWonShort(balance))", editable: true)
+                stripDivider
+                stripCell(label: "런웨이", value: runwayLabel, valueColor: runwayColor)
+            }
+            if isEditing {
+                balanceEditor
+            }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 16)
+        .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.white.opacity(0.72))
@@ -97,121 +102,97 @@ public struct FinancialSnapshotCard: View {
         )
     }
 
-    // MARK: - Header
+    // MARK: - Strip cells
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            BUEyebrow("재무 현황 · FINANCIAL")
-            Text("회계 스냅샷")
-                .font(.system(size: 17, weight: .bold))
-                .tracking(-0.3)
-                .foregroundStyle(BUColor.midnightDeep)
-            Text("누적 매출 · 잔고 · 런웨이 — 운영 대시보드와 별개")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted)
-        }
+    private var stripDivider: some View {
+        Rectangle().fill(BUColor.cardBorder).frame(width: 1, height: 34)
     }
 
-    private var divider: some View {
-        Rectangle()
-            .fill(BUColor.cardBorder)
-            .frame(height: 1)
-    }
-
-    // MARK: - Stat row
-
-    private enum Tone { case neutral }
-
-    private func statRow(label: String, value: String, valueColor: Color = BUColor.midnightDeep, tone: Tone) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(BUColor.ink)
-            Spacer()
-            Text(value)
-                .font(.system(size: 15, weight: .bold))
-                .tracking(-0.2)
-                .foregroundStyle(valueColor)
-        }
-        .frame(minHeight: 28)
-    }
-
-    // MARK: - Inline editable balance row
-
-    private var balanceRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("현재 잔고")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(BUColor.ink)
-                Spacer()
-                if !isEditing {
-                    Text("₩\(fmtWonShort(balance))")
-                        .font(.system(size: 15, weight: .bold))
-                        .tracking(-0.2)
-                        .foregroundStyle(BUColor.midnightDeep)
+    private func stripCell(label: String, value: String, valueColor: Color = BUColor.midnightDeep, editable: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Text(label)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+                if editable && !isEditing {
                     Button {
                         draft = balance > 0 ? String(Int(balance)) : ""
                         isEditing = true
                         focused = true
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 10, weight: .semibold))
-                            Text("수정")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .foregroundStyle(BUColor.midnight)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule().fill(BUColor.midnight.opacity(0.08))
-                        )
+                        Image(systemName: "pencil")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(BUColor.midnight)
+                            .frame(width: 18, height: 18)
+                            .background(BUColor.midnight.opacity(0.08), in: Circle())
                     }
                     .buttonStyle(.plain)
-                    .frame(minHeight: 30)
+                    .accessibilityLabel("현재 잔고 수정")
                 }
             }
-            if isEditing {
-                HStack(spacing: 8) {
-                    TextField("0", text: $draft)
-                        .keyboardType(.numberPad)
-                        .focused($focused)
-                        .font(.system(size: 15, weight: .semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10).fill(BUColor.midnight.opacity(0.04))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-                        )
+            Text(value)
+                .font(.system(size: 15, weight: .bold))
+                .tracking(-0.2)
+                .foregroundStyle(valueColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+    }
 
-                    Button("저장") {
-                        commitBalance()
-                    }
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(BUColor.midnight)
-                    .clipShape(Capsule())
-                    .frame(minHeight: 44)
-                    .buttonStyle(.plain)
+    // MARK: - Header
 
-                    Button("취소") {
-                        isEditing = false
-                        draft = ""
-                    }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 10)
-                    .frame(minHeight: 44)
-                    .buttonStyle(.plain)
-                }
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            BUEyebrow("재무 현황 · FINANCIAL")
+            Spacer(minLength: 0)
+            Text("운영 대시보드와 별개")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+        }
+    }
+
+    // MARK: - Inline balance editor (수정 탭 시 스트립 아래)
+
+    private var balanceEditor: some View {
+        HStack(spacing: 8) {
+            TextField("0", text: $draft)
+                .keyboardType(.numberPad)
+                .focused($focused)
+                .font(.system(size: 15, weight: .semibold))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10).fill(BUColor.midnight.opacity(0.04))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+                )
+
+            Button("저장") {
+                commitBalance()
             }
+            .font(.system(size: 13, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(BUColor.midnight)
+            .clipShape(Capsule())
+            .frame(minHeight: 44)
+            .buttonStyle(.plain)
+
+            Button("취소") {
+                isEditing = false
+                draft = ""
+            }
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(BUColor.inkMuted)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
+            .frame(minHeight: 44)
+            .buttonStyle(.plain)
         }
     }
 

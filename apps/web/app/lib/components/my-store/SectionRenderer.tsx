@@ -49,6 +49,8 @@ type Props = {
   onArrayUpdate?: (id: string, patch: Record<string, unknown>) => void;
   onArrayRemove?: (id: string) => void;
   recommendedPrefills?: Array<{ name: string; type?: string; helper?: string }>;
+  /** 2026-08-19 IA: 접힌 행 모드 — 헤더(제목 + 입력 n/m) 만 보이고 클릭하면 펼침 (iOS SectionCard collapsible 미러) */
+  collapsible?: boolean;
 };
 
 function daysUntil(dateStr: string | undefined): number | null {
@@ -64,10 +66,12 @@ export function SectionRenderer({
   section, ko,
   objectValue, onObjectFieldChange,
   arrayValue, onArrayAdd, onArrayUpdate, onArrayRemove,
-  recommendedPrefills,
+  recommendedPrefills, collapsible = false,
 }: Props) {
   const Icon = ICON_MAP[section.icon] ?? Building2;
   const filledCount = countFilled(section, objectValue, arrayValue);
+  const [expanded, setExpanded] = useState(!collapsible);
+  const toggleExpanded = () => { if (collapsible) setExpanded((v) => !v); };
 
   // ── Object 모드 수정/저장 ── (Array 모드는 add/remove 가 이미 명시적이라 그대로)
   const isObjectMode = !!(section.fields && objectValue && onObjectFieldChange);
@@ -83,6 +87,7 @@ export function SectionRenderer({
     setSaveStatus("idle");
     setSaveError(null);
     setEditing(true);
+    setExpanded(true);
   };
 
   const handleCancel = () => {
@@ -120,8 +125,13 @@ export function SectionRenderer({
 
   return (
     <section id={section.id} style={card}>
-      {/* Header */}
-      <header style={sectionHeader}>
+      {/* Header — collapsible 이면 클릭으로 펼침/접힘 (버튼 영역은 stopPropagation) */}
+      <header
+        style={{ ...sectionHeader, ...(collapsible ? { cursor: "pointer", userSelect: "none" as const } : null) }}
+        onClick={toggleExpanded}
+        role={collapsible ? "button" : undefined}
+        aria-expanded={collapsible ? expanded : undefined}
+      >
         <div style={{
           width: 36, height: 36, borderRadius: 11, flexShrink: 0,
           background: PALETTE.MIDNIGHT_8,
@@ -131,9 +141,14 @@ export function SectionRenderer({
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={sectionTitle}>{ko ? section.title : section.titleEn ?? section.title}</div>
-          {section.subtitle && <div style={sectionSubtitle}>{section.subtitle}</div>}
+          {section.subtitle && (expanded || !collapsible) && <div style={sectionSubtitle}>{section.subtitle}</div>}
         </div>
-        {filledCount.show && (
+        {collapsible && filledCount.show && (
+          <span style={{ fontSize: 11, fontWeight: 600, color: PALETTE.MUTED, whiteSpace: "nowrap" as const }}>
+            {section.arrayItem ? `${filledCount.filled}${ko ? "건" : ""}` : `${ko ? "입력 " : ""}${filledCount.filled}/${filledCount.total}`}
+          </span>
+        )}
+        {!collapsible && filledCount.show && (
           <div style={{
             fontSize: 11,
             fontWeight: 700,
@@ -149,9 +164,9 @@ export function SectionRenderer({
             {filledCount.filled}/{filledCount.total}
           </div>
         )}
-        {/* 수정/저장/취소 버튼 — Object 모드만 */}
-        {isObjectMode && (
-          <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+        {/* 수정/저장/취소 버튼 — Object 모드만 (접힌 상태에선 chevron 만) */}
+        {isObjectMode && expanded && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
             {saveStatus === "saved" && (
               <span style={{ fontSize: 11, color: PALETTE.SUCCESS, fontWeight: 600 }}>
                 {ko ? "✓ 저장됨" : "✓ Saved"}
@@ -190,10 +205,17 @@ export function SectionRenderer({
             )}
           </div>
         )}
+        {collapsible && (
+          <ChevronDown
+            size={14}
+            strokeWidth={2}
+            style={{ color: PALETTE.MUTED, flexShrink: 0, transition: "transform 0.18s", transform: expanded ? "rotate(180deg)" : "none" }}
+          />
+        )}
       </header>
 
       {/* Object 모드: settings-list — editing=false 일 때 input 잠금 */}
-      {section.fields && objectValue && onObjectFieldChange && (
+      {expanded && section.fields && objectValue && onObjectFieldChange && (
         <div
           style={{
             ...sectionBody,
@@ -216,7 +238,7 @@ export function SectionRenderer({
       )}
 
       {/* Array 모드: 항목 리스트 */}
-      {section.arrayItem && arrayValue !== undefined && onArrayAdd && onArrayUpdate && onArrayRemove && (
+      {expanded && section.arrayItem && arrayValue !== undefined && onArrayAdd && onArrayUpdate && onArrayRemove && (
         <ArrayEditor
           spec={section.arrayItem}
           value={arrayValue}

@@ -20,7 +20,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  LogOut, Store, CalendarDays, LogIn, Timer, ChevronLeft, ChevronRight,
+  LogOut, CalendarDays, LogIn, Timer, ChevronLeft, ChevronRight,
   Plus, CheckCircle2, Clock3, X, Moon, Hourglass, UserRound,
 } from "lucide-react";
 import {
@@ -33,6 +33,10 @@ import { StaffProfileView } from "./StaffProfileView";
 import { StaffRightsCard } from "./StaffRightsCard";
 import { StaffAllowanceCard, type AllowanceReq, type AllowanceType, type OvertimeCandidate } from "./StaffAllowanceCard";
 import { ShiftAvailabilityCalendar } from "../team/ShiftAvailabilityCalendar";
+import { SegmentedTabs } from "../SegmentedTabs";
+
+/** 세그먼트 (2026-08-19 IA 정리, iOS StaffDashboardView.StaffSegment 미러) */
+type StaffTab = "today" | "requests" | "rightsPay";
 
 // ── Build.UP 팔레트 (신호등 컬러 금지) ──
 const MIDNIGHT = "#191970";
@@ -90,6 +94,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const [ctxError, setCtxError] = useState(false); // 연결 조회 RPC 실패 — "미연결"과 구분 (2026-07-13)
   const [signingOut, setSigningOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false); // 내 정보 팝업 (2026-07-13)
+  const [tab, setTab] = useState<StaffTab>("today");     // 세그먼트 (2026-08-19)
 
   const [todayAtt, setTodayAtt] = useState<Attendance | null>(null);
   const [todaySched, setTodaySched] = useState<Shift | null>(null);
@@ -419,78 +424,109 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       <div style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
         {renderHeader(true)}
 
-        {/* ① 가게 헤더 */}
-        <section style={{ ...cardStyle, paddingBottom: 22 }}>
+        {/* ① 페이지 헤더 — 가게명 제목 + 역할 부제 + 세그먼트 (사장 화면 통일 헤더 미러, 2026-08-19) */}
+        <header style={{ padding: "2px 4px 0" }}>
           <div style={eyebrow}>Found.One · {ko ? "직원 대시보드" : "Staff"}</div>
-          <h1 style={{ ...h1, marginBottom: 12 }}>
-            <span style={{ color: MIDNIGHT }}>{ctx.storeName}</span>{ko ? "에서 일하고 있어요" : ""}
-          </h1>
-          <div style={chipRow}>
-            <span style={chip}><Store size={12} strokeWidth={1.8} /> {ctx.storeName}</span>
-            <span style={chip}>{ko ? "역할" : "Role"} · <strong style={{ marginLeft: 3 }}>{ctx.role === "manager" ? (ko ? "매니저" : "Manager") : ko ? "직원" : "Staff"}</strong></span>
-            {(() => { const t = tenureDays(ctx.hireDate, ctx.joinedAt); return t != null && t >= 1 ? (
-              <span style={chip}>{ko ? "근속" : "Day"} · <strong style={{ marginLeft: 3 }}>{ko ? `${t.toLocaleString()}일차` : t.toLocaleString()}</strong></span>
-            ) : null; })()}
-            {ctx.employmentType && (
-              <span style={{ ...chip, background: MIDNIGHT, color: "white" }}>{employmentTypeLabel(ctx.employmentType, ko)}</span>
-            )}
-            {ctx.jobDuties.map((k) => (
-              <span key={k} style={chip}>{jobDutyLabel(k, ko)}</span>
-            ))}
+          <h1 style={h1}><span style={{ color: MIDNIGHT }}>{ctx.storeName}</span></h1>
+          <div style={{ fontSize: 13.5, color: MUTED, marginTop: 4, fontWeight: 600 }}>
+            {ctx.role === "manager" ? (ko ? "매니저" : "Manager") : ko ? "직원" : "Staff"} · {ctx.storeName}
           </div>
-          <WeekdayStrip ko={ko} days={workdays} />
-        </section>
-
-        {/* ② 오늘 카드 — 출퇴근 */}
-        <TodayCard
-          ko={ko} sched={todaySched} att={todayAtt} clockedIn={clockedIn} busy={busy}
-          onClockIn={clockIn} onClockOut={clockOut} tick={tick}
-        />
-
-        {/* ③ 출근 기록 캘린더 */}
-        <CalendarCard
-          ko={ko} y={viewMonth.y} m={viewMonth.m} isCurrentMonth={isToday}
-          att={monthAtt} rules={rules} exceptions={monthSched} leaves={leaves} todayStr={today}
-          onPrev={() => setViewMonth((v) => { const d = new Date(v.y, v.m - 1, 1); return { y: d.getFullYear(), m: d.getMonth() }; })}
-          onNext={() => setViewMonth((v) => { const d = new Date(v.y, v.m + 1, 1); return { y: d.getFullYear(), m: d.getMonth() }; })}
-        />
-
-        {/* ③-b 다음 달 희망 근무 신청 (2026-07-30 사장님 요청) — 캘린더 바로 뒤.
-            "이미 신청한 동료 시간을 보면서 조정" 이 핵심이라 같은 화면 안에서 붙여 둔다. */}
-        <section style={cardStyle}>
-          <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em", marginBottom: 10 }}>
-            {ko ? "근무 희망 신청" : "Shift requests"}
+          <div style={{ marginTop: 12 }}>
+            <SegmentedTabs<StaffTab>
+              ariaLabel={ko ? "직원 대시보드 탭" : "Staff tabs"}
+              value={tab}
+              onChange={setTab}
+              items={[
+                { key: "today", label: ko ? "오늘" : "Today" },
+                { key: "requests", label: ko ? "신청" : "Requests" },
+                { key: "rightsPay", label: ko ? "권리·급여" : "Rights · Pay" },
+              ]}
+            />
           </div>
-          <ShiftAvailabilityCalendar ko={ko} ownerId={ctx.ownerUserId} myUserId={ctx.userId} mode="staff" />
-        </section>
+        </header>
 
-        {/* ④ 연차·휴가 — 잔여 요약(근로기준법 제60조) + 신청 목록 */}
-        <LeaveCard ko={ko} leaves={leaves} ledger={leaveLedger} ledgerFailed={ledgerFailed}
-          onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave}
-          hireDate={ctx.hireDate} leaveBasis={ctx.leaveBasis} headcount={ctx.staffHeadcount} />
+        {tab === "today" && (
+          <>
+            {/* 가게 컨텍스트 — 근속·고용형태·직무·근무 요일 (가게명·역할은 헤더로 흡수) */}
+            <section style={{ ...cardStyle, paddingBottom: 22 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em" }}>{ko ? "내 근무 정보" : "My job"}</div>
+                {(() => { const t = tenureDays(ctx.hireDate, ctx.joinedAt); return t != null && t >= 1 ? (
+                  <span style={{ ...chip, marginLeft: "auto" }}>{ko ? "근속" : "Day"} · <strong style={{ marginLeft: 3 }}>{ko ? `${t.toLocaleString()}일차` : t.toLocaleString()}</strong></span>
+                ) : null; })()}
+              </div>
+              {(ctx.employmentType || ctx.jobDuties.length > 0) && (
+                <div style={{ ...chipRow, marginBottom: 12 }}>
+                  {ctx.employmentType && (
+                    <span style={{ ...chip, background: MIDNIGHT, color: "white" }}>{employmentTypeLabel(ctx.employmentType, ko)}</span>
+                  )}
+                  {ctx.jobDuties.map((k) => (
+                    <span key={k} style={chip}>{jobDutyLabel(k, ko)}</span>
+                  ))}
+                </div>
+              )}
+              <WeekdayStrip ko={ko} days={workdays} />
+            </section>
 
-        {/* ④-b 추가 수당 신청 (연장·야간·휴일근로, 2026-07-13) */}
-        <StaffAllowanceCard ko={ko} allowances={allowances} candidates={overtimeCandidates} onRequest={submitAllowance} onCancel={cancelAllowance} />
+            {/* ② 오늘 카드 — 출퇴근 */}
+            <TodayCard
+              ko={ko} sched={todaySched} att={todayAtt} clockedIn={clockedIn} busy={busy}
+              onClockIn={clockIn} onClockOut={clockOut} tick={tick}
+            />
 
-        {/* ④-c 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 표시 */}
-        {ctx.paydayDay != null && (
-          <StaffPaydayCard ko={ko} paydayDay={ctx.paydayDay} onReportUnpaid={reportUnpaid} />
+            {/* ③ 출근 기록 캘린더 */}
+            <CalendarCard
+              ko={ko} y={viewMonth.y} m={viewMonth.m} isCurrentMonth={isToday}
+              att={monthAtt} rules={rules} exceptions={monthSched} leaves={leaves} todayStr={today}
+              onPrev={() => setViewMonth((v) => { const d = new Date(v.y, v.m - 1, 1); return { y: d.getFullYear(), m: d.getMonth() }; })}
+              onNext={() => setViewMonth((v) => { const d = new Date(v.y, v.m + 1, 1); return { y: d.getFullYear(), m: d.getMonth() }; })}
+            />
+          </>
         )}
 
-        {/* ⑤ 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장과 동일 판정, 2026-07-13) */}
-        <StaffRightsCard
-          ko={ko}
-          hourlyWage={ctx.hourlyWage}
-          hireDate={ctx.hireDate}
-          joinedAt={ctx.joinedAt}
-          weeklyMinutes={rules.reduce((sum, r) => {
-            const [sh, sm] = r.start_time.split(":").map(Number);
-            const [eh, em] = r.end_time.split(":").map(Number);
-            let d = eh * 60 + em - (sh * 60 + sm);
-            if (d <= 0) d += 1440;
-            return sum + d;
-          }, 0)}
-        />
+        {tab === "requests" && (
+          <>
+            {/* 다음 달 희망 근무 신청 (2026-07-30 사장님 요청) — 동료가 낸 시간을 보면서 조정 */}
+            <section style={cardStyle}>
+              <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em", marginBottom: 10 }}>
+                {ko ? "근무 희망 신청" : "Shift requests"}
+              </div>
+              <ShiftAvailabilityCalendar ko={ko} ownerId={ctx.ownerUserId} myUserId={ctx.userId} mode="staff" />
+            </section>
+
+            {/* 연차·휴가 — 잔여 요약(근로기준법 제60조) + 신청 목록 */}
+            <LeaveCard ko={ko} leaves={leaves} ledger={leaveLedger} ledgerFailed={ledgerFailed}
+              onOpen={() => setLeaveOpen(true)} onCancel={cancelLeave}
+              hireDate={ctx.hireDate} leaveBasis={ctx.leaveBasis} headcount={ctx.staffHeadcount} />
+
+            {/* 추가 수당 신청 (연장·야간·휴일근로, 2026-07-13) */}
+            <StaffAllowanceCard ko={ko} allowances={allowances} candidates={overtimeCandidates} onRequest={submitAllowance} onCancel={cancelAllowance} />
+          </>
+        )}
+
+        {tab === "rightsPay" && (
+          <>
+            {/* 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 표시 */}
+            {ctx.paydayDay != null && (
+              <StaffPaydayCard ko={ko} paydayDay={ctx.paydayDay} onReportUnpaid={reportUnpaid} />
+            )}
+
+            {/* 내 근로 권리 — 주휴수당·퇴직금·연차 자격 (사장과 동일 판정, 2026-07-13). 접힘 요약 + 펼치기 */}
+            <StaffRightsCard
+              ko={ko}
+              hourlyWage={ctx.hourlyWage}
+              hireDate={ctx.hireDate}
+              joinedAt={ctx.joinedAt}
+              weeklyMinutes={rules.reduce((sum, r) => {
+                const [sh, sm] = r.start_time.split(":").map(Number);
+                const [eh, em] = r.end_time.split(":").map(Number);
+                let d = eh * 60 + em - (sh * 60 + sm);
+                if (d <= 0) d += 1440;
+                return sum + d;
+              }, 0)}
+            />
+          </>
+        )}
         {/* 로그아웃·내 정보는 상단 「내 정보」 → 전체 페이지(StaffProfileView)로 (2026-07-13). */}
       </div>
 

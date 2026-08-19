@@ -27,6 +27,12 @@ import { DaangnHiringGuideModal } from "../DaangnHiringGuideModal";
 import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
 import { OwnerScheduleCalendar } from "../team/OwnerScheduleCalendar";
 import { ShiftAvailabilityCalendar } from "../team/ShiftAvailabilityCalendar";
+import { SegmentedTabs } from "../SegmentedTabs";
+import { CollapsibleSection } from "../CollapsibleSection";
+import { OverlayModal } from "../OverlayModal";
+
+/** 세그먼트 (2026-08-19 IA 정리, iOS TeamManagementView.TeamSegment 미러) */
+type TeamTab = "staff" | "schedule" | "leavePay";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -100,6 +106,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
   const [todayAtt, setTodayAtt] = useState<Att[]>([]); // 오늘 출퇴근 — 직원별 출근여부 배지 (2026-07-14)
   const [loading, setLoading] = useState(true);
   const [showDaangnGuide, setShowDaangnGuide] = useState(false); // 당근 구인 가이드 팝업 (2026-07-25)
+  const [tab, setTab] = useState<TeamTab>("staff");            // 세그먼트 (2026-08-19)
+  const [inviteOpen, setInviteOpen] = useState(false);          // 「직원 추가」 모달 — 세그먼트 우측 + 버튼
   const [membersError, setMembersError] = useState(false); // get_store_members RPC 실패 — "직원 없음"과 구분 (2026-07-13)
   // 급여일 (2026-07-15) — paidThisMonth: true=보냄 / false=아직 / null=무응답(=cron 이 3일 간격 재알림)
   const [paydayDay, setPaydayDay] = useState<number | null>(null);
@@ -315,25 +323,43 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
       <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
         <header>
           <div style={eyebrow}>Found.One · {ko ? "직원 관리" : "Team"}</div>
-          <h1 style={h1}>{ko ? "근무표 · 연차 관리" : "Schedule & time off"}</h1>
+          <h1 style={h1}>{ko ? "직원" : "Team"}</h1>
           <p style={{ fontSize: 14, color: MUTED, margin: "8px 0 0", lineHeight: 1.6 }}>
-            {ko ? "직원별 근무 요일·시간을 정하고, 연차 신청을 승인/반려하세요. 여기서 정한 근무표는 직원 화면에 그대로 표시됩니다." : "Set each staff's shifts and approve time-off requests."}
+            {ko ? "근무표 · 연차 · 급여 — 직원별 근무를 정하고 신청을 승인하세요. 여기서 정한 근무표는 직원 화면에 그대로 표시됩니다." : "Schedules, time off and payroll — set shifts and approve requests."}
           </p>
         </header>
 
-        {/* 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동 (2026-07-24 사장님 지시).
-            2026-07-25: 채널 목록을 shared SSOT(HIRING_QUICK_CHANNELS)로 승격 + 당근알바 추가
-            + "당근으로 구하는 법" 가이드 팝업. URL 은 공식 도메인만. */}
-        <ExternalQuickLinks
-          title={ko ? "직원 구인 바로가기" : "Hiring quick links"}
-          caption={ko ? "공고 등록·지원자 관리는 각 사이트에서 하세요." : "Post jobs on these sites."}
-          action={{ label: ko ? "당근으로 구하는 법 →" : "How to hire on Daangn →", onClick: () => setShowDaangnGuide(true) }}
-          links={HIRING_QUICK_CHANNELS.map((c) => ({
-            label: ko ? c.label : c.labelEn,
-            url: c.url,
-            badge: c.badge ? (ko ? c.badge.ko : c.badge.en) : undefined,
-          }))}
+        {/* 세그먼트 (2026-08-19 IA 정리, iOS TeamManagementView 미러) — 배지 = 처리 대기 건수,
+            우측 + = 「직원 추가」 모달 (본문 하단 카드에서 승격) */}
+        <SegmentedTabs<TeamTab>
+          ariaLabel={ko ? "직원 관리 탭" : "Team tabs"}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: "staff", label: ko ? "직원" : "Staff", badge: leavers.length || undefined },
+            { key: "schedule", label: ko ? "근무표" : "Schedule" },
+            { key: "leavePay", label: ko ? "연차·급여" : "Leave · Pay", badge: (pending.length + allowPending.length) || undefined },
+          ]}
+          right={(
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              aria-label={ko ? "직원 추가" : "Add staff"}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: MIDNIGHT, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+            >
+              <UserPlus size={14} strokeWidth={2} />{ko ? "직원 추가" : "Add staff"}
+            </button>
+          )}
         />
+        {inviteOpen && (
+          <OverlayModal label={ko ? "직원 추가" : "Add staff"} onClose={() => setInviteOpen(false)} maxWidth={560}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <UserPlus size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+              <div style={sectionTitle}>{ko ? "직원 추가" : "Add staff"}</div>
+            </div>
+            <InviteLinkSection ko={ko} />
+          </OverlayModal>
+        )}
         {showDaangnGuide && <DaangnHiringGuideModal ko={ko} onClose={() => setShowDaangnGuide(false)} />}
 
         {loading ? (
@@ -359,13 +385,64 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
             </div>
             <p style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, margin: "0 0 12px" }}>
               {ko
-                ? "아래에서 초대 링크를 만들어 직원에게 카톡·문자로 보내세요. 직원이 링크로 가입·연결되면 여기서 근무표·연차·출퇴근을 관리할 수 있어요."
+                ? "초대 링크를 만들어 직원에게 카톡·문자로 보내세요. 직원이 링크로 가입·연결되면 여기서 근무표·연차·출퇴근을 관리할 수 있어요."
                 : "Create an invite link below and send it to your staff. Once they join, you can manage schedules, time off, and attendance here."}
             </p>
-            <InviteLinkSection ko={ko} />
+            <button type="button" onClick={() => setInviteOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, border: "none", background: MIDNIGHT, color: "white", fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
+              <UserPlus size={15} strokeWidth={2} />{ko ? "직원 초대 만들기" : "Create invite"}
+            </button>
+            <div style={{ height: 14 }} />
+            <CollapsibleSection title={ko ? "직원 구하기" : "Hiring"} summary={ko ? "알바몬 · 당근알바 · 고용24 등" : "Job boards"}>
+              {/* 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동 (2026-07-24 사장님 지시).
+                  2026-07-25: 채널 목록을 shared SSOT(HIRING_QUICK_CHANNELS)로 승격 + 당근알바 추가
+                  + "당근으로 구하는 법" 가이드 팝업. URL 은 공식 도메인만. 2026-08-19: 「직원」탭 맨 아래 접힘. */}
+              <ExternalQuickLinks
+                title={ko ? "직원 구인 바로가기" : "Hiring quick links"}
+                caption={ko ? "공고 등록·지원자 관리는 각 사이트에서 하세요." : "Post jobs on these sites."}
+                action={{ label: ko ? "당근으로 구하는 법 →" : "How to hire on Daangn →", onClick: () => setShowDaangnGuide(true) }}
+                links={HIRING_QUICK_CHANNELS.map((c) => ({
+                  label: ko ? c.label : c.labelEn,
+                  url: c.url,
+                  badge: c.badge ? (ko ? c.badge.ko : c.badge.en) : undefined,
+                }))}
+              />
+            </CollapsibleSection>
           </div>
         ) : (
           <>
+            {tab === "staff" && (
+              <>
+            {/* ── 처리할 일 요약 — 연차 대기 · 수당 대기 · 퇴사 정산 (탭하면 해당 세그먼트로) ── */}
+            {(() => {
+              const items: { label: string; count: number; target: TeamTab }[] = [
+                { label: ko ? "연차 대기" : "Leave pending", count: pending.length, target: "leavePay" },
+                { label: ko ? "수당 대기" : "Allowance pending", count: allowPending.length, target: "leavePay" },
+                { label: ko ? "퇴사 정산" : "Offboarding", count: leavers.length, target: "staff" },
+              ];
+              const total = items.reduce((n, i) => n + i.count, 0);
+              return (
+                <section style={card}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: total ? 12 : 4 }}>
+                    <CheckCircle2 size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                    <div style={sectionTitle}>{ko ? "처리할 일" : "To do"}</div>
+                    {total > 0 && <span style={{ ...badge, background: MIDNIGHT }}>{total}</span>}
+                  </div>
+                  {total === 0 ? (
+                    <div style={{ fontSize: 12.5, color: MUTED }}>{ko ? "지금 처리할 일이 없어요." : "Nothing to do right now."}</div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {items.filter((i) => i.count > 0).map((i) => (
+                        <button key={i.label} type="button" onClick={() => setTab(i.target)}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 10, border: "none", background: MIDNIGHT_SOFT, color: MIDNIGHT, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                          {i.label} <strong>{i.count}</strong> ›
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
+
             {/* ── 급여일 (2026-07-15) — 시간에 걸린 액션이라 맨 위 ── */}
             <section style={card}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -425,6 +502,34 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
               )}
             </section>
 
+            {/* 직원별 근무표 */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "직원 명단" : "Staff"}</div>
+                <span style={{ ...badge, background: MIDNIGHT_SOFT2, color: MIDNIGHT }}>{activeMembers.length}</span>
+              </div>
+              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
+                {ko ? "이름을 누르면 상세(시급·근태·연차), 「수정」으로 근무 요일·기본 근무시간을 정하세요. 특정 날짜만 다르게(대타)·휴무는 「예외」에서." : "Click a name for details; use Edit to set work days and default shift time. Exceptions for one-off changes."}
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* 퇴사자는 근무표 대상이 아니다 — 위 「퇴사자 정산」 섹션에서만 다룬다. */}
+                {activeMembers.map((m) => (
+                  <MemberScheduleEditor
+                    key={m.member_user_id} ko={ko} member={m}
+                    attToday={todayAtt.find((a) => a.member_user_id === m.member_user_id) ?? null}
+                    memberRules={rules.filter((r) => r.member_user_id === m.member_user_id && r.active)}
+                    memberExceptions={exceptions.filter((e) => e.member_user_id === m.member_user_id)}
+                    onSave={(wd, s, e, until) => saveRules(m.member_user_id, wd, s, e, until)}
+                    onSaveException={(date, isOff, s, e) => saveException(m.member_user_id, date, isOff, s, e)}
+                    onDeleteException={deleteException}
+                    onSetHireDate={(date) => setHireDate(m.member_user_id, date)}
+                    onOpenDetail={() => setDetailMember(m)}
+                  />
+                ))}
+              </div>
+            </section>
+
             {/* ── 퇴사·정산 (2026-07-15) — 미정산자만. 정산 완료하면 RPC 가 안 내려줘 사라짐 ── */}
             {leavers.length > 0 && (
               <section style={card}>
@@ -444,6 +549,62 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
               </section>
             )}
 
+            <CollapsibleSection title={ko ? "직원 구하기" : "Hiring"} summary={ko ? "알바몬 · 당근알바 · 고용24 등" : "Job boards"}>
+              {/* 구인구직 바로가기 — 직원이 없거나 더 필요할 때의 다음 행동 (2026-07-24 사장님 지시).
+                  2026-07-25: 채널 목록을 shared SSOT(HIRING_QUICK_CHANNELS)로 승격 + 당근알바 추가
+                  + "당근으로 구하는 법" 가이드 팝업. URL 은 공식 도메인만. 2026-08-19: 「직원」탭 맨 아래 접힘. */}
+              <ExternalQuickLinks
+                title={ko ? "직원 구인 바로가기" : "Hiring quick links"}
+                caption={ko ? "공고 등록·지원자 관리는 각 사이트에서 하세요." : "Post jobs on these sites."}
+                action={{ label: ko ? "당근으로 구하는 법 →" : "How to hire on Daangn →", onClick: () => setShowDaangnGuide(true) }}
+                links={HIRING_QUICK_CHANNELS.map((c) => ({
+                  label: ko ? c.label : c.labelEn,
+                  url: c.url,
+                  badge: c.badge ? (ko ? c.badge.ko : c.badge.en) : undefined,
+                }))}
+              />
+            </CollapsibleSection>
+              </>
+            )}
+
+            {tab === "schedule" && (
+              <>
+            {/* 근무 캘린더 — 어느 날 누가 나오는지 한눈에 (2026-07-28 사장님 요청).
+                배정 편집(아래 섹션)보다 먼저 — 현황 파악이 편집보다 앞선다. */}
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
+                <div style={sectionTitle}>{ko ? "근무 캘린더" : "Shift calendar"}</div>
+              </div>
+              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
+                {ko ? "날짜를 누르면 그날 출근하는 직원과 시간을 볼 수 있어요." : "Tap a date to see who works that day."}
+              </p>
+              <OwnerScheduleCalendar
+                ko={ko}
+                ownerId={ownerId}
+                members={activeMembers.map((m) => ({ member_user_id: m.member_user_id, name: m.name }))}
+                rules={rules}
+              />
+            </section>
+
+            {/* 희망 근무 취합 — 직원이 낸 다음 달 희망 (2026-07-30 사장님 요청).
+                근무 캘린더(확정) 바로 뒤. 2026-08-19: 접힘 섹션 (iOS = 요약 카드 + 시트). */}
+            <CollapsibleSection
+              title={ko ? "희망 근무 취합" : "Shift requests"}
+              summary={ko ? "직원이 낸 다음 달 희망 → 근무표에 넣기" : "Next month's requests"}
+            >
+              <p style={{ fontSize: 12.5, color: MUTED, margin: 0, lineHeight: 1.5 }}>
+                {ko
+                  ? "직원이 낸 다음 달 희망을 모아서 보여줘요. 마음에 들면 그대로 근무표에 넣을 수 있어요."
+                  : "Next month's requests from your staff — add them straight to the roster."}
+              </p>
+              <ShiftAvailabilityCalendar ko={ko} ownerId={ownerId} myUserId={ownerId} mode="owner" />
+            </CollapsibleSection>
+              </>
+            )}
+
+            {tab === "leavePay" && (
+              <>
             {/* 연차 승인 큐 */}
             <section style={card}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
@@ -547,74 +708,8 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
               />
             </section>
 
-            {/* 근무 캘린더 — 어느 날 누가 나오는지 한눈에 (2026-07-28 사장님 요청).
-                배정 편집(아래 섹션)보다 먼저 — 현황 파악이 편집보다 앞선다. */}
-            <section style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-                <div style={sectionTitle}>{ko ? "근무 캘린더" : "Shift calendar"}</div>
-              </div>
-              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
-                {ko ? "날짜를 누르면 그날 출근하는 직원과 시간을 볼 수 있어요." : "Tap a date to see who works that day."}
-              </p>
-              <OwnerScheduleCalendar
-                ko={ko}
-                ownerId={ownerId}
-                members={activeMembers.map((m) => ({ member_user_id: m.member_user_id, name: m.name }))}
-                rules={rules}
-              />
-            </section>
-
-            {/* 희망 근무 취합 — 직원이 낸 다음 달 희망 (2026-07-30 사장님 요청).
-                근무 캘린더(확정) 바로 뒤 — "확정 현황 → 다음 달 희망 → 배정 편집" 순서. */}
-            <section style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <CalendarPlus size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-                <div style={sectionTitle}>{ko ? "희망 근무 취합" : "Shift requests"}</div>
-              </div>
-              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
-                {ko
-                  ? "직원이 낸 다음 달 희망을 모아서 보여줘요. 마음에 들면 그대로 근무표에 넣을 수 있어요."
-                  : "Next month's requests from your staff — add them straight to the roster."}
-              </p>
-              <ShiftAvailabilityCalendar ko={ko} ownerId={ownerId} myUserId={ownerId} mode="owner" />
-            </section>
-
-            {/* 직원별 근무표 */}
-            <section style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-                <div style={sectionTitle}>{ko ? "근무표 배정" : "Weekly schedule"}</div>
-              </div>
-              <p style={{ fontSize: 12.5, color: MUTED, margin: "0 0 14px", lineHeight: 1.5 }}>
-                {ko ? "근무 요일과 기본 근무시간을 정하세요. 특정 날짜만 다르게(대타) 하거나 휴무 처리는 「예외」에서." : "Pick work days and set the default shift time. Use exceptions for one-off changes."}
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* 퇴사자는 근무표 대상이 아니다 — 위 「퇴사자 정산」 섹션에서만 다룬다. */}
-                {activeMembers.map((m) => (
-                  <MemberScheduleEditor
-                    key={m.member_user_id} ko={ko} member={m}
-                    attToday={todayAtt.find((a) => a.member_user_id === m.member_user_id) ?? null}
-                    memberRules={rules.filter((r) => r.member_user_id === m.member_user_id && r.active)}
-                    memberExceptions={exceptions.filter((e) => e.member_user_id === m.member_user_id)}
-                    onSave={(wd, s, e, until) => saveRules(m.member_user_id, wd, s, e, until)}
-                    onSaveException={(date, isOff, s, e) => saveException(m.member_user_id, date, isOff, s, e)}
-                    onDeleteException={deleteException}
-                    onSetHireDate={(date) => setHireDate(m.member_user_id, date)}
-                    onOpenDetail={() => setDetailMember(m)}
-                  />
-                ))}
-              </div>
-            </section>
-
-            {/* 직원 추가 초대 — 운영 중에도 새 직원 연결 (2026-07-12: 종전엔 초대 진입로가 로드맵 채용 단계에만 있었음) */}
-            <section style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <UserPlus size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-                <div style={sectionTitle}>{ko ? "직원 추가" : "Add staff"}</div>
-              </div>
-              <InviteLinkSection ko={ko} />
-            </section>
+              </>
+            )}
           </>
         )}
       </div>

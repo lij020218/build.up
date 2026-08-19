@@ -6,7 +6,8 @@
 
 ```
 dashboard/
-├── OperationalDashboard.tsx       # Orchestrator ~300줄 (모든 tier 호출 + 비용미입력 안내 + 모달)
+├── OperationalDashboard.tsx       # Orchestrator (세그먼트 3탭 + 모든 tier 호출 + 비용미입력 안내 + 모달)
+├── homeSegments.ts                # 세그먼트 SSOT (키·DeepDive id→탭·selector→탭·포커스 이벤트)
 ├── sections/
 │   ├── DASHBOARD_MAP.md           # 이 문서
 │   ├── Tier0Header.tsx            # 상호명 + LIVE 배지 + 리추얼 배너
@@ -27,10 +28,31 @@ hooks/
 └── useDashboardComputed.tsx       # 모든 계산값 단일 소스 (totalSales, runwayMonths 등)
 ```
 
-**orchestrator 실제 렌더 순서** (2026-07-27 확인): Tier0 → 오늘의 요약 → 오늘의 관리
-→ Tier1(Alert) → Tier1DailyHub → FeatureNudge → Tier1.5 → Tier2 → **Tier4** → 비용미입력
-안내 → **Tier3** → Tier5 → 세부 관리(DetailTabs). ⚠️ Tier 4 가 Tier 3 보다 먼저 렌더됨
-(번호 ≠ 화면 순서).
+## 세그먼트 (2026-08-19 IA — 홈 3탭, iOS TodayView.HomeSegment 1:1)
+
+> 사장님 지시: 한 화면에 요소가 꽉 차는 현상 배제. 홈은 여전히 "카드 여러 장 · 데이터 먼저"
+> (히어로 독점 금지) — 세그먼트는 *동시 노출 수* 만 줄인다. 카드 삭제 0, 모든 카드는 어느 한 탭에서 도달.
+> 매핑 SSOT: `dashboard/homeSegments.ts` (세그먼트 키·DeepDive id→탭·카드 selector→탭·포커스 이벤트).
+> 세그먼트 컨트롤: `components/SegmentedTabs.tsx` (Tier0Header 바로 아래).
+
+| 세그먼트 | 렌더 순서 (위→아래) | 파일 |
+|---|---|---|
+| **오늘** (기본) | 세팅 미션 → 오늘의 요약(AI 코칭 요약 + 매출·고객 차트) → 긴급 AlertStrip → 손익·현금 2-col | `StoreSetupMissionsCard` · `TodaySummarySection` · `Tier1Hero` · `Tier1DailyHub` |
+| **운영** | 오늘의 관리(오퍼링 요약·고객·팀) → Tier1.5 코칭(리추얼·정책자금·위생·업종 카드·스타트업 지표) → 비용 미입력 안내 → 운영 관리 DeepDive | `TodayManagementSection` · `Tier1_5Coaching` · orchestrator 인라인 · `Tier3Operations` |
+| **더보기** | 이번 주 점검 → 성장 도구 → 플레이북·내보내기 → 미사용 기능 안내 → 세부 관리(DetailTabs) | `Tier2WeeklyPulse` · `Tier4GrowthTools` · `Tier5ForecastTools` · `FeatureNudgeCard` · `DetailTabs` |
+
+세그먼트 밖(항상): Tier0Header(상호명 + 리추얼 배너 — 닫기 가능) · MilestoneToast · 캘린더 모달.
+
+교차 탭 이동 규칙:
+- `buildup:open-deepdive {id}` (구독 플랜 → ops-mgmt 등): orchestrator 가 `DEEPDIVE_SEGMENT[id]` 로 탭 전환
+  + `markDeepDiveOpen(id)` 로 펼침 예약 (섹션이 마운트되며 localStorage 상태로 펼쳐짐).
+- 히어로 CTA `focusBySelector` 가 DOM 에서 못 찾으면 `requestHomeFocus(selector)` → `SELECTOR_SEGMENT`
+  로 탭 전환 후 스크롤(+입력 포커스). 홈이 마운트돼 있지 않으면 false → 기존 폴백.
+- 새 카드에 `data-*` selector 를 달아 CTA 타깃으로 쓰면 `SELECTOR_SEGMENT` 에도 한 줄 추가.
+
+**orchestrator 실제 렌더 순서** (2026-08-19 세그먼트 이후): 위 표가 정본. 종전(2026-07-27) 단일 스크롤 순서
+Tier0 → 오늘의 요약 → 오늘의 관리 → Tier1(Alert) → Tier1DailyHub → FeatureNudge → Tier1.5 → Tier2 → Tier4
+→ 비용미입력 안내 → Tier3 → Tier5 → 세부 관리 는 폐기.
 
 **대시보드 밖으로 이관된 카드** (파일은 dashboard/ 에 남아 있으나 렌더는 다른 surface):
 - `InventoryOpsCard`(+MenuProfitabilityModal) → 대시보드(통합 카드, section="all") **및** `surfaces/OfferingsSurface.tsx`(/offerings — 메뉴/재고 분리 카드, section prop) 양쪽 렌더 (2026-07-27 d2fb90c3·f61f46f0)
