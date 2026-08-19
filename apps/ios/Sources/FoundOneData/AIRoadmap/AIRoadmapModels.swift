@@ -106,7 +106,21 @@ public struct AIRoadmapResult: Decodable, Sendable {
         public struct Phase: Decodable, Sendable {
             public let name: String
             public let weeks: Int
+            /// 서버 스키마엔 없는 필드 — 빌드 4가 non-optional 이라 phases 있으면 디코딩 전멸(2026-08-19). 빌드 5부터 optional+기본 [].
             public let tasks: [String]
+
+            enum CodingKeys: String, CodingKey { case name, weeks, tasks }
+            public init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+                weeks = try Self.decodeInt(c, .weeks) ?? 0
+                tasks = try c.decodeIfPresent([String].self, forKey: .tasks) ?? []
+            }
+            private static func decodeInt(_ c: KeyedDecodingContainer<CodingKeys>, _ k: CodingKeys) throws -> Int? {
+                if let i = try? c.decodeIfPresent(Int.self, forKey: k) { return i }
+                if let d = try? c.decodeIfPresent(Double.self, forKey: k) { return Int(d.rounded()) }
+                return nil
+            }
         }
     }
 
