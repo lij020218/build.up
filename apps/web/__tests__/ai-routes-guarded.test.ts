@@ -35,3 +35,16 @@ describe("AI 라우트 가드 커버리지", () => {
     expect(offenders, `가드 없는 AI 라우트: ${offenders.join(", ")}`).toEqual([]);
   });
 });
+
+describe("LLM 키 해석 — process.env.ANTHROPIC_API_KEY 직접 참조 금지", () => {
+  it("OpenAI 셔임(createAiClient)을 쓰는 라우트는 getAnthropicApiKey()/getOpenAiApiKey() 를 써야 한다", () => {
+    // 2026-08-19 prod 실측: market-narrative·guides-ask·stage-brief 가 Anthropic 키를 OpenAI 셔임에 넘겨 401 → 항상 503.
+    const offenders: string[] = [];
+    for (const file of walk(API)) {
+      const src = readFileSync(file, "utf8");
+      if (!/createAiClient|createLongAiClient/.test(src)) continue;
+      if (/const apiKey = process\.env\.ANTHROPIC_API_KEY/.test(src)) offenders.push(file.replace(API, "app/api"));
+    }
+    expect(offenders, `직접 참조: ${offenders.join(", ")}`).toEqual([]);
+  });
+});

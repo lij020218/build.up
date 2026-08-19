@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAnthropicApiKey } from "../../../_lib/env";
 import { interpretMarketScore } from "@foundone/ai";
 import type { RecommendationItem } from "@foundone/shared";
 import { runAiFeature } from "../../../_lib/ai-guard";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "item 필드가 필요합니다." }, { status: 400 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = getAnthropicApiKey(); // OPENAI_API_KEY 우선(메인 LLM) — 종전 process.env.ANTHROPIC 직접 참조는 OpenAI 셔임에 Anthropic 키를 넘겨 401 (2026-08-19 prod 실측)
   if (!apiKey) {
     return NextResponse.json({ error: "AI가 설정되지 않았습니다." }, { status: 500 });
   }

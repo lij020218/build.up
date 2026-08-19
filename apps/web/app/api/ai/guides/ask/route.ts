@@ -9,6 +9,7 @@ import {
 } from "@foundone/shared";
 import { interpretGuideQuestion } from "@foundone/ai";
 import { NextResponse } from "next/server";
+import { getAnthropicApiKey } from "../../../_lib/env";
 import { supabase } from "../../../../../lib/supabase";
 import { getRequestId, logApiError, logApiEvent } from "../../../_lib/observability";
 import { runAiFeature } from "../../../_lib/ai-guard";
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   // 2026-08-19 ai-guard: 분·일·주·월 한도. LLM 실패 → 정적 가이드 답변(200)으로 내려가되
   //  우리 쪽 실패이므로 사용 횟수는 환불(refunded:true). 키 미설정도 LLM 0회 → 환불.
   return runAiFeature({ request, feature: "guides-ask" }, async ({ userId, refund }) => {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = getAnthropicApiKey(); // OPENAI_API_KEY 우선(메인 LLM) — 종전 process.env.ANTHROPIC 직접 참조는 OpenAI 셔임에 Anthropic 키를 넘겨 401 (2026-08-19 prod 실측)
     let answer: GuideQaAnswer;
     let refunded = false;
 
