@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, ArrowLeft, Building2, ShieldCheck, Tv, MapPin, Wallet, Truck,
@@ -226,6 +226,51 @@ const fmtBudget = (manwon: number) => {
   return `${v.toLocaleString()}만원`;
 };
 
+// ── 비동기 작업 폴링 (2026-08-19 "타임아웃은 정말 심각한 버그") ──
+//   POST + `x-ai-async: 1` → 202 {jobId} → GET /api/ai/jobs/[id] 를 2s(30s 이후 4s) 간격, 최대 6분 폴링.
+//   iOS AIRoadmapService 와 동일 계약·cadence. 새로고침 후 재개를 위해 jobId 는 sessionStorage 에 보관.
+const AI_JOB_SESSION_KEY = "foundone:ai-roadmap-job";
+const AI_JOB_POLL_MAX_MS = 6 * 60_000;
+type AiJobView = { id: string; status: "queued" | "running" | "succeeded" | "failed"; progress?: string | null; result?: unknown; error?: string | null };
+
+async function pollAiJob(
+  jobId: string,
+  getToken: () => Promise<string>,
+  onProgress: (p: string | null) => void,
+  isCancelled: () => boolean,
+): Promise<RoadmapGenerationResult> {
+  const startedAt = Date.now();
+  let notFoundStreak = 0;
+  while (!isCancelled()) {
+    if (Date.now() - startedAt > AI_JOB_POLL_MAX_MS) {
+      throw new Error("로드맵 생성이 예상보다 오래 걸리고 있어요. 잠시 후 '내 로드맵'에서 다시 확인하거나 다시 시도해 주세요.");
+    }
+    const elapsed = Date.now() - startedAt;
+    await new Promise((r) => setTimeout(r, elapsed > 30_000 ? 4_000 : 2_000));
+    if (isCancelled()) break;
+    let res: Response;
+    try {
+      res = await fetch(`/api/ai/jobs/${encodeURIComponent(jobId)}`, {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+        cache: "no-store",
+      });
+    } catch {
+      continue; // 일시 네트워크 오류 — 다음 틱에 재시도
+    }
+    if (res.status === 404) {
+      // 전파 지연 가능성 1~2틱 허용 후 실패
+      if (++notFoundStreak >= 3) throw new Error("작업을 찾을 수 없어요. 다시 시도해 주세요.");
+      continue;
+    }
+    if (!res.ok) continue;
+    const job = (await res.json()) as AiJobView;
+    if (job.status === "succeeded") return job.result as RoadmapGenerationResult;
+    if (job.status === "failed") throw new Error(job.error ?? "생성 실패");
+    onProgress(job.progress ?? null);
+  }
+  throw new Error("cancelled");
+}
+
 export default function AIRoadmapWizard({ language, onComplete, onBack }: Props) {
   const ko = language === "ko";
   const [step, setStep] = useState<Step>("idea");
@@ -243,6 +288,9 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   const [result, setResult] = useState<RoadmapGenerationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [genProgress, setGenProgress] = useState(0);
+  // 서버가 보내는 진행 문구(ai_jobs.progress) — 비동기 작업 모드에서만 채워짐
+  const [serverProgress, setServerProgress] = useState<string | null>(null);
+  const pollCancelRef = useRef<{ cancelled: boolean }>({ cancelled: false });
   const [editingSection, setEditingSection] = useState<string | null>(null);
 
   // 사업 아이디어 텍스트로 업종 유형 추론
@@ -355,6 +403,12 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
     }
   };
 
+  const getToken = async (): Promise<string> => {
+    const { supabase } = await import("../../../lib/supabase");
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? "";
+  };
+
   const handleGenerate = async () => {
     setStep("generating");
     setGenProgress(0);
@@ -375,13 +429,27 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
       }
     };
     setTimeout(advanceStep, stepDelays[0]);
+    pollCancelRef.current = { cancelled: false };
+
+    // API 응답 후 남은 단계 빠르게 완료
+    const finishGenSteps = () => {
+      const quickFinish = () => {
+        setGenProgress((prev) => {
+          if (prev >= genSteps.length) return prev;
+          setTimeout(quickFinish, 200);
+          return prev + 1;
+        });
+      };
+      quickFinish();
+    };
 
     try {
       const { supabase } = await import("../../../lib/supabase");
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/ai/roadmap/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
+        // x-ai-async: 202 {jobId} 즉시 응답 → 폴링 (클라이언트 타임아웃 제거)
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}`, "x-ai-async": "1" },
         body: JSON.stringify({
           ideaText,
           confirmedSubIndustryId: confirmedIndustry?.subIndustryId,
@@ -393,32 +461,71 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           language,
         }),
       });
-      cancelled = true;
-      // API 응답 후 남은 단계 빠르게 완료
-      const quickFinish = () => {
-        setGenProgress((prev) => {
-          if (prev >= genSteps.length) return prev;
-          setTimeout(quickFinish, 200);
-          return prev + 1;
-        });
-      };
-      quickFinish();
-
       if (!res.ok) {
+        cancelled = true;
         const err = await res.json();
         throw new Error(err.error ?? "생성 실패");
       }
 
-      const data: RoadmapGenerationResult = await res.json();
+      let data: RoadmapGenerationResult;
+      if (res.status === 202) {
+        // 비동기 작업 — jobId 보관(새로고침 재개) 후 폴링. 점진 표시는 마지막 단계 holding 그대로.
+        const { jobId } = (await res.json()) as { jobId: string };
+        try { sessionStorage.setItem(AI_JOB_SESSION_KEY, jobId); } catch { /* ignore */ }
+        data = await pollAiJob(jobId, getToken, setServerProgress, () => pollCancelRef.current.cancelled);
+        try { sessionStorage.removeItem(AI_JOB_SESSION_KEY); } catch { /* ignore */ }
+      } else {
+        // 동기 응답(레거시/폴백) — 종전과 동일
+        data = await res.json();
+      }
+      cancelled = true;
+      finishGenSteps();
+      setServerProgress(null);
       setResult(data);
       setStep("review");
     } catch (err) {
       cancelled = true;
+      if (err instanceof Error && err.message === "cancelled") return;
       setGenProgress(0);
+      setServerProgress(null);
       setError(err instanceof Error ? err.message : String(err));
       setStep("idea"); // 이전 입력(ideaText, budget, region, storeName)은 state에 보존됨
     }
   };
+
+  // 언마운트 시 진행 중 폴링 중단 (작업 자체는 서버에서 계속 — jobId 가 sessionStorage 에 남아 재진입 시 재개)
+  useEffect(() => () => { pollCancelRef.current.cancelled = true; }, []);
+
+  // 새로고침/재진입 시 진행 중이던 작업 재개 (sessionStorage 의 jobId) — 결과가 이미 있으면 그대로 리뷰로
+  useEffect(() => {
+    let jobId: string | null = null;
+    try { jobId = sessionStorage.getItem(AI_JOB_SESSION_KEY); } catch { /* ignore */ }
+    if (!jobId) return;
+    pollCancelRef.current = { cancelled: false };
+    const ref = pollCancelRef.current;
+    setStep("generating");
+    setGenProgress(genSteps.length - 1);
+    (async () => {
+      try {
+        const data = await pollAiJob(jobId!, getToken, setServerProgress, () => ref.cancelled);
+        try { sessionStorage.removeItem(AI_JOB_SESSION_KEY); } catch { /* ignore */ }
+        if (ref.cancelled) return;
+        setGenProgress(genSteps.length);
+        setServerProgress(null);
+        setResult(data);
+        setStep("review");
+      } catch (err) {
+        try { sessionStorage.removeItem(AI_JOB_SESSION_KEY); } catch { /* ignore */ }
+        if (ref.cancelled || (err instanceof Error && err.message === "cancelled")) return;
+        setGenProgress(0);
+        setServerProgress(null);
+        setError(err instanceof Error ? err.message : String(err));
+        setStep("idea");
+      }
+    })();
+    return () => { ref.cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Step: 아이디어 입력 ──
   if (step === "idea") {
@@ -733,9 +840,14 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e1a3e", marginBottom: "6px", letterSpacing: "-0.025em" }}>
             {ko ? "로드맵을 구성하고 있습니다" : "Building your roadmap"}
           </div>
-          <div style={{ fontSize: "12.5px", color: "rgba(30,26,62,0.5)", fontWeight: 500, marginBottom: "22px" }}>
-            {ko ? "보통 30초~1분 걸려요 — 화면을 닫지 마세요" : "Usually takes 30s–1min — keep this open"}
+          <div style={{ fontSize: "12.5px", color: "rgba(30,26,62,0.5)", fontWeight: 500, marginBottom: serverProgress ? "8px" : "22px" }}>
+            {ko ? "보통 1~3분 걸려요 — 새로고침해도 이어서 받아요" : "Usually takes 1–3 min — safe to refresh"}
           </div>
+          {serverProgress && (
+            <div style={{ fontSize: "12.5px", color: "#191970", fontWeight: 600, marginBottom: "22px" }}>
+              {serverProgress}
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px", textAlign: "left" as const }}>
             {genSteps.map((s, i) => (
               <div key={s} style={{ display: "flex", alignItems: "center", gap: "12px" }}>

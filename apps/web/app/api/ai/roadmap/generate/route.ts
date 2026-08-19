@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { checkRoadmapGenerationQuota } from "../../../_lib/rate-limit";
 import { runAiFeature } from "../../../_lib/ai-guard";
+import {
+  wantsAsyncJob, createAiJob, markAiJobRunning, setAiJobProgress, markAiJobSucceeded, markAiJobFailed,
+} from "../../../_lib/ai-jobs";
+import { llmCallContext } from "@foundone/ai/utils/client";
 import { generateRoadmap, selectFromPool } from "@foundone/ai";
 import type {
   RoadmapGenerationInput,
@@ -42,6 +46,16 @@ import { getSupplyBrands } from "../../../_lib/supply-brands";
 //   Pass 1 LLM 호출은 packages/ai createAiClient (30s × SDK 재시도 3회) + 라우트 재시도 2회 = 최악 ~180s < 300s
 //   → 플랫폼 504 대신 아래 catch 에서 JSON 503 으로 응답한다.
 export const maxDuration = 300;
+
+// ── 비동기 작업 모드 (2026-08-19, "타임아웃은 정말 심각한 버그") ──
+//   · 헤더 `x-ai-async: 1` 이 있으면: 모든 게이트(검증·쿼터·ai-guard) 통과 후 ai_jobs 행(queued)을 만들고
+//     **202 {jobId, status:"queued"}** 를 즉시 돌려준다. 실제 생성은 같은 인보케이션의 `after()`(next/server,
+//     Next 15.1+ 안정 — https://nextjs.org/docs/app/api-reference/functions/after) 에서 계속되며
+//     maxDuration(300s) 만큼 살아 있다(Vercel waitUntil). 클라이언트는 GET /api/ai/jobs/[id] 로 폴링.
+//   · 헤더가 없으면(출시된 iOS 1.0.0(5) 등 구 클라이언트) **동기** — 종전처럼 전체 결과 JSON 을 반환.
+//     `x-ai-sync: 1` 또는 `?sync=1` 은 async 헤더가 있어도 동기를 강제(디버그·한 릴리스 레거시).
+//   · 환불: 202 가 이미 나갔으므로 ai-guard 의 자동 환불(5xx 판정)은 동작하지 않는다 → after 안의 실패 분기에서
+//     ctx.refund() 를 **명시적으로 1회** 호출(503 NextResponse 반환·throw 모두). 성공 시 환불 없음.
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -464,6 +478,8 @@ export async function POST(request: Request) {
 
   // ── ai-guard: 분당·일(3)·주(6)·월 ₩6,000 한도 + 실패 시 전액 환불 (2026-08-19) ──
   //   핸들러가 503 을 돌려주거나 throw 하면 가드가 일·주·월 카운터를 환불한다(ctx.refund 중복 호출 금지 — 이중 환불).
+  const FAIL_MESSAGE = "로드맵 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.";
+  const asyncMode = wantsAsyncJob(request);
   const res = await runAiFeature(
     {
       request,
@@ -471,16 +487,62 @@ export async function POST(request: Request) {
       limits: { daily: 3, weekly: 6 },
       // Pass1 은 핸들러 안에서 이미 1회 재시도(타임아웃) — 가드 재시도까지 겹치면 한 요청이 4회 LLM 호출·수 분 지연
       retryOnce: false,
-      failMessage: "로드맵 생성에 실패했습니다. 사용 횟수는 차감되지 않았어요. 잠시 후 다시 시도해 주세요.",
+      failMessage: FAIL_MESSAGE,
     },
-    async () => runRoadmapGeneration(body, apiKey),
+    async (ctx) => {
+      if (!asyncMode) return runRoadmapGeneration(body, apiKey);
+
+      // ── 비동기 모드: ai_jobs 행 → 202 즉시 → after() 에서 생성 ──
+      const jobId = await createAiJob({
+        userId: ctx.userId,
+        feature: "roadmap-generate",
+        // 입력은 재현·디버그용 최소만(아이디어 전문은 2,000자 제한 적용 후)
+        input: { ideaText: body.ideaText, region: body.region ?? null, budget: body.budget ?? null, confirmedSubIndustryId: body.confirmedSubIndustryId ?? null },
+      });
+      if (!jobId) {
+        // 작업 원장을 못 만들면(DB 미설정 등) 동기로 폴백 — 거짓 실패 금지
+        console.warn("[roadmap/generate] ai_jobs insert unavailable → sync fallback");
+        return runRoadmapGeneration(body, apiKey);
+      }
+
+      const limits = ctx.limits;
+      after(async () => {
+        await markAiJobRunning(jobId, "업종 분석 중…");
+        try {
+          // after 콜백은 가드의 llmCallContext(AsyncLocalStorage) 밖에서 실행될 수 있어 명시적으로 다시 감싼다
+          const out = await llmCallContext.run(
+            { feature: "roadmap-generate", timeoutMs: limits.timeoutMs, maxRetries: limits.maxRetries },
+            () => runRoadmapGeneration(body, apiKey, (p) => { void setAiJobProgress(jobId, p); }),
+          );
+          const payload = await out.json().catch(() => null) as Record<string, unknown> | null;
+          if (out.status >= 200 && out.status < 300 && payload) {
+            await markAiJobSucceeded(jobId, payload);
+          } else {
+            // 503(Pass1 실패 등) — 202 가 이미 나가 가드 자동 환불이 없으므로 여기서 1회 환불
+            await ctx.refund();
+            await markAiJobFailed(jobId, String(payload?.error ?? FAIL_MESSAGE));
+            console.warn(`[roadmap/generate async] job ${jobId.slice(0, 8)} failed status=${out.status} (refunded)`);
+          }
+        } catch (e) {
+          await ctx.refund();
+          await markAiJobFailed(jobId, FAIL_MESSAGE);
+          console.error(`[roadmap/generate async] job ${jobId.slice(0, 8)} threw (refunded):`, e instanceof Error ? e.message : String(e));
+        }
+      });
+      return NextResponse.json({ jobId, status: "queued" }, { status: 202 });
+    },
   );
   // 원장 기록·환불은 가드가 단 한 번 수행 (2026-08-19: 종전 이중 기록/이중 환불 제거). 평생 3회 판정은 같은 원장을 읽는다.
   return res;
 }
 
-/** Pass1(로드맵 본문) → Pass2(풀 선택) → 결정론 보강. 실패는 503 JSON(가드가 카운터 환불) 또는 throw. */
-async function runRoadmapGeneration(body: RoadmapGenerationInput, apiKey: string): Promise<NextResponse> {
+/** Pass1(로드맵 본문) → Pass2(풀 선택) → 결정론 보강. 실패는 503 JSON(가드가 카운터 환불) 또는 throw.
+ *  onProgress: 비동기 작업 모드에서 Pass 경계마다 진행 문구(ai_jobs.progress)를 갱신. 동기 모드는 미전달. */
+async function runRoadmapGeneration(
+  body: RoadmapGenerationInput,
+  apiKey: string,
+  onProgress?: (progress: string) => void,
+): Promise<NextResponse> {
   // ── Pass 1: sub-industry 결정 + 전체 컨텍스트 ──
   let result: RoadmapGenerationResult | null = null;
   // 재시도 1층 원칙(2026-08-19): Pass1 재시도·폴백은 LlmClient(SDK 재시도 1회 + 모델 폴백 + 서킷 브레이커)가 담당.
@@ -517,6 +579,7 @@ async function runRoadmapGeneration(body: RoadmapGenerationInput, apiKey: string
   //
   // 어느 단계가 실패해도 사장님은 추천을 봄.
 
+  onProgress?.("공급처 매칭 중…");
   let pool = await fetchPool(result);
 
   // ① 풀이 비어있으면 universalFallback 으로 보강
@@ -572,6 +635,7 @@ async function runRoadmapGeneration(body: RoadmapGenerationInput, apiKey: string
   //   vendor_recommendations 의 interior 시드는 순수 가이드 텍스트(업체명 0)라 카드가
   //   "업체를 추천해줄 것처럼 해놓고 인테리어 해야 한다는 내용만" 이 됐다.
   //   세부업종 SSOT(sub-industry-interior-2026)의 실명 업체·플랫폼을 description 에 덧붙인다.
+  onProgress?.("지역 업체·지원사업 보강 중…");
   enrichInteriorVendorNames(enriched, result.parsed.subIndustryId);
 
   // ── 지역 실명 부착 (2026-08-04) — LLM 산출이 아니라 서버가 실데이터를 붙인다 ──

@@ -185,10 +185,10 @@ describe("UX 리뷰 후속 (2026-08-03 U1~U4 + effort 제약)", () => {
     }
   });
 
-  it("U2: 대기 화면이 소요 시간을 말한다 (실측 26~28s) — 웹·iOS 동일 문구", () => {
+  it("U2: 대기 화면이 소요 시간을 말한다 (2026-08-19 prod 실측 120s+ → 비동기 작업, 1~3분) — 웹·iOS 동일 문구", () => {
     const web = readFileSync(join(HERE, "..", "app", "lib", "components", "AIRoadmapWizard.tsx"), "utf8");
     const ios = readFileSync(join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Roadmap", "AIRoadmapWizardView.swift"), "utf8");
-    for (const src of [web, ios]) expect(src).toContain("보통 30초~1분 걸려요");
+    for (const src of [web, ios]) expect(src).toContain("보통 1~3분 걸려요");
   });
 
   it("U3: 지역 예시가 시/도 포함 (실측 상권 매칭 정확도)", () => {

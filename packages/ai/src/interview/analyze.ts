@@ -3,6 +3,8 @@
 
 import { createAiClient } from "../utils/client";
 import { systemWithCache } from "../utils/client";
+import { parseLlmJson } from "../utils/parse-json";
+import type { ResponseSchema } from "../utils/structured-output";
 
 export type InterviewAnalysisInput = {
   interviewNotes: string;
@@ -18,6 +20,37 @@ export type InterviewAnalysisResult = {
   willingnessToPaySignals: string[];
   oneProblemStatement: string;
   nextSteps: string[];
+};
+
+/** Structured Outputs 스키마 — InterviewAnalysisResult 1:1 */
+export const INTERVIEW_ANALYSIS_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "interview_analysis",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["patterns", "corePain", "targetSegment", "existingAlternatives", "willingnessToPaySignals", "oneProblemStatement", "nextSteps"],
+    properties: {
+      patterns: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["pattern", "frequency", "quotes"],
+          properties: {
+            pattern: { type: "string" },
+            frequency: { type: "string" },
+            quotes: { type: "array", items: { type: "string" } },
+          },
+        },
+      },
+      corePain: { type: "string" },
+      targetSegment: { type: "string" },
+      existingAlternatives: { type: "array", items: { type: "string" } },
+      willingnessToPaySignals: { type: "array", items: { type: "string" } },
+      oneProblemStatement: { type: "string" },
+      nextSteps: { type: "array", items: { type: "string" } },
+    },
+  },
 };
 
 const SYSTEM_PROMPT = `당신은 YC 파트너 출신의 고객 인사이트 분석 전문가입니다.
@@ -70,23 +103,11 @@ ${input.interviewNotes}
     // ✦ Prompt Caching — interview analysis system prompt 안정 재사용
     system: systemWithCache(SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }],
+    response_schema: INTERVIEW_ANALYSIS_RESPONSE_SCHEMA,
   });
 
   const text = (() => { const t = response.content.find((c) => c.type === "text"); return t && t.type === "text" ? t.text : ""; })();
 
-  let jsonStr = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
-  const start = jsonStr.indexOf("{");
-  const end = jsonStr.lastIndexOf("}");
-  if (start === -1 || end === -1) throw new Error("Failed to find JSON");
-  jsonStr = jsonStr.slice(start, end + 1);
-  jsonStr = jsonStr.replace(/,\s*([\]}])/g, "$1");
-
-  try {
-    return JSON.parse(jsonStr) as InterviewAnalysisResult;
-  } catch {
-    const fixed = jsonStr.replace(/"([^"]*?)"/g, (match) =>
-      match.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t")
-    );
-    return JSON.parse(fixed) as InterviewAnalysisResult;
-  }
+  // Structured Outputs 로 문법은 보장 — parseLlmJson(4단계 복구) 은 안전망
+  return parseLlmJson<InterviewAnalysisResult>(text);
 }

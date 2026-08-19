@@ -15,21 +15,21 @@ export type AdminFetchState<T> = {
   reload: () => void;
 };
 
-/** 관리자 변경 요청 — 세션 토큰을 Bearer 로 붙여 POST. {ok,status} 반환. */
-export async function adminPost(path: string, body: unknown): Promise<{ ok: boolean; status: number; error?: string }> {
+/** 관리자 변경 요청 — 세션 토큰을 Bearer 로 붙여 POST. {ok,status,error,json} 반환 (json = 응답 본문, 실패 시 null). */
+export async function adminPost(path: string, body: unknown): Promise<{ ok: boolean; status: number; error?: string; json: unknown }> {
   try {
     const { data: sess } = await supabase.auth.getSession();
     const token = sess.session?.access_token;
-    if (!token) return { ok: false, status: 401, error: "로그인이 필요합니다." };
+    if (!token) return { ok: false, status: 401, error: "로그인이 필요합니다.", json: null };
     const res = await fetch(path, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     const json = await res.json().catch(() => ({}));
-    return { ok: res.ok, status: res.status, error: json?.error };
+    return { ok: res.ok, status: res.status, error: json?.error, json };
   } catch {
-    return { ok: false, status: 0, error: "네트워크 오류" };
+    return { ok: false, status: 0, error: "네트워크 오류", json: null };
   }
 }
 

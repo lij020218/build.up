@@ -5,6 +5,8 @@ import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
 import { DASHBOARD_ACTION_SYSTEM_PROMPT, buildDashboardActionPrompt } from "./prompt";
 import type { DashboardContext } from "./prompt";
+import { parseLlmJson } from "../utils/parse-json";
+import type { ResponseSchema } from "../utils/structured-output";
 
 const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 // 1024 → 1536 → 2048: insight 4단계 서사 + 액션별 정량 ROI(estimatedImpactWon) +
@@ -83,6 +85,62 @@ export type DashboardActionsResponse = {
   insightReferencedCase?: ReferencedCase;
 };
 
+// ── Structured Outputs 스키마 — DashboardActionsResponse 1:1 (선택 필드 = null 유니온, 파서가 undefined 로 정규화) ──
+const REFERENCED_CASE_SCHEMA = {
+  type: ["object", "null"],
+  additionalProperties: false,
+  required: ["id", "name"],
+  properties: { id: { type: "string" }, name: { type: "string" } },
+};
+const EVIDENCE_SCHEMA = { type: ["array", "null"], items: { type: "string" } };
+export const DASHBOARD_ACTIONS_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "dashboard_actions",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["todayActions", "crisisActions", "insight", "insightReferencedCase"],
+    properties: {
+      todayActions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["title", "reason", "priority", "confidence", "referencedCase", "feature", "evidence", "estimatedImpactWon"],
+          properties: {
+            title: { type: "string" },
+            reason: { type: "string" },
+            priority: { type: "string", enum: ["high", "medium"] },
+            confidence: { type: "string", enum: ["high", "medium", "low"] },
+            referencedCase: REFERENCED_CASE_SCHEMA,
+            feature: { type: ["string", "null"] },
+            evidence: EVIDENCE_SCHEMA,
+            estimatedImpactWon: { type: ["number", "null"] },
+          },
+        },
+      },
+      crisisActions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["title", "impact", "difficulty", "confidence", "referencedCase", "feature", "evidence"],
+          properties: {
+            title: { type: "string" },
+            impact: { type: "string" },
+            difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+            confidence: { type: "string", enum: ["high", "medium", "low"] },
+            referencedCase: REFERENCED_CASE_SCHEMA,
+            feature: { type: ["string", "null"] },
+            evidence: EVIDENCE_SCHEMA,
+          },
+        },
+      },
+      insight: { type: "string" },
+      insightReferencedCase: REFERENCED_CASE_SCHEMA,
+    },
+  },
+};
+
 /**
  * 잘린 JSON 복구 — Claude max_tokens 도달로 응답이 끊긴 경우 닫히지 않은 {[" 추적해 보충.
  * 100% 안전한 복구는 아니지만 todayActions 같은 부분 데이터는 살릴 수 있음.
@@ -129,7 +187,8 @@ function parseResponse(raw: string): DashboardActionsResponse {
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    // Structured Outputs 로 문법은 보장 — parseLlmJson(4단계 복구) 은 안전망, 아래 로컬 복구는 최후 수단
+    parsed = parseLlmJson(cleaned);
   } catch {
     // 1단계 fallback: greedy 매칭으로 첫 {부터 마지막 } 까지 추출
     const match = cleaned.match(/\{[\s\S]*\}/);
@@ -257,6 +316,7 @@ export async function generateDashboardActions(
       // 자가개선: 최근 "안 맞아요" 블록을 user prompt 끝에 붙여 비슷한 코칭 회피.
       { role: "user", content: buildDashboardActionPrompt(ctx) + (options.negativeFeedbackBlock ?? "") + (options.behaviorBlock ?? "") },
     ],
+    response_schema: DASHBOARD_ACTIONS_RESPONSE_SCHEMA,
   });
 
   const content = response.content.find((c) => c.type === "text") ?? response.content[0];

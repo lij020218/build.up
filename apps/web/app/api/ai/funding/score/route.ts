@@ -5,6 +5,8 @@ import { normalizeBreakdown, toInt } from "../../../_lib/ios-contract";
 import { runAiFeature } from "../../../_lib/ai-guard";
 import { isTransientLlmError, EmptyLlmResponseError } from "@foundone/ai/utils/client";
 import { parseLlmJson } from "@foundone/ai/utils/parse-json";
+import { jsonSchemaResponseFormat, isSchemaRejectedError, LlmRefusalError } from "@foundone/ai/utils/structured-output";
+import { FUNDING_SCORE_RESPONSE_SCHEMA } from "./schema";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "@foundone/ai";
 import {
   formatKRW,
@@ -380,17 +382,30 @@ ${userContext}
 
   // 실패는 throw → 게이트가 1회 재시도 후 환불 + 503(failMessage)
   const client = new OpenAI({ apiKey, timeout: 30_000, maxRetries: 3 });
+  // Structured Outputs(json_schema strict) — 스키마가 strict 제약으로 거부되면 strict:false 1회 재시도. parseLlmJson 은 안전망.
+  let schemaStrict = true;
   const text = await withLlmFallback("gpt-5.4-mini", async (model) => {
-    const r = await client.chat.completions.create({
+    const call = () => client.chat.completions.create({
       model,
       max_completion_tokens: 900,
       temperature: 0.3,
-      response_format: { type: "json_object" },
+      response_format: jsonSchemaResponseFormat(FUNDING_SCORE_RESPONSE_SCHEMA, schemaStrict),
       messages: [
         { role: "system", content: buildSystemPrompt(rubric) },
         { role: "user", content: userPrompt },
       ],
     });
+    let r: Awaited<ReturnType<typeof call>>;
+    try {
+      r = await call();
+    } catch (e) {
+      if (!schemaStrict || !isSchemaRejectedError(e)) throw e;
+      console.warn("[funding/score] response_schema strict 거부 → strict:false 재시도:", e instanceof Error ? e.message : String(e));
+      schemaStrict = false;
+      r = await call();
+    }
+    const refusal = r.choices[0]?.message?.refusal;
+    if (typeof refusal === "string" && refusal.trim()) throw new LlmRefusalError(model, refusal);
     const out = r.choices[0]?.message?.content ?? "";
     if (!out.trim()) throw new EmptyLlmResponseError(model);
     return out;

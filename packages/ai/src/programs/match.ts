@@ -12,6 +12,36 @@ import type {
   ProgramMatchingResult,
   ProgramRecommendation,
 } from "./prompt";
+import type { ResponseSchema } from "../utils/structured-output";
+
+/** Structured Outputs 스키마 — ProgramMatchingResult 1:1 */
+export const PROGRAM_MATCHING_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "program_matching",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["recommendations", "strategy", "timeline"],
+    properties: {
+      recommendations: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["programId", "fitScore", "fitReason", "applicationTip", "priority"],
+          properties: {
+            programId: { type: "string" },
+            fitScore: { type: "number" },
+            fitReason: { type: "string" },
+            applicationTip: { type: "string" },
+            priority: { type: "string", enum: ["must_apply", "recommended", "consider"] },
+          },
+        },
+      },
+      strategy: { type: "string" },
+      timeline: { type: "string" },
+    },
+  },
+};
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
@@ -204,6 +234,7 @@ export async function matchPrograms(
     // ✦ Prompt Caching — program 매칭 system prompt 안정 재사용
     system: systemWithCache(PROGRAM_MATCHING_SYSTEM_PROMPT),
     messages: [{ role: "user", content: userMessage }],
+    response_schema: PROGRAM_MATCHING_RESPONSE_SCHEMA,
   });
 
   const textBlock = message.content.find((block) => block.type === "text");

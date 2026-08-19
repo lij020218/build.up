@@ -38,6 +38,8 @@ private final class AIRoadmapViewModel {
     var region: String = ""
     var storeName: String = ""
     var genProgress: Int = 0
+    /// 서버 진행 문구(ai_jobs.progress — 비동기 작업 모드에서만). 웹 serverProgress 미러.
+    var serverProgress: String? = nil
     var result: AIRoadmapResult? = nil
     var errorMessage: String? = nil
 
@@ -95,6 +97,7 @@ private final class AIRoadmapViewModel {
     func generate() {
         step = .generating
         genProgress = 0
+        serverProgress = nil
         errorMessage = nil
 
         // 웹과 동일한 점진적 진행 (7 딜레이, 마지막은 API 응답까지 holding)
@@ -119,16 +122,21 @@ private final class AIRoadmapViewModel {
                     storeName: storeName.isEmpty ? nil : storeName,
                     teamSize: nil
                 )
-                let res = try await service.generate(input: input)
+                // 비동기 작업(202 → 폴링) — 서버 진행 문구를 화면에 반영. 점진 표시는 마지막 단계 holding 그대로.
+                let res = try await service.generate(input: input) { progress in
+                    Task { @MainActor in self.serverProgress = progress }
+                }
                 // API 응답 후 남은 단계 빠르게 완료
                 for i in genProgress..<genSteps.count {
                     try? await Task.sleep(nanoseconds: 200_000_000)
                     self.genProgress = i + 1
                 }
+                self.serverProgress = nil
                 self.result = res
                 self.step = .review
             } catch {
                 self.genProgress = 0
+                self.serverProgress = nil
                 self.errorMessage = error.localizedDescription
                 self.step = .idea
             }
@@ -678,10 +686,17 @@ private struct GeneratingStepView: View {
                         .foregroundStyle(Color(red: 0.118, green: 0.102, blue: 0.243))
                         .tracking(-0.55)
                         .multilineTextAlignment(.center)
-                    // 실측 26~28초(Pass1) + 선택 호출 — 기대치 설정으로 이탈 방지 (웹 미러, 2026-08-03)
-                    Text("보통 30초~1분 걸려요 — 화면을 닫지 마세요")
+                    // 비동기 작업 모드(2026-08-19): 서버가 이어서 생성하므로 잠시 나가도 된다 (웹 미러)
+                    Text("보통 1~3분 걸려요 — 잠시 기다려 주세요")
                         .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(Color(red: 0.118, green: 0.102, blue: 0.243).opacity(0.5))
+                    if let serverProgress = vm.serverProgress, !serverProgress.isEmpty {
+                        Text(serverProgress)
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .foregroundStyle(midnight)
+                            .transition(.opacity)
+                            .animation(.easeOut(duration: 0.25), value: serverProgress)
+                    }
                 }
 
                 // 단계 리스트

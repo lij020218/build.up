@@ -5,6 +5,8 @@ import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { getOpenAIApiKey } from "../../../_lib/env";
 import { runAiFeature } from "../../../_lib/ai-guard";
 import { withOpenAiFallback, OPENAI_SDK_MAX_RETRIES } from "../../../_lib/openai-fallback";
+import { jsonSchemaResponseFormat, isSchemaRejectedError } from "@foundone/ai/utils/structured-output";
+import { CARDNEWS_RESPONSE_SCHEMA } from "./schema";
 
 /**
  * 인스타 카드뉴스 자동 제작 ("마케팅 작업하기" 신기능, 2026-07-21 사장님 지시).
@@ -229,16 +231,28 @@ ${storeFacts}
         // 2026-07-27 gpt-5.6-luna 전환 — 인터랙티브(사장님이 기다림)라 최속 티어 + effort none (실측 ~2s).
         //  5.6 계열은 temperature 미지원(400) — 제거(기본 1.0 거동이 창의 작업에 무방).
         //  response_format json_object 가 필요해 OpenAI 직접 호출 유지 → SDK 재시도 3 + 일시 오류 시 mini 폴백.
-        const r = await withOpenAiFallback("gpt-5.6-luna", (model) => client.chat.completions.create({
-          model,
-          reasoning_effort: "none",
-          max_completion_tokens: 1800,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: user },
-          ],
-        }), "[cardnews]");
+        //  2026-08-19 Structured Outputs(json_schema strict) — 스키마 거부 400 이면 strict:false 1회 재시도. parseLlmJson 은 안전망.
+        let schemaStrict = true;
+        const r = await withOpenAiFallback("gpt-5.6-luna", async (model) => {
+          const call = () => client.chat.completions.create({
+            model,
+            reasoning_effort: "none",
+            max_completion_tokens: 1800,
+            response_format: jsonSchemaResponseFormat(CARDNEWS_RESPONSE_SCHEMA, schemaStrict),
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+          });
+          try {
+            return await call();
+          } catch (e) {
+            if (!schemaStrict || !isSchemaRejectedError(e)) throw e;
+            console.warn("[cardnews] response_schema strict 거부 → strict:false 재시도:", e instanceof Error ? e.message : String(e));
+            schemaStrict = false;
+            return call();
+          }
+        }, "[cardnews]");
 
         console.info("[ai-cost] cardnews", JSON.stringify({ model: r.model, in: r.usage?.prompt_tokens, out: r.usage?.completion_tokens }));
         const content = r.choices[0]?.message?.content ?? "";

@@ -64,6 +64,8 @@ export const USER_TABLES = [
   "coaching_feedback",
   // 2026-08-14 사업계획서 초안 원장 (펀딩 페이지 '사업계획서 보기')
   "business_plan_drafts",
+  // 2026-08-19 비동기 AI 작업 원장(입력·결과 jsonb 포함 — 개인 데이터). 만료 1일이지만 초기화 시 즉시 삭제.
+  "ai_jobs",
 ] as const;
 
 // owner_user_id 컬럼 테이블 (사용자가 소유자로 만든 row 만).

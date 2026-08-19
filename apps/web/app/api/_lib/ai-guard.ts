@@ -30,6 +30,8 @@ import {
 } from "./rate-limit";
 import { getSupabaseAdmin } from "./supabase-admin";
 import { isTransientLlmError, llmCallContext } from "@foundone/ai/utils/client";
+// 관측: 이 모듈을 import 하는 순간 LLM 호출 관찰자가 등록돼 ai_call_log 에 적재된다(부작용 import, 멱등).
+import "./ai-call-log";
 
 // ─────────────────────────────────────────────────────────────
 // 기능별 한도 표 — 일/주/분당. 월간은 ₩6,000 예산 미터(ai-cost.ts)가 담당.
@@ -247,7 +249,7 @@ export async function runAiFeature(
 
   // 재시도 1층 원칙(P0): 일시 오류(429/5xx/타임아웃)는 SDK 가 이미 재시도+폴백 — 여기선 **파싱/빈 응답**에만 1회 더.
   const attempt = async (): Promise<NextResponse> =>
-    llmCallContext.run({ feature: opts.feature, timeoutMs: g.limits.timeoutMs, maxRetries: g.limits.maxRetries }, () => handler(g));
+    llmCallContext.run({ feature: opts.feature, timeoutMs: g.limits.timeoutMs, maxRetries: g.limits.maxRetries, userId: g.userId }, () => handler(g));
   let res: NextResponse | null = null;
   let lastErr: unknown = null;
   try {

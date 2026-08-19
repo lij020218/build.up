@@ -5,6 +5,18 @@ import { systemWithCache } from "../utils/client";
 import { parseLlmJson } from "../utils/parse-json";
 import { REPORT_INSIGHT_SYSTEM_PROMPT, buildReportInsightPrompt } from "./prompt";
 import type { ReportInsightInput } from "./prompt";
+import type { ResponseSchema } from "../utils/structured-output";
+
+/** Structured Outputs 스키마 — { insight } */
+export const REPORT_INSIGHT_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "report_insight",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["insight"],
+    properties: { insight: { type: "string" } },
+  },
+};
 
 const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 const DEFAULT_MAX_TOKENS = 300;
@@ -44,6 +56,7 @@ export async function generateReportInsight(
     messages: [
       { role: "user", content: buildReportInsightPrompt(input) },
     ],
+    response_schema: REPORT_INSIGHT_RESPONSE_SCHEMA,
   });
 
   const content = response.content.find((c) => c.type === "text") ?? response.content[0];

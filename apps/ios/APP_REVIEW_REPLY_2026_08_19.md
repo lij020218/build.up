@@ -26,7 +26,8 @@ Demo account (already in App Review Information): `[lij020218@cau.ac.kr]` / pass
 - AI roadmap generation: Profile → “진행 초기화” is NOT needed; instead sign up with a new email (any address; email confirmation link is sent) and choose “AI로 로드맵 만들기” on the onboarding screen — generation takes about 40–90 seconds.
 - Dashboard / Reports / Finance / Tax: bottom tabs.
 - Staff: “직원” tab → invite by 8-character code.
-- Account deletion: Profile (사이드바 → 프로필) → “계정 삭제” → confirm. Deletion is immediate and permanent (server-side; auth user and all data rows removed).
+- Account deletion: Profile (사이드바 → 내 정보) → “계정 삭제” → confirm. It is also available during onboarding (account icon at the top-right of every onboarding screen → “계정 삭제”). Deletion is immediate and permanent (server-side: auth user, all data rows and uploaded files are removed; Sign in with Apple tokens are revoked). Statutory labor records (attendance/payroll), if any, are retained for 3 years in a separate archive as required by the Korean Labor Standards Act §42 — disclosed in our privacy policy.
+- Account types: there is one sign-up path. An “employee” view appears only when an owner invites a user with an 8-character code (Staff tab → 직원 추가); the demo account above is an owner account. Staff demo account: `[있으면 이메일/비번, 없으면 "not needed for review — staff features require an owner invitation; the owner demo account can create an invite code at 직원 → +"]`
 No sample files are required.
 
 **5. External services used**

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { runAiFeature } from "../../../_lib/ai-guard";
+import { MEMBERS_PARSE_RESPONSE_SCHEMA } from "./schema";
 
 type ParsedMember = {
   name: string;
@@ -55,32 +56,33 @@ export async function POST(request: Request) {
         ? `CSV/엑셀/텍스트에서 회원·고객 데이터를 추출해 JSON 배열로 반환하는 파서입니다.
 반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요.
 
-[
+{ "members": [
   { "name": "이름", "plan": "이용권/등급", "fee": 금액(원 정수), "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }
-]
+] }
 
 규칙:
 - 제공된 데이터에 있는 회원/고객만 추출. 절대로 없는 사람을 만들어내지 마세요.
-- 데이터를 파싱할 수 없거나 회원/고객 정보가 없으면 빈 배열 []을 반환.
+- 데이터를 파싱할 수 없거나 회원/고객 정보가 없으면 빈 배열 {"members":[]} 을 반환.
 - fee는 원 단위 정수. "50,000원" → 50000. 없으면 0.
 - 날짜는 YYYY-MM-DD 형식. 없으면 빈 문자열 "".
 - plan은 이용권명, 등급, 코스명 등. 없으면 "일반".
 - 헤더 행, 합계 행, 빈 행은 무시.
 - 열 이름이 달라도 의미상 이름/금액/날짜에 해당하면 추출.`
-        : `Parse member/customer data from CSV/text into a JSON array. Respond ONLY with JSON.
+        : `Parse member/customer data from CSV/text into JSON. Respond ONLY with JSON.
 
-[
+{ "members": [
   { "name": "Name", "plan": "Plan/tier", "fee": amountInt, "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }
-]
+] }
 
 Rules:
 - ONLY extract members that exist in the data. NEVER fabricate entries.
-- If no member data found, return empty array [].
+- If no member data found, return {"members":[]}.
 - fee as integer (currency units). Empty/missing → 0.
 - Dates as YYYY-MM-DD or empty string "".
 - plan: membership tier, course name, etc. Default "일반".
 - Skip header/total/empty rows.`,
       messages: [{ role: "user", content: `<user_input>${text}</user_input>` }],
+      response_schema: MEMBERS_PARSE_RESPONSE_SCHEMA, // Structured Outputs — 파서는 안전망
     });
 
     const content = response.content[0];

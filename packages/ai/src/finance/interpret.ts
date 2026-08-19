@@ -4,6 +4,24 @@ import { AiParseError } from "../types/ai";
 import type { AiStructuredResponse, AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
 import { FINANCE_SYSTEM_PROMPT, buildFinanceUserPrompt } from "./prompt";
+import { parseLlmJson } from "../utils/parse-json";
+import type { ResponseSchema } from "../utils/structured-output";
+
+/** Structured Outputs 스키마 — AiStructuredResponse(4칸) 1:1 */
+export const FINANCE_INTERPRET_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "finance_interpretation",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["summary", "rationale", "warnings", "nextActions"],
+    properties: {
+      summary: { type: "string" },
+      rationale: { type: "array", items: { type: "string" } },
+      warnings: { type: "array", items: { type: "string" } },
+      nextActions: { type: "array", items: { type: "string" } },
+    },
+  },
+};
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
@@ -13,21 +31,11 @@ const DEFAULT_MAX_TOKENS = 1024;
 // ─── 응답 파싱 & 검증 ─────────────────────────────────────────────────────────
 
 function parseAiResponse(raw: string): AiStructuredResponse {
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = parseLlmJson(raw); // robust 4단계 파서 — Structured Outputs 의 안전망
   } catch {
-    // JSON 부분만 추출 시도
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (match) {
-      try { parsed = JSON.parse(match[0]); } catch {
-        throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
-      }
-    } else {
-      throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
-    }
+    throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
@@ -77,7 +85,8 @@ export async function interpretFinancialSimulation(
     system: systemWithCache(FINANCE_SYSTEM_PROMPT),
     messages: [
       { role: "user", content: userMessage }
-    ]
+    ],
+    response_schema: FINANCE_INTERPRET_RESPONSE_SCHEMA,
   });
 
   const content = response.content.find((c) => c.type === "text") ?? response.content[0];

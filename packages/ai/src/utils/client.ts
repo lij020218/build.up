@@ -12,12 +12,13 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { LlmRefusalError, isSchemaRejectedError, type ResponseSchema } from "./structured-output";
 
 /**
  * 호출 문맥(기능별 타임아웃·재시도) — ai-guard 가 핸들러 실행 동안 설정하면 그 안에서 만들어지는
  * 모든 LlmClient 가 자동으로 따른다 (packages/ai 내부 함수들이 createAiClient 를 직접 호출해도 적용).
  */
-export type LlmCallContext = { feature?: string; timeoutMs?: number; maxRetries?: number };
+export type LlmCallContext = { feature?: string; timeoutMs?: number; maxRetries?: number; userId?: string };
 export const llmCallContext = new AsyncLocalStorage<LlmCallContext>();
 
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -57,6 +58,7 @@ function fallbackFor(model: string): string | null {
 }
 /** 재시도/폴백 가치가 있는 오류인지 — 입력 오류(400/401/403/404/422)는 제외 */
 export function isTransientLlmError(err: unknown): boolean {
+  if (err instanceof LlmRefusalError) return false;   // 구조화 출력 거부 — 같은 입력이면 같은 결과
   const e = err as { status?: number; code?: string; name?: string; message?: string } | undefined;
   const status = typeof e?.status === "number" ? e.status : undefined;
   if (status !== undefined) {
@@ -175,6 +177,12 @@ type AMessagesCreateRequest = {
   top_p?: number;
   /** GPT-5.6 계열 추론 강도 — 5.6 모델일 때만 사용(기본 "none"). 판단형 라우트는 "low"+ 명시. */
   reasoning_effort?: "none" | "low" | "medium" | "high";
+  /**
+   * OpenAI Structured Outputs (2026-08-19) — `response_format: {type:"json_schema", json_schema:{name, strict:true, schema}}`.
+   *  tools 가 없을 때만 적용(function calling 경로는 tool 스키마가 그 역할). 폴백 모델 호출에도 그대로 전달.
+   *  스키마가 strict 제약을 어겨 400 이면 strict:false 로 1회 재시도. 모델이 거부(refusal)하면 LlmRefusalError(비일시).
+   */
+  response_schema?: ResponseSchema;
   metadata?: unknown;
 };
 type AMessagesCreateResponse = {
@@ -389,8 +397,16 @@ class LlmClient {
       if (oaiTools) baseParams.tools = oaiTools;
       if (oaiToolChoice !== undefined) baseParams.tool_choice = oaiToolChoice;
 
+      // ── Structured Outputs — tools 없는 JSON 응답 라우트 전용 ──
+      const rs = !oaiTools && req.response_schema ? req.response_schema : undefined;
+      let schemaStrict = rs?.strict ?? true;
+      const withResponseFormat = (params: Record<string, unknown>) => {
+        if (!rs) return params;
+        return { ...params, response_format: { type: "json_schema", json_schema: { name: rs.name, strict: schemaStrict, schema: rs.schema } } };
+      };
+
       // ── 호출 + 폴백 (SDK 재시도는 내부에서 이미 3회) ──
-      type ChatResp = { choices: Array<{ finish_reason?: string | null; message?: { content?: string | null; tool_calls?: unknown[] } }>; usage?: { prompt_tokens?: number; completion_tokens?: number } };
+      type ChatResp = { choices: Array<{ finish_reason?: string | null; message?: { content?: string | null; refusal?: string | null; tool_calls?: unknown[] } }>; usage?: { prompt_tokens?: number; completion_tokens?: number } };
       let response: ChatResp;
       let usedModel = mappedModel;
       const callOnce = async (model: string) => {
@@ -405,8 +421,19 @@ class LlmClient {
           delete (params as Record<string, unknown>).temperature;
           delete (params as Record<string, unknown>).top_p;
         }
-        const r = (await this.openai.chat.completions.create(params as never)) as unknown as ChatResp;
+        let r: ChatResp;
+        try {
+          r = (await this.openai.chat.completions.create(withResponseFormat(params) as never)) as unknown as ChatResp;
+        } catch (e) {
+          // 스키마 자체가 strict 제약 위반으로 거부된 경우에만 strict:false 로 1회 재시도 (입력 400 일반은 그대로 throw)
+          if (!rs || !schemaStrict || !isSchemaRejectedError(e)) throw e;
+          console.warn(`[LlmClient] response_schema "${rs.name}" strict 거부(${String((e as Error)?.message ?? "").slice(0, 160)}) → strict:false 재시도`);
+          schemaStrict = false;
+          r = (await this.openai.chat.completions.create(withResponseFormat(params) as never)) as unknown as ChatResp;
+        }
         const c = r.choices?.[0];
+        const refusal = c?.message?.refusal;
+        if (typeof refusal === "string" && refusal.trim()) throw new LlmRefusalError(model, refusal);
         const hasTool = Array.isArray((c?.message as { tool_calls?: unknown[] } | undefined)?.tool_calls)
           && ((c?.message as { tool_calls?: unknown[] }).tool_calls?.length ?? 0) > 0;
         const hasText = typeof c?.message?.content === "string" && c.message.content.trim().length > 0;

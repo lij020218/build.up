@@ -9,6 +9,24 @@ import {
   type StageBriefParams,
   type StageBriefResult
 } from "./prompt";
+import type { ResponseSchema } from "../utils/structured-output";
+
+/** Structured Outputs 스키마 — StageBriefResult 1:1 */
+export const STAGE_BRIEF_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "stage_brief",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["headline", "context", "actions", "commonMistakes", "readyWhen"],
+    properties: {
+      headline: { type: "string" },
+      context: { type: "string" },
+      actions: { type: "array", items: { type: "string" } },
+      commonMistakes: { type: "array", items: { type: "string" } },
+      readyWhen: { type: "string" },
+    },
+  },
+};
 
 const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 const DEFAULT_MAX_TOKENS = 600;
@@ -71,7 +89,8 @@ export async function generateStageBrief(
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
     // ✦ Prompt Caching — stage brief system prompt 안정 재사용
     system: systemWithCache(STAGE_BRIEF_SYSTEM_PROMPT),
-    messages: [{ role: "user", content: userPrompt }]
+    messages: [{ role: "user", content: userPrompt }],
+    response_schema: STAGE_BRIEF_RESPONSE_SCHEMA,
   });
 
   const textBlock = message.content.find((block) => block.type === "text");

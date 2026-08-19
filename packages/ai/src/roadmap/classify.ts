@@ -15,6 +15,7 @@ import { parseLlmJson } from "../utils/parse-json";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { SUB_INDUSTRY_TAXONOMY_BLOCK } from "./prompt";
+import type { ResponseSchema } from "../utils/structured-output";
 
 const DEFAULT_MODEL = "gpt-5.6-luna";
 const DEFAULT_MAX_TOKENS = 800;
@@ -32,13 +33,39 @@ export type IndustryClassification = {
   candidates: IndustryCandidate[];   // 적합도 순 1~3개
 };
 
+/** Structured Outputs 스키마 — 루트 배열은 strict 불가라 {candidates:[...]} 로 감싼다 */
+export const INDUSTRY_CLASSIFY_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "industry_classification",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["candidates"],
+    properties: {
+      candidates: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["subIndustryId", "categoryId", "label", "reason"],
+          properties: {
+            subIndustryId: { type: "string" },
+            categoryId: { type: "string" },
+            label: { type: "string" },
+            reason: { type: "string" },
+          },
+        },
+      },
+    },
+  },
+};
+
 const SYSTEM_PROMPT = `당신은 한국 창업 아이디어를 업종 택소노미로 분류하는 전문가입니다.
 
 ${SUB_INDUSTRY_TAXONOMY_BLOCK}
 
 ## 출력
 사용자의 아이디어에 가장 맞는 세부 업종 **후보 1~3개**를 적합도 순으로. JSON 만 출력:
-[{"subIndustryId":"...","categoryId":"...","label":"한국어 업종명","reason":"이 업종으로 본 근거 한 줄 (사용자 표현 인용)"}]
+{"candidates":[{"subIndustryId":"...","categoryId":"...","label":"한국어 업종명","reason":"이 업종으로 본 근거 한 줄 (사용자 표현 인용)"}]}
 
 규칙:
 - subIndustryId·categoryId 는 위 목록의 값만. 임의 ID 절대 금지.
@@ -55,6 +82,7 @@ export async function classifyIndustry(
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
     system: systemWithCache(SYSTEM_PROMPT, "1h"),
     messages: [{ role: "user", content: `창업 아이디어: "${ideaText.slice(0, 2000)}"` }],
+    response_schema: INDUSTRY_CLASSIFY_RESPONSE_SCHEMA,
   });
 
   const text = response.content
@@ -67,6 +95,10 @@ export async function classifyIndustry(
     parsed = parseLlmJson(text);
   } catch {
     throw new AiParseError("업종 분류 응답이 유효한 JSON이 아닙니다.", text);
+  }
+  // {candidates:[...]} (Structured Outputs) 와 구형 루트 배열 모두 관용
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && Array.isArray((parsed as { candidates?: unknown }).candidates)) {
+    parsed = (parsed as { candidates: unknown[] }).candidates;
   }
   if (!Array.isArray(parsed) || parsed.length === 0) {
     throw new AiParseError("업종 분류 후보가 비어 있습니다.", text);

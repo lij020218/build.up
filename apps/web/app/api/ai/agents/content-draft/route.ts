@@ -3,6 +3,7 @@ import { createAiClient } from "@foundone/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { runAiFeature } from "../../../_lib/ai-guard";
+import { CONTENT_DRAFT_RESPONSE_SCHEMA } from "./schema";
 
 /**
  * Content Agent — 인스타/SNS 포스트 초안 생성.
@@ -118,6 +119,7 @@ export async function POST(request: Request) {
         },
       ],
       messages: [{ role: "user", content: buildPrompt(input) }],
+      response_schema: CONTENT_DRAFT_RESPONSE_SCHEMA, // Structured Outputs — 파서는 안전망
     });
 
     const text = res.content.find((c) => c.type === "text")?.text ?? "";

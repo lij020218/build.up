@@ -3,6 +3,7 @@ import { createAiClient } from "@foundone/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { runAiFeature } from "../../../_lib/ai-guard";
+import { FEEDBACK_FORM_RESPONSE_SCHEMA, stripNullFields } from "./schema";
 
 /**
  * Feedback Form Agent — 소프트오픈/운영 피드백 질문지 자동 생성.
@@ -172,6 +173,7 @@ export async function POST(request: Request) {
         },
       ],
       messages: [{ role: "user", content: buildPrompt(input) }],
+      response_schema: FEEDBACK_FORM_RESPONSE_SCHEMA, // Structured Outputs — 파서는 안전망
     });
 
     const text = res.content.find((c) => c.type === "text")?.text ?? "";
@@ -181,7 +183,10 @@ export async function POST(request: Request) {
     }>(text);
     return NextResponse.json({
       intro: typeof parsed.intro === "string" ? parsed.intro : "",
-      questions: Array.isArray(parsed.questions) ? parsed.questions : [],
+      // strict 스키마의 null 선택 필드(description/options/scale) 제거 → 종전 출력과 동일
+      questions: Array.isArray(parsed.questions)
+        ? parsed.questions.map((q) => (q && typeof q === "object" ? stripNullFields(q as Record<string, unknown>) : q))
+        : [],
       tips: Array.isArray(parsed.tips) ? parsed.tips : [],
       paperText: typeof parsed.paperText === "string" ? parsed.paperText : "",
       cache: {

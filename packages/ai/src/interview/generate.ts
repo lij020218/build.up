@@ -3,6 +3,8 @@
 
 import { createAiClient } from "../utils/client";
 import { systemWithCache } from "../utils/client";
+import { parseLlmJson } from "../utils/parse-json";
+import type { ResponseSchema } from "../utils/structured-output";
 
 export type InterviewInput = {
   industryCategoryId: string;
@@ -26,6 +28,38 @@ export type InterviewScript = {
   questions: InterviewQuestion[];
   closing: string;
   doNots: string[];
+};
+
+/** Structured Outputs 스키마 — InterviewScript 1:1 (followUp 선택 → null 유니온, 후처리로 undefined 정규화) */
+export const INTERVIEW_SCRIPT_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "interview_script",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["title", "duration", "principles", "icebreaker", "questions", "closing", "doNots"],
+    properties: {
+      title: { type: "string" },
+      duration: { type: "string" },
+      principles: { type: "array", items: { type: "string" } },
+      icebreaker: { type: "string" },
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["phase", "question", "purpose", "followUp"],
+          properties: {
+            phase: { type: "string" },
+            question: { type: "string" },
+            purpose: { type: "string" },
+            followUp: { type: ["string", "null"] },
+          },
+        },
+      },
+      closing: { type: "string" },
+      doNots: { type: "array", items: { type: "string" } },
+    },
+  },
 };
 
 const SYSTEM_PROMPT = `당신은 Y Combinator와 IDEO에서 훈련받은 고객 인터뷰 전문가입니다.
@@ -83,36 +117,29 @@ Generate a Mom Test interview script in English based on the above.`;
     // ✦ Prompt Caching — interview generation system prompt
     system: systemWithCache(SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }],
+    response_schema: INTERVIEW_SCRIPT_RESPONSE_SCHEMA,
   });
 
   const text = (() => { const t = response.content.find((c) => c.type === "text"); return t && t.type === "text" ? t.text : ""; })();
 
-  // JSON 추출 + 정리
-  let jsonStr = text;
-  // markdown 코드블록 제거
-  jsonStr = jsonStr.replace(/```json\s*/g, "").replace(/```\s*/g, "");
-  // 가장 바깥 {} 추출
-  const start = jsonStr.indexOf("{");
-  const end = jsonStr.lastIndexOf("}");
-  if (start === -1 || end === -1) throw new Error("Failed to find JSON in response");
-  jsonStr = jsonStr.slice(start, end + 1);
-
-  // 트레일링 콤마만 제거 (제어 문자는 건드리지 않음 — 파싱 실패 시 2차에서 처리)
-  jsonStr = jsonStr.replace(/,\s*([\]}])/g, "$1");
-
+  // Structured Outputs 로 문법은 보장 — parseLlmJson(4단계 복구) 은 안전망
+  let script: InterviewScript;
   try {
-    return JSON.parse(jsonStr) as InterviewScript;
-  } catch (e1) {
-    // 2차 시도: 문자열 값 내부의 실제 줄바꿈을 이스케이프
-    try {
-      // JSON 문자열 안의 raw newline만 \\n으로 교체 (키-값 구조 밖의 줄바꿈은 무시)
-      const fixed = jsonStr.replace(/"([^"]*?)"/g, (match) => {
-        return match.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t");
-      });
-      return JSON.parse(fixed) as InterviewScript;
-    } catch (e2) {
-      console.error("[interview/generate] JSON length:", jsonStr.length, "last 100 chars:", jsonStr.slice(-100));
-      throw new Error(`JSON parse failed: ${e2 instanceof Error ? e2.message : String(e2)}`);
-    }
+    script = parseLlmJson<InterviewScript>(text);
+  } catch (e) {
+    console.error("[interview/generate] JSON length:", text.length, "last 100 chars:", text.slice(-100));
+    throw new Error(`JSON parse failed: ${e instanceof Error ? e.message : String(e)}`);
   }
+  // strict 스키마의 null(followUp) → 종전 출력과 동일하게 undefined(필드 생략)
+  if (Array.isArray(script.questions)) {
+    script.questions = script.questions.map((q): InterviewQuestion => {
+      if (q && typeof q === "object" && (q as { followUp?: unknown }).followUp === null) {
+        const rest: Record<string, unknown> = { ...(q as Record<string, unknown>) };
+        delete rest.followUp;
+        return rest as unknown as InterviewQuestion;
+      }
+      return q;
+    });
+  }
+  return script;
 }

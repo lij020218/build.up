@@ -2,12 +2,41 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
-import { looseExtractJson } from "../utils/parse-json";
+import { parseLlmJson } from "../utils/parse-json";
+import type { ResponseSchema } from "../utils/structured-output";
 import {
   HEALTH_DIAGNOSIS_SYSTEM_PROMPT,
   buildHealthDiagnosisUserPrompt,
 } from "./prompt";
 import type { HealthDiagnosisContext, HealthDiagnosisResult } from "./prompt";
+
+/** Structured Outputs 스키마 — HealthDiagnosisResult 1:1 */
+export const HEALTH_DIAGNOSIS_RESPONSE_SCHEMA: ResponseSchema = {
+  name: "health_diagnosis",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["headline", "statusSummary", "actions", "encouragement"],
+    properties: {
+      headline: { type: "string" },
+      statusSummary: { type: "string" },
+      actions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["title", "reason", "difficulty"],
+          properties: {
+            title: { type: "string" },
+            reason: { type: "string" },
+            difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+          },
+        },
+      },
+      encouragement: { type: "string" },
+    },
+  },
+};
 
 const DEFAULT_MODEL = "gpt-5.4-mini";   // 실제 실행 모델 (2026-08-03 이름 정직화 — 종전 claude-* 표기는 MODEL_MAP 거쳐 동일 모델)
 const DEFAULT_MAX_TOKENS = 800;
@@ -15,11 +44,9 @@ const DEFAULT_MAX_TOKENS = 800;
 // ─── 응답 파싱 ──────────────────────────────────────────────────────────────
 
 function parseDiagnosisResponse(raw: string): HealthDiagnosisResult {
-  const cleaned = looseExtractJson(raw);
-
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = parseLlmJson(raw); // robust 4단계 파서 — Structured Outputs 의 안전망
   } catch {
     throw new AiParseError("경영 진단 응답이 유효한 JSON이 아닙니다.", raw);
   }
@@ -71,6 +98,7 @@ export async function diagnoseBusinessHealth(
     // ✦ Prompt Caching — 같은 사용자가 시간차 진단 시 절감
     system: systemWithCache(HEALTH_DIAGNOSIS_SYSTEM_PROMPT),
     messages: [{ role: "user", content: userMessage }],
+    response_schema: HEALTH_DIAGNOSIS_RESPONSE_SCHEMA,
   });
   const message = rawMessage as { content: Array<{ type: "text"; text: string }>; stop_reason: string | null; usage: { input_tokens: number; output_tokens: number } };
 

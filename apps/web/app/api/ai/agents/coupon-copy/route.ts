@@ -3,6 +3,7 @@ import { createAiClient } from "@foundone/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { parseLlmJson } from "@foundone/ai/utils/parse-json";
 import { runAiFeature } from "../../../_lib/ai-guard";
+import { COUPON_COPY_RESPONSE_SCHEMA } from "./schema";
 
 /**
  * Coupon Agent — 쿠폰 카피 생성.
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
         },
       ],
       messages: [{ role: "user", content: buildPrompt(input) }],
+      response_schema: COUPON_COPY_RESPONSE_SCHEMA, // Structured Outputs — 파서는 안전망
     });
 
     const text = res.content.find((c) => c.type === "text")?.text ?? "";
