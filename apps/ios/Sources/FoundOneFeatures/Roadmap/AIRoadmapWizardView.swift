@@ -80,9 +80,15 @@ private final class AIRoadmapViewModel {
         Task { @MainActor in
             defer { classifying = false }
             do {
-                let candidates = try await service.classify(ideaText: ideaText)
-                industryCandidates = candidates
-                confirmedIndustry = candidates.first
+                let result = try await service.classify(ideaText: ideaText)
+                industryCandidates = result.candidates
+                confirmedIndustry = result.candidates.first
+                // 아이디어에 이미 적힌 지역·예산·가게명은 프리필 — 비어 있을 때만 (지역 중복 입력 UX 수정, 2026-08-20)
+                if let ex = result.extracted {
+                    if let r = ex.region, region.trimmingCharacters(in: .whitespaces).isEmpty { region = r }
+                    if let b = ex.budgetWon, b > 0, budget == nil { budget = b }
+                    if let n = ex.storeName, storeName.trimmingCharacters(in: .whitespaces).isEmpty { storeName = n }
+                }
                 step = .industry
             } catch {
                 // 분류 실패해도 막지 않는다 — 생성 중 AI 판단 경로로 진행 가능 (거짓 실패 금지)

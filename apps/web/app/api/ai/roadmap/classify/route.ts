@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     async () => {
       // 실패는 throw → 가드가 1회 재시도 후 환불 + 503
       const result = await classifyIndustry(ideaText, { apiKey });
-      return NextResponse.json({ ok: true, candidates: result.candidates });
+      return NextResponse.json({ ok: true, candidates: result.candidates, extracted: result.extracted });
     },
   );
 }

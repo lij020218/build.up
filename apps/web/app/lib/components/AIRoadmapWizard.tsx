@@ -386,6 +386,14 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
         throw new Error(json?.error ?? "업종 분석 실패");
       }
       setIndustryCandidates(json.candidates);
+      // 아이디어 텍스트에 이미 적힌 지역·예산·가게명은 뒷단계에 프리필 (2026-08-20: 지역을 또 묻던 UX 수정 — 비어 있을 때만)
+      const ex = json.extracted as { region?: string | null; budgetWon?: number | null; storeName?: string | null } | undefined;
+      if (ex?.region && !region.trim()) setRegion(ex.region);
+      if (typeof ex?.budgetWon === "number" && ex.budgetWon > 0 && budget == null) {
+        setBudget(ex.budgetWon);
+        setBudgetText(String(Math.round(ex.budgetWon / 10_000)));
+      }
+      if (ex?.storeName && !storeName.trim()) setStoreName(ex.storeName);
       setConfirmedIndustry({
         subIndustryId: json.candidates[0].subIndustryId,
         categoryId: json.candidates[0].categoryId,
