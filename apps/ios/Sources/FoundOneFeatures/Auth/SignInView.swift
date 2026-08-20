@@ -70,9 +70,18 @@ public struct SignInView: View {
                     .padding(.horizontal, BUSpacing.lg)
             }
         }
+        #if DEBUG
+        // 디자인 검증용 — SIMCTL_CHILD_BU_DEMO_EMAIL_SHEET=signup|login 로 시트 자동 오픈 (시뮬 탭 도구 부재 대응)
+        .onAppear {
+            if ProcessInfo.processInfo.environment["BU_DEMO_EMAIL_SHEET"] != nil { showEmailAuth = true }
+        }
+        #endif
         .sheet(isPresented: $showEmailAuth) {
             EmailAuthSheet(coordinator: coordinator)
                 .presentationDetents([.medium, .large])
+                // 드래그가 시트 리사이즈 대신 폼 스크롤로 가게 — 가입 모드 필드가 많아 스크롤 우선 (2026-08-21)
+                .presentationContentInteraction(.scrolls)
+                .presentationDragIndicator(.visible)
                 .presentationDragIndicator(.visible)
         }
     }
@@ -161,7 +170,9 @@ private struct EmailAuthSheet: View {
 
     var body: some View {
         ZStack {
-            BUBackgroundSurface()
+            // (DEBUG 시트 자동 오픈 시 모드 지정)
+            // 2026-08-21 UI 수정: 시트 안 아우로라는 타원 가장자리가 하단에서 '반달'로 잘려 보임 → 플랫 배경
+            BUFlatBackground()
 
             if case .needsEmailConfirmation(let pendingEmail) = coordinator.state {
                 // ── 이메일 인증 대기 화면 ──
@@ -235,6 +246,8 @@ private struct EmailAuthSheet: View {
                 .padding(BUSpacing.lg)
             } else {
                 // ── 로그인 / 회원가입 폼 ──
+                // 2026-08-21: 가입 모드 콘텐츠가 medium 시트 높이를 넘쳐 버튼이 잘리던 문제 → ScrollView
+                ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     HStack {
                         Text(mode == .signup ? "이메일로 가입" : "이메일 로그인")
@@ -299,7 +312,7 @@ private struct EmailAuthSheet: View {
                             Toggle("", isOn: $agreedToTerms)
                                 .labelsHidden()
                                 .tint(BUColor.auroraNavy)
-                                .frame(width: 32)
+                                .fixedSize()   // 2026-08-21: width 32 강제가 스위치(최소 51pt)를 약관 텍스트 위로 겹치게 했음
                             HStack(spacing: 0) {
                                 Button("이용약관") { openURL(URL(string: "https://foundone.dev/terms")!) }
                                     .font(.system(size: 12, weight: .medium))
@@ -385,14 +398,22 @@ private struct EmailAuthSheet: View {
                         }
                     }
 
-                    Spacer(minLength: 0)
                 }
                 .padding(BUSpacing.lg)
+                .padding(.bottom, 24)   // 홈 인디케이터와 버튼 간격
+                .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
         .onChange(of: coordinator.isAuthenticated) { _, isAuthenticated in
             if isAuthenticated { dismiss() }
         }
+        #if DEBUG
+        .onAppear {
+            if ProcessInfo.processInfo.environment["BU_DEMO_EMAIL_SHEET"] == "signup" { mode = .signup }
+        }
+        #endif
     }
 
     private func sendReset() {
