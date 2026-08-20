@@ -299,8 +299,10 @@ export default function AuthPage() {
 
   // 가입 제출 게이트 — [필수] 약관 동의 전에는 제출 불가. disabled·커서·불투명도가 같은 근거를
   //   쓰도록 한 곳에서 파생 (종전엔 disabled 만 걸리고 스타일은 그대로라 "눌리는 것처럼" 보였음).
+  // 2026-08-20 iOS 심사 2.1(a) 반려 교훈 미러: 약관 미동의로 버튼을 '무반응(disabled)'으로 두지 않는다.
+  //   버튼은 항상 클릭 가능 — 미동의면 handleSignup 진입 가드가 사유 메시지를 보여준다.
   const signupBlocked = mode === "signup" && !agreedRequired;
-  const submitDisabled = loading || signupBlocked;
+  const submitDisabled = loading;
 
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
@@ -705,7 +707,7 @@ export default function AuthPage() {
                   fontWeight: 600,
                   letterSpacing: "-0.005em",
                   boxShadow: submitDisabled ? "none" : "0 2px 10px rgba(30,42,85,0.32)",
-                  cursor: loading ? "wait" : signupBlocked ? "not-allowed" : "pointer",
+                  cursor: loading ? "wait" : "pointer",
                   opacity: submitDisabled ? 0.45 : 1,
                   transition: "opacity 0.2s"
                 }}

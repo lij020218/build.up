@@ -119,6 +119,9 @@ private struct EmailAuthSheet: View {
     @State private var email = ""
     @State private var password = ""
     @State private var agreedToTerms = false
+    /// 2.1(a) 심사 반려(2026-08-20, iPad 호환 모드): 버튼이 disabled 라 "눌러도 무반응"으로 보였다.
+    /// → 버튼은 항상 탭 가능, 미충족 사유를 여기 담아 빨간 문구로 안내.
+    @State private var validationMessage: String? = nil
     @State private var resetInfo: String?
     @State private var resetIsError = false
     @FocusState private var focusedField: Field?
@@ -336,10 +339,18 @@ private struct EmailAuthSheet: View {
                             LinearGradient(colors: [BUColor.auroraNavy, BUColor.auroraBlue], startPoint: .leading, endPoint: .trailing),
                             in: RoundedRectangle(cornerRadius: 15, style: .continuous)
                         )
-                        .opacity(canSubmit && !isAuthenticating ? 1 : 0.48)
+                        .opacity(isAuthenticating ? 0.6 : 1)
                     }
                     .buttonStyle(PressableButtonStyle())
-                    .disabled(!canSubmit || isAuthenticating)
+                    .disabled(isAuthenticating)
+
+                    if let vmsg = validationMessage {
+                        Text(vmsg)
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .foregroundStyle(BUColor.danger)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
 
                     if mode == .login {
                         Button {
@@ -403,8 +414,34 @@ private struct EmailAuthSheet: View {
         }
     }
 
+    /// 미충족 항목 첫 번째를 사람 말로 — "무반응 버튼" 금지 (2.1(a) 재발 방지)
+    private func firstValidationProblem() -> String? {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedEmail.contains("@") { return "이메일 주소를 입력해주세요." }
+        if mode == .login {
+            if password.isEmpty { return "비밀번호를 입력해주세요." }
+            return nil
+        }
+        if !passwordStrong { return "비밀번호는 8자 이상, 영문과 숫자를 포함해야 해요." }
+        if lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "이름(성·이름)을 입력해주세요." }
+        let year = Int(birthYearText) ?? 0
+        let maxYear = Calendar.current.component(.year, from: Date()) - 14
+        if !(year >= 1900 && year <= maxYear) { return "출생연도 4자리를 입력해주세요. (만 14세 이상 가입 가능)" }
+        if !agreedToTerms { return "이용약관·개인정보처리방침에 동의해주세요. (버튼 위 스위치)" }
+        return nil
+    }
+
     private func submit() {
-        guard canSubmit, !isAuthenticating else { return }
+        guard !isAuthenticating else { return }
+        if let problem = firstValidationProblem() {
+            validationMessage = problem
+            #if canImport(UIKit)
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            #endif
+            return
+        }
+        validationMessage = nil
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
