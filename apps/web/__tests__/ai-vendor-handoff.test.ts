@@ -81,6 +81,41 @@ describe("buildAiVendorHandoff", () => {
     expect(vendorCustomInputs[key]).toBe("우리동네 인테리어");
   });
 
+  // ── 2026-08-20 위저드 업그레이드 ③ — 리뷰에서 체크한 내 지역 인테리어 업체 ──
+  it("선택한 지역 인테리어 업체 → s4 커스텀, 전화는 '이름 — 전화' 라벨로 (reason 분리)", () => {
+    const { vendorSelections, vendorCustomInputs } = buildAiVendorHandoff(
+      [], [], catalog,
+      [
+        { name: "망원동인테리어", phone: "02-123-4567" },
+        { name: "성산디자인", phone: null },
+      ],
+    );
+    const keys = Object.keys(vendorSelections);
+    expect(keys).toHaveLength(2);
+    for (const k of keys) expect(k).toMatch(/^vendor-setup_s4_c\d+$/);
+    const labels = Object.values(vendorCustomInputs);
+    expect(labels).toContain("망원동인테리어 — 02-123-4567");
+    expect(labels).toContain("성산디자인");
+    const parsed = parseVendorCustomLabel("망원동인테리어 — 02-123-4567");
+    expect(parsed.name).toBe("망원동인테리어");
+    expect(parsed.reason).toBe("02-123-4567");
+  });
+
+  it("지역 업체는 최대 3곳까지만 (스펙: 체크 최대 3)", () => {
+    const { vendorSelections } = buildAiVendorHandoff(
+      [], [], catalog,
+      [1, 2, 3, 4, 5].map((n) => ({ name: `업체${n}` })),
+    );
+    expect(Object.keys(vendorSelections)).toHaveLength(3);
+  });
+
+  it("지역 업체 미전달(구 시그니처 3-인자 호출) — 종전 동작 그대로 (backward-compat)", () => {
+    const { vendorSelections } = buildAiVendorHandoff(
+      [{ name: "업체A", category: "식자재" }], [], catalog,
+    );
+    expect(Object.keys(vendorSelections)).toHaveLength(1);
+  });
+
   it("빈 이름은 드롭, 커서는 키 충돌 없이 증가", () => {
     const { vendorSelections } = buildAiVendorHandoff(
       [

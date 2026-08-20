@@ -2723,6 +2723,9 @@ export function buildAiVendorHandoff(
   suppliers: Array<{ name: string; category: string }>,
   interiorVendors: Array<{ title: string }>,
   catalog: SubIndustryVendorData,
+  /** 리뷰 화면에서 사용자가 체크한 내 지역 인테리어 업체 (2026-08-20 위저드 업그레이드 ③, 최대 3곳).
+   *  전화번호가 있으면 "이름 — 전화" 라벨로 저장 — parseVendorCustomLabel 이 전화를 reason 으로 분리해 표시. */
+  selectedRegionalInteriorFirms: Array<{ name: string; phone?: string | null }> = [],
 ): { vendorSelections: Record<string, string>; vendorCustomInputs: Record<string, string> } {
   const vs: Record<string, string> = {};
   const vc: Record<string, string> = {};
@@ -2745,6 +2748,13 @@ export function buildAiVendorHandoff(
   for (const supplier of suppliers) pushPick(aiVendorStepForCategory(supplier.category), supplier.name);
   // 인테리어 시공 업체는 s4 (인테리어/기타) — 시공 준비는 인테리어 공사 단계에서 진행
   for (const iv of interiorVendors) pushPick(4, iv.title);
+  // 사용자가 직접 고른 내 지역 인테리어 업체 → s4 프리체크 (카탈로그에 없는 실지역 업체 — 항상 커스텀)
+  for (const firm of selectedRegionalInteriorFirms.slice(0, 3)) {
+    const name = firm.name.trim();
+    if (!name) continue;
+    const phone = firm.phone?.trim();
+    pushPick(4, phone ? `${name} — ${phone}` : name);
+  }
   return { vendorSelections: vs, vendorCustomInputs: vc };
 }
 

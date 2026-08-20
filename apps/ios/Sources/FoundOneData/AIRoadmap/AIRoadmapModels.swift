@@ -18,13 +18,18 @@ public struct AIRoadmapInput: Encodable, Sendable {
     public let region: String?
     public let storeName: String?
     public let teamSize: Int?
+    /// 예산 직접 입력 모드 (2026-08-21 위저드 이원화) — 사용자가 정한 항목은 서버가
+    /// budgetAllocation/monthlyCosts 출력에 그대로 보존하고 나머지만 최적 배분한다.
+    public let budgetBreakdown: AIBudgetBreakdown?
     public let language: String
 
     public init(
         ideaText: String,
         confirmedSubIndustryId: String? = nil,
         confirmedCategoryId: String? = nil,
-        budget: Int?, region: String?, storeName: String?, teamSize: Int?, language: String = "ko"
+        budget: Int?, region: String?, storeName: String?, teamSize: Int?,
+        budgetBreakdown: AIBudgetBreakdown? = nil,
+        language: String = "ko"
     ) {
         self.ideaText = ideaText
         self.confirmedSubIndustryId = confirmedSubIndustryId
@@ -33,7 +38,52 @@ public struct AIRoadmapInput: Encodable, Sendable {
         self.region = region
         self.storeName = storeName
         self.teamSize = teamSize
+        self.budgetBreakdown = budgetBreakdown
         self.language = language
+    }
+}
+
+/// 사용자 직접 입력 예산 (2026-08-21 위저드 예산 이원화).
+///  서버 계약 미러: packages/ai prompt.ts `RoadmapBudgetBreakdown` — 필드 추가·수정 시 양쪽 동시.
+///  모든 값 **만원 단위 정수**. nil/빈 필드는 인코딩 생략(부분 입력 허용 — 빈 항목은 AI가 채움).
+public struct AIBudgetBreakdown: Encodable, Sendable, Equatable {
+    /// budget-setup 단계 항목 키(startup-budget-items SSOT: deposit·premium·interior·equipment·
+    /// initialStock·permits·openMarketing·franchiseFee·incorporation·development·content·storefront) → 만원
+    public let items: [String: Int]?
+    /// ② 운영예비자금 (만원) — budgetAllocation.workingCapital 로 그대로 유지
+    public let workingCapital: Int?
+    /// 월비용 (만원) — monthlyCosts 의 해당 필드로 그대로 유지
+    public let monthly: Monthly?
+
+    public struct Monthly: Encodable, Sendable, Equatable {
+        public let ingredients: Int?
+        public let labor: Int?
+        public let rent: Int?
+        public let utilities: Int?
+        public let other: Int?
+
+        public init(ingredients: Int? = nil, labor: Int? = nil, rent: Int? = nil,
+                    utilities: Int? = nil, other: Int? = nil) {
+            self.ingredients = ingredients
+            self.labor = labor
+            self.rent = rent
+            self.utilities = utilities
+            self.other = other
+        }
+
+        public var isEmpty: Bool {
+            [ingredients, labor, rent, utilities, other].compactMap { $0 }.isEmpty
+        }
+    }
+
+    public init(items: [String: Int]? = nil, workingCapital: Int? = nil, monthly: Monthly? = nil) {
+        self.items = items
+        self.workingCapital = workingCapital
+        self.monthly = monthly
+    }
+
+    public var isEmpty: Bool {
+        (items?.isEmpty ?? true) && workingCapital == nil && (monthly?.isEmpty ?? true)
     }
 }
 
@@ -94,6 +144,34 @@ public struct AIRoadmapResult: Decodable, Sendable {
 
         public var displayTotal: Int {
             total ?? (deposit + interior + equipment + workingCapital)
+        }
+    }
+
+    /// 월비용(만원) — 서버 monthlyCosts 미러 (2026-08-21 예산 이원화 핸드오프용, 구버전 응답 호환 optional).
+    public let monthlyCosts: MonthlyCostsOut?
+
+    public struct MonthlyCostsOut: Decodable, Sendable {
+        public let ingredients: Int?
+        public let labor: Int?
+        public let rent: Int?
+        public let utilities: Int?
+        public let other: Int?
+
+        // 관용 디코딩 — LLM 이 소수·문자열을 내도 전체 결과 디코딩을 깨지 않는다 (2026-08-19 교훈: Phase.tasks).
+        private enum CodingKeys: String, CodingKey { case ingredients, labor, rent, utilities, other }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            func lenient(_ k: CodingKeys) -> Int? {
+                if let i = try? c.decodeIfPresent(Int.self, forKey: k) { return i }
+                if let d = try? c.decodeIfPresent(Double.self, forKey: k) { return Int(d.rounded()) }
+                if let s = try? c.decodeIfPresent(String.self, forKey: k) { return Int(s) }
+                return nil
+            }
+            ingredients = lenient(.ingredients)
+            labor = lenient(.labor)
+            rent = lenient(.rent)
+            utilities = lenient(.utilities)
+            other = lenient(.other)
         }
     }
 

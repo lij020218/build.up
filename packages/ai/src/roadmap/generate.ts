@@ -7,7 +7,7 @@ import {
   ROADMAP_GENERATION_SYSTEM_PROMPT,
   buildRoadmapGenerationPrompt,
 } from "./prompt";
-import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
+import type { RoadmapGenerationInput, RoadmapGenerationResult, RoadmapBudgetBreakdown } from "./prompt";
 
 // 2026-08-03 gpt-5.6-terra 전환 (사장님 결정 — Luna vs Terra 판단):
 //  Pass 1 은 71개 세부업종 분류 + 예산 배분 + 인허가 구성의 "판단형" 호출이고,
@@ -696,6 +696,47 @@ export function parseResponse(raw: string): RoadmapGenerationResult {
   return result;
 }
 
+/**
+ * 사용자 확정 예산 항목 강제 (2026-08-20 예산 이원화) — 프롬프트 지시를 LLM 이 무시해도
+ *  최종 budgetAllocation·monthlyCosts 는 사용자 값. 값 보존이 구조적으로 보장된다.
+ *  단위: 만원 (parseResponse 정규화 후와 동일). 매핑:
+ *   - items.deposit(+items.premium 합산 — 별도 슬롯 없음) → budgetAllocation.deposit
+ *   - items.interior → interior / items.equipment → equipment / workingCapital → workingCapital
+ *   - 그 외 items(초도물품·인허가 등)는 출력 슬롯이 없어 프롬프트 지시로만 반영 (단계 핸드오프에서 원값 보존)
+ *   - monthly.* → monthlyCosts.* / total·monthlyFixedCost 는 덮어쓴 뒤 재계산
+ */
+export function applyBudgetBreakdown(
+  result: RoadmapGenerationResult,
+  bb: RoadmapBudgetBreakdown | undefined,
+): RoadmapGenerationResult {
+  if (!bb) return result;
+  const pos = (v: unknown): number | null => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+  const items = bb.items ?? {};
+  const ba = result.budgetAllocation;
+  const deposit = pos(items.deposit);
+  const premium = pos(items.premium);
+  if (deposit != null) ba.deposit = deposit + (premium ?? 0);
+  const interior = pos(items.interior);
+  if (interior != null) ba.interior = interior;
+  const equipment = pos(items.equipment);
+  if (equipment != null) ba.equipment = equipment;
+  const wc = pos(bb.workingCapital);
+  if (wc != null) ba.workingCapital = wc;
+  ba.total = ba.deposit + ba.interior + ba.equipment + ba.workingCapital;
+
+  const monthly = bb.monthly ?? {};
+  const mc = result.monthlyCosts;
+  for (const key of ["ingredients", "labor", "rent", "utilities", "other"] as const) {
+    const v = pos(monthly[key]);
+    if (v != null) mc[key] = v;
+  }
+  ba.monthlyFixedCost = mc.labor + mc.rent + mc.utilities + mc.other;
+  return result;
+}
+
 export async function generateRoadmap(
   input: RoadmapGenerationInput,
   options: AiCallOptions
@@ -760,11 +801,15 @@ export async function generateRoadmap(
     return r;
   };
 
+  // 확정 업종 + 사용자 확정 예산 항목을 순서대로 강제 — LLM 지시 미준수를 구조적으로 차단
+  const finalize = (r: RoadmapGenerationResult): RoadmapGenerationResult =>
+    applyBudgetBreakdown(enforceConfirmed(r), input.budgetBreakdown);
+
   // Tool Use 응답 우선 처리 (강제됐으니 항상 존재)
   const toolUse = response.content.find((c) => c.type === "tool_use");
   if (toolUse && toolUse.type === "tool_use") {
     // tool input은 schema 강제됐지만 parseResponse 의 안전장치 (subIndustryId fallback 등) 재사용
-    return enforceConfirmed(parseResponse(JSON.stringify(toolUse.input)));
+    return finalize(parseResponse(JSON.stringify(toolUse.input)));
   }
 
   // Fallback: 구버전 호환 — text 블록 파싱
@@ -777,5 +822,5 @@ export async function generateRoadmap(
   }
   const tx = textBlock.text ?? "";
   console.log("[roadmap/generate] Fallback to text block, length:", tx.length);
-  return enforceConfirmed(parseResponse(tx));
+  return finalize(parseResponse(tx));
 }

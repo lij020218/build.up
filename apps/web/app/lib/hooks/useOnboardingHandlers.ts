@@ -7,6 +7,8 @@ import {
   saveRoadmapState,
   saveStoreData,
   upsertStageDecision,
+  BUDGET_ITEM_INPUT_PREFIX,
+  MONTHLY_MARKETING_INPUT_KEY,
   type UserStoreData,
 } from "@foundone/shared";
 import {
@@ -17,9 +19,10 @@ import {
   useOperationsStore,
 } from "../stores";
 import { useStoreInfoStore } from "../stores/store-info-store";
+import { useMarketingStore } from "../stores/marketing-store";
 import { buildAiVendorHandoff, getVendorData } from "../components/stages/offline/vendor-setup-data";
 import { supabase } from "../../../lib/supabase";
-import type { DashboardDeps, DashboardSurface } from "../types";
+import type { AiRoadmapWizardExtras, DashboardDeps, DashboardSurface } from "../types";
 import { SURFACE_HREFS } from "../constants";
 
 /** useOnboardingHandlers 전용 추가 deps */
@@ -40,6 +43,8 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setInitialOperatingCapital,
     setBudgetInputText,
     setPreferredRegionInput,
+    setSelectedLocationId,
+    setLocationMode,
     setStartupType,
     setSelectedFranchiseBrandId,
     setStoreName,
@@ -63,6 +68,7 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setVendorSelections,
     setVendorCustomInputs,
     setOpsSelections,
+    setRecommendedMarkets,
   } = useRoadmapStore();
 
   // ── Finance store ──
@@ -325,9 +331,24 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
       interiorMaterials: Array<{ id: string; nameKo: string; descriptionKo: string; costRangeKo?: string; tags: string[]; trendSource?: string; priority: number }>;
       interiorConcepts: Array<{ id: string; nameKo: string; descriptionKo: string; costRangeKo?: string; pros: string[]; cons: string[]; tags: string[]; priority: number }>;
     };
-  }, wizardStoreName?: string) => {
+  }, wizardStoreName?: string, extras?: AiRoadmapWizardExtras) => {
     const now = new Date().toISOString();
     let nextDecisions = decisions;
+
+    // ── 단위 정규화 (2026-08-20 수정) ──────────────────────────────────────
+    //   budgetAllocation·monthlyCosts 는 **만원 단위** (parseResponse 정규화 계약).
+    //   종전엔 만원 값을 원 단위 setter(selectedBudget·initialOperatingCapital·monthlyCosts)에
+    //   그대로 넣어 1/10,000 로 저장되는 버그 — 여기서 만원→원 변환.
+    //   힐링 가드: 값이 100만(만원 단위 100억) 이상이면 이미 원 단위로 판단해 그대로 (parseResponse 와 동일 기준).
+    const manwonToWon = (v: number): number => {
+      const n = Math.max(0, Math.round(Number(v) || 0));
+      return n >= 1_000_000 ? n : n * 10_000;
+    };
+    /** 원→만원 역방향 (budgetItem.* 프리필용 — 만원 문자열 규약) */
+    const asManwon = (v: number): number => {
+      const n = Math.max(0, Math.round(Number(v) || 0));
+      return n >= 1_000_000 ? Math.round(n / 10_000) : n;
+    };
 
     // ── AI 로드맵 결과 전체 보존 (기존에는 버려지던 데이터) ──
     useRoadmapStore.getState().setAiRoadmapResult({
@@ -389,17 +410,48 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     //   · 직후 세션에서도 4단계를 마치면 완료된 5단계를 건너뛰어 4→6 점프
     //   완료를 1·2·3 연속으로 유지하면 heal 이 건드릴 구멍이 없고 4→5→6 이 끊김 없이 이어진다.
     //   예산 두 통 분리: total 에는 workingCapital(②운영예비)이 포함 — ①시설·창업비만 capital 로.
-    const aiWorkingCapital = result.budgetAllocation.workingCapital ?? 0;
-    const aiFacilityBudget =
-      aiWorkingCapital > 0 && aiWorkingCapital < result.budgetAllocation.total
-        ? result.budgetAllocation.total - aiWorkingCapital
-        : result.budgetAllocation.total;
+    const aiWorkingCapitalWon = manwonToWon(result.budgetAllocation.workingCapital ?? 0);
+    const aiTotalWon = manwonToWon(result.budgetAllocation.total);
+    const aiFacilityBudgetWon =
+      aiWorkingCapitalWon > 0 && aiWorkingCapitalWon < aiTotalWon
+        ? aiTotalWon - aiWorkingCapitalWon
+        : aiTotalWon;
+
+    // ── ② 예산 단계 항목 프리필 (2026-08-20 위저드 업그레이드) ──────────────
+    //   budgetAllocation 버킷 → budget-setup 의 `budgetItem.<key>` (만원 문자열, iOS 미러 규약).
+    //   사용자가 "직접 입력"한 원값(권리금·초도물품 등 포함)은 그대로 우선 — AI 버킷은
+    //   사용자가 해당(또는 합산 연관: 보증금↔권리금) 키를 안 정한 경우에만 채운다.
+    //   완료(completedAt) 처리는 하지 않는다 — 사장님이 확인해야 완료 (정직성).
+    const userBudgetItems = extras?.budgetBreakdown?.items ?? {};
+    const hasUserItem = (k: string) => Number(userBudgetItems[k]) > 0;
+    const budgetItemInputs: Record<string, string> = {};
+    const ba = result.budgetAllocation;
+    if (asManwon(ba.deposit ?? 0) > 0 && !hasUserItem("deposit") && !hasUserItem("premium")) {
+      budgetItemInputs[`${BUDGET_ITEM_INPUT_PREFIX}deposit`] = String(asManwon(ba.deposit ?? 0));
+    }
+    if (asManwon(ba.interior ?? 0) > 0 && !hasUserItem("interior")) {
+      budgetItemInputs[`${BUDGET_ITEM_INPUT_PREFIX}interior`] = String(asManwon(ba.interior ?? 0));
+    }
+    if (asManwon(ba.equipment ?? 0) > 0 && !hasUserItem("equipment")) {
+      budgetItemInputs[`${BUDGET_ITEM_INPUT_PREFIX}equipment`] = String(asManwon(ba.equipment ?? 0));
+    }
+    for (const [k, v] of Object.entries(userBudgetItems)) {
+      if (Number(v) > 0) budgetItemInputs[`${BUDGET_ITEM_INPUT_PREFIX}${k}`] = String(Math.round(Number(v)));
+    }
+    // 월 마케팅 예산 — budget-setup 의 기존 키 + marketing store (협찬 탭과 같은 필드)
+    const userMonthlyMarketing = extras?.budgetBreakdown?.monthlyMarketing;
+    if (typeof userMonthlyMarketing === "number" && userMonthlyMarketing > 0) {
+      budgetItemInputs[MONTHLY_MARKETING_INPUT_KEY] = String(Math.round(userMonthlyMarketing));
+      useMarketingStore.getState().setMonthlyBudget(Math.round(userMonthlyMarketing) * 10_000);
+    }
+
     nextDecisions = upsertStageDecision(nextDecisions, "budget-setup", {
       stageId: "budget-setup",
       inputs: {
-        capital: aiFacilityBudget,
+        capital: aiFacilityBudgetWon,
         targetOpenDate: result.timeline.targetOpenDate,
         aiGenerated: true,   // 로드맵 헤더 "AI가 채워뒀어요" 안내 조건 (완료 시 자동 소멸)
+        ...budgetItemInputs,
       },
     });
     // ── 4단계(타깃 고객) 프리필 — AI 가 뽑아놓고 버려지던 targetCustomer 를 단계에 전달 ──
@@ -409,7 +461,26 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
         inputs: { targetCustomer: result.identity.targetCustomer },
       });
     }
-    if (result.parsed.preferredRegion) {
+    // ── ① 상권 핸드오프 (2026-08-20 위저드 업그레이드) ────────────────────
+    //   위저드에서 추천 상권을 탭해 골랐으면 location-candidates 단계의 기존 키에 그대로 기록:
+    //   selectedPrimaryOptionId(→selectedLocationId 복원)·selectionMode "recommended"·
+    //   recommendedMarkets(카드 목록)·aiMarketRegion(큐레이션 덮어쓰기 가드, useDataLoading).
+    //   ⚠️ completedAt 은 여전히 찍지 않는다 (2026-08-03 감사 P1) — 단계 게이트=상권 선택은
+    //   사장님이 화면에서 직접 확정. 여기선 "선택된 상태로 도착"까지만.
+    const pickedMarket = extras?.selectedMarket ?? null;
+    const regionForStage = (result.parsed.preferredRegion || extras?.marketRegion || "").trim();
+    if (pickedMarket && regionForStage) {
+      nextDecisions = upsertStageDecision(nextDecisions, "location-candidates", {
+        stageId: "location-candidates",
+        selectedPrimaryOptionId: pickedMarket.id,
+        inputs: {
+          preferredRegion: regionForStage,
+          selectionMode: "recommended",
+          aiMarketRegion: regionForStage,
+          finalMarketTitle: pickedMarket.title,
+        },
+      });
+    } else if (result.parsed.preferredRegion) {
       // ⚠️ completedAt 을 찍지 않는다 (2026-08-03 감사 P1).
       //   지역명 문자열 하나로 입지 단계를 완료 처리하면, 사업 생사를 가르는 결정이
       //   가장 얇은 데이터로 자동 통과된다. 지역은 채워두되(발품 준비) 완료는
@@ -425,16 +496,37 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setSelectedIndustryCategoryId(result.parsed.industryCategoryId);
     setSelectedBusinessModelId(result.parsed.businessModelId);
     setStartupType(result.parsed.startupType);
-    setSelectedBudget(aiFacilityBudget);                       // ① 시설·창업비만
+    setSelectedBudget(aiFacilityBudgetWon);                       // ① 시설·창업비만 (원)
     setInitialOperatingCapital(
-      aiWorkingCapital > 0 ? aiWorkingCapital : undefined,     // ② 운영예비 — AI 산출 그대로
+      aiWorkingCapitalWon > 0 ? aiWorkingCapitalWon : undefined,  // ② 운영예비 — AI 산출 그대로 (원)
     );
-    setBudgetInputText(String(Math.round(aiFacilityBudget / 10000)));
-    if (result.parsed.preferredRegion) setPreferredRegionInput(result.parsed.preferredRegion);
+    setBudgetInputText(String(Math.round(aiFacilityBudgetWon / 10000)));
+    if (pickedMarket && regionForStage) {
+      setPreferredRegionInput(regionForStage);
+      setSelectedLocationId(pickedMarket.id);
+      setLocationMode("recommended");
+      const candidates = extras?.marketCandidates && extras.marketCandidates.length > 0
+        ? extras.marketCandidates
+        : [pickedMarket];
+      setRecommendedMarkets(candidates);
+    } else if (result.parsed.preferredRegion) {
+      setPreferredRegionInput(result.parsed.preferredRegion);
+    }
 
-    // 비용
-    const mc = result.monthlyCosts;
+    // 비용 — monthlyCosts 는 만원 단위 → finance store 는 원 단위 (기존 사업자 경로와 동일 계약)
+    const mc = {
+      ingredients: manwonToWon(result.monthlyCosts.ingredients),
+      labor: manwonToWon(result.monthlyCosts.labor),
+      rent: manwonToWon(result.monthlyCosts.rent),
+      utilities: manwonToWon(result.monthlyCosts.utilities),
+      other: manwonToWon(result.monthlyCosts.other),
+    };
     setMonthlyCosts({ ...mc, sga: 0, marketing: 0, interest: 0 });
+    setCostIngredientsText(mc.ingredients ? String(Math.round(mc.ingredients / 10000)) : "");
+    setCostLaborText(mc.labor ? String(Math.round(mc.labor / 10000)) : "");
+    setCostRentText(mc.rent ? String(Math.round(mc.rent / 10000)) : "");
+    setCostUtilitiesText(mc.utilities ? String(Math.round(mc.utilities / 10000)) : "");
+    setCostOtherText(mc.other ? String(Math.round(mc.other / 10000)) : "");
 
     // ── 운영 채널 ──
     // 우선 operationalChannels (Pass 2 AI 가 풀에서 골라준 우선순위 + reasoning) 사용,
@@ -474,6 +566,8 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
         result.recommendations.suppliers ?? [],
         result.recommendations.interiorVendors ?? [],
         getVendorData(result.parsed.subIndustryId, result.parsed.industryCategoryId),
+        // ③ 리뷰에서 체크한 내 지역 인테리어 업체 (최대 3곳) → s4 프리체크 (2026-08-20)
+        extras?.selectedInteriorFirms ?? [],
       );
       if (Object.keys(vs).length > 0) {
         setVendorSelections(vs);

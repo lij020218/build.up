@@ -37,6 +37,139 @@ private final class AIRoadmapViewModel {
     var budget: Int? = nil
     var region: String = ""
     var storeName: String = ""
+
+    // ── 예산 이원화 (2026-08-21) — "AI에게 맡기기"(기본) | "직접 입력" ──
+    //  키 = budget-setup 항목 키(startup-budget-items SSOT 미러) + workingCapital + monthly.* .
+    //  값 = 만원 단위 텍스트. 부분 입력 허용 (빈 항목은 AI가 채움).
+    var budgetManualMode = false
+    var manualBudgetTexts: [String: String] = [:]
+
+    /// 시설 항목 키 목록 — 확정 업종 기준 (BudgetSetupStageView 항목 세트와 1:1.
+    ///  franchiseFee 는 창업형태가 아직 미정이라 위저드에선 제외).
+    var manualItemFields: [(key: String, label: String)] {
+        switch confirmedIndustry?.categoryId {
+        case "startup-tech":
+            return [("incorporation", "법인설립·행정"), ("equipment", "장비·SW·인프라"),
+                    ("development", "개발·초기 인건비"), ("openMarketing", "초기 마케팅")]
+        case "online-digital":
+            return [("initialStock", "초도재고·사입"), ("content", "촬영·콘텐츠"),
+                    ("storefront", "스토어 구축"), ("permits", "신고·행정"),
+                    ("openMarketing", "초기 광고")]
+        default:
+            return [("deposit", "보증금"), ("premium", "권리금"), ("interior", "인테리어·간판"),
+                    ("equipment", "집기·주방설비"), ("initialStock", "초도물품"),
+                    ("permits", "인허가·행정·보험"), ("openMarketing", "오픈 마케팅")]
+        }
+    }
+
+    /// 직접 입력 모드에서만 서버로 전달 — AI 모드 복귀 시 입력값은 무시(모드가 곧 의사표시).
+    func userBudgetBreakdown() -> AIBudgetBreakdown? {
+        guard budgetManualMode else { return nil }
+        func n(_ k: String) -> Int? {
+            guard let v = Int(manualBudgetTexts[k] ?? ""), v > 0 else { return nil }
+            return v
+        }
+        var items: [String: Int] = [:]
+        for field in manualItemFields {
+            if let v = n(field.key) { items[field.key] = v }
+        }
+        // 월 마케팅은 서버 monthly 계약에 없음 — budget-setup monthlyMarketingBudget 핸드오프 전용 (웹 미러)
+        let monthly = AIBudgetBreakdown.Monthly(labor: n("monthly.labor"), rent: n("monthly.rent"))
+        let bb = AIBudgetBreakdown(
+            items: items.isEmpty ? nil : items,
+            workingCapital: n("workingCapital"),
+            monthly: monthly.isEmpty ? nil : monthly)
+        return bb.isEmpty ? nil : bb
+    }
+
+    /// 직접 입력 월 마케팅 예산 (만원) — budget-setup 기존 키 + 마케팅 예산 필드로 핸드오프 (웹 미러).
+    var userMonthlyMarketingMan: Int? {
+        guard budgetManualMode, let v = Int(manualBudgetTexts["monthlyMarketing"] ?? ""), v > 0 else { return nil }
+        return v
+    }
+
+    /// 직접 입력 항목(시설+운영예비) 합계 (원) — 총예산 미지정 시 대체값.
+    var manualBudgetSumWon: Int {
+        (manualItemFields.map(\.key) + ["workingCapital"])
+            .compactMap { Int(manualBudgetTexts[$0] ?? "") }
+            .filter { $0 > 0 }
+            .reduce(0, +) * 10_000
+    }
+
+    // ── 지역 단계 = 추천 상권 선택 (2026-08-21) — POST /api/data/market-recommend ──
+    var marketItems: [MarketScoredItem] = []
+    var marketLoading = false
+    var selectedMarket: MarketScoredItem? = nil
+    var manualRegionMode = false
+    /// 추천 호출에 쓴 지역 문자열 (예: "마포구") — 상권 단계 loc.region 핸드오프용.
+    var searchedRegion = ""
+    private var marketFetchedRegion: String? = nil
+
+    /// 선택된 상권의 지역칸 표기값 (시/도 prefix 포함 가능) — 수동 수정 감지용.
+    private var selectedMarketRegionValue: String? = nil
+
+    /// 지역칸에 적힌 지역으로 새 추천이 가능한 상태인가 — "추천 상권 보기" 버튼 노출 판단.
+    ///  실패한 지역도 재호출 금지 (웹 미러 — market-recommend 쿼터 보호: 분 3·일 8).
+    var canSearchMarkets: Bool {
+        let trimmed = region.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !marketLoading else { return false }
+        if selectedMarket != nil { return false }
+        return trimmed != marketFetchedRegion
+    }
+
+    func fetchMarketRecommendIfNeeded() {
+        let trimmed = region.trimmingCharacters(in: .whitespaces)
+        // 선택된 상권명이 지역칸에 들어있으면 그 이름으로 재검색하지 않는다
+        if selectedMarket != nil { return }
+        guard !trimmed.isEmpty, !marketLoading, marketFetchedRegion != trimmed else { return }
+        marketFetchedRegion = trimmed   // 실패 포함 같은 값 재호출 금지 (웹 marketRecsRegion 미러)
+        searchedRegion = trimmed
+        marketLoading = true
+        Task { @MainActor in
+            defer { marketLoading = false }
+            do {
+                let res = try await MarketRecommendService.shared().recommend(MarketRecommendInput(
+                    region: trimmed,
+                    categoryId: confirmedIndustry?.categoryId ?? "food",
+                    subIndustryId: confirmedIndustry?.subIndustryId,
+                    capital: budget
+                ))
+                selectedMarket = nil
+                // 점수 높은 순 3~5개 (웹 미러)
+                marketItems = Array(res.items.sorted { $0.score > $1.score }.prefix(5))
+                if !marketItems.isEmpty { manualRegionMode = false }
+            } catch {
+                // 추천 실패는 조용히 직접 입력 경로로 폴백 — 거짓 실패 화면 금지
+                marketItems = []
+            }
+        }
+    }
+
+    /// 상권 카드 탭 → region = 그 상권 이름 (수정 가능). 사용자가 입력한 지역의 시/도 prefix 를
+    /// 유지해 뒷단계 실측 매칭(부동산원 등) 정확도 보존 (웹 pickMarket 미러).
+    func selectMarket(_ item: MarketScoredItem) {
+        if selectedMarket?.id == item.id {
+            selectedMarket = nil
+            selectedMarketRegionValue = nil
+            region = searchedRegion
+            return
+        }
+        selectedMarket = item
+        let parts = searchedRegion.split(separator: " ").map(String.init).filter { !$0.isEmpty }
+        let prefix = parts.count > 1 ? parts.dropLast().joined(separator: " ") : ""
+        let value = (prefix.isEmpty || item.title.contains(prefix)) ? item.title : "\(prefix) \(item.title)"
+        selectedMarketRegionValue = value
+        region = value
+    }
+
+    /// 지역칸 수동 수정 감지 — 선택 표기값과 달라지면 선택 해제 (수정 가능 계약).
+    func regionTextChanged(_ newValue: String) {
+        guard selectedMarket != nil else { return }
+        if newValue != selectedMarketRegionValue {
+            selectedMarket = nil
+            selectedMarketRegionValue = nil
+        }
+    }
     var genProgress: Int = 0
     /// 서버 진행 문구(ai_jobs.progress — 비동기 작업 모드에서만). 웹 serverProgress 미러.
     var serverProgress: String? = nil
@@ -126,7 +259,8 @@ private final class AIRoadmapViewModel {
                     budget: budget,
                     region: region.isEmpty ? nil : region,
                     storeName: storeName.isEmpty ? nil : storeName,
-                    teamSize: nil
+                    teamSize: nil,
+                    budgetBreakdown: userBudgetBreakdown()
                 )
                 // 비동기 작업(202 → 폴링) — 서버 진행 문구를 화면에 반영. 점진 표시는 마지막 단계 holding 그대로.
                 let res = try await service.generate(input: input) { progress in
@@ -150,18 +284,35 @@ private final class AIRoadmapViewModel {
     }
 }
 
+// MARK: - AIWizardExtras
+
+/// 위저드 완료 시 함께 넘기는 사용자 선택 (2026-08-21 3대 업그레이드) —
+///  AppRoot 가 상권(loc.*)·예산(stage.budget.*)·인테리어(vendor step 4) 핸드오프에 사용.
+public struct AIWizardExtras: Sendable {
+    /// 지역 단계에서 탭으로 고른 추천 상권 (없으면 직접 입력 경로)
+    public let selectedMarket: MarketScoredItem?
+    /// 상권 추천 호출에 쓴 지역 문자열 (예: "마포구") — loc.region 프리필용
+    public let searchedRegion: String
+    /// 리뷰 화면에서 체크한 내 지역 인테리어 업체 (최대 3곳)
+    public let selectedInteriorFirms: [AIRoadmapResult.Recommendations.RegionalInteriorFirm]
+    /// 예산 직접 입력 모드의 사용자 입력 (만원) — AI 출력보다 우선 보존
+    public let userBudget: AIBudgetBreakdown?
+    /// 직접 입력 월 마케팅 예산 (만원) — 서버 계약 밖, budget-setup monthlyMarketingBudget 핸드오프 전용
+    public let userMonthlyMarketingMan: Int?
+}
+
 // MARK: - AIRoadmapWizardView
 
 public struct AIRoadmapWizardView: View {
 
-    let onComplete: (AIRoadmapResult, String) -> Void
+    let onComplete: (AIRoadmapResult, String, AIWizardExtras) -> Void
     let onBack: () -> Void
 
     @State private var vm: AIRoadmapViewModel
 
     public init(
         webAppURL: URL,
-        onComplete: @escaping (AIRoadmapResult, String) -> Void,
+        onComplete: @escaping (AIRoadmapResult, String, AIWizardExtras) -> Void,
         onBack: @escaping () -> Void
     ) {
         let service = AIRoadmapService(webAppURL: webAppURL, supabaseClient: BUSupabase.shared.client)
@@ -189,7 +340,15 @@ public struct AIRoadmapWizardView: View {
                     ReviewStepView(
                         result: result,
                         storeName: vm.storeName,
-                        onComplete: { onComplete(result, vm.storeName) },
+                        onComplete: { selectedFirms in
+                            onComplete(result, vm.storeName, AIWizardExtras(
+                                selectedMarket: vm.selectedMarket,
+                                searchedRegion: vm.searchedRegion,
+                                selectedInteriorFirms: selectedFirms,
+                                userBudget: vm.userBudgetBreakdown(),
+                                userMonthlyMarketingMan: vm.userMonthlyMarketingMan
+                            ))
+                        },
                         onBack: { vm.step = .idea }
                     )
                 }
@@ -583,12 +742,111 @@ private struct BudgetStepView: View {
             }
             .padding(.top, 14)
 
+            // 예산 이원화 (2026-08-21) — "AI에게 맡기기"(기본) | "직접 입력"
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    budgetModeChip("AI에게 맡기기", selected: !vm.budgetManualMode) {
+                        vm.budgetManualMode = false
+                    }
+                    budgetModeChip("항목별로 직접 입력", selected: vm.budgetManualMode) {
+                        vm.budgetManualMode = true
+                    }
+                }
+                Text(vm.budgetManualMode
+                     ? "아는 항목만 적으면 됩니다 — 비워둔 항목은 AI가 최적 배분으로 채워요. (만원 단위)"
+                     : "총예산만 정하면 AI가 보증금·인테리어·장비·운영예비를 최적 배분합니다.")
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
+                    .lineSpacing(2)
+            }
+            .padding(.top, 20)
+
+            if vm.budgetManualMode {
+                manualBudgetFields
+                    .padding(.top, 12)
+            }
+
             primaryButton(label: "다음") {
-                if vm.budget == nil { vm.budget = 50_000_000 }
+                if vm.budget == nil {
+                    let sum = vm.manualBudgetSumWon
+                    vm.budget = sum > 0 ? sum : 50_000_000
+                }
                 vm.step = .region
             }
             .padding(.top, 24)
         }
+    }
+
+    // MARK: 직접 입력 필드 (키 = 서버 budgetBreakdown 계약: items[budget-setup 키]·workingCapital·monthly.*)
+
+    // 웹 위저드 월비용 필드와 1:1 (월세·월 인건비·월 마케팅 — 웹·모바일 동기화)
+    private static let monthlyFields: [(key: String, label: String)] = [
+        ("monthly.rent", "월세"),
+        ("monthly.labor", "월 인건비"),
+        ("monthlyMarketing", "월 마케팅"),
+    ]
+
+    private var manualBudgetFields: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            manualFieldGroup(title: "① 한 번 쓰는 돈 + 운영 예비",
+                             fields: vm.manualItemFields + [("workingCapital", "운영 예비자금")])
+            Divider().overlay(midnight.opacity(0.10))
+            manualFieldGroup(title: "② 매달 나가는 돈 (월비용)", fields: Self.monthlyFields)
+        }
+        .background(Color.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(midnight.opacity(0.12), lineWidth: 1))
+    }
+
+    private func manualFieldGroup(title: String, fields: [(key: String, label: String)]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.system(size: 10.5, weight: .heavy))
+                .tracking(0.6)
+                .foregroundStyle(midnight)
+                .padding(.horizontal, 14)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+            ForEach(fields, id: \.key) { field in
+                HStack(spacing: 8) {
+                    Text(field.label)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                    Spacer(minLength: 8)
+                    TextField("AI가 채움", text: Binding(
+                        get: { vm.manualBudgetTexts[field.key] ?? "" },
+                        set: { vm.manualBudgetTexts[field.key] = $0.filter(\.isNumber) }
+                    ))
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle((Int(vm.manualBudgetTexts[field.key] ?? "") ?? 0) > 0
+                                     ? midnight
+                                     : Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45))
+                    .frame(width: 84)
+                    .padding(.vertical, 7)
+                    .padding(.horizontal, 10)
+                    .background(midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    Text("만원")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+            }
+            Spacer().frame(height: 10)
+        }
+    }
+
+    private func budgetModeChip(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 12.5, weight: .bold))
+                .foregroundStyle(selected ? .white : midnight)
+                .padding(.horizontal, 13)
+                .padding(.vertical, 8)
+                .background(selected ? midnight : midnight.opacity(0.06), in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -607,12 +865,71 @@ private struct RegionStepView: View {
                 subtitle: "구/동 수준이면 충분합니다. 없으면 AI가 추천합니다."
             )
 
+            // 추천 상권 선택 (2026-08-21) — 지역이 이미 있으면(아이디어 추출·입력) 상권 후보 3~5곳 제시.
+            //  실패·후보 없음은 조용히 직접 입력 경로 (거짓 실패 화면 금지).
+            if vm.marketLoading {
+                HStack(spacing: 8) {
+                    ProgressView().scaleEffect(0.8)
+                    Text("「\(vm.region)」 추천 상권 분석 중...")
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+                }
+                .padding(.bottom, 14)
+            } else if !vm.manualRegionMode && !vm.marketItems.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("AI 추천 상권 — 탭하면 이 상권으로 진행합니다")
+                        .font(.system(size: 11.5, weight: .heavy))
+                        .tracking(0.4)
+                        .foregroundStyle(midnight)
+                    ForEach(vm.marketItems) { item in
+                        marketCard(item)
+                    }
+                    Button {
+                        vm.manualRegionMode = true
+                        if vm.selectedMarket != nil {
+                            vm.selectedMarket = nil
+                            vm.region = vm.searchedRegion
+                        }
+                    } label: {
+                        Text("직접 입력할게요")
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .foregroundStyle(midnight.opacity(0.65))
+                            .underline()
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
+                }
+                .padding(.bottom, 16)
+            }
+
             TextField("예: 강남구 역삼동, 마포구 망원동", text: $vm.region)
                 .font(.system(size: 15, weight: .medium))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 14)
                 .background(Color.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(midnight.opacity(0.12), lineWidth: 1))
+                .onChange(of: vm.region) { _, newVal in
+                    // 선택한 상권명을 직접 수정하면 선택 해제 (수정 가능 계약)
+                    vm.regionTextChanged(newVal)
+                }
+
+            // 직접 타이핑한 지역도 추천 경로 진입 가능
+            if vm.canSearchMarkets {
+                Button { vm.fetchMarketRecommendIfNeeded() } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "sparkle.magnifyingglass")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("「\(vm.region.trimmingCharacters(in: .whitespaces))」 추천 상권 보기")
+                            .font(.system(size: 12.5, weight: .bold))
+                    }
+                    .foregroundStyle(midnight)
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 9)
+                    .background(midnight.opacity(0.06), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 10)
+            }
 
             HStack(spacing: 10) {
                 primaryButton(label: "다음") {
@@ -620,11 +937,51 @@ private struct RegionStepView: View {
                 }
                 secondaryButton(label: "건너뛰기") {
                     vm.region = ""
+                    vm.selectedMarket = nil
                     vm.step = .storeName
                 }
             }
             .padding(.top, 24)
         }
+        .onAppear { vm.fetchMarketRecommendIfNeeded() }
+    }
+
+    private func marketCard(_ item: MarketScoredItem) -> some View {
+        let selected = vm.selectedMarket?.id == item.id
+        let oneLine = item.summary.isEmpty ? (item.reasons.first ?? "") : item.summary
+        return Button { vm.selectMarket(item) } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(item.title)
+                        .font(.system(size: 14.5, weight: .bold))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                    Text("\(item.score)점")
+                        .font(.system(size: 10.5, weight: .heavy))
+                        .foregroundStyle(midnight)
+                        .padding(.horizontal, 8).padding(.vertical, 2)
+                        .background(midnight.opacity(0.08), in: Capsule())
+                    Spacer()
+                    if selected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .heavy))
+                            .foregroundStyle(midnight)
+                    }
+                }
+                if !oneLine.isEmpty {
+                    Text(oneLine)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.6))
+                        .lineLimit(1)
+                        .multilineTextAlignment(.leading)
+                }
+            }
+            .padding(13)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(selected ? midnight.opacity(0.05) : Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(selected ? midnight : midnight.opacity(0.12), lineWidth: selected ? 2 : 1))
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -759,8 +1116,17 @@ private struct GeneratingStepView: View {
 private struct ReviewStepView: View {
     let result: AIRoadmapResult
     let storeName: String
-    let onComplete: () -> Void
+    /// 완료 시 리뷰에서 체크한 내 지역 인테리어 업체(최대 3곳)를 함께 전달 (2026-08-21)
+    let onComplete: ([AIRoadmapResult.Recommendations.RegionalInteriorFirm]) -> Void
     let onBack: () -> Void
+
+    /// 내 지역 인테리어 업체 선택 (regionalInteriorFirms 인덱스, 최대 3)
+    @State private var selectedFirmIdx: Set<Int> = []
+
+    private var selectedFirms: [AIRoadmapResult.Recommendations.RegionalInteriorFirm] {
+        let firms = result.recommendations.regionalInteriorFirms ?? []
+        return selectedFirmIdx.sorted().compactMap { firms.indices.contains($0) ? firms[$0] : nil }
+    }
 
     private var totalBudget: Int { result.budgetAllocation.displayTotal }
 
@@ -887,7 +1253,7 @@ private struct ReviewStepView: View {
                 // 시작 버튼
                 VStack(spacing: 10) {
                     primaryButton(label: "로드맵 시작하기 →") {
-                        onComplete()
+                        onComplete(selectedFirms)
                     }
                     Button(action: onBack) {
                         Text("다시 입력하기")
@@ -1028,8 +1394,13 @@ private struct ReviewStepView: View {
                     Text("인테리어 — 업종 검색 × 등록 대장 교차")
                         .font(.system(size: 11, weight: .heavy))
                         .foregroundStyle(midnight)
-                    ForEach(Array(firms.enumerated()), id: \.offset) { _, f in
-                        regionalFirmRow(f)
+                    // 2026-08-21: 탭 선택 (최대 3곳) → 공급처 단계 인테리어 섹션에 프리체크
+                    Text("탭해서 최대 3곳 선택 — 선택한 업체는 「공급처·장비」 단계에 미리 담아드려요. 선택 안 해도 진행됩니다.")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
+                        .lineSpacing(1.8)
+                    ForEach(Array(firms.enumerated()), id: \.offset) { i, f in
+                        regionalFirmRow(f, index: i)
                     }
                 }
                 if let places = result.recommendations.regionalSupplierPlaces, !places.isEmpty {
@@ -1103,32 +1474,60 @@ private struct ReviewStepView: View {
         }
     }
 
-    private func regionalFirmRow(_ f: AIRoadmapResult.Recommendations.RegionalInteriorFirm) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 5) {
-                if let url = f.mapUrl.flatMap(URL.init(string:)) {
-                    Link(f.name + " ↗", destination: url)
-                        .font(.system(size: 12.5, weight: .bold))
-                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
-                } else {
-                    Text(f.name)
-                        .font(.system(size: 12.5, weight: .bold))
-                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+    /// 인테리어 업체 행 — 탭=선택 토글(최대 3곳), 지도 링크는 우측 별도 (2026-08-21 선택형 전환)
+    private func regionalFirmRow(_ f: AIRoadmapResult.Recommendations.RegionalInteriorFirm, index: Int) -> some View {
+        let isSel = selectedFirmIdx.contains(index)
+        return HStack(alignment: .top, spacing: 6) {
+            Button { toggleFirm(index) } label: {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: isSel ? "checkmark.square.fill" : "square")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(isSel ? midnight : Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.3))
+                        .padding(.top, 1)
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 5) {
+                            Text(f.name)
+                                .font(.system(size: 12.5, weight: .bold))
+                                .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
+                            if f.industryMatch { tagChip("업종 특화", color: midnight) }
+                            if f.licensed { tagChip("등록 확인", color: BUColor.success) }
+                            if f.operating { tagChip("영업 확인", color: BUColor.accent) }
+                            if let d = f.distanceM {
+                                Text(d < 1000 ? "\(Int(d))m" : String(format: "%.1fkm", d / 1000))
+                                    .font(.system(size: 10.5, weight: .bold))
+                                    .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
+                            }
+                        }
+                        Text([f.phone, f.address].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 0)
                 }
-                if f.industryMatch { tagChip("업종 특화", color: midnight) }
-                if f.licensed { tagChip("등록 확인", color: BUColor.success) }
-                if f.operating { tagChip("영업 확인", color: BUColor.accent) }
-                if let d = f.distanceM {
-                    Text(d < 1000 ? "\(Int(d))m" : String(format: "%.1fkm", d / 1000))
-                        .font(.system(size: 10.5, weight: .bold))
-                        .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.5))
-                }
+                .contentShape(Rectangle())
             }
-            Text([f.phone, f.address].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.55))
+            .buttonStyle(.plain)
+            if let url = f.mapUrl.flatMap(URL.init(string:)) {
+                Link("지도 ↗", destination: url)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(BUColor.accent)
+                    .padding(.top, 1)
+            }
         }
-        .padding(.bottom, 4)
+        .padding(8)
+        .background(isSel ? midnight.opacity(0.05) : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(.bottom, 2)
+    }
+
+    /// 선택 토글 — 최대 3곳 (초과 탭은 무시)
+    private func toggleFirm(_ index: Int) {
+        if selectedFirmIdx.contains(index) {
+            selectedFirmIdx.remove(index)
+        } else if selectedFirmIdx.count < 3 {
+            selectedFirmIdx.insert(index)
+        }
     }
 }
 

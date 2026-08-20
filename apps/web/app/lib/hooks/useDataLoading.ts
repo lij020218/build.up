@@ -215,6 +215,21 @@ export function useDataLoading(
     if (aiMarketRegion && aiMarketRegion === preferredRegionInput.trim()) {
       return;
     }
+    // AI 위저드 핸드오프 보존 (2026-08-20 위저드 업그레이드 ①) — 위저드에서 고른 상권 추천이
+    //  decisions 에 기록돼 있고(재로그인·새로고침에도 영속) 같은 지역이면 큐레이션이 덮지 않는다.
+    //  aiMarketRegion(세션 state)과 달리 이 가드는 영속 데이터 기반이라 리로드 후에도 유효.
+    {
+      const rs = useRoadmapStore.getState();
+      const persistedAiRegion = (rs.decisions["location-candidates"]?.inputs as Record<string, unknown> | undefined)?.aiMarketRegion;
+      if (
+        typeof persistedAiRegion === "string" &&
+        persistedAiRegion.trim().length > 0 &&
+        persistedAiRegion.trim() === preferredRegionInput.trim() &&
+        rs.recommendedMarkets.length > 0
+      ) {
+        return;
+      }
+    }
 
     void loadMarketSignalRecommendations(supabase, {
       regionQuery: preferredRegionInput,

@@ -933,7 +933,7 @@ private struct OnboardingFlow: View {
             case .ai:
                 AIRoadmapWizardView(
                     webAppURL: BUSupabase.shared.env.webAppURL,
-                    onComplete: { result, nameInput in
+                    onComplete: { result, nameInput, extras in
                         let parsed = result.parsed
                         // cluster: industryCategoryId → BusinessCluster rawValue
                         let clusterRaw: String
@@ -1006,33 +1006,121 @@ private struct OnboardingFlow: View {
                         if let model = parsed.businessModelId, !model.isEmpty {
                             roadmapStore.completeStage("business-model", selectedPrimaryOptionId: model)
                         }
-                        // 예산 두 통 분리 (웹과 동일): total 에서 ②운영예비(workingCapital)를 뺀 ①만 capital
-                        let total = result.budgetAllocation.displayTotal
-                        let working = result.budgetAllocation.workingCapital
-                        let facility = (working > 0 && working < total) ? total - working : total
+                        // ── 예산 핸드오프 (2026-08-21 이원화) — budgetAllocation(만원) + 사용자 직접 입력 우선 ──
+                        //  budgetAllocation 은 만원 단위 계약. 원 단위 오염 힐링(≥100만 = 원으로 판단 ÷10,000)은
+                        //  리뷰 fmt() 와 동일 기준.
+                        func healManwon(_ v: Int) -> Int {
+                            guard v > 0 else { return 0 }
+                            return v >= 1_000_000 ? Int((Double(v) / 10_000).rounded()) : v
+                        }
+                        let userB = extras.userBudget
+                        let userItems = (userB?.items ?? [:]).filter { $0.value > 0 }
+                        let ba = result.budgetAllocation
+                        // applyBudgetBreakdown(packages/ai) 로컬 미러 — 서버가 구버전이어도
+                        //  사용자가 정한 값이 AI 출력을 덮는다 (값 보존 계약의 iOS 측 방어).
+                        var depositMan = healManwon(ba.deposit)
+                        if let d = userItems["deposit"] { depositMan = d + (userItems["premium"] ?? 0) }
+                        let interiorMan  = userItems["interior"]  ?? healManwon(ba.interior)
+                        let equipmentMan = userItems["equipment"] ?? healManwon(ba.equipment)
+                        let workingMan   = userB?.workingCapital ?? healManwon(ba.workingCapital)
+                        // 예산 두 통 분리 (웹과 동일): ①시설 = 4버킷 중 운영예비 제외분. AI 출력이 비정상
+                        //  (버킷 전부 0)이면 total-운영예비 폴백.
+                        var facility = depositMan + interiorMan + equipmentMan
+                        if facility <= 0 {
+                            let total = healManwon(ba.displayTotal)
+                            facility = (workingMan > 0 && workingMan < total) ? total - workingMan : total
+                        }
                         if facility > 0 {
-                            var budgetInputs = ["capital": String(facility), "aiGenerated": "true"]
+                            // capital 은 단계 계약상 원 단위 ("\(startupWon)" — BudgetSetupStageView stageInputs 미러)
+                            var budgetInputs = ["capital": String(facility * 10_000), "aiGenerated": "true"]
                             if let open = result.timeline.targetOpenDate, !open.isEmpty {
                                 budgetInputs["targetOpenDate"] = open
                             }
+                            // 항목별 예산 프리필 (웹 규약 budgetItem.<key> = 만원) — 사용자 입력 항목은 원본 그대로,
+                            //  사용자가 안 정한 버킷만 AI 배분값. BudgetSetupStageView onAppear 가 itemTexts 로 복원.
+                            var itemMan = userItems
+                            if itemMan["deposit"] == nil, itemMan["premium"] == nil, healManwon(ba.deposit) > 0 {
+                                itemMan["deposit"] = healManwon(ba.deposit)
+                            }
+                            if itemMan["interior"] == nil, healManwon(ba.interior) > 0 {
+                                itemMan["interior"] = healManwon(ba.interior)
+                            }
+                            if itemMan["equipment"] == nil, healManwon(ba.equipment) > 0 {
+                                itemMan["equipment"] = healManwon(ba.equipment)
+                            }
+                            for (key, value) in itemMan { budgetInputs["budgetItem.\(key)"] = String(value) }
+                            if workingMan > 0 { budgetInputs["operatingWon"] = String(workingMan * 10_000) }
                             roadmapStore.prefillStage("budget-setup", inputs: budgetInputs)
+                            // 예산 설정 화면 도착 시 채워진 상태 (①시설=@AppStorage startupWon, ②운영예비=operatingWon)
+                            //  — 프리필만, 자동 완료 처리는 하지 않는다 (정직성).
+                            ud.set(facility * 10_000, forKey: "stage.budget.startupWon")
+                            if workingMan > 0 { ud.set(workingMan * 10_000, forKey: "stage.budget.operatingWon") }
+                        }
+                        // 직접 입력 월 마케팅(만원) — budget-setup 기존 키 + 마케팅 예산 컬럼 (웹 미러:
+                        //  budgetItemInputs.monthlyMarketingBudget + useMarketingStore.setMonthlyBudget)
+                        if let mm = extras.userMonthlyMarketingMan, mm > 0 {
+                            roadmapStore.prefillStage("budget-setup", inputs: ["monthlyMarketingBudget": String(mm)])
+                            MarketingRepository.persistMonthlyBudgetForCurrentUser(mm * 10_000)
+                        }
+                        // 월비용 핸드오프 — monthlyCosts(만원) → 재무 검토 fin.* (비어 있을 때만: 입력값 보호)
+                        let mc = result.monthlyCosts
+                        let userMc = userB?.monthly
+                        let finPairs: [(Int?, String)] = [
+                            (userMc?.rent        ?? mc?.rent,        "fin.rent"),
+                            (userMc?.labor       ?? mc?.labor,       "fin.labor"),
+                            (userMc?.utilities   ?? mc?.utilities,   "fin.utilities"),
+                            (userMc?.ingredients ?? mc?.ingredients, "fin.ingredients"),
+                            (userMc?.other       ?? mc?.other,       "fin.other"),
+                        ]
+                        for (value, key) in finPairs {
+                            if let v = value, healManwon(v) > 0, ud.integer(forKey: key) == 0 {
+                                ud.set(healManwon(v), forKey: key)
+                            }
                         }
                         if let target = result.identity?.targetCustomer, !target.isEmpty {
                             roadmapStore.prefillStage("target-customer-definition", inputs: ["targetCustomer": target])
                         }
-                        if !parsed.preferredRegion.isEmpty {
+                        // ── 상권 핸드오프 (2026-08-21) — 위저드에서 고른 추천 상권을 상권 단계의
+                        //  선택 상태로. 웹 useOnboardingHandlers 미러: selectionMode "recommended"·
+                        //  aiMarketRegion·finalMarketTitle·selectedPrimaryOptionId=market.id.
+                        //  ⚠️ completedAt 은 찍지 않는다 — 단계 게이트(상권 선택)는 사장님이 화면에서 확정.
+                        let regionForStage = (!parsed.preferredRegion.isEmpty
+                                              ? parsed.preferredRegion : extras.searchedRegion)
+                            .trimmingCharacters(in: .whitespaces)
+                        if let market = extras.selectedMarket, !regionForStage.isEmpty {
+                            roadmapStore.prefillStage(
+                                "location-candidates",
+                                inputs: [
+                                    "preferredRegion": regionForStage,
+                                    "selectionMode": "recommended",
+                                    "aiMarketRegion": regionForStage,
+                                    "finalMarketTitle": market.title,
+                                ],
+                                selectedPrimaryOptionId: market.id
+                            )
+                            // iOS 단계 게이트·지역칸 @AppStorage 키 — 도착 즉시 "선택된 상권" 표시
+                            ud.set(market.title, forKey: "loc.selectedMarketTitle")
+                            let regionQuery = !extras.searchedRegion.isEmpty ? extras.searchedRegion : regionForStage
+                            if (ud.string(forKey: "loc.region") ?? "").isEmpty {
+                                ud.set(regionQuery, forKey: "loc.region")
+                            }
+                        } else if !parsed.preferredRegion.isEmpty {
                             // 입지는 발품 전 — 완료 금지 (웹 2026-08-02 P1 수정의 iOS 미러)
                             roadmapStore.prefillStage(
                                 "location-candidates",
                                 inputs: ["preferredRegion": parsed.preferredRegion, "selectionMode": "direct"]
                             )
+                            if (ud.string(forKey: "loc.region") ?? "").isEmpty {
+                                ud.set(parsed.preferredRegion, forKey: "loc.region")
+                            }
                         }
-                        // AI 추천 공급처·장비·POS·인테리어 시공 → vendor-setup 프리필
-                        // (웹 useOnboardingHandlers 미러, 2026-08-05 감사 후속 — 종전엔 iOS 에서 통째로 버려짐)
+                        // AI 추천 공급처·장비·POS·인테리어 시공 + 리뷰에서 체크한 내 지역 인테리어 업체(최대 3곳)
+                        //  → vendor-setup 프리필 (웹 buildAiVendorHandoff 미러)
                         AIVendorHandoff.apply(
                             result: result,
                             subIndustryId: parsed.subIndustryId,
-                            categoryId: parsed.industryCategoryId
+                            categoryId: parsed.industryCategoryId,
+                            selectedInteriorFirms: extras.selectedInteriorFirms
                         )
                         selectedTab = .roadmap
                     },

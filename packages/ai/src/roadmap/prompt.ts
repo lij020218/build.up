@@ -1,6 +1,8 @@
 // ─── AI 자동 로드맵 생성 프롬프트 ─────────────────────────────────────────────
 // 사용자의 사업 아이디어 텍스트를 분석하여 전체 창업 로드맵을 자동 생성합니다.
 
+import { budgetItemsFor } from "@foundone/shared";
+
 /**
  * 업종 택소노미 + 매칭 규칙 — Pass 1 과 분류 전용 호출(classify.ts)이 공유하는 SSOT.
  *  여기만 고치면 두 프롬프트가 함께 갱신된다 (이중 관리 금지).
@@ -132,6 +134,27 @@ export const SUB_INDUSTRY_TAXONOMY_BLOCK = `## 업종별 카테고리 ID (정확
 - **"스터디카페"(무인·키오스크·시간권·24시간) → study-cafe-space (space 카테고리)**. 스터디카페는 공간임대업이다.
   study-room (education) 은 **독서실**(총무 상주·월정액 지정석·학원법 등록 대상) 전용 — 법적 인허가 체계가 다르므로 절대 혼동 금지 (2026-08-03 평가에서 오분류 실측)`;
 
+/**
+ * 사용자가 직접 확정한 예산 항목 (2026-08-20 위저드 예산 이원화 — "직접 입력" 모드).
+ *  모든 값은 **만원 단위 정수**. 채워진 항목은 AI 배분에서 그대로 유지되어야 하며
+ *  (프롬프트 지시 + generate.ts applyBudgetBreakdown 후처리 강제), 빈 항목만 AI 가 채운다.
+ *  ⚠️ iOS AIRoadmapInput 이 이 구조를 손미러 — 필드 추가·수정 시 양쪽 동시.
+ */
+export type RoadmapBudgetBreakdown = {
+  /** budget-setup 단계 항목 키(@foundone/shared startup-budget-items SSOT: deposit·premium·interior·equipment·initialStock·permits·openMarketing·franchiseFee·incorporation·development·content·storefront) → 만원 */
+  items?: Record<string, number>;
+  /** ② 운영예비자금 (만원) — budgetAllocation.workingCapital 로 그대로 유지 */
+  workingCapital?: number;
+  /** 월비용 (만원) — monthlyCosts 의 해당 필드로 그대로 유지 */
+  monthly?: {
+    ingredients?: number;
+    labor?: number;
+    rent?: number;
+    utilities?: number;
+    other?: number;
+  };
+};
+
 export type RoadmapGenerationInput = {
   /** 사용자가 입력한 사업 아이디어 (자유 텍스트, 제한 없음) */
   ideaText: string;
@@ -143,6 +166,8 @@ export type RoadmapGenerationInput = {
   region?: string;
   teamSize?: number;
   storeName?: string;
+  /** 사용자가 "직접 입력" 모드에서 확정한 예산 항목 (만원) — 값 보존 계약 (2026-08-20) */
+  budgetBreakdown?: RoadmapBudgetBreakdown;
   language: "ko" | "en";
 };
 
@@ -725,6 +750,34 @@ export function buildRoadmapGenerationPrompt(input: RoadmapGenerationInput): str
     if (input.budget) lines.push(`- 예산: ${Math.round(input.budget / 10000).toLocaleString()}만원`);
     if (input.region) lines.push(`- 희망 지역: <user_input>${input.region}</user_input>`);
     if (input.teamSize) lines.push(`- 팀 규모: ${input.teamSize}명`);
+    lines.push("");
+  }
+
+  // ── 사용자 확정 예산 항목 (2026-08-20 예산 이원화) — 값 보존 지시 ──
+  //   항목 라벨은 @foundone/shared startup-budget-items SSOT 재사용 (하드코딩 금지).
+  const bb = input.budgetBreakdown;
+  const bbItems = Object.entries(bb?.items ?? {}).filter(([, v]) => Number.isFinite(v) && v > 0);
+  const bbMonthly = Object.entries(bb?.monthly ?? {}).filter(([, v]) => Number.isFinite(v) && (v as number) > 0) as Array<[string, number]>;
+  const hasBreakdown = bbItems.length > 0 || (bb?.workingCapital ?? 0) > 0 || bbMonthly.length > 0;
+  if (hasBreakdown) {
+    const labelByKey = new Map<string, string>();
+    for (const catId of ["food", "online-digital", "startup-tech"]) {
+      for (const def of budgetItemsFor(catId, true)) {
+        if (!labelByKey.has(def.key)) labelByKey.set(def.key, def.labelKo);
+      }
+    }
+    const monthlyLabels: Record<string, string> = {
+      ingredients: "월 재료비", labor: "월 인건비", rent: "월 임대료", utilities: "월 공과금", other: "월 기타비용",
+    };
+    lines.push(`## 사용자 확정 예산 항목 (만원 단위)`);
+    for (const [k, v] of bbItems) lines.push(`- ${labelByKey.get(k) ?? k} (${k}): ${Math.round(v).toLocaleString()}만원`);
+    if ((bb?.workingCapital ?? 0) > 0) lines.push(`- 운영예비자금 (workingCapital): ${Math.round(bb!.workingCapital!).toLocaleString()}만원`);
+    for (const [k, v] of bbMonthly) lines.push(`- ${monthlyLabels[k] ?? k} (monthlyCosts.${k}): ${Math.round(v).toLocaleString()}만원`);
+    lines.push(
+      `위 항목은 사용자가 직접 확정한 금액입니다. budgetAllocation·monthlyCosts 를 배분할 때 ` +
+      `사용자가 정한 항목은 그대로 유지하고, 비어 있는 나머지 항목만 최적 배분하세요. ` +
+      `(권리금 등 별도 슬롯이 없는 항목은 가장 가까운 배분 항목에 합산해 총액이 어긋나지 않게 하세요.)`,
+    );
     lines.push("");
   }
 

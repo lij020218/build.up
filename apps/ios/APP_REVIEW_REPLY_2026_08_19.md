@@ -10,8 +10,8 @@ Hello App Review team,
 Thank you for the review. We have uploaded a new build, **1.0.0 (5)**, that includes fixes found during our own device testing, and we are providing the requested information below.
 
 **1. Screen recording (physical device)**
-Attached: `[ ]` (recorded on iPhone `[모델]`, iOS `[버전]`). The recording starts from launching the app and shows: sign-up with email confirmation → onboarding → home dashboard → notification permission prompt → AI roadmap generation → roadmap stage detail → My Store (photo library permission prompt when choosing a store photo) → Profile → sign out → sign in → account deletion (Profile > 계정 삭제 > confirm) returning to the sign-in screen.
-The app has no in-app purchases or subscriptions, no user-generated public content, and no location/contacts/tracking prompts.
+Attached: `[파일명]` (recorded on iPhone `[모델]`, iOS `[버전]`, one continuous unedited take). It starts from launching the app and shows: sign-in with an existing email account → the home dashboard and core features (home segments, reports, staff, my store, roadmap) → Profile → **account deletion** (계정 삭제 → confirm → returned to the sign-in screen) → **sign-up** with the same email → email confirmation → onboarding → dashboard. `[영상에 없는 항목은 지우세요]`
+Permission prompts: the app requests only notification permission (optional reminders) — it had already been granted on the test device before recording, so iOS does not show the prompt again; the app uses no camera, location, contacts, microphone, or App Tracking Transparency (no such usage-description keys in Info.plist; photos are chosen through the system PhotosPicker, which needs no permission prompt). There are no in-app purchases/subscriptions and no user-generated public content.
 
 **2. Devices / OS tested**
 - iPhone `[모델, e.g. 16 Pro Max]` — iOS `[버전]` (physical device, TestFlight)

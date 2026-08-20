@@ -448,6 +448,38 @@ export async function POST(request: Request) {
   const MAX_REGION = 100;
   // 확정 업종 (2026-08-03 분류 분리) — id 형식 검증만 (실제 강제는 generateRoadmap 내부)
   const ID_RE = /^[a-z0-9-]{2,40}$/;
+  // 사용자 확정 예산 항목 (2026-08-20 예산 이원화) — 만원 단위. 키·값·개수 제한으로 프롬프트 주입·비용 방어.
+  const sanitizeBudgetBreakdown = (raw: unknown): RoadmapGenerationInput["budgetBreakdown"] => {
+    if (!raw || typeof raw !== "object") return undefined;
+    const src = raw as { items?: unknown; workingCapital?: unknown; monthly?: unknown };
+    const num = (v: unknown): number | undefined => {
+      const n = Number(v);
+      // 만원 단위 상한 100억(1,000,000만원) — parseResponse 의 원 단위 오염 기준과 동일
+      return Number.isFinite(n) && n > 0 && n < 1_000_000 ? Math.round(n) : undefined;
+    };
+    const items: Record<string, number> = {};
+    if (src.items && typeof src.items === "object") {
+      for (const [k, v] of Object.entries(src.items as Record<string, unknown>).slice(0, 16)) {
+        const n = num(v);
+        if (n !== undefined && /^[a-zA-Z]{1,30}$/.test(k)) items[k] = n;
+      }
+    }
+    const monthly: Record<string, number> = {};
+    if (src.monthly && typeof src.monthly === "object") {
+      for (const k of ["ingredients", "labor", "rent", "utilities", "other"]) {
+        const n = num((src.monthly as Record<string, unknown>)[k]);
+        if (n !== undefined) monthly[k] = n;
+      }
+    }
+    const workingCapital = num(src.workingCapital);
+    if (Object.keys(items).length === 0 && Object.keys(monthly).length === 0 && workingCapital === undefined) return undefined;
+    return {
+      ...(Object.keys(items).length > 0 ? { items } : {}),
+      ...(workingCapital !== undefined ? { workingCapital } : {}),
+      ...(Object.keys(monthly).length > 0 ? { monthly } : {}),
+    };
+  };
+
   body = {
     ...body,
     ...(body.confirmedSubIndustryId && !ID_RE.test(body.confirmedSubIndustryId) ? { confirmedSubIndustryId: undefined } : {}),
@@ -455,6 +487,7 @@ export async function POST(request: Request) {
     ideaText: body.ideaText.trim().slice(0, MAX_IDEA_TEXT),
     ...(body.storeName !== undefined && { storeName: body.storeName.trim().slice(0, MAX_STORE_NAME) }),
     ...(body.region !== undefined && { region: body.region.trim().slice(0, MAX_REGION) }),
+    budgetBreakdown: sanitizeBudgetBreakdown(body.budgetBreakdown),
   };
 
   const apiKey = getAnthropicApiKey();

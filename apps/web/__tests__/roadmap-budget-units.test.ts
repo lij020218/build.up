@@ -5,7 +5,8 @@
  *   만원으로 정규화해야 한다. monthlyCosts 도 동일 가드.
  */
 import { describe, it, expect } from "vitest";
-import { parseResponse } from "@foundone/ai/roadmap/generate";
+import { parseResponse, applyBudgetBreakdown } from "@foundone/ai/roadmap/generate";
+import { buildRoadmapGenerationPrompt } from "@foundone/ai/roadmap/prompt";
 
 /** 필수 필드 최소 골격 — parseResponse 는 parsed 필수. 테스트 관심사는 budgetAllocation·monthlyCosts 뿐 */
 function rawWith(ba: Record<string, number>, mc: Record<string, number> = {}): string {
@@ -50,6 +51,81 @@ describe("roadmap budgetAllocation 단위 정규화", () => {
     }));
     expect(r.budgetAllocation.workingCapital).toBe(0);
     expect(r.budgetAllocation.total).toBe(9_000);
+  });
+});
+
+/**
+ * 사용자 확정 예산 항목 강제 (2026-08-20 위저드 예산 이원화 — budgetBreakdown 입력 계약).
+ *  프롬프트 지시를 LLM 이 무시해도 사용자 값이 budgetAllocation·monthlyCosts 에 살아남아야 한다.
+ */
+describe("applyBudgetBreakdown — 사용자 값 보존 계약", () => {
+  const base = () => parseResponse(rawWith(
+    { deposit: 4_000, interior: 3_000, equipment: 2_000, workingCapital: 1_000, total: 10_000 },
+    { ingredients: 300, labor: 250, rent: 200, utilities: 30, other: 50 },
+  ));
+
+  it("사용자 항목(보증금·인테리어·운영예비)이 AI 배분을 덮어쓰고 total 재계산", () => {
+    const r = applyBudgetBreakdown(base(), {
+      items: { deposit: 3_000, interior: 2_500 },
+      workingCapital: 1_500,
+    });
+    expect(r.budgetAllocation.deposit).toBe(3_000);
+    expect(r.budgetAllocation.interior).toBe(2_500);
+    expect(r.budgetAllocation.equipment).toBe(2_000);      // 미입력 → AI 값 유지
+    expect(r.budgetAllocation.workingCapital).toBe(1_500);
+    expect(r.budgetAllocation.total).toBe(3_000 + 2_500 + 2_000 + 1_500);
+  });
+
+  it("권리금은 보증금 버킷에 합산 (별도 출력 슬롯 없음)", () => {
+    const r = applyBudgetBreakdown(base(), { items: { deposit: 3_000, premium: 500 } });
+    expect(r.budgetAllocation.deposit).toBe(3_500);
+  });
+
+  it("월비용(월세·인건비) 덮어쓰기 + monthlyFixedCost 재계산", () => {
+    const r = applyBudgetBreakdown(base(), { monthly: { rent: 150, labor: 400 } });
+    expect(r.monthlyCosts.rent).toBe(150);
+    expect(r.monthlyCosts.labor).toBe(400);
+    expect(r.monthlyCosts.ingredients).toBe(300);          // 미입력 → AI 값 유지
+    expect(r.budgetAllocation.monthlyFixedCost).toBe(400 + 150 + 30 + 50);
+  });
+
+  it("breakdown 없음/빈 값 = no-op (AI 맡기기 모드와 동일)", () => {
+    const a = applyBudgetBreakdown(base(), undefined);
+    const b = applyBudgetBreakdown(base(), { items: {}, monthly: {} });
+    expect(a.budgetAllocation).toEqual(base().budgetAllocation);
+    expect(b.budgetAllocation).toEqual(base().budgetAllocation);
+    expect(b.monthlyCosts).toEqual(base().monthlyCosts);
+  });
+
+  it("0·음수·비수치 입력은 무시", () => {
+    const r = applyBudgetBreakdown(base(), {
+      items: { deposit: 0, interior: -100 },
+      monthly: { rent: Number.NaN },
+    });
+    expect(r.budgetAllocation.deposit).toBe(4_000);
+    expect(r.budgetAllocation.interior).toBe(3_000);
+    expect(r.monthlyCosts.rent).toBe(200);
+  });
+});
+
+describe("buildRoadmapGenerationPrompt — 사용자 확정 예산 섹션", () => {
+  it("budgetBreakdown 이 있으면 항목·유지 지시가 프롬프트에 포함", () => {
+    const p = buildRoadmapGenerationPrompt({
+      ideaText: "마포구 카페",
+      language: "ko",
+      budgetBreakdown: { items: { deposit: 3_000, premium: 500 }, workingCapital: 1_500, monthly: { rent: 200 } },
+    });
+    expect(p).toContain("사용자 확정 예산 항목");
+    expect(p).toContain("보증금");           // startup-budget-items SSOT 라벨 재사용
+    expect(p).toContain("권리금");
+    expect(p).toContain("3,000만원");
+    expect(p).toContain("운영예비자금");
+    expect(p).toContain("월 임대료");
+    expect(p).toContain("그대로 유지");
+  });
+  it("budgetBreakdown 이 없으면 섹션 미포함 (종전 프롬프트 그대로)", () => {
+    const p = buildRoadmapGenerationPrompt({ ideaText: "마포구 카페", language: "ko" });
+    expect(p).not.toContain("사용자 확정 예산 항목");
   });
 });
 

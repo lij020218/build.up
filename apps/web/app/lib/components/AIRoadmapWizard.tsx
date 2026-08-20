@@ -12,8 +12,11 @@ import {
   buildAiDoneList,
   bankLabel,
   ownerActionTrackFor,
+  budgetItemsFor,
   type OwnerAction,
+  type RecommendationItem,
 } from "@foundone/shared";
+import type { AiRoadmapWizardExtras } from "../types";
 import { FloatingInspiration } from "./FloatingInspiration";
 
 // ── 미드나이트 톤 일관 — 로드맵 단계 카드 디자인과 통일 ──
@@ -201,7 +204,8 @@ type Step = "idea" | "industry" | "budget" | "region" | "storeName" | "generatin
 
 type Props = {
   language: "ko" | "en";
-  onComplete: (result: RoadmapGenerationResult, storeName: string) => void;
+  /** extras: 위저드에서 사용자가 직접 고른 상권·예산 항목·인테리어 업체 (2026-08-20 3대 업그레이드 핸드오프) */
+  onComplete: (result: RoadmapGenerationResult, storeName: string, extras?: AiRoadmapWizardExtras) => void;
   onBack: () => void;
 };
 
@@ -230,6 +234,8 @@ const fmtBudget = (manwon: number) => {
 //   POST + `x-ai-async: 1` → 202 {jobId} → GET /api/ai/jobs/[id] 를 2s(30s 이후 4s) 간격, 최대 6분 폴링.
 //   iOS AIRoadmapService 와 동일 계약·cadence. 새로고침 후 재개를 위해 jobId 는 sessionStorage 에 보관.
 const AI_JOB_SESSION_KEY = "foundone:ai-roadmap-job";
+// 위저드에서 고른 상권·예산 항목은 새로고침 후 작업 재개(폴링) 시에도 핸드오프에 살아야 한다 (2026-08-20)
+const AI_WIZARD_EXTRAS_SESSION_KEY = "foundone:ai-roadmap-wizard-extras";
 const AI_JOB_POLL_MAX_MS = 6 * 60_000;
 type AiJobView = { id: string; status: "queued" | "running" | "succeeded" | "failed"; progress?: string | null; result?: unknown; error?: string | null };
 
@@ -292,6 +298,71 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   const [serverProgress, setServerProgress] = useState<string | null>(null);
   const pollCancelRef = useRef<{ cancelled: boolean }>({ cancelled: false });
   const [editingSection, setEditingSection] = useState<string | null>(null);
+
+  // ── ① 지역 단계 = 추천 상권 선택 (2026-08-20) ──
+  //   market-recommend 는 가드 걸린 라우트(분 3·일 8) — 지역 값당 1회만 호출 (스텝 진입 시 or 버튼).
+  const [marketRecs, setMarketRecs] = useState<RecommendationItem[] | null>(null);
+  const [marketRecsLoading, setMarketRecsLoading] = useState(false);
+  /** 마지막으로 추천을 요청한 지역 문자열 — 같은 값 재호출 금지 (실패 포함: 조용한 수동 폴백) */
+  const [marketRecsRegion, setMarketRecsRegion] = useState<string | null>(null);
+  const [selectedMarket, setSelectedMarket] = useState<RecommendationItem | null>(null);
+  const [regionManualMode, setRegionManualMode] = useState(false);
+
+  // ── ② 예산 이원화: AI 맡기기(기본) | 직접 입력 ──
+  const [budgetMode, setBudgetMode] = useState<"ai" | "manual">("ai");
+  /** budget-setup 단계 항목 키(startup-budget-items SSOT) → 만원 문자열 */
+  const [budgetItemsText, setBudgetItemsText] = useState<Record<string, string>>({});
+  const [workingCapitalText, setWorkingCapitalText] = useState("");
+  const [monthlyRentText, setMonthlyRentText] = useState("");
+  const [monthlyLaborText, setMonthlyLaborText] = useState("");
+  const [monthlyMarketingText, setMonthlyMarketingText] = useState("");
+  /** 새로고침 재개 시 sessionStorage 에서 복원된 직접 입력 예산 (입력 state 는 세션에 없음) */
+  const restoredBudgetBreakdownRef = useRef<AiRoadmapWizardExtras["budgetBreakdown"]>(null);
+
+  // ── ③ 리뷰: 내 지역 인테리어 업체 선택 (최대 3곳) ──
+  const [pickedInteriorFirms, setPickedInteriorFirms] = useState<Record<string, boolean>>({});
+
+  // 직접 입력 예산 → 핸드오프·생성 입력 (만원). 아무것도 안 채웠으면 null (= AI 맡기기와 동일).
+  const wizardBudgetBreakdown: AiRoadmapWizardExtras["budgetBreakdown"] = (() => {
+    if (budgetMode !== "manual") return restoredBudgetBreakdownRef.current ?? null;
+    const num = (t: string) => { const n = Number(t); return Number.isFinite(n) && n > 0 ? Math.round(n) : undefined; };
+    const items: Record<string, number> = {};
+    for (const [k, v] of Object.entries(budgetItemsText)) {
+      const n = num(v);
+      if (n !== undefined) items[k] = n;
+    }
+    const workingCapital = num(workingCapitalText);
+    const monthlyRent = num(monthlyRentText);
+    const monthlyLabor = num(monthlyLaborText);
+    const monthlyMarketing = num(monthlyMarketingText);
+    if (Object.keys(items).length === 0 && !workingCapital && !monthlyRent && !monthlyLabor && !monthlyMarketing) return null;
+    return { items, workingCapital, monthlyRent, monthlyLabor, monthlyMarketing };
+  })();
+
+  /** onComplete 로 넘길 위저드 부가 선택 — 상권·예산 항목·인테리어 업체 */
+  const buildWizardExtras = (r: RoadmapGenerationResult | null): AiRoadmapWizardExtras => ({
+    selectedMarket,
+    marketCandidates: marketRecs ?? undefined,
+    marketRegion: marketRecsRegion,
+    budgetBreakdown: wizardBudgetBreakdown,
+    selectedInteriorFirms: (r?.recommendations.regionalInteriorFirms ?? [])
+      .filter((f) => pickedInteriorFirms[f.name])
+      .slice(0, 3)
+      .map((f) => ({ name: f.name, phone: f.phone })),
+  });
+
+  const toggleInteriorFirm = (name: string) => {
+    setPickedInteriorFirms((prev) => {
+      const next = { ...prev };
+      if (next[name]) {
+        delete next[name];
+        return next;
+      }
+      if (Object.values(next).filter(Boolean).length >= 3) return prev; // 최대 3곳
+      next[name] = true;
+      return next;
+    });
+  };
 
   // 사업 아이디어 텍스트로 업종 유형 추론
   const ideaLower = ideaText.toLowerCase();
@@ -417,6 +488,67 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
     return session?.access_token ?? "";
   };
 
+  // ── ① 추천 상권 요청 — 지역 값당 1회 (가드 라우트: 분 3·일 8. 키 입력마다 호출 금지) ──
+  //   실패는 조용히 수동 입력 폴백 (거짓 실패 화면 금지) — 같은 지역 재시도도 막아 쿼터 보호.
+  const fetchMarketRecommend = async (regionQuery: string) => {
+    const r = regionQuery.trim();
+    if (!r || marketRecsLoading || marketRecsRegion === r) return;
+    setMarketRecsLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/data/market-recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          region: r,
+          categoryId: confirmedIndustry?.categoryId ?? "food",
+          subIndustryId: confirmedIndustry?.subIndustryId,
+          capital: budget ?? undefined,
+          language,
+        }),
+      });
+      const json = await res.json().catch(() => ({} as Record<string, unknown>));
+      const items = Array.isArray((json as { items?: unknown }).items)
+        ? ((json as { items: RecommendationItem[] }).items)
+        : [];
+      if (!res.ok || !(json as { ok?: boolean }).ok || items.length === 0) {
+        setMarketRecs(null);
+      } else {
+        // 점수 높은 순 3~5개
+        setMarketRecs(items.slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 5));
+        setSelectedMarket(null);
+      }
+    } catch {
+      setMarketRecs(null);
+    } finally {
+      setMarketRecsRegion(r);   // 실패 포함 — 같은 값 재호출 금지
+      setMarketRecsLoading(false);
+    }
+  };
+
+  /** 상권 카드 탭 → region = 그 상권 이름 (수정 가능) + 선택 항목 보존 */
+  const pickMarket = (item: RecommendationItem) => {
+    setSelectedMarket(item);
+    const district = typeof item.meta?.districtName === "string" && item.meta.districtName
+      ? String(item.meta.districtName)
+      : item.title;
+    // 사용자가 입력한 지역의 시/도 prefix 를 유지해 뒷단계 실측 매칭(부동산원 등) 정확도 보존
+    const q = (marketRecsRegion ?? "").trim();
+    const parts = q.split(/\s+/).filter(Boolean);
+    const prefix = parts.length > 1 ? parts.slice(0, -1).join(" ") : "";
+    setRegion(!prefix || district.includes(prefix) ? district : `${prefix} ${district}`);
+  };
+
+  // 지역 스텝 진입 시 1회 자동 요청 (classify 의 extracted.region 프리필 or 직접 입력값)
+  useEffect(() => {
+    if (step !== "region") return;
+    const r = region.trim();
+    if (!r || regionManualMode) return;
+    if (marketRecsRegion === r) return;
+    void fetchMarketRecommend(r);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const handleGenerate = async () => {
     setStep("generating");
     setGenProgress(0);
@@ -451,6 +583,16 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
       quickFinish();
     };
 
+    // 위저드 선택(상권·직접 예산)은 새로고침 재개 후에도 핸드오프에 필요 — jobId 와 함께 세션 보관
+    try {
+      sessionStorage.setItem(AI_WIZARD_EXTRAS_SESSION_KEY, JSON.stringify({
+        selectedMarket,
+        marketCandidates: marketRecs,
+        marketRegion: marketRecsRegion,
+        budgetBreakdown: wizardBudgetBreakdown,
+      }));
+    } catch { /* ignore */ }
+
     try {
       const { supabase } = await import("../../../lib/supabase");
       const { data: { session } } = await supabase.auth.getSession();
@@ -466,6 +608,19 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           region: region || undefined,
           storeName: storeName || undefined,
           teamSize: teamSize ?? undefined,
+          // 직접 입력 모드 사용자 확정 항목 (만원) — 서버 프롬프트 + 후처리 강제로 값 보존
+          ...(wizardBudgetBreakdown
+            ? {
+                budgetBreakdown: {
+                  items: wizardBudgetBreakdown.items,
+                  workingCapital: wizardBudgetBreakdown.workingCapital,
+                  monthly: {
+                    ...(wizardBudgetBreakdown.monthlyRent ? { rent: wizardBudgetBreakdown.monthlyRent } : {}),
+                    ...(wizardBudgetBreakdown.monthlyLabor ? { labor: wizardBudgetBreakdown.monthlyLabor } : {}),
+                  },
+                },
+              }
+            : {}),
           language,
         }),
       });
@@ -509,6 +664,22 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
     let jobId: string | null = null;
     try { jobId = sessionStorage.getItem(AI_JOB_SESSION_KEY); } catch { /* ignore */ }
     if (!jobId) return;
+    // 새로고침 전에 고른 상권·직접 입력 예산 복원 — 리뷰→핸드오프까지 유지 (2026-08-20)
+    try {
+      const raw = sessionStorage.getItem(AI_WIZARD_EXTRAS_SESSION_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          selectedMarket?: RecommendationItem | null;
+          marketCandidates?: RecommendationItem[] | null;
+          marketRegion?: string | null;
+          budgetBreakdown?: AiRoadmapWizardExtras["budgetBreakdown"];
+        };
+        if (saved.selectedMarket) setSelectedMarket(saved.selectedMarket);
+        if (Array.isArray(saved.marketCandidates) && saved.marketCandidates.length > 0) setMarketRecs(saved.marketCandidates);
+        if (typeof saved.marketRegion === "string") setMarketRecsRegion(saved.marketRegion);
+        if (saved.budgetBreakdown) restoredBudgetBreakdownRef.current = saved.budgetBreakdown;
+      }
+    } catch { /* ignore */ }
     pollCancelRef.current = { cancelled: false };
     const ref = pollCancelRef.current;
     setStep("generating");
@@ -713,31 +884,140 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               {ko ? "2단계: 예산" : "Step 2: Budget"}
             </div>
             <h1 style={title}>{ko ? "예상 창업 자금은 얼마인가요?" : "What's your estimated budget?"}</h1>
-            <p style={subtitle}>{ko ? "대략적인 금액이면 충분합니다" : "A rough estimate is fine"}</p>
+            <p style={subtitle}>
+              {budgetMode === "ai"
+                ? (ko ? "총액만 알려주시면 배분은 AI가 해드립니다" : "Give the total — AI allocates the rest")
+                : (ko ? "아는 항목만 적어주세요 — 비워둔 항목은 AI가 채워드립니다" : "Fill only what you know — AI fills the rest")}
+            </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            {[
-              { label: ko ? "3천만원 이하" : "Under 30M", value: 30000000 },
-              { label: ko ? "3-5천만원" : "30-50M", value: 50000000 },
-              { label: ko ? "5천-1억" : "50M-100M", value: 100000000 },
-              { label: ko ? "1억 이상" : "Over 100M", value: 150000000 },
-            ].map((opt) => (
-              <button key={opt.value} type="button" onClick={() => { setBudget(opt.value); setBudgetText(String(Math.round(opt.value / 10000))); }}
-                style={{ ...optionBtn, borderColor: budget === opt.value ? "#191970" : "rgba(25,25,112,0.10)", background: budget === opt.value ? "rgba(25,25,112,0.04)" : "rgba(255,255,255,0.8)" }}>
-                {opt.label}
+          {/* ── 예산 이원화 (2026-08-20): AI 맡기기(기본) | 직접 입력 ── */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            {([
+              { id: "ai" as const, label: ko ? "AI에게 맡기기" : "Let AI allocate", sub: ko ? "총예산만 입력" : "Total only" },
+              { id: "manual" as const, label: ko ? "직접 입력" : "Enter myself", sub: ko ? "항목별로 정하기" : "Item by item" },
+            ]).map((m) => (
+              <button key={m.id} type="button" onClick={() => setBudgetMode(m.id)}
+                style={{
+                  ...optionBtn, flex: 1, padding: "12px",
+                  borderColor: budgetMode === m.id ? "#191970" : "rgba(25,25,112,0.10)",
+                  background: budgetMode === m.id ? "rgba(25,25,112,0.04)" : "rgba(255,255,255,0.8)",
+                }}>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{m.label}</div>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{m.sub}</div>
               </button>
             ))}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px" }}>
-            <span style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "또는" : "or"}</span>
-            <input type="text" inputMode="numeric" value={budgetText}
-              onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ""); setBudgetText(v); setBudget(v ? Number(v) * 10000 : null); }}
-              placeholder={ko ? "직접 입력 (만원)" : "Enter amount (만원)"}
-              style={inputStyle} />
-          </div>
 
-          <button type="button" onClick={() => { if (!budget) setBudget(50000000); setStep("region"); }}
+          {budgetMode === "ai" ? (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                {[
+                  { label: ko ? "3천만원 이하" : "Under 30M", value: 30000000 },
+                  { label: ko ? "3-5천만원" : "30-50M", value: 50000000 },
+                  { label: ko ? "5천-1억" : "50M-100M", value: 100000000 },
+                  { label: ko ? "1억 이상" : "Over 100M", value: 150000000 },
+                ].map((opt) => (
+                  <button key={opt.value} type="button" onClick={() => { setBudget(opt.value); setBudgetText(String(Math.round(opt.value / 10000))); }}
+                    style={{ ...optionBtn, borderColor: budget === opt.value ? "#191970" : "rgba(25,25,112,0.10)", background: budget === opt.value ? "rgba(25,25,112,0.04)" : "rgba(255,255,255,0.8)" }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px" }}>
+                <span style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "또는" : "or"}</span>
+                <input type="text" inputMode="numeric" value={budgetText}
+                  onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ""); setBudgetText(v); setBudget(v ? Number(v) * 10000 : null); }}
+                  placeholder={ko ? "직접 입력 (만원)" : "Enter amount (만원)"}
+                  style={inputStyle} />
+              </div>
+            </>
+          ) : (() => {
+            // 항목 세트 = budget-setup 단계 SSOT(startup-budget-items) 그대로 — 프랜차이즈 여부는 아직 미확정이라 공통 항목만
+            const itemDefs = budgetItemsFor(confirmedIndustry?.categoryId, false);
+            const facilitySumManwon = Object.values(budgetItemsText).reduce((a, v) => a + (Number(v) > 0 ? Math.round(Number(v)) : 0), 0);
+            const wcManwon = Number(workingCapitalText) > 0 ? Math.round(Number(workingCapitalText)) : 0;
+            const digitOnly = (raw: string) => raw.replace(/[^0-9]/g, "");
+            const smallLabel: React.CSSProperties = { fontSize: 12, fontWeight: 650, color: "#0f172a", marginBottom: 4 };
+            const smallInput: React.CSSProperties = { ...inputStyle, width: "100%", padding: "10px 12px", fontSize: "13.5px" };
+            return (
+              <>
+                <div style={{ ...STAGE_LABEL, marginBottom: 8 }}>{ko ? "① 시설·창업비 (만원)" : "① Setup costs (만원)"}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {itemDefs.map((def) => (
+                    <div key={def.key}>
+                      <div style={smallLabel}>{def.labelKo}{def.optionalKo ? <span style={{ fontWeight: 500, color: "var(--muted)" }}> · {def.optionalKo}</span> : null}</div>
+                      <input
+                        type="text" inputMode="numeric"
+                        value={budgetItemsText[def.key] ?? ""}
+                        onChange={(e) => {
+                          const v = digitOnly(e.target.value);
+                          setBudgetItemsText((prev) => {
+                            const next = { ...prev };
+                            if (v) next[def.key] = v; else delete next[def.key];
+                            return next;
+                          });
+                        }}
+                        placeholder={def.hintKo}
+                        style={smallInput}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ ...STAGE_LABEL, margin: "16px 0 8px" }}>{ko ? "② 운영예비 + 월비용 (만원)" : "② Reserve + monthly (만원)"}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <div style={smallLabel}>{ko ? "운영예비자금" : "Operating reserve"}</div>
+                    <input type="text" inputMode="numeric" value={workingCapitalText}
+                      onChange={(e) => setWorkingCapitalText(digitOnly(e.target.value))}
+                      placeholder={ko ? "매출 전까지 버틸 돈" : "Runway"} style={smallInput} />
+                  </div>
+                  <div>
+                    <div style={smallLabel}>{ko ? "월세" : "Monthly rent"}</div>
+                    <input type="text" inputMode="numeric" value={monthlyRentText}
+                      onChange={(e) => setMonthlyRentText(digitOnly(e.target.value))}
+                      placeholder={ko ? "예: 200" : "e.g., 200"} style={smallInput} />
+                  </div>
+                  <div>
+                    <div style={smallLabel}>{ko ? "월 인건비" : "Monthly labor"}</div>
+                    <input type="text" inputMode="numeric" value={monthlyLaborText}
+                      onChange={(e) => setMonthlyLaborText(digitOnly(e.target.value))}
+                      placeholder={ko ? "직원·알바 합계" : "Total payroll"} style={smallInput} />
+                  </div>
+                  <div>
+                    <div style={smallLabel}>{ko ? "월 마케팅" : "Monthly marketing"}</div>
+                    <input type="text" inputMode="numeric" value={monthlyMarketingText}
+                      onChange={(e) => setMonthlyMarketingText(digitOnly(e.target.value))}
+                      placeholder={ko ? "광고·판촉" : "Ads · promos"} style={smallInput} />
+                  </div>
+                </div>
+                {(facilitySumManwon > 0 || wcManwon > 0) && (
+                  <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: "rgba(25,25,112,0.04)", fontSize: 13, color: "#0f172a", fontWeight: 600, display: "flex", justifyContent: "space-between" }}>
+                    <span>{ko ? "입력 합계" : "Entered total"}</span>
+                    <span style={{ fontVariantNumeric: "tabular-nums" as const }}>
+                      {ko
+                        ? `시설 ${facilitySumManwon.toLocaleString()}만 + 예비 ${wcManwon.toLocaleString()}만 = ${(facilitySumManwon + wcManwon).toLocaleString()}만원`
+                        : `${(facilitySumManwon + wcManwon).toLocaleString()}만원`}
+                    </span>
+                  </div>
+                )}
+                <div style={{ marginTop: 8, fontSize: 11.5, color: "rgba(15,23,42,0.45)", lineHeight: 1.5 }}>
+                  {ko ? "적은 항목은 그대로 유지되고, 비워둔 항목만 AI가 업종 시세로 채웁니다." : "Your values are kept as-is; AI fills only the blanks."}
+                </div>
+              </>
+            );
+          })()}
+
+          <button type="button" onClick={() => {
+            if (budgetMode === "manual" && wizardBudgetBreakdown) {
+              // 총예산 = 시설 항목 합 + 운영예비 (만원→원). 아무것도 없으면 종전 기본값 경로.
+              const sum = Object.values(wizardBudgetBreakdown.items).reduce((a, b) => a + b, 0)
+                + (wizardBudgetBreakdown.workingCapital ?? 0);
+              if (sum > 0) { setBudget(sum * 10000); setBudgetText(String(sum)); }
+            }
+            if (!budget && !(budgetMode === "manual" && wizardBudgetBreakdown)) setBudget(50000000);
+            setStep("region");
+          }}
             style={{ ...primaryBtn, marginTop: "24px" }}>
             {ko ? "다음" : "Continue"}
           </button>
@@ -767,16 +1047,83 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             <p style={subtitle}>{ko ? "시/도까지 함께 적어주세요 — 한국부동산원 실측 상권 데이터(임대료) 매칭이 정확해집니다. 없으면 건너뛰어도 됩니다." : "Include the province/city for accurate market-data matching. Optional."}</p>
           </div>
 
+          {/* ── 추천 상권 (실측 점수) — 지역 값이 있으면 자동 1회, 실패 시 조용히 수동 폴백 ── */}
+          {!regionManualMode && marketRecsLoading && (
+            <div style={{ marginBottom: 14, padding: "14px 16px", borderRadius: 14, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)", fontSize: 13, color: "#191970", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+              <Sparkles size={13} strokeWidth={1.5} />
+              {ko ? `"${(marketRecsRegion ?? region).trim() || region}" 주변 추천 상권을 찾고 있어요… (실측 데이터 점수)` : "Finding nearby market areas… (measured score)"}
+            </div>
+          )}
+          {!regionManualMode && !marketRecsLoading && (marketRecs?.length ?? 0) > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ ...STAGE_LABEL, marginBottom: 8 }}>
+                {ko ? "AI 추천 상권 — 탭해서 선택 (실측 점수)" : "Recommended areas — tap to pick"}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                {marketRecs!.map((item) => {
+                  const sel = selectedMarket?.id === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => pickMarket(item)}
+                      style={{
+                        textAlign: "left" as const, padding: "12px 14px", borderRadius: 14, cursor: "pointer",
+                        border: sel ? "2px solid #191970" : "1px solid rgba(25,25,112,0.12)",
+                        background: sel ? "rgba(25,25,112,0.05)" : "white",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <MapPin size={13} strokeWidth={1.6} color="#191970" />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", flex: 1 }}>{item.title}</span>
+                        {typeof item.score === "number" && (
+                          <span style={{ fontSize: 12, fontWeight: 800, color: "#191970", fontVariantNumeric: "tabular-nums" as const }}>
+                            {item.score}<span style={{ fontSize: 10, fontWeight: 500, color: "var(--muted)" }}>/100</span>
+                          </span>
+                        )}
+                        {sel && <span style={{ fontSize: 13, fontWeight: 800, color: "#191970" }}>✓</span>}
+                      </div>
+                      {(item.summary || item.reasons?.[0]) && (
+                        <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.5, marginTop: 4 }}>
+                          {item.summary || item.reasons?.[0]}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setRegionManualMode(true); setSelectedMarket(null); }}
+                style={{ marginTop: 8, background: "transparent", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", padding: 0, fontFamily: "inherit", textDecoration: "underline" }}
+              >
+                {ko ? "직접 입력할게요" : "I'll type it myself"}
+              </button>
+            </div>
+          )}
+
           <input type="text" value={region} onChange={(e) => setRegion(e.target.value)}
             placeholder={ko ? "예: 대전 둔산동, 서울 마포구 망원동" : "e.g., Daejeon Dunsan, Seoul Mangwon"}
             style={inputStyle} />
+
+          {/* 지역을 바꿔 적었으면 그 값으로 1회 재추천 (같은 값 재호출 금지 — 가드 쿼터 보호) */}
+          {!regionManualMode && !marketRecsLoading && region.trim().length > 1 && marketRecsRegion !== region.trim() && (
+            <button
+              type="button"
+              onClick={() => { void fetchMarketRecommend(region); }}
+              style={{ marginTop: 10, background: "transparent", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 700, color: "#191970", padding: 0, fontFamily: "inherit" }}
+            >
+              {ko ? `"${region.trim()}" 추천 상권 보기 →` : `See recommendations for "${region.trim()}" →`}
+            </button>
+          )}
 
           <div style={{ display: "flex", gap: "10px", marginTop: "24px" }}>
             <button type="button" onClick={() => setStep("storeName")}
               style={{ ...primaryBtn, flex: 1 }}>
               {ko ? "다음" : "Continue"}
             </button>
-            <button type="button" onClick={() => { setRegion(""); setStep("storeName"); }}
+            <button type="button" onClick={() => { setRegion(""); setSelectedMarket(null); setStep("storeName"); }}
               style={{ ...secondaryBtn, whiteSpace: "nowrap" as const }}>
               {ko ? "건너뛰기" : "Skip"}
             </button>
@@ -1409,9 +1756,27 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                       <div style={{ fontSize: 11, fontWeight: 750, color: "#191970", marginBottom: 8 }}>
                         {ko ? "내 지역 인테리어 업체 · 업종 검색 × 등록 대장 교차" : "Local contractors · industry search × registry"}
                       </div>
+                      {/* 체크 = 인테리어 준비 단계에 프리체크로 전달 (2026-08-20 위저드 업그레이드 ③, 최대 3곳) */}
                       <div style={{ display: "flex", flexDirection: "column" as const, gap: 7 }}>
                         {result.recommendations.regionalInteriorFirms!.map((f, i) => (
-                          <div key={i} style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.5 }}>
+                          <div key={i} style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 7 }}>
+                            <button
+                              type="button"
+                              onClick={() => toggleInteriorFirm(f.name)}
+                              aria-pressed={!!pickedInteriorFirms[f.name]}
+                              title={ko ? "선택하면 인테리어 준비 단계에 미리 담아드려요 (최대 3곳)" : "Pre-add to the interior stage (max 3)"}
+                              style={{
+                                width: 16, height: 16, marginTop: 1, borderRadius: 5, cursor: "pointer", flexShrink: 0,
+                                border: pickedInteriorFirms[f.name] ? "1px solid #191970" : "1px solid rgba(25,25,112,0.30)",
+                                background: pickedInteriorFirms[f.name] ? "#191970" : "white",
+                                display: "inline-flex", alignItems: "center", justifyContent: "center", padding: 0,
+                              }}
+                            >
+                              {pickedInteriorFirms[f.name] && (
+                                <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                              )}
+                            </button>
+                            <span style={{ minWidth: 0 }}>
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap" as const }}>
                               {f.mapUrl
                                 ? <a href={f.mapUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#0f172a", textDecoration: "none" }}>{f.name} ↗</a>
@@ -1439,9 +1804,17 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                             </span>
                             {f.phone && <span style={{ color: "var(--muted)" }}> · {f.phone}</span>}
                             {f.address && <span style={{ color: "var(--muted)" }}> · {f.address}</span>}
+                            </span>
                           </div>
                         ))}
                       </div>
+                      {Object.values(pickedInteriorFirms).some(Boolean) && (
+                        <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: "#191970" }}>
+                          {ko
+                            ? `${Object.values(pickedInteriorFirms).filter(Boolean).length}곳 선택됨 — 인테리어 준비 단계에 미리 담아드려요 (최대 3곳)`
+                            : `${Object.values(pickedInteriorFirms).filter(Boolean).length} selected — pre-added to the interior stage (max 3)`}
+                        </div>
+                      )}
                       <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
                         {ko
                           ? "업종 특화(업종 키워드 검색) 업체를 상권에서 가까운 순으로 먼저 보여드려요 · 등록 확인 = 국토부 면허 대장 · 영업 확인 = 국세청 원천 상가 데이터. 평점이 아니니 반드시 2~3곳 복수 견적을 비교하세요."
@@ -1591,7 +1964,10 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
 
           {/* 버튼 */}
           <div style={{ display: "flex", gap: "10px", marginTop: "24px", justifyContent: "center" }}>
-            <button type="button" onClick={() => onComplete(result, storeName)} style={{ ...primaryBtn, maxWidth: "320px" }}>
+            <button type="button" onClick={() => {
+              try { sessionStorage.removeItem(AI_WIZARD_EXTRAS_SESSION_KEY); } catch { /* ignore */ }
+              onComplete(result, storeName, buildWizardExtras(result));
+            }} style={{ ...primaryBtn, maxWidth: "320px" }}>
               {ko ? "이대로 진행하기" : "Proceed with this plan"}
             </button>
             <button type="button" onClick={() => { setStep("idea"); setResult(null); }} style={secondaryBtn}>

@@ -30,10 +30,17 @@ enum AIVendorHandoff {
     ]
 
     /// 위저드 완료 시 호출 — 추천 업체를 vendor-setup 선택 상태로 넘긴다.
-    static func apply(result: AIRoadmapResult, subIndustryId: String, categoryId: String?) {
+    ///  selectedInteriorFirms: 리뷰 화면에서 사용자가 체크한 내 지역 인테리어 업체 (최대 3곳, 2026-08-21) —
+    ///  step 4(인테리어·기타)에 이름+연락처 note 로 프리체크. 웹 buildAiVendorHandoff 미러.
+    static func apply(
+        result: AIRoadmapResult,
+        subIndustryId: String,
+        categoryId: String?,
+        selectedInteriorFirms: [AIRoadmapResult.Recommendations.RegionalInteriorFirm] = []
+    ) {
         let suppliers = result.recommendations.suppliers
         let interiorVendors = result.recommendations.interiorVendors ?? []
-        guard !suppliers.isEmpty || !interiorVendors.isEmpty else { return }
+        guard !suppliers.isEmpty || !interiorVendors.isEmpty || !selectedInteriorFirms.isEmpty else { return }
 
         let bundle = VendorDataRegistry.bundle(forSubIndustry: subIndustryId, categoryId: categoryId)
         let catalogNames: [Int: Set<String>] = [
@@ -71,6 +78,15 @@ enum AIVendorHandoff {
         }
         for iv in interiorVendors {
             add(step: 4, name: iv.title, note: "AI 추천 인테리어 시공 업체")
+        }
+        // 사용자가 리뷰에서 직접 체크한 내 지역 인테리어 업체 — 등록·영업 확인 실데이터 (2026-08-21, 최대 3곳 방어)
+        for f in selectedInteriorFirms.prefix(3) {
+            let note = [f.phone, f.address]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+                .joined(separator: " · ")
+            add(step: 4, name: f.name,
+                note: note.isEmpty ? "리뷰에서 선택한 내 지역 인테리어 업체" : note)
         }
 
         for (step, key) in selectionKeys where !(selected[step] ?? []).isEmpty {
