@@ -405,6 +405,7 @@ struct GuestTaxView: View {
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 2)
+            Color.clear.frame(height: 110)   // 하단 탭바 클리어런스 (로드맵 탭과 동일)
         }
     }
 

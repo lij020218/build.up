@@ -63,15 +63,20 @@ private struct AuroraGlow: View {
     let opacity: Double
 
     var body: some View {
-        Ellipse()
+        // 2026-08-22 반달 수정: 납작한 Ellipse 에 원형 그라데이션을 채우면 짧은 축에서 투명해지기 전에
+        // 도형 경계에 잘려 딱딱한 호("반달")가 생긴다. → 원(그라데이션이 정확히 가장자리에서 0)에
+        // scaleEffect 로 눌러 타원을 만들면 경계가 항상 완전 투명 — 잘린 에지 0.
+        Circle()
             .fill(
                 RadialGradient(
                     colors: [color.opacity(opacity), color.opacity(opacity * 0.45), color.opacity(0)],
                     center: .center,
                     startRadius: 0,
-                    endRadius: max(w, h) * 0.5
+                    endRadius: w * 0.5
                 )
             )
+            .frame(width: w, height: w)
+            .scaleEffect(x: 1, y: h / w)
             .frame(width: w, height: h)
     }
 }
