@@ -58,6 +58,7 @@ import { ContractAiAnalysisPanel } from "./ContractAiAnalysisPanel";
 import { HiringCalculatorPanel, HiringTogglePanel } from "./HiringInteractivePanels";
 import { MyHiringPlanCard } from "../offline/MyHiringPlanCard";
 import { NtsBizVerifyCard } from "./NtsBizVerifyCard";
+import { GuestSignupLink } from "../../ui/GuestSignupLink";
 import { useStoreInfoStore } from "../../../stores/store-info-store";
 import { SETUP_META_KEY, readSetupMeta } from "../../../setup-missions";
 
@@ -994,6 +995,112 @@ function BizVerifyGateBlock({ ko }: { ko: boolean }) {
           {ko ? "건너뛰기 선택됨 — 대시보드 「가게 세팅 미션」에서 나중에 확인할 수 있어요." : "Skipped — verify later from the dashboard setup missions."}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ───────────────────────── 게스트(둘러보기) 렌더러 ─────────────────────────
+ *
+ * GuestStageContentRenderer — 로그인 없이(/browse) 단계 콘텐츠를 읽기 전용으로 렌더.
+ * iOS 심사 5.1.1(v) 대응 게스트 모드의 웹 미러 (웹·모바일 동기화 원칙).
+ *
+ *  - DashboardProvider 불필요 — useDashboardCtx 를 쓰지 않는다.
+ *  - 업종 분기(byCategory)는 "food"(음식점) 예시 고정 — 호출부가 예시임을 안내.
+ *  - 쓰기·인증이 걸린 섹션(interactive / gateChecklist / axisChecklist)은 렌더하지 않고
+ *    페이지당 한 번 GuestSignupLink 잠금 행으로 대체 (가짜 UI·무반응 토글 금지).
+ */
+
+/** 게스트에서 렌더하지 않는(쓰기·인증 필요) 섹션 kind. */
+const GUEST_LOCKED_KINDS: ReadonlySet<Section["kind"]> = new Set([
+  "interactive",
+  "gateChecklist",
+  "axisChecklist",
+] satisfies Array<Section["kind"]>);
+
+/** 게스트용 no-op 바인딩 — 잠금 kind 를 걸러내므로 실제로 호출되지 않는다. */
+const GUEST_IACT: InteractiveBindings = {
+  taxChecks: {},
+  setTaxChecks: () => {},
+  cpaDecision: null,
+  setCpaDecision: () => {},
+  contractSubChecks: {},
+  setContractSubChecks: () => {},
+  faq: { qaText: "", setQaText: () => {}, qaStatus: "idle", qaError: "", askAi: () => {} },
+};
+
+export function GuestStageContentRenderer({
+  content,
+  ko,
+}: {
+  content: StageContent;
+  ko: boolean;
+}) {
+  const [page, setPage] = useState(0);
+
+  // 업종 예시 고정: food 우선, 없으면 첫 카테고리 (registration-setup 등 전 단계 food 보유).
+  const catId = content.byCategory["food"] ? "food" : Object.keys(content.byCategory)[0];
+  const cat = content.byCategory[catId];
+  const categoryLabel = cat?.label ?? "";
+  const pageLabels = useMemo(() => content.pages.map((p) => p.label), [content]);
+  const currentPage = content.pages[page] ?? content.pages[0];
+  const keyAction = content.keyAction;
+
+  if (!cat) return null;
+
+  const lockedCount = currentPage.sections.filter((s) => GUEST_LOCKED_KINDS.has(s.kind)).length;
+  let lockShown = false;
+
+  return (
+    <div className="bento-fade-in" style={{ marginBottom: "16px" }}>
+      {keyAction && (keyAction.pillars && keyAction.pillars.length > 0 ? (
+        <KeyActionHero
+          ko={ko}
+          action={{ title: keyAction.title, detail: keyAction.subtitle }}
+          pillars={keyAction.pillars.map((p) => {
+            const Icon = ICONS[p.icon];
+            return { icon: <Icon size={12} strokeWidth={1.5} />, label: p.label, meta: p.meta };
+          })}
+        />
+      ) : (
+        <StartupKeyActionHero
+          eyebrow={keyAction.eyebrow}
+          title={keyAction.title}
+          subtitle={keyAction.subtitle}
+          miniCards={(keyAction.miniCards ?? []).map((m) => ({ icon: ICONS[m.icon], label: m.label, detail: m.detail }))}
+        />
+      ))}
+
+      <div style={{ marginBottom: "16px" }}>
+        <StartupPageNav page={page} totalPages={content.pages.length} labels={pageLabels} onChange={setPage} />
+      </div>
+
+      {currentPage.sections.map((section, i) => {
+        if (GUEST_LOCKED_KINDS.has(section.kind)) {
+          // 잠금 안내는 페이지당 한 번만 (연속 인터랙티브 섹션 중복 방지).
+          if (lockShown) return null;
+          lockShown = true;
+          return (
+            <div key={`locked-${i}`} style={{ marginBottom: "16px" }}>
+              <GuestSignupLink
+                label={
+                  ko
+                    ? `체크리스트·입력 도구${lockedCount > 1 ? ` ${lockedCount}개` : ""}는 가입 후 이용할 수 있어요`
+                    : "Sign up to use checklists and interactive tools"
+                }
+              />
+            </div>
+          );
+        }
+        return renderSection(section, i, {
+          content,
+          cat,
+          catId,
+          categoryLabel,
+          pageId: currentPage.id,
+          ko,
+          iact: GUEST_IACT,
+        });
+      })}
     </div>
   );
 }

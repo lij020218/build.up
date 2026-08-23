@@ -69,6 +69,11 @@ public struct AppRoot: View {
     @State private var resetCoordinator = ResetCoordinator()
     /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
     @State private var demoMode: MockScenario? = nil
+    /// 게스트 둘러보기 모드 (App Review 5.1.1(v), 2026-08-23) — 계정 없이 번들 정보 surface 만.
+    ///   재실행 시에도 유지(UserDefaults "guest.mode") — 로그인 성공 시 해제.
+    ///   ⚠️ DEBUG 데모(demoMode)와 별개 — Release 에서도 동작하는 정식 경로.
+    @State private var guestMode: Bool = UserDefaults.standard.bool(forKey: Self.guestModeKey)
+    private static let guestModeKey = "guest.mode"
     /// 기존 가게 등록 완료 후 loadDashboardIfNeeded 에서 StoreInfo / AppStorage 에 적용할 임시 저장.
     @State private var pendingRegistration: StoreRegistration? = nil
     /// 계정 역할 (business_profiles.user_role) — nil=미확정(스켈레톤), "staff"/"manager"=직원 대시보드,
@@ -115,6 +120,10 @@ public struct AppRoot: View {
            ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
            let scenario = MockScenario(envValue: raw) {
             self._demoMode = State(initialValue: scenario)
+        }
+        // BU_DEMO_GUEST=1 → 게스트 둘러보기 모드 자동 진입 (시뮬레이터 시각 검증용)
+        if ProcessInfo.processInfo.environment["BU_DEMO_GUEST"] == "1" {
+            self._guestMode = State(initialValue: true)
         }
         // BU_DEMO_TAB
         if let tab = ProcessInfo.processInfo.environment["BU_DEMO_TAB"] {
@@ -240,8 +249,14 @@ public struct AppRoot: View {
                             await loadDashboardIfNeeded(coordinator: coordinator)
                         }
                 }
+            } else if guestMode {
+                // ── 게스트 둘러보기 (Release 정식 경로) — 계정·개인정보 무관 번들 surface 만 ──
+                GuestModeView(onExitToSignIn: { setGuestMode(false) })
             } else {
-                SignInView(coordinator: coordinator)
+                SignInView(
+                    coordinator: coordinator,
+                    onBrowseAsGuest: { setGuestMode(true) }
+                )
                     .overlay(alignment: .bottomTrailing) {
                         #if DEBUG
                         // 디자인 미리보기 전용 — 실제 데이터 아님. 작은 회색
@@ -257,6 +272,10 @@ public struct AppRoot: View {
             }
         }
         .environment(roadmapStore)
+        // 로그인 성공 시 게스트 모드 해제 — 다음 실행이 게스트로 시작하지 않게 영속값도 제거.
+        .onChange(of: coordinator.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated && guestMode { setGuestMode(false) }
+        }
         // 인증 상태 *앱 수명 내내* 관측 + 계정 전환 격리 (2026-08-19: 종전엔 SignInView 의 .task 라
         //   로그인 직후 뷰가 사라지며 관측이 끊겨, 세션 만료·토큰 refresh 실패·다른 기기 로그아웃을
         //   메인 화면에서 감지하지 못했다. 이제 root .task 라 로그인 뒤에도 계속 돈다.)
@@ -323,6 +342,17 @@ public struct AppRoot: View {
             }
         )) {
             ResetPasswordView(coordinator: coordinator)
+        }
+    }
+
+    /// 게스트 모드 전환 — @State + UserDefaults 영속 동시 갱신 (재실행 시 게스트 유지, 로그인 시 해제).
+    @MainActor
+    private func setGuestMode(_ on: Bool) {
+        guestMode = on
+        if on {
+            UserDefaults.standard.set(true, forKey: Self.guestModeKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
         }
     }
 

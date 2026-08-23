@@ -859,6 +859,22 @@ export default function AuthPage() {
                 )}
               </div>
             )}
+
+            {/* 로그인 없이 둘러보기 — iOS 5.1.1(v) 게스트 모드 웹 미러.
+                가입 없이 정보성 기능(/browse: 프랜차이즈·세금·로드맵 미리보기)에 접근. */}
+            {(mode === "login" || mode === "signup") && (
+              <button
+                type="button"
+                onClick={() => router.push("/browse")}
+                style={{
+                  background: "none", border: "none", color: "rgba(255,255,255,0.45)",
+                  fontSize: 12.5, cursor: "pointer", textDecoration: "underline",
+                  padding: "2px 0", margin: "14px auto 0", display: "block",
+                }}
+              >
+                {language === "ko" ? "로그인 없이 둘러보기" : "Browse without an account"}
+              </button>
+            )}
           </div>
         </div>
       )}

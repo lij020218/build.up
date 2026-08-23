@@ -24,9 +24,12 @@ public struct SignInView: View {
 
     @Bindable public var coordinator: AuthCoordinator
     @State private var showEmailAuth = false
+    /// 로그인 없이 둘러보기 (게스트 모드) — App Review 5.1.1(v) 대응. nil 이면 버튼 미노출.
+    private let onBrowseAsGuest: (() -> Void)?
 
-    public init(coordinator: AuthCoordinator) {
+    public init(coordinator: AuthCoordinator, onBrowseAsGuest: (() -> Void)? = nil) {
         self.coordinator = coordinator
+        self.onBrowseAsGuest = onBrowseAsGuest
     }
 
     public var body: some View {
@@ -57,6 +60,10 @@ public struct SignInView: View {
                     }
                     EmailButton {
                         showEmailAuth = true
+                    }
+                    // 3차 버튼 — 계정 없이 번들 정보(프랜차이즈·세금·로드맵 미리보기)만 둘러보기.
+                    if let onBrowseAsGuest {
+                        GuestBrowseButton(action: onBrowseAsGuest)
                     }
                 }
                 .padding(.horizontal, BUSpacing.md)
@@ -726,6 +733,22 @@ private struct EmailButton: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct GuestBrowseButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("로그인 없이 둘러보기")
+                .font(.system(size: 12.5, weight: .regular))
+                .foregroundStyle(BUColor.inkMuted)
+                .underline()
+                .frame(maxWidth: .infinity, minHeight: 38)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("로그인 없이 둘러보기")
     }
 }
 

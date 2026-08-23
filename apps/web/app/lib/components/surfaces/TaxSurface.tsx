@@ -22,6 +22,7 @@ import {
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import TaxCalendarCard from "../TaxCalendarCard";
 import { ExternalQuickLinks } from "../ui/ExternalQuickLinks";
+import { GuestSignupLink } from "../ui/GuestSignupLink";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_DEEP = "#10104a";
@@ -56,7 +57,11 @@ const disclaimer: React.CSSProperties = {
   fontSize: 11, color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: 8,
 };
 
-export function TaxSurface() {
+/**
+ * @param guest 둘러보기(/browse) 모드 — 개인화 자리(매출·업종 기반 값)에
+ *   "기록하면 계산돼요" 대신 가입 안내 행을 노출. 정보성 섹션(공통 공제·일정)은 그대로.
+ */
+export function TaxSurface({ guest = false }: { guest?: boolean }) {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
   const categoryId = d.industryCategoryId || null;
@@ -132,7 +137,11 @@ export function TaxSurface() {
               }}>{taxType.simplifiedEligible ? "간이과세 가능" : "일반과세"}</span>
             )}
           </div>
-          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.75)", lineHeight: 1.55 }}>{taxType.noteKo}</div>
+          {guest && annualRevenueWon <= 0 ? (
+            <GuestSignupLink compact label={ko ? "내 가게 기준으로 보려면 가입하세요" : "Sign up to see your store's tax type"} />
+          ) : (
+            <div style={{ fontSize: 13, color: "rgba(15,23,42,0.75)", lineHeight: 1.55 }}>{taxType.noteKo}</div>
+          )}
         </div>
 
         {/* 부가세 + 종소세 2열 */}
@@ -146,6 +155,8 @@ export function TaxSurface() {
                 </div>
                 <div style={disclaimer}>{vat.noteKo}</div>
               </>
+            ) : guest ? (
+              <GuestSignupLink compact label={ko ? "내 가게 기준으로 보려면 가입하세요" : "Sign up to see your store's estimate"} />
             ) : <div style={{ fontSize: 13, color: "var(--muted)" }}>{ko ? "매출을 기록하면 계산돼요." : "Log sales to estimate."}</div>}
           </div>
           <div style={card}>
@@ -157,6 +168,8 @@ export function TaxSurface() {
                 </div>
                 <div style={disclaimer}>{incomeTax.noteKo}</div>
               </>
+            ) : guest ? (
+              <GuestSignupLink compact label={ko ? "내 가게 기준으로 보려면 가입하세요" : "Sign up to see your store's bracket"} />
             ) : <div style={{ fontSize: 13, color: "var(--muted)" }}>{incomeTax.noteKo}</div>}
           </div>
         </div>
@@ -228,6 +241,11 @@ export function TaxSurface() {
           </div>
         )}
 
+        {/* 게스트 — 업종특화 감면은 업종 설정이 필요 → 가입 안내 행 (가짜 자격 표시 금지) */}
+        {guest && (
+          <GuestSignupLink label={ko ? "내 업종 맞춤 감면(창업·특별세액감면)을 보려면 가입하세요" : "Sign up to see industry-specific reductions"} />
+        )}
+
         <div style={disclaimer}>
           {ko
             ? "※ 자격·감면율은 조세특례제한법·국세청 기준 안내예요. 실제 적용 세액과 중복적용 여부는 홈택스·세무사로 확정하세요."
@@ -245,7 +263,9 @@ export function TaxSurface() {
         />
         {!hasData && (
           <div style={disclaimer}>
-            {ko ? "매출·직원 정보를 기록하면 일정이 내 상황에 맞게 표시돼요." : "Log sales & staff to personalize."}
+            {guest
+              ? (ko ? "가입하면 내 매출·직원 기준으로 일정이 맞춤 표시돼요." : "Sign up to personalize this schedule to your store.")
+              : (ko ? "매출·직원 정보를 기록하면 일정이 내 상황에 맞게 표시돼요." : "Log sales & staff to personalize.")}
           </div>
         )}
       </div>
