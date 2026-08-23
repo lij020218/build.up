@@ -13,10 +13,64 @@
 //  ⚠️ 가짜 숫자 금지 — 데모 매출·대시보드 절대 미노출. 계정 기반 surface(홈·AI·직원)는
 //     전부 가입 게이트 뒤에 남는다. DEBUG 데모 인프라(DemoTabs)와 완전 별개.
 //
+//  디자인 (2026-08-23 미니멀·아이콘 리디자인):
+//   • 모든 행/카드 leading = 36pt 아이콘 타일 (rounded 10, midnight 8% bg, SF Symbol semibold)
+//   • 테두리 제거 — 옅은 bg(white 0.72 / midnight 4%)로 구분, radius 14-16
+//   • 섹션 헤더 = 10pt SF 심볼 + 11pt heavy 라벨
+//   • 로드맵 = phase 별 그룹 섹션 (행마다 번호·칩 반복 제거)
+//
 
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneCore
+
+// MARK: - 아이콘 디자인 시스템 (게스트 전용 fileprivate)
+
+/// SF Symbol 이름 검증 — 이 iOS 버전에 없으면 폴백 심볼로 대체.
+private func safeSymbol(_ name: String, fallback: String = "circle.fill") -> String {
+    #if canImport(UIKit)
+    if UIImage(systemName: name) != nil { return name }
+    return UIImage(systemName: fallback) != nil ? fallback : "circle.fill"
+    #else
+    return name
+    #endif
+}
+
+/// 36×36 라운드 사각 아이콘 타일 — 모든 목록 행/카드의 leading 요소.
+private struct GuestIconTile: View {
+    let symbol: String
+    var fallback: String = "circle.fill"
+    var size: CGFloat = 36
+
+    var body: some View {
+        Image(systemName: safeSymbol(symbol, fallback: fallback))
+            .font(.system(size: size >= 36 ? 15.5 : 13, weight: .semibold))
+            .foregroundStyle(BUColor.midnight)
+            .frame(width: size, height: size)
+            .background(
+                BUColor.midnight.opacity(0.08),
+                in: RoundedRectangle(cornerRadius: size >= 36 ? 10 : 8, style: .continuous)
+            )
+    }
+}
+
+/// 섹션 헤더 — 작은 심볼 + 11pt heavy 라벨.
+private struct GuestSectionHeader: View {
+    let symbol: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: safeSymbol(symbol))
+                .font(.system(size: 10, weight: .bold))
+            Text(text)
+                .font(.system(size: 11, weight: .heavy))
+                .kerning(0.3)
+        }
+        .foregroundStyle(BUColor.ink.opacity(0.5))
+        .padding(.leading, 2)
+    }
+}
 
 // MARK: - Guest Shell
 
@@ -100,7 +154,7 @@ public struct GuestModeView: View {
         }
     }
 
-    // MARK: 상단 배너 — 항상 표시
+    // MARK: 상단 배너 — 항상 표시 (한 줄 유지)
 
     private var banner: some View {
         HStack(spacing: 8) {
@@ -198,6 +252,8 @@ public struct GuestModeView: View {
 struct GuestTaxView: View {
     let onRequestSignup: () -> Void
 
+    @Environment(\.openURL) private var openURL
+
     private let hometax = "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&menuCd=index3"
 
     var body: some View {
@@ -208,11 +264,7 @@ struct GuestTaxView: View {
                     subtitle: "세액공제 · 신고 일정 안내"
                 )
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    BUQuickLinksCard(
-                        title: "국세청 바로가기",
-                        caption: "신고·납부·전자세금계산서는 홈택스에서 — 이 화면은 일반 안내예요.",
-                        links: [BUQuickLink(label: "국세청 홈택스", url: hometax, isPrimary: true)]
-                    )
+                    hometaxRow
                     gatedCalcRow
                     creditSection
                     scheduleSection
@@ -224,24 +276,56 @@ struct GuestTaxView: View {
         .scrollIndicators(.hidden)
     }
 
+    // ── 국세청 홈택스 — 신고·납부는 공식 채널로 ──
+
+    private var hometaxRow: some View {
+        Button {
+            if let url = URL(string: hometax) { openURL(url) }
+        } label: {
+            HStack(spacing: 12) {
+                GuestIconTile(symbol: "building.columns")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("국세청 홈택스")
+                        .font(.system(size: 14.5, weight: .bold))
+                        .foregroundStyle(BUColor.ink)
+                        .lineLimit(1)
+                    Text("신고·납부·전자세금계산서")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 6)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight.opacity(0.55))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("국세청 홈택스 열기")
+    }
+
     // ── 세금 계산은 내 매출 기반 → 가입 게이트 ──
 
     private var gatedCalcRow: some View {
         Button(action: onRequestSignup) {
-            HStack(spacing: 10) {
-                Image(systemName: "lock")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(BUColor.midnight)
-                VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 12) {
+                GuestIconTile(symbol: "lock")
+                VStack(alignment: .leading, spacing: 2) {
                     Text("내 가게 기준 예상 세금")
-                        .font(.system(size: 14, weight: .heavy))
-                        .foregroundStyle(BUColor.midnightDeep)
-                    Text("가입 후 매출을 기록하면 예상치가 보여요.")
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(BUColor.ink.opacity(0.65))
+                        .font(.system(size: 14.5, weight: .bold))
+                        .foregroundStyle(BUColor.ink)
+                        .lineLimit(1)
+                    Text("가입 후 매출을 기록하면 보여요")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.inkMuted)
                         .lineLimit(1)
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: 6)
                 Text("가입")
                     .font(.system(size: 12, weight: .heavy))
                     .foregroundStyle(.white)
@@ -249,10 +333,10 @@ struct GuestTaxView: View {
                     .padding(.vertical, 6)
                     .background(BUColor.midnight, in: Capsule())
             }
-            .padding(16)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(BUColor.midnight.opacity(0.10), lineWidth: 1))
+            .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -260,46 +344,67 @@ struct GuestTaxView: View {
 
     // ── 세액공제·감면 (공통 4종 — 번들 데이터, 누구에게나 동일) ──
 
+    /// TaxDataRegistry.common id → SF Symbol.
+    private func creditSymbol(_ id: String) -> String {
+        switch id {
+        case "yellow-umbrella":       return "umbrella"
+        case "pension-irp":           return "chart.line.uptrend.xyaxis"
+        case "integrated-employment": return "person.2.badge.plus"
+        case "sincere-medical-edu":   return "cross.case"
+        default:                      return "percent"
+        }
+    }
+
     private var creditSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("사장님이라면 챙길 세액공제·감면")
+        VStack(alignment: .leading, spacing: 8) {
+            GuestSectionHeader(symbol: "checkmark.seal", text: "챙길 세액공제·감면")
             ForEach(TaxDataRegistry.common) { b in
-                card {
-                    Text(b.titleKo)
-                        .font(.system(size: 14, weight: .heavy))
-                        .foregroundStyle(BUColor.midnightDeep)
-                    Text(b.summaryKo)
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(BUColor.ink.opacity(0.72))
-                        .lineLimit(2)   // 밀도: 요약 2줄 컷, 법조 근거는 하단 각주 하나로 갈음
+                HStack(alignment: .top, spacing: 12) {
+                    GuestIconTile(symbol: creditSymbol(b.id), fallback: "person.2")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(b.titleKo)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                        Text(b.summaryKo)
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .lineSpacing(1.5)
+                            .lineLimit(2)   // 밀도: 요약 2줄 컷, 법조 근거는 하단 각주 하나로 갈음
+                    }
+                    Spacer(minLength: 0)
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             // 업종특화 감면 — 업종은 계정 데이터 → 가입 게이트 행
             Button(action: onRequestSignup) {
-                HStack(spacing: 8) {
-                    Image(systemName: "lock")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                    Text("업종별 감면(창업·특별세액감면)은 가입 후 내 업종 기준으로 보여요.")
+                HStack(spacing: 12) {
+                    GuestIconTile(symbol: "lock")
+                    Text("업종별 감면은 가입 후 내 업종 기준으로 보여요")
                         .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(BUColor.ink.opacity(0.7))
+                        .foregroundStyle(BUColor.ink.opacity(0.65))
                         .lineSpacing(2)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
-                .padding(14)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(red: 0xF7/255, green: 0xF8/255, blue: 0xFE/255).opacity(0.7), in: RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(BUColor.midnight.opacity(0.10), lineWidth: 1))
+                .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             Text("※ 자격·감면율은 조세특례제한법·국세청 기준 안내예요. 실제 적용 세액은 홈택스·세무사로 확정하세요.")
-                .font(.system(size: 11))
-                .foregroundStyle(BUColor.ink.opacity(0.5))
+                .font(.system(size: 10.5))
+                .foregroundStyle(BUColor.ink.opacity(0.45))
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 2)
         }
     }
 
@@ -312,31 +417,36 @@ struct GuestTaxView: View {
     }
 
     private var scheduleSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("신고 일정")
+        VStack(alignment: .leading, spacing: 8) {
+            GuestSectionHeader(symbol: "calendar", text: "신고 일정")
             ForEach(upcomingEvents(), id: \.event.id) { item in
-                card {
-                    HStack(alignment: .top, spacing: 10) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(item.event.title)
-                                .font(.system(size: 14, weight: .heavy))
-                                .foregroundStyle(BUColor.midnightDeep)
-                            Text(item.event.description)
-                                .font(.system(size: 12))
-                                .foregroundStyle(BUColor.ink.opacity(0.65))
-                                .lineSpacing(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        Spacer(minLength: 8)
-                        Text(item.dDayLabel)
-                            .font(.system(size: 12, weight: .heavy))
-                            .foregroundStyle(item.daysUntil <= 14 ? BUColor.danger : BUColor.midnight)
+                HStack(alignment: .center, spacing: 12) {
+                    GuestIconTile(symbol: "calendar")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.event.title)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                        Text(item.event.description)
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .lineLimit(1)
                     }
+                    Spacer(minLength: 8)
+                    Text(item.dDayLabel)
+                        .font(.system(size: 12, weight: .heavy))
+                        .foregroundStyle(item.daysUntil <= 14 ? BUColor.danger : BUColor.midnight)
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             Text("내 과세유형(간이·일반)에 맞춘 일정은 가입 후 보여드려요.")
-                .font(.system(size: 11.5, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted)
+                .padding(.horizontal, 2)
         }
     }
 
@@ -362,23 +472,6 @@ struct GuestTaxView: View {
         }
         return items.sorted { $0.daysUntil < $1.daysUntil }.prefix(4).map { $0 }
     }
-
-    // ── helpers ──
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 13, weight: .heavy))
-            .foregroundStyle(BUColor.ink.opacity(0.55))
-    }
-
-    @ViewBuilder
-    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 5) { content() }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(BUColor.midnight.opacity(0.10), lineWidth: 1))
-    }
 }
 
 // MARK: - GuestRoadmapPreview — 오프라인 경로 읽기 전용 미리보기
@@ -403,6 +496,25 @@ struct GuestRoadmapPreview: View {
     }
     #endif
 
+    private struct PhaseGroup: Identifiable {
+        let phase: StagePhase
+        var stages: [RoadmapStage]
+        var id: String { phase.rawValue }
+    }
+
+    /// phase 순서를 유지한 연속 그룹 (offline: 준비 → 사업 등록 → 오픈 준비 → 오픈·운영).
+    private var phaseGroups: [PhaseGroup] {
+        var groups: [PhaseGroup] = []
+        for stage in stages {
+            if let last = groups.indices.last, groups[last].phase == stage.phase {
+                groups[last].stages.append(stage)
+            } else {
+                groups.append(PhaseGroup(phase: stage.phase, stages: [stage]))
+            }
+        }
+        return groups
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
@@ -412,8 +524,12 @@ struct GuestRoadmapPreview: View {
                 )
                 VStack(alignment: .leading, spacing: 8) {
                     signupHintCard
-                    ForEach(stages) { stage in
-                        stageRow(stage)
+                    ForEach(phaseGroups) { group in
+                        GuestSectionHeader(symbol: phaseSymbol(group.phase), text: group.phase.labelKo)
+                            .padding(.top, 10)
+                        ForEach(group.stages) { stage in
+                            stageRow(stage)
+                        }
                     }
                     Color.clear.frame(height: 110)
                 }
@@ -426,6 +542,51 @@ struct GuestRoadmapPreview: View {
         #endif
         .sheet(item: $selectedStage) { stage in
             GuestStageDetailSheet(stage: stage, onRequestSignup: onRequestSignup)
+        }
+    }
+
+    // ── 심볼 매핑 ──
+
+    /// phase → 섹션 헤더 심볼 (offline 4종 + 안전 기본값).
+    private func phaseSymbol(_ phase: StagePhase) -> String {
+        switch phase {
+        case .preparation:  return "lightbulb"
+        case .registration: return "doc.text"
+        case .setup:        return "hammer"
+        case .launch:       return "storefront"
+        default:            return "flag"
+        }
+    }
+
+    /// stageId → 행 아이콘 심볼 (offline 21종 + 안전 기본값).
+    private func stageSymbol(_ id: String) -> String {
+        switch id {
+        // 공통 준비
+        case "industry-selection":         return "square.grid.2x2"
+        case "startup-type":               return "building.2"
+        case "business-model":             return "switch.2"
+        case "target-customer-definition": return "person.2"
+        case "budget-setup":               return "wonsign.circle"
+        // 사업 등록
+        case "permit-check":               return "checkmark.seal"
+        case "location-candidates":        return "map"
+        case "contract-review":            return "doc.text.magnifyingglass"
+        // 오픈 준비
+        case "construction-setup":         return "paintbrush.pointed"
+        case "registration-setup":         return "doc.badge.plus"
+        case "biz-registration":           return "creditcard"
+        case "tax-guide":                  return "percent"
+        case "loan-guide":                 return "banknote"
+        case "menu-design":                return "fork.knife"
+        case "vendor-setup":               return "shippingbox"
+        case "hiring-setup":               return "person.badge.plus"
+        case "insurance-tax-setup":        return "checkmark.shield"
+        // 오픈·운영
+        case "operations-setup":           return "megaphone"
+        case "pre-launch":                 return "sparkles"
+        case "financial-review":           return "chart.line.uptrend.xyaxis"
+        case "pre-launch-final":           return "flag.checkered"
+        default:                           return "flag"
         }
     }
 
@@ -444,7 +605,6 @@ struct GuestRoadmapPreview: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
-        .padding(.bottom, 4)
     }
 
     private func stageRow(_ stage: RoadmapStage) -> some View {
@@ -452,39 +612,21 @@ struct GuestRoadmapPreview: View {
             selectedStage = stage
         } label: {
             HStack(spacing: 12) {
-                Text("\(stage.stepNumber)")
-                    .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(BUColor.midnight)
-                    .frame(width: 30, height: 30)
-                    .background(BUColor.midnight.opacity(0.07), in: Circle())
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(stage.titleKo)
-                            .font(.system(size: 14.5, weight: .bold))
-                            .foregroundStyle(BUColor.ink)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                        Text(stage.phase.labelKo)
-                            .font(.system(size: 10, weight: .heavy))
-                            .foregroundStyle(BUColor.midnight.opacity(0.65))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(BUColor.midnight.opacity(0.06), in: Capsule())
-                    }
-                }
+                GuestIconTile(symbol: stageSymbol(stage.stageId))
+                Text(stage.titleKo)
+                    .font(.system(size: 14.5, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Spacer(minLength: 6)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(BUColor.inkSubtle)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 13)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1)
-            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -541,10 +683,14 @@ private struct GuestStageDetailSheet: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("\(stage.stepNumber)단계 · \(stage.phase.labelKo) · 미리보기")
-                .font(.system(size: 11.5, weight: .heavy))
-                .foregroundStyle(BUColor.midnight.opacity(0.6))
-                .textCase(nil)
+            HStack(spacing: 5) {
+                Image(systemName: "eye")
+                    .font(.system(size: 10, weight: .bold))
+                Text("\(stage.stepNumber)단계 · \(stage.phase.labelKo) · 미리보기")
+                    .font(.system(size: 11.5, weight: .heavy))
+                    .textCase(nil)
+            }
+            .foregroundStyle(BUColor.midnight.opacity(0.6))
             Text(content?.shell.title ?? stage.titleKo)
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(BUColor.ink)
@@ -561,9 +707,13 @@ private struct GuestStageDetailSheet: View {
 
     private func keyActionCard(_ ka: BUStageContent.KeyAction) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(ka.eyebrow)
-                .font(.system(size: 11, weight: .heavy))
-                .foregroundStyle(BUColor.midnight.opacity(0.6))
+            HStack(spacing: 5) {
+                Image(systemName: "star")
+                    .font(.system(size: 10, weight: .bold))
+                Text(ka.eyebrow)
+                    .font(.system(size: 11, weight: .heavy))
+            }
+            .foregroundStyle(BUColor.midnight.opacity(0.6))
             Text(ka.title)
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(BUColor.midnightDeep)
@@ -574,13 +724,10 @@ private struct GuestStageDetailSheet: View {
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
             if let minis = ka.miniCards, !minis.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(minis.enumerated()), id: \.offset) { _, m in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: safeSymbol(m.icon))
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(BUColor.midnight)
-                                .frame(width: 18)
+                        HStack(alignment: .top, spacing: 10) {
+                            GuestIconTile(symbol: m.icon, fallback: "checkmark.circle", size: 28)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(m.label)
                                     .font(.system(size: 12.5, weight: .bold))
@@ -596,13 +743,10 @@ private struct GuestStageDetailSheet: View {
                 .padding(.top, 4)
             }
             if let pillars = ka.pillars, !pillars.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(pillars.enumerated()), id: \.offset) { _, p in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: safeSymbol(p.icon))
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(BUColor.midnight)
-                                .frame(width: 18)
+                        HStack(alignment: .top, spacing: 10) {
+                            GuestIconTile(symbol: p.icon, fallback: "checkmark.circle", size: 28)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(p.label)
                                     .font(.system(size: 12.5, weight: .bold))
@@ -619,9 +763,8 @@ private struct GuestStageDetailSheet: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(BUColor.midnight.opacity(0.10), lineWidth: 1))
+        .padding(14)
+        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // ── 페이지 → 정적 섹션만 렌더 ──
@@ -632,9 +775,8 @@ private struct GuestStageDetailSheet: View {
         if !rendered.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 if !page.label.isEmpty {
-                    Text(page.label)
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(BUColor.ink.opacity(0.55))
+                    GuestSectionHeader(symbol: "square.stack", text: page.label)
+                        .padding(.top, 4)
                 }
                 ForEach(Array(rendered.enumerated()), id: \.offset) { _, section in
                     renderSection(section)
@@ -657,7 +799,7 @@ private struct GuestStageDetailSheet: View {
     private func renderSection(_ section: BUStageContent.Section) -> some View {
         switch section {
         case .whyList(_, let subtitle, let items):
-            sectionCard(eyebrow: "왜 필요한가", subtitle: subtitle) {
+            sectionCard(symbol: "questionmark.circle", eyebrow: "왜 필요한가", subtitle: subtitle) {
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                     HStack(alignment: .top, spacing: 8) {
                         Text(item.accent)
@@ -677,7 +819,7 @@ private struct GuestStageDetailSheet: View {
                 }
             }
         case .stepList(_, let eyebrow, let subtitle, let steps, _, let links):
-            sectionCard(eyebrow: eyebrow, subtitle: subtitle) {
+            sectionCard(symbol: "list.number", eyebrow: eyebrow, subtitle: subtitle) {
                 ForEach(Array(steps.enumerated()), id: \.offset) { idx, step in
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(idx + 1)")
@@ -705,9 +847,15 @@ private struct GuestStageDetailSheet: View {
                             Button {
                                 openURL(url)
                             } label: {
-                                Text("\(link.label) →")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundStyle(BUColor.midnight)
+                                HStack(spacing: 4) {
+                                    Image(systemName: "link")
+                                        .font(.system(size: 10, weight: .semibold))
+                                    Text(link.label)
+                                        .font(.system(size: 12, weight: .bold))
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.system(size: 9, weight: .semibold))
+                                }
+                                .foregroundStyle(BUColor.midnight)
                             }
                             .buttonStyle(.plain)
                         }
@@ -715,10 +863,15 @@ private struct GuestStageDetailSheet: View {
                 }
             }
         case .infoCard(_, _, let title, let body):
-            sectionCard(eyebrow: nil, subtitle: nil) {
-                Text(title)
-                    .font(.system(size: 13.5, weight: .heavy))
-                    .foregroundStyle(BUColor.midnightDeep)
+            sectionCard(symbol: nil, eyebrow: nil, subtitle: nil) {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                    Text(title)
+                        .font(.system(size: 13.5, weight: .heavy))
+                        .foregroundStyle(BUColor.midnightDeep)
+                }
                 Text(body)
                     .font(.system(size: 12.5))
                     .foregroundStyle(BUColor.ink.opacity(0.72))
@@ -726,10 +879,15 @@ private struct GuestStageDetailSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         case .noteList(_, let title, let items):
-            sectionCard(eyebrow: nil, subtitle: nil) {
-                Text(title)
-                    .font(.system(size: 13.5, weight: .heavy))
-                    .foregroundStyle(BUColor.midnightDeep)
+            sectionCard(symbol: nil, eyebrow: nil, subtitle: nil) {
+                HStack(spacing: 6) {
+                    Image(systemName: "note.text")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                    Text(title)
+                        .font(.system(size: 13.5, weight: .heavy))
+                        .foregroundStyle(BUColor.midnightDeep)
+                }
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                     HStack(alignment: .top, spacing: 6) {
                         Text("·")
@@ -744,7 +902,7 @@ private struct GuestStageDetailSheet: View {
                 }
             }
         case .comparisonCards(let eyebrow, let cards):
-            sectionCard(eyebrow: eyebrow, subtitle: nil) {
+            sectionCard(symbol: "arrow.left.arrow.right", eyebrow: eyebrow, subtitle: nil) {
                 ForEach(Array(cards.enumerated()), id: \.offset) { _, cardItem in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(cardItem.title)
@@ -765,7 +923,7 @@ private struct GuestStageDetailSheet: View {
                 }
             }
         case .pathCards(_, let eyebrow, let subtitle, let cards, _):
-            sectionCard(eyebrow: eyebrow, subtitle: subtitle) {
+            sectionCard(symbol: "signpost.right", eyebrow: eyebrow, subtitle: subtitle) {
                 ForEach(Array(cards.enumerated()), id: \.offset) { _, cardItem in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(cardItem.condition)
@@ -784,7 +942,7 @@ private struct GuestStageDetailSheet: View {
                 }
             }
         case .stageOverview(let headline, let intro, let stat, let outlineEyebrow, let workOutline, let outcomeTitle, let outcome):
-            sectionCard(eyebrow: nil, subtitle: nil) {
+            sectionCard(symbol: nil, eyebrow: nil, subtitle: nil) {
                 Text(headline)
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(BUColor.midnightDeep)
@@ -803,9 +961,7 @@ private struct GuestStageDetailSheet: View {
                         .foregroundStyle(BUColor.inkMuted)
                 }
                 .padding(.vertical, 2)
-                Text(outlineEyebrow)
-                    .font(.system(size: 11.5, weight: .heavy))
-                    .foregroundStyle(BUColor.ink.opacity(0.55))
+                GuestSectionHeader(symbol: "list.bullet", text: outlineEyebrow)
                     .padding(.top, 2)
                 ForEach(Array(workOutline.enumerated()), id: \.offset) { idx, item in
                     HStack(alignment: .top, spacing: 8) {
@@ -834,7 +990,7 @@ private struct GuestStageDetailSheet: View {
                     .padding(.top, 2)
             }
         case .linkCards(let eyebrow, let links):
-            sectionCard(eyebrow: eyebrow, subtitle: nil) {
+            sectionCard(symbol: "link", eyebrow: eyebrow, subtitle: nil) {
                 ForEach(Array(links.enumerated()), id: \.offset) { _, link in
                     if let url = URL(string: link.url) {
                         Button {
@@ -851,6 +1007,9 @@ private struct GuestStageDetailSheet: View {
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .foregroundStyle(BUColor.midnight.opacity(0.55))
                                 }
                                 Text(link.desc)
                                     .font(.system(size: 11.5))
@@ -872,15 +1031,22 @@ private struct GuestStageDetailSheet: View {
     }
 
     private func sectionCard<Content: View>(
+        symbol: String?,
         eyebrow: String?,
         subtitle: String?,
         @ViewBuilder _ content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if let eyebrow, !eyebrow.isEmpty {
-                Text(eyebrow)
-                    .font(.system(size: 11, weight: .heavy))
-                    .foregroundStyle(BUColor.midnight.opacity(0.6))
+                HStack(spacing: 5) {
+                    if let symbol {
+                        Image(systemName: safeSymbol(symbol))
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    Text(eyebrow)
+                        .font(.system(size: 11, weight: .heavy))
+                }
+                .foregroundStyle(BUColor.midnight.opacity(0.6))
             }
             if let subtitle, !subtitle.isEmpty {
                 Text(subtitle)
@@ -892,9 +1058,8 @@ private struct GuestStageDetailSheet: View {
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(BUColor.midnight.opacity(0.10), lineWidth: 1))
+        .padding(14)
+        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var signupFooter: some View {
@@ -920,15 +1085,6 @@ private struct GuestStageDetailSheet: View {
         }
         .buttonStyle(.plain)
         .padding(.top, 4)
-    }
-
-    /// SF Symbol 이름 검증 — SSOT JSON 아이콘이 iOS 에 없으면 기본 아이콘으로 폴백.
-    private func safeSymbol(_ name: String) -> String {
-        #if canImport(UIKit)
-        return UIImage(systemName: name) != nil ? name : "circle.fill"
-        #else
-        return name
-        #endif
     }
 }
 
