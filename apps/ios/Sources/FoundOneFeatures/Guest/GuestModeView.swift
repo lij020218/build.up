@@ -106,11 +106,9 @@ public struct GuestModeView: View {
         HStack(spacing: 8) {
             Image(systemName: "eye")
                 .font(.system(size: 12, weight: .semibold))
-            Text("둘러보기 모드 — 내 가게 관리와 AI 로드맵은 가입 후 이용할 수 있어요")
-                .font(.system(size: 11.5, weight: .bold))
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .fixedSize(horizontal: false, vertical: true)
+            Text("둘러보기 모드")
+                .font(.system(size: 12, weight: .bold))
+                .lineLimit(1)
             Spacer(minLength: 6)
             Button(action: onExitToSignIn) {
                 Text("가입하기")
@@ -238,12 +236,10 @@ struct GuestTaxView: View {
                     Text("내 가게 기준 예상 세금")
                         .font(.system(size: 14, weight: .heavy))
                         .foregroundStyle(BUColor.midnightDeep)
-                    Text("과세유형·부가세·종소세 예상치는 가입 후 매출을 기록하면 보여드려요.")
+                    Text("가입 후 매출을 기록하면 예상치가 보여요.")
                         .font(.system(size: 12.5))
                         .foregroundStyle(BUColor.ink.opacity(0.65))
-                        .lineSpacing(2)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 Text("가입")
@@ -275,11 +271,7 @@ struct GuestTaxView: View {
                     Text(b.summaryKo)
                         .font(.system(size: 12.5))
                         .foregroundStyle(BUColor.ink.opacity(0.72))
-                        .lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("근거: \(b.basis)\(b.sunset.map { " · \($0)까지" } ?? "")")
-                        .font(.system(size: 11))
-                        .foregroundStyle(BUColor.ink.opacity(0.5))
+                        .lineLimit(2)   // 밀도: 요약 2줄 컷, 법조 근거는 하단 각주 하나로 갈음
                 }
             }
             // 업종특화 감면 — 업종은 계정 데이터 → 가입 게이트 행
@@ -288,7 +280,7 @@ struct GuestTaxView: View {
                     Image(systemName: "lock")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(BUColor.midnight)
-                    Text("업종특화 감면(창업·특별세액감면)은 내 업종 기준으로 보려면 가입이 필요해요.")
+                    Text("업종별 감면(창업·특별세액감면)은 가입 후 내 업종 기준으로 보여요.")
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(BUColor.ink.opacity(0.7))
                         .lineSpacing(2)
@@ -416,7 +408,7 @@ struct GuestRoadmapPreview: View {
             VStack(spacing: 0) {
                 BUPageHeader(
                     title: "창업 로드맵",
-                    subtitle: "오프라인 외식 기준 미리보기 · 단계를 눌러 내용을 확인하세요"
+                    subtitle: "단계를 눌러 내용 미리보기"
                 )
                 VStack(alignment: .leading, spacing: 8) {
                     signupHintCard
@@ -442,7 +434,7 @@ struct GuestRoadmapPreview: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(BUColor.midnightBright)
-            Text("가입하면 내 업종에 맞는 단계 구성과 진행 관리를 쓸 수 있어요.")
+            Text("가입하면 내 업종 맞춤 구성으로 진행을 관리할 수 있어요.")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(BUColor.ink.opacity(0.7))
                 .lineSpacing(2)
@@ -479,12 +471,6 @@ struct GuestRoadmapPreview: View {
                             .padding(.vertical, 2)
                             .background(BUColor.midnight.opacity(0.06), in: Capsule())
                     }
-                    Text(stage.descriptionKo)
-                        .font(.system(size: 12))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 6)
                 Image(systemName: "chevron.right")
@@ -492,7 +478,7 @@ struct GuestRoadmapPreview: View {
                     .foregroundStyle(BUColor.inkSubtle)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(.vertical, 13)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
