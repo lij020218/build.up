@@ -140,7 +140,8 @@ function OfferingCatalogCard({ d, ko, unitLabel, kind }: { d: DashboardHook; ko:
     d.setInvForm({
       open: true, editId: null, name: "", qty: "0", unit: ko ? "개" : "ea", threshold: "",
       unitCost: "", category: "other", itemType: "product",
-      sellingPrice: "", displayCategory: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
+      sellingPrice: "", displayCategory: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "", orderCycleDays: "",
+      purchasePackSize: "", purchasePackPrice: "",
     });
   };
   const closeForm = () => d.setInvForm({ ...invForm, open: false, editId: null, name: "", sellingPrice: "", displayCategory: "" });

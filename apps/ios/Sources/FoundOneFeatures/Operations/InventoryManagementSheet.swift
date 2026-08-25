@@ -68,15 +68,26 @@ public struct InventoryManagementSheet: View {
     /// 신규 메뉴 저장 직후 레시피(재료 선택) 편집 자동 오픈. (2026-07-22 사장님 지시, 웹 정합)
     let isMenuIndustry: Bool
     let goldenMax: Double
+    /// 업종 카테고리 — 스타터팩(콜드스타트 체크리스트) 노출 판단용 (2026-08-25, 웹 정합)
+    let categoryId: String?
     @State private var recipeEditMenuId: String?
+    @State private var starterDeselected: Set<String> = []
 
-    public init(storeInfoStore: StoreInfoStore, isMenuIndustry: Bool = false, goldenMax: Double = 33) {
+    public init(storeInfoStore: StoreInfoStore, isMenuIndustry: Bool = false, goldenMax: Double = 33, categoryId: String? = nil) {
         self.storeInfoStore = storeInfoStore
         self.isMenuIndustry = isMenuIndustry
         self.goldenMax = goldenMax
+        self.categoryId = categoryId
     }
 
     private var items: [BUInventoryItem] { storeInfoStore.state.inventory }
+
+    /// 스타터팩 — 재료 0개 콜드스타트에서만 (재진입 소음 방지) + 이미 있는 이름 제외 (웹 정합)
+    private var starterItems: [BUStarterPackItem] {
+        guard let pack = BUInventoryStarterPacks.resolve(categoryId: categoryId),
+              !items.contains(where: { $0.itemType != "product" }) else { return [] }
+        return pack.items.filter { s in !items.contains { $0.name == s.name } }
+    }
 
     public var body: some View {
         NavigationStack {
@@ -85,8 +96,12 @@ public struct InventoryManagementSheet: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.md) {
                         headerBlock
+                        // 스타터 패널은 재료 0개일 때 목록(메뉴 등)과 공존 — 메뉴만 있는 매장도 재료 콜드스타트 해소
+                        if !starterItems.isEmpty {
+                            starterPanel
+                        }
                         if items.isEmpty {
-                            emptyState
+                            if starterItems.isEmpty { emptyState }
                         } else {
                             itemList
                         }
@@ -246,6 +261,72 @@ public struct InventoryManagementSheet: View {
         }
     }
 
+    /// 스타터 체크리스트 — 콜드스타트 해소 (2026-08-25, 웹 InventoryOpsCard 정합).
+    /// 기본 전체 선택(카페는 안 쓰는 게 더 적음), 칩에서 단위=관리 방식 자연 학습.
+    private var starterPanel: some View {
+        let pack = BUInventoryStarterPacks.resolve(categoryId: categoryId)
+        let pickedCount = starterItems.filter { !starterDeselected.contains($0.name) }.count
+        return BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(pack?.title ?? "많이 쓰는 품목")
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundStyle(BUColor.ink)
+                Text("쓰는 것만 골라 한 번에 추가하세요. 수량·가격은 나중에 아는 것부터 채우면 돼요.")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                BUWrapLayout(spacing: 6) {
+                    ForEach(starterItems) { s in
+                        starterChip(s)
+                    }
+                }
+                Button {
+                    let picked = starterItems.filter { !starterDeselected.contains($0.name) }
+                    guard !picked.isEmpty else { return }
+                    storeInfoStore.commit { state in
+                        for s in picked {
+                            state.inventory.append(BUInventoryItem(
+                                name: s.name, quantity: 0, unit: s.unit,
+                                category: s.category, itemType: "material"
+                            ))
+                        }
+                    }
+                } label: {
+                    Text("\(pickedCount)개 품목 추가")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .disabled(pickedCount == 0)
+            }
+        }
+    }
+
+    private func starterChip(_ s: BUStarterPackItem) -> some View {
+        let selected = !starterDeselected.contains(s.name)
+        let bulk = BUInventoryItem.bulkUnits.contains(s.unit.lowercased())
+        return Button {
+            if selected { starterDeselected.insert(s.name) } else { starterDeselected.remove(s.name) }
+        } label: {
+            HStack(spacing: 4) {
+                Text("\(selected ? "✓ " : "")\(s.name)")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("\(s.unit) · \(bulk ? "원가·리듬" : "수량")")
+                    .font(.system(size: 10))
+                    .opacity(0.7)
+            }
+            .foregroundStyle(selected ? BUColor.midnight : BUColor.inkMuted)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(selected ? BUColor.midnight.opacity(0.08) : Color(.systemBackground), in: Capsule())
+            .overlay(Capsule().strokeBorder(selected ? BUColor.midnight.opacity(0.3) : BUColor.cardBorder, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
     private var itemList: some View {
         VStack(spacing: 8) {
             Picker("정렬", selection: $sortMode) {
@@ -258,22 +339,45 @@ public struct InventoryManagementSheet: View {
             ForEach(sortedItems) { item in
                 itemRow(item)
             }
+            // ── 원가·발주 리듬 재료 (벌크 단위) — 잔량 대신 마지막 발주 경과일 (2026-08-25, 웹 정합) ──
+            if !bulkItems.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("원가·발주 리듬 관리")
+                        .font(.system(size: 11, weight: .heavy))
+                        .foregroundStyle(BUColor.midnight)
+                        .textCase(.uppercase)
+                        .tracking(0.5)
+                        .padding(.top, 8)
+                    Text("무게·부피 단위 재료는 잔량 대신 원가 계산과 발주 리듬으로 관리돼요.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                ForEach(bulkItems) { item in
+                    bulkItemRow(item)
+                }
+            }
         }
     }
 
+    /// 수량 추적 대상 (개수 단위 재료 + 상품) / 벌크(무게·부피 단위) 재료 분리 — 추적모드 분리 (2026-08-25)
+    private var countedItems: [BUInventoryItem] { items.filter { !$0.isBulkTracked } }
+    private var bulkItems: [BUInventoryItem] { items.filter { $0.isBulkTracked } }
+
     private var sortedItems: [BUInventoryItem] {
+        let base = countedItems
         switch sortMode {
         case .name:
-            return items.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+            return base.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
         case .category:
-            return items.sorted {
+            return base.sorted {
                 if $0.category != $1.category { return $0.category < $1.category }
                 return $0.name.localizedCompare($1.name) == .orderedAscending
             }
         case .urgency:
-            let alert  = items.filter { $0.isLowStock }
-            let watch  = items.filter { !$0.isLowStock && $0.daysUntilStockout <= 7 }
-            let normal = items.filter { !$0.isLowStock && $0.daysUntilStockout > 7 }
+            let alert  = base.filter { $0.isLowStock }
+            let watch  = base.filter { !$0.isLowStock && $0.daysUntilStockout <= 7 }
+            let normal = base.filter { !$0.isLowStock && $0.daysUntilStockout > 7 }
             return alert + watch + normal
         }
     }
@@ -320,6 +424,81 @@ public struct InventoryManagementSheet: View {
                     }
                 }
                 Menu {
+                    Button("수정") {
+                        editingItem = item
+                        showForm = true
+                    }
+                    Button("삭제", role: .destructive) {
+                        pendingDeleteItem = item
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .padding(8)
+                }
+            }
+        }
+    }
+
+    /// 벌크(무게·부피 단위) 재료 행 — 잔량 없이 단가·발주 리듬 + [오늘 발주] (2026-08-25, 웹 정합)
+    private func bulkItemRow(_ item: BUInventoryItem) -> some View {
+        let daysSince = item.daysSinceLastOrder(todayKST: CoachingHistoryRepository.todayKST())
+        let cycle = item.orderCycleDays ?? 0
+        let overdue = cycle > 0 && (daysSince ?? 0) >= cycle && daysSince != nil
+        return BUCard(.outer) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(item.name)
+                            .font(.system(size: 14, weight: .heavy))
+                            .foregroundStyle(BUColor.ink)
+                        if overdue {
+                            Text("발주 시기 확인")
+                                .font(.system(size: 9.5, weight: .bold))
+                                .foregroundStyle(BUColor.danger)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(BUColor.danger.opacity(0.10), in: Capsule())
+                        }
+                        if let catLabel = inventoryCategoryChipLabel(item) {
+                            Text(catLabel)
+                                .font(.system(size: 9.5, weight: .semibold))
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    HStack(spacing: 12) {
+                        // 단가는 사장님 언어로 — 구매 묶음("1L 2,600원") > L·kg 환산 > 원단위 (웹 정합).
+                        //  금액은 절사 없는 정확 표기 — formatKRWCompact 는 18,000→"1만" 절사라 원가 맥락에 부적합 (2026-08-25)
+                        if let size = item.purchasePackSize, let price = item.purchasePackPrice, size > 0, price > 0 {
+                            infoChip(label: "구매", value: "\(BUInventoryItem.packSizeLabel(size, unit: item.unit)) \(Int(price).formatted())원")
+                        } else if let disp = item.bulkCostDisplay {
+                            infoChip(label: "단가", value: "\(Int(disp.amount).formatted())원/\(disp.perUnit)")
+                        } else if item.unitCost > 0 {
+                            infoChip(label: "단가", value: "\(Int(item.unitCost).formatted())원/\(item.unit)")
+                        }
+                        infoChip(
+                            label: "발주",
+                            value: daysSince.map { "\($0)일 전" } ?? "기록 없음"
+                        )
+                        if cycle > 0 {
+                            infoChip(label: "주기", value: "\(cycle)일")
+                        }
+                    }
+                }
+                Menu {
+                    Button("오늘 발주") {
+                        let today = CoachingHistoryRepository.todayKST()
+                        storeInfoStore.commit { state in
+                            if let idx = state.inventory.firstIndex(where: { $0.id == item.id }) {
+                                state.inventory[idx].lastOrderedAt = today
+                            }
+                        }
+                    }
                     Button("수정") {
                         editingItem = item
                         showForm = true
@@ -531,6 +710,11 @@ private struct InventoryItemForm: View {
     @State private var itemType: String
     @State private var sellingPrice: String
     @State private var displayCategory: String
+    /// 벌크(무게·부피 단위) 재료 전용 — 발주 주기(일) (2026-08-25 추적모드 분리, 웹 정합)
+    @State private var orderCycleDays: String
+    /// 벌크 재료 전용 — 구매 묶음(한 번에 사는 양·가격) → 단가 자동 파생 (웹 정합)
+    @State private var purchasePackSize: String
+    @State private var purchasePackPrice: String
 
     private let categories = ["fresh", "dry", "frozen", "beverage", "supply", "other"]
     private let categoryLabels: [String: String] = [
@@ -553,6 +737,27 @@ private struct InventoryItemForm: View {
         _itemType     = State(initialValue: existing?.itemType ?? "material")
         _sellingPrice = State(initialValue: existing.map { $0.sellingPrice > 0 ? "\(Int($0.sellingPrice))" : "" } ?? "")
         _displayCategory = State(initialValue: existing?.displayCategory ?? "")
+        _orderCycleDays = State(initialValue: existing?.orderCycleDays.map { "\($0)" } ?? "")
+        _purchasePackSize = State(initialValue: existing?.purchasePackSize.map { "\(Int($0))" } ?? "")
+        _purchasePackPrice = State(initialValue: existing?.purchasePackPrice.map { "\(Int($0))" } ?? "")
+    }
+
+    /// 벌크(무게·부피 단위) 재료 — 수량·임계·소진량 대신 발주 주기 (2026-08-25 추적모드 분리)
+    private var isBulkForm: Bool {
+        itemType != "product" && BUInventoryItem.bulkUnits.contains(unit.trimmingCharacters(in: .whitespaces).lowercased())
+    }
+
+    /// 구매 묶음 입력 시 파생 단가 안내, 아니면 관리 방식 설명 (웹 폼 힌트 정합)
+    private var bulkFormHint: String {
+        let size = Double(purchasePackSize) ?? 0
+        let price = Double(purchasePackPrice) ?? 0
+        if size > 0 && price > 0 {
+            let per = price / size
+            // 절사 없는 정확 표기 (formatKRWCompact 는 18,000→"1만" 절사)
+            let scaled = ["ml", "cc", "g"].contains(unit.lowercased()) ? " (\(unit.lowercased() == "g" ? "kg" : "L")당 \(Int(per * 1000).formatted())원)" : ""
+            return "\(BUInventoryItem.packSizeLabel(size, unit: unit)) \(Int(price).formatted())원 → 단가 자동 계산\(scaled)"
+        }
+        return "부어 쓰는(무게·부피) 재료는 잔량 대신 원가 계산과 발주 리듬으로 관리돼요 — 수량 입력이 필요 없어요."
     }
 
     private var canSave: Bool {
@@ -599,20 +804,46 @@ private struct InventoryItemForm: View {
                                 }
                                 if !(itemType == "product" && isMenuIndustry) {
                                 HStack(spacing: 8) {
-                                    formField(label: itemType == "product" ? "재고 수량" : "현재 재고", required: itemType != "product") {
-                                        TextField("0", text: $quantity)
-                                            .keyboardType(.numberPad)
-                                            .textFieldStyle(.roundedBorder)
+                                    if !isBulkForm {
+                                        formField(label: itemType == "product" ? "재고 수량" : "현재 재고", required: itemType != "product") {
+                                            TextField("0", text: $quantity)
+                                                .keyboardType(.numberPad)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
                                     }
                                     formField(label: "단위", required: false) {
                                         // g·kg·ml·l 로 등록하면 레시피 소요량에서 그램·리터 환산 활성화
                                         TextField("개·g·kg·ml", text: $unit)
                                             .textFieldStyle(.roundedBorder)
                                     }
-                                    .frame(width: 90)
+                                    .frame(width: isBulkForm ? nil : 90)
                                 }
                                 }
                                 if itemType != "product" {
+                                if isBulkForm {
+                                    // 벌크 재료: 잔량 대신 발주 리듬 — 수량·임계·소진량 입력 없음 (2026-08-25, 웹 정합)
+                                    formField(label: "발주 주기 (일, 선택)", required: false) {
+                                        TextField("예) 3", text: $orderCycleDays)
+                                            .keyboardType(.numberPad)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    // 단가 = 구매 묶음으로 입력 — 사장님은 "우유 1L 2,600원"으로 기억 (웹 정합)
+                                    HStack(spacing: 8) {
+                                        formField(label: "한 번에 사는 양 (\(unit))", required: false) {
+                                            TextField("1000", text: $purchasePackSize)
+                                                .keyboardType(.numberPad)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
+                                        formField(label: "그 가격 (원)", required: false) {
+                                            TextField("2600", text: $purchasePackPrice)
+                                                .keyboardType(.numberPad)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
+                                    }
+                                    Text(bulkFormHint)
+                                        .font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                } else {
                                 formField(label: "최소 임계 (재주문 기준)", required: false) {
                                     TextField("0", text: $minThreshold)
                                         .keyboardType(.numberPad)
@@ -624,10 +855,13 @@ private struct InventoryItemForm: View {
                                         .textFieldStyle(.roundedBorder)
                                 }
                                 }
+                                }
+                                if !isBulkForm {
                                 formField(label: itemType == "product" ? "원가 (원, 선택 — 레시피 지정 시 자동)" : "단가 (원, 선택)", required: false) {
                                     TextField("0", text: $unitCost)
                                         .keyboardType(.numberPad)
                                         .textFieldStyle(.roundedBorder)
+                                }
                                 }
                                 if itemType != "product" {
                                 formField(label: "카테고리", required: false) {
@@ -690,14 +924,18 @@ private struct InventoryItemForm: View {
     }
 
     private func save() {
+        // 구매 묶음 있으면 단가 자동 파생 (웹 handleInvSave 정합)
+        let packSize = Double(purchasePackSize) ?? 0
+        let packPrice = Double(purchasePackPrice) ?? 0
+        let derivedUnitCost: Double? = (packSize > 0 && packPrice > 0) ? packPrice / packSize : nil
         let item = BUInventoryItem(
             id: existing?.id ?? UUID().uuidString,
             name: name.trimmingCharacters(in: .whitespaces),
-            // 메뉴(수량 필드 숨김)는 기존 수량 보존 (신규는 0)
-            quantity: (itemType == "product" && isMenuIndustry) ? (existing?.quantity ?? 0) : (Double(quantity) ?? 0),
+            // 메뉴(수량 필드 숨김)·벌크 재료(잔량 미추적)는 기존 수량 보존 (신규는 0)
+            quantity: ((itemType == "product" && isMenuIndustry) || isBulkForm) ? (existing?.quantity ?? 0) : (Double(quantity) ?? 0),
             unit: unit.isEmpty ? "개" : unit,
             minThreshold: Double(minThreshold) ?? 0,
-            unitCost: Double(unitCost) ?? 0,
+            unitCost: derivedUnitCost ?? (Double(unitCost) ?? 0),
             category: category,
             itemType: itemType,
             // 상품 자유분류 — 폼 입력 우선(비면 nil), material 은 nil (2026-07-22 통합)
@@ -705,11 +943,16 @@ private struct InventoryItemForm: View {
                 ? (displayCategory.trimmingCharacters(in: .whitespaces).isEmpty ? nil : displayCategory.trimmingCharacters(in: .whitespaces))
                 : nil,
             recipe: existing?.recipe, // 레시피 보존 — 편집은 MenuRecipeSheet 에서
+            takeoutRecipe: existing?.takeoutRecipe, // 포장 추가 재료 보존 (2026-08-25 홀/포장 분리)
             sellingPrice: itemType == "product" ? (Double(sellingPrice) ?? 0) : (existing?.sellingPrice ?? 0),
             leadTimeDays: existing?.leadTimeDays ?? 1,
             dailyUsage: Double(dailyUsage) ?? 0,
             monthlySold: existing?.monthlySold ?? 0, // 편집 시 판매량 리셋 버그 수정 (기존 값 보존)
+            monthlySoldTakeout: existing?.monthlySoldTakeout ?? 0,
             lastOrderedAt: existing?.lastOrderedAt,
+            orderCycleDays: (Int(orderCycleDays) ?? 0) > 0 ? Int(orderCycleDays) : nil,
+            purchasePackSize: packSize > 0 ? packSize : nil,
+            purchasePackPrice: packPrice > 0 ? packPrice : nil,
             wasteLog: existing?.wasteLog ?? []
         )
         onSave(item)

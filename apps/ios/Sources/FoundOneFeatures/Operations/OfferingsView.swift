@@ -111,7 +111,7 @@ public struct OfferingsView: View {
             profile = try? await repo.loadSnapshot()
         }
         .sheet(isPresented: $showManageSheet) {
-            InventoryManagementSheet(storeInfoStore: storeInfoStore, isMenuIndustry: isMenuKind, goldenMax: goldenMax)
+            InventoryManagementSheet(storeInfoStore: storeInfoStore, isMenuIndustry: isMenuKind, goldenMax: goldenMax, categoryId: categoryId)
         }
         .sheet(isPresented: $showRecipeSheet) {
             MenuRecipeSheet(storeInfoStore: storeInfoStore, goldenMax: goldenMax)
@@ -470,14 +470,10 @@ public struct OfferingsView: View {
         .opacity(disabled ? 0.4 : 1)
     }
 
-    /// 판매 delta — monthlySold ± + (레시피 있으면) 재고 차감 (웹 handleProdSoldChange · MenuRecipeSheet.recordSale 정합)
+    /// 판매 delta — 홀/포장 SSOT(RecipeCost.recordSale) 위임. 이 카탈로그(권종·서비스)는 홀 기본 (웹 정합)
     private func recordSale(_ itemId: String, _ delta: Int) {
         storeInfoStore.commit { s in
-            s.inventory = s.inventory.map { it in
-                guard it.id == itemId else { return it }
-                var c = it; c.monthlySold = max(0, c.monthlySold + Double(delta)); return c
-            }
-            s.inventory = RecipeCost.applyRecipeStockDelta(s.inventory, menuId: itemId, delta: Double(delta))
+            s.inventory = RecipeCost.recordSale(s.inventory, menuId: itemId, delta: delta)
         }
     }
 }

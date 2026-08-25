@@ -17,6 +17,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, MessageSquareWarning, PackageX, Wallet } from "lucide-react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { entriesInLastDays, honestDailyAverage } from "../../utils/daily-windows";
+import { isCountTracked } from "@foundone/shared";
 
 type AlertKind = "cash" | "review" | "inventory" | "unpaid";
 
@@ -102,9 +103,10 @@ export function AlertStripBanner() {
     //  ⚠️ 메뉴(itemType==="product")는 재고가 아니라 판매 품목 — "발주" 대상이 아니다.
     //    재고 카드(InventoryOpsCard)와 동일하게 재료(material)만 집계 (2026-07-13 감사: 메뉴가
     //    qty 0 로 "즉시 발주 3개" 오표시되던 버그. 재고 카드는 0개인데 배너만 3개였음).
-    const inventory = (d.inventory ?? []) as Array<{ id: string; name: string; quantity: number; minThreshold?: number; itemType?: string }>;
+    //  ⚠️ 벌크(무게·부피 단위) 재료도 제외 — 잔량 추적 대상이 아님 (2026-08-25 추적모드 분리).
+    const inventory = (d.inventory ?? []) as Array<{ id: string; name: string; quantity: number; minThreshold?: number; itemType?: string; unit?: string }>;
     const lowStockItems = inventory.filter(
-      (i) => i.itemType !== "product" && (i.minThreshold ?? 0) > 0 && i.quantity <= (i.minThreshold ?? 0),
+      (i) => i.itemType !== "product" && isCountTracked(i) && (i.minThreshold ?? 0) > 0 && i.quantity <= (i.minThreshold ?? 0),
     );
     if (lowStockItems.length > 0) {
       const criticalItems = lowStockItems.filter((i) => i.quantity <= 0);

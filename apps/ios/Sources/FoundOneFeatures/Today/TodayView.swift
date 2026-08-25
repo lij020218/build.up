@@ -204,6 +204,23 @@ public struct TodayView: View {
         .onReceive(storeInfo?.objectWillChange ?? ObservableObjectPublisher()) { _ in
             storeRevision &+= 1
         }
+        // 시뮬 시각 검증 훅 (시뮬 탭 도구 부재 대응 — BU_DEMO_EMAIL_SHEET 패턴, 2026-08-25).
+        //   BU_DEMO_ALLOW=1 이중 가드 + fallback(no-op) store 에만 시드 → 실계정 오염 불가.
+        //   SEED_INVENTORY=cafe → 카페 픽스처(벌크·포장 메뉴) 주입 / INVENTORY·RECIPE_SHEET=1 → 시트 자동 오픈.
+        .onAppear {
+            let env = ProcessInfo.processInfo.environment
+            guard env["BU_DEMO_ALLOW"] == "1" else { return }
+            // 초기 load() 완료 후 시드 (즉시 시드하면 비동기 load 의 빈 state 가 덮어씀) → 시트는 그 뒤 오픈
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                if env["BU_DEMO_SEED_INVENTORY"] == "cafe", let si = storeInfo, si.state.inventory.isEmpty {
+                    si.commit { s in s.inventory = Self.demoCafeInventory() }
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                if env["BU_DEMO_INVENTORY_SHEET"] == "1" { showInventorySheet = true }
+                if env["BU_DEMO_RECIPE_SHEET"] == "1" { showRecipeSheet = true }
+            }
+        }
         .sheet(isPresented: $showInputSheet, onDismiss: { inputSheetDate = nil }) {
             QuickInputSheet(dashboardStore: dashboardStore, initialDate: inputSheetDate)
         }
@@ -212,7 +229,8 @@ public struct TodayView: View {
                 InventoryManagementSheet(
                     storeInfoStore: si,
                     isMenuIndustry: isMenuCardIndustry,
-                    goldenMax: (mock.category == .beauty || mock.category == .fitness || mock.category == .pet || mock.category == .education || mock.category == .livingService || mock.category == .space) ? 25 : 33
+                    goldenMax: (mock.category == .beauty || mock.category == .fitness || mock.category == .pet || mock.category == .education || mock.category == .livingService || mock.category == .space) ? 25 : 33,
+                    categoryId: webCategoryId(from: mock.category)
                 )
             }
         }
@@ -677,6 +695,31 @@ public struct TodayView: View {
         case .restaurant, .cafe, .beauty, .fitness, .pet, .education, .livingService, .space: return true
         default: return false
         }
+    }
+
+    /// 시뮬 시각 검증용 카페 픽스처 — 벌크(원가·리듬)·개수(수량)·홀/포장 메뉴 전 유형 포함.
+    /// BU_DEMO_SEED_INVENTORY=cafe 에서만 사용 (no-op fallback store 전용, 2026-08-25).
+    private static func demoCafeInventory() -> [BUInventoryItem] {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        let fiveDaysAgo = f.string(from: Date().addingTimeInterval(-5 * 86_400))
+        return [
+            BUInventoryItem(id: "demo-milk", name: "우유", quantity: 0, unit: "ml", unitCost: 2.6, category: "fresh",
+                            lastOrderedAt: fiveDaysAgo, orderCycleDays: 3,
+                            purchasePackSize: 1000, purchasePackPrice: 2600),
+            BUInventoryItem(id: "demo-bean", name: "원두", quantity: 0, unit: "g", unitCost: 18, category: "beverage",
+                            purchasePackSize: 1000, purchasePackPrice: 18000),
+            BUInventoryItem(id: "demo-cup", name: "아이스컵", quantity: 40, unit: "개", minThreshold: 50, unitCost: 150, category: "supply"),
+            BUInventoryItem(id: "demo-straw", name: "빨대", quantity: 500, unit: "개", minThreshold: 100, unitCost: 20, category: "supply"),
+            BUInventoryItem(id: "demo-americano", name: "아메리카노", quantity: 0, unit: "개", category: "other", itemType: "product",
+                            recipe: [BURecipeIngredient(materialId: "demo-bean", qty: 18, unit: "g")],
+                            takeoutRecipe: [
+                                BURecipeIngredient(materialId: "demo-cup", qty: 1, unit: "개"),
+                                BURecipeIngredient(materialId: "demo-straw", qty: 1, unit: "개"),
+                            ],
+                            sellingPrice: 4500, monthlySold: 8, monthlySoldTakeout: 5),
+        ]
     }
 
     /// 메뉴 수익성 카드용 — 로드맵 menu-design 이 product 로 기록한 메뉴.

@@ -16,6 +16,7 @@ import {
   suggestedThreshold,
   ABC_TARGET_KO,
   FULFILLMENT_FREE_STORAGE_DAYS,
+  isCountTracked,
 } from "@foundone/shared";
 import { getKstDate } from "../../../utils/business-day";
 
@@ -66,6 +67,8 @@ export function InventoryManagementCard() {
   };
 
   const itemStatus = (item: InventoryItem): "urgent" | "warning" | "good" => {
+    // 벌크(무게·부피 단위) 재료는 잔량 신호 없음 (2026-08-25 추적모드 분리)
+    if (!isCountTracked(item)) return "good";
     if (item.quantity === 0) return "urgent";
     if (needsOrderToday(item)) return "urgent";
     const exp = expiryLeft(item);

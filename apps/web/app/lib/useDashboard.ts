@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getUiCopy, getRecommendedPrograms } from "@foundone/shared";
+import { getUiCopy, getRecommendedPrograms, isCountTracked } from "@foundone/shared";
 import { useCashflowStore } from "./stores/cashflow-store";
 import { projectCashflow, detectCrisis } from "./services/cashflow-projection";
 import { ageFromBirthYear } from "./components/dashboard/OwnerProfileChips";
@@ -648,7 +648,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
           productCount: ((unifiedProducts as Array<unknown> | undefined)?.length ?? 0)
             + ((products as Array<unknown> | undefined)?.length ?? 0)
             + ((serviceMenuItems as Array<unknown> | undefined)?.length ?? 0),
-          lowStockItems: (inventory as InventoryItemLocal[]).filter(i => i.quantity <= i.minThreshold && i.minThreshold > 0).map(i => i.name).slice(0, 3),
+          // 벌크(무게·부피 단위) 재료는 잔량 추적 제외 — AI 컨텍스트에도 오신호 금지 (2026-08-25)
+          lowStockItems: (inventory as InventoryItemLocal[]).filter(i => isCountTracked(i as { unit?: string; itemType?: string }) && i.quantity <= i.minThreshold && i.minThreshold > 0).map(i => i.name).slice(0, 3),
           upcomingFixedExpenses: (() => {
             const today = new Date().getDate();
             return (fixedExpenses as { name: string; amount: number; dueDay: number }[])

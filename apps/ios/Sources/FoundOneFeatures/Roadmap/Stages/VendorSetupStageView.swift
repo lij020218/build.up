@@ -816,6 +816,9 @@ public struct VendorSetupStageView: View {
                     leadTimeDays: ex?.leadTimeDays ?? 1,
                     dailyUsage: ex?.dailyUsage ?? 0,
                     lastOrderedAt: ex?.lastOrderedAt,
+                    orderCycleDays: ex?.orderCycleDays,
+                    purchasePackSize: ex?.purchasePackSize,
+                    purchasePackPrice: ex?.purchasePackPrice,
                     wasteLog: ex?.wasteLog ?? []
                 )
             }

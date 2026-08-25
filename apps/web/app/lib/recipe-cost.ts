@@ -10,6 +10,7 @@
  *  UI 에서 재료 단위와 호환되는 단위만 노출해 비호환 입력을 원천 차단(정직: 잘못된 환산 금지).
  */
 
+import { isCountTracked } from "@foundone/shared";
 import type { InventoryItem, RecipeIngredient } from "./stores/operations-store";
 
 const WEIGHT: Record<string, number> = { mg: 0.001, g: 1, kg: 1000 };
@@ -97,6 +98,8 @@ export function makeableServings(menu: InventoryItem, materials: InventoryItem[]
     if (ing.qty <= 0) continue;
     const mat = materials.find((m) => m.id === ing.materialId);
     if (!mat) return null; // 삭제된 재료 → 계산 불가(과대표시 방지)
+    // 벌크(무게·부피 단위) 재료는 잔량 미추적 → 제약으로 잡으면 "0개 가능" 가짜 숫자 (2026-08-25 추적모드 분리)
+    if (!isCountTracked(mat)) continue;
     const per = convertQty(ing.qty, ing.unit, mat.unit);
     if (per == null || per <= 0) return null;
     counted++;
@@ -108,6 +111,16 @@ export function makeableServings(menu: InventoryItem, materials: InventoryItem[]
 }
 
 /**
+ * 포장(테이크아웃) 추가 원가 — takeoutRecipe(컵·뚜껑·빨대) 합산. 없으면 0.
+ *  포장 원가 = menuCostPerServing + takeoutExtraCost. (2026-08-25 홀/포장 분리)
+ */
+export function takeoutExtraCost(menu: InventoryItem, materials: InventoryItem[]): number {
+  const recipe = menu.takeoutRecipe ?? [];
+  if (recipe.length === 0) return 0;
+  return recipe.reduce((sum, ing) => sum + (ingredientCost(ing, materials) ?? 0), 0);
+}
+
+/**
  * 판매 delta 개에 따른 재료 재고 차감 결과. delta>0 차감, delta<0 복구.
  *  반환 = 갱신된 inventory 배열(레시피 없는 메뉴/재료 없는 항목은 무변).
  *  차감 후 음수는 0 클램프(과사용 은닉 방지 위해 별도 경보는 UI 몫).
@@ -116,15 +129,19 @@ export function applyRecipeStockDelta(
   inventory: InventoryItem[],
   menuId: string,
   delta: number,
+  /** 포장 판매 — 기본 레시피에 takeoutRecipe(컵·뚜껑·빨대)를 합산 차감 (2026-08-25 홀/포장 분리) */
+  takeout = false,
 ): InventoryItem[] {
   const menu = inventory.find((i) => i.id === menuId);
-  const recipe = menu?.recipe ?? [];
+  const recipe = [...(menu?.recipe ?? []), ...(takeout ? menu?.takeoutRecipe ?? [] : [])];
   if (recipe.length === 0 || delta === 0) return inventory;
   // materialId → 차감량(재료단위)
   const deductByMaterial = new Map<string, number>();
   for (const ing of recipe) {
     const mat = inventory.find((m) => m.id === ing.materialId);
     if (!mat) continue;
+    // 벌크(무게·부피 단위) 재료는 잔량 미추적 → 차감하면 음수 클램프 쓰레기값만 누적 (2026-08-25)
+    if (!isCountTracked(mat)) continue;
     const per = convertQty(ing.qty, ing.unit, mat.unit);
     if (per == null) continue;
     deductByMaterial.set(ing.materialId, (deductByMaterial.get(ing.materialId) ?? 0) + per * delta);

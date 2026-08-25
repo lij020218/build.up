@@ -4,9 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { DashboardHook } from "../../useDashboard";
 import { importInventoryFromFile, INVENTORY_IMPORT_ACCEPT } from "../../inventory-file-import";
-import { detectOverstockItems, type OverstockAlert } from "@foundone/shared";
+import { detectOverstockItems, isBulkUnit, isCountTracked, orderRhythm, bulkUnitCostDisplay, packSizeLabel, resolveStarterPack, type OverstockAlert } from "@foundone/shared";
+import { getKstDate } from "../../utils/business-day";
 import type { InventoryItem } from "../../stores/operations-store";
-import { menuCostPerServing, makeableServings } from "../../recipe-cost";
+import { menuCostPerServing, makeableServings, takeoutExtraCost } from "../../recipe-cost";
 import { RecipeEditorModal } from "../surfaces/analytics/RecipeEditorModal";
 import { MenuProfitabilityModal } from "./MenuProfitabilityModal";
 
@@ -428,12 +429,17 @@ export function InventoryOpsCard({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const invForm = d.invForm;
   const isEditing = Boolean(invForm.editId);
+  // ── 스타터팩 (2026-08-25) — 재료 0개 콜드스타트에서만 체크리스트 노출 (inventory-starter-packs SSOT)
+  //    기본 전체 선택(카페는 안 쓰는 게 더 적음) → 해제한 이름만 추적.
+  const starterPack = resolveStarterPack(d.businessCtx.categoryId);
+  const [starterDeselected, setStarterDeselected] = useState<Set<string>>(new Set());
   const [showAllInventory, setShowAllInventory] = useState(false);
   const [inventorySnapshot, setInventorySnapshot] = useState<InventoryEntry[]>([]);
   // 전체 재고 팝업 정렬 — 긴급도(기본)/가나다/분류. 카드 상위4는 항상 긴급도.
   const [invSortMode, setInvSortMode] = useState<"urgency" | "name" | "category">("urgency");
   const sortInventory = (arr: InventoryEntry[]): InventoryEntry[] => {
     const urgencyRank = (it: InventoryEntry) => {
+      if (!isCountTracked(it)) return 2;          // 벌크 재료는 잔량 긴급도 없음 (추적모드 분리)
       const th = it.minThreshold ?? 0;
       if (th > 0 && it.quantity <= 0) return 0;   // critical
       if (th > 0 && it.quantity <= th) return 1;  // warning
@@ -743,7 +749,11 @@ export function InventoryOpsCard({
                 const cost = menuCost(m);
                 const ratio = menuRatio(m);
                 const rc = m.recipe?.length ?? 0;
-                const over = m.sellingPrice > 0 && ratio > goldenMax;
+                // 홀/포장 분리 (2026-08-25) — 포장 추가 재료 지정 시 카운터 분할 + 포장 원가율 병기
+                const extra = takeoutExtraCost(m, recipeMaterials);
+                const hasTakeout = (m.takeoutRecipe?.length ?? 0) > 0;
+                const takeoutRatio = m.sellingPrice > 0 ? ((cost + extra) / m.sellingPrice) * 100 : 0;
+                const over = m.sellingPrice > 0 && (hasTakeout ? Math.max(ratio, takeoutRatio) : ratio) > goldenMax;
                 return (
                   <div key={m.id} style={{ padding: "10px 12px", borderRadius: "12px", border: `1px solid ${over ? "rgba(182,76,76,0.18)" : "rgba(25,25,112,0.08)"}`, background: over ? "rgba(182,76,76,0.03)" : "rgba(25,25,112,0.02)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "7px" }}>
@@ -756,27 +766,39 @@ export function InventoryOpsCard({
                         </div>
                         <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px" }}>
                           {ko
-                            ? `${m.sellingPrice.toLocaleString()}원 · 원가 ${cost > 0 ? `${Math.round(cost).toLocaleString()}원` : "미입력"}${rc > 0 ? ` (재료 ${rc}종 자동)` : ""}`
-                            : `₩${m.sellingPrice.toLocaleString()} · cost ${cost > 0 ? `₩${Math.round(cost).toLocaleString()}` : "N/A"}`}
+                            ? `${m.sellingPrice.toLocaleString()}원 · 원가 ${cost > 0 ? `${Math.round(cost).toLocaleString()}원` : "미입력"}${rc > 0 ? ` (재료 ${rc}종 자동)` : ""}${hasTakeout && extra > 0 ? ` · 포장 +${Math.round(extra).toLocaleString()}원` : ""}`
+                            : `₩${m.sellingPrice.toLocaleString()} · cost ${cost > 0 ? `₩${Math.round(cost).toLocaleString()}` : "N/A"}${hasTakeout && extra > 0 ? ` · takeout +₩${Math.round(extra).toLocaleString()}` : ""}`}
                         </div>
                       </div>
                       {m.sellingPrice > 0 && (
-                        <span style={{ fontSize: "13px", fontWeight: 750, color: over ? "#b64c4c" : "#191970", flexShrink: 0 }}>{ratio.toFixed(0)}%</span>
+                        /* 포장 지정 메뉴는 홀/포장 원가율 병기 — 포장 쪽이 진짜 마진을 보여줌 (2026-08-25) */
+                        <span style={{ fontSize: hasTakeout ? "11.5px" : "13px", fontWeight: 750, color: over ? "#b64c4c" : "#191970", flexShrink: 0, textAlign: "right" as const }}>
+                          {hasTakeout ? (ko ? `홀 ${ratio.toFixed(0)}% · 포장 ${takeoutRatio.toFixed(0)}%` : `${ratio.toFixed(0)}% · TO ${takeoutRatio.toFixed(0)}%`) : `${ratio.toFixed(0)}%`}
+                        </span>
                       )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const }}>
-                      {/* 판매 −/＋ — 레시피만큼 재고 자동 차감·복구 (handleProdSoldChange) */}
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <button type="button" onClick={() => d.handleProdSoldChange(m.id, -1)}
-                          aria-label={ko ? `${m.name} 판매 취소` : `Undo ${m.name} sale`}
-                          style={{ width: "26px", height: "26px", borderRadius: "8px 0 0 8px", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                        <div style={{ padding: "0 9px", height: "26px", border: "1px solid rgba(25,25,112,0.14)", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", fontSize: "12px", fontWeight: 650, minWidth: "52px", justifyContent: "center", fontVariantNumeric: "tabular-nums" as const }} aria-live="polite">
-                          {(m.monthlySold ?? 0)}{ko ? " 판매" : " sold"}
+                      {/* 판매 −/＋ — 레시피만큼 재고 자동 차감·복구 (handleProdSoldChange).
+                          포장 추가 재료 지정 메뉴는 홀/포장 카운터 분할 — 포장만 부자재 차감 (2026-08-25) */}
+                      {(hasTakeout
+                        ? [
+                            { label: ko ? "홀" : "In", takeout: false, count: Math.max(0, (m.monthlySold ?? 0) - ((m as { monthlySoldTakeout?: number }).monthlySoldTakeout ?? 0)) },
+                            { label: ko ? "포장" : "TO", takeout: true, count: (m as { monthlySoldTakeout?: number }).monthlySoldTakeout ?? 0 },
+                          ]
+                        : [{ label: ko ? "판매" : "sold", takeout: false, count: m.monthlySold ?? 0 }]
+                      ).map((counter) => (
+                        <div key={counter.label} style={{ display: "flex", alignItems: "center" }}>
+                          <button type="button" onClick={() => d.handleProdSoldChange(m.id, -1, counter.takeout)}
+                            aria-label={ko ? `${m.name} ${counter.label} 판매 취소` : `Undo ${m.name} ${counter.label} sale`}
+                            style={{ width: "26px", height: "26px", borderRadius: "8px 0 0 8px", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                          <div style={{ padding: "0 9px", height: "26px", border: "1px solid rgba(25,25,112,0.14)", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", fontSize: "12px", fontWeight: 650, minWidth: hasTakeout ? "44px" : "52px", justifyContent: "center", fontVariantNumeric: "tabular-nums" as const }} aria-live="polite">
+                            {counter.count} {counter.label}
+                          </div>
+                          <button type="button" onClick={() => d.handleProdSoldChange(m.id, 1, counter.takeout)}
+                            aria-label={ko ? `${m.name} ${counter.label} 판매 기록` : `Record ${m.name} ${counter.label} sale`}
+                            style={{ width: "26px", height: "26px", borderRadius: "0 8px 8px 0", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                         </div>
-                        <button type="button" onClick={() => d.handleProdSoldChange(m.id, 1)}
-                          aria-label={ko ? `${m.name} 판매 기록` : `Record ${m.name} sale`}
-                          style={{ width: "26px", height: "26px", borderRadius: "0 8px 8px 0", border: "1px solid rgba(25,25,112,0.14)", background: "rgba(25,25,112,0.03)", fontSize: "15px", cursor: "pointer", color: "#191970", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-                      </div>
+                      ))}
                       {rc === 0 ? (
                         <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{ko ? "재료 등록 시 자동차감" : "Set recipe for auto-deduct"}</span>
                       ) : (() => {
@@ -813,7 +835,19 @@ export function InventoryOpsCard({
         </div>
       )}
 
-      {showStockSection && (<>
+      {showStockSection && (() => {
+        // ── 추적모드 분리 (2026-08-25, 사용자 피드백 — inventory-tracking SSOT) ──
+        //  벌크(무게·부피 단위) 재료 = 잔량·발주임계 대신 원가·발주 리듬으로 관리.
+        const countedStock = inventory.filter((i) => isCountTracked(i));
+        const bulkStock = inventory.filter((i) => !isCountTracked(i));
+        const todayIso = getKstDate(new Date());
+        // 스타터팩: 재료가 하나도 없을 때만 (재진입 소음 방지) + 이미 있는 이름 제외
+        const materialCount = fullInventory.filter((i) => i.itemType !== "product").length;
+        const starterItems = starterPack && materialCount === 0
+          ? starterPack.items.filter((s) => !fullInventory.some((i) => i.name === s.name))
+          : [];
+        const showStarter = starterItems.length > 0;
+        return (<>
       {/* 재료(식자재·소모품) 섹션 라벨 — 통합 카드에서만 (분리 카드는 카드 제목이 대신) */}
       {section === "all" && isMenuMode && (
         <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
@@ -821,6 +855,72 @@ export function InventoryOpsCard({
         </div>
       )}
 
+      {showStarter ? (
+        /* ── 스타터 체크리스트 — 콜드스타트 해소 (2026-08-25, 사용자 피드백 "베이스로 깔아놓기") ── */
+        <div style={{ borderRadius: "14px", background: "rgba(25,25,112,0.03)", padding: "14px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>
+            {ko ? starterPack!.titleKo : starterPack!.titleEn}
+          </div>
+          <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", marginBottom: "10px" }}>
+            {ko
+              ? "쓰는 것만 골라 한 번에 추가하세요. 수량·가격은 나중에 아는 것부터 채우면 돼요."
+              : "Pick what you use — quantities and prices can be filled in later."}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px", marginBottom: "12px" }}>
+            {starterItems.map((s) => {
+              const selected = !starterDeselected.has(s.name);
+              const bulk = isBulkUnit(s.unit);
+              return (
+                <button
+                  key={s.name}
+                  type="button"
+                  onClick={() => setStarterDeselected((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(s.name)) next.delete(s.name); else next.add(s.name);
+                    return next;
+                  })}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "5px", padding: "6px 10px",
+                    borderRadius: "999px", cursor: "pointer", fontSize: "12px", fontWeight: 600,
+                    border: selected ? "1px solid rgba(25,25,112,0.3)" : "1px solid rgba(15,23,42,0.1)",
+                    background: selected ? "rgba(25,25,112,0.08)" : "#fff",
+                    color: selected ? "#191970" : "rgba(15,23,42,0.45)",
+                  }}
+                >
+                  {selected ? "✓ " : ""}{s.name}
+                  {/* 단위가 곧 관리 방식 — 여기서 추적모드 규칙을 자연 학습 */}
+                  <span style={{ fontSize: "10px", fontWeight: 500, opacity: 0.7 }}>
+                    {s.unit} · {bulk ? (ko ? "원가·리듬" : "cost") : (ko ? "수량" : "count")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const picked = starterItems.filter((s) => !starterDeselected.has(s.name));
+              if (picked.length === 0) return;
+              const now = Date.now();
+              d.saveInventory([
+                ...fullInventory,
+                ...picked.map((s, idx) => ({
+                  id: `starter-${now}-${idx}`,
+                  name: s.name, quantity: 0, unit: s.unit, minThreshold: 0, unitCost: 0,
+                  category: s.category, itemType: "material" as const, sellingPrice: 0,
+                  expiryDate: "", supplierName: "", supplierUrl: "", leadTimeDays: 1,
+                  dailyUsage: 0, lastOrderedAt: "", wasteLog: [],
+                })),
+              ]);
+            }}
+            style={{ ...opsActionPrimary, width: "100%" }}
+          >
+            {ko
+              ? `${starterItems.length - [...starterDeselected].filter((n) => starterItems.some((s) => s.name === n)).length}개 품목 추가`
+              : `Add ${starterItems.length - starterDeselected.size} items`}
+          </button>
+        </div>
+      ) : (<>
       <div style={opsMetricGrid}>
         <div style={opsMetricCard}>
           <div style={opsMetricLabel}>{ko ? "발주 필요" : "Reorder"}</div>
@@ -830,15 +930,15 @@ export function InventoryOpsCard({
         </div>
         <div style={opsMetricCard}>
           <div style={opsMetricLabel}>{ko ? "정상 품목" : "Normal"}</div>
-          <div style={opsMetricValue}>{Math.max(inventory.length - lowStockItems.length, 0)}{ko ? "개" : ""}</div>
+          <div style={opsMetricValue}>{Math.max(countedStock.length - lowStockItems.length, 0)}{ko ? "개" : ""}</div>
         </div>
       </div>
 
-      <OverstockSection ko={ko} inventory={inventory} />
+      <OverstockSection ko={ko} inventory={countedStock} />
 
       <div style={listStack}>
         {/* 발주 필요(critical → warning) 품목을 상단으로 정렬 후 top 4 노출. 2026-05-11 */}
-        {[...inventory]
+        {[...countedStock]
           .map((item) => {
             const threshold = item.minThreshold ?? 0;
             const isLow = lowStockItems.some((c) => c.id === item.id);
@@ -911,7 +1011,69 @@ export function InventoryOpsCard({
           </button>
         )}
       </div>
+
+      {/* ── 원가·발주 리듬 재료 (벌크 단위) — 잔량 대신 마지막 발주 경과일 (2026-08-25) ── */}
+      {bulkStock.length > 0 && (
+        <div style={{ marginTop: "12px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "4px" }}>
+            {ko ? "원가·발주 리듬 관리" : "Cost & order rhythm"}
+          </div>
+          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginBottom: "8px" }}>
+            {ko
+              ? "무게·부피 단위 재료는 잔량 대신 원가 계산과 발주 리듬으로 관리돼요."
+              : "Weight/volume ingredients are managed by cost and order rhythm, not counts."}
+          </div>
+          <div style={listStack}>
+            {bulkStock.map((item) => {
+              const rhythm = orderRhythm(item as { lastOrderedAt?: string; orderCycleDays?: number }, todayIso);
+              const cycle = (item as { orderCycleDays?: number }).orderCycleDays ?? 0;
+              return (
+                <div key={item.id} style={{ ...listRow, borderLeft: `3px solid ${rhythm?.overdue ? "#b64c4c" : "rgba(25,25,112,0.15)"}` }}>
+                  <div>
+                    <div style={listTitle}>{item.name}</div>
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" as const }}>
+                      {/* 단가는 사장님 언어로 — 구매 묶음("1L 2,600원") > L·kg 환산 > 원단위 (2026-08-25) */}
+                      {(() => {
+                        const pack = item as { purchasePackSize?: number; purchasePackPrice?: number };
+                        if (pack.purchasePackSize && pack.purchasePackPrice) {
+                          return <span style={listMeta}>{packSizeLabel(pack.purchasePackSize, item.unit ?? "")} {fmt(pack.purchasePackPrice)}</span>;
+                        }
+                        const disp = item.unitCost ? bulkUnitCostDisplay(item.unitCost, item.unit) : null;
+                        if (disp) return <span style={listMeta}>{fmt(disp.amount)}/{disp.perUnit}</span>;
+                        return item.unitCost ? <span style={listMeta}>{fmt(item.unitCost)}/{item.unit}</span> : null;
+                      })()}
+                      <span style={listMeta}>
+                        {rhythm
+                          ? (ko ? `마지막 발주 ${rhythm.daysSince}일 전` : `Ordered ${rhythm.daysSince}d ago`)
+                          : (ko ? "발주 기록 없음" : "No order yet")}
+                        {cycle > 0 ? (ko ? ` · 보통 ${cycle}일마다` : ` · every ${cycle}d`) : ""}
+                      </span>
+                      {rhythm?.overdue && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, color: "#b64c4c", background: "rgba(182,76,76,0.08)", borderRadius: "4px", padding: "1px 5px" }}>
+                          {ko ? "발주 시기 확인" : "Check order"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={rowActions}>
+                    <button type="button" onClick={() => d.handleMarkOrdered(item.id)} style={tinyAction}>
+                      {ko ? "오늘 발주" : "Ordered"}
+                    </button>
+                    <button type="button" onClick={() => d.openInvEdit(item as never)} style={tinyAction}>
+                      {ko ? "수정" : "Edit"}
+                    </button>
+                    <button type="button" onClick={() => { if (window.confirm(ko ? `'${item.name}' 재고를 삭제하시겠습니까? 되돌릴 수 없습니다.` : `Delete '${item.name}'? This can't be undone.`)) d.handleInvDelete(item.id); }} style={tinyDangerAction}>
+                      {ko ? "삭제" : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       </>)}
+      </>); })()}
 
       {/* 전체 재고 팝업 — Portal로 body에 직접 렌더링하여 부모 리렌더링 격리 */}
       {showAllInventory && typeof document !== "undefined" && createPortal(
@@ -960,8 +1122,9 @@ export function InventoryOpsCard({
             <div style={{ overflowY: "auto", padding: "12px 24px 24px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
               {sortInventory(inventorySnapshot)
                 .map((item) => {
-                const isLow = (item.minThreshold ?? 0) > 0 && item.quantity <= (item.minThreshold ?? 0);
-                const urgency = (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
+                const tracked = isCountTracked(item);
+                const isLow = tracked && (item.minThreshold ?? 0) > 0 && item.quantity <= (item.minThreshold ?? 0);
+                const urgency = tracked && (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
                 const urgencyColor = urgency === "critical" ? "#b64c4c" : urgency === "warning" ? "#191970" : "#1d3557";
                 return (
                   <div key={item.id} style={{
@@ -986,7 +1149,10 @@ export function InventoryOpsCard({
                     </div>
                     <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
                       <div style={{ fontSize: "14px", fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>
-                        {item.quantity}{item.unit ? ` ${item.unit}` : ""}
+                        {/* 벌크 재료는 잔량 대신 단가 — 추적모드 분리 (2026-08-25) */}
+                        {tracked
+                          ? <>{item.quantity}{item.unit ? ` ${item.unit}` : ""}</>
+                          : (item.unitCost ? `${fmt(item.unitCost)}/${item.unit}` : (ko ? "원가·리듬" : "Cost only"))}
                       </div>
                       {(item as { sellingPrice?: number }).sellingPrice ? (
                         <div style={{ fontSize: "11px", color: "var(--muted)" }}>{fmt((item as { sellingPrice?: number }).sellingPrice ?? 0)}</div>
@@ -1157,9 +1323,11 @@ export function InventoryOpsCard({
             </>
             )
           ) : (
-            /* ── 원재료 폼: 단가 + 수량 + 최소수량 + 일사용량 + 리드타임 + 공급처 ── */
+            /* ── 원재료 폼: 단가 + 수량 + 최소수량 + 일사용량 + 리드타임 + 공급처 ──
+                 벌크(무게·부피 단위)면 수량·최소수량·일사용량 대신 발주 주기 — 추적모드 분리 (2026-08-25) */
             <>
               <div style={formGridThree}>
+                {!isBulkUnit(invForm.unit) && (
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1168,6 +1336,7 @@ export function InventoryOpsCard({
                   placeholder={ko ? "수량" : "Qty"}
                   style={inputStyle}
                 />
+                )}
                 <input
                   type="text"
                   list="inv-unit-suggestions"
@@ -1182,6 +1351,16 @@ export function InventoryOpsCard({
                     <option key={u} value={u} />
                   ))}
                 </datalist>
+                {isBulkUnit(invForm.unit) ? (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.orderCycleDays}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, orderCycleDays: event.target.value.replace(/[^0-9]/g, "") }))}
+                  placeholder={ko ? "발주 주기(일)" : "Order cycle (d)"}
+                  style={inputStyle}
+                />
+                ) : (
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1190,24 +1369,49 @@ export function InventoryOpsCard({
                   placeholder={ko ? "최소 수량" : "Min"}
                   style={inputStyle}
                 />
+                )}
               </div>
               <div style={formGridThree}>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={invForm.unitCost}
-                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, unitCost: event.target.value.replace(/[^0-9.]/g, "") }))}
-                  placeholder={ko ? "단가 (매입가)" : "Unit cost"}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={invForm.dailyUsage}
-                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, dailyUsage: event.target.value.replace(/[^0-9.]/g, "") }))}
-                  placeholder={ko ? "일 사용량" : "Daily usage"}
-                  style={inputStyle}
-                />
+                {isBulkUnit(invForm.unit) ? (
+                  /* 벌크 단가 = 구매 묶음으로 입력 — 사장님은 "우유 1L 2,600원"으로 기억 (2026-08-25) */
+                  <>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={invForm.purchasePackSize}
+                      onChange={(event) => d.setInvForm((prev) => ({ ...prev, purchasePackSize: event.target.value.replace(/[^0-9.]/g, "") }))}
+                      placeholder={ko ? `한 번에 사는 양 (${invForm.unit})` : `Pack size (${invForm.unit})`}
+                      style={inputStyle}
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={invForm.purchasePackPrice}
+                      onChange={(event) => d.setInvForm((prev) => ({ ...prev, purchasePackPrice: event.target.value.replace(/[^0-9]/g, "") }))}
+                      placeholder={ko ? "그 가격 (원)" : "Pack price"}
+                      style={inputStyle}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={invForm.unitCost}
+                      onChange={(event) => d.setInvForm((prev) => ({ ...prev, unitCost: event.target.value.replace(/[^0-9.]/g, "") }))}
+                      placeholder={ko ? "단가 (매입가)" : "Unit cost"}
+                      style={inputStyle}
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={invForm.dailyUsage}
+                      onChange={(event) => d.setInvForm((prev) => ({ ...prev, dailyUsage: event.target.value.replace(/[^0-9.]/g, "") }))}
+                      placeholder={ko ? "일 사용량" : "Daily usage"}
+                      style={inputStyle}
+                    />
+                  </>
+                )}
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1217,6 +1421,23 @@ export function InventoryOpsCard({
                   style={inputStyle}
                 />
               </div>
+              {isBulkUnit(invForm.unit) && (
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "-4px" }}>
+                  {(() => {
+                    const size = Number(invForm.purchasePackSize) || 0;
+                    const price = Number(invForm.purchasePackPrice) || 0;
+                    if (size > 0 && price > 0) {
+                      const disp = bulkUnitCostDisplay(price / size, invForm.unit);
+                      return ko
+                        ? `${packSizeLabel(size, invForm.unit)} ${fmt(price)} → 단가 자동 계산${disp ? ` (${disp.perUnit}당 ${fmt(disp.amount)})` : ""}`
+                        : `${packSizeLabel(size, invForm.unit)} at ${fmt(price)} → unit cost auto-derived`;
+                    }
+                    return ko
+                      ? "부어 쓰는(무게·부피) 재료는 잔량 대신 원가 계산과 발주 리듬으로 관리돼요 — 수량 입력이 필요 없어요."
+                      : "Weight/volume ingredients skip counting — managed by cost and order rhythm instead.";
+                  })()}
+                </div>
+              )}
             </>
           )}
           {invForm.itemType === "material" && (
@@ -1282,8 +1503,10 @@ export function InventoryOpsCard({
           menu={recipeMenu}
           materials={recipeMaterials}
           goldenMax={goldenMax}
-          onSave={(recipe) => {
-            d.saveInventory(fullInventory.map((i) => (i.id === recipeMenu.id ? { ...i, recipe } : i)));
+          onSave={(recipe, takeoutRecipe) => {
+            d.saveInventory(fullInventory.map((i) => (i.id === recipeMenu.id
+              ? { ...i, recipe, takeoutRecipe: takeoutRecipe.length > 0 ? takeoutRecipe : undefined }
+              : i)));
             setRecipeMenuId(null);
           }}
           onClose={() => setRecipeMenuId(null)}

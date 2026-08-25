@@ -469,6 +469,9 @@ function syncMaterialsToInventory(
       leadTimeDays: existing?.leadTimeDays ?? 1,
       dailyUsage: existing?.dailyUsage ?? 0,
       lastOrderedAt: existing?.lastOrderedAt ?? "",
+      orderCycleDays: existing?.orderCycleDays,
+      purchasePackSize: existing?.purchasePackSize,
+      purchasePackPrice: existing?.purchasePackPrice,
       wasteLog: existing?.wasteLog ?? [],
     };
   });

@@ -227,24 +227,80 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     public var displayCategory: String?
     /// 레시피(BOM) — 메뉴에 들어가는 재료 소요량. 원가율 계산 + 판매 시 재고 자동차감. web InventoryItem.recipe 미러.
     public var recipe: [BURecipeIngredient]?
+    /// 포장(테이크아웃) 추가 재료 — 컵·뚜껑·빨대. 지정하면 판매 카운터 홀/포장 분할, 포장 판매만 추가 차감.
+    /// web takeoutRecipe 미러 (2026-08-25 홀/포장 분리)
+    public var takeoutRecipe: [BURecipeIngredient]?
     public var sellingPrice: Double
     public var leadTimeDays: Int
     public var dailyUsage: Double
     /// 월 판매 수량 — 소매 sell-through 계산용. 웹 SellThroughProduct.monthlySold 정합.
     /// 0 이면 카드에서 dailyUsage × 26 추정 + "추정" 배지. 기존 JSON 미포함 → 0 default.
     public var monthlySold: Double
+    /// 월 판매 중 포장 수 — 홀 = monthlySold − monthlySoldTakeout. web monthlySoldTakeout 미러 (2026-08-25)
+    public var monthlySoldTakeout: Double
     public var lastOrderedAt: String?
+    /// 발주 주기(일) — 벌크(무게·부피 단위) 재료의 발주 리듬 알림용. 사장님 직접 입력, nil=알림 없음.
+    /// web InventoryItem.orderCycleDays 미러 (2026-08-25 추적모드 분리)
+    public var orderCycleDays: Int?
+    /// 구매 묶음 — 사장님 언어는 "우유 1L(1000ml) 2,600원". 둘 다 있으면 unitCost = price/size 파생.
+    /// web purchasePackSize/Price 미러 (2026-08-25)
+    public var purchasePackSize: Double?
+    public var purchasePackPrice: Double?
     public var wasteLog: [WasteLogEntry]
 
     // MARK: Derived
 
-    /// 재주문 필요 여부 (web: quantity <= minThreshold)
-    public var isLowStock: Bool { quantity <= minThreshold && minThreshold > 0 }
+    /// 벌크(무게·부피) 단위 — web inventory-tracking.ts BULK_UNITS 손미러. 수정 시 양쪽 동시.
+    public static let bulkUnits: Set<String> = [
+        "g", "kg", "mg", "그램", "킬로그램",
+        "ml", "l", "cc", "리터", "밀리리터", "㎖", "ℓ",
+        "oz", "온스", "lb", "파운드",
+    ]
 
-    /// 소진까지 남은 일 수 (dailyUsage == 0 이면 999)
+    /// 벌크 재료 여부 — 수량 추적 제외, 원가·발주 리듬으로만 관리 (2026-08-25 추적모드 분리).
+    /// 상품(product)은 단위 무관 항상 수량 추적. web isCountTracked 의 부정형 미러.
+    public var isBulkTracked: Bool {
+        itemType != "product" && Self.bulkUnits.contains(unit.trimmingCharacters(in: .whitespaces).lowercased())
+    }
+
+    /// 재주문 필요 여부 (web: quantity <= minThreshold) — 벌크 재료는 잔량 신호 없음
+    public var isLowStock: Bool { !isBulkTracked && quantity <= minThreshold && minThreshold > 0 }
+
+    /// 소진까지 남은 일 수 (dailyUsage == 0 이면 999) — 벌크 재료는 소진 신호 없음
     public var daysUntilStockout: Int {
-        guard dailyUsage > 0 else { return 999 }
+        guard !isBulkTracked, dailyUsage > 0 else { return 999 }
         return max(0, Int(quantity / dailyUsage))
+    }
+
+    /// 벌크 단가 자연 표기 — 사장님 언어는 "L당·kg당" (web bulkUnitCostDisplay 미러, 2026-08-25)
+    public var bulkCostDisplay: (amount: Double, perUnit: String)? {
+        guard unitCost > 0 else { return nil }
+        let u = unit.trimmingCharacters(in: .whitespaces).lowercased()
+        if u == "ml" || u == "cc" || u == "밀리리터" || u == "㎖" { return (unitCost * 1000, "L") }
+        if u == "g" || u == "그램" { return (unitCost * 1000, "kg") }
+        return nil
+    }
+
+    /// 구매 묶음 자연 표기 — 1000ml → "1L" (web packSizeLabel 미러)
+    public static func packSizeLabel(_ size: Double, unit: String) -> String {
+        let u = unit.trimmingCharacters(in: .whitespaces).lowercased()
+        if (u == "ml" || u == "cc"), size >= 1000, size.truncatingRemainder(dividingBy: 100) == 0 {
+            return "\(Int(size / 1000))L"
+        }
+        if u == "g", size >= 1000, size.truncatingRemainder(dividingBy: 100) == 0 {
+            return "\(Int(size / 1000))kg"
+        }
+        return "\(Int(size))\(unit)"
+    }
+
+    /// 마지막 발주 후 경과 일수 — 기록 없거나 파싱 불가면 nil (web orderRhythm 미러, 위조 금지)
+    public func daysSinceLastOrder(todayKST: String) -> Int? {
+        guard let last = lastOrderedAt, !last.isEmpty else { return nil }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        guard let lastDate = f.date(from: String(last.prefix(10))), let today = f.date(from: todayKST) else { return nil }
+        return max(0, Int(today.timeIntervalSince(lastDate) / 86_400))
     }
 
     public init(
@@ -258,27 +314,36 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         itemType: String = "material",
         displayCategory: String? = nil,
         recipe: [BURecipeIngredient]? = nil,
+        takeoutRecipe: [BURecipeIngredient]? = nil,
         sellingPrice: Double = 0,
         leadTimeDays: Int = 1,
         dailyUsage: Double = 0,
         monthlySold: Double = 0,
+        monthlySoldTakeout: Double = 0,
         lastOrderedAt: String? = nil,
+        orderCycleDays: Int? = nil,
+        purchasePackSize: Double? = nil,
+        purchasePackPrice: Double? = nil,
         wasteLog: [WasteLogEntry] = []
     ) {
         self.id = id; self.name = name; self.quantity = quantity; self.unit = unit
         self.minThreshold = minThreshold; self.unitCost = unitCost; self.category = category
         self.itemType = itemType; self.displayCategory = displayCategory; self.recipe = recipe
+        self.takeoutRecipe = takeoutRecipe
         self.sellingPrice = sellingPrice
         self.leadTimeDays = leadTimeDays; self.dailyUsage = dailyUsage
-        self.monthlySold = monthlySold
-        self.lastOrderedAt = lastOrderedAt; self.wasteLog = wasteLog
+        self.monthlySold = monthlySold; self.monthlySoldTakeout = monthlySoldTakeout
+        self.lastOrderedAt = lastOrderedAt; self.orderCycleDays = orderCycleDays
+        self.purchasePackSize = purchasePackSize; self.purchasePackPrice = purchasePackPrice
+        self.wasteLog = wasteLog
     }
 
-    // MARK: Codable — monthlySold·recipe 는 기존 JSON 에 없을 수 있어 decodeIfPresent 로 처리
+    // MARK: Codable — monthlySold·recipe·orderCycleDays 는 기존 JSON 에 없을 수 있어 decodeIfPresent 로 처리
     enum CodingKeys: String, CodingKey {
         case id, name, quantity, unit, minThreshold, unitCost, category, itemType
-        case displayCategory, recipe
-        case sellingPrice, leadTimeDays, dailyUsage, monthlySold, lastOrderedAt, wasteLog
+        case displayCategory, recipe, takeoutRecipe
+        case sellingPrice, leadTimeDays, dailyUsage, monthlySold, monthlySoldTakeout, lastOrderedAt, orderCycleDays, wasteLog
+        case purchasePackSize, purchasePackPrice
     }
 
     public init(from decoder: any Decoder) throws {
@@ -293,11 +358,16 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         itemType       = try c.decode(String.self,           forKey: .itemType)
         displayCategory = try? c.decodeIfPresent(String.self, forKey: .displayCategory)
         recipe         = (try? c.decodeIfPresent([BURecipeIngredient].self, forKey: .recipe)) ?? nil
+        takeoutRecipe  = (try? c.decodeIfPresent([BURecipeIngredient].self, forKey: .takeoutRecipe)) ?? nil
         sellingPrice   = try c.decode(Double.self,           forKey: .sellingPrice)
         leadTimeDays   = try c.decode(Int.self,              forKey: .leadTimeDays)
         dailyUsage     = try c.decode(Double.self,           forKey: .dailyUsage)
         monthlySold    = (try? c.decodeIfPresent(Double.self, forKey: .monthlySold)) ?? 0
+        monthlySoldTakeout = (try? c.decodeIfPresent(Double.self, forKey: .monthlySoldTakeout)) ?? 0
         lastOrderedAt  = try? c.decodeIfPresent(String.self, forKey: .lastOrderedAt)
+        orderCycleDays = try? c.decodeIfPresent(Int.self,    forKey: .orderCycleDays)
+        purchasePackSize  = try? c.decodeIfPresent(Double.self, forKey: .purchasePackSize)
+        purchasePackPrice = try? c.decodeIfPresent(Double.self, forKey: .purchasePackPrice)
         wasteLog       = (try? c.decodeIfPresent([WasteLogEntry].self, forKey: .wasteLog)) ?? []
     }
 }

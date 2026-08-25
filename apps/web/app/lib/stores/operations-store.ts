@@ -23,8 +23,20 @@ export type InventoryItem = {
   /** 레시피(BOM) — 메뉴(itemType=product)에 들어가는 재료 소요량. 원가율 계산 + 판매 시 재고 자동차감.
    *  비어있으면 수동 unitCost 폴백. material 은 미사용. (2026-07-22 레시피/BOM) */
   recipe?: RecipeIngredient[];
+  /** 포장(테이크아웃) 추가 재료 — 컵·뚜껑·빨대 등. 지정하면 판매 카운터가 홀/포장으로 분할되고
+   *  포장 판매만 이 재료를 추가 차감 + 포장 원가율 별도 표시. (2026-08-25 홀/포장 분리, 사장님 지시) */
+  takeoutRecipe?: RecipeIngredient[];
+  /** 월 판매 중 포장(테이크아웃) 수 — 홀 = monthlySold − monthlySoldTakeout. 항상 monthlySold 이하. */
+  monthlySoldTakeout?: number;
   expiryDate: string; supplierName: string; supplierUrl: string;
   leadTimeDays: number; dailyUsage: number; lastOrderedAt: string;
+  /** 발주 주기(일) — 부어 쓰는(벌크 단위) 재료의 발주 리듬 알림용. 사장님 직접 입력, 미설정=알림 없음.
+   *  (2026-08-25 추적모드 분리: 벌크 재료는 잔량 대신 원가·발주 리듬 — inventory-tracking SSOT) */
+  orderCycleDays?: number;
+  /** 구매 묶음 — 사장님 언어는 "우유 1L(1000ml) 2,600원"이지 "2.6원/ml"이 아니다 (2026-08-25).
+   *  벌크 재료 전용 입력 경험: 둘 다 있으면 unitCost = price/size 자동 파생(레시피 SSOT는 unitCost 유지). */
+  purchasePackSize?: number;
+  purchasePackPrice?: number;
   wasteLog: { date: string; qty: number; reason: string }[];
 };
 
@@ -37,6 +49,11 @@ export type InvForm = {
   /** 상품류 자유문자열 분류 (메인/사이드·의류/잡화 등). material 은 미사용. (2026-07-22 상품모델 통합) */
   displayCategory?: string;
   expiryDate: string; supplierName: string; url: string; leadTimeDays: string; dailyUsage: string;
+  /** 벌크(무게·부피 단위) 재료 전용 — 발주 주기(일) (2026-08-25 추적모드 분리) */
+  orderCycleDays: string;
+  /** 벌크 재료 전용 — 구매 묶음(한 번에 사는 양·가격) → 단가 자동 파생 (2026-08-25) */
+  purchasePackSize: string;
+  purchasePackPrice: string;
 };
 
 export type Employee = {
@@ -99,7 +116,8 @@ export type Subscriber = {
 const EMPTY_INV_FORM: InvForm = {
   open: false, editId: null, name: "", qty: "", unit: "개", threshold: "",
   unitCost: "", category: "other", itemType: "material", sellingPrice: "",
-  expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
+  expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "", orderCycleDays: "",
+  purchasePackSize: "", purchasePackPrice: "",
 };
 
 // ─── Store ───

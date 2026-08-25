@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { convertQty, compatibleUnits, menuCostPerServing, menuCostRatio, applyRecipeStockDelta, makeableServings } from "../recipe-cost";
+import { convertQty, compatibleUnits, menuCostPerServing, menuCostRatio, applyRecipeStockDelta, makeableServings, takeoutExtraCost } from "../recipe-cost";
 import type { InventoryItem } from "../stores/operations-store";
 
 /** 레시피/BOM 원가·재고차감 회귀 가드 (2026-07-22). */
@@ -63,12 +63,13 @@ describe("makeableServings — 지금 재료로 N개 가능 (입력 아닌 파�
     { materialId: "onion", qty: 0.3, unit: "개" },   // 10/0.3 = 33.3
     { materialId: "pork", qty: 150, unit: "g" },     // 3kg/0.15kg = 20 ← 병목
   ]});
-  it("병목 재료 기준 내림 — 돼지고기 20개", () => {
-    expect(makeableServings(bibim, materials)).toEqual({ servings: 20, limitingMaterialId: "pork" });
+  //  2026-08-25 추적모드 분리: kg(벌크) 재료는 잔량 제약에서 제외 → 병목은 개수 재료(양파)만.
+  it("병목 = 개수 재료만 (벌크 돼지고기는 제약 제외) — 양파 33개", () => {
+    expect(makeableServings(bibim, materials)).toEqual({ servings: 33, limitingMaterialId: "onion" });
   });
-  it("재고 0 재료 → 0개(병목 표시)", () => {
-    const out = makeableServings(bibim, [mat("onion", { unit: "개", quantity: 10 }), mat("pork", { unit: "kg", quantity: 0 })]);
-    expect(out).toEqual({ servings: 0, limitingMaterialId: "pork" });
+  it("개수 재료 재고 0 → 0개(병목 표시)", () => {
+    const out = makeableServings(bibim, [mat("onion", { unit: "개", quantity: 0 }), mat("pork", { unit: "kg", quantity: 3 })]);
+    expect(out).toEqual({ servings: 0, limitingMaterialId: "onion" });
   });
   it("레시피 없으면 null(비표시 — 위조 금지)", () => {
     expect(makeableServings(menu("plain"), materials)).toBeNull();
@@ -85,10 +86,11 @@ describe("applyRecipeStockDelta", () => {
     mat("flour", { unit: "kg", quantity: 5 }),
     menu("bibim", { recipe: [{ materialId: "onion", qty: 0.3, unit: "개" }, { materialId: "flour", qty: 200, unit: "g" }] }),
   ];
-  it("판매 +2 → 재료 차감 (양파 0.6, 밀가루 0.4kg)", () => {
+  //  2026-08-25 추적모드 분리: kg(벌크) 밀가루는 차감 제외 — 개수 재료(양파)만 차감.
+  it("판매 +2 → 개수 재료만 차감 (양파 0.6, 벌크 밀가루 무변)", () => {
     const out = applyRecipeStockDelta(base, "bibim", 2);
     expect(out.find((i) => i.id === "onion")!.quantity).toBe(9.4);
-    expect(out.find((i) => i.id === "flour")!.quantity).toBe(4.6);
+    expect(out.find((i) => i.id === "flour")!.quantity).toBe(5);
   });
   it("판매 취소 -1 → 복구", () => {
     const out = applyRecipeStockDelta(base, "bibim", -1);
@@ -101,5 +103,76 @@ describe("applyRecipeStockDelta", () => {
   it("레시피 없는 메뉴는 무변", () => {
     const noRec = [...base.slice(0, 2), menu("plain")];
     expect(applyRecipeStockDelta(noRec, "plain", 5)).toEqual(noRec);
+  });
+});
+
+describe("벌크 재료 (추적모드 분리 2026-08-25) — 잔량 제약·차감 제외, 원가는 유지", () => {
+  const materials = [
+    mat("milk", { unit: "ml", unitCost: 3, quantity: 0 }),   // 우유 — 벌크, 잔량 미추적
+    mat("cup", { unit: "개", unitCost: 150, quantity: 40 }), // 컵 — 개수 추적
+  ];
+  const latte = menu("latte", {
+    sellingPrice: 5000,
+    recipe: [
+      { materialId: "milk", qty: 200, unit: "ml" },
+      { materialId: "cup", qty: 1, unit: "개" },
+    ],
+  });
+
+  it("원가에는 벌크 재료 포함 (200ml×3원 + 컵 150원)", () =>
+    expect(menuCostPerServing(latte, materials)).toBe(750));
+
+  it("makeableServings — 벌크 잔량(0)을 제약으로 잡지 않음 (컵 40개가 병목)", () =>
+    expect(makeableServings(latte, materials)).toEqual({ servings: 40, limitingMaterialId: "cup" }));
+
+  it("레시피가 벌크 재료뿐이면 null (가짜 '0개 가능' 금지)", () => {
+    const milkOnly = menu("milk-only", { recipe: [{ materialId: "milk", qty: 200, unit: "ml" }] });
+    expect(makeableServings(milkOnly, materials)).toBeNull();
+  });
+
+  it("판매 차감 — 컵만 차감, 벌크 우유는 무변", () => {
+    const next = applyRecipeStockDelta([latte, ...materials], "latte", 3);
+    expect(next.find((i) => i.id === "cup")?.quantity).toBe(37);
+    expect(next.find((i) => i.id === "milk")?.quantity).toBe(0);
+  });
+});
+
+describe("홀/포장 분리 (2026-08-25) — takeoutRecipe 는 포장 판매에만", () => {
+  const materials = [
+    mat("milk", { unit: "ml", unitCost: 3, quantity: 0 }),
+    mat("cup", { unit: "개", unitCost: 150, quantity: 40 }),
+    mat("lid", { unit: "개", unitCost: 80, quantity: 40 }),
+  ];
+  const latte = menu("latte", {
+    sellingPrice: 5000,
+    recipe: [{ materialId: "milk", qty: 200, unit: "ml" }],
+    takeoutRecipe: [
+      { materialId: "cup", qty: 1, unit: "개" },
+      { materialId: "lid", qty: 1, unit: "개" },
+    ],
+  });
+
+  it("takeoutExtraCost — 컵 150 + 뚜껑 80 = 230", () =>
+    expect(takeoutExtraCost(latte, materials)).toBe(230));
+
+  it("기본 원가에는 포장 재료 미포함 (우유 600원만)", () =>
+    expect(menuCostPerServing(latte, materials)).toBe(600));
+
+  it("홀 판매 차감 — 포장 재료 무변", () => {
+    const next = applyRecipeStockDelta([latte, ...materials], "latte", 2);
+    expect(next.find((i) => i.id === "cup")?.quantity).toBe(40);
+    expect(next.find((i) => i.id === "lid")?.quantity).toBe(40);
+  });
+
+  it("포장 판매 차감 — 컵·뚜껑 차감 (벌크 우유는 여전히 무변)", () => {
+    const next = applyRecipeStockDelta([latte, ...materials], "latte", 2, true);
+    expect(next.find((i) => i.id === "cup")?.quantity).toBe(38);
+    expect(next.find((i) => i.id === "lid")?.quantity).toBe(38);
+    expect(next.find((i) => i.id === "milk")?.quantity).toBe(0);
+  });
+
+  it("포장 판매 취소(-1) — 복구", () => {
+    const next = applyRecipeStockDelta([latte, ...materials], "latte", -1, true);
+    expect(next.find((i) => i.id === "cup")?.quantity).toBe(41);
   });
 });

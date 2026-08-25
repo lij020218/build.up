@@ -85,6 +85,8 @@ export * from "./adapters/commercial-rent";
 export * from "./adapters/building-registry";
 export * from "./startup-tools";
 export * from "./inventory-insights";
+export * from "./inventory-tracking";
+export * from "./inventory-starter-packs";
 export * from "./inspiration-quotes";
 export * from "./startup-budget-items";
 export * from "./mobile-launch-guide";

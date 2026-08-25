@@ -2055,9 +2055,8 @@ struct DemoTabs: View {
 
     /// Demo 모드용 stub store — 빈 StoreInfoState (placeholder UI 그대로 표시).
     /// 가짜 데이터로 섹션을 채울 수 있으나, 사장님 실제 데이터로 착각 방지 우선.
-    private var demoStoreInfo: StoreInfoStore {
-        StoreInfoStore(repository: MockStoreInfoRepository())
-    }
+    /// ⚠️ computed 였을 땐 리렌더마다 새 인스턴스 → 데모 중 추가한 재고가 증발 (2026-08-25 @State 안정화).
+    @State private var demoStoreInfo = StoreInfoStore(repository: MockStoreInfoRepository())
 
     /// Demo 모드용 stub store — Mock 데이터로 채운 DashboardStore (Supabase 호출 X).
     private var demoDashboardStore: DashboardStore {

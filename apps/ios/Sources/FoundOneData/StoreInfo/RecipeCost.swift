@@ -76,6 +76,8 @@ public enum RecipeCost {
         for ing in recipe {
             if ing.qty <= 0 { continue }
             guard let mat = materials.first(where: { $0.id == ing.materialId }) else { return nil }
+            // 벌크(무게·부피 단위) 재료는 잔량 미추적 → 제약으로 잡으면 "0개 가능" 가짜 숫자 (2026-08-25 추적모드 분리, 웹 미러)
+            if mat.isBulkTracked { continue }
             guard let per = convertQty(ing.qty, from: ing.unit, to: mat.unit), per > 0 else { return nil }
             counted += 1
             let s = mat.quantity / per
@@ -85,14 +87,24 @@ public enum RecipeCost {
         return Makeable(servings: Int(minServ.rounded(.down)), limitingMaterialId: limiting)
     }
 
+    /// 포장(테이크아웃) 추가 원가 — takeoutRecipe(컵·뚜껑·빨대) 합산. 없으면 0.
+    /// 포장 원가 = menuCostPerServing + takeoutExtraCost. web takeoutExtraCost 미러 (2026-08-25 홀/포장 분리)
+    public static func takeoutExtraCost(_ menu: BUInventoryItem, materials: [BUInventoryItem]) -> Double {
+        (menu.takeoutRecipe ?? []).reduce(0) { $0 + (ingredientCost($1, materials: materials) ?? 0) }
+    }
+
     /// 판매 delta 개 → 재료 재고 차감(delta>0)·복구(delta<0). 0 클램프. 레시피/재료 없으면 무변.
-    public static func applyRecipeStockDelta(_ inventory: [BUInventoryItem], menuId: String, delta: Double) -> [BUInventoryItem] {
+    /// takeout=true 면 기본 레시피에 takeoutRecipe 를 합산 차감 (2026-08-25 홀/포장 분리, 웹 미러).
+    public static func applyRecipeStockDelta(_ inventory: [BUInventoryItem], menuId: String, delta: Double, takeout: Bool = false) -> [BUInventoryItem] {
         guard delta != 0,
-              let menu = inventory.first(where: { $0.id == menuId }),
-              let recipe = menu.recipe, !recipe.isEmpty else { return inventory }
+              let menu = inventory.first(where: { $0.id == menuId }) else { return inventory }
+        let recipe = (menu.recipe ?? []) + (takeout ? (menu.takeoutRecipe ?? []) : [])
+        guard !recipe.isEmpty else { return inventory }
         var deduct: [String: Double] = [:]
         for ing in recipe {
             guard let mat = inventory.first(where: { $0.id == ing.materialId }),
+                  // 벌크 재료는 잔량 미추적 → 차감 시 음수 클램프 쓰레기값만 누적 (2026-08-25, 웹 미러)
+                  !mat.isBulkTracked,
                   let per = convertQty(ing.qty, from: ing.unit, to: mat.unit) else { continue }
             deduct[ing.materialId, default: 0] += per * delta
         }
@@ -103,5 +115,32 @@ public enum RecipeCost {
             copy.quantity = max(0, ((item.quantity - d) * 10000).rounded() / 10000)
             return copy
         }
+    }
+
+    /// 판매 기록 — 홀/포장 분리 (웹 handleProdSoldChange 완전 미러, 2026-08-25).
+    ///  monthlySold = 총 판매(기존 소비처 유지), monthlySoldTakeout = 그중 포장.
+    ///  포장 ± 는 총·포장 동시 갱신 + takeoutRecipe 추가 차감 / 홀 ± 는 홀(총−포장)만 0 클램프.
+    public static func recordSale(_ inventory: [BUInventoryItem], menuId: String, delta: Int, takeout: Bool = false) -> [BUInventoryItem] {
+        guard let menu = inventory.first(where: { $0.id == menuId }) else { return inventory }
+        let total = menu.monthlySold
+        let tk = menu.monthlySoldTakeout
+        let actualDelta: Double
+        var nextTk = tk
+        if takeout {
+            nextTk = max(0, tk + Double(delta))
+            actualDelta = nextTk - tk
+        } else {
+            let hall = max(0, total - tk)
+            actualDelta = max(0, hall + Double(delta)) - hall
+        }
+        if actualDelta == 0 { return inventory }
+        let withSold = inventory.map { it -> BUInventoryItem in
+            guard it.id == menuId else { return it }
+            var c = it
+            c.monthlySold = max(0, total + actualDelta)
+            c.monthlySoldTakeout = nextTk
+            return c
+        }
+        return applyRecipeStockDelta(withSold, menuId: menuId, delta: actualDelta, takeout: takeout)
     }
 }

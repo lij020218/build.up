@@ -14,7 +14,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { DashboardHook } from "../useDashboard";
-import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore, TOTAL_EMPLOYER_RATE_PCT } from "@foundone/shared";
+import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore, TOTAL_EMPLOYER_RATE_PCT, isCountTracked } from "@foundone/shared";
 import type { MonthlyCosts, HealthScoreResult } from "@foundone/shared";
 import { getBusinessDay, getKstDate, getKstMonthKey, prevMonthKey } from "../utils/business-day";
 import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
@@ -260,7 +260,8 @@ export function useDashboardComputed(d: DashboardHook) {
 
   // 재고 / 직원
   const inventory = d.inventory as InventoryEntry[];
-  const lowStockItems = inventory.filter((i) => i.quantity <= (i.minThreshold ?? 0));
+  // 벌크(무게·부피 단위) 재료는 잔량 추적 제외 (2026-08-25 추적모드 분리 — inventory-tracking SSOT)
+  const lowStockItems = inventory.filter((i) => isCountTracked(i) && i.quantity <= (i.minThreshold ?? 0));
   const employees = d.employees as EmployeeEntry[];
   // 월 인건비 = 실부담(임금 + 주휴수당 + 사업주 4대보험). 종전 임금만 계산(×4.34)은 ~20% 과소표시 →
   //   StaffLaborCard.calcEmployee / iOS monthlyBurden 과 동일 공식으로 통일 (SSOT 요율, 4.345).

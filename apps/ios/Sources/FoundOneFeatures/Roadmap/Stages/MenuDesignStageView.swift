@@ -565,11 +565,18 @@ private extension MenuDesignStageView {
                     category: Self.mapMenuCategoryToInventory(m.category),
                     itemType: "product",
                     displayCategory: m.category, // 메뉴 분류 무손실 보존 (2026-07-22 통합, 웹 정합)
+                    // 레시피·포장 재료 보존 — 종전엔 미전달로 단계 재저장 시 레시피가 소멸 (2026-08-25 버그 수정)
+                    recipe: ex?.recipe,
+                    takeoutRecipe: ex?.takeoutRecipe,
                     sellingPrice: Double(m.price),
                     leadTimeDays: ex?.leadTimeDays ?? 1,
                     dailyUsage: ex?.dailyUsage ?? 0,
                     monthlySold: ex?.monthlySold ?? 0,
+                    monthlySoldTakeout: ex?.monthlySoldTakeout ?? 0,
                     lastOrderedAt: ex?.lastOrderedAt,
+                    orderCycleDays: ex?.orderCycleDays,
+                    purchasePackSize: ex?.purchasePackSize,
+                    purchasePackPrice: ex?.purchasePackPrice,
                     wasteLog: ex?.wasteLog ?? []
                 )
             }

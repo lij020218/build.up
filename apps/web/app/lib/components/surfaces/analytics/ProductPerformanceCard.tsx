@@ -75,9 +75,11 @@ export function ProductPerformanceCard() {
   const sorted = [...displayProducts].sort((a, b) => calcRevenue(b) - calcRevenue(a));
   const dangerItems = displayProducts.filter(p => effCost(p) > 0 && calcMargin(p) < 20);
 
-  // 레시피 저장 → 메뉴 inventory 항목에 recipe 기록.
-  const handleSaveRecipe = (menuId: string, recipe: RecipeIngredient[]) => {
-    saveInventory(inventory.map((i) => (i.id === menuId ? { ...i, recipe } : i)));
+  // 레시피 저장 → 메뉴 inventory 항목에 recipe + 포장 추가 재료 기록 (2026-08-25 홀/포장 분리).
+  const handleSaveRecipe = (menuId: string, recipe: RecipeIngredient[], takeoutRecipe: RecipeIngredient[]) => {
+    saveInventory(inventory.map((i) => (i.id === menuId
+      ? { ...i, recipe, takeoutRecipe: takeoutRecipe.length > 0 ? takeoutRecipe : undefined }
+      : i)));
     setRecipeMenuId(null);
   };
   const recipeMenu = recipeMenuId ? invById.get(recipeMenuId) ?? null : null;
@@ -404,7 +406,7 @@ export function ProductPerformanceCard() {
           menu={recipeMenu}
           materials={materials}
           goldenMax={goldenMax}
-          onSave={(recipe) => handleSaveRecipe(recipeMenu.id, recipe)}
+          onSave={(recipe, takeoutRecipe) => handleSaveRecipe(recipeMenu.id, recipe, takeoutRecipe)}
           onClose={() => setRecipeMenuId(null)}
         />
       )}

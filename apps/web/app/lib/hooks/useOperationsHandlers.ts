@@ -166,20 +166,27 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   const emptyInvForm: InvForm = {
     open: false, editId: null, name: "", qty: "", unit: "개", threshold: "",
     unitCost: "", category: "other", itemType: "material" as const,
-    sellingPrice: "", displayCategory: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
+    sellingPrice: "", displayCategory: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "", orderCycleDays: "",
+    purchasePackSize: "", purchasePackPrice: "",
   };
 
   /** 저장 성공 시 항목 id 반환(신규·수정 공통) — 메뉴 저장 직후 레시피 팝업 자동 오픈용. (2026-07-22) */
   const handleInvSave = (): string | undefined => {
     if (!invForm.name.trim()) return undefined;
     const existing = inventory.find(i => i.id === invForm.editId);
+    // 구매 묶음(한 번에 사는 양·가격) 있으면 단가 자동 파생 — 사장님은 "1L 2,600원"으로 기억 (2026-08-25)
+    const packSize = Number(invForm.purchasePackSize) || 0;
+    const packPrice = Number(invForm.purchasePackPrice) || 0;
+    const derivedUnitCost = packSize > 0 && packPrice > 0 ? packPrice / packSize : null;
     const item: InventoryItem = {
       id: invForm.editId ?? Date.now().toString(),
       name: invForm.name.trim(),
       quantity: Number(invForm.qty) || 0,
       unit: invForm.unit,
       minThreshold: Number(invForm.threshold) || 0,
-      unitCost: Number(invForm.unitCost) || 0,
+      unitCost: derivedUnitCost ?? (Number(invForm.unitCost) || 0),
+      purchasePackSize: packSize > 0 ? packSize : undefined,
+      purchasePackPrice: packPrice > 0 ? packPrice : undefined,
       category: invForm.category,
       itemType: invForm.itemType,
       sellingPrice: Number(invForm.sellingPrice) || 0,
@@ -190,6 +197,12 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       supplierUrl: invForm.url.trim(),
       leadTimeDays: Number(invForm.leadTimeDays) || 1,
       dailyUsage: Number(invForm.dailyUsage) || 0,
+      orderCycleDays: Number(invForm.orderCycleDays) || undefined,
+      // 폼에 없는 필드는 기존 값 보존 — 편집 시 레시피·판매량 리셋 버그 수정 (2026-08-25, iOS 는 기수정)
+      recipe: existing?.recipe,
+      takeoutRecipe: existing?.takeoutRecipe,
+      monthlySold: existing?.monthlySold,
+      monthlySoldTakeout: existing?.monthlySoldTakeout,
       lastOrderedAt: existing?.lastOrderedAt ?? "",
       wasteLog: existing?.wasteLog ?? [],
     };
@@ -221,6 +234,9 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       supplierName: item.supplierName ?? "", url: item.supplierUrl ?? "",
       leadTimeDays: item.leadTimeDays ? String(item.leadTimeDays) : "",
       dailyUsage: item.dailyUsage ? String(item.dailyUsage) : "",
+      orderCycleDays: item.orderCycleDays ? String(item.orderCycleDays) : "",
+      purchasePackSize: item.purchasePackSize ? String(item.purchasePackSize) : "",
+      purchasePackPrice: item.purchasePackPrice ? String(item.purchasePackPrice) : "",
     });
   };
 
@@ -430,11 +446,28 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     else saveProducts(products.filter(p => p.id !== id));
   };
 
-  const handleProdSoldChange = (id: string, delta: number) => {
-    if (inventory.some(i => i.id === id)) {
+  const handleProdSoldChange = (id: string, delta: number, takeout = false) => {
+    const menu = inventory.find(i => i.id === id);
+    if (menu) {
       // 1) 판매량 갱신  2) 레시피(BOM) 있으면 재료 재고 자동 차감(delta>0)·복구(delta<0). (2026-07-22)
-      const withSold = inventory.map(i => i.id === id ? { ...i, monthlySold: Math.max(0, (i.monthlySold ?? 0) + delta) } : i);
-      saveInventory(applyRecipeStockDelta(withSold, id, delta));
+      //  홀/포장 분리 (2026-08-25): monthlySold = 총 판매(기존 소비처 유지), monthlySoldTakeout = 그중 포장.
+      //  포장 ± 는 총·포장 동시 갱신 + takeoutRecipe 추가 차감 / 홀 ± 는 홀(총−포장)만 0 클램프.
+      const total = menu.monthlySold ?? 0;
+      const tk = menu.monthlySoldTakeout ?? 0;
+      let actualDelta: number;
+      let nextTk = tk;
+      if (takeout) {
+        nextTk = Math.max(0, tk + delta);
+        actualDelta = nextTk - tk;
+      } else {
+        const hall = Math.max(0, total - tk);
+        actualDelta = Math.max(0, hall + delta) - hall;
+      }
+      if (actualDelta === 0) return;
+      const withSold = inventory.map(i => i.id === id
+        ? { ...i, monthlySold: Math.max(0, total + actualDelta), monthlySoldTakeout: nextTk > 0 ? nextTk : undefined }
+        : i);
+      saveInventory(applyRecipeStockDelta(withSold, id, actualDelta, takeout));
     } else {
       saveProducts(products.map(p => p.id === id ? { ...p, monthlySold: Math.max(0, p.monthlySold + delta) } : p));
     }
