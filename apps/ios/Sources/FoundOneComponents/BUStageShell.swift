@@ -47,6 +47,17 @@ public extension EnvironmentValues {
 
 public struct BUStageShell<Content: View>: View {
 
+    /// 시뮬 시각 검증 전용 초기 스크롤 앵커 — BU_DEMO_ALLOW=1 + BU_DEMO_SCROLL=bottom|center 일 때만.
+    /// 평상시 nil = 기본 동작 (defaultScrollAnchor(nil)).
+    fileprivate static var demoScrollAnchor: UnitPoint? {
+        guard ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1" else { return nil }
+        switch ProcessInfo.processInfo.environment["BU_DEMO_SCROLL"] {
+        case "bottom": return .bottom
+        case "center": return .center
+        default: return nil
+        }
+    }
+
     public let stageId: String
     public let title: String
     public let stageEyebrow: String
@@ -209,6 +220,9 @@ public struct BUStageShell<Content: View>: View {
             // 모바일 최적화 — 스크롤 시 키보드 자동 dismiss (iPhone SE 등 작은 화면에서 키보드가
             // continue bar 가리는 문제 방지).
             .scrollDismissesKeyboard(.interactively)
+            // 시뮬 시각 검증 — BU_DEMO_SCROLL=bottom|center 로 초기 스크롤 위치 지정
+            //   (시뮬 스크롤 주입 불가 대응, BU_DEMO_EMAIL_SHEET 패턴. BU_DEMO_ALLOW=1 이중 가드, 2026-08-26)
+            .defaultScrollAnchor(Self.demoScrollAnchor)
             #endif
         }
         .navigationTitle(title)

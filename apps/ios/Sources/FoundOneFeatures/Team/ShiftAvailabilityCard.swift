@@ -828,6 +828,12 @@ struct ShiftAvailabilityCard: View {
 
     // ── 데이터 ──
     private func load() async {
+        // 시뮬 시각 검증 데모 — 서버 없이 "신청 없음" 정상 상태 (BU_DEMO_SEED_TEAM 패턴, 2026-08-26)
+        if ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
+           ProcessInfo.processInfo.environment["BU_DEMO_SEED_TEAM"] == "1" {
+            failed = false; rows = []; subs = []
+            return
+        }
         guard let owner = ownerUserId else { return }
         loading = true
         defer { loading = false }

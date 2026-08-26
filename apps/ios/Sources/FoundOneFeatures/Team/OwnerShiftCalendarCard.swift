@@ -434,6 +434,12 @@ struct OwnerShiftCalendarCard: View {
     }
 
     private func load() async {
+        // 시뮬 시각 검증 데모 — 서버 없이 규칙 기반 캘린더만 (BU_DEMO_SEED_TEAM 패턴, 2026-08-26)
+        if ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
+           ProcessInfo.processInfo.environment["BU_DEMO_SEED_TEAM"] == "1" {
+            loadError = nil
+            return
+        }
         loading = true
         defer { loading = false }
         async let ex = try? repo.ownerMonthExceptions(monthStart: monthStart, monthEnd: monthEnd)

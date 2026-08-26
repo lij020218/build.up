@@ -2042,15 +2042,26 @@ struct DemoTabs: View {
                 tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId),
                 bottomTabs: bottomQuickTabs(businessLaunched: mockData.resolverInput.businessLaunched, offeringCategoryId: mockData.resolverInput.categoryId, offeringSubIndustryId: nil),
                 accessory: {
-                    ExitButton(action: onExit)
+                    if !Self.hideBanner {   // 캡처 모드에선 데모 종료 X 버튼도 숨김
+                        ExitButton(action: onExit)
+                    }
                 }
             ) {
                 content
-                    .padding(.top, 36)  // 배너 자리
+                    .padding(.top, Self.hideBanner ? 0 : 36)  // 배너 자리
             }
 
-            DemoModeBanner(scenario: scenario, onExit: onExit)
+            if !Self.hideBanner {
+                DemoModeBanner(scenario: scenario, onExit: onExit)
+            }
         }
+    }
+
+    /// 시뮬 스크린샷 캡처 전용 — BU_DEMO_HIDE_BANNER=1 이면 데모 배너 숨김 (BU_DEMO_ALLOW 이중 가드).
+    /// 평상시 데모 UX 에서는 항상 배너 표시 (실데이터 착각 방지 목적 유지).
+    private static var hideBanner: Bool {
+        ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1"
+            && ProcessInfo.processInfo.environment["BU_DEMO_HIDE_BANNER"] == "1"
     }
 
     /// Demo 모드용 stub store — 빈 StoreInfoState (placeholder UI 그대로 표시).

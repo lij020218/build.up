@@ -216,6 +216,18 @@ public struct TeamManagementView: View {
     }
 
     private func load() async {
+        // 시뮬 시각 검증 데모 시드 (BU_DEMO_EMAIL_SHEET 패턴, 2026-08-25) — 서버 없이 직원 화면 구성.
+        //  BU_DEMO_ALLOW=1 + BU_DEMO_SEED_TEAM=1 두 변수 모두 있어야 진입 (실계정 오염 불가: 로컬 @State 만 채움).
+        if ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
+           ProcessInfo.processInfo.environment["BU_DEMO_SEED_TEAM"] == "1" {
+            seedDemoTeam()
+            // BU_DEMO_TEAM_TAB=schedule|leavePay — 세그먼트 자동 전환 (시뮬 탭 주입 불가 대응)
+            if let raw = ProcessInfo.processInfo.environment["BU_DEMO_TEAM_TAB"],
+               let seg = TeamSegment(rawValue: raw) {
+                segment = seg
+            }
+            return
+        }
         do {
             async let m = repo.members()
             async let l = repo.leaveRequests()
@@ -248,6 +260,32 @@ public struct TeamManagementView: View {
         } catch {
             if members == nil { loadFailed = true }
         }
+    }
+
+    /// 데모 팀 픽스처 — 모델 init 이 internal 이라 JSON 디코드로 구성. 로컬 @State 만 채우므로 저장·동기화 없음.
+    private func seedDemoTeam() {
+        let membersJSON = """
+        [
+          {"member_user_id":"11111111-1111-1111-1111-111111111111","name":"김서연","role":"staff",
+           "joined_at":"2026-03-02","hire_date":"2026-03-02","hourly_wage":11000,"employment_type":"full_time","job_duties":[]},
+          {"member_user_id":"22222222-2222-2222-2222-222222222222","name":"박지훈","role":"staff",
+           "joined_at":"2026-05-16","hire_date":"2026-05-16","hourly_wage":10500,"employment_type":"part_time","job_duties":[]},
+          {"member_user_id":"33333333-3333-3333-3333-333333333333","name":"이하은","role":"staff",
+           "joined_at":"2026-07-01","hire_date":"2026-07-01","hourly_wage":10500,"employment_type":"part_time","job_duties":[]}
+        ]
+        """
+        var rulesRows: [String] = []
+        // 김서연 평일 오픈조, 박지훈 주중 오후, 이하은 주말
+        for wd in 1...5 { rulesRows.append("{\"id\":\"aaaa0000-0000-0000-0000-00000000000\(wd)\",\"member_user_id\":\"11111111-1111-1111-1111-111111111111\",\"weekday\":\(wd),\"start_time\":\"08:00:00\",\"end_time\":\"16:00:00\",\"active\":true}") }
+        for wd in [2,3,4] { rulesRows.append("{\"id\":\"bbbb0000-0000-0000-0000-00000000000\(wd)\",\"member_user_id\":\"22222222-2222-2222-2222-222222222222\",\"weekday\":\(wd),\"start_time\":\"15:00:00\",\"end_time\":\"21:00:00\",\"active\":true}") }
+        for wd in [0,6] { rulesRows.append("{\"id\":\"cccc0000-0000-0000-0000-00000000000\(wd)\",\"member_user_id\":\"33333333-3333-3333-3333-333333333333\",\"weekday\":\(wd),\"start_time\":\"10:00:00\",\"end_time\":\"18:00:00\",\"active\":true}") }
+        let rulesJSON = "[\(rulesRows.joined(separator: ","))]"
+        let dec = JSONDecoder()
+        members = (try? dec.decode([TeamMember].self, from: Data(membersJSON.utf8))) ?? []
+        rules = (try? dec.decode([TeamScheduleRule].self, from: Data(rulesJSON.utf8))) ?? []
+        paydayDay = 10
+        paidThisMonth = true
+        loadFailed = false
     }
 
     // ── 헤더 (시트 전용 — 탭 화면은 BUPageHeader) ──
