@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   title: "Found.One — 창업 로드맵 멘토링",
   description: "단계별 창업 로드맵, 세무·자금·입지 분석, 지원사업 매칭까지. 예비 창업자를 위한 올인원 멘토링 서비스.",
   metadataBase: new URL(BASE_URL),
+  // iOS Safari 스마트 앱 배너 — App Store 출시(2026-08) 후 웹→앱 전환 동선
+  itunes: { appId: "6802198801" },
   // icon/opengraph-image 는 app/icon.tsx · app/opengraph-image.tsx (next/og 로 PNG 생성)가
   //   파일 컨벤션으로 자동 주입 — SVG(크롤러 미렌더) 대신 PNG. 명시 지정 제거.
   openGraph: {

@@ -23,6 +23,18 @@ import { useRouter } from "next/navigation";  // 랜딩 nav "서비스" 버튼�
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../language-provider";
 
+/* ─── App Store (2026-08 iOS 정식 출시) — 상단 nav · 하단 CTA 공용 ─── */
+const APP_STORE_URL = "https://apps.apple.com/kr/app/id6802198801";
+
+/** Apple 로고 글리프 — App Store 링크 버튼용 */
+function AppleGlyph({ size = 13, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 814 1000" fill={color} aria-hidden="true" style={{ display: "block" }}>
+      <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57-155.5-127C46.7 790.7 0 663 0 541.8c0-194.4 126.4-297.5 250.8-297.5 66.1 0 121.2 43.4 162.7 43.4 39.5 0 101.1-46 176.3-46 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z" />
+    </svg>
+  );
+}
+
 /* ─── types ─── */
 type AuthMode = "signup" | "login" | "password" | "reset";
 
@@ -339,6 +351,23 @@ export default function AuthPage() {
           >
             {language === "ko" ? "서비스" : "App"}
           </button>
+          <a
+            href={APP_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="App Store"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              color: "rgba(255,255,255,0.8)",
+              fontSize: 13,
+              textDecoration: "none"
+            }}
+          >
+            <AppleGlyph size={13} color="rgba(255,255,255,0.8)" />
+            <span className="landing-appstore-label">App Store</span>
+          </a>
           <button
             type="button"
             onClick={() => {
@@ -1204,7 +1233,12 @@ export default function AuthPage() {
           opacity: cv ? 1 : 0,
           transform: cv ? "translateY(0)" : "translateY(20px)",
           transition: "opacity 0.7s ease, transform 0.7s ease",
-          transitionDelay: "0.4s"
+          transitionDelay: "0.4s",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap"
         }}>
           <button
             type="button"
@@ -1233,6 +1267,36 @@ export default function AuthPage() {
           >
             {t.heroCta}
           </button>
+          <a
+            href={APP_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "13px 28px",
+              borderRadius: 980,
+              border: "1px solid rgba(255,255,255,0.28)",
+              color: "#fff",
+              fontSize: 15,
+              fontWeight: 600,
+              letterSpacing: "-0.005em",
+              textDecoration: "none",
+              transition: "background 0.18s ease, transform 0.15s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.10)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
+          >
+            <AppleGlyph size={16} color="#fff" />
+            {language === "ko" ? "App Store에서 다운로드" : "Download on the App Store"}
+          </a>
         </div>
         </>; })()}
       </section>

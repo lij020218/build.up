@@ -128,6 +128,13 @@ body {
   }
 }
 
+/* 랜딩 상단 nav App Store 링크 — 좁은 화면에선 텍스트 숨기고  글리프만 (nav 3버튼 폭 백스톱, 2026-08-26) */
+@media (max-width: 480px) {
+  .landing-appstore-label {
+    display: none;
+  }
+}
+
 /* safe-area 패딩 — sticky footer·fixed nav 가 홈 인디케이터·노치에 가리지 않도록 */
 .has-safe-area-bottom {
   padding-bottom: max(16px, env(safe-area-inset-bottom));
