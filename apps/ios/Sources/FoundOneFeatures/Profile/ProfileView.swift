@@ -70,20 +70,20 @@ public struct ProfileView: View {
             VStack(spacing: 0) {
                 // 공통 페이지 헤더 (2026-08-19 통일) — "내 정보" + 아바타 블록은 아래 header 로 축소 유지
                 BUPageHeader(title: "내 정보", subtitle: profileSubtitle)
-                VStack(alignment: .leading, spacing: BUSpacing.md) {
+                // 2026-09-12 개편: 카드 11장이 각자 떠 있던 것을 **애플식 그룹 리스트**로 묶었다.
+                //  종전 문제 — 제목이 세 번 나오고(`ACCOUNT · 계정` + `계정 정보` + 행 라벨),
+                //  카드마다 반투명 흰색을 손으로 칠했고, 본문이 13pt 라 촘촘했다.
+                VStack(alignment: .leading, spacing: BUSpacing.shellGap) {
                     header
                     accountCard
                     journeyCard
                     storeCard
-                    ownerProfileCard
-                    dataConnectionCard
-                    storeConnectCard
+                    connectionsSection
                     notificationCard
+                    ownerProfileCard
                     languageCard
                     supportCard
-                    feedbackCard
                     accountActionsCard
-                    Color.clear.frame(height: 110)
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
             }
@@ -224,32 +224,20 @@ public struct ProfileView: View {
     // MARK: - 2. accountCard
 
     private var accountCard: some View {
-        profileCard(eyebrow: "ACCOUNT · 계정", title: "계정 정보") {
-            VStack(spacing: 0) {
-                if let email = coordinator?.currentSession?.email, !email.isEmpty {
-                    infoRow(label: "이메일", value: email, isMono: true)
-                    divider
-                } else {
-                    infoRow(label: "이메일", value: "미로그인")
-                    divider
-                }
-                infoRow(label: "로그인 방식", value: providerLabel)
-                divider
-                if let uid = coordinator?.currentSession?.userId {
-                    infoRow(label: "사용자 ID", value: shortUserId(uid), isMono: true)
-                    divider
-                }
-                HStack(alignment: .center) {
-                    Text("계정 유형")
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(BUColor.inkSecondary)
-                    Spacer(minLength: BUSpacing.sm)
-                    AccountTypeBadge(isAnonymous: isAnonymousAccount)
-                }
-                .frame(minHeight: 44)
-                .padding(.horizontal, BUSpacing.md)
+        BUListSection("계정") {
+            BUListRow.value("이메일", accountEmailLabel, monospaced: !isAnonymousAccount)
+            BUListRow.value("로그인 방식", providerLabel)
+            if let uid = coordinator?.currentSession?.userId {
+                BUListRow.value("사용자 ID", shortUserId(uid), monospaced: true)
             }
+            // 종전엔 주황/초록 캡슐 배지였다. 값이 두 가지뿐이라 색까지 쓸 이유가 없다.
+            BUListRow.value("계정 유형", isAnonymousAccount ? "미로그인" : "이메일 계정")
         }
+    }
+
+    private var accountEmailLabel: String {
+        guard let email = coordinator?.currentSession?.email, !email.isEmpty else { return "미로그인" }
+        return email
     }
 
     private var providerLabel: String {
@@ -274,27 +262,11 @@ public struct ProfileView: View {
     // MARK: - 3. journeyCard (내 여정 진행도 — 웹 156–184 미러)
 
     private var journeyCard: some View {
-        profileCard(eyebrow: "MY JOURNEY · 내 여정", title: "진행 상황") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(roadmap.completedCount)개 단계 완료")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
-                    Spacer(minLength: 0)
-                    Text("\(progressPercent)%")
-                        .font(.system(size: 22, weight: .heavy))
-                        .tracking(-0.5)
-                        .foregroundStyle(progressPercent >= 100
-                            ? BUColor.success
-                            : BUColor.accent)
-                }
+        BUListSection("진행 상황", footer: journeySubtitle) {
+            BUListRow.content("완료한 단계", value: "\(roadmap.completedCount) / \(max(roadmap.totalCount, 1))") {
                 ProgressBar(percent: progressPercent)
-                Text(journeySubtitle)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
             }
-            .padding(.horizontal, BUSpacing.md)
-            .padding(.vertical, BUSpacing.sm + 4)
+            BUListRow.value("진행률", "\(progressPercent)%")
         }
     }
 
@@ -314,46 +286,16 @@ public struct ProfileView: View {
     // MARK: - 4. storeCard (탭 → StoreInfoEditSheet)
 
     private var storeCard: some View {
-        Button {
-            showStoreEdit = true
-        } label: {
-            profileCard(eyebrow: "STORE · 가게", title: "가게 정보", trailing: {
-                AnyView(
-                    HStack(spacing: 4) {
-                        Text("편집")
-                            .font(.system(size: 11, weight: .heavy))
-                        Image(systemName: "pencil")
-                            .font(.system(size: 10, weight: .heavy))
-                    }
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(BUColor.midnight.opacity(0.08), in: Capsule())
-                )
-            }) {
-                VStack(spacing: 0) {
-                    infoRow(label: "가게 이름", value: store.storeName.isEmpty ? "미입력" : store.storeName)
-                    divider
-                    infoRow(label: "업종", value: store.category.labelKo)
-                    if !hideHoursForCategory {
-                        divider
-                        infoRow(label: "영업시간", value: businessHoursLabel)
-                    }
-                    divider
-                    infoRow(
-                        label: "운영 기간",
-                        value: store.businessLaunched
-                            ? "\(store.daysSinceLaunch)일째"
-                            : "운영 시작 안 함"
-                    )
-                    divider
-                    infoRow(
-                        label: "현재 단계",
-                        value: stageLabel
-                    )
-                }
+        // "편집" 캡슐 칩 → 섹션 제목 오른쪽 링크 (애플이 섹션 동작을 두는 자리).
+        BUListSection("가게", actionLabel: "편집", action: { showStoreEdit = true }) {
+            BUListRow.value("가게 이름", store.storeName.isEmpty ? "미입력" : store.storeName)
+            BUListRow.value("업종", store.category.labelKo)
+            if !hideHoursForCategory {
+                BUListRow.value("영업시간", businessHoursLabel)
             }
+            BUListRow.value("운영 기간", store.businessLaunched ? "\(store.daysSinceLaunch)일째" : "운영 시작 안 함")
+            BUListRow.value("현재 단계", stageLabel)
         }
-        .buttonStyle(.plain)
     }
 
     private var hideHoursForCategory: Bool {
@@ -377,131 +319,26 @@ public struct ProfileView: View {
         }
     }
 
-    // MARK: - 의견 보내기 (인앱 피드백)
+    // MARK: - 연결 및 지원 (종전: 40pt 아이콘 타일이 붙은 카드 3장이 각자 떠 있었다)
 
-    private var feedbackCard: some View {
-        Button { showFeedbackSheet = true } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(BUColor.midnight08)
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "bubble.left.and.text.bubble.right")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                }
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("의견 보내기")
-                        .font(.system(size: 14.5, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("불편한 점·제안 무엇이든 — 빠르게 반영하겠습니다")
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineLimit(2)
-                }
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(BUColor.inkMuted)
-            }
-            .padding(BUSpacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white.opacity(0.72)))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
-            .contentShape(Rectangle())
+    private var connectionsSection: some View {
+        BUListSection("연결") {
+            BUListRow.link("데이터 연결",
+                           subtitle: connectionSubtitle) { showDataConnections = true }
+                .icon("antenna.radiowaves.left.and.right")
+            BUListRow.link("가게 연결 (직원용)",
+                           subtitle: "초대 코드로 근무표·연차를 함께 씁니다") { showStoreConnect = true }
+                .icon("person.badge.key")
+            BUListRow.link("의견 보내기",
+                           subtitle: "불편한 점·제안 무엇이든 빠르게 반영합니다") { showFeedbackSheet = true }
+                .icon("bubble.left.and.text.bubble.right")
         }
-        .buttonStyle(.plain)
     }
 
-    // MARK: - 3.5 dataConnectionCard (사장님 외부 데이터 자동 수집)
-
-    private var dataConnectionCard: some View {
-        Button { showDataConnections = true } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(BUColor.midnight08)
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                }
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("데이터 연결")
-                        .font(.system(size: 14.5, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("자체 서비스 데이터 자동 수집 — 매일 새벽 갱신")
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineLimit(2)
-                }
-                Spacer(minLength: 8)
-                if let n = connectionCount, n > 0 {
-                    Text("현재 \(n)개 연결")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(BUColor.success)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(BUColor.success.opacity(0.10), in: Capsule())
-                }
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(BUColor.inkMuted)
-            }
-            .padding(BUSpacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    // ── 가게 연결 (직원용) — 초대 코드 입력·받은 초대 (2026-07-12, 웹 StoreConnectCard 미러) ──
-    private var storeConnectCard: some View {
-        Button { showStoreConnect = true } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(BUColor.midnight08)
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "person.badge.key")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                }
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("가게 연결 (직원용)")
-                        .font(.system(size: 14.5, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("사장님께 받은 초대 코드로 직원 연결 — 근무표·연차")
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineLimit(2)
-                }
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(BUColor.inkMuted)
-            }
-            .padding(BUSpacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+    /// 연결 개수는 초록 캡슐 배지였다 → 부제 한 줄로. 숫자 하나에 색을 쓸 이유가 없다.
+    private var connectionSubtitle: String {
+        guard let n = connectionCount, n > 0 else { return "매일 새벽 자동 수집" }
+        return "현재 \(n)개 연결 · 매일 새벽 자동 수집"
     }
 
     @MainActor
@@ -540,102 +377,55 @@ public struct ProfileView: View {
     // MARK: - 4. notificationCard
 
     private var notificationCard: some View {
-        profileCard(eyebrow: "NOTIFICATIONS · 알림", title: "알림 설정") {
-            VStack(spacing: 0) {
-                toggleRow(
-                    title: "매출 미입력 알림",
-                    subtitle: "3일 이상 매출이 비면 알려드려요",
-                    isOn: $notifStaleSales
-                )
-                divider
-                toggleRow(
-                    title: "세금 신고 임박",
-                    subtitle: "신고 마감 7일 전부터 안내",
-                    isOn: $notifTaxDeadline
-                )
-                divider
-                toggleRow(
-                    title: "인허가 만료 임박",
-                    subtitle: "만료 30일 전부터 안내",
-                    isOn: $notifPermitExpiry
-                )
-                divider
-                toggleRow(
-                    title: "매주 운영 점검",
-                    subtitle: "월요일 아침 한 주 미리보기",
-                    isOn: $notifWeeklyCheckup
-                )
-            }
+        BUListSection("알림") {
+            BUListRow.toggle("매출 미입력", subtitle: "3일 이상 매출이 비면 알려드려요", isOn: $notifStaleSales)
+            BUListRow.toggle("세금 신고 임박", subtitle: "신고 마감 7일 전부터 안내", isOn: $notifTaxDeadline)
+            BUListRow.toggle("인허가 만료 임박", subtitle: "만료 30일 전부터 안내", isOn: $notifPermitExpiry)
+            BUListRow.toggle("매주 운영 점검", subtitle: "월요일 아침 한 주 미리보기", isOn: $notifWeeklyCheckup)
         }
     }
 
     // MARK: - 4.5 ownerProfileCard (지원사업 매칭 — 출생연도·신용·폐업·장애, 로컬 전용·서버 미전송)
 
     private var ownerProfileCard: some View {
-        profileCard(eyebrow: "OWNER · 사장님", title: "지원사업 매칭 정보") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원을 더 정확히 찾아드려요. 모두 선택 · 기기에만 저장.")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                OwnerProfileChips(onChange: {})
+        BUListSection(
+            "지원사업 매칭",
+            footer: "모두 선택 항목이며 기기에만 저장됩니다. 서버로 보내지 않습니다."
+        ) {
+            BUListRow.content(
+                "해당하는 항목",
+                subtitle: "청년(만 39세 이하)·시니어 전용 지원을 더 정확히 찾아드려요"
+            ) {
+                OwnerProfileChips(onChange: {}, showsHeader: false)
             }
-            .padding(.horizontal, BUSpacing.md)
-            .padding(.vertical, BUSpacing.sm)
         }
     }
 
     // MARK: - 7. languageCard (ko/en 실제 토글 — @AppStorage 영구)
 
     private var languageCard: some View {
-        profileCard(eyebrow: "LANGUAGE · 언어", title: "설정") {
-            HStack(alignment: .center) {
-                Text("언어")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(BUColor.inkSecondary)
-                Spacer(minLength: BUSpacing.sm)
+        BUListSection("언어") {
+            BUListRow.custom("표시 언어") {
                 LanguageToggle(language: $language)
             }
-            .frame(minHeight: 44)
-            .padding(.horizontal, BUSpacing.md)
         }
     }
 
     // MARK: - 6. supportCard
 
     private var supportCard: some View {
-        profileCard(eyebrow: "SUPPORT · 지원", title: "도움말 및 지원") {
-            VStack(spacing: 0) {
-                supportRow(
-                    title: "이용약관",
-                    url: URL(string: "https://foundone.dev/terms")
-                )
-                divider
-                supportRow(
-                    title: "개인정보처리방침",
-                    url: URL(string: "https://foundone.dev/privacy")
-                )
-                divider
-                supportRow(
-                    title: "문의하기",
-                    // 웹 푸터·지원 페이지와 동일한 주소로 통일 (2026-08-06 사장님 지시).
-                    //   support@foundone.dev 는 수신함이 없어 문의가 유실된다.
-                    url: URL(string: "mailto:\(BusinessInfo.contactEmail)")
-                )
-                divider
-                HStack {
-                    Text("버전")
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(BUColor.inkSecondary)
-                    Spacer(minLength: BUSpacing.sm)
-                    Text(appVersionString)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(BUColor.inkMuted)
-                }
-                .frame(minHeight: 44)
-                .padding(.horizontal, BUSpacing.md)
-            }
+        BUListSection("도움말") {
+            BUListRow.link("이용약관") { open("https://foundone.dev/terms") }
+            BUListRow.link("개인정보처리방침") { open("https://foundone.dev/privacy") }
+            // 문의 주소는 웹 푸터와 동일 (2026-08-06 지시) — support@ 는 수신함이 없어 유실된다.
+            BUListRow.link("문의하기") { open("mailto:\(BusinessInfo.contactEmail)") }
+            BUListRow.value("버전", appVersionString)
         }
+    }
+
+    private func open(_ raw: String) {
+        guard let url = URL(string: raw) else { return }
+        openURL(url)
     }
 
     private var appVersionString: String {
@@ -647,125 +437,34 @@ public struct ProfileView: View {
     // MARK: - 9. accountActionsCard (진행 초기화 + 로그아웃 + 계정 삭제)
 
     private var accountActionsCard: some View {
-        VStack(spacing: BUSpacing.sm) {
-            // 운영자 모드 — /api/admin/me 200 인 계정에만 노출. 콘솔은 웹 전용이라 Safari 로 연다.
+        // 애플은 되돌리기 어려운 동작을 **빨간 글자 한 줄**로만 둔다 — 캡슐 버튼·테두리 없이.
+        VStack(alignment: .leading, spacing: BUSpacing.shellGap) {
             if isAdminUser {
-                Button {
-                    openURL(BUSupabase.shared.env.webAppURL.appendingPathComponent("admin"))
-                } label: {
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("운영자 모드")
-                                .font(.system(size: 14, weight: .heavy))
-                                .foregroundStyle(BUColor.ink)
-                            Text("가입·기능 사용량·피드백 관리 (운영자 전용, 웹으로 열림)")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(BUColor.inkMuted)
-                                .lineLimit(2)
-                        }
-                        Spacer(minLength: 8)
-                        Text("콘솔 열기")
-                            .font(.system(size: 12, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12).padding(.vertical, 7)
-                            .background(BUColor.midnight, in: Capsule())
+                BUListSection("운영자", footer: "가입·기능 사용량·피드백 관리. 웹 콘솔로 열립니다.") {
+                    BUListRow.link("운영자 콘솔 열기") {
+                        openURL(BUSupabase.shared.env.webAppURL.appendingPathComponent("admin"))
                     }
-                    .padding(BUSpacing.md)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.white.opacity(0.72))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-                    )
+                    .icon("wrench.and.screwdriver")
                 }
-                .buttonStyle(.plain)
             }
 
-            // 진행 초기화 — 모든 사장님에게 노출 (anon 도 자기 데이터 지울 수 있음)
-            Button {
-                showResetConfirm = true
-            } label: {
-                HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("진행 초기화")
-                            .font(.system(size: 14, weight: .heavy))
-                            .foregroundStyle(BUColor.ink)
-                        Text("모든 단계 결정·매출·캠페인 데이터를 초기화합니다")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(BUColor.inkMuted)
-                            .lineLimit(2)
-                    }
-                    Spacer(minLength: 8)
-                    if resetting {
-                        ProgressView().scaleEffect(0.85)
-                    } else {
-                        Text("초기화")
-                            .font(.system(size: 12, weight: .heavy))
-                            .foregroundStyle(BUColor.danger)
-                            .padding(.horizontal, 12).padding(.vertical, 7)
-                            .background(BUColor.danger.opacity(0.08), in: Capsule())
-                    }
+            BUListSection(footer: "진행 초기화는 모든 단계 결정·매출·캠페인 기록을 지웁니다. 계정은 유지됩니다.") {
+                BUListRow.destructive(resetting ? "초기화하는 중…" : "진행 초기화") {
+                    showResetConfirm = true
                 }
-                .padding(BUSpacing.md)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white.opacity(0.72))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-            .disabled(resetting)
-
-            if coordinator != nil {
-                Button {
-                    guard let coordinator else { return }
-                    Task { await coordinator.signOut() }
-                } label: {
-                    Text("로그아웃")
-                        .font(BUFont.label)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .frame(maxWidth: .infinity, minHeight: 52)
-                        .background(
-                            RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                                .fill(BUColor.surfaceElevated)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
-
-                // 계정 삭제는 실계정만 — 익명 세션은 /api/account/delete 가 401 이므로 버튼 숨김.
-                if !isAnonymousAccount {
-                    Button {
-                        showDeleteConfirm = true
-                    } label: {
-                        Text("계정 삭제")
-                            .font(BUFont.label)
-                            .foregroundStyle(BUColor.danger)
-                            .frame(maxWidth: .infinity, minHeight: 52)
-                            .background(
-                                RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                                    .fill(BUColor.danger.opacity(0.06))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                                    .strokeBorder(BUColor.danger.opacity(0.20), lineWidth: 1)
-                            )
+                if coordinator != nil {
+                    BUListRow.button("로그아웃") {
+                        guard let coordinator else { return }
+                        Task { await coordinator.signOut() }
                     }
-                    .buttonStyle(.plain)
+                    // 계정 삭제는 실계정만 — 익명 세션은 /api/account/delete 가 401.
+                    if !isAnonymousAccount {
+                        BUListRow.destructive("계정 삭제") { showDeleteConfirm = true }
+                    }
                 }
             }
         }
-        .padding(.top, BUSpacing.xs)
+        .disabled(resetting)
     }
 
     // MARK: - Reset action
@@ -868,133 +567,9 @@ public struct ProfileView: View {
         }
     }
 
-    // MARK: - Reusable building blocks
-
-    @ViewBuilder
-    private func profileCard<Content: View>(
-        eyebrow: String,
-        title: String,
-        trailing: (() -> AnyView)? = nil,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 4) {
-                    BUEyebrow(eyebrow)
-                    Text(title)
-                        .font(BUFont.cardTitleSmall)
-                        .foregroundStyle(BUColor.ink)
-                }
-                Spacer(minLength: 8)
-                if let trailing { trailing() }
-            }
-            .padding(.horizontal, BUSpacing.md)
-            .padding(.top, BUSpacing.md)
-            .padding(.bottom, BUSpacing.sm)
-
-            content()
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.72))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-        )
-    }
-
-    private var divider: some View {
-        Rectangle()
-            .fill(BUColor.borderSubtle)
-            .frame(height: 1)
-            .padding(.horizontal, BUSpacing.md)
-    }
-
-    private func infoRow(label: String, value: String, isMono: Bool = false) -> some View {
-        HStack(alignment: .center) {
-            Text(label)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(BUColor.inkSecondary)
-            Spacer(minLength: BUSpacing.sm)
-            Text(value)
-                .font(.system(size: 13, weight: .medium, design: isMono ? .monospaced : .default))
-                .foregroundStyle(BUColor.ink)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
-        .frame(minHeight: 44)
-        .padding(.horizontal, BUSpacing.md)
-    }
-
-    private func toggleRow(title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
-        HStack(alignment: .center, spacing: BUSpacing.sm) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(BUColor.ink)
-                Text(subtitle)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(BUColor.inkSecondary)
-                    .lineLimit(2)
-            }
-            Spacer(minLength: BUSpacing.sm)
-            Toggle("", isOn: isOn)
-                .labelsHidden()
-                .tint(BUColor.midnight)
-        }
-        .frame(minHeight: 52)
-        .padding(.horizontal, BUSpacing.md)
-        .padding(.vertical, BUSpacing.xs)
-    }
-
-    @ViewBuilder
-    private func supportRow(title: String, url: URL?) -> some View {
-        if let url {
-            Link(destination: url) {
-                supportRowContent(title: title)
-            }
-            .buttonStyle(.plain)
-        } else {
-            supportRowContent(title: title)
-        }
-    }
-
-    private func supportRowContent(title: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(BUColor.ink)
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(BUColor.inkSubtle)
-        }
-        .frame(minHeight: 44)
-        .padding(.horizontal, BUSpacing.md)
-        .contentShape(Rectangle())
-    }
 }
 
 // MARK: - Helper components
-
-/// 계정 유형 배지 — 미로그인 (주황) / 등록 (초록).
-private struct AccountTypeBadge: View {
-    let isAnonymous: Bool
-
-    var body: some View {
-        let (label, fg, bg, border): (String, Color, Color, Color) = isAnonymous
-            ? ("미로그인", BUColor.warn, BUColor.warn.opacity(0.10), BUColor.warn.opacity(0.2))
-            : ("이메일 계정", BUColor.success, BUColor.success.opacity(0.10), BUColor.success.opacity(0.2))
-        return Text(label)
-            .font(.system(size: 11, weight: .heavy))
-            .foregroundStyle(fg)
-            .padding(.horizontal, 10).padding(.vertical, 3)
-            .background(bg, in: Capsule())
-            .overlay(Capsule().strokeBorder(border, lineWidth: 1))
-    }
-}
 
 /// 진행도 막대 — 0–100, 100% 면 초록.
 private struct ProgressBar: View {

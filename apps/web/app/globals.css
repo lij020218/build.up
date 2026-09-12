@@ -13,18 +13,34 @@
 
 :root {
   color-scheme: light;
-  --bg: #f7f6f3;
-  --bg-raw: #f7f6f3;
+  /* 캔버스 (2026-09-12 사장님 결정) — 흰 배경 + 상단 연푸른 글로우.
+     iOS BUColor.appBackground / canvasGlow 와 같은 값. 종전 베이지(#f7f6f3)+오로라는
+     콘텐츠가 "유리 위"에 놓여 글자 대비가 스크롤 위치마다 달라지는 문제가 있었다. */
+  --bg: #ffffff;
+  --bg-raw: #ffffff;
+  --canvas-glow: 74, 108, 240;      /* #4A6CF0 — iOS canvasGlow */
+  --canvas-glow-opacity: 0.20;      /* iOS BUColor.canvasGlowOpacity */
   --transparent: transparent;
 
-  /* Aurora build.up brand palette */
+  /* Aurora build.up brand palette — 브랜드 화면(랜딩 등) 전용으로만 남김.
+     앱 화면 배경에는 더 이상 쓰지 않는다. */
   --aurora-1: #1d3557;
   --aurora-2: #457b9d;
   --aurora-3: #a8dadc;
   --aurora-4: #e0f0ff;
   --aurora-5: #1d3557;
-  --surface: rgba(255, 255, 255, 0.82);
+  /* 카드는 불투명 — 반투명 표면은 글자 대비를 배경에 맡기게 된다. */
+  --surface: #ffffff;
   --surface-strong: #ffffff;
+  /* 카드 안쪽 블록용 옅은 회색 면 (iOS BUColor.subtleFill). */
+  --subtle-fill: #f2f2f7;
+
+  /* 카드 모서리 — 한 곳에서만 정한다 (iOS BURadius.outerCard 와 같은 값).
+     근거: 애플이 자사앱에서 실제로 쓰는 값은 inset grouped 리스트 섹션의 10pt 다
+     (설정·메일·메모의 흰 묶음). "직사각형에 모서리만 둥근" 모양이 그것.
+     카드를 12 로 둔 건 안쪽 8px 면이 동심으로 보이게 하려는 것.
+     종전에는 이 값이 133곳에 직접 박혀 있어 한 번에 바꿀 수가 없었다. */
+  --card-radius: 12px;
   --text: #111111;
   --muted: #5b616e;
   --border: rgba(17, 17, 17, 0.08);
@@ -143,62 +159,26 @@ body {
   padding-top: max(0px, env(safe-area-inset-top));
 }
 
-/* ── Aurora 배경 효과 (body ::before + ::after 이중 레이어) ── */
-body::before,
-body::after {
+/* ── 캔버스 배경 (2026-09-12) ──────────────────────────────────────────
+   종전: body::before/::after 두 겹의 오로라 그라디언트가 화면 전체에서 흐름.
+     → 카드가 반투명이라 글자 대비가 스크롤 위치마다 달라졌고, 80s·110s 애니메이션이
+       계속 합성돼 저사양 기기에서 스크롤이 무거웠다.
+   현재: 흰 바탕 + 상단 한 곳의 정적 글로우 한 겹. iOS BUCanvasBackground 와 같은 모양
+     (중심 50% / -12%, 반경 화면폭 115%).
+   오로라 변수·키프레임은 브랜드 화면용으로 남겨 둔다 — 앱 배경으로는 쓰지 않는다. */
+body::before {
   content: "";
   position: fixed;
-  inset: -20px;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-}
-
-/* 레이어 1: 메인 오로라 */
-body::before {
-  opacity: 0.38;
-  filter: blur(20px);
-  background-image:
-    repeating-linear-gradient(100deg, var(--bg-raw,#f7f6f3) 0%, var(--bg-raw,#f7f6f3) 7%, transparent 10%, transparent 12%, var(--bg-raw,#f7f6f3) 16%),
-    repeating-linear-gradient(100deg, var(--aurora-1,#1d3557) 10%, var(--aurora-2,#457b9d) 15%, var(--aurora-3,#a8dadc) 20%, var(--aurora-4,#e0f0ff) 25%, var(--aurora-5,#1d3557) 30%);
-  background-size: 300% 100%, 200% 100%;
-  mask-image:
-    radial-gradient(ellipse at 85% 5%, black 5%, transparent 50%),
-    radial-gradient(ellipse at 10% 55%, black 5%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, black 3%, transparent 40%);
-  mask-composite: add;
-  -webkit-mask-composite: source-over;
-  animation: auroraFlow1 80s ease-in-out infinite;
-}
-
-/* 레이어 2: 보조 오로라 */
-body::after {
-  opacity: 0.25;
-  filter: blur(28px);
-  background-image:
-    repeating-linear-gradient(135deg, transparent 0%, transparent 5%, var(--aurora-2,#457b9d) 8%, transparent 11%, transparent 15%, var(--aurora-3,#a8dadc) 18%, transparent 21%),
-    repeating-linear-gradient(80deg, var(--aurora-1,#1d3557) 5%, var(--aurora-4,#e0f0ff) 12%, var(--aurora-2,#457b9d) 20%, var(--aurora-3,#a8dadc) 28%, var(--aurora-1,#1d3557) 35%);
-  background-size: 250% 100%, 300% 100%;
-  mask-image:
-    radial-gradient(ellipse at 20% 15%, black 5%, transparent 45%),
-    radial-gradient(ellipse at 75% 70%, black 5%, transparent 45%);
-  mask-composite: add;
-  -webkit-mask-composite: source-over;
-  animation: auroraFlow2 110s ease-in-out infinite;
-}
-
-@keyframes auroraFlow1 {
-  0%   { background-position: 50% 50%, 50% 50%; transform: scale(1) rotate(0deg); }
-  25%  { background-position: 150% 50%, 120% 50%; transform: scale(1.02) rotate(0.5deg); }
-  50%  { background-position: 250% 50%, 200% 50%; transform: scale(1) rotate(0deg); }
-  75%  { background-position: 350% 50%, 280% 50%; transform: scale(1.02) rotate(-0.5deg); }
-  100% { background-position: 450% 50%, 350% 50%; transform: scale(1) rotate(0deg); }
-}
-
-@keyframes auroraFlow2 {
-  0%   { background-position: 0% 50%, 100% 50%; transform: scale(1.01) rotate(-0.3deg); }
-  33%  { background-position: 100% 30%, 200% 60%; transform: scale(1) rotate(0.3deg); }
-  66%  { background-position: 200% 50%, 300% 40%; transform: scale(1.01) rotate(-0.3deg); }
-  100% { background-position: 300% 50%, 400% 50%; transform: scale(1) rotate(0.3deg); }
+  background:
+    radial-gradient(
+      115vw 60vh at 50% -12%,
+      rgba(var(--canvas-glow), var(--canvas-glow-opacity)) 0%,
+      rgba(var(--canvas-glow), calc(var(--canvas-glow-opacity) * 0.35)) 38%,
+      rgba(var(--canvas-glow), 0) 72%
+    );
 }
 
 /* 콘텐츠를 Aurora 위에 표시 */
@@ -551,16 +531,6 @@ html {
   }
   html {
     scroll-behavior: auto;
-  }
-}
-
-/* ⚠️ 2026-05-19 모바일: Aurora 배경 애니메이션 정지 (로우엔드 안드로이드 jank 방지). */
-@media (max-width: 640px) { /* BP.sm */
-  body::before,
-  body::after {
-    animation: none !important;
-    opacity: 0.18 !important;
-    filter: blur(40px) !important;
   }
 }
 

@@ -65,7 +65,7 @@ export function StartupFoundationStage() {
       {/* 페이지별 콘텐츠 — 현재 페이지만 표시 */}
       {page === 0 && <ModePathCard stageId="startup-foundation" />}
       {page === 0 && (
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "핵심 원칙" : "Core Principle"}</div>
         <div style={{ fontSize: "17px", fontWeight: 720, color: "#0f172a", lineHeight: 1.4, marginBottom: "10px" }}>
           {ko ? "먼저 만들고, 법인은 나중에." : "Build first. Incorporate later."}
@@ -96,7 +96,7 @@ export function StartupFoundationStage() {
       {page === 1 && (
       <>
       {/* STEP 1 — 핵심 문제 정의 (First Principles) */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "white", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
@@ -402,7 +402,7 @@ export function StartupFoundationStage() {
         };
         const c = modeContent[startupOperatingMode] ?? modeContent.bootstrap;
         return (
-          <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
+          <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
             {/* 헤더 */}
             <div style={{ padding: "20px 22px 14px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -540,7 +540,7 @@ export function StartupFoundationStage() {
         return (
           <>
             {/* ─── 헤더 + 모드별 권장 ─── */}
-            <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, padding: "20px 22px" }}>
+            <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, padding: "20px 22px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                 <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
                 <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "법인 vs 개인사업자 — 의사결정만" : "Corp vs Sole — decision only"}</span>
@@ -859,7 +859,7 @@ export function StartupFoundationStage() {
         };
         const c = modeContent[startupOperatingMode] ?? modeContent.bootstrap;
         return (
-          <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
+          <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
             {/* 헤더 */}
             <div style={{ padding: "20px 22px 14px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

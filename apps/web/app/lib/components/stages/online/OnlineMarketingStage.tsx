@@ -26,7 +26,7 @@ export function OnlineMarketingStage() {
         }}
       />
       {/* 네이버 SEO */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(3,199,90,0.1)", background: "linear-gradient(180deg, rgba(3,199,90,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(3,199,90,0.1)", background: "linear-gradient(180deg, rgba(3,199,90,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
             <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#03C75A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "13px", fontWeight: 700 }}>N</div>
@@ -63,7 +63,7 @@ export function OnlineMarketingStage() {
       </div>
 
       {/* 첫 광고 캠페인 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "첫 광고 캠페인 세팅" : "First Ad Campaign Setup"}</div>
           <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>{ko ? "초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요." : "First 2 weeks are data collection. Start at ₩5-10K/day."}</div>
@@ -95,7 +95,7 @@ export function OnlineMarketingStage() {
       </div>
 
       {/* 리뷰 전략 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "8px" }}>{ko ? "초기 리뷰 확보 전략" : "Early Review Strategy"}</div>
         <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
         <div style={{ display: "grid", gap: "6px" }}>

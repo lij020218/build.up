@@ -21,36 +21,9 @@ import { formatKrw } from "../../utils/format-krw";
 import { StoreNameInput } from "../stages/shared/StoreNameInput";
 import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
 import { ConfirmModal } from "../ConfirmModal";
+import { ListSection, ListRow, listSectionStyles } from "../ui/ListSection";
 
-// ── Local styles ──
-const card: React.CSSProperties = {
-  ...styles.card,
-  gap: "0px",
-  padding: "0px",
-  overflow: "hidden",
-};
-const sectionLabel: React.CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 700,
-  color: "var(--muted)",
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.07em",
-  padding: "16px 18px 12px",
-  borderBottom: "1px solid rgba(0,0,0,0.06)",
-};
-const row: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "13px 18px",
-  borderBottom: "1px solid rgba(0,0,0,0.05)",
-};
-const rowLast: React.CSSProperties = {
-  ...row,
-  borderBottom: "none",
-};
-const rowKey: React.CSSProperties = { fontSize: "13px", color: "var(--muted)" };
-const rowVal: React.CSSProperties = { fontSize: "13px", fontWeight: 500, color: "var(--primary)", textAlign: "right" as const };
+// 카드·행 스타일은 ui/ListSection.tsx 로 옮겼다 (2026-09-12) — 화면마다 다시 만들지 않는다.
 
 export function ProfileView() {
   const d = useDashboardCtx();
@@ -186,39 +159,23 @@ export function ProfileView() {
         </div>
       </div>
 
-      {/* ── 카드 1: 계정 정보 ── */}
-      <article style={card}>
-        <div style={sectionLabel}>{ko ? "계정 정보" : "Account"}</div>
+      {/* ── 계정 (2026-09-12: 카드 안 대문자 eyebrow → 카드 밖 제목, 배지 → 값 텍스트) ── */}
+      <ListSection title={ko ? "계정" : "Account"}>
         {isSignedIn && displayName && !isAnonymous && (
-          <div style={row}>
-            <span style={rowKey}>{ko ? "이름" : "Name"}</span>
-            <span style={rowVal}>{displayName}</span>
-          </div>
+          <ListRow first label={ko ? "이름" : "Name"} value={displayName} />
         )}
         {isSignedIn && emailPart && !isAnonymous && (
-          <div style={row}>
-            <span style={rowKey}>{ko ? "이메일" : "Email"}</span>
-            <span style={{ ...rowVal, fontSize: "12px", fontFamily: "monospace" }}>{emailPart}</span>
-          </div>
+          <ListRow label={ko ? "이메일" : "Email"} value={emailPart} monospace />
         )}
         {idPart && (
-          <div style={row}>
-            <span style={rowKey}>{ko ? "사용자 ID" : "User ID"}</span>
-            <span style={{ ...rowVal, fontSize: "12px", fontFamily: "monospace", color: "var(--muted)" }}>{idPart}…</span>
-          </div>
+          <ListRow label={ko ? "사용자 ID" : "User ID"} value={`${idPart}…`} monospace />
         )}
-        <div style={rowLast}>
-          <span style={rowKey}>{ko ? "계정 유형" : "Account type"}</span>
-          <span style={{
-            fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "999px",
-            background: isAnonymous ? "rgba(255,149,0,0.10)" : "rgba(29,53,87,0.10)",
-            color: isAnonymous ? "#b36200" : "#1a7a36",
-            border: `1px solid ${isAnonymous ? "rgba(255,149,0,0.2)" : "rgba(29,53,87,0.2)"}`,
-          }}>
-            {isAnonymous ? (ko ? "미로그인" : "Guest") : (ko ? "이메일 계정" : "Registered")}
-          </span>
-        </div>
-      </article>
+        {/* 종전엔 주황/초록 캡슐 배지였다. 값이 두 가지뿐이라 색까지 쓸 이유가 없다. */}
+        <ListRow
+          label={ko ? "계정 유형" : "Account type"}
+          value={isAnonymous ? (ko ? "미로그인" : "Guest") : (ko ? "이메일 계정" : "Registered")}
+        />
+      </ListSection>
 
       {/* ── 카드 1.5: 가게 연결 (직원용) — 받은 초대·초대 코드 입력 (2026-07-12) ── */}
       <div style={{ marginTop: "12px" }}>
@@ -228,91 +185,94 @@ export function ProfileView() {
         </div>
       </div>
 
-      {/* ── 카드 2: 내 여정 진행 상황 ── */}
-      <article style={{ ...card, marginTop: "12px" }}>
-        <div style={sectionLabel}>{ko ? "내 여정" : "My Journey"}</div>
-        <div style={{ padding: "16px 18px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px" }}>
-            <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-              {ko ? `${completedCount}개 단계 완료` : `${completedCount} stages completed`}
-            </span>
-            <span style={{ fontSize: "20px", fontWeight: 700, color: correctedProgressPercent >= 100 ? "#1d3557" : "#3b5c8c", letterSpacing: "-0.5px" }}>
-              {correctedProgressPercent}%
-            </span>
-          </div>
-          <div style={{ height: "6px", borderRadius: "4px", background: "rgba(0,0,0,0.07)", overflow: "hidden" }}>
+      {/* ── 진행 상황 ── */}
+      <ListSection
+        title={ko ? "진행 상황" : "Progress"}
+        style={{ marginTop: "16px" }}
+        footer={
+          (ko ? `전체 ${pathTotalStages}단계 중` : `of ${pathTotalStages} total stages`) +
+          (businessLaunched
+            ? (ko ? " · 개업 완료" : " · Business launched")
+            : (ko ? " · 창업 준비 중" : " · In progress"))
+        }
+      >
+        <ListRow
+          first
+          label={ko ? "완료한 단계" : "Stages completed"}
+          value={`${completedCount} / ${pathTotalStages}`}
+        />
+        <ListRow label={ko ? "진행률" : "Progress"} value={`${correctedProgressPercent}%`} />
+        <div style={{ padding: "0 16px 14px" }}>
+          <div style={{ height: "6px", borderRadius: "4px", background: "rgba(17,19,26,0.07)", overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: "4px",
-              background: correctedProgressPercent >= 100
-                ? "#1d3557"
-                : "linear-gradient(90deg, #3b5c8c 0%, #5f8bb8 100%)",
+              background: "var(--primary)",
               width: `${correctedProgressPercent}%`,
               transition: "width 0.4s ease",
             }} />
           </div>
-          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "8px" }}>
-            {ko ? `전체 ${pathTotalStages}단계 중` : `of ${pathTotalStages} total stages`}
-            {businessLaunched
-              ? (ko ? " · 개업 완료" : " · Business launched")
-              : (ko ? " · 창업 준비 중" : " · In progress")}
-          </div>
         </div>
-      </article>
+      </ListSection>
 
-      {/* ── 카드 2.5: 매장 정보 (상호 + 영업 시간) ── */}
-      {/* 운영 중에도 변경 가능 — 영업 시간이 바뀌면 일자 컷오프도 자동 반영 */}
-      <article style={{ ...card, marginTop: "12px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <div style={{ ...sectionLabel, padding: 0, borderBottom: "none" }}>
-          {ko ? "매장 정보" : "Store info"}
+      {/* ── 매장 정보 (운영 중에도 변경 가능 — 영업 시간이 바뀌면 일자 컷오프도 자동 반영) ── */}
+      <ListSection title={ko ? "매장 정보" : "Store info"} style={{ marginTop: "16px" }}>
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <StoreNameInput />
+          {d.industryCategoryId !== "online-digital" && d.industryCategoryId !== "startup-tech" && (
+            <BusinessHoursInput />
+          )}
         </div>
-        <StoreNameInput />
-        {d.industryCategoryId !== "online-digital" && d.industryCategoryId !== "startup-tech" && (
-          <BusinessHoursInput />
-        )}
-      </article>
+      </ListSection>
 
-      {/* ── 카드 2.6: 사장님 정보 (지원사업 맞춤 매칭) ──
+      {/* ── 지원사업 매칭 ──
        *   출생연도·신용점수·폐업검토·장애 — 청년/시니어/신용취약/폐업/장애 정책자금 매칭에 사용.
        *   ⚠️ 민감정보라 기기(localStorage)에만 저장하고 서버로 전송하지 않음. 모두 선택 입력.
        */}
-      <article style={{ ...card, marginTop: "12px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ ...sectionLabel, padding: 0, borderBottom: "none" }}>
-          {ko ? "사장님 정보 (지원사업 매칭)" : "Owner info (program matching)"}
-        </div>
-        <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5, marginTop: "-2px" }}>
-          {ko
-            ? "출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원을 더 정확히 찾아드려요. 모두 선택 입력 · 기기에만 저장."
-            : "Add your birth year to surface youth (≤39) / senior (40+) programs. All optional, stored on device only."}
-        </div>
-        <OwnerProfileChips ko={ko} />
-      </article>
-
-      {/* ── 카드 3: 앱 설정 ── */}
-      <article style={{ ...card, marginTop: "12px" }}>
-        <div style={sectionLabel}>{ko ? "설정" : "Settings"}</div>
-        <div style={rowLast}>
-          <span style={rowKey}>{ko ? "언어" : "Language"}</span>
-          <div style={{ display: "flex", gap: "6px" }}>
-            {(["ko", "en"] as const).map((lang) => (
-              <button
-                key={lang}
-                type="button"
-                onClick={() => setLanguage(lang)}
-                style={{
-                  fontSize: "12px", fontWeight: 600, padding: "5px 14px",
-                  borderRadius: "8px", cursor: "pointer",
-                  border: language === lang ? "none" : "1px solid rgba(0,0,0,0.12)",
-                  background: language === lang ? "#3b5c8c" : "transparent",
-                  color: language === lang ? "#fff" : "var(--muted)",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                {lang === "ko" ? "한국어" : "English"}
-              </button>
-            ))}
+      <ListSection
+        title={ko ? "지원사업 매칭" : "Program matching"}
+        style={{ marginTop: "16px" }}
+        footer={ko
+          ? "모두 선택 항목이며 기기에만 저장됩니다. 서버로 보내지 않습니다."
+          : "All optional, stored on device only — never sent to the server."}
+      >
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={listSectionStyles.subtitle}>
+            {ko
+              ? "출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원을 더 정확히 찾아드려요."
+              : "Add your birth year to surface youth (≤39) / senior (40+) programs."}
           </div>
+          <OwnerProfileChips ko={ko} />
         </div>
-      </article>
+      </ListSection>
+
+      {/* ── 설정 ── */}
+      <ListSection title={ko ? "설정" : "Settings"} style={{ marginTop: "16px" }}>
+        <ListRow
+          first
+          label={ko ? "언어" : "Language"}
+          trailing={
+            <div style={{ display: "flex", gap: "6px" }}>
+              {(["ko", "en"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  style={{
+                    fontSize: "13px", fontWeight: 600, padding: "6px 14px",
+                    borderRadius: "8px", cursor: "pointer",
+                    border: language === lang ? "none" : "1px solid rgba(17,19,26,0.12)",
+                    background: language === lang ? "var(--primary)" : "transparent",
+                    color: language === lang ? "#fff" : "var(--muted)",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {lang === "ko" ? "한국어" : "English"}
+                </button>
+              ))}
+            </div>
+          }
+        />
+      </ListSection>
 
       {/* ── 카드 3.1: 대시보드 카드 표시 설정 (2026-05-11) ── */}
       <DashboardLayoutCard ko={ko} />
@@ -352,130 +312,51 @@ export function ProfileView() {
       {/* ── 의견 보내기 (인앱 피드백) ── */}
       <FeedbackCard ko={ko} />
 
-      {/* ── 카드 4: 계정 관리 ── */}
-      <article style={{ ...card, marginTop: "12px" }}>
-        <div style={sectionLabel}>{ko ? "계정 관리" : "Account Actions"}</div>
-
+      {/* ── 계정 관리 (2026-09-12: 행마다 색 버튼을 달던 것을 애플처럼 글자 행으로) ── */}
+      <ListSection
+        title={ko ? "계정 관리" : "Account"}
+        style={{ marginTop: "16px" }}
+        footer={ko
+          ? "진행 초기화는 모든 단계 결정·입력값을 지웁니다. 계정은 유지됩니다."
+          : "Reset clears all stage decisions and inputs. Your account stays."}
+      >
         {isAnonymous && (
-          <div style={row}>
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>
-                {ko ? "계정 만들기" : "Create account"}
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--muted)" }}>
-                {ko ? "진행 상황을 영구 저장하고 기기 간 동기화" : "Save progress permanently across devices"}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => router.push("/auth")}
-              style={{
-                fontSize: "12px", fontWeight: 600, color: "#fff",
-                background: "#3b5c8c", border: "none", borderRadius: "10px",
-                padding: "8px 16px", cursor: "pointer", flexShrink: 0,
-              }}
-            >
-              {ko ? "시작하기 →" : "Get started →"}
-            </button>
-          </div>
+          <ListRow
+            first
+            label={ko ? "계정 만들기" : "Create account"}
+            subtitle={ko ? "진행 상황을 영구 저장하고 기기 간 동기화" : "Save progress permanently across devices"}
+            onClick={() => router.push("/auth")}
+            trailing={<span style={listSectionStyles.action}>{ko ? "시작하기" : "Get started"}</span>}
+          />
         )}
-
         {isAdminUser && (
-          <div style={row}>
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>
-                {ko ? "운영자 모드" : "Operator console"}
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--muted)" }}>
-                {ko ? "가입·기능 사용량·피드백 관리 (운영자 전용)" : "Signups, usage & feedback (operators only)"}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => router.push("/admin")}
-              style={{
-                fontSize: "12px", fontWeight: 600, color: "#fff",
-                background: "#1d3557", border: "none", borderRadius: "10px",
-                padding: "8px 16px", cursor: "pointer", flexShrink: 0,
-              }}
-            >
-              {ko ? "콘솔 열기 →" : "Open →"}
-            </button>
-          </div>
+          <ListRow
+            label={ko ? "운영자 콘솔" : "Operator console"}
+            subtitle={ko ? "가입·기능 사용량·피드백 관리 (운영자 전용)" : "Signups, usage & feedback (operators only)"}
+            onClick={() => router.push("/admin")}
+            trailing={<span style={listSectionStyles.action}>{ko ? "열기" : "Open"}</span>}
+          />
         )}
-
-        <div style={row}>
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>
-              {ko ? "진행 초기화" : "Reset progress"}
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--muted)" }}>
-              {ko ? "모든 단계 결정 및 입력값을 초기화합니다" : "Clear all stage decisions and inputs"}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={resetDemo}
-            style={{
-              fontSize: "12px", fontWeight: 600, color: "#b64c4c",
-              background: "rgba(182,76,76,0.08)", border: "none", borderRadius: "10px",
-              padding: "8px 14px", cursor: "pointer", flexShrink: 0,
-            }}
-          >
-            {ko ? "초기화" : "Reset"}
-          </button>
-        </div>
-
+        <ListRow
+          label={ko ? "진행 초기화" : "Reset progress"}
+          onClick={resetDemo}
+          destructive
+        />
         {!isAnonymous && (
-          <div style={rowLast}>
-            <span style={{ fontSize: "13px", fontWeight: 600 }}>
-              {ko ? "로그아웃" : "Sign out"}
-            </span>
-            <button
-              type="button"
-              onClick={() => { void handleSignOut(); }}
-              style={{
-                fontSize: "12px", fontWeight: 600, color: "var(--muted)",
-                background: "rgba(0,0,0,0.05)", border: "none", borderRadius: "10px",
-                padding: "8px 14px", cursor: "pointer", flexShrink: 0,
-              }}
-            >
-              {ko ? "로그아웃" : "Sign out"}
-            </button>
-          </div>
+          <ListRow label={ko ? "로그아웃" : "Sign out"} onClick={() => { void handleSignOut(); }} />
         )}
         {!isAnonymous && (
-          <div style={rowLast}>
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px", color: "#b64c4c" }}>
-                {ko ? "계정 삭제" : "Delete account"}
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--muted)" }}>
-                {ko ? "모든 데이터·구독 영구 삭제 (되돌릴 수 없음)" : "Permanently remove all data & subscriptions"}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setDeleteConfirmOpen(true)}
-              style={{
-                fontSize: "12px", fontWeight: 600, color: "#fff",
-                background: "#b64c4c", border: "none", borderRadius: "10px",
-                padding: "8px 14px", cursor: "pointer", flexShrink: 0,
-              }}
-            >
-              {ko ? "계정 삭제" : "Delete"}
-            </button>
-          </div>
+          <ListRow
+            label={ko ? "계정 삭제" : "Delete account"}
+            subtitle={ko ? "모든 데이터·구독 영구 삭제 (되돌릴 수 없음)" : "Permanently remove all data & subscriptions"}
+            onClick={() => setDeleteConfirmOpen(true)}
+            destructive
+          />
         )}
         {isAnonymous && (
-          <div style={rowLast}>
-            <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-              {ko ? "저장 상태" : "Save status"}
-            </span>
-            <span style={{ fontSize: "12px", color: "var(--muted)" }}>{persistenceLabel}</span>
-          </div>
+          <ListRow label={ko ? "저장 상태" : "Save status"} value={persistenceLabel} />
         )}
-      </article>
+      </ListSection>
 
     </section>
     </>

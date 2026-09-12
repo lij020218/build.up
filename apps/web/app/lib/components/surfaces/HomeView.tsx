@@ -331,7 +331,7 @@ export function HomeView() {
                     style={{
                       ...homeStagger(index, 0.22),
                       display: "grid", gap: "8px", padding: "18px",
-                      borderRadius: "20px",
+                      borderRadius: "var(--card-radius)",
                       border: "1px solid var(--border)",
                       background: "rgba(255,255,255,0.82)",
                       textDecoration: "none", color: "inherit",

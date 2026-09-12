@@ -133,7 +133,7 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
   return (
     <section
       style={{
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         background: "white",
         border: "1px solid rgba(25,25,112,0.08)",
         boxShadow: "0 2px 16px rgba(25,25,112,0.04)",

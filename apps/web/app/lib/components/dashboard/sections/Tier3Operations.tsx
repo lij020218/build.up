@@ -104,7 +104,7 @@ export function SubscriptionEnableNudge({
     <article
       style={{
         ...nextStaggerStyle(),
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         border: "1px solid rgba(124,58,237,0.08)",
         background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, #fff 100%)",
         padding: "20px 22px",
@@ -262,7 +262,7 @@ export function SaaSKeyMetricsCard({
     <article
       style={{
         ...nextStaggerStyle(),
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         border: "1px solid rgba(124,58,237,0.08)",
         background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, #fff 100%)",
         padding: "20px 22px",

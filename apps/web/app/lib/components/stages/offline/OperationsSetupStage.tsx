@@ -1202,7 +1202,7 @@ export function OperationsSetupStage() {
 
   // ─── 플랫폼/채널 리스트 (배달·POS·SNS 공통) ───
   const renderDetail = (items: OpsDetail[], prefix: string) => (
-    <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+    <div style={{ background: "white", borderRadius: "var(--card-radius)", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
       {items.map((item, i) => {
         const isSelected = !!opsSelections[`${prefix}-${item.id}`];
         const isDark = item.color === "#F9E000";
@@ -1262,7 +1262,7 @@ export function OperationsSetupStage() {
       <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
 
         {/* ── POS란? — 미드나이트 톤으로 통일 ── */}
-        <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+        <div style={{ background: "white", borderRadius: "var(--card-radius)", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
           <div style={{ padding: "16px 20px 6px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
               <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "rgba(25,25,112,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1320,7 +1320,7 @@ export function OperationsSetupStage() {
           <div style={{ height: "3px", borderRadius: "100px", background: "rgba(0,0,0,0.07)", overflow: "hidden", marginBottom: "10px" }}>
             <div style={{ height: "100%", width: `${(checkedCount / posChecks.length) * 100}%`, background: MIDNIGHT, borderRadius: "100px", transition: "width 0.35s ease" }} />
           </div>
-          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+          <div style={{ background: "white", borderRadius: "var(--card-radius)", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
             {posChecks.map((check, i) => {
               const checked = !!opsPosChecks[check.id];
               return (

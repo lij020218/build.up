@@ -138,6 +138,7 @@ public struct GuestModeView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .buBottomTabClearance()
             }
         }
         .overlay(alignment: .bottom) {
@@ -241,7 +242,8 @@ public struct GuestModeView: View {
             .accessibilityLabel("가입 또는 로그인")
         }
         .padding(6)
-        .background(.ultraThinMaterial, in: Capsule())
+        .frame(height: BUTabBarMetrics.barHeight)
+        .background(.regularMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(Color.white.opacity(0.55), lineWidth: 0.7))
         .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.06), lineWidth: 0.7).padding(-0.7))
     }
@@ -268,7 +270,6 @@ struct GuestTaxView: View {
                     gatedCalcRow
                     creditSection
                     scheduleSection
-                    Color.clear.frame(height: 110)
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
             }
@@ -405,7 +406,6 @@ struct GuestTaxView: View {
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 2)
-            Color.clear.frame(height: 110)   // 하단 탭바 클리어런스 (로드맵 탭과 동일)
         }
     }
 
@@ -532,7 +532,6 @@ struct GuestRoadmapPreview: View {
                             stageRow(stage)
                         }
                     }
-                    Color.clear.frame(height: 110)
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
             }

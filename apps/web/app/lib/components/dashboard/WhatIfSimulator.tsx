@@ -683,7 +683,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
 /* ─── Styles ─── */
 
 const card: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   padding: "22px",
   background: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(243,246,251,0.91))",
   border: "1px solid rgba(15, 23, 42, 0.048)",

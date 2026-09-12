@@ -275,7 +275,7 @@ export function FundingPlanModal({
           maxHeight: "86vh",
           overflow: "auto",
           background: "white",
-          borderRadius: 20,
+          borderRadius: "var(--card-radius)",
           padding: "22px 22px 18px",
           boxShadow: "0 24px 64px rgba(15,23,42,0.28)",
         }}

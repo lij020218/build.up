@@ -1,27 +1,22 @@
 //
-//  BUCard.swift — Found.One 표준 카드 컴포넌트 (웹 SSOT 1:1 미러)
+//  BUCard.swift — Found.One 표준 카드 컴포넌트.
 //
-//  웹 카드 패턴 (operationalStyles.ts + CEOMorningHero):
+//  2026-09-12 개편 (사장님 승인한 미리보기 기준):
 //
-//   Hero outer (CEOMorningHero):
-//     radius 24 / padding 28-28-24 / 3-stop diagonal gradient (#F7F8FE → #EEF0FB → #E5E8F7)
-//     border 1px rgba(25,25,112,0.08)
-//     shadow: inset highlight + 단일 soft shadow(BUShadow.hero, radius 12) — 웹 0 8px 32px 근사
-//     + 2 radial ambient glows (right-top blue / left-bottom midnight)
+//   카드는 **두 종류**뿐이다.
+//    · 바깥 카드(heroOuter / outer)
+//        흰색 불투명 · 모서리 20 · 여백 18 · 0.5pt 헤어라인 경계 · 얕은 그림자 한 겹
+//    · 카드 안 구획(nested)
+//        채움 없음. 위쪽 0.5pt 구분선 하나로만 나눈다 → 흰 면이 이어져 가볍게 읽힌다.
+//    · 안쪽 면(headline / inner)
+//        옅은 채움(subtleFill)만. 경계·그림자 없음. inner 에 tint 를 주면 경고 박스(모서리 16).
 //
-//   Outer card (heroPanel/opsCard/activityCard):
-//     radius 20 / padding 22 / 180deg gradient (#fff → #f7f8fe)
-//     border 1px rgba(25,25,112,0.10)
-//     shadow: 단일 레이어(BUShadow.card, radius 10) — 웹 dual layer 근사(성능 2026-08-19)
+//  왜 이렇게 바꿨나:
+//   종전에는 모서리 24/20/18/16/14 다섯 단계 + 그라디언트 3종 + 테두리 3겹 + inset highlight 가
+//   겹쳐 홈 히어로가 "카드 안의 카드 안의 카드"가 됐다. 모서리 단계가 필요했던 이유는
+//   중첩 그 자체였으므로, 중첩을 없애니 단계도 필요 없어졌다.
 //
-//   Headline (KPI 미니카드):
-//     radius 16 / padding 20 / 동일 gradient + border + shadow
-//
-//   Nested white (Row 2 NSM):
-//     radius 18 / padding 20-22 / solid white / no shadow
-//
-//   Inner block (Row 1.5 위험신호 + activityMiniStat):
-//     radius 14 / padding 13-15 / HEALTH_COLORS tint bg / no shadow
+//  수치는 BURadius / BUSpacing 한 곳에서만 정의한다 (Spacing.swift).
 //
 
 import SwiftUI
@@ -44,33 +39,39 @@ public enum BUCardStyle: Sendable {
 
     public var radius: CGFloat {
         switch self {
-        case .heroOuter: return BURadius.heroOuter      // 24
-        case .outer:     return BURadius.outerCard      // 20
-        case .nested:    return BURadius.nestedCard     // 18
-        case .headline:  return BURadius.headlineCard   // 16
-        case .inner:     return BURadius.innerBlock     // 14
+        // 전부 20 (inner 만 16) — 실제 값은 BURadius 한 곳에서 바꾼다.
+        case .heroOuter: return BURadius.heroOuter
+        case .outer:     return BURadius.outerCard
+        case .nested:    return BURadius.nestedCard
+        case .headline:  return BURadius.headlineCard
+        case .inner:     return BURadius.innerBlock
         }
     }
     public var paddingV: CGFloat {
         switch self {
-        case .heroOuter: return BUSpacing.heroOuterPadding     // 18 (모바일)
-        case .outer:     return BUSpacing.cardPadding          // 18
-        case .nested:    return BUSpacing.nestedCardPaddingV   // 16
-        case .headline:  return BUSpacing.headlinePadding      // 16
-        case .inner:     return 11
+        case .heroOuter: return BUSpacing.heroOuterPadding
+        case .outer:     return BUSpacing.cardPadding
+        case .nested:    return BUSpacing.nestedCardPaddingV
+        case .headline:  return BUSpacing.headlinePadding
+        case .inner:     return 13
         }
     }
     public var paddingH: CGFloat {
         switch self {
-        case .heroOuter: return BUSpacing.heroOuterPadding     // 18
-        case .outer:     return BUSpacing.cardPadding          // 18
-        case .nested:    return BUSpacing.nestedCardPaddingH   // 18
-        case .headline:  return BUSpacing.headlinePadding      // 16
-        case .inner:     return 13
+        case .heroOuter: return BUSpacing.heroOuterPadding
+        case .outer:     return BUSpacing.cardPadding
+        // nested 는 '카드 안 구획' — 가로 여백을 또 주면 글이 두 번 들여써진다.
+        case .nested:    return 0
+        case .headline:  return BUSpacing.headlinePadding
+        case .inner:     return 15
         }
     }
     public var paddingBottom: CGFloat {
-        self == .heroOuter ? BUSpacing.heroOuterPaddingBottom : paddingV
+        switch self {
+        case .heroOuter: return BUSpacing.heroOuterPaddingBottom
+        case .nested:    return BUSpacing.nestedCardPaddingBottom
+        default:         return paddingV
+        }
     }
 }
 
@@ -106,64 +107,29 @@ public struct BUCard<Content: View>: View {
             .background(backgroundView)
             .overlay(borderOverlay)
             .overlay(insetHighlightOverlay)
-            .clipShape(RoundedRectangle(cornerRadius: style.radius, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: style == .nested ? 0 : style.radius, style: .continuous))
             .modifier(BUCardShadowModifier(style: style))
     }
 
     // MARK: Background
 
+    /// 2026-09-12 개편: 카드는 **두 종류**뿐이다.
+    ///   · 바깥 카드(heroOuter/outer) = 흰색 불투명 + 얇은 경계 + 얕은 그림자
+    ///   · 안쪽 면(nested/headline/inner) = 옅은 채움만. 경계·그림자 없음 → 카드 안 카드처럼 보이지 않는다.
+    ///  종전에는 그라디언트 3종 + 테두리 3겹 + inset highlight 가 겹쳐 "카드 안의 카드 안의 카드" 가 됐다.
+    private var isOuterCard: Bool { style == .heroOuter || style == .outer }
+
     @ViewBuilder
     private var backgroundView: some View {
-        switch style {
-        case .heroOuter:
-            ZStack {
-                LinearGradient(
-                    stops: [
-                        .init(color: BUColor.heroGradientStart, location: 0.0),
-                        .init(color: BUColor.heroGradientMid,   location: 0.5),
-                        .init(color: BUColor.heroGradientEnd,   location: 1.0),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [BUColor.glowBlue.opacity(0.10), BUColor.glowBlue.opacity(0)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 180
-                        )
-                    )
-                    .frame(width: 360, height: 360)
-                    .offset(x: 140, y: -180)
-                    .allowsHitTesting(false)
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [BUColor.glowMidnight.opacity(0.06), BUColor.glowMidnight.opacity(0)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 120
-                        )
-                    )
-                    .frame(width: 240, height: 240)
-                    .offset(x: -100, y: 140)
-                    .allowsHitTesting(false)
-            }
-
-        case .outer, .headline:
-            LinearGradient(
-                colors: [BUColor.cardGradientTop, BUColor.cardGradientBottom],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-        case .nested:
+        if isOuterCard {
             BUColor.surfaceElevated
-
-        case .inner:
-            (tint ?? BUColor.midnight).opacity(0.04)
+        } else if style == .nested {
+            // 채움 없음 — 아래 borderOverlay 의 구분선 하나로 나눈다.
+            Color.clear
+        } else if style == .inner, let tint {
+            tint.opacity(0.06)
+        } else {
+            BUColor.subtleFill
         }
     }
 
@@ -171,43 +137,27 @@ public struct BUCard<Content: View>: View {
 
     @ViewBuilder
     private var borderOverlay: some View {
-        switch style {
-        case .heroOuter:
+        if isOuterCard {
+            // 흰 배경 위 흰 카드 — 경계선 하나로만 띄운다.
             RoundedRectangle(cornerRadius: style.radius, style: .continuous)
-                .strokeBorder(BUColor.heroBorder, lineWidth: 1)
-        case .outer, .headline:
-            RoundedRectangle(cornerRadius: style.radius, style: .continuous)
-                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-        case .nested:
-            RoundedRectangle(cornerRadius: style.radius, style: .continuous)
-                .strokeBorder(BUColor.borderSubtle, lineWidth: 0.5)
-        case .inner:
-            RoundedRectangle(cornerRadius: style.radius, style: .continuous)
-                .strokeBorder(
-                    tint?.opacity(0.25) ?? BUColor.borderSubtle,
-                    lineWidth: 0.5
-                )
+                .strokeBorder(BUColor.ink.opacity(0.07), lineWidth: 0.5)
+        } else if style == .nested {
+            // 카드 안 구획 — 회색 블록 대신 위쪽 0.5pt 선 하나.
+            //  옅은 회색 면을 카드 안에 또 깔면 그게 "카드 안의 카드"로 읽힌다.
+            VStack(spacing: 0) {
+                BUHairline()
+                Spacer(minLength: 0)
+            }
         }
+        // 그 밖의 안쪽 면은 경계 없음 (여백과 색 차이로 충분하다)
     }
 
     // MARK: Inset highlight (heroOuter)
 
+    /// 2026-09-12: inset highlight 제거 — 유리질 표현은 네비게이션 레이어(탭바)에만 둔다.
     @ViewBuilder
     private var insetHighlightOverlay: some View {
-        if style == .heroOuter {
-            RoundedRectangle(cornerRadius: style.radius, style: .continuous)
-                .stroke(Color.white.opacity(0.6), lineWidth: 1)
-                .blendMode(.overlay)
-                .padding(0.5)
-                .mask(
-                    LinearGradient(
-                        colors: [.white, .clear],
-                        startPoint: .top,
-                        endPoint: .center
-                    )
-                )
-                .allowsHitTesting(false)
-        }
+        EmptyView()
     }
 }
 
@@ -218,11 +168,10 @@ private struct BUCardShadowModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         switch style {
-        case .heroOuter:
-            content.buShadow(.hero)
-        case .outer, .headline:
-            content.buShadow(.card)
-        case .nested, .inner:
+        case .heroOuter, .outer:
+            // 얕은 그림자 한 겹 — 흰 배경에서 카드를 띄우는 최소한.
+            content.shadow(color: BUColor.ink.opacity(0.05), radius: 10, x: 0, y: 3)
+        case .headline, .nested, .inner:
             content
         }
     }

@@ -162,7 +162,7 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
     <section
       data-cost-management
       style={{
-        borderRadius: 20,
+        borderRadius: "var(--card-radius)",
         background: "white",
         border: `1px solid ${PALETTE.MIDNIGHT_BORDER}`,
         boxShadow: "0 1px 3px rgba(25,25,112,0.03), 0 12px 28px -16px rgba(25,25,112,0.12)",

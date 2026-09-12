@@ -91,7 +91,7 @@ export function DaumPostcodeModal({ open, onClose, onSelect }: Props) {
     >
       <div style={{
         width: "100%", maxWidth: "480px", height: "min(560px, 80vh)",
-        background: "#fff", borderRadius: "20px", overflow: "hidden",
+        background: "#fff", borderRadius: "var(--card-radius)", overflow: "hidden",
         display: "flex", flexDirection: "column",
         boxShadow: "0 24px 60px rgba(17,17,17,0.25)",
       }}>

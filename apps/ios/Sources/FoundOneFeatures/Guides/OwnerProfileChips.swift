@@ -16,6 +16,8 @@ struct OwnerProfileChips: View {
     var onChange: () -> Void
     /// 출생연도 미입력 시 청년·시니어 매칭 가치 넛지 노출 (펀딩페이지만 true).
     var showNudge: Bool = false
+    /// 자체 설명 줄 표시 여부. 그룹 리스트 안에서는 섹션 제목·각주가 같은 말을 하므로 끈다.
+    var showsHeader: Bool = true
 
     /// 값 변경 후 서버 background sync (fire-and-forget).
     private func syncToServer() {
@@ -44,9 +46,11 @@ struct OwnerProfileChips: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("내 정보 추가 (선택) — 더 정확한 추천 · 기기에만 저장")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(BUColor.inkMuted)
+            if showsHeader {
+                Text("내 정보 추가 (선택) — 더 정확한 추천 · 기기에만 저장")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
             if showNudge && birthYear == 0 {
                 Text("💡 출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원을 더 정확히 찾아드려요")
                     .font(.system(size: 12, weight: .semibold))

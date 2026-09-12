@@ -174,7 +174,6 @@ public struct GuidesView: View {
                         }
 
                         footnote
-                        Color.clear.frame(height: 110)
                     }
                     .padding(.horizontal, BUSpacing.screenMargin)
                 }

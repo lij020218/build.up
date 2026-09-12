@@ -129,7 +129,7 @@ export function ProgressMilestonesCard({
   return (
     <section
       style={{
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         padding: "20px 22px",
         background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,250,253,0.9) 100%)",
         border: "1px solid rgba(15,23,42,0.05)",

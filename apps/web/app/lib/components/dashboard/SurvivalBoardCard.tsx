@@ -288,7 +288,7 @@ const opsPill: React.CSSProperties = {
 };
 
 const survivalCard: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   padding: "20px",
   background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   color: "#0f172a",

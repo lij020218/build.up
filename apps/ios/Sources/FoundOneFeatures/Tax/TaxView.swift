@@ -59,7 +59,6 @@ public struct TaxView: View {
                     calcSection
                     creditSection
                     scheduleSection
-                    Color.clear.frame(height: 100)
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
             }

@@ -332,7 +332,7 @@ function CodefWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => v
       padding: "20px", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        background: "#fff", borderRadius: "20px", width: "100%", maxWidth: "500px",
+        background: "#fff", borderRadius: "var(--card-radius)", width: "100%", maxWidth: "500px",
         maxHeight: "90vh", overflow: "auto",
         boxShadow: "0 30px 80px rgba(15,23,42,0.25)",
         fontFamily: "Pretendard Variable, Pretendard, -apple-system, sans-serif",

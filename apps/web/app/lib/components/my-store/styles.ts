@@ -23,7 +23,7 @@ export const PALETTE = {
 
 /** 섹션 카드 — 흰색 베이스, hairline 보더, 부드러운 그림자 */
 export const card: React.CSSProperties = {
-  borderRadius: 20,
+  borderRadius: "var(--card-radius)",
   padding: 0,
   background: "white",
   border: `1px solid ${PALETTE.MIDNIGHT_BORDER}`,

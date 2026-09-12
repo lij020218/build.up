@@ -174,7 +174,7 @@ export function StartupTypeSelectionStage() {
                 type="button"
                 style={{
                   display: "flex", flexDirection: "column" as const, alignItems: "center", textAlign: "center" as const,
-                  gap: "8px", padding: "32px 20px", borderRadius: "20px", cursor: "pointer", width: "100%",
+                  gap: "8px", padding: "32px 20px", borderRadius: "var(--card-radius)", cursor: "pointer", width: "100%",
                   border: selected ? `1.5px solid ${c.color}40` : "1.5px solid rgba(0,0,0,0.04)",
                   background: selected
                     ? `linear-gradient(160deg, ${c.color}10 0%, ${c.color}06 100%)`
@@ -341,7 +341,7 @@ export function StartupTypeSelectionStage() {
                           display: "grid",
                           gap: "14px",
                           padding: "20px",
-                          borderRadius: "20px",
+                          borderRadius: "var(--card-radius)",
                           border: sel ? "2px solid var(--primary)" : "1px solid var(--border)",
                           background: sel ? "rgba(29,53,87,0.04)" : "rgba(255,255,255,0.82)",
                           boxShadow: sel ? "0 0 0 4px rgba(29,53,87,0.06)" : "0 2px 8px rgba(17,17,17,0.03)",

@@ -60,7 +60,7 @@ export function EmptyStateCard({
   return (
     <section
       style={{
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         padding: compact ? "18px 20px" : "24px 22px",
         background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.85) 100%)",
         border: "1px solid rgba(15,23,42,0.05)",

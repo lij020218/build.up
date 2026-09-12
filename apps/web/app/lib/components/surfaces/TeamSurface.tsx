@@ -21,6 +21,7 @@ import {
   calcAnnualLeave, usedLeaveDays, remainingLeaveDays, leaveYearRange,
   LEAVE_BASIS_LABEL, type LeaveBasis,
 } from "@foundone/shared";
+import { ListSection, ListRow } from "../ui/ListSection";
 import { InviteLinkSection } from "../InviteLinkSection";
 import { StaffDetailModal } from "./StaffDetailModal";
 import { DaangnHiringGuideModal } from "../DaangnHiringGuideModal";
@@ -412,34 +413,28 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
           <>
             {tab === "staff" && (
               <>
-            {/* ── 처리할 일 요약 — 연차 대기 · 수당 대기 · 퇴사 정산 (탭하면 해당 세그먼트로) ── */}
+            {/* ── 처리할 일 (2026-09-12: 틴트 칩 → 애플식 행, 0건이면 카드 자체를 숨김) ──
+                칩은 개수가 늘면 줄바꿈으로 깨지고 무엇이 급한지 크기로 구분되지 않았다.
+                "처리할 일 없음" 카드는 자리만 차지하므로 렌더하지 않는다. */}
             {(() => {
               const items: { label: string; count: number; target: TeamTab }[] = [
-                { label: ko ? "연차 대기" : "Leave pending", count: pending.length, target: "leavePay" },
-                { label: ko ? "수당 대기" : "Allowance pending", count: allowPending.length, target: "leavePay" },
-                { label: ko ? "퇴사 정산" : "Offboarding", count: leavers.length, target: "staff" },
-              ];
-              const total = items.reduce((n, i) => n + i.count, 0);
+                { label: ko ? "연차 승인" : "Leave approvals", count: pending.length, target: "leavePay" as TeamTab },
+                { label: ko ? "수당 승인" : "Allowance approvals", count: allowPending.length, target: "leavePay" as TeamTab },
+                { label: ko ? "퇴사 정산" : "Offboarding", count: leavers.length, target: "staff" as TeamTab },
+              ].filter((i) => i.count > 0);
+              if (items.length === 0) return null;
               return (
-                <section style={card}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: total ? 12 : 4 }}>
-                    <CheckCircle2 size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-                    <div style={sectionTitle}>{ko ? "처리할 일" : "To do"}</div>
-                    {total > 0 && <span style={{ ...badge, background: MIDNIGHT }}>{total}</span>}
-                  </div>
-                  {total === 0 ? (
-                    <div style={{ fontSize: 12.5, color: MUTED }}>{ko ? "지금 처리할 일이 없어요." : "Nothing to do right now."}</div>
-                  ) : (
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {items.filter((i) => i.count > 0).map((i) => (
-                        <button key={i.label} type="button" onClick={() => setTab(i.target)}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 10, border: "none", background: MIDNIGHT_SOFT, color: MIDNIGHT, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
-                          {i.label} <strong>{i.count}</strong> ›
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                <ListSection title={ko ? "처리할 일" : "To do"}>
+                  {items.map((i, idx) => (
+                    <ListRow
+                      key={i.label}
+                      first={idx === 0}
+                      label={i.label}
+                      subtitle={ko ? `${i.count}건` : `${i.count}`}
+                      onClick={() => setTab(i.target)}
+                    />
+                  ))}
+                </ListSection>
               );
             })()}
 
@@ -692,21 +687,17 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
               </div>
             </section>
 
-            {/* 연차 관리 — 법정 일수(근로기준법 제60조) + 직원별 잔여 (2026-07-28) */}
-            <section style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <CalendarClock size={17} strokeWidth={1.8} style={{ color: MIDNIGHT }} />
-                <div style={sectionTitle}>{ko ? "연차 관리" : "Annual leave"}</div>
-              </div>
-              <AnnualLeaveSection
-                ko={ko}
-                members={activeMembers}
-                leaves={leaveLedger}
-                ledgerFailed={ledgerFailed}
-                basis={leaveBasis}
-                onChangeBasis={(b) => void saveLeaveBasis(b)}
-              />
-            </section>
+            {/* 연차 관리 — 법정 일수(근로기준법 제60조) + 직원별 잔여 (2026-07-28)
+                2026-09-12: 감싸던 카드 + 아이콘 제목을 제거했다 — 컴포넌트가 자체 섹션 2개를
+                그리므로 여기서 또 카드를 두르면 카드 안의 카드가 된다. */}
+            <AnnualLeaveSection
+              ko={ko}
+              members={activeMembers}
+              leaves={leaveLedger}
+              ledgerFailed={ledgerFailed}
+              basis={leaveBasis}
+              onChangeBasis={(b) => void saveLeaveBasis(b)}
+            />
 
               </>
             )}
@@ -722,6 +713,10 @@ export function TeamSurface({ ko, categoryId }: { ko: boolean; categoryId?: stri
           leaves={leaves.filter((l) => l.member_user_id === detailMember.member_user_id)}
           ko={ko}
           categoryId={categoryId}
+          // 급여 계산 입력 — 5인 기준선·승인된 수당·급여일이 있어야 정확해진다.
+          headcount={Math.max(activeMembers.length, 1)}
+          approvedAllowances={allowances}
+          paydayDay={paydayDay}
           onClose={() => setDetailMember(null)}
           onWageSaved={(wage) => {
             setDetailMember((prev) => (prev ? { ...prev, hourly_wage: wage } : prev));
@@ -1066,7 +1061,7 @@ function mdRange(s: string, e: string): string {
 
 // ── styles ──
 const wrap: React.CSSProperties = { padding: "8px 4px 40px" };
-const card: React.CSSProperties = { background: "white", borderRadius: 20, padding: "22px 22px", boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)" };
+const card: React.CSSProperties = { background: "white", borderRadius: "var(--card-radius)", padding: "22px 22px", boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)" };
 const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MIDNIGHT_MUTED, marginBottom: 8 };
 /**
  * 급여일 — 읽기 default + 「수정」 + 저장 (사장님 데이터 카드 표준 패턴, feedback_edit_save_pattern).
@@ -1091,62 +1086,51 @@ function AnnualLeaveSection({ ko, members, leaves, ledgerFailed, basis, onChange
   const headcount = members.length;
   const statutory = headcount >= 5;
 
+  // 2026-09-12 개편 (iOS AnnualLeaveCard 와 같은 규칙):
+  //  · 회색 안내 블록 + 2단 선택 카드 + **직원마다 테두리 상자**(카드 3중첩)를 없앴다.
+  //  · 5인 미만일 때 직원마다 똑같은 문장(basisNote)이 반복됐다 → 각주에서 한 번만.
+  //  · 선택은 라디오 카드 대신 체크마크 목록(설정앱 패턴).
+  const footerText = (() => {
+    const base = statutory
+      ? (ko
+          ? `등록 직원 ${headcount}명 — 상시 5인 이상이라 법정 연차(근로기준법 제60조)가 적용돼요. 1년 미만은 개근 1개월당 1일, 1년부터 15일, 3년째부터 2년마다 1일씩 늘어 최대 25일이에요.`
+          : `${headcount} staff — statutory leave applies (LSA §60).`)
+      : (ko
+          ? `등록 직원 ${headcount}명 — 5인 미만은 법정 연차 의무가 없어요(근로기준법 제11조·제60조). 근로계약서·취업규칙에 연차를 정했다면 그 약속은 지켜야 해요.`
+          : `${headcount} staff — under 5, no statutory leave (LSA §11, §60). Contractual leave still applies.`);
+    if (!statutory) return base;
+    const caveat = ko
+      ? "표시된 일수는 입사일 기준 예상치예요. 실제 일수는 직전 1년 출근율(80%)과 상시 근로자 수 산정에 따라 달라질 수 있어요 — 확정이 필요하면 노무사(1350)에게 확인하세요."
+      : "Estimates based on hire date. Actual entitlement depends on 80% attendance and headcount rules.";
+    return `${base}\n\n${caveat}`;
+  })();
+
   return (
-    <div>
-      {/* 5인 기준선 안내 — 사장님 질문의 핵심 */}
-      <div style={{
-        padding: "10px 12px", borderRadius: 10, marginBottom: 14,
-        background: statutory ? MIDNIGHT_SOFT : "rgba(15,23,42,0.04)",
-        fontSize: 12, lineHeight: 1.6, color: statutory ? MIDNIGHT : MUTED,
-      }}>
-        {statutory
-          ? (ko
-              ? `등록 직원 ${headcount}명 — 상시 5인 이상이라 법정 연차(근로기준법 제60조)가 적용돼요. 1년 미만은 개근 1개월당 1일, 1년부터 15일, 3년째부터 2년마다 1일씩 늘어 최대 25일이에요.`
-              : `${headcount} staff — statutory leave applies (LSA §60).`)
-          : (ko
-              ? `등록 직원 ${headcount}명 — 5인 미만은 법정 연차 의무가 없어요 (근로기준법 제11조·제60조). 근로계약서·취업규칙에 연차를 정했다면 그 약속은 지켜야 해요.`
-              : `${headcount} staff — under 5, no statutory leave (LSA §11, §60). Contractual leave still applies.`)}
-      </div>
+    <div style={{ display: "grid", gap: 16 }}>
+      {/* 설정 — 부여 기준 */}
+      <ListSection title={ko ? "연차 부여 기준" : "Accrual basis"}>
+        {(["hire_date", "fiscal_year"] as const).map((b, idx) => {
+          const on = basis === b;
+          const label = LEAVE_BASIS_LABEL[b];
+          return (
+            <ListRow
+              key={b}
+              first={idx === 0}
+              label={ko ? label.ko : label.en}
+              subtitle={ko ? label.desc.ko : label.desc.en}
+              onClick={() => !on && onChangeBasis(b)}
+              trailing={on ? <Check size={17} strokeWidth={2.2} style={{ color: MIDNIGHT }} /> : undefined}
+            />
+          );
+        })}
+      </ListSection>
 
-      {/* 부여 기준 — 사장이 선택 */}
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: MUTED, marginBottom: 7 }}>
-          {ko ? "연차 부여 기준" : "Accrual basis"}
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {(["hire_date", "fiscal_year"] as const).map((b) => {
-            const on = basis === b;
-            const label = LEAVE_BASIS_LABEL[b];
-            return (
-              <button
-                key={b}
-                type="button"
-                onClick={() => !on && onChangeBasis(b)}
-                style={{
-                  flex: "1 1 160px", textAlign: "left", padding: "10px 12px", borderRadius: 11,
-                  border: on ? `1.5px solid ${MIDNIGHT}` : `1px solid ${MIDNIGHT_BORDER}`,
-                  background: on ? MIDNIGHT_SOFT : "white",
-                  cursor: on ? "default" : "pointer",
-                }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 750, color: on ? MIDNIGHT : INK }}>
-                  {ko ? label.ko : label.en}
-                </div>
-                <div style={{ fontSize: 11, color: MUTED, marginTop: 2, lineHeight: 1.45 }}>
-                  {ko ? label.desc.ko : label.desc.en}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 직원별 연차 */}
-      {members.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: MUTED }}>{ko ? "등록된 직원이 없어요." : "No staff yet."}</div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {members.map((m) => {
+      {/* 현황 — 직원별 잔여 */}
+      <ListSection title={ko ? "직원별 잔여" : "Remaining by staff"} footer={footerText}>
+        {members.length === 0 ? (
+          <ListRow first label={ko ? "등록된 직원이 없어요" : "No staff yet"} />
+        ) : (
+          members.map((m, idx) => {
             const result = calcAnnualLeave(m.hire_date, { basis, headcount });
             const range = leaveYearRange(basis, m.hire_date);
             const used = usedLeaveDays(
@@ -1154,47 +1138,42 @@ function AnnualLeaveSection({ ko, members, leaves, ledgerFailed, basis, onChange
               { yearStart: range.start, yearEnd: range.end },
             );
             const left = remainingLeaveDays(result.days, used);
+            const isStatutory = result.statutory && result.days > 0;
+            // 원장 조회 실패 — 잔여를 계산하면 가짜 숫자가 된다. 그대로 말한다.
+            if (isStatutory && ledgerFailed) {
+              return (
+                <ListRow
+                  key={m.member_user_id}
+                  first={idx === 0}
+                  label={m.name}
+                  subtitle={ko ? `발생 ${result.days}일 · 사용 일수를 불러오지 못해 잔여를 계산할 수 없어요` : `${result.days} granted · usage unavailable`}
+                />
+              );
+            }
+            if (!isStatutory) {
+              return (
+                <ListRow
+                  key={m.member_user_id}
+                  first={idx === 0}
+                  label={m.name}
+                  value={ko ? (m.hire_date ? "법정 의무 없음" : "입사일 미입력") : (m.hire_date ? "Not statutory" : "No hire date")}
+                />
+              );
+            }
             return (
-              <div key={m.member_user_id} style={{ padding: "11px 13px", borderRadius: 11, border: `1px solid ${MIDNIGHT_BORDER}`, background: "rgba(255,255,255,0.7)" }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 750, color: INK }}>{m.name}</span>
-                  {result.statutory && result.days > 0 && ledgerFailed ? (
-                    <span style={{ fontSize: 12.5, color: "#b64c4c", fontWeight: 650 }}>
-                      {ko
-                        ? `발생 ${result.days}일 · 사용 일수를 불러오지 못해 잔여를 계산할 수 없어요`
-                        : `${result.days} granted · usage unavailable`}
-                    </span>
-                  ) : result.statutory && result.days > 0 ? (
-                    <>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: MIDNIGHT, fontVariantNumeric: "tabular-nums" }}>
-                        {ko ? `잔여 ${left}일` : `${left}d left`}
-                      </span>
-                      <span style={{ fontSize: 11.5, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
-                        {ko ? `(발생 ${result.days}일 · 사용 ${used}일)` : `(${result.days} granted · ${used} used)`}
-                      </span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, background: "rgba(15,23,42,0.05)", borderRadius: 999, padding: "2px 7px" }}>
-                        {ko ? "예상" : "est."}
-                      </span>
-                    </>
-                  ) : (
-                    <span style={{ fontSize: 12.5, color: MUTED }}>
-                      {ko ? (m.hire_date ? "법정 의무 없음" : "입사일 미입력") : (m.hire_date ? "Not statutory" : "No hire date")}
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 11, color: MUTED, marginTop: 5, lineHeight: 1.5 }}>
-                  {ko ? result.basisNote.ko : result.basisNote.en}
-                </div>
-              </div>
+              <ListRow
+                key={m.member_user_id}
+                first={idx === 0}
+                label={m.name}
+                value={ko ? `잔여 ${left}일` : `${left}d left`}
+                subtitle={ko
+                  ? `발생 ${result.days}일 · 사용 ${used}일 · ${result.basisNote.ko}`
+                  : `${result.days} granted · ${used} used · ${result.basisNote.en}`}
+              />
             );
-          })}
-        </div>
-      )}
-      <div style={{ fontSize: 11, color: MIDNIGHT_MUTED, marginTop: 12, lineHeight: 1.55 }}>
-        {ko
-          ? "표시된 일수는 입사일 기준 예상치예요. 실제 일수는 직전 1년 출근율(80%)과 상시 근로자 수 산정에 따라 달라질 수 있어요 — 확정이 필요하면 노무사(1350)에게 확인하세요."
-          : "Estimates based on hire date. Actual entitlement depends on 80% attendance and headcount rules."}
-      </div>
+          })
+        )}
+      </ListSection>
     </div>
   );
 }

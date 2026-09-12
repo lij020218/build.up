@@ -274,7 +274,7 @@ export function FundingPlansListModal({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        style={{ width: "min(720px, 100%)", maxHeight: "86vh", overflow: "auto", background: "white", borderRadius: 20, padding: "22px 22px 18px", boxShadow: "0 24px 64px rgba(15,23,42,0.28)" }}
+        style={{ width: "min(720px, 100%)", maxHeight: "86vh", overflow: "auto", background: "white", borderRadius: "var(--card-radius)", padding: "22px 22px 18px", boxShadow: "0 24px 64px rgba(15,23,42,0.28)" }}
       >
         <FundingPlansList ko={ko} onClose={onClose} />
       </div>

@@ -484,10 +484,10 @@ const KEYFRAMES = `
 
 .ccd-card {
   position: relative;
-  border-radius: 20px;
+  border-radius: var(--card-radius);
   padding: 18px 20px 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%);
-  border: 1px solid rgba(25,25,112,0.10);
+  background: var(--surface);
+  border: 0.5px solid rgba(17,19,26,0.07);
   box-shadow:
     0 1px 3px rgba(25,25,112,0.04),
     0 12px 24px -12px rgba(25,25,112,0.10);

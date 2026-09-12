@@ -100,7 +100,7 @@ export default function BillingPage() {
         ) : (
           <>
             {/* 현재 플랜 카드 */}
-            <div style={{ background: "#fff", borderRadius: "20px", padding: "28px 24px", marginBottom: "16px", border: "1px solid rgba(0,0,0,0.06)" }}>
+            <div style={{ background: "#fff", borderRadius: "var(--card-radius)", padding: "28px 24px", marginBottom: "16px", border: "1px solid rgba(0,0,0,0.06)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                 <div>
                   <div style={{ fontSize: "18px", fontWeight: 700 }}>프리미엄 플랜</div>

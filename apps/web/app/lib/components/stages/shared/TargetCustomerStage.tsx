@@ -261,7 +261,7 @@ export function TargetCustomerStage() {
         <>
           {/* WHY 카드 */}
           <div style={{
-            borderRadius: "20px",
+            borderRadius: "var(--card-radius)",
             border: `1px solid ${MIDNIGHT_BORDER}`,
             background: "white",
             padding: "20px 22px",
@@ -327,7 +327,7 @@ export function TargetCustomerStage() {
       {/* ─────────────────────────────────────────────────────────────── */}
       {pg === 1 && (
         <>
-          <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
+          <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
               <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
               <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>
@@ -481,7 +481,7 @@ export function TargetCustomerStage() {
       {/* ─────────────────────────────────────────────────────────────── */}
       {pg === 2 && (
         <>
-          <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
+          <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
               <AlertTriangle size={14} strokeWidth={2.2} color={MIDNIGHT} />
               <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>

@@ -31,7 +31,7 @@ export function OnlineRegistrationStage() {
   const pages = [
     // ── 페이지 0: 사업자등록 ──
     () => (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.1)", background: "linear-gradient(180deg, rgba(25,25,112,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.1)", background: "linear-gradient(180deg, rgba(25,25,112,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         {/* 헤더 */}
         <div style={{ padding: "24px 24px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
@@ -154,7 +154,7 @@ export function OnlineRegistrationStage() {
 
     // ── 페이지 1: 통신판매업 신고 ──
     () => (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.1)", background: "linear-gradient(180deg, rgba(124,58,237,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(124,58,237,0.1)", background: "linear-gradient(180deg, rgba(124,58,237,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         {/* 헤더 */}
         <div style={{ padding: "24px 24px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>

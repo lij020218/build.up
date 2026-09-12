@@ -60,7 +60,7 @@ export function ModePathCard({
 
   return (
     <div style={{
-      borderRadius: "20px",
+      borderRadius: "var(--card-radius)",
       border: `1px solid ${MIDNIGHT}1A`,
       background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`,
       padding: "20px 22px",

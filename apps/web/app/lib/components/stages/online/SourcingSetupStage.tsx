@@ -31,7 +31,7 @@ export function SourcingSetupStage() {
         }}
       />
       {/* 소싱 방법 비교 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "소싱 방법 비교" : "Sourcing Methods"}</div>
           <div style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "예산과 목표에 맞는 방법을 선택하세요" : "Choose based on your budget and goals"}</div>
@@ -54,7 +54,7 @@ export function SourcingSetupStage() {
       </div>
 
       {/* 상세페이지 작성 가이드 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "상세페이지 구성 순서" : "Detail Page Structure"}</div>
           <div style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "전환율을 높이는 검증된 구성" : "Proven structure for higher conversion"}</div>
@@ -94,7 +94,7 @@ export function SourcingSetupStage() {
       </div>
 
       {/* 상품 촬영 팁 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "18px 22px" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "18px 22px" }}>
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", marginBottom: "8px" }}>{ko ? "상품 촬영 — 스마트폰으로 충분합니다" : "Product Photos — Smartphone is enough"}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
           {[

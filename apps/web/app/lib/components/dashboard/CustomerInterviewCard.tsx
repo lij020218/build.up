@@ -1097,7 +1097,7 @@ function InsightSection({ title, items, color, Icon }: { title: string; items: s
 // ─── Styles ───────────────────────────────────────────────
 
 const card: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   border: "1px solid rgba(124,58,237,0.08)",
   background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(124,58,237,0.015) 100%)",
   padding: "18px 22px",

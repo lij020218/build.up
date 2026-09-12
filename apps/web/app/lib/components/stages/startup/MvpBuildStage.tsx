@@ -632,7 +632,7 @@ pnpm dlx vercel
       {/* PAGE 0 — ModePathCard 보충 */}
       {mvpPage === 0 && <ModePathCard stageId="mvp-build" />}
 
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         {/* 헤더 */}
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>

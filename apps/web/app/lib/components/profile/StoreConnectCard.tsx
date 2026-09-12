@@ -97,7 +97,7 @@ export function StoreConnectCard({ ko }: { ko: boolean }) {
     <article
       style={{
         background: "white",
-        borderRadius: 20,
+        borderRadius: "var(--card-radius)",
         padding: "20px 22px",
         border: `1px solid ${MIDNIGHT_BORDER}`,
         boxShadow: "0 6px 30px rgba(25,25,112,0.05)",

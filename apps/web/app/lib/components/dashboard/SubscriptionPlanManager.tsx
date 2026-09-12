@@ -107,7 +107,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
 
   return (
     <article style={{
-      borderRadius: "20px",
+      borderRadius: "var(--card-radius)",
       border: "1px solid rgba(124,58,237,0.08)",
       background: isEmpty
         ? "linear-gradient(180deg, rgba(124,58,237,0.04) 0%, rgba(168,85,247,0.02) 100%)"

@@ -170,7 +170,7 @@ const toast: React.CSSProperties = {
   alignItems: "center",
   gap: "14px",
   padding: "16px 20px",
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   background: "rgba(255,255,255,0.98)",
   border: "1px solid rgba(15,23,42,0.08)",
   boxShadow: "0 16px 48px rgba(15,23,42,0.14), 0 0 0 1px rgba(15,23,42,0.04)",
