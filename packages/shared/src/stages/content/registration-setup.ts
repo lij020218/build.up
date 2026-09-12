@@ -20,6 +20,7 @@
  */
 
 import type { CategoryContent, StageContent } from "../schema";
+import { DOCUMENT_GLOSSARY_SECTION } from "./app-compliance";
 
 /* ───────────────────────── 업종별 분기 데이터 ───────────────────────── */
 
@@ -662,6 +663,8 @@ export const REGISTRATION_SETUP_CONTENT: StageContent = {
             { label: "간이과세 기준 (2026)", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7693&mi=2272" },
           ],
         },
+        // 서류 용어 사전(2026-09, 구함 사례) — 사본·증명·원본·인감. 오프라인도 인허가·PG·계약 서류에서 동일하게 헷갈림.
+        DOCUMENT_GLOSSARY_SECTION,
         { kind: "interactive", ref: "hometaxLink", platforms: ["ios"] },
         { kind: "interactive", ref: "bizRegToggle", platforms: ["ios"], config: { label: "사업자등록 완료" } },
         // 국세청 실검증 게이트 (2026-08-03 사장님 스펙): 등록 마치면 번호 입력→국세청 확인→다음 단계.

@@ -39,6 +39,8 @@ const PREVIEW_STAGE_ORDER = [
   "permit-check",
   "hiring-setup",
   "tax-guide",
+  // 앱·플랫폼 규제·계약(company-setup 임베드 콘텐츠) — 게스트에겐 독립 미리보기로 노출.
+  "app-compliance",
 ] as const;
 
 export default function BrowseClient() {

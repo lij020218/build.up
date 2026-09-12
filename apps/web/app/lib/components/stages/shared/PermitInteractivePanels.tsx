@@ -61,7 +61,7 @@ export function LiveDataPanel({ ko }: { ko: boolean }) {
 
   if (!livePermitInsights || livePermitInsights.loading) {
     return (
-      <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(255,237,213,0.1) 0%, rgba(255,255,255,0.9) 100%)" }}>
+      <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(255,237,213,0.1) 0%, rgba(255,255,255,0.9) 100%)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#191970", animation: "bentoPulse 1.5s infinite" }} />
           <span style={{ fontSize: "14px", fontWeight: 600 }}>{ko ? "사업자 현황 데이터 조회 중..." : "Loading permit data..."}</span>
@@ -75,7 +75,7 @@ export function LiveDataPanel({ ko }: { ko: boolean }) {
   const rateColor = ins.survivalRate >= 70 ? "#1d3557" : ins.survivalRate >= 50 ? "#191970" : "#b64c4c";
 
   return (
-    <div style={{ marginBottom: "16px", borderRadius: "20px", border: `1px solid ${rateColor}15`, background: `linear-gradient(180deg, ${rateColor}06 0%, rgba(255,255,255,0.92) 100%)`, overflow: "hidden" }} className="bento-fade-in">
+    <div style={{ marginBottom: "16px", borderRadius: "var(--card-radius)", border: `1px solid ${rateColor}15`, background: `linear-gradient(180deg, ${rateColor}06 0%, rgba(255,255,255,0.92) 100%)`, overflow: "hidden" }} className="bento-fade-in">
       <div style={{ padding: "18px 20px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: rateColor }} />

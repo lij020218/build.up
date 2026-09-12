@@ -38,7 +38,12 @@ export type IconKey =
   | "creditCard"
   | "users"
   | "rosette"
-  | "calendar";
+  | "calendar"
+  // app-compliance(앱·플랫폼 규제·계약) 에서 추가
+  | "smartphone"
+  | "mapPin"
+  | "phone"
+  | "globe";
 
 /** 색 강조 의미 토큰 — 플랫폼이 디자인 시스템 색으로 매핑. */
 export type Accent = "midnight" | "blue" | "danger";
@@ -128,6 +133,20 @@ export type GateItem = { id: string; label: string; detail?: string };
 
 /** 정적 안내 콜아웃 한 줄(contract-review "계약 후 즉시 할 일" 등). */
 export type NoteItem = string;
+
+/* ── app-compliance(앱·플랫폼 규제·계약) 식 glossary / dependencyChain / compareTable / copyTemplate ── */
+
+/** 용어 사전 항목 — 서류·상품명 혼동(사본·증명·PASS 두 상품 등). where=발급처·출처, format=제출 형식. */
+export type GlossaryTerm = { term: string; meaning: string; where?: string; format?: string };
+
+/** 절차 의존 그래프 노드 — 앞 절차가 뒤 절차의 전제. blocks=이 절차가 미완이면 뒤 절차에 생기는 일. */
+export type DependencyNode = { id: string; icon?: IconKey; label: string; detail: string; blocks?: string };
+
+/** 비교표 행 — cells 길이 = columns 길이 - 1(첫 열은 label). 값이 없으면 "미확인" 을 그대로 적는다. */
+export type CompareRow = { label: string; cells: string[]; note?: string };
+
+/** 복사 템플릿 줄(상품 명세 등) — label: value 로 평문 복사. */
+export type TemplateLine = { label: string; value: string };
 
 /* ─────────────────── 카테고리(업종)별 분기 데이터 ─────────────────── */
 
@@ -221,8 +240,19 @@ export type InteractiveRef =
   | "soloOperator"        // 1인 운영(직원 없음) 토글 — 채용 없이 단계 통과
   | "hiringContractDone"  // 근로계약서 작성·교부 완료 토글(게이팅)
   | "hiringInsuranceDone" // 4대보험 신고 완료 토글
-  | "hiringPayslipDone"
-  | "bizVerify";  // 급여명세서 자동 발송 셋업 토글
+  | "hiringPayslipDone" // 급여명세서 자동 발송 셋업 토글
+  | "bizVerify"         // 사업자등록번호 국세청 확인 게이트
+  // ── app-compliance ──
+  /** 날짜 오프셋 계산기 — 기준일 입력 → ±offsetDays 결과일(위치정보법 D+30 신고 마감, 개인정보처리방침 개정 7일 전 고지).
+   *  config: { title, inputLabel, offsetDays:number, direction:"after"|"before", resultLabel, note?, noticeTemplate? }
+   *  noticeTemplate 의 {{input}}·{{result}} 는 플랫폼이 선택 날짜로 치환(고지 문구 생성). 로컬 계산, 서버 저장 없음. */
+  | "dateOffset"
+  /** 본인인증 채널 선택기 — 요건(성별·내외국인·월 건수·테스트·결제) → 추천·비용·콘솔 클릭 경로. compliance/identity-channels. */
+  | "authChannelPicker"
+  /** PG 입점심사 사전 검사 — URL → 서버 검사(/api/compliance/pg-precheck) → 항목별 통과/미달·반려 문구. compliance/pg-precheck. */
+  | "pgPrecheck"
+  /** 서류 요청 메일 해석기 — 본문 붙여넣기 → 용어별 '어디서·어떤 형식' + 체크리스트. compliance/doc-request. */
+  | "docRequestDecoder";
 
 /**
  * 섹션 프리미티브. kind 로 분기.
@@ -323,6 +353,19 @@ export type Section =
     }
   /** 정적 안내 콜아웃(제목 + 인라인 항목) — contract-review "계약 후 즉시 할 일". */
   | { kind: "noteList"; severity?: "danger" | "warn"; title: string; items: NoteItem[] }
+  /** 용어 사전 — 정적(전 업종 공통). 서류 이름 옆에 "= 어디서 어떤 형식으로" 한 줄. */
+  | { kind: "glossary"; eyebrow: string; subtitle?: string; terms: GlossaryTerm[] }
+  /** 절차 의존 그래프 — 정적 세로 체인. 앞 절차 미완이 뒤 절차의 반려 사유가 됨을 표시. */
+  | { kind: "dependencyChain"; eyebrow: string; subtitle?: string; nodes: DependencyNode[] }
+  /** 비교표 — 정적(본인인증 채널 비교 등). columns[0] 은 행 라벨 열 제목. */
+  | { kind: "compareTable"; eyebrow: string; subtitle?: string; columns: string[]; rows: CompareRow[]; footnote?: string }
+  /** 복사 템플릿 — 정적. 플랫폼이 "복사" 버튼으로 lines 를 "label: value" 평문으로 클립보드 복사. */
+  | { kind: "copyTemplate"; eyebrow: string; subtitle?: string; title: string; lines: TemplateLine[]; footnote?: string }
+  /**
+   * 준비 체크리스트 — 토글 가능하지만 **게이팅하지 않음**(gateChecklist 와 달리 단계 통과 조건 아님).
+   * PG 심사 사전 점검·계약 서류 준비처럼 "빠짐 확인" 용. 상태는 플랫폼 로컬 저장.
+   */
+  | { kind: "prepChecklist"; eyebrow: string; subtitle?: string; items: GateItem[]; doneNote?: string }
   /** 마지막 페이지 마무리 — 단계 최상위 wrapup 데이터를 렌더(웹) / BUStageShell(iOS). */
   | { kind: "wrapup" }
   /** 플랫폼별 인터랙티브 위젯. config 는 ref 별 임의 설정(loose). */

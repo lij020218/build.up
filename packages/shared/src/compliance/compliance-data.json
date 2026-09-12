@@ -1,0 +1,437 @@
+{
+  "identityChannels": [
+    {
+      "id": "danal",
+      "name": "다날 휴대폰 본인인증",
+      "method": "휴대폰(PASS앱/SMS) 본인확인 — 통신3사 대행",
+      "plans": [
+        {
+          "monthlyKrw": 50000,
+          "cases": 1200
+        },
+        {
+          "monthlyKrw": 100000,
+          "cases": 2400
+        },
+        {
+          "monthlyKrw": 200000,
+          "cases": 4800
+        },
+        {
+          "monthlyKrw": 300000,
+          "cases": 7200
+        }
+      ],
+      "perCaseKrw": null,
+      "joinFeeViaPortoneKrw": 0,
+      "joinFeeDirectKrw": 100000,
+      "returnsGender": true,
+      "returnsForeigner": null,
+      "testBeforeContract": false,
+      "testNote": "계약 전 테스트 채널 없음(구함 확인, 2026-09). 다날 절차상 '모듈 설치 및 테스트'는 계약·등록비·보증보험 뒤 5단계.",
+      "suretyBond": true,
+      "suretyNote": "다날 본인확인 서비스 신청 절차에 보증보험(1년, 만료 시 재가입) 가입 단계 포함. 보험료 미확인.",
+      "contractLeadTime": "다날 FAQ: 실서비스 오픈까지 약 7~10일 / 구함 체감(포트원 경유): 2~3주",
+      "documents": [
+        "계약서 원본 2부(본인확인: 통합계약서 + 특약서)",
+        "사업자등록증 사본 1부",
+        "인감증명서 원본(대표자 명의) 1부 — 전자계약 시 제외",
+        "대표자 신분증 앞·뒤 사본",
+        "고객정보 및 실제소유자 확인서"
+      ],
+      "quoteContact": null,
+      "sources": [
+        {
+          "label": "포트원 블로그 — 본인인증 도입 방법",
+          "url": "https://blog.portone.io/authorization-payment-2/"
+        },
+        {
+          "label": "다날 신청 절차",
+          "url": "https://www.danalpay.com/service_application/application_process"
+        },
+        {
+          "label": "다날 본인확인 서비스",
+          "url": "https://www.danalpay.com/service_introduction/personal_check"
+        }
+      ]
+    },
+    {
+      "id": "kcp",
+      "name": "NHN KCP 휴대폰 본인확인",
+      "method": "휴대폰(PASS앱/SMS) 본인확인 — 통신3사 대행",
+      "plans": null,
+      "perCaseKrw": null,
+      "joinFeeViaPortoneKrw": 0,
+      "joinFeeDirectKrw": null,
+      "returnsGender": true,
+      "returnsForeigner": true,
+      "testBeforeContract": true,
+      "testNote": "테스트 서버 testcert.kcp.co.kr — 테스트용 인증키가 사전 발급되어 별도 요청 없이 연동 가능(KCP 개발자센터).",
+      "suretyBond": null,
+      "suretyNote": "미확인",
+      "contractLeadTime": "미확인",
+      "documents": [],
+      "quoteContact": "NHN KCP 고객센터 1666-6410 (요금제 공개 페이지 없음, 월 기본 건수 이월 없음·인증 시도 기준 과금)",
+      "sources": [
+        {
+          "label": "KCP 개발자센터 — 본인확인 V2",
+          "url": "https://developer.kcp.co.kr/guide/cert"
+        },
+        {
+          "label": "sir.kr — KCP 휴대폰 본인확인 안내",
+          "url": "https://sir.kr/services/auth/kcp"
+        }
+      ]
+    },
+    {
+      "id": "inicis-unified",
+      "name": "KG이니시스 통합인증",
+      "method": "카카오·네이버 등 민간 인증서(간편인증)",
+      "plans": null,
+      "perCaseKrw": 40,
+      "joinFeeViaPortoneKrw": 0,
+      "joinFeeDirectKrw": null,
+      "returnsGender": false,
+      "returnsForeigner": false,
+      "testBeforeContract": null,
+      "testNote": "미확인",
+      "suretyBond": null,
+      "suretyNote": "미확인",
+      "contractLeadTime": "미확인",
+      "documents": [],
+      "quoteContact": null,
+      "sources": [
+        {
+          "label": "포트원 개발자 문서 — 본인인증 연동(V2)",
+          "url": "https://developers.portone.io/opi/ko/extra/identity-verification/readme-v2?v=v2"
+        }
+      ]
+    }
+  ],
+  "portoneConsoleStepsIdentityOnly": [
+    "포트원 관리자콘솔 좌측 하단 [전자결제 신청] — 이름이 '결제'지만 본인인증도 여기서 신청합니다.",
+    "'전자결제 직접 선택하기' → 일반결제·간편결제·해외결제·본인인증 4개 섹션 중 **본인인증 섹션만** 선택합니다.",
+    "결제수단(신용카드 등)이 기본으로 체크돼 있으면 **모두 해제** — 카드가 포함된 채 제출되면 카드 PG 가입비 결제 화면으로 이어집니다.",
+    "채널 추가에서 대행사(다날 등)를 고르면 결제 모듈만 보입니다. 다음 단계 **'채널 속성' 토글에서 본인인증**을 켭니다.",
+    "약 3영업일 내 대행사 담당자가 연락 — 계약서·서류(아래 목록)를 미리 준비하면 여기서 시간을 아낍니다."
+  ],
+  "pgPrecheckRules": [
+    {
+      "id": "biz-number",
+      "label": "사업자등록번호 표기",
+      "severity": "reject",
+      "rejectAs": "사업자 정보 미표기",
+      "fix": "푸터에 000-00-00000 형식으로 표기 (사업자등록증과 동일)",
+      "how": "본문에서 000-00-00000 패턴 탐지"
+    },
+    {
+      "id": "company-name",
+      "label": "상호(회사명) 표기",
+      "severity": "reject",
+      "rejectAs": "사업자 정보 미표기",
+      "fix": "푸터에 '상호: OOO' 표기 — 사업자등록증 상호와 완전히 일치",
+      "how": "'상호'·'회사명'·'법인명' 라벨 탐지"
+    },
+    {
+      "id": "representative",
+      "label": "대표자 성명 표기",
+      "severity": "reject",
+      "rejectAs": "사업자 정보 미표기",
+      "fix": "푸터에 '대표: 홍길동' 표기",
+      "how": "'대표'·'대표자' 라벨 탐지"
+    },
+    {
+      "id": "address",
+      "label": "사업장 소재지 표기",
+      "severity": "reject",
+      "rejectAs": "사업자 정보 미표기",
+      "fix": "푸터에 '주소:' 또는 '사업장 소재지:' 표기",
+      "how": "'주소'·'사업장 소재지' 라벨 탐지"
+    },
+    {
+      "id": "phone",
+      "label": "전화번호 표기",
+      "severity": "reject",
+      "rejectAs": "유선번호 미표기 (구함 반려 1)",
+      "fix": "유선번호가 없으면 휴대폰 번호로도 통과 사례 있음(구함) — 000-0000-0000 형식으로 푸터에",
+      "how": "02/0XX/010/15XX-XXXX 번호 패턴 탐지"
+    },
+    {
+      "id": "email",
+      "label": "이메일 표기",
+      "severity": "warn",
+      "rejectAs": "연락처 미비로 보류 가능",
+      "fix": "푸터에 문의 이메일 표기",
+      "how": "이메일 패턴 탐지"
+    },
+    {
+      "id": "privacy-officer",
+      "label": "개인정보관리책임자 표기",
+      "severity": "warn",
+      "rejectAs": "법적 필수 정보 미비(전자상거래법 표시사항)",
+      "fix": "푸터 또는 처리방침에 '개인정보 보호책임자: 이름·연락처'",
+      "how": "'개인정보 (보호|관리)책임자' 탐지"
+    },
+    {
+      "id": "terms-link",
+      "label": "이용약관 링크",
+      "severity": "reject",
+      "rejectAs": "약관 미비 — 심사 보류",
+      "fix": "'이용약관' 텍스트의 링크를 푸터에 — 빈 페이지면 보류되니 내용까지",
+      "how": "'이용약관'·terms 링크/텍스트 탐지"
+    },
+    {
+      "id": "privacy-link",
+      "label": "개인정보처리방침 링크",
+      "severity": "reject",
+      "rejectAs": "처리방침 미비 — 심사 보류",
+      "fix": "'개인정보처리방침' 링크를 푸터에 — 수집 항목·위탁사 포함",
+      "how": "'개인정보처리방침'·privacy 링크/텍스트 탐지"
+    },
+    {
+      "id": "product-price",
+      "label": "상품·서비스 명세 + 가격",
+      "severity": "reject",
+      "rejectAs": "상품 혹은 서비스가 등록되지 않았거나 상세 설명 및 가격 정보가 확인되지 않았어요 (구함 반려 2)",
+      "fix": "무료라도 상품명·가격(0원)·상세·제공방식·환불을 한 페이지에 — 상품 명세 템플릿 사용",
+      "how": "가격 표기(원/₩/무료/0원) + 상품·서비스·이용권 단어 동시 탐지"
+    },
+    {
+      "id": "refund-policy",
+      "label": "환불·취소 규정",
+      "severity": "reject",
+      "rejectAs": "불충분한 환불 정책 (포트원 반려 원인 2)",
+      "fix": "환불 가능 기간·절차를 구체적으로 — 무료 서비스는 '결제·환불 없음' 명시",
+      "how": "'환불'·'취소 규정'·'반품/교환' 탐지"
+    },
+    {
+      "id": "test-sample-name",
+      "label": "상품명에 '테스트/샘플' 없음",
+      "severity": "warn",
+      "rejectAs": "테스트 상품으로 판단 — 보류",
+      "fix": "상품명에서 '테스트'·'샘플' 제거",
+      "how": "'테스트 상품'·'샘플' 단어 탐지"
+    },
+    {
+      "id": "coming-soon",
+      "label": "'곧 출시' 문구 없음",
+      "severity": "warn",
+      "rejectAs": "서비스 미등록으로 읽힘 (구함 반려 2의 숨은 원인)",
+      "fix": "출시 전이면 TestFlight 공개 링크·웹 데모를 걸거나, 본인확인만 신청 시 APK/앱심사 문서로 진행",
+      "how": "'곧 출시'·'출시 예정'·coming soon 탐지"
+    },
+    {
+      "id": "store-link",
+      "label": "앱스토어/플레이 링크",
+      "severity": "info",
+      "rejectAs": "(참고) 서비스 실재 증빙",
+      "fix": "정식 등록 후 App Store·Google Play 링크를 홈에",
+      "how": "apps.apple.com / play.google.com 링크 탐지"
+    },
+    {
+      "id": "telecom-number",
+      "label": "통신판매업 신고번호",
+      "severity": "info",
+      "rejectAs": "(참고) 결제 받는 서비스만 해당",
+      "fix": "인앱결제·광고수익이 있으면 신고 후 번호 표기. 결제 없는 무료 앱은 불필요",
+      "how": "'통신판매업' 탐지"
+    }
+  ],
+  "appOnlyNote": "앱 전용 서비스라 사이트가 없거나 출시 전이면: 본인확인 서비스만 신청하는 경우 앱스토어 등록 전 APK 파일 또는 앱심사 문서 형태로 심사 진행이 가능합니다(포트원 FAQ '서비스 구축요건').",
+  "docTerms": [
+    {
+      "id": "copy",
+      "term": "사본",
+      "aliases": [
+        "사본",
+        "복사본",
+        "스캔본"
+      ],
+      "meaning": "원본을 복사·스캔한 것. 별도 서류가 아닙니다. '사업자등록증 사본' = 사업자등록증을 촬영·스캔한 파일.",
+      "where": "내가 가진 원본을 복사",
+      "format": "PDF 또는 이미지. jpg 허용 여부는 제출처마다 달라 미확인 — 제출 전 확인",
+      "checklist": "요청된 서류의 사본(스캔/촬영 파일) 준비"
+    },
+    {
+      "id": "original",
+      "term": "원본",
+      "aliases": [
+        "원본"
+      ],
+      "meaning": "서명·날인이 된 실물 문서. '계약서 원본 2부' = 같은 계약서 2부를 작성해 양쪽이 1부씩 보관.",
+      "where": "직접 작성·날인 후 우편 (전자계약 선택 시 실물 불필요)",
+      "format": "실물",
+      "checklist": "원본 요구 서류는 전자계약으로 대체 가능한지 먼저 확인"
+    },
+    {
+      "id": "biz-cert",
+      "term": "사업자등록증",
+      "aliases": [
+        "사업자등록증"
+      ],
+      "meaning": "사업자등록 때 발급되는 증서. '사업자등록증명'(증명원)과 다른 서류입니다.",
+      "where": "홈택스 → 사업자등록 → 발급/재발급",
+      "format": "PDF·이미지 사본",
+      "checklist": "사업자등록증 사본(사업자번호·상호·대표자가 계약 신청서와 완전히 일치하는지 확인)"
+    },
+    {
+      "id": "biz-cert-proof",
+      "term": "사업자등록증명",
+      "aliases": [
+        "사업자등록증명",
+        "등록증명원",
+        "사업자등록증명원",
+        "증명원"
+      ],
+      "meaning": "현재 등록 상태를 확인하는 국세청 민원증명. 금융기관·관공서 제출용. 글자 끝(증/증명)으로 구분.",
+      "where": "홈택스 → 민원증명 → 사업자등록증명 (무인발급기·세무서도 가능)",
+      "format": "PDF 즉시 발급",
+      "checklist": "사업자등록증명(민원증명) 발급 — 요청이 '증명'인지 '증'인지 재확인"
+    },
+    {
+      "id": "seal-cert",
+      "term": "인감증명서",
+      "aliases": [
+        "인감증명서",
+        "인감 증명서",
+        "법인인감증명서",
+        "인감증명"
+      ],
+      "meaning": "등록된 인감(도장)이 본인 것임을 증명하는 서류. 다날은 전자계약을 선택하면 제외.",
+      "where": "개인: 주민센터 / 법인: 인터넷등기소·등기소 — 최근 3개월 이내",
+      "format": "실물 원본(요청 시) 또는 사본",
+      "checklist": "전자계약이면 생략 가능 여부 확인 → 필요 시 최근 3개월 이내 발급"
+    },
+    {
+      "id": "id-copy",
+      "term": "대표자 신분증 사본",
+      "aliases": [
+        "신분증",
+        "신분증 사본",
+        "주민등록증",
+        "운전면허증"
+      ],
+      "meaning": "대표자 본인 확인용. 앞·뒤 모두. '마스킹 없이' 요구되면 주민번호 뒷자리를 가리지 않은 사본.",
+      "where": "본인 신분증 촬영·스캔",
+      "format": "앞·뒤 이미지. 마스킹 여부는 요청 문구 그대로(다날 개인사업자: 마스킹 없이 — 구함 확인 / 다날 FAQ: 뒷자리 마스킹 — 충돌, 담당자에게 확인)",
+      "checklist": "신분증 앞·뒤 사본 — 마스킹 여부를 요청 문구대로"
+    },
+    {
+      "id": "masking",
+      "term": "마스킹",
+      "aliases": [
+        "마스킹",
+        "가림"
+      ],
+      "meaning": "주민번호 뒷자리 등 일부를 가리는 것. '마스킹 없이'면 가리지 말라는 뜻, '마스킹 후'면 가리라는 뜻.",
+      "where": "—",
+      "format": "요청 문구 그대로 따를 것",
+      "checklist": "마스킹 지시(있음/없음) 확인"
+    },
+    {
+      "id": "owner-form",
+      "term": "고객정보 및 실제소유자 확인서",
+      "aliases": [
+        "실제소유자",
+        "실제 소유자",
+        "고객정보 확인서",
+        "고객확인"
+      ],
+      "meaning": "계약 상대(대행사)가 특정금융정보법상 실제 소유자를 확인하려고 받는 양식. 다날 개인사업자 서류에 포함.",
+      "where": "대행사(다날)가 양식 제공 — 담당자 메일 첨부",
+      "format": "양식 작성 후 서명",
+      "checklist": "대행사 양식 수령 → 대표자 정보 기입·서명"
+    },
+    {
+      "id": "bank-copy",
+      "term": "통장 사본",
+      "aliases": [
+        "통장 사본",
+        "통장사본",
+        "계좌 사본",
+        "입금 통장"
+      ],
+      "meaning": "정산·입금 계좌 확인용. 통장 첫 장 또는 은행 앱의 계좌 확인서.",
+      "where": "은행 앱 → 계좌 확인서(통장 사본) 발급",
+      "format": "PDF·이미지",
+      "checklist": "사업용 계좌의 통장 사본(예금주 = 상호 또는 대표자)"
+    },
+    {
+      "id": "surety-bond",
+      "term": "보증보험",
+      "aliases": [
+        "보증보험",
+        "이행보증",
+        "서울보증"
+      ],
+      "meaning": "거래 사고 대비 보험. 다날 절차에 가입 단계(1년, 만료 시 재가입)가 있으며 본인확인 서비스 소개 절차에도 포함. 보험료는 미확인.",
+      "where": "대행사 안내에 따라 보증보험사 가입",
+      "format": "가입 후 증권",
+      "checklist": "보증보험 필요 여부·보험료를 담당자에게 확인(본인인증 단독 계약 포함)"
+    },
+    {
+      "id": "e-contract",
+      "term": "전자계약",
+      "aliases": [
+        "전자계약",
+        "전자 계약"
+      ],
+      "meaning": "우편 없이 휴대폰 인증으로 진행하는 계약. 다날: 전자계약 선택 시 인감증명서 제외.",
+      "where": "대행사가 보내는 전자계약 링크",
+      "format": "온라인 서명",
+      "checklist": "전자계약 선택 → 인감증명서·원본 우편 생략"
+    },
+    {
+      "id": "special-terms",
+      "term": "통합계약서 · 특약서",
+      "aliases": [
+        "특약서",
+        "통합계약서",
+        "특약"
+      ],
+      "meaning": "다날 본인확인은 통합계약서 + 특약서 세트. '계약서 원본 2부'가 이 둘을 뜻함.",
+      "where": "대행사 제공",
+      "format": "원본 2부 또는 전자계약",
+      "checklist": "통합계약서 + 특약서 서명(원본 2부 또는 전자계약)"
+    },
+    {
+      "id": "small-biz-cert",
+      "term": "소상공인확인서",
+      "aliases": [
+        "소상공인확인서",
+        "소상공인 확인서",
+        "1인창조기업 확인"
+      ],
+      "meaning": "위치정보법 소상공인 특례 신고에 첨부. 신규 창업(전년·당년 설립)은 서류 없이 신청서만으로 즉시 발급.",
+      "where": "중소기업현황정보시스템(sminfo.mss.go.kr) → 소상공인확인서 발급",
+      "format": "PDF 즉시 발급",
+      "checklist": "sminfo 회원가입 → 신청서 작성 → 즉시 발급(신규 창업)"
+    },
+    {
+      "id": "escrow-cert",
+      "term": "구매안전서비스 이용확인증",
+      "aliases": [
+        "구매안전서비스",
+        "에스크로 확인증",
+        "구매안전"
+      ],
+      "meaning": "통신판매업 신고 시 첨부. PG 가맹점 페이지에서 다운로드 — PG 계약이 먼저. 앱스토어·플레이 결제만이면 '비적용 확인서'.",
+      "where": "PG사 가맹점 관리자 페이지",
+      "format": "PDF",
+      "checklist": "PG 계약 완료 후 확인증 다운로드 → 정부24 통신판매업 신고 첨부"
+    },
+    {
+      "id": "corp-registry",
+      "term": "법인등기부등본(등기사항전부증명서)",
+      "aliases": [
+        "등기부등본",
+        "등기사항전부증명서",
+        "법인등기"
+      ],
+      "meaning": "법인 사업자만. PG 계약 서류(법인)에 포함.",
+      "where": "인터넷등기소",
+      "format": "PDF·실물",
+      "checklist": "법인이면 최근 발급본 준비 (개인사업자는 해당 없음)"
+    }
+  ]
+}
