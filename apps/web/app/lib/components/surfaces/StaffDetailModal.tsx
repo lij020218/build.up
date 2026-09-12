@@ -19,7 +19,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { X, Wallet, CalendarCheck2, Clock3, ShieldCheck, Briefcase, Check, UserMinus } from "lucide-react";
-import { MINIMUM_WAGE_2026, checkSeveranceObligation, EMPLOYMENT_TYPES, getJobDuties, jobDutyLabel } from "@foundone/shared";
+import { MINIMUM_WAGE_2026, checkSeveranceObligation, EMPLOYMENT_TYPES, getJobDuties, jobDutyLabel, calculatePayroll } from "@foundone/shared";
+import { PayslipView } from "../payroll/PayslipView";
+import { OverlayModal } from "../OverlayModal";
 import { supabase } from "../../../../lib/supabase";
 
 const MIDNIGHT = "#191970";
@@ -44,12 +46,18 @@ function fmtDur(min: number, ko: boolean): string {
   return ko ? `${m}분` : `${m}m`;
 }
 
-export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClose, onWageSaved, onJobSaved, onMarkLeft }: {
+export function StaffDetailModal({ member, rules, leaves, ko, categoryId, headcount = 1, approvedAllowances = [], paydayDay = null, onClose, onWageSaved, onJobSaved, onMarkLeft }: {
   member: Member;
   rules: Rule[];
   leaves: Leave[];
   ko: boolean;
   categoryId?: string | null;
+  /** 상시 근로자 수 — 5인 미만이면 가산수당 의무가 없다(근기법 §11). */
+  headcount?: number;
+  /** 이번 달 승인된 추가 수당 (연장·야간·휴일). */
+  approvedAllowances?: { member_user_id: string; work_date: string; allowance_type: string; minutes: number; status: string }[];
+  /** 사장이 정한 급여일 — 명세서 "임금지급일" 기재용. */
+  paydayDay?: number | null;
   onClose: () => void;
   onWageSaved: (wage: number) => void;
   onJobSaved: (employmentType: string | null, jobDuties: string[]) => void;
@@ -58,6 +66,7 @@ export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClos
 }) {
   // 퇴사 처리는 되돌리기 번거로운 상태 변경이라 2단계 확인.
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [payslipOpen, setPayslipOpen] = useState(false);
   // ── 급여: 읽기 default + 수정 + 저장 (사장님 데이터 카드 표준 패턴) ──
   const [editingWage, setEditingWage] = useState(false);
   const [wageInput, setWageInput] = useState(member.hourly_wage != null ? String(member.hourly_wage) : "");
@@ -126,10 +135,37 @@ export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClos
     return sum + d;
   }, 0);
   const weeklyHours = weeklyMin / 60;
-  const hasJuhyu = weeklyHours >= 15;
-  const weeklyAllowance = wage != null && hasJuhyu ? (weeklyHours / 5) * wage : 0;
-  const monthlyPay = wage != null ? Math.round((wage * weeklyHours + weeklyAllowance) * 4.345) : null;
   const belowMinimum = wage != null && wage < MINIMUM_WAGE_2026;
+
+  // 2026-09-12: 종전 "예상 월급"은 4대보험·세금·가산수당을 전부 뺀 값이라, 사장님이 그대로 주면
+  //  공제를 안 한 셈이 되고 승인된 연장·야간 수당은 누락됐다. 이제 calculatePayroll 로 계산한다.
+  const payrollPeriod = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }).slice(0, 7);
+  const approvedHours = (type: string) =>
+    approvedAllowances
+      .filter((a) => a.member_user_id === member.member_user_id && a.status === "approved"
+        && a.allowance_type === type && a.work_date.startsWith(payrollPeriod))
+      .reduce((sum, a) => sum + a.minutes / 60, 0);
+
+  const tenureDays = (() => {
+    const base = member.hire_date ?? (member.joined_at ? member.joined_at.slice(0, 10) : null);
+    if (!base) return undefined;
+    const d = new Date(base);
+    if (Number.isNaN(d.getTime())) return undefined;
+    return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86_400_000));
+  })();
+
+  const payroll = wage != null && wage > 0 && weeklyHours > 0
+    ? calculatePayroll({
+        period: payrollPeriod,
+        headcount: Math.max(1, headcount),
+        hourlyWage: wage,
+        contractedWeeklyHours: weeklyHours,
+        overtimeHours: approvedHours("overtime"),
+        nightHours: approvedHours("night"),
+        holidayHours: approvedHours("holiday"),
+        tenureDays,
+      })
+    : null;
 
   // 퇴직금 자격 — SSOT(labor-law-checks) 재사용, 직원 화면과 동일 판정 (2026-07-13)
   const severanceHire = member.hire_date ?? (member.joined_at ? member.joined_at.slice(0, 10) : undefined);
@@ -300,23 +336,40 @@ export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClos
               {ko ? `⚠ 2026 최저시급 ${MINIMUM_WAGE_2026.toLocaleString()}원 미달` : `Below 2026 minimum wage`}
             </div>
           )}
-          <div style={{ display: "flex", gap: 6 }}>
-            <div style={statCell}>
-              <div style={statVal}>{weeklyMin > 0 ? fmtDur(weeklyMin, ko) : "—"}</div>
-              <div style={statLabel}>{ko ? "주 근무 (근무표)" : "Weekly"}</div>
+          {payroll ? (
+            <div style={{ display: "grid", gap: 2 }}>
+              {[
+                [ko ? "주 근무 (근무표)" : "Weekly", fmtDur(weeklyMin, ko), false],
+                [ko ? "지급 총액" : "Gross", `${payroll.grossPay.toLocaleString()}원`, false],
+                [ko ? "공제 총액" : "Deductions", `−${payroll.deductionTotal.toLocaleString()}원`, false],
+                [ko ? "실지급액" : "Net pay", `${payroll.netPay.toLocaleString()}원`, true],
+              ].map(([label, value, big]) => (
+                <div key={String(label)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 40 }}>
+                  <span style={{ fontSize: 15, color: MUTED }}>{label}</span>
+                  <span style={{ fontSize: big ? 20 : 17, fontWeight: big ? 700 : 400, color: INK, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPayslipOpen(true)}
+                style={{
+                  marginTop: 8, width: "100%", minHeight: 50, borderRadius: 10, border: "none",
+                  background: MIDNIGHT, color: "#fff", fontSize: 16, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                {ko ? "임금명세서 보기" : "View payslip"}
+              </button>
+              {payroll.warnings.some((w) => w.level === "violation") && (
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#b64c4c", marginTop: 6 }}>
+                  {ko ? "바로잡아야 할 항목이 있습니다 — 명세서에서 확인하세요." : "Violations found — see payslip."}
+                </div>
+              )}
             </div>
-            <div style={statCell}>
-              <div style={statVal}>{wage != null && weeklyMin > 0 ? (hasJuhyu ? `${Math.round(weeklyAllowance).toLocaleString()}원` : ko ? "해당 없음" : "N/A") : "—"}</div>
-              <div style={statLabel}>{ko ? "주휴수당 (주 15h↑)" : "Weekly holiday pay"}</div>
+          ) : (
+            <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5 }}>
+              {ko ? "시급과 근무표를 등록하면 지급액·공제액을 계산해 드립니다." : "Set an hourly wage and schedule to see the breakdown."}
             </div>
-            <div style={statCell}>
-              <div style={statVal}>{monthlyPay != null && weeklyMin > 0 ? `${monthlyPay.toLocaleString()}원` : "—"}</div>
-              <div style={statLabel}>{ko ? "예상 월급" : "Est. monthly"}</div>
-            </div>
-          </div>
-          <div style={{ fontSize: 10.5, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>
-            {ko ? "근무표 기준 추정치 (주휴수당 포함, 4대보험·세금 미반영). 시급·근무표가 바뀌면 자동 재계산." : "Estimate based on schedule, incl. weekly holiday pay."}
-          </div>
+          )}
         </div>
 
         {/* ②-b 퇴직금 자격 — 직원 화면과 동일 판정 (2026-07-13) */}
@@ -438,6 +491,17 @@ export function StaffDetailModal({ member, rules, leaves, ko, categoryId, onClos
           )}
         </div>
       </div>
+
+      {/* 임금명세서 — 근기법 §48② 교부 의무. 계산은 calculatePayroll SSOT. */}
+      {payslipOpen && payroll && (
+        <OverlayModal label={ko ? "임금명세서" : "Payslip"} onClose={() => setPayslipOpen(false)} maxWidth={640}>
+          <PayslipView
+            memberName={member.name}
+            result={payroll}
+            paydayLabel={paydayDay != null ? (ko ? `매월 ${paydayDay}일` : `Day ${paydayDay}`) : undefined}
+          />
+        </OverlayModal>
+      )}
     </div>
   );
 }
