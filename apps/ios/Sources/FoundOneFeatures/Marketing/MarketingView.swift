@@ -188,7 +188,6 @@ public struct MarketingView: View {
                             )
                         }
 
-                        Color.clear.frame(height: 110)
                     }
                     .padding(.horizontal, BUSpacing.screenMargin)
                 }
@@ -447,6 +446,7 @@ public struct MarketingView: View {
         Task {
             let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
             await repo.setPlayDone(weekKey: wk, title: title, done: willDo)
+            if willDo { MarketingRepository.logEngagement(event: "play_done") } // 실행까지 갔는지 (웹과 동일 신호)
         }
     }
 

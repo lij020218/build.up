@@ -64,7 +64,7 @@ struct MarketingMemeLane: View {
                 .font(.system(size: 17, weight: .bold))
                 .tracking(-0.34)
                 .foregroundStyle(BUColor.ink)
-            Text("마케터들이 보는 트렌드 매체에서 매일 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫.")
+            Text("마케터들이 보는 트렌드 매체(고구마팜·캐릿 등)의 최신 글에서 자동 수집 — 원본과 발행일만 보여드려요. 적용은 사장님 몫.")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
