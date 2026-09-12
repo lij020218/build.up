@@ -8,6 +8,10 @@ import {
   formatFranchiseCost,
   getScoreColor,
   getScoreLabel,
+  franchiseLogoWebPath,
+  franchiseMonogram,
+  franchiseTint,
+  closureBand,
 } from "@foundone/shared";
 import { FranchiseDetailModal } from "./FranchiseDetailModal";
 import { Search, ChevronRight, ChevronDown, AlertTriangle } from "lucide-react";
@@ -122,46 +126,68 @@ export function FranchiseView() {
         })}
       </div>
 
-      {/* Brand rows — 컴팩트 한 줄(브랜드 · 카테고리 · 종합 · 창업비용 · 폐점률 + chevron).
-          2026-08-19 밀도 정리: 4 지표 그리드 + 5 점수 바는 FranchiseDetailModal 에 이미 있음 → 행에서 제거. iOS 동일 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {visible.map(fb => {
+      {/* Brand rows — 2026-09-12 재디자인: 행마다 떠 있던 카드 → **하나의 그룹 리스트**(애플 설정/앱스토어 패턴).
+          행 = 브랜드 아이콘 타일 + 상호 + (업종 · 창업비용 · 폐점률) + 종합점수. iOS FranchiseBrandRow 와 1:1. */}
+      <style>{`.fr-row:hover{background:rgba(25,25,112,0.035)}.fr-row:active{background:rgba(25,25,112,0.06)}`}</style>
+      <div style={listContainerStyle}>
+        {visible.map((fb, i) => {
           const overall = computeOverallScore(fb.scores);
           const isKftc = fb.tier === "kftc";
           const catLabel = categories.find(c => c.id === fb.categoryId)?.label ?? fb.categoryId;
-          const closureColor = fb.closureRate >= 20 ? "#b64c4c" : fb.closureRate >= 10 ? MIDNIGHT : TEXT_PRIMARY;
+          const tint = franchiseTint(fb.categoryId);
+          const band = closureBand(fb.closureRate);
+          const closureColor = band === "risk" ? "#b64c4c" : band === "watch" ? "#b8860b" : TEXT_MUTED;
+          const logo = franchiseLogoWebPath(fb.id);
+          const name = fb.name[language];
 
           return (
-            <button
-              key={fb.id}
-              type="button"
-              onClick={() => setSelectedBrandId(fb.id)}
-              className="bento-card"
-              style={rowStyle}
-            >
-              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.015em", color: TEXT_PRIMARY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {fb.name[language]}
-                  </span>
-                  <span style={rowChipStyle}>{catLabel}</span>
-                  {isKftc && (
-                    <span title={ko ? "공정위 공개데이터 자동 수록 · 점수는 실데이터 산출" : "Auto-listed from KFTC open data"} style={{ ...rowChipStyle, color: "rgba(25,25,112,0.7)" }}>
-                      {ko ? "공정위" : "KFTC"}
+            <div key={fb.id}>
+              {i > 0 && <div style={separatorStyle} />}
+              <button type="button" className="fr-row" onClick={() => setSelectedBrandId(fb.id)} style={rowStyle}>
+                {/* 브랜드 아이콘 — 공식 로고(번들) 또는 업종 색 모노그램 */}
+                <span style={{ ...tileStyle, background: logo ? "#fff" : tint.bg }}>
+                  {logo
+                    ? <img src={logo} alt="" aria-hidden loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 6 }} />
+                    : <span style={{ fontSize: franchiseMonogram(name).length > 1 ? 15 : 19, fontWeight: 700, letterSpacing: "-0.03em", color: tint.fg }}>
+                        {franchiseMonogram(name)}
+                      </span>}
+                </span>
+
+                <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+                    <span style={{ fontSize: 15.5, fontWeight: 650, letterSpacing: "-0.02em", color: TEXT_PRIMARY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {name}
                     </span>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 12, fontSize: 11.5, color: TEXT_MUTED, flexWrap: "wrap" }}>
-                  <span>{ko ? "창업비용" : "Startup"} <strong style={{ color: TEXT_PRIMARY, fontWeight: 700 }}>{fb.startupCostWon > 0 ? formatFranchiseCost(fb.startupCostWon) : "—"}</strong></span>
-                  <span>{ko ? "폐점률" : "Closure"} <strong style={{ color: closureColor, fontWeight: 700 }}>{fb.closureRate > 0 ? `${fb.closureRate}%` : "—"}</strong></span>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
-                <span style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: getScoreColor(overall) }}>{overall}</span>
-                <span style={{ fontSize: 9, color: "var(--muted)", marginTop: 2 }}>{getScoreLabel(overall, language)}</span>
-              </div>
-              <ChevronRight size={16} strokeWidth={2} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
-            </button>
+                    {isKftc && (
+                      <span title={ko ? "공정위 공개데이터 자동 수록 · 점수는 실데이터 산출" : "Auto-listed from KFTC open data"} style={kftcBadgeStyle}>
+                        {ko ? "공정위" : "KFTC"}
+                      </span>
+                    )}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+                    <span style={{ fontWeight: 650, color: tint.fg, flexShrink: 0 }}>{catLabel}</span>
+                    <span style={dotStyle} />
+                    <span style={{ color: TEXT_MUTED, fontVariantNumeric: "tabular-nums" }}>
+                      {fb.startupCostWon > 0 ? formatFranchiseCost(fb.startupCostWon) : (ko ? "비용 미공개" : "Cost N/A")}
+                    </span>
+                    {fb.closureRate > 0 && (
+                      <>
+                        <span style={dotStyle} />
+                        <span style={{ color: closureColor, fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>
+                          {ko ? "폐점" : "Closure"} {fb.closureRate}%
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </span>
+
+                <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
+                  <span style={{ fontSize: 18, fontWeight: 750, lineHeight: 1, letterSpacing: "-0.03em", color: getScoreColor(overall), fontVariantNumeric: "tabular-nums" }}>{overall}</span>
+                  <span style={{ fontSize: 9.5, fontWeight: 600, color: TEXT_SUBTLE, marginTop: 3 }}>{getScoreLabel(overall, language)}</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={2} style={{ color: "rgba(15,23,42,0.28)", flexShrink: 0 }} />
+              </button>
+            </div>
           );
         })}
       </div>
@@ -258,28 +284,63 @@ const subtitleStyle: React.CSSProperties = {
   maxWidth: 640,
 };
 
+/** 목록 전체를 감싸는 하나의 카드 — 행은 그 안에서 헤어라인으로 나뉜다(애플 그룹 리스트). */
+const listContainerStyle: React.CSSProperties = {
+  borderRadius: 18,
+  border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
+  background: "white",
+  overflow: "hidden",
+};
+
+const separatorStyle: React.CSSProperties = {
+  height: 1,
+  background: "rgba(15,23,42,0.07)",
+  marginLeft: 70,   // 타일(44) + 좌여백(14) + 간격(12) — 텍스트 기준 들여쓰기
+};
+
 const rowStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 12,
-  padding: "12px 14px",
-  borderRadius: 14,
-  border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
-  background: "white",
+  padding: "11px 14px",
+  border: "none",
+  background: "transparent",
   cursor: "pointer",
   textAlign: "left" as const,
-  transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+  transition: "background 0.14s ease",
   fontFamily: "inherit",
   width: "100%",
+  minHeight: 64,
 };
 
-const rowChipStyle: React.CSSProperties = {
-  fontSize: 10,
-  fontWeight: 600,
-  padding: "2px 7px",
+/** 브랜드 아이콘 타일 — 로고 또는 모노그램 */
+const tileStyle: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: 11,
+  flexShrink: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+  border: "1px solid rgba(15,23,42,0.06)",
+};
+
+const dotStyle: React.CSSProperties = {
+  width: 2.5,
+  height: 2.5,
   borderRadius: 999,
-  background: "rgba(25,25,112,0.06)",
-  color: MIDNIGHT,
+  background: "rgba(15,23,42,0.3)",
+  flexShrink: 0,
+};
+
+const kftcBadgeStyle: React.CSSProperties = {
+  fontSize: 9,
+  fontWeight: 700,
+  padding: "1.5px 5px",
+  borderRadius: 999,
+  background: "rgba(15,23,42,0.05)",
+  color: "rgba(15,23,42,0.5)",
   whiteSpace: "nowrap",
   flexShrink: 0,
 };
