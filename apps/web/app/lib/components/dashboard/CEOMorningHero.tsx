@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useEffect, useState, useRef } from "react";
-import { requestHomeFocus } from "./homeSegments";
+import { dispatchHeroCta } from "./heroCta";
+import { ownerAddress } from "@foundone/shared";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, MoveRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Settings2, Check } from "lucide-react";
@@ -124,7 +125,10 @@ export function CEOMorningHero({ d }: Props) {
     hour < 5 ? "night" : hour < 11 ? "morning" : hour < 17 ? "afternoon" : hour < 22 ? "evening" : "night";
 
   const greeting = useMemo(() => {
-    const name = (d.storeName as string) || (ko ? "사장님" : "Founder");
+    // 2026-09-12 사장님 지시("김사장이라 하지 말고 님자를 꼭 붙여") — 규칙은 shared SSOT 한 곳.
+    //  종전에는 사람이 아니라 **상호**를 불렀다("성심당 본점, 오늘 정리할 때입니다").
+    //  인사말은 사람에게 하는 말이므로 이름 + "님", 이름이 없으면 호칭으로 떨어진다.
+    const name = ownerAddress(d.userName, { ko });
     if (ko) {
       switch (period) {
         case "morning": return { line1: `좋은 아침입니다, ${name}.`, line2: "오늘의 가장 중요한 숫자부터 보겠습니다." };
@@ -139,7 +143,7 @@ export function CEOMorningHero({ d }: Props) {
       case "evening": return { line1: `${name}, time to reflect.`, line2: "One last look so tomorrow goes better." };
       default: return { line1: `${name}.`, line2: "Worth a quick check-in even now." };
     }
-  }, [period, d.storeName, ko]);
+  }, [period, d.userName, ko]);
 
   const PeriodIcon = period === "morning" ? Sunrise : period === "afternoon" ? Sun : period === "evening" ? Sunrise : Moon;
 
@@ -536,21 +540,6 @@ export function CEOMorningHero({ d }: Props) {
   // CTA 클릭 핸들러 — briefing.ctaTarget(인사이트가 가리키는 실제 카드)에 따라 디스패치.
   // 매출 입력이 목적이면 input에 자동 포커스, 그 외엔 카드를 1.1초간 ring 하이라이트로 강조.
   // 모든 분기에서 fallback 보장 — 클릭이 무반응으로 끝나지 않게 (거짓 기능 금지).
-  const focusBySelector = (selector: string, opts: { focusInput?: boolean } = {}) => {
-    const el = document.querySelector<HTMLElement>(selector);
-    // 홈 세그먼트 IA (2026-08-19): 카드가 다른 탭(운영·더보기)에 있으면 DOM 에 없다 → 탭 전환 + 스크롤 요청.
-    if (!el) return requestHomeFocus(selector, opts);
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (opts.focusInput) {
-      window.setTimeout(() => {
-        const input = el.querySelector<HTMLInputElement>('input[inputmode="numeric"], input[type="number"], input[type="text"]');
-        input?.focus();
-      }, 450);
-    }
-    flashHighlight(el);
-    return true;
-  };
-
   const handleBriefingCta = () => {
     // 2026-05-27 보안 (P1-5): 프로덕션 console.info 제거. 디버그는 dev 만.
     if (process.env.NODE_ENV !== "production") {
@@ -560,71 +549,7 @@ export function CEOMorningHero({ d }: Props) {
         ctaLabel: ko ? briefing.ctaKo : briefing.ctaEn,
       });
     }
-    let handled = false;
-    switch (briefing.ctaTarget) {
-      case "sales":
-        handled = focusBySelector("[data-sales-input]", { focusInput: true });
-        break;
-      case "users":
-        handled = focusBySelector("[data-user-activity]")
-          || focusBySelector("[data-first-customers-card]");
-        break;
-      case "cashflow":
-        handled = focusBySelector("[data-cashflow-hero]");
-        break;
-      case "costs":
-        // 현재 surface 에 비용 관련 카드(P&L·구조 시각화)가 보이면 그쪽 우선.
-        // 못 찾으면 analytics(내 가게) surface 로 전환 + 비용 *관리* 카드로 정확 스크롤.
-        handled = focusBySelector("[data-cost-structure]")
-          || focusBySelector("[data-pl-hero]");
-        if (!handled && typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
-            detail: { surface: "analytics", selector: "[data-cost-management]" },
-          }));
-          handled = true;
-        }
-        break;
-      case "inventory":
-        // 재료·메뉴·재고·재주문 → 재고 관리 카드 (사용자 지침: "메뉴 관련이면 재고 관리 카드")
-        handled = focusBySelector("[data-inventory-card]");
-        break;
-      case "team":
-        // 직원·노무·4대보험·퇴직금 → 팀 관리 카드
-        handled = focusBySelector("[data-team-card]");
-        break;
-      case "primeCost":
-        // 프라임코스트 합계 점검 → Prime Cost 카드 (외식·카페).
-        // 없으면 analytics surface 의 비용 관리 카드로 폴백.
-        handled = focusBySelector("[data-prime-cost-card]");
-        if (!handled && typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
-            detail: { surface: "analytics", selector: "[data-cost-management]" },
-          }));
-          handled = true;
-        }
-        break;
-      case "operations":
-        handled = focusBySelector("[data-ops-rituals]");
-        break;
-      case "marketing":
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
-            detail: { surface: "marketing" },
-          }));
-          handled = true;
-        }
-        break;
-    }
-    // 타깃 카드를 못 찾았다고 무조건 매출로 보내지 않는다. ctaTarget 별 정직 fallback.
-    if (!handled) {
-      if (briefing.ctaTarget === "sales") {
-        handled = focusBySelector("[data-sales-input]", { focusInput: true });
-      } else {
-        // 마지막 안전망 — 페이지 상단으로 스크롤. 매출로 떨어뜨리지 않음.
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        handled = true;
-      }
-    }
+    dispatchHeroCta(briefing);
   };
 
   const briefingUrgent = briefing.tone === "crisis" || briefing.tone === "warning";
@@ -1365,19 +1290,6 @@ export function CEOMorningHero({ d }: Props) {
 
 // ─── Helpers ───
 // 타깃 카드를 1.2초간 미드나이트 ring으로 강조 — 사용자가 "어디로 갔는지" 즉시 인지.
-function flashHighlight(el: HTMLElement) {
-  const prevTransition = el.style.transition;
-  const prevBoxShadow = el.style.boxShadow;
-  el.style.transition = "box-shadow 0.35s ease";
-  el.style.boxShadow = "0 0 0 3px rgba(25,25,112,0.32), 0 12px 36px -8px rgba(25,25,112,0.28)";
-  window.setTimeout(() => {
-    el.style.boxShadow = prevBoxShadow;
-    window.setTimeout(() => {
-      el.style.transition = prevTransition;
-    }, 400);
-  }, 1100);
-}
-
 function fmtKrw(n: number, ko: boolean): string {
   if (!isFinite(n) || isNaN(n)) return "—";
   if (n >= 100_000_000) return ko ? `${(n / 100_000_000).toFixed(1)}억원` : `₩${(n / 100_000_000).toFixed(1)}B`;

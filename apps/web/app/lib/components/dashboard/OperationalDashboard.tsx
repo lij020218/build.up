@@ -14,6 +14,7 @@ import { Tier1Hero } from "./sections/Tier1Hero";
 import { FeatureNudgeSection } from "./FeatureNudgeCard";
 import { TodaySummarySection } from "./sections/TodaySummarySection";
 import { TodayManagementSection } from "./sections/TodayManagementSection";
+import { HomeTeamSection } from "./sections/HomeTeamSection";
 import { Tier1DailyHub } from "./sections/Tier1DailyHub";
 import { Tier1_5Coaching } from "./sections/Tier1_5Coaching";
 import { Tier2WeeklyPulse } from "./sections/Tier2WeeklyPulse";
@@ -213,6 +214,11 @@ export default function OperationalDashboard({ d }: Props) {
               briefingExpanded={showFullBriefing}
               onToggleBriefing={() => setShowFullBriefing((v) => !v)}
             />
+          </div>
+
+          {/* 직원 — 직원이 있을 때만 요약 바로 아래로 승격 (2026-09-12, iOS 동일). 0명이면 렌더 안 함. */}
+          <div className="dash-stagger-item" style={nextStaggerStyle()}>
+            <HomeTeamSection d={d} ko={ko} />
           </div>
 
           {/* Tier 1 — 긴급 AlertStrip (전체 AI 브리핑은 오늘의 요약 카드에서 펼침) */}
