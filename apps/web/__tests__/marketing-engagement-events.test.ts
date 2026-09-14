@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
  */
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROUTE = join(HERE, "..", "app", "api", "ai", "marketing", "engagement", "route.ts");
-const MIGRATION = join(HERE, "..", "..", "..", "supabase", "migrations", "20260912_000001_marketing_engagement_cardnews_events.sql");
+const MIGRATION = join(HERE, "..", "..", "..", "supabase", "migrations", "20260912000001_marketing_engagement_cardnews_events.sql");
 const CARDNEWS = join(HERE, "..", "app", "lib", "components", "surfaces", "CardNewsStudio.tsx");
 const SURFACE = join(HERE, "..", "app", "lib", "components", "surfaces", "MarketingSurface.tsx");
 const IOS_CARDNEWS = join(HERE, "..", "..", "ios", "Sources", "FoundOneFeatures", "Marketing", "CardNewsStudioCard.swift");

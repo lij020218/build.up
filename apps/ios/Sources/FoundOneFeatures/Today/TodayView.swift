@@ -103,6 +103,8 @@ public struct TodayView: View {
     /// 홈 직원 구획용 승인 대기 건수 (연차·수당). 직원이 있을 때만 조회한다.
     @State private var pendingLeaveCount = 0
     @State private var pendingAllowanceCount = 0
+    /// 오늘 근무 명단 — 판정은 BUTodayRoster(웹 today-roster.ts 미러)가 한다.
+    @State private var todayRoster: [BUTodayRosterEntry] = []
     /// storeInfo 변경 감지용 — storeInfo 는 plain let 이라 자체 관찰이 안 되므로
     /// objectWillChange 를 구독해 이 값을 bump → 홈 카드(재고·직원·고객) 즉시 재렌더.
     @State private var storeRevision = 0
@@ -331,13 +333,33 @@ public struct TodayView: View {
         )
 
         // ①-b 직원 — **직원이 있을 때만** 히어로 바로 아래로 승격 (2026-09-12).
-        //   승인 대기가 있으면 그것이 첫 줄 — 사장님이 오늘 눌러야 할 것이기 때문.
+        //   2026-09-14: "함께 일하는 사람 N명" 한 줄 → **오늘 출근 카드 줄**.
+        //   숫자는 오늘 무엇을 할지 알려주지 않는다. 아침에 필요한 건 누가 몇 시에 오는가와
+        //   왔는가뿐이라, 사람당 카드 하나를 이른 시간부터 왼쪽에 놓는다.
         if hasTeam {
-            BUListSection("직원", actionLabel: "관리", action: { showTeamSheet = true }) {
-                if demoPendingLeave + demoPendingAllowance > 0 {
-                    BUListRow.link("승인 대기", subtitle: pendingSummary) { showTeamSheet = true }
+            VStack(alignment: .leading, spacing: 10) {
+                BUSectionTitle(rosterTitle, actionLabel: "관리", action: { showTeamSheet = true })
+
+                if displayRoster.isEmpty {
+                    // 근무표가 아직 없을 수도 있다 — 0명이라 단정하지 않고 할 일을 준다.
+                    BUListSection {
+                        BUListRow.link(
+                            "오늘 근무 예정 없음",
+                            subtitle: "근무표를 등록하면 여기에 출근 현황이 보입니다"
+                        ) { showTeamSheet = true }
+                    }
+                } else {
+                    // 가로 줄은 화면 끝까지 흐르게 — 부모의 좌우 여백을 상쇄한다.
+                    //  카드가 가장자리에서 잘려 보여야 "옆에 더 있다"가 읽힌다.
+                    TodayRosterStrip(entries: displayRoster) { showTeamSheet = true }
+                        .padding(.horizontal, -BUSpacing.screenMargin)
                 }
-                BUListRow.value("함께 일하는 사람", "\(teamHeadcount)명")
+
+                if demoPendingLeave + demoPendingAllowance > 0 {
+                    BUListSection {
+                        BUListRow.link("승인 대기", subtitle: pendingSummary) { showTeamSheet = true }
+                    }
+                }
             }
         }
 
@@ -787,8 +809,64 @@ public struct TodayView: View {
         }
         async let leaves = try? repo.leaveRequests()
         async let allowances = try? repo.allowanceRequests()
-        pendingLeaveCount = (await leaves ?? []).filter { $0.status == "pending" }.count
+        async let rules = try? repo.scheduleRules()
+        async let attendance = try? repo.ownerTodayAttendance()
+
+        let today = BUTodayRoster.localDateKey()
+        async let exceptions = try? repo.ownerMonthExceptions(monthStart: today, monthEnd: today)
+
+        let loadedLeaves = await leaves ?? []
+        pendingLeaveCount = loadedLeaves.filter { $0.status == "pending" }.count
         pendingAllowanceCount = (await allowances ?? []).filter { $0.status == "pending" }.count
+
+        todayRoster = Self.buildRoster(
+            today: today,
+            members: invitedStaff,
+            rules: await rules ?? [],
+            exceptions: await exceptions ?? [],
+            attendance: await attendance ?? [],
+            leaves: loadedLeaves
+        )
+    }
+
+    /// Repository 타입 → SSOT 입력으로 변환 후 판정. 판정 자체는 BUTodayRoster 가 한다.
+    private static func buildRoster(
+        today: String,
+        members: [TeamMember],
+        rules: [TeamScheduleRule],
+        exceptions: [OwnerScheduleException],
+        attendance: [OwnerTodayAttendance],
+        leaves: [TeamLeaveRequest]
+    ) -> [BUTodayRosterEntry] {
+        let weekday = BUTodayRoster.weekday(of: today)
+        let inputs = members.filter { !$0.hasLeft }.map { m in
+            BURosterMemberInput(
+                memberUserId: m.memberUserId.uuidString,
+                name: m.name,
+                rules: rules.filter { $0.memberUserId == m.memberUserId },
+                exceptions: exceptions.filter { $0.memberUserId == m.memberUserId }
+            )
+        }
+        return BUTodayRoster.build(
+            dateStr: today,
+            weekday: weekday,
+            members: inputs,
+            attendance: attendance.map {
+                BURosterAttendance(
+                    memberUserId: $0.memberUserId.uuidString,
+                    clockInAt: $0.clockInAt,
+                    clockOutAt: $0.clockOutAt
+                )
+            },
+            leaves: leaves.map {
+                BURosterLeave(
+                    memberUserId: $0.memberUserId.uuidString,
+                    startDate: $0.startDate,
+                    endDate: $0.endDate,
+                    status: $0.status
+                )
+            }
+        )
     }
 
     /// 시뮬 캡처 전용 — 직원 구획을 눈으로 확인하기 위한 가짜 인원. BU_DEMO_ALLOW 이중 가드.
@@ -810,6 +888,50 @@ public struct TodayView: View {
 
     /// 화면에 쓰는 인원 수 — 초대 직원과 수동 급여 명단 중 큰 쪽(두 모집단이 별개다).
     private var teamHeadcount: Int { max(max(invitedStaff.count, realEmployees.count), demoTeamSize) }
+
+    /// 홈에 그릴 오늘 명단 — 휴무자는 빼고(오늘과 무관), 연차는 남긴다(왜 없는지의 답).
+    private var displayRoster: [BUTodayRosterEntry] {
+        let base = demoRoster ?? todayRoster
+        return BUTodayRoster.visibleForHome(base)
+    }
+
+    /// "오늘 출근 · 3명 중 1명" — 제목이 곧 요약이라 따로 줄을 쓰지 않는다.
+    private var rosterTitle: String {
+        let expected = BUTodayRoster.expectedCount(displayRoster)
+        guard expected > 0 else { return "오늘 출근" }
+        return "오늘 출근 · \(expected)명 중 \(BUTodayRoster.clockedInCount(displayRoster))명"
+    }
+
+    /// 시뮬 캡처 전용 — 근무표가 있는 실계정이 아직 없어 양성 케이스를 볼 방법이 이것뿐이다.
+    ///  BU_DEMO_ALLOW 이중 가드. 실계정에서는 항상 nil.
+    private var demoRoster: [BUTodayRosterEntry]? {
+        #if DEBUG
+        guard demoTeamSize > 0 else { return nil }
+        let today = BUTodayRoster.localDateKey()
+        // 실제 판정과 같은 순서로 둔다 — 이른 시간이 왼쪽, 시간 없는 연차가 맨 뒤.
+        let plan: [(name: String, start: String, end: String, status: BUTodayShiftStatus)] = [
+            ("최서준", "07:00:00", "13:00:00", .done),
+            ("김미소", "09:00:00", "15:00:00", .working),
+            ("정다은", "13:00:00", "21:00:00", .scheduled),
+            ("박준영", "15:00:00", "22:00:00", .scheduled),
+            ("이하늘", "11:00:00", "17:00:00", .leave),
+        ]
+        return plan.prefix(demoTeamSize).enumerated().map { i, p in
+            BUTodayRosterEntry(
+                memberUserId: "demo-\(i)",
+                name: p.name,
+                status: p.status,
+                startTime: p.status == .leave ? nil : p.start,
+                endTime: p.status == .leave ? nil : p.end,
+                startMinutes: p.status == .leave ? nil : BUWorkSchedule.timeToMinutes(p.start),
+                clockInAt: p.status == .working || p.status == .done ? "\(today)T00:02:00Z" : nil,
+                clockOutAt: p.status == .done ? "\(today)T09:05:00Z" : nil
+            )
+        }
+        #else
+        return nil
+        #endif
+    }
 
     /// 표시용 대기 건수 — 데모 모드면 예시 값(연차 2·수당 1).
     private var demoPendingLeave: Int { demoTeamSize > 0 ? max(pendingLeaveCount, 2) : pendingLeaveCount }
