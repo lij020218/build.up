@@ -51,7 +51,7 @@ export function CardSkeleton({ height = "180px" }: { height?: string }) {
   return (
     <div
       style={{
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         padding: "24px",
         background: "rgba(255,255,255,0.6)",
         border: "1px solid rgba(0,0,0,0.04)",

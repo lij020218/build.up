@@ -26,9 +26,16 @@ public struct BUStageContentRenderer: View {
     @State private var checklist: Set<String> = []        // taxChecklist 체크된 id
     @State private var axisChecks: Set<String> = []       // axisChecklist(permit-check 3축) 체크된 task id
     @State private var gateChecks: Set<String> = []       // gateChecklist(contract-review 9대 조항) 체크된 item id
+    @State private var prepChecks: Set<String> = []       // prepChecklist(app-compliance 준비 확인) — 게이팅 없음
 
     public let content: BUStageContent
-    public init(content: BUStageContent) { self.content = content }
+    /// 임베디드 모드 — 다른(수기) 단계 안에 이 콘텐츠의 **한 페이지 섹션만** 렌더(쉘·네비·wrapup 없음).
+    ///   웹 미러: StageContentEmbeddedPage(content, pageIndex). CompanySetupStageView 가 app-compliance 를 이렇게 붙인다.
+    public let embeddedPage: Int?
+    public init(content: BUStageContent, embeddedPage: Int? = nil) {
+        self.content = content
+        self.embeddedPage = embeddedPage
+    }
 
     /// 단일 선택 ref → advance inputs 의 정식 키(StageInputProjector 가 컬럼 투영).
     private static let inputKeyForRef: [String: String] = [
@@ -152,6 +159,11 @@ public struct BUStageContentRenderer: View {
         if hasGateChecklist {
             gateChecks = Set(d.stringArray(forKey: defaultsKey("gateChecks")) ?? [])
         }
+        prepChecks = Set(d.stringArray(forKey: defaultsKey("prepChecks")) ?? [])
+    }
+    private func setPrepChecks(_ ids: Set<String>) {
+        prepChecks = ids
+        UserDefaults.standard.set(Array(ids), forKey: defaultsKey("prepChecks"))
     }
     private func setAxisChecks(_ ids: Set<String>) {
         axisChecks = ids
@@ -208,6 +220,26 @@ public struct BUStageContentRenderer: View {
     }
 
     public var body: some View {
+        if let embeddedPage {
+            embeddedBody(pageIndex: embeddedPage)
+        } else {
+            shellBody
+        }
+    }
+
+    /// 임베디드 — 섹션만(호스트 위저드가 네비·쉘·게이팅 소유).
+    private func embeddedBody(pageIndex: Int) -> some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            if let p = content.pages[safe: pageIndex] {
+                ForEach(Array(p.sections.enumerated()), id: \.offset) { _, section in
+                    sectionView(section, pageId: p.id)
+                }
+            }
+        }
+        .onAppear { loadInteractiveState() }
+    }
+
+    private var shellBody: some View {
         BUStageShell(
             stageId: content.stageId,
             title: content.shell.title,
@@ -301,9 +333,205 @@ public struct BUStageContentRenderer: View {
             gateChecklistSection(eyebrow: eyebrow, subtitle: subtitle, items: items, doneNote: doneNote)
         case let .noteList(severity, title, items):
             noteListSection(severity: severity, title: title, items: items)
+        case let .glossary(eyebrow, subtitle, terms):
+            glossarySection(eyebrow: eyebrow, subtitle: subtitle, terms: terms)
+        case let .dependencyChain(eyebrow, subtitle, nodes):
+            dependencyChainSection(eyebrow: eyebrow, subtitle: subtitle, nodes: nodes)
+        case let .compareTable(eyebrow, subtitle, columns, rows, footnote):
+            compareTableSection(eyebrow: eyebrow, subtitle: subtitle, columns: columns, rows: rows, footnote: footnote)
+        case let .copyTemplate(eyebrow, subtitle, title, lines, footnote):
+            BUCopyTemplateCard(eyebrow: eyebrow, subtitle: subtitle, title: title, lines: lines, footnote: footnote)
+        case let .prepChecklist(eyebrow, subtitle, items, doneNote):
+            prepChecklistSection(eyebrow: eyebrow, subtitle: subtitle, items: items, doneNote: doneNote)
         case .unsupported:
             EmptyView()
         }
+    }
+
+    // MARK: app-compliance 섹션 (glossary · dependencyChain · compareTable · prepChecklist)
+
+    private func glossarySection(eyebrow: String, subtitle: String?, terms: [BUStageContent.GlossaryTerm]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(eyebrow)
+                if let subtitle {
+                    Text(subtitle).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(Array(terms.enumerated()), id: \.offset) { i, t in
+                    if i > 0 { Divider().opacity(0.5) }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(t.term).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                        Text(t.meaning).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if t.whereLabel != nil || t.format != nil {
+                            VStack(alignment: .leading, spacing: 4) {
+                                if let w = t.whereLabel { glossaryChip(prefix: "어디서", text: w, tinted: true) }
+                                if let f = t.format { glossaryChip(prefix: "형식", text: f, tinted: false) }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    private func glossaryChip(prefix: String, text: String, tinted: Bool) -> some View {
+        Text("\(prefix) · \(text)")
+            .font(.system(size: 11.5, weight: .semibold))
+            .foregroundStyle(tinted ? BUColor.midnight : BUColor.inkSecondary)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background((tinted ? BUColor.midnight : BUColor.ink).opacity(tinted ? 0.08 : 0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func dependencyChainSection(eyebrow: String, subtitle: String?, nodes: [BUStageContent.DependencyNode]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(eyebrow)
+                if let subtitle {
+                    Text(subtitle).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(Array(nodes.enumerated()), id: \.offset) { i, n in
+                    let isLast = i == nodes.count - 1
+                    HStack(alignment: .top, spacing: BUSpacing.sm) {
+                        VStack(spacing: 4) {
+                            ZStack {
+                                Circle().fill(BUColor.midnight).frame(width: 30, height: 30)
+                                Image(systemName: Self.sfSymbol(n.icon ?? "arrowRight")).font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                            }
+                            if !isLast {
+                                Rectangle().fill(BUColor.midnight.opacity(0.18)).frame(width: 2).frame(minHeight: 18)
+                            }
+                        }
+                        .frame(width: 30)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(n.label).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(n.detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if let blocks = n.blocks {
+                                HStack(alignment: .top, spacing: 6) {
+                                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(BUColor.danger).padding(.top, 2)
+                                    Text("미완이면 → \(blocks)").font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.danger).lineSpacing(2)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.horizontal, 10).padding(.vertical, 7)
+                                .background(BUColor.danger.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(BUColor.danger.opacity(0.16), lineWidth: 1))
+                            }
+                        }
+                        .padding(.bottom, isLast ? 0 : 10)
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+        }
+    }
+
+    private func compareTableSection(eyebrow: String, subtitle: String?, columns: [String], rows: [BUStageContent.CompareRow], footnote: String?) -> some View {
+        // 모바일 폭에서는 표 대신 행 카드(라벨 + 열별 라벨: 값)로 펼친다 — 같은 데이터, 가로 스크롤 없음.
+        let valueColumns = Array(columns.dropFirst())
+        return VStack(alignment: .leading, spacing: BUSpacing.sm) {
+            BUCard(.hero) {
+                VStack(alignment: .leading, spacing: 4) {
+                    BUEyebrow(eyebrow)
+                    if let subtitle {
+                        Text(subtitle).font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            ForEach(rows, id: \.label) { row in
+                BUCard(.card) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(row.label).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                        ForEach(Array(row.cells.enumerated()), id: \.offset) { ci, cell in
+                            let unknown = cell == "미확인"
+                            HStack(alignment: .top, spacing: 8) {
+                                Text(valueColumns[safe: ci] ?? "")
+                                    .font(.system(size: 11.5, weight: .bold)).foregroundStyle(BUColor.inkMuted)
+                                    .frame(width: 96, alignment: .leading)
+                                Text(cell)
+                                    .font(BUFont.bodyCaption)
+                                    .italic(unknown)
+                                    .foregroundStyle(unknown ? BUColor.inkSubtle : BUColor.inkSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 0)
+                            }
+                        }
+                        if let note = row.note {
+                            Text(note).font(.system(size: 11.5)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+            if let footnote {
+                Text(footnote).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 4)
+            }
+        }
+    }
+
+    private func prepChecklistSection(eyebrow: String, subtitle: String?, items: [BUStageContent.GateItem], doneNote: String?) -> some View {
+        let done = items.filter { prepChecks.contains($0.id) }.count
+        let allDone = !items.isEmpty && done == items.count
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                HStack {
+                    BUEyebrow(eyebrow)
+                    Spacer()
+                    Text("\(done)/\(items.count)")
+                        .font(.system(size: 11, weight: .bold)).foregroundStyle(allDone ? .white : BUColor.inkSecondary)
+                        .padding(.horizontal, 8).padding(.vertical, 2)
+                        .background(allDone ? BUColor.success : BUColor.midnight.opacity(0.08), in: Capsule())
+                }
+                if let subtitle {
+                    Text(subtitle).font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(items, id: \.id) { item in
+                    prepCheckRow(item)
+                }
+                if allDone, let doneNote {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success)
+                        Text(doneNote).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }.padding(.top, 4)
+                }
+                Text("준비 확인용 — 단계 통과 조건이 아닙니다").font(.system(size: 11)).foregroundStyle(BUColor.inkSubtle)
+            }
+        }
+    }
+
+    private func prepCheckRow(_ item: BUStageContent.GateItem) -> some View {
+        let isChecked = prepChecks.contains(item.id)
+        return Button {
+            var next = prepChecks
+            if next.contains(item.id) { next.remove(item.id) } else { next.insert(item.id) }
+            setPrepChecks(next)
+        } label: {
+            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                Image(systemName: isChecked ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 18)).foregroundStyle(isChecked ? BUColor.success : BUColor.inkSubtle).padding(.top, 1)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.label).font(BUFont.bodySmall).foregroundStyle(isChecked ? BUColor.ink : BUColor.inkMuted)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    if let detail = item.detail, !isChecked {
+                        Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: 정적 섹션 뷰
@@ -908,6 +1136,10 @@ public struct BUStageContentRenderer: View {
         case "checklist":     return "checklist"
         case "calendar":      return "calendar"
         case "alertTriangle": return "exclamationmark.triangle.fill"
+        case "smartphone":    return "iphone"
+        case "mapPin":        return "mappin.and.ellipse"
+        case "phone":         return "phone.fill"
+        case "globe":         return "globe"
         default:              return "circle.fill"
         }
     }
@@ -987,6 +1219,14 @@ public struct BUStageContentRenderer: View {
             labeledToggle(ref, title: "4대보험 신고 완료 (D+14)")
         case "hiringPayslipDone":
             labeledToggle(ref, title: "급여명세서 자동 발송 셋업")
+        case "dateOffset":
+            BUDateOffsetCard(config: config)
+        case "authChannelPicker":
+            BUAuthChannelPicker(config: config)
+        case "pgPrecheck":
+            BUPgPrecheckCard(config: config)
+        case "docRequestDecoder":
+            BUDocRequestDecoder(config: config)
         default:
             // storeName·docUpload 등 현재 웹 전용 ref → iOS 미구현(후속 이식).
             EmptyView()

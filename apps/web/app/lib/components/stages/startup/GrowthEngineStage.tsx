@@ -95,7 +95,7 @@ export function GrowthEngineStage() {
       {pg === 0 && (
       <>
       <ModePathCard stageId="growth-engine" />
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
           <AlertTriangle size={14} strokeWidth={2.2} color={MIDNIGHT} />
           <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이 단계가 중요한가" : "Why this matters"}</span>
@@ -154,7 +154,7 @@ export function GrowthEngineStage() {
 
       {/* PAGE 1 — 북극성 지표 선택 */}
       {pg === 1 && (
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
@@ -216,7 +216,7 @@ export function GrowthEngineStage() {
 
       {/* PAGE 2 — 주간 성장 리뷰 */}
       {pg === 2 && (
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
@@ -258,7 +258,7 @@ export function GrowthEngineStage() {
 
       {/* PAGE 3 — 리텐션 벤치마크 */}
       {pg === 3 && (
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>

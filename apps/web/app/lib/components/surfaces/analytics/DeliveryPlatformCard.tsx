@@ -111,7 +111,7 @@ export function DeliveryPlatformCard() {
                   const entry = { id: `dlv-${Date.now()}-${preset.name}`, ...preset };
                   saveDeliveryPlatforms([...deliveryPlatforms, entry]);
                 }}
-                style={{ fontSize: "12px", fontWeight: 600, padding: "7px 14px", borderRadius: "20px", border: "1px solid rgba(0,0,0,0.12)", background: "transparent", color: "var(--primary)", cursor: "pointer" }}>
+                style={{ fontSize: "12px", fontWeight: 600, padding: "7px 14px", borderRadius: "var(--card-radius)", border: "1px solid rgba(0,0,0,0.12)", background: "transparent", color: "var(--primary)", cursor: "pointer" }}>
                 + {preset.name}
               </button>
             ))}

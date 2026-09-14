@@ -340,7 +340,7 @@ function ConnectWizard({
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "#fff",
-          borderRadius: "20px",
+          borderRadius: "var(--card-radius)",
           width: "100%", maxWidth: "520px",
           maxHeight: "90vh", overflow: "auto",
           boxShadow: "0 30px 80px rgba(15,23,42,0.25)",

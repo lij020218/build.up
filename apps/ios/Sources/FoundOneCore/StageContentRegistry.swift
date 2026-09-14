@@ -195,6 +195,39 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         public let detail: String?
     }
 
+    // ── app-compliance 식 glossary / dependencyChain / compareTable / copyTemplate ──
+
+    public struct GlossaryTerm: Decodable, Sendable, Hashable {
+        public let term: String
+        public let meaning: String
+        public let whereLabel: String?   // JSON "where" (Swift 예약어 회피)
+        public let format: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case term, meaning, format
+            case whereLabel = "where"
+        }
+    }
+
+    public struct DependencyNode: Decodable, Sendable, Hashable {
+        public let id: String
+        public let icon: String?
+        public let label: String
+        public let detail: String
+        public let blocks: String?
+    }
+
+    public struct CompareRow: Decodable, Sendable, Hashable {
+        public let label: String
+        public let cells: [String]
+        public let note: String?
+    }
+
+    public struct TemplateLine: Decodable, Sendable, Hashable {
+        public let label: String
+        public let value: String
+    }
+
     public struct CategoryContent: Decodable, Sendable, Hashable {
         public let label: String
         // registration-setup 인허가 데이터(optional)
@@ -253,6 +286,12 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         public let note: String?
         public let title: String?
         public let options: [TaxOption]?
+        // dateOffset(app-compliance) — 기준일 ±offsetDays
+        public let inputLabel: String?
+        public let resultLabel: String?
+        public let offsetDays: Int?
+        public let direction: String?      // "after" | "before"
+        public let noticeTemplate: String? // {{input}}·{{result}} 치환
     }
 
     /// 섹션 — "kind" 로 분기되는 discriminated union.
@@ -278,6 +317,13 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
         case axisChecklist(eyebrow: String, subtitle: String?, axes: [AxisRef])
         case gateChecklist(eyebrow: String, subtitle: String?, items: [GateItem], doneNote: String?)
         case noteList(severity: String?, title: String, items: [String])
+        // app-compliance(2026-09)
+        case glossary(eyebrow: String, subtitle: String?, terms: [GlossaryTerm])
+        case dependencyChain(eyebrow: String, subtitle: String?, nodes: [DependencyNode])
+        case compareTable(eyebrow: String, subtitle: String?, columns: [String], rows: [CompareRow], footnote: String?)
+        case copyTemplate(eyebrow: String, subtitle: String?, title: String, lines: [TemplateLine], footnote: String?)
+        /// 준비 체크리스트 — 토글은 되지만 게이팅하지 않음(gateChecklist 와 구분).
+        case prepChecklist(eyebrow: String, subtitle: String?, items: [GateItem], doneNote: String?)
         /// 미지원 kind(스키마 확장 시 그레이스풀 스킵).
         case unsupported(String)
 
@@ -289,6 +335,8 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
             case headline, intro, stat, outlineEyebrow, workOutline, outcomeTitle, outcome
             case axis, stepLabel, time, why, tasks, watchouts, showFavorable, axes
             case doneNote
+            // glossary / dependencyChain / compareTable / copyTemplate
+            case terms, nodes, columns, rows, footnote, lines
         }
 
         public init(from decoder: any Decoder) throws {
@@ -393,6 +441,36 @@ public struct BUStageContent: Decodable, Sendable, Hashable {
                     severity: try c.decodeIfPresent(String.self, forKey: .severity),
                     title: try c.decode(String.self, forKey: .title),
                     items: try c.decode([String].self, forKey: .items))
+            case "glossary":
+                self = .glossary(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                    terms: try c.decode([GlossaryTerm].self, forKey: .terms))
+            case "dependencyChain":
+                self = .dependencyChain(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                    nodes: try c.decode([DependencyNode].self, forKey: .nodes))
+            case "compareTable":
+                self = .compareTable(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                    columns: try c.decode([String].self, forKey: .columns),
+                    rows: try c.decode([CompareRow].self, forKey: .rows),
+                    footnote: try c.decodeIfPresent(String.self, forKey: .footnote))
+            case "copyTemplate":
+                self = .copyTemplate(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                    title: try c.decode(String.self, forKey: .title),
+                    lines: try c.decode([TemplateLine].self, forKey: .lines),
+                    footnote: try c.decodeIfPresent(String.self, forKey: .footnote))
+            case "prepChecklist":
+                self = .prepChecklist(
+                    eyebrow: try c.decode(String.self, forKey: .eyebrow),
+                    subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                    items: try c.decode([GateItem].self, forKey: .items),
+                    doneNote: try c.decodeIfPresent(String.self, forKey: .doneNote))
             default:
                 self = .unsupported(kind)
             }

@@ -226,7 +226,7 @@ export function CashZeroDateCard({ ko }: Props) {
 
 const cardStyle: React.CSSProperties = {
   background: "white",
-  borderRadius: 20,
+  borderRadius: "var(--card-radius)",
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 2px 8px rgba(15,23,42,0.04)",
   padding: "22px 24px",

@@ -99,7 +99,6 @@ public struct OfferingsView: View {
                             catalogCard
                         }
 
-                        Color.clear.frame(height: 110)
                     }
                     .padding(.horizontal, BUSpacing.screenMargin)
                 }

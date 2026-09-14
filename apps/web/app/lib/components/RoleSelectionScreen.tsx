@@ -234,7 +234,7 @@ const roleCard: React.CSSProperties = {
   alignItems: "center",
   textAlign: "center",
   padding: "24px 16px 20px",
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   border: "2px solid",
   cursor: "pointer",
   transition: "all 0.2s ease",

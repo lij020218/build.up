@@ -36,7 +36,15 @@ const fmt = (n: number) => {
 const CASES_INFLIGHT = new Map<string, Promise<unknown>>();
 
 /** 실행 신호 계측 — fire-and-forget. 실패는 UX 에 절대 개입하지 않음 (2026-07-25). */
-function logMarketingEvent(event: "copy_click" | "meme_origin_click") {
+export type MarketingEngagementEvent =
+  | "copy_click"
+  | "meme_origin_click"
+  | "cardnews_generate"
+  | "cardnews_save"
+  | "play_done";
+
+/** 실행 신호 계측 — fire-and-forget. UX 에 절대 개입하지 않는다. */
+export function logMarketingEvent(event: MarketingEngagementEvent) {
   void (async () => {
     try {
       const session = await supabase.auth.getSession();
@@ -331,6 +339,7 @@ export function MarketingSurface() {
     const willDo = !next.has(title);
     if (willDo) next.add(title); else next.delete(title);
     setDoneTitles(next); // optimistic
+    if (willDo) logMarketingEvent("play_done"); // 실행까지 갔는지 — 주간 개선의 유일한 성공 신호
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
@@ -950,8 +959,8 @@ function MemeLane({ pack, ko }: { pack: MemePackCache | null; ko: boolean }) {
           </div>
           <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
             {ko
-              ? "마케터들이 보는 트렌드 매체에서 매일 자동 수집 — 원본만 보여드려요. 적용은 사장님 몫."
-              : "Collected daily from trend media marketers actually read — originals only."}
+              ? "마케터들이 보는 트렌드 매체(고구마팜·캐릿 등)의 최신 글에서 자동 수집 — 원본과 발행일만 보여드려요. 적용은 사장님 몫."
+              : "Auto-collected from the latest posts of trend media marketers actually read — originals and dates only."}
           </div>
         </div>
       </div>

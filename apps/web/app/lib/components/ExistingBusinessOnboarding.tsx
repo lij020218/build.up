@@ -328,7 +328,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
     fontSize: "14px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "28px",
   };
   const cardStyle: React.CSSProperties = {
-    borderRadius: "20px", border: "1px solid rgba(25,25,112,0.10)",
+    borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.10)",
     background: "rgba(255,255,255,0.9)",
     boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 32px rgba(25,25,112,0.06)",
     padding: "20px",

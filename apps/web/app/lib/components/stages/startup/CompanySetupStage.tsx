@@ -1,6 +1,7 @@
 "use client";
 
 import { Lightbulb, FileText, Shield, Calculator } from "lucide-react";
+import { APP_COMPLIANCE_CONTENT, showsAppCompliance } from "@foundone/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { ModePathCard } from "./ModePathCard";
 import {
@@ -13,6 +14,10 @@ import {
 } from "./StartupStageShell";
 import { StoreNameInput } from "../shared/StoreNameInput";
 import { StageWrapup } from "../shared/StageWrapup";
+import { StageContentEmbeddedPage } from "../shared/StageContentRenderer";
+
+/** 수기 페이지 수(사업자등록·IP·세무·보안약관). 뒤에 app-compliance SSOT 페이지가 붙는다. */
+const BASE_PAGE_COUNT = 4;
 
 export function CompanySetupStage() {
   const d = useDashboardCtx();
@@ -21,10 +26,15 @@ export function CompanySetupStage() {
   const { guideSelections, setGuideSelections } = d;
   const bizType = (guideSelections["biz-structure"] as "sole" | "corp" | undefined) ?? null;
 
-  const totalPg = 4;
-  const pgLabels = ko
+  // 앱·플랫폼 규제·계약(구함 사례 2026-09) — 소프트웨어 스타트업 클러스터만 추가 페이지로 임베드(웹·iOS 동일 SSOT).
+  const appPages = showsAppCompliance(d.selectedIndustryId ?? undefined, d.industryCategoryId ?? "")
+    ? APP_COMPLIANCE_CONTENT.pages
+    : [];
+  const totalPg = BASE_PAGE_COUNT + appPages.length;
+  const baseLabels = ko
     ? ["사업자등록", "특허·상표 출원", "과세 유형·세무", "보안·약관"]
     : ["Registration", "IP Filing", "Tax Setup", "Privacy & Terms"];
+  const pgLabels = [...baseLabels, ...appPages.map((p) => p.label)];
 
   const linkStyle: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", gap: "4px",
@@ -84,7 +94,7 @@ export function CompanySetupStage() {
       />
       )}
       {pg === 0 && (
-      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "사업자등록 — 사업 형태 선택" : "Business Registration — Choose Your Structure"}</span>
           <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "6px" }}>
@@ -249,7 +259,7 @@ export function CompanySetupStage() {
       {pg === 1 && (
       <div style={{ display: "flex", flexDirection: "column" as const, gap: "14px" }}>
         {/* 헤더 + 핵심 경고 */}
-        <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
+        <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
           <span style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a" }}>{ko ? "특허·상표 출원 — 공개 전 필수" : "Patent & Trademark Filing — Before Public Disclosure"}</span>
           <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.18)", marginTop: "10px" }}>
             <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b64c4c", lineHeight: 1.6 }}>
@@ -516,7 +526,7 @@ export function CompanySetupStage() {
         };
         const isCorp = bizType === "corp";
         return (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginBottom: "10px" }}>{ko ? "과세 유형 결정 · 세무 기초" : "Tax Type & Basics"}</div>
         <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "14px" }}>
           {isCorp
@@ -672,7 +682,7 @@ export function CompanySetupStage() {
 
       {/* ── Page 3: 보안 · 약관 ── */}
       {pg === 3 && (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginBottom: "10px" }}>{ko ? "개인정보보호 · 이용약관 · 보안" : "Privacy, Terms & Security"}</div>
         <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "14px" }}>
           {ko ? "개인사업자라도 고객 데이터를 수집하면 개인정보보호법 적용 대상입니다. 서비스 출시 전에 기본기를 갖추세요." : "Even sole proprietors are subject to privacy law when collecting customer data. Set up basics before launch."}
@@ -700,6 +710,11 @@ export function CompanySetupStage() {
           <a href="https://easylaw.go.kr" target="_blank" rel="noopener noreferrer" style={linkStyle}>찾기쉬운 생활법령 ↗</a>
         </div>
       </div>
+      )}
+
+      {/* ── Page 4+: 앱·플랫폼 규제·계약 (SSOT app-compliance, 임베디드) ── */}
+      {pg >= BASE_PAGE_COUNT && appPages.length > 0 && (
+      <StageContentEmbeddedPage content={APP_COMPLIANCE_CONTENT} pageIndex={pg - BASE_PAGE_COUNT} />
       )}
 
       {pg === totalPg - 1 && (

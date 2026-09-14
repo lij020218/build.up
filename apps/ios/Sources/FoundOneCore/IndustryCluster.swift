@@ -75,6 +75,23 @@ public struct IndustryCluster: Sendable, Hashable {
     public var isService: Bool       { category.isService }
     public var isOnline: Bool        { category == .onlineDigital }
     public var isStartupTech: Bool   { category == .startupTech }
+
+    /// 소프트웨어가 아닌 startup-tech 세부 업종(하드웨어·딥테크).
+    /// 웹 SSOT: packages/shared/src/roadmap/clusters.ts NON_SOFTWARE_STARTUP_SUB_INDUSTRIES
+    ///   (apps/web/__tests__/app-compliance-ios-sync.test.ts 가 이 목록을 대조).
+    public static let nonSoftwareStartupSubIndustries: Set<String> = [
+        "hardware-iot",
+        "robotics-physical-ai",
+        "biotech-medtech",
+        "semiconductor",
+        "climate-energy",
+    ]
+
+    /// 소프트웨어 스타트업(tech-software 클러스터) — 웹 showsAppCompliance() 미러.
+    ///   startup-tech 이면서 하드웨어·딥테크 세부 업종이 아니면 true(세부 업종 미선택 폴백 = 소프트웨어).
+    public var isSoftwareStartup: Bool {
+        isStartupTech && !Self.nonSoftwareStartupSubIndustries.contains(subIndustryId)
+    }
     public var isRetail: Bool        { category == .retail }
 
     /// 외식·카페·소매 — 점포 영업 신고 + 상권 분석 필요한 클러스터.

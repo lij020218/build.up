@@ -3,6 +3,9 @@
 //
 //  웹 SSOT: apps/web/app/lib/components/surfaces/CardNewsStudio.tsx + /api/ai/marketing/cardnews
 //
+//  2026-09-12: 테마 3종(shared cardnews-themes SSOT → CardNewsThemeRegistry) + **사진 없으면 텍스트 카드로 완성**.
+//    종전에는 사진 전에 내보내면 "📷 사진을 넣어주세요" 자리표시가 박힌 이미지가 나왔다(웹·iOS 동일 문제).
+//
 //  템플릿 2종 (서버가 업종으로 결정):
 //   · photo (카페·음식점): 1장 = 사진+가게명/타이틀 오버레이, 2장~ = 사진 주인공+하단 띠,
 //     마지막 = 로고 장(업로드, 없으면 상호 워드마크). 사진은 장별 PhotosPicker → 기기 내 합성.
@@ -16,6 +19,7 @@
 import SwiftUI
 import PhotosUI
 import FoundOneDesignSystem
+import FoundOneCore
 import FoundOneData
 
 // MARK: - 공유 시트 (UIActivityViewController 래퍼)
@@ -30,6 +34,22 @@ private struct ActivityShareSheet: UIViewControllerRepresentable {
 }
 #endif
 
+// MARK: - 테마 색 변환 (shared hex 토큰 → SwiftUI Color)
+
+private extension Color {
+    /// "#RRGGBB" → Color. 파싱 실패 시 fallback.
+    init(themeHex hex: String, fallback: Color = .black) {
+        var h = hex.trimmingCharacters(in: .whitespaces)
+        if h.hasPrefix("#") { h.removeFirst() }
+        guard h.count == 6, let v = UInt32(h, radix: 16) else { self = fallback; return }
+        self = Color(
+            red: Double((v >> 16) & 0xFF) / 255,
+            green: Double((v >> 8) & 0xFF) / 255,
+            blue: Double(v & 0xFF) / 255
+        )
+    }
+}
+
 // MARK: - 카드 렌더 뷰 (미리보기·1080×1350 내보내기 공용)
 
 private struct CardNewsCardView: View {
@@ -40,13 +60,28 @@ private struct CardNewsCardView: View {
     let isPhotoVariant: Bool
     let photo: UIImage?
     let logo: UIImage?
+    let theme: BUCardNewsTheme?
     /// true = 1080×1350 원본 스케일 (내보내기), false = 미리보기 축소
     let exportScale: Bool
 
     private var s: CGFloat { exportScale ? 5.0 : 1.0 }   // 미리보기 216×270 → 내보내기 1080×1350
     private var W: CGFloat { 216 * s }
     private var H: CGFloat { 270 * s }
-    private var onDark: Bool { isPhotoVariant ? card.role != "cta" : card.role == "cover" }
+
+    // ── 테마 색 (shared SSOT, 없으면 기존 미드나잇 폴백) ──
+    private var cCoverFrom: Color { theme.map { Color(themeHex: $0.coverFrom, fallback: BUColor.midnight) } ?? BUColor.midnight }
+    private var cCoverTo: Color { theme.map { Color(themeHex: $0.coverTo, fallback: BUColor.midnightDeep) } ?? BUColor.midnightDeep }
+    private var cBodyBg: Color { theme.map { Color(themeHex: $0.bodyBg, fallback: BUColor.surface) } ?? Color(red: 0xF7 / 255, green: 0xF8 / 255, blue: 0xFE / 255) }
+    private var cInk: Color { theme.map { Color(themeHex: $0.ink, fallback: BUColor.midnightDeep) } ?? BUColor.midnightDeep }
+    private var cAccent: Color { theme.map { Color(themeHex: $0.accent, fallback: BUColor.midnight) } ?? BUColor.midnight }
+    private var cAccentOnDark: Color { theme.map { Color(themeHex: $0.accentOnDark, fallback: .white) } ?? Color(red: 0xB9 / 255, green: 0xBB / 255, blue: 0xFF / 255) }
+    private var cCtaBg: Color { theme.map { Color(themeHex: $0.ctaBg, fallback: .white) } ?? Color(red: 0xF7 / 255, green: 0xF6 / 255, blue: 0xF1 / 255) }
+
+    /// 사진을 실제로 깔 수 있는 장인가 (웹 usePhoto 미러).
+    private var usePhoto: Bool { isPhotoVariant && card.role != "cta" && photo != nil }
+    /// 사진형이라도 사진이 없으면 **텍스트 카드로 완성**한다 (웹 asText 미러).
+    private var asText: Bool { !isPhotoVariant || (card.role != "cta" && photo == nil) }
+    private var onDark: Bool { usePhoto || (asText && card.role == "cover") }
 
     var body: some View {
         ZStack {
@@ -63,35 +98,32 @@ private struct CardNewsCardView: View {
     }
 
     @ViewBuilder private var background: some View {
-        if isPhotoVariant {
-            if card.role == "cta" {
-                Color(red: 0xF7 / 255, green: 0xF6 / 255, blue: 0xF1 / 255)
-            } else if let photo {
-                Image(uiImage: photo)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: W, height: H)
-                    .clipped()
-            } else {
-                Color(red: 0xED / 255, green: 0xEF / 255, blue: 0xF8 / 255)
-            }
+        if isPhotoVariant && card.role == "cta" {
+            cCtaBg
+        } else if usePhoto, let photo {
+            Image(uiImage: photo)
+                .resizable()
+                .scaledToFill()
+                .frame(width: W, height: H)
+                .clipped()
         } else {
+            // 텍스트 카드 배경 — 사진형의 "사진 없음" 상태도 여기로 온다(자리표시 대신 완성본).
             switch card.role {
             case "cover":
-                LinearGradient(colors: [BUColor.midnight, BUColor.midnightDeep], startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(colors: [cCoverFrom, cCoverTo], startPoint: .topLeading, endPoint: .bottomTrailing)
             case "cta":
-                LinearGradient(
-                    colors: [Color(red: 0xEE / 255, green: 0xF0 / 255, blue: 0xFB / 255), Color(red: 0xDF / 255, green: 0xE3 / 255, blue: 0xFF / 255)],
-                    startPoint: .top, endPoint: .bottom
-                )
+                ZStack(alignment: .top) {
+                    cCtaBg
+                    cAccent.opacity(0.1).frame(height: H * 0.34)
+                }
             default:
-                Color(red: 0xF7 / 255, green: 0xF8 / 255, blue: 0xFE / 255)
+                cBodyBg
             }
         }
     }
 
     @ViewBuilder private var content: some View {
-        if isPhotoVariant {
+        if isPhotoVariant && (card.role == "cta" || usePhoto) {
             photoVariantContent
         } else {
             textVariantContent
@@ -110,15 +142,15 @@ private struct CardNewsCardView: View {
                 } else {
                     Text(storeName)
                         .font(.system(size: 19 * s, weight: .heavy))
-                        .foregroundStyle(BUColor.midnight)
+                        .foregroundStyle(cAccent)
                         .multilineTextAlignment(.center)
-                    Rectangle().fill(BUColor.midnight.opacity(0.35)).frame(width: 24 * s, height: 1.5 * s)
+                    Rectangle().fill(cAccent.opacity(0.35)).frame(width: 24 * s, height: 1.5 * s)
                 }
                 VStack(spacing: 2 * s) {
                     ForEach(Array(card.lines.prefix(2).enumerated()), id: \.offset) { _, line in
                         Text(line)
                             .font(.system(size: 9.5 * s))
-                            .foregroundStyle(BUColor.ink.opacity(0.6))
+                            .foregroundStyle(cInk.opacity(0.6))
                     }
                 }
             }
@@ -126,24 +158,7 @@ private struct CardNewsCardView: View {
             .frame(width: W, height: H)
         } else {
             ZStack(alignment: .bottomLeading) {
-                if photo == nil {
-                    // 사진 자리표시 — 촬영 가이드
-                    VStack(spacing: 4 * s) {
-                        Text("📷").font(.system(size: 14 * s))
-                        Text(card.photoIdea ?? "사진을 넣어주세요")
-                            .font(.system(size: 8.5 * s))
-                            .foregroundStyle(BUColor.ink.opacity(0.55))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 14 * s)
-                    }
-                    .frame(width: W - 20 * s, height: H - 20 * s)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8 * s)
-                            .strokeBorder(BUColor.midnight.opacity(0.3), style: StrokeStyle(lineWidth: 1.5 * s, dash: [5 * s, 4 * s]))
-                    )
-                    .frame(width: W, height: H)
-                }
-                // 하단 그라데이션 + 텍스트 오버레이
+                // 하단 그라데이션 + 텍스트 오버레이 (사진이 있을 때만 이 경로)
                 VStack(alignment: .leading, spacing: 3 * s) {
                     Text(card.title)
                         .font(.system(size: (card.role == "cover" ? 15 : 12.5) * s, weight: .heavy))
@@ -162,7 +177,7 @@ private struct CardNewsCardView: View {
                 .frame(width: W, alignment: .leading)
                 .background(
                     LinearGradient(
-                        colors: [Color(red: 0.04, green: 0.04, blue: 0.16).opacity(0), Color(red: 0.04, green: 0.04, blue: 0.16).opacity(0.75)],
+                        colors: [cCoverTo.opacity(0), cCoverTo.opacity(0.8)],
                         startPoint: .top, endPoint: .bottom
                     )
                 )
@@ -204,15 +219,15 @@ private struct CardNewsCardView: View {
             VStack(alignment: .leading, spacing: 8 * s) {
                 Text(card.title)
                     .font(.system(size: 15 * s, weight: .heavy))
-                    .foregroundStyle(BUColor.midnightDeep)
+                    .foregroundStyle(cInk)
                 VStack(alignment: .leading, spacing: 2 * s) {
                     ForEach(Array(card.lines.prefix(3).enumerated()), id: \.offset) { _, line in
-                        Text(line).font(.system(size: 9.5 * s)).foregroundStyle(BUColor.ink.opacity(0.7))
+                        Text(line).font(.system(size: 9.5 * s)).foregroundStyle(cInk.opacity(0.7))
                     }
                 }
                 Text(storeName)
                     .font(.system(size: 11 * s, weight: .heavy))
-                    .foregroundStyle(BUColor.midnight)
+                    .foregroundStyle(cAccent)
                     .padding(.top, 4 * s)
             }
             .padding(14 * s)
@@ -221,14 +236,14 @@ private struct CardNewsCardView: View {
             VStack(alignment: .leading, spacing: 6 * s) {
                 Text(String(format: "%02d", index))
                     .font(.system(size: 9 * s, weight: .bold))
-                    .foregroundStyle(BUColor.midnight)
+                    .foregroundStyle(cAccent)
                 Text(card.title)
                     .font(.system(size: 13.5 * s, weight: .heavy))
-                    .foregroundStyle(BUColor.midnightDeep)
-                Rectangle().fill(BUColor.midnight.opacity(0.2)).frame(width: 22 * s, height: 2 * s)
+                    .foregroundStyle(cInk)
+                Rectangle().fill(cAccent.opacity(0.2)).frame(width: 22 * s, height: 2 * s)
                 VStack(alignment: .leading, spacing: 3 * s) {
                     ForEach(Array(card.lines.prefix(3).enumerated()), id: \.offset) { _, line in
-                        Text(line).font(.system(size: 9.5 * s)).foregroundStyle(BUColor.ink.opacity(0.78))
+                        Text(line).font(.system(size: 9.5 * s)).foregroundStyle(cInk.opacity(0.78))
                     }
                 }
             }
@@ -236,13 +251,13 @@ private struct CardNewsCardView: View {
             .padding(.top, 16 * s)
             .frame(width: W, height: H, alignment: .topLeading)
             .overlay(alignment: .top) {
-                Rectangle().fill(BUColor.midnight).frame(height: 4 * s)
+                Rectangle().fill(cAccent).frame(height: 4 * s)
             }
         }
     }
 
     private func highlightedTitle(size: CGFloat, color: Color) -> some View {
-        let lavender = Color(red: 0xB9 / 255, green: 0xBB / 255, blue: 0xFF / 255)
+        let lavender = cAccentOnDark
         var text = Text(card.title).foregroundColor(color)
         if let hl = card.highlight, card.title.contains(hl), let range = card.title.range(of: hl) {
             let before = String(card.title[card.title.startIndex..<range.lowerBound])
@@ -262,7 +277,7 @@ private struct CardNewsCardView: View {
                     Circle()
                         .fill(onDark
                             ? (i == index ? Color.white : Color.white.opacity(0.4))
-                            : (i == index ? BUColor.midnight : BUColor.midnight.opacity(0.25)))
+                            : (i == index ? cAccent : cAccent.opacity(0.25)))
                         .frame(width: (i == index ? 6 : 4) * s, height: (i == index ? 6 : 4) * s)
                 }
             }
@@ -273,7 +288,7 @@ private struct CardNewsCardView: View {
             // AI 기본법 생성물 소표기
             Text("AI 제작 보조")
                 .font(.system(size: 5 * s))
-                .foregroundStyle(onDark ? Color.white.opacity(0.45) : BUColor.ink.opacity(0.35))
+                .foregroundStyle(onDark ? Color.white.opacity(0.45) : cInk.opacity(0.35))
                 .padding(.trailing, 8 * s)
                 .padding(.bottom, 7 * s)
         }
@@ -308,6 +323,12 @@ public struct CardNewsStudioCard: View {
     @State private var copied = false
     @State private var shareItems: [UIImage] = []
     @State private var showShare = false
+    /// 렌더 테마 — 업종 기본값에서 시작하고 사장님이 칩으로 바꾼다 (웹 CardNewsStudio 와 동일 SSOT).
+    @State private var themeId: String?
+
+    private var theme: BUCardNewsTheme? {
+        CardNewsThemeRegistry.resolve(themeId ?? CardNewsThemeRegistry.defaultThemeId(categoryId: industryCategoryId))
+    }
 
     private var displayStore: String { storeName.isEmpty ? "내 가게" : storeName }
     private var isPhotoVariant: Bool { result?.styleVariant == "photo" }
@@ -382,9 +403,7 @@ public struct CardNewsStudioCard: View {
                         .padding(.vertical, 3)
                         .background(BUColor.midnight.opacity(0.07), in: Capsule())
                 }
-                Text(isPhotoVariant || industryCategoryId == "food" || industryCategoryId == "cafe-dessert"
-                     ? "주제만 정하면 인스타 캐러셀 3~5장을 만들어 드려요. 카페·음식점은 사진형(1장 사진+타이틀, 2장~ 사진, 마지막 로고)으로."
-                     : "주제만 정하면 인스타 캐러셀용 카드뉴스 3~5장을 만들어 드려요.")
+                Text("주제만 정하면 인스타 캐러셀용 카드뉴스 3~5장을 만들어 드려요. 사진을 넣으면 사진형으로, 안 넣어도 글자 카드로 바로 저장됩니다.")
                     .font(.system(size: 12))
                     .foregroundStyle(BUColor.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -441,6 +460,7 @@ public struct CardNewsStudioCard: View {
 
     @ViewBuilder private func resultSection(_ result: CardNewsResponse) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            themeRow
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 10) {
                     ForEach(Array(result.cards.enumerated()), id: \.offset) { i, card in
@@ -448,8 +468,19 @@ public struct CardNewsStudioCard: View {
                             CardNewsCardView(
                                 card: card, index: i, total: result.cards.count,
                                 storeName: displayStore, isPhotoVariant: isPhotoVariant,
-                                photo: photos[i], logo: logo, exportScale: false
+                                photo: photos[i], logo: logo, theme: theme, exportScale: false
                             )
+                            // 함께 올릴 사진 가이드 — 카드 안에 자리표시를 넣지 않으므로(2026-09-12) 화면에서 안내
+                            if let idea = card.photoIdea, !idea.isEmpty {
+                                Text("📷 \(idea)")
+                                    .font(.system(size: 10.5))
+                                    .foregroundStyle(BUColor.inkSecondary)
+                                    .lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 8).padding(.vertical, 6)
+                                    .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
+                            }
                             cardActions(card: card, index: i)
                         }
                         .frame(width: 216)
@@ -464,6 +495,38 @@ public struct CardNewsStudioCard: View {
                 .font(.system(size: 10.5))
                 .foregroundStyle(BUColor.inkMuted45)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// 테마 선택 — 모든 가게가 같은 카드를 올리지 않도록 (2026-09-12, 웹과 동일 목록).
+    @ViewBuilder private var themeRow: some View {
+        let themes = CardNewsThemeRegistry.themes
+        if !themes.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    Text("카드 테마")
+                        .font(.system(size: 11.5, weight: .bold))
+                        .foregroundStyle(BUColor.midnight)
+                    ForEach(themes) { t in
+                        let on = t.id == (theme?.id ?? "")
+                        Button { themeId = t.id } label: {
+                            HStack(spacing: 5) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(LinearGradient(colors: [Color(themeHex: t.coverFrom), Color(themeHex: t.coverTo)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .frame(width: 12, height: 12)
+                                Text(t.label.ko)
+                                    .font(.system(size: 11.5, weight: on ? .bold : .semibold))
+                                    .foregroundStyle(BUColor.midnightDeep)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(on ? BUColor.midnight.opacity(0.06) : Color.clear, in: Capsule())
+                            .overlay(Capsule().stroke(on ? BUColor.midnight : BUColor.midnight.opacity(0.14), lineWidth: on ? 1.5 : 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 
@@ -595,6 +658,7 @@ public struct CardNewsStudioCard: View {
             } else {
                 result = resp
                 photos = [:]
+                MarketingRepository.logEngagement(event: "cardnews_generate") // 기능에 도달했는가 (웹과 동일 신호)
             }
         } catch {
             errorMessage = "생성에 실패했어요. 잠시 후 다시 시도해 주세요."
@@ -609,7 +673,7 @@ public struct CardNewsStudioCard: View {
             let view = CardNewsCardView(
                 card: result.cards[i], index: i, total: result.cards.count,
                 storeName: displayStore, isPhotoVariant: isPhotoVariant,
-                photo: photos[i], logo: logo, exportScale: true
+                photo: photos[i], logo: logo, theme: theme, exportScale: true
             )
             let renderer = ImageRenderer(content: view)
             renderer.scale = 1
@@ -618,5 +682,6 @@ public struct CardNewsStudioCard: View {
         guard !images.isEmpty else { return }
         shareItems = images
         showShare = true
+        MarketingRepository.logEngagement(event: "cardnews_save") // 만든 걸 실제로 가져갔는가
     }
 }

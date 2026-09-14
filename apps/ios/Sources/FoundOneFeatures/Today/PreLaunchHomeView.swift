@@ -95,7 +95,6 @@ public struct PreLaunchHomeView: View {
                     heroPanel
                     roadmapSignalCard
                     founderSnapshotCard
-                    Color.clear.frame(height: 110)  // 하단 탭바 회피
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
             }

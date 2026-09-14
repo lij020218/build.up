@@ -47,8 +47,16 @@ describe("guest browse mode (/browse)", () => {
   it("FranchiseView renders with guest ctx (bundled data, no auth)", () => {
     renderGuest(React.createElement(FranchiseView));
     expect(container.textContent).toContain("프랜차이즈 브랜드");
-    // 브랜드 행이 실제로 나온다 (빈 화면 아님)
-    expect(container.querySelectorAll("button.bento-card").length).toBeGreaterThan(0);
+    // 브랜드 행이 실제로 나온다 (빈 화면 아님) — 2026-09-12 행 재디자인으로 클래스가 .fr-row 로 바뀜
+    const rows = container.querySelectorAll("button.fr-row");
+    expect(rows.length).toBeGreaterThan(0);
+    // 행이 요청받은 정보를 담는다: 상호 + 업종 + 창업비용 + 폐점률 + 종합점수
+    const firstRow = rows[0]?.textContent ?? "";
+    expect(firstRow).toMatch(/폐점/);
+    expect(firstRow).toMatch(/\d/);
+    // 아이콘 타일 — 로고(img) 또는 모노그램 중 하나는 항상 있다
+    const tiles = container.querySelectorAll("button.fr-row > span:first-child");
+    expect(tiles.length).toBe(rows.length);
   });
 
   it("TaxSurface guest shows signup rows instead of personalization prompts", () => {

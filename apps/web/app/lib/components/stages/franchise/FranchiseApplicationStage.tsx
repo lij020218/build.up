@@ -346,7 +346,7 @@ export function FranchiseApplicationStage() {
         <>
           <div
             style={{
-              borderRadius: "20px",
+              borderRadius: "var(--card-radius)",
               border: `1px solid ${MIDNIGHT_BORDER}`,
               background: "white",
               padding: "20px 22px",
@@ -432,7 +432,7 @@ export function FranchiseApplicationStage() {
         <>
           <div
             style={{
-              borderRadius: "20px",
+              borderRadius: "var(--card-radius)",
               border: "1px solid rgba(25,25,112,0.08)",
               background: "white",
               padding: "20px 22px",
@@ -605,7 +605,7 @@ export function FranchiseApplicationStage() {
         <>
           <div
             style={{
-              borderRadius: "20px",
+              borderRadius: "var(--card-radius)",
               border: `1px solid ${MIDNIGHT_BORDER}`,
               background: "white",
               padding: "20px 22px",

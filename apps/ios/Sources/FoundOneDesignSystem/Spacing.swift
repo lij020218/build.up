@@ -28,23 +28,27 @@ public enum BUSpacing {
     public static let xxxl: CGFloat = 48
 
     // MARK: - Card padding (모바일 최적화 — 사장님 지적: "카드들이 모바일에서 잘림")
-    /// CEOMorningHero outer card padding (모바일 viewport 폭 고려 18-18-16 로 축소)
-    /// 웹: 28-28-24 (데스크탑) → 모바일에선 더 컴팩트하게.
-    public static let heroOuterPadding: CGFloat = 14
-    public static let heroOuterPaddingBottom: CGFloat = 12
+    /// 2026-09-12 개편: 카드 중첩을 없앤 뒤 여백을 되돌렸다.
+    ///  종전 14/12 는 "카드 안의 카드 안의 카드" 3겹을 한 화면에 욱여넣느라 깎은 값이다.
+    ///  중첩이 사라졌으니 바깥 카드 하나가 숨 쉴 여백을 갖는 편이 읽기 쉽다.
+    public static let heroOuterPadding: CGFloat = 18
+    public static let heroOuterPaddingBottom: CGFloat = 18
     /// heroPanel padding (모바일 20)
     public static let heroPanelPadding: CGFloat = 20
     /// opsCard / activityCard padding (모바일 18)
     public static let cardPadding: CGFloat = 18
-    /// headlineCard padding (모바일 16)
-    public static let headlinePadding: CGFloat = 16
-    /// 작은 inner card (Row 2 NSM nested) padding 16/18
-    public static let nestedCardPaddingV: CGFloat = 16
+    /// headlineCard padding — 바깥 카드(18)와 맞춰 단계 차이를 없앴다.
+    public static let headlinePadding: CGFloat = 18
+    /// nested 구획 padding — 위 18(구분선과 거리), 아래 10(다음 구분선/카드 여백이 이어서 18 을 준다).
+    ///  아래도 18 이면 구획 마지막 요소(버튼) 밑이 36pt 비어 보인다 (2026-09-12 실렌더).
+    public static let nestedCardPaddingV: CGFloat = 18
+    public static let nestedCardPaddingBottom: CGFloat = 10
     public static let nestedCardPaddingH: CGFloat = 18
 
     // MARK: - Gap (웹 1:1)
-    /// Shell gap — Tier 간 (18px)
-    public static let shellGap: CGFloat = 18
+    /// 섹션 사이 간격 — 관련 없는 것끼리는 넉넉히 띄운다(18 → 24).
+    ///  간격이 좁으면 카드 경계선에 위계를 의존하게 되고, 화면이 목록처럼 읽힌다.
+    public static let shellGap: CGFloat = 24
     /// Hero panel 내부 gap — 모바일 12pt (사장님 피드백 2026-05-14: Hero 영역 축소)
     public static let heroGap: CGFloat = 12
     /// opsCard 내부 gap (14px)
@@ -57,9 +61,10 @@ public enum BUSpacing {
     public static let rowGap: CGFloat = 14
 
     // MARK: - 화면 좌우 margin (모바일)
-    /// 모바일 컨텐츠 좌우 margin — 12pt (콘텐츠 폭 최대화)
-    /// 사장님 지적: "카드들이 모바일에서 잘림"
-    public static let screenMargin: CGFloat = 12
+    /// 모바일 컨텐츠 좌우 margin — 16pt.
+    ///  종전 12 는 카드 3겹 중첩 시절 폭을 아끼려던 값이고, 화면마다 12/16 으로 갈려 있었다.
+    ///  중첩을 없앤 뒤 16 으로 통일 — 이미 BUSpacing.md(16) 를 쓰던 화면들과도 같아진다.
+    public static let screenMargin: CGFloat = 16
 
     // MARK: - Touch target
     public static let minTapTarget: CGFloat = 44
@@ -69,20 +74,38 @@ public enum BUSpacing {
 // MARK: - Radius (웹 RADIUS 1:1)
 
 public enum BURadius {
-    /// CEOMorningHero outer — 24px (모달과 동일)
-    public static let heroOuter: CGFloat = 24
-    /// OUTER_CARD — 20px (heroPanel, opsCard, activityCard, survivalCard)
-    public static let outerCard: CGFloat = 20
-    /// Row 2 nested white card — 18px (NSM 메트릭 카드)
-    public static let nestedCard: CGFloat = 18
-    /// headlineCard / KPI 미니카드 — 16px
-    public static let headlineCard: CGFloat = 16
-    /// INNER_BLOCK — 14px (위험신호 박스, mini stat, sub block)
-    public static let innerBlock: CGFloat = 14
+    // 2026-09-12 개편: 24/20/18/16/14 다섯 단계 → **한 값**.
+    //  단계가 필요했던 이유는 카드를 카드 안에 넣었기 때문이다. 중첩을 없앴으니
+    //  모서리로 깊이를 표현할 일이 없다.
+    //
+    //  값의 근거 (사장님 지시 2026-09-12: "각진 직사각형에서 모서리만 둥근 걸 원한다"):
+    //   · 애플 HIG 는 숫자를 공표하지 않는다 — "연속 곡률(continuous)을 쓰고,
+    //     큰 면은 평평한 변 + 부드러운 모서리로 읽히게" 라는 질적 지침만 있다.
+    //   · 애플이 자사앱에서 **실제로 쓰는** 값은 inset grouped 리스트 섹션의 **10pt** 다.
+    //     설정·메일·메모·건강의 흰 묶음이 전부 이것 — 정확히 "직사각형에 모서리만 둥근" 모양.
+    //   · 흔히 도는 "22.37% 반경 + 60% 스무딩"은 **앱 아이콘 템플릿**을 역산한 값이지
+    //     일반 UI 규칙이 아니다. 카드에 그 비율을 쓰면 뭉툭해진다(직전 26pt 가 그랬다).
+    //
+    //  그래서: 카드 12 / 안쪽 면 8. 카드를 10 이 아닌 12 로 둔 이유는
+    //  안쪽 8pt 면이 카드 안에서 동심(concentric)으로 보이려면 바깥이 한 단계 커야 하기 때문이다.
+    //  (iOS 26 의 ConcentricRectangle 이 자동으로 해 주는 계산 = 바깥 반경 − 여백.)
+    //  ⚠️ 모든 카드는 `style: .continuous` 로 그린다 — 같은 수치라도 원형 모서리보다 변이 곧게 읽힌다.
+    /// CEOMorningHero outer
+    public static let heroOuter: CGFloat = 12
+    /// OUTER_CARD (heroPanel, opsCard, activityCard, survivalCard)
+    public static let outerCard: CGFloat = 12
+    /// Row 2 nested white card (NSM 메트릭 카드)
+    public static let nestedCard: CGFloat = 12
+    /// headlineCard / KPI 미니카드
+    public static let headlineCard: CGFloat = 12
+    /// INNER_BLOCK — 위험신호 박스, mini stat, sub block (카드가 아닌 '면')
+    ///  카드보다 작게 — 카드 모서리를 넘어 보이지 않게.
+    public static let innerBlock: CGFloat = 8
     /// INPUT — 10px (input, primaryActionSmall)
     public static let input: CGFloat = 10
     /// primaryAction button — 12px
-    public static let button: CGFloat = 12
+    /// 카드(12)보다 작게 — 버튼이 카드보다 둥글면 카드가 더 각져 보인다.
+    public static let button: CGFloat = 10
     /// BADGE — 8px (작은 라벨 칩)
     public static let badge: CGFloat = 8
     /// PILL — 999 (capsule)

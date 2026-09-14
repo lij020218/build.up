@@ -1067,7 +1067,7 @@ export function AnalyticsSurface() {
 
                   {/* 폐업 비용 계산기 + 지원 안내 */}
                   <article style={{
-                    borderRadius: "20px",
+                    borderRadius: "var(--card-radius)",
                     border: "1px solid var(--border)",
                     background: "rgba(255,255,255,0.6)",
                     padding: "0",

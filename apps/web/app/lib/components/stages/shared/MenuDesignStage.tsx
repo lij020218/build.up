@@ -904,7 +904,7 @@ function mapCategoryToInventory(cat: string): InventoryItem["category"] {
 
 // ── 스타일 토큰 ─────────────────────────────────────────────────────────
 const cardStyle: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   border: `1px solid ${MIDNIGHT_BORDER}`,
   background: "white",
   padding: "20px 22px",

@@ -899,7 +899,7 @@ export function FinancialReviewStage() {
         return (
           <article style={{
             padding: "22px 24px",
-            borderRadius: "20px",
+            borderRadius: "var(--card-radius)",
             background: "var(--surface-strong)",
             border: `1px solid rgba(25,25,112,0.12)`,
             boxShadow: "0 1px 2px rgba(17,17,17,0.02)",

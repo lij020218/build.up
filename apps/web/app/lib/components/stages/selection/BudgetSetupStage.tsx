@@ -771,7 +771,7 @@ export function BudgetSetupStage() {
           {/* ── 총 필요 자금 = ① 시설비 + ② 운영 예비자금 (두 통의 관계를 항상 노출) ── */}
           <div style={{
             marginTop: "14px",
-            borderRadius: "20px",
+            borderRadius: "var(--card-radius)",
             background: "rgba(29,53,87,0.05)",
             border: "1px solid rgba(29,53,87,0.1)",
             padding: "18px 20px",

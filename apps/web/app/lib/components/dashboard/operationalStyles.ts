@@ -1,6 +1,18 @@
 import type React from "react";
 
 /**
+ * 2026-09-12 카드 개편 (사장님이 고른 iOS 미리보기와 같은 규칙):
+ *  · 표면은 **불투명 흰색**(--surface). 종전 180deg 그라디언트(#fff → #f7f8fe)는
+ *    베이지 캔버스 위에서 카드를 띄우려던 장치인데, 캔버스가 흰색이 된 지금은
+ *    카드 안쪽만 미묘하게 탁해 보이게 할 뿐이다.
+ *  · 경계는 0.5px 헤어라인 한 겹, 그림자는 얕은 한 겹.
+ *    종전 2겹 그림자(0 12px 24px -12px)는 카드가 여러 장 쌓이면 배경을 회색으로 뭉갰다.
+ *  · 모서리는 `--card-radius` 한 곳에서만 — iOS BURadius.outerCard 와 같은 값.
+ *    (2026-09-12 사장님 지시로 20 → 26. 20 은 각져 보였다.)
+ *  주의: 데스크톱 밀도는 유지한다 — 여백까지 모바일 값으로 옮기지 않는다.
+ */
+
+/**
  * ───────────────────────────────────────────────────────────────
  * 디자인 토큰 — 운영 대시보드 및 전체 surface 공통 기준.
  *
@@ -113,11 +125,11 @@ export const shell: React.CSSProperties = {
 };
 
 export const heroPanel: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   padding: "var(--dash-card-pad, 24px)",
-  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
-  border: "1px solid rgba(25,25,112,0.10)",
-  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
+  background: "var(--surface)",
+  border: "0.5px solid rgba(17,19,26,0.07)",
+  boxShadow: "0 3px 10px rgba(17,19,26,0.05)",
   display: "grid",
   // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
   //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
@@ -233,11 +245,11 @@ export const headlineGrid: React.CSSProperties = {
 };
 
 export const headlineCard: React.CSSProperties = {
-  borderRadius: "16px",
+  borderRadius: "var(--card-radius)",
   padding: "var(--dash-card-pad, 20px)",
-  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
-  border: "1px solid rgba(25,25,112,0.10)",
-  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
+  background: "var(--surface)",
+  border: "0.5px solid rgba(17,19,26,0.07)",
+  boxShadow: "0 3px 10px rgba(17,19,26,0.05)",
   transition: "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease",
   cursor: "default",
 };
@@ -284,11 +296,11 @@ export const survivalGrid: React.CSSProperties = {
 };
 
 export const opsCard: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   padding: "var(--dash-card-pad, 22px)",
-  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
-  border: "1px solid rgba(25,25,112,0.10)",
-  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
+  background: "var(--surface)",
+  border: "0.5px solid rgba(17,19,26,0.07)",
+  boxShadow: "0 3px 10px rgba(17,19,26,0.05)",
   display: "grid",
   // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
   //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)
@@ -350,11 +362,11 @@ export const detailSectionTitle: React.CSSProperties = {
 /* ── ActivitySnapshotCard styles ── */
 
 export const activityCard: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   padding: "22px",
-  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
-  border: "1px solid rgba(25,25,112,0.10)",
-  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
+  background: "var(--surface)",
+  border: "0.5px solid rgba(17,19,26,0.07)",
+  boxShadow: "0 3px 10px rgba(17,19,26,0.05)",
   display: "grid",
   // 단일 컬럼 명시 — 생략(암시적 auto) 시 컬럼이 자식의 max-content 를 따라가
   //   카드가 컨테이너보다 넓어진다(grid blowout). 좁은 폰에서 우측 잘림의 원인. (2026-07-15)

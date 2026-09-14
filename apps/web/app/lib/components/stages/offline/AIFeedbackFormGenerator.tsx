@@ -166,7 +166,7 @@ export function AIFeedbackFormGenerator({
   return (
     <div style={{
       background: "white",
-      borderRadius: "20px",
+      borderRadius: "var(--card-radius)",
       overflow: "hidden",
       boxShadow: "0 1px 8px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)",
     }}>

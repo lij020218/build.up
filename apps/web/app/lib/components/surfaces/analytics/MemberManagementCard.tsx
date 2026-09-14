@@ -124,7 +124,7 @@ export function MemberManagementCard() {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <span style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "-0.2px" }}>{m.name}</span>
-                    <span style={{ fontSize: "10px", fontWeight: 700, color: statusColor(m.status), background: `${statusColor(m.status)}18`, padding: "2px 7px", borderRadius: "20px" }}>
+                    <span style={{ fontSize: "10px", fontWeight: 700, color: statusColor(m.status), background: `${statusColor(m.status)}18`, padding: "2px 7px", borderRadius: "var(--card-radius)" }}>
                       {statusLabel(m.status)}
                     </span>
                   </div>

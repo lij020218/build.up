@@ -13,11 +13,27 @@ import SwiftUI
 
 public enum BUColor {
 
-    // MARK: - App Background (globals.css)
-    /// 앱 전역 body 배경 — 베이지 톤 (#f7f6f3)
+    // MARK: - App Background (2026-09-12 개편)
+    /// 앱 전역 배경 — **흰색**. 상단 푸른 글로우는 BUCanvasBackground 가 얹는다.
+    ///  (종전: 베이지 #f7f6f3 + 전역 Aurora 그라디언트 → 콘텐츠가 유리 위에 놓여 대비가 흔들렸다)
     public static let appBackground = Color(
-        light: Color(red: 0xF7/255, green: 0xF6/255, blue: 0xF3/255),
-        dark:  Color(red: 0x0A/255, green: 0x0A/255, blue: 0x14/255)
+        light: .white,
+        dark:  Color(red: 0x0A/255, green: 0x0A/255, blue: 0x0E/255)
+    )
+
+    /// 배경 상단 글로우 색 — 브랜드 미드나잇 계열의 옅은 푸름.
+    public static let canvasGlow = Color(
+        light: Color(red: 0x4A/255, green: 0x6C/255, blue: 0xF0/255),
+        dark:  Color(red: 0x4A/255, green: 0x6C/255, blue: 0xF0/255)
+    )
+
+    /// 글로우 세기 — 0.20(연함, 기본) / 0.30(또렷). 이 값 하나로 전 화면이 바뀐다.
+    public static let canvasGlowOpacity: Double = 0.20
+
+    /// 입력창·칩처럼 **흰 배경 위에 놓이는 옅은 면**. (종전에 베이지 appBackground 를 쓰던 자리)
+    public static let subtleFill = Color(
+        light: Color(red: 0xF2/255, green: 0xF2/255, blue: 0xF7/255),
+        dark:  Color(red: 0x16/255, green: 0x16/255, blue: 0x1E/255)
     )
 
     // MARK: - Hero Card Gradient (CEOMorningHero outer)
@@ -173,4 +189,21 @@ extension Color {
     }
 
     // hex / rgb helper 는 HealthColors.swift 에 정의 — 중복 회피
+}
+
+// MARK: - Hex 색 (shared SSOT 토큰용)
+
+public extension Color {
+    /// "#RRGGBB" → Color. 웹과 공유하는 hex 토큰(업종 색·카드뉴스 테마)을 그대로 쓰기 위한 초기화.
+    /// 파싱 실패 시 fallback.
+    init(buHex hex: String, fallback: Color = .gray) {
+        var h = hex.trimmingCharacters(in: .whitespaces)
+        if h.hasPrefix("#") { h.removeFirst() }
+        guard h.count == 6, let v = UInt32(h, radix: 16) else { self = fallback; return }
+        self = Color(
+            red: Double((v >> 16) & 0xFF) / 255,
+            green: Double((v >> 8) & 0xFF) / 255,
+            blue: Double(v & 0xFF) / 255
+        )
+    }
 }

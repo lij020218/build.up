@@ -162,6 +162,26 @@ public struct AppRoot: View {
     }
 
     public var body: some View {
+        #if DEBUG
+        // 디자인 개편 미리보기 (2026-09-12) — BU_DEMO_DESIGN=home|roadmap|profile 로 실행.
+        //   비교용 목업만 그린다. Release 빌드에는 DesignPreviewView 자체가 컴파일되지 않는다.
+        if ProcessInfo.processInfo.environment["BU_DEMO_DESIGN"] != nil {
+            DesignPreviewView()
+        } else if ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
+                  ProcessInfo.processInfo.environment["BU_DEMO_SEED_STAFF"] == "1" {
+            // 직원용 화면 시각 검증 (2026-09-12) — 직원 역할 계정이 없어 이 화면만 볼 방법이 없었다.
+            //  BU_DEMO_ALLOW=1 + BU_DEMO_SEED_STAFF=1 이중 가드. 데이터는 StaffDashboardView 가
+            //  로컬 @State 로만 시드한다(서버 접근 없음).
+            StaffDashboardView(onSignOut: {})
+        } else {
+            mainBody
+        }
+        #else
+        mainBody
+        #endif
+    }
+
+    private var mainBody: some View {
         Group {
             if let scenario = demoMode {
                 // ── DEBUG 데모 모드 ── (Release 에서는 DemoTabs 자체가 컴파일되지 않는다)
@@ -1567,6 +1587,8 @@ private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
 
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // 탭 바 여백은 셸이 한 번만 잡는다 — 화면마다 스페이서를 넣지 않는다.
+                    .buBottomTabClearance(!bottomTabs.isEmpty && !hideBottomTabs)
             }
             .accessibilityHidden(sidebarOpen)
 
@@ -1622,7 +1644,7 @@ private struct FoundOneMobileShell<Content: View, Accessory: View>: View {
     }
 }
 
-/// 하단 플로팅 탭 바 — Liquid Glass(ultraThinMaterial) 캡슐 위 4탭.
+/// 하단 플로팅 탭 바 — Liquid Glass(regularMaterial) 캡슐 위 4탭.
 ///  HIG 준수: 아이콘 위 라벨(compact), filled 심볼, 선택 상태는 미드나잇 틴트(신호등 컬러 X).
 private struct FoundOneBottomTabBar: View {
     let tabs: [FoundOneSurfaceTab]
@@ -1659,9 +1681,11 @@ private struct FoundOneBottomTabBar: View {
             }
         }
         .padding(6)
+        .frame(height: BUTabBarMetrics.barHeight)
         // 성능(2026-08-19): material 위에 .shadow 를 직접 얹으면 매 프레임 오프스크린 합성.
         //   그림자 제거 → 얇은 이중 스트로크(안 흰색 / 바깥 네이비 6%)로 부유감만 유지.
-        .background(.ultraThinMaterial, in: Capsule())
+        // 흰 캔버스에서 ultraThin 은 뒤 글자가 그대로 비쳐 "깨진 글자"로 읽혔다 → regular.
+        .background(.regularMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(Color.white.opacity(0.55), lineWidth: 0.7))
         .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.06), lineWidth: 0.7).padding(-0.7))
     }

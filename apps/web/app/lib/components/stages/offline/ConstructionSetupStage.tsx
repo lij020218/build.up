@@ -358,7 +358,7 @@ export function ConstructionSetupStage() {
                             {/* 본사 공급 자재 / 집기 */}
                             <div style={{
                               background: "white",
-                              borderRadius: "20px",
+                              borderRadius: "var(--card-radius)",
                               overflow: "hidden",
                               boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
                               marginBottom: "12px",
@@ -398,7 +398,7 @@ export function ConstructionSetupStage() {
                                 <div style={{
                                   background: "linear-gradient(180deg, rgba(25,25,112,0.04) 0%, rgba(255,255,255,0.96) 100%)",
                                   border: "1px solid rgba(25,25,112,0.16)",
-                                  borderRadius: "20px",
+                                  borderRadius: "var(--card-radius)",
                                   padding: "20px 22px",
                                   marginBottom: "12px",
                                 }}>
@@ -501,7 +501,7 @@ export function ConstructionSetupStage() {
                             {/* 단일 컨테이너 카드 — Apple grouped list 스타일 */}
                             <div style={{
                               background: "white",
-                              borderRadius: "20px",
+                              borderRadius: "var(--card-radius)",
                               overflow: "hidden",
                               boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
                             }}>
@@ -589,7 +589,7 @@ export function ConstructionSetupStage() {
                                       flexDirection: "column",
                                       alignItems: "flex-start",
                                       padding: "16px",
-                                      borderRadius: "20px",
+                                      borderRadius: "var(--card-radius)",
                                       border: "none",
                                       outline: picked ? "2.5px solid var(--primary)" : "none",
                                       background: picked ? "white" : "white",
@@ -700,7 +700,7 @@ export function ConstructionSetupStage() {
                           { bg: "rgba(255,45,85,0.1)",   fg: "rgb(220,40,75)"   },
                         ];
                         const sectionTitle: CSSProperties = { fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" };
-                        const card: CSSProperties = { background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)" };
+                        const card: CSSProperties = { background: "white", borderRadius: "var(--card-radius)", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)" };
                         const hairline = (i: number) => i > 0 ? <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "18px" }} /> : null;
                         return (
                           <div style={{ marginBottom: "28px" }}>
@@ -852,7 +852,7 @@ export function ConstructionSetupStage() {
                             <div style={{
                               background: "linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%)",
                               border: "1px solid rgba(25,25,112,0.10)",
-                              borderRadius: "20px",
+                              borderRadius: "var(--card-radius)",
                               padding: "22px 20px",
                               boxShadow: "0 2px 16px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.03)",
                               display: "flex",
@@ -921,7 +921,7 @@ export function ConstructionSetupStage() {
                           /* 로딩 — Apple shimmer 스켈레톤 */
                           <div style={{
                             background: "white",
-                            borderRadius: "20px",
+                            borderRadius: "var(--card-radius)",
                             overflow: "hidden",
                             boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
                           }}>
@@ -942,7 +942,7 @@ export function ConstructionSetupStage() {
                           /* 업체 목록 — Apple grouped list */
                           <div style={{
                             background: "white",
-                            borderRadius: "20px",
+                            borderRadius: "var(--card-radius)",
                             overflow: "hidden",
                             boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
                           }}>
@@ -1052,7 +1052,7 @@ export function ConstructionSetupStage() {
                           /* 결과 없음 → 재시도 */
                           <div style={{
                             background: "white",
-                            borderRadius: "20px",
+                            borderRadius: "var(--card-radius)",
                             padding: "28px 20px",
                             boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
                             textAlign: "center",
@@ -1087,7 +1087,7 @@ export function ConstructionSetupStage() {
                           /* 상권 미설정 */
                           <div style={{
                             background: "white",
-                            borderRadius: "20px",
+                            borderRadius: "var(--card-radius)",
                             padding: "28px 20px",
                             boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
                             textAlign: "center",

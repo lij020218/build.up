@@ -7,6 +7,7 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneComponents
+import FoundOneCore
 import FoundOneData
 
 public struct CompanySetupStageView: View {
@@ -16,6 +17,7 @@ public struct CompanySetupStageView: View {
     private let stageId = "company-setup"
 
     @State private var page = 0
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
 
     @AppStorage("cs.corpRegistered")  private var corpRegistered  = false
     @AppStorage("cs.patentFiled")     private var patentFiled     = false
@@ -27,7 +29,17 @@ public struct CompanySetupStageView: View {
         ["corpRegistered": "\(corpRegistered)", "patentFiled": "\(patentFiled)", "trademarkFiled": "\(trademarkFiled)", "bizAccount": "\(bizAccount)", "done": "\(done)"]
     }
 
-    private let pages = ["법인 설립", "IP 보호"]
+    private static let basePages = ["법인 설립", "IP 보호"]
+
+    /// 앱·플랫폼 규제·계약(SSOT app-compliance, 구함 사례 2026-09) — 소프트웨어 스타트업만 추가 페이지로 임베드.
+    ///   웹 미러: CompanySetupStage → showsAppCompliance() + StageContentEmbeddedPage.
+    private var appCompliance: BUStageContent? {
+        guard IndustryCluster.from(industryId: industryId).isSoftwareStartup else { return nil }
+        return StageContentRegistry.content(for: "app-compliance")
+    }
+    private var pages: [String] {
+        Self.basePages + (appCompliance?.pages.map(\.label) ?? [])
+    }
 
     public init() {}
 
@@ -89,7 +101,13 @@ public struct CompanySetupStageView: View {
                 Group {
                     switch page {
                     case 0: corpPage
-                    default: ipPage
+                    case 1: ipPage
+                    default:
+                        if let appCompliance {
+                            BUStageContentRenderer(content: appCompliance, embeddedPage: page - Self.basePages.count)
+                        } else {
+                            ipPage
+                        }
                     }
                 }
             }

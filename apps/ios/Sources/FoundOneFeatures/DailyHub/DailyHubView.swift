@@ -108,7 +108,6 @@ public struct DailyHubView: View {
                     )
                 }
 
-                Color.clear.frame(height: 110)
             }
             .padding(.horizontal, BUSpacing.md)
             .padding(.top, BUSpacing.md)

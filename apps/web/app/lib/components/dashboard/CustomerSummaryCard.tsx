@@ -81,7 +81,7 @@ export function CustomerSummaryCard({ d, ko, fmt }: { d: DashboardHook; ko: bool
   const emptyText = emptyMsg[mode] ?? emptyMsg.repeat;
 
   return (
-    <article style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.10)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
+    <article style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.10)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{title}</span>

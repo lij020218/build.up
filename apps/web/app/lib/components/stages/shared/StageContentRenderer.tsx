@@ -10,7 +10,7 @@
  * 디자인: RegistrationSetupStage 의 미드나잇 Apple-style 프리미티브 1:1 보존.
  */
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   FileText,
   ShieldCheck,
@@ -30,6 +30,12 @@ import {
   Award,
   Calendar,
   ChevronRight,
+  Smartphone,
+  MapPin,
+  Phone,
+  Globe,
+  Copy,
+  Check,
   type LucideIcon,
 } from "lucide-react";
 import type {
@@ -58,6 +64,7 @@ import { ContractAiAnalysisPanel } from "./ContractAiAnalysisPanel";
 import { HiringCalculatorPanel, HiringTogglePanel } from "./HiringInteractivePanels";
 import { MyHiringPlanCard } from "../offline/MyHiringPlanCard";
 import { NtsBizVerifyCard } from "./NtsBizVerifyCard";
+import { AuthChannelPickerWidget, PgPrecheckWidget, DocRequestDecoderWidget } from "./CompliancePanels";
 import { GuestSignupLink } from "../../ui/GuestSignupLink";
 import { useStoreInfoStore } from "../../../stores/store-info-store";
 import { SETUP_META_KEY, readSetupMeta } from "../../../setup-missions";
@@ -81,6 +88,10 @@ const ICONS: Record<IconKey, LucideIcon> = {
   users: Users,
   rosette: Award,
   calendar: Calendar,
+  smartphone: Smartphone,
+  mapPin: MapPin,
+  phone: Phone,
+  globe: Globe,
 };
 
 const ACCENT_COLOR: Record<Accent, string> = {
@@ -375,6 +386,227 @@ function CpaDecisionWidget({
         })}
       </div>
     </div>
+  );
+}
+
+
+/* ───────────────────────── app-compliance 위젯(정적 섹션 + dateOffset) ─────────────────────────
+ *  glossary·dependencyChain·compareTable·copyTemplate·prepChecklist 는 데이터로 렌더(iOS 동일 kind).
+ *  dateOffset 은 로컬 계산기(서버 저장 없음) — 위치정보법 D+30 · 개인정보처리방침 개정 7일 전 고지.
+ */
+
+const DANGER = "#b64c4c";
+
+/** "YYYY-MM-DD" → 로컬 Date(자정). 잘못된 값이면 null. */
+function parseIsoDate(v: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function addDays(d: Date, days: number): Date {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
+const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"];
+
+function formatDateKo(d: Date, ko: boolean): string {
+  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  if (!ko) return iso;
+  return `${iso} (${WEEKDAY_KO[d.getDay()]})`;
+}
+
+/** 오늘 기준 D-표기. 음수면 이미 지남. */
+function dDayLabel(target: Date, ko: boolean): string {
+  const today = new Date();
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diff = Math.round((target.getTime() - base.getTime()) / 86_400_000);
+  if (diff === 0) return ko ? "오늘" : "Today";
+  if (diff > 0) return `D-${diff}`;
+  return ko ? `${-diff}일 지남` : `${-diff}d overdue`;
+}
+
+function useCopy(): [boolean, (text: string) => void] {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1800);
+    return () => clearTimeout(t);
+  }, [copied]);
+  const copy = (text: string) => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(() => setCopied(true)).catch(() => setCopied(false));
+  };
+  return [copied, copy];
+}
+
+function CopyButton({ text, ko }: { text: string; ko: boolean }) {
+  const [copied, copy] = useCopy();
+  const Icon = copied ? Check : Copy;
+  let label = ko ? "복사" : "Copy";
+  if (copied) label = ko ? "복사됨" : "Copied";
+  return (
+    <button
+      type="button"
+      onClick={() => copy(text)}
+      style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "12px", fontWeight: 700, color: copied ? "#2f8f4e" : MIDNIGHT, background: copied ? "rgba(47,143,78,0.08)" : MIDNIGHT_SOFT, border: "none", borderRadius: "8px", padding: "6px 10px", cursor: "pointer" }}
+    >
+      <Icon size={12} strokeWidth={2.2} />
+      {label}
+    </button>
+  );
+}
+
+type DateOffsetConfig = {
+  title?: string;
+  inputLabel?: string;
+  offsetDays?: number;
+  direction?: "after" | "before";
+  resultLabel?: string;
+  note?: string;
+  noticeTemplate?: string;
+};
+
+/** 날짜 오프셋 계산기(웹) — 기준일 입력 → ±offsetDays 결과일 + D-day + (선택) 고지 문구. */
+export function DateOffsetWidget({ config, ko }: { config?: Record<string, unknown>; ko: boolean }) {
+  const c = (config ?? {}) as DateOffsetConfig;
+  const offsetDays = typeof c.offsetDays === "number" ? c.offsetDays : 0;
+  const signed = c.direction === "before" ? -offsetDays : offsetDays;
+  const [value, setValue] = useState("");
+  const input = parseIsoDate(value);
+  const result = input ? addDays(input, signed) : null;
+  const notice = result && input && c.noticeTemplate
+    ? c.noticeTemplate.replaceAll("{{input}}", formatDateKo(input, ko)).replaceAll("{{result}}", formatDateKo(result, ko))
+    : null;
+
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <CardShell>
+        <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: MIDNIGHT_SOFT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Calendar size={16} strokeWidth={2.2} color={MIDNIGHT} />
+            </div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{c.title ?? ""}</div>
+          </div>
+          <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.6)" }}>{c.inputLabel ?? (ko ? "기준일" : "Base date")}</span>
+            <input
+              type="date"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              style={{ fontSize: "14px", padding: "9px 12px", borderRadius: "10px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", color: "#0f172a", maxWidth: "240px" }}
+            />
+          </label>
+          <div style={{ padding: "12px 14px", borderRadius: "12px", background: result ? "rgba(25,25,112,0.05)" : "rgba(0,0,0,0.02)", border: `1px solid ${result ? "rgba(25,25,112,0.14)" : "rgba(0,0,0,0.06)"}` }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px" }}>{c.resultLabel ?? (ko ? "결과일" : "Result")}</div>
+            {result ? (
+              <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em" }}>{formatDateKo(result, ko)}</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "white", background: MIDNIGHT, padding: "2px 8px", borderRadius: "999px" }}>{dDayLabel(result, ko)}</span>
+              </div>
+            ) : (
+              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "날짜를 고르면 마감일을 계산합니다" : "Pick a date to compute the deadline"}</div>
+            )}
+          </div>
+          {c.note && <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>{c.note}</div>}
+          {notice && (
+            <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.6)" }}>{ko ? "고지 문구" : "Notice text"}</span>
+                <CopyButton text={notice} ko={ko} />
+              </div>
+              <div style={{ fontSize: "13px", lineHeight: 1.6, color: "#0f172a", whiteSpace: "pre-wrap" }}>{notice}</div>
+            </div>
+          )}
+        </div>
+      </CardShell>
+    </div>
+  );
+}
+
+/** 준비 체크리스트(게이팅 없음) — 로컬 저장(localStorage). 항목 id 로 키 구성. */
+function PrepChecklistWidget({ section, ko }: { section: Extract<Section, { kind: "prepChecklist" }>; ko: boolean }) {
+  const storageKey = `prepChecklist:${section.items.map((it) => it.id).join(",")}`;
+  const [checks, setChecks] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null;
+      if (raw) setChecks(JSON.parse(raw) as Record<string, boolean>);
+    } catch {
+      // 저장소 접근 불가 — 빈 상태로 렌더
+    }
+  }, [storageKey]);
+  const toggle = (id: string) => {
+    setChecks((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      try { window.localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  };
+  const done = section.items.filter((it) => checks[it.id]).length;
+  const total = section.items.length;
+  const allDone = total > 0 && done === total;
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+        <span style={sectionLabelStyle}>{section.eyebrow}</span>
+        <span style={{ fontSize: "11.5px", fontWeight: 700, color: allDone ? "#fff" : "var(--text)", background: allDone ? "#1d3557" : "rgba(0,0,0,0.08)", padding: "3px 10px", borderRadius: "999px" }}>{done} / {total}</span>
+      </div>
+      {section.subtitle && <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55, marginBottom: "10px" }}>{section.subtitle}</div>}
+      <CardShell>
+        {section.items.map((it, idx) => {
+          const isDone = !!checks[it.id];
+          return (
+            <div key={it.id}>
+              {idx > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "48px" }} />}
+              <button type="button" onClick={() => toggle(it.id)} style={{ display: "flex", gap: "12px", alignItems: "flex-start", width: "100%", textAlign: "left", padding: "13px 16px", background: isDone ? "rgba(29,53,87,0.04)" : "transparent", border: "none", cursor: "pointer" }}>
+                <div style={{ flexShrink: 0, marginTop: "1px", width: 22, height: 22, borderRadius: 7, border: isDone ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: isDone ? "#1d3557" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {isDone && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "14px", fontWeight: 600, color: isDone ? "rgba(0,0,0,0.4)" : "var(--text)", lineHeight: 1.45, textDecoration: isDone ? "line-through" : "none" }}>{it.label}</div>
+                  {it.detail && !isDone && <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, marginTop: "3px" }}>{it.detail}</div>}
+                </div>
+              </button>
+            </div>
+          );
+        })}
+      </CardShell>
+      {allDone && section.doneNote && (
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px", fontSize: "13px", fontWeight: 700, color: "#2f8f4e" }}>
+          <Check size={14} strokeWidth={2.4} />
+          {section.doneNote}
+        </div>
+      )}
+      <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.45)", marginTop: "6px" }}>{ko ? "준비 확인용 — 단계 통과 조건이 아닙니다" : "Prep-only — not a stage gate"}</div>
+    </div>
+  );
+}
+
+function CopyTemplateCard({ section, ko }: { section: Extract<Section, { kind: "copyTemplate" }>; ko: boolean }) {
+  const text = section.lines.map((l) => `${l.label}: ${l.value}`).join("\n");
+  return (
+    <SectionCard key={section.title} title={section.eyebrow} subtitle={section.subtitle}>
+      <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 700, color: MIDNIGHT }}>{section.title}</div>
+          <CopyButton text={text} ko={ko} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "6px 12px", padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.08)", fontSize: "13px", lineHeight: 1.55 }}>
+          {section.lines.map((l) => (
+            <div key={l.label} style={{ display: "contents" }}>
+              <div style={{ fontWeight: 700, color: "rgba(15,23,42,0.7)" }}>{l.label}</div>
+              <div style={{ color: "#0f172a" }}>{l.value}</div>
+            </div>
+          ))}
+        </div>
+        {section.footnote && <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>{section.footnote}</div>}
+      </div>
+    </SectionCard>
   );
 }
 
@@ -790,6 +1022,97 @@ function renderSection(
       );
     }
 
+
+    case "glossary":
+      return (
+        <SectionCard key={key} title={section.eyebrow} subtitle={section.subtitle}>
+          {section.terms.map((t, idx) => (
+            <div key={t.term} style={{ padding: "12px 16px", borderTop: idx > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none" }}>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: MIDNIGHT, marginBottom: "3px" }}>{t.term}</div>
+              <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>{t.meaning}</div>
+              {(t.where || t.format) && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
+                  {t.where && <span style={{ fontSize: "11.5px", fontWeight: 600, color: MIDNIGHT, background: MIDNIGHT_SOFT, padding: "3px 8px", borderRadius: "6px" }}>{ko ? "어디서" : "Where"} · {t.where}</span>}
+                  {t.format && <span style={{ fontSize: "11.5px", fontWeight: 600, color: "rgba(15,23,42,0.7)", background: "rgba(0,0,0,0.05)", padding: "3px 8px", borderRadius: "6px" }}>{ko ? "형식" : "Format"} · {t.format}</span>}
+                </div>
+              )}
+            </div>
+          ))}
+        </SectionCard>
+      );
+
+    case "dependencyChain":
+      return (
+        <SectionCard key={key} title={section.eyebrow} subtitle={section.subtitle}>
+          <div style={{ padding: "14px 16px 6px" }}>
+            {section.nodes.map((n, idx) => {
+              const Icon = n.icon ? ICONS[n.icon] : ChevronRight;
+              const isLast = idx === section.nodes.length - 1;
+              return (
+                <div key={n.id} style={{ display: "flex", gap: "12px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "30px", flexShrink: 0 }}>
+                    <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: MIDNIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Icon size={14} strokeWidth={2.2} color="white" />
+                    </div>
+                    {!isLast && <div style={{ width: "2px", flex: 1, minHeight: "18px", background: "rgba(25,25,112,0.18)", margin: "4px 0" }} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? "8px" : "16px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", lineHeight: 1.4 }}>{n.label}</div>
+                    <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55, marginTop: "3px" }}>{n.detail}</div>
+                    {n.blocks && (
+                      <div style={{ display: "flex", gap: "6px", alignItems: "flex-start", marginTop: "6px", padding: "7px 10px", borderRadius: "8px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.16)" }}>
+                        <AlertTriangle size={12} strokeWidth={2.2} color={DANGER} style={{ marginTop: "2px", flexShrink: 0 }} />
+                        <div style={{ fontSize: "12px", color: DANGER, lineHeight: 1.5, fontWeight: 600 }}>{ko ? "미완이면 → " : "If missing → "}{n.blocks}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+      );
+
+    case "compareTable":
+      return (
+        <SectionCard key={key} title={section.eyebrow} subtitle={section.subtitle}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px", minWidth: "520px" }}>
+              <thead>
+                <tr>
+                  {section.columns.map((col) => (
+                    <th key={col} style={{ textAlign: "left", padding: "10px 14px", fontSize: "11.5px", fontWeight: 700, color: "rgba(15,23,42,0.55)", background: "rgba(25,25,112,0.03)", borderBottom: `1px solid ${MIDNIGHT_BORDER}`, whiteSpace: "nowrap" }}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {section.rows.map((row) => (
+                  <tr key={row.label}>
+                    <td style={{ padding: "11px 14px", verticalAlign: "top", borderBottom: "0.5px solid rgba(0,0,0,0.07)" }}>
+                      <div style={{ fontWeight: 700, color: MIDNIGHT }}>{row.label}</div>
+                      {row.note && <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "3px", lineHeight: 1.45 }}>{row.note}</div>}
+                    </td>
+                    {row.cells.map((cell, ci) => {
+                      const unknown = cell === "미확인";
+                      return (
+                        <td key={ci} style={{ padding: "11px 14px", verticalAlign: "top", color: unknown ? "rgba(15,23,42,0.4)" : "rgba(15,23,42,0.8)", lineHeight: 1.5, borderBottom: "0.5px solid rgba(0,0,0,0.07)", fontStyle: unknown ? "italic" : "normal" }}>{cell}</td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {section.footnote && <div style={{ padding: "10px 14px", fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>{section.footnote}</div>}
+        </SectionCard>
+      );
+
+    case "copyTemplate":
+      return <CopyTemplateCard key={key} section={section} ko={ko} />;
+
+    case "prepChecklist":
+      return <PrepChecklistWidget key={key} section={section} ko={ko} />;
+
     case "wrapup":
       return (
         <StageWrapup
@@ -853,6 +1176,14 @@ function renderSection(
           return <HiringTogglePanel key={key} label={ko ? "4대보험 신고 완료 (D+14)" : "4-insurance filed (D+14)"} />;
         case "hiringPayslipDone":
           return <HiringTogglePanel key={key} label={ko ? "급여명세서 자동 발송 셋업" : "Auto payslip set up"} />;
+        case "dateOffset":
+          return <DateOffsetWidget key={key} config={section.config} ko={ko} />;
+        case "authChannelPicker":
+          return <AuthChannelPickerWidget key={key} config={section.config} ko={ko} />;
+        case "pgPrecheck":
+          return <PgPrecheckWidget key={key} config={section.config} ko={ko} />;
+        case "docRequestDecoder":
+          return <DocRequestDecoderWidget key={key} config={section.config} ko={ko} />;
         case "bizVerify":
           return <BizVerifyGateBlock key={key} ko={ko} />;
         default:
@@ -868,23 +1199,71 @@ function renderSection(
 
 /* ───────────────────────── 메인 ───────────────────────── */
 
-export function StageContentRenderer({ content }: { content: StageContent }) {
-  const d = useDashboardCtx();
+/** byCategory 키 해석 — 내 업종 → "food" 폴백 → 첫 키(iOS BUStageContentRenderer.categoryId 와 동일 규칙). */
+function resolveStageCategory(content: StageContent, industryCategoryId: string | null | undefined): { catId: string; cat: CategoryContent } {
+  const keys = Object.keys(content.byCategory);
+  let catId = keys[0] ?? "";
+  if (industryCategoryId && content.byCategory[industryCategoryId]) catId = industryCategoryId;
+  else if (content.byCategory.food) catId = "food";
+  return { catId, cat: content.byCategory[catId] };
+}
+
+/** DashboardContext → 인터랙티브 바인딩(세무 체크·세무사 결정·계약 체크·FAQ). 메인/임베디드 렌더러 공유. */
+function useStageInteractiveBindings(): InteractiveBindings {
   const {
-    industryCategoryId, language,
     taxChecks, setTaxChecks,
     cpaDecision, setCpaDecision,
     contractSubChecks, setContractSubChecks,
     knowledgeQaText, setKnowledgeQaText,
     knowledgeQaStatus, knowledgeQaError,
     handleKnowledgeQuestion,
-  } = d;
+  } = useDashboardCtx();
+  return {
+    taxChecks,
+    setTaxChecks,
+    cpaDecision,
+    setCpaDecision: (v: string) => setCpaDecision(v as "self" | "cpa"),
+    contractSubChecks,
+    setContractSubChecks,
+    faq: {
+      qaText: knowledgeQaText,
+      setQaText: setKnowledgeQaText,
+      qaStatus: knowledgeQaStatus,
+      qaError: knowledgeQaError,
+      askAi: () => handleKnowledgeQuestion("tax"),
+    },
+  };
+}
+
+/**
+ * StageContentEmbeddedPage — 다른(수기) 단계 안에 SSOT 콘텐츠의 **한 페이지 섹션만** 렌더.
+ *  히어로·페이지 네비·wrapup 없음 — 호스트 위저드(CompanySetupStage 등)가 페이지 네비를 소유.
+ *  iOS 미러: BUStageContentRenderer(content:, embeddedPage:).
+ */
+export function StageContentEmbeddedPage({ content, pageIndex }: { content: StageContent; pageIndex: number }) {
+  const { industryCategoryId, language } = useDashboardCtx();
+  const iact = useStageInteractiveBindings();
+  const ko = language === "ko";
+  const { catId, cat } = resolveStageCategory(content, industryCategoryId);
+  const currentPage = content.pages[pageIndex];
+  if (!currentPage || !cat) return null;
+  return (
+    <div className="bento-fade-in" style={{ marginBottom: "16px" }}>
+      {currentPage.sections.map((section, i) =>
+        renderSection(section, i, { content, cat, catId, categoryLabel: cat.label, pageId: currentPage.id, ko, iact }),
+      )}
+    </div>
+  );
+}
+
+export function StageContentRenderer({ content }: { content: StageContent }) {
+  const d = useDashboardCtx();
+  const { industryCategoryId, language } = d;
   const ko = language === "ko";
 
   const [page, setPage] = useState(0);
 
-  const catId = industryCategoryId && content.byCategory[industryCategoryId] ? industryCategoryId : "food";
-  const cat = content.byCategory[catId];
+  const { catId, cat } = resolveStageCategory(content, industryCategoryId);
   const categoryLabel = cat.label;
   const pageLabels = useMemo(() => content.pages.map((p) => p.label), [content]);
 
@@ -902,21 +1281,7 @@ export function StageContentRenderer({ content }: { content: StageContent }) {
       }
     : content.keyAction;
 
-  const iact: InteractiveBindings = {
-    taxChecks,
-    setTaxChecks,
-    cpaDecision,
-    setCpaDecision: (v: string) => setCpaDecision(v as "self" | "cpa"),
-    contractSubChecks,
-    setContractSubChecks,
-    faq: {
-      qaText: knowledgeQaText,
-      setQaText: setKnowledgeQaText,
-      qaStatus: knowledgeQaStatus,
-      qaError: knowledgeQaError,
-      askAi: () => handleKnowledgeQuestion("tax"),
-    },
-  };
+  const iact = useStageInteractiveBindings();
 
   return (
     <div className="bento-fade-in" style={{ marginBottom: "16px" }}>

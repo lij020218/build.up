@@ -206,7 +206,7 @@ export function MonthlyProgressCard() {
 /* ─── Styles ─── */
 
 const card: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   padding: "22px",
   background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   border: "1px solid rgba(25,25,112,0.10)",

@@ -614,7 +614,7 @@ function PopbillWizard({
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "#fff",
-          borderRadius: "20px",
+          borderRadius: "var(--card-radius)",
           width: "100%",
           maxWidth: "500px",
           maxHeight: "90vh",

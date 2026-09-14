@@ -211,7 +211,6 @@ public struct FranchiseView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         brandCards
                         disclaimerFootnote
-                        Color.clear.frame(height: 110)
                     }
                     .padding(.horizontal, BUSpacing.screenMargin)
                 }
@@ -319,14 +318,29 @@ public struct FranchiseView: View {
 
     private var brandCards: some View {
         // 공정위 자동 브랜드 합류로 최대 ~1,600개 → LazyVStack + 20행 페이지네이션.
-        let shown = filteredBrands.prefix(visibleCount)
-        return LazyVStack(spacing: 8) {
-            ForEach(shown) { brand in
-                FranchiseBrandCard(brand: brand) {
-                    selectedBrand = brand
-                    selectedBrandIdStorage = brand.id
+        let shown = Array(filteredBrands.prefix(visibleCount))
+        return LazyVStack(spacing: 14) {
+            // 2026-09-12 재디자인: 행마다 떠 있던 카드 → **하나의 그룹 리스트**(애플 설정/앱스토어 패턴).
+            //   행 = 브랜드 아이콘 타일 + 상호 + (업종·창업비용·폐점률) + 종합점수. 구분선은 텍스트 기준으로 들여쓴다.
+            LazyVStack(spacing: 0) {
+                ForEach(Array(shown.enumerated()), id: \.element.id) { idx, brand in
+                    FranchiseBrandRow(brand: brand) {
+                        selectedBrand = brand
+                        selectedBrandIdStorage = brand.id
+                    }
+                    if idx < shown.count - 1 {
+                        Rectangle()
+                            .fill(BUColor.ink.opacity(0.07))
+                            .frame(height: 0.5)
+                            .padding(.leading, 70)   // 아이콘 타일(44) + 좌여백(14) + 간격(12)
+                    }
                 }
             }
+            .background(Color.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+            )
 
             if filteredBrands.count > shown.count {
                 Button {
@@ -392,93 +406,154 @@ private func overallScore(_ b: FranchiseBrandView) -> Double { b.overall }
 
 // MARK: - Brand card
 
-private struct FranchiseBrandCard: View {
-    let brand: FranchiseBrandView
-    let onTapInfoDisclosure: () -> Void
+/// 브랜드 아이콘 타일 — 공식 로고(번들) 있으면 로고, 없으면 업종 색 모노그램.
+///  로고 품질 게이트(96px+·배너 배제)는 수집 스크립트가 이미 통과시킨 것만 번들에 넣는다.
+private struct FranchiseBrandTile: View {
+    let brandId: String
+    let name: String
+    let categoryId: String
+    var size: CGFloat = 44
 
-    // 2026-08-19 밀도 정리: 컴팩트 한 줄 행(브랜드 · 카테고리 · 종합 · 초기비용 · 폐점률 + chevron).
-    //   2×2 지표 그리드 + 5 점수 바는 상세 시트(FranchiseDetailSheet)에 이미 존재 → 카드에서 제거.
-    var body: some View {
-        Button(action: onTapInfoDisclosure) {
-            HStack(alignment: .center, spacing: 10) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 5) {
-                        Text(brand.name)
-                            .font(.system(size: 15, weight: .bold))
-                            .tracking(-0.3)
-                            .foregroundStyle(BUColor.ink)
-                            .lineLimit(1)
-                        Text(brand.category)
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(BUColor.midnight)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(BUColor.midnight.opacity(0.06), in: Capsule())
-                        if brand.isKftc {
-                            Text("공정위")
-                                .font(.system(size: 9.5, weight: .heavy))
-                                .foregroundStyle(BUColor.midnight.opacity(0.7))
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(BUColor.midnight.opacity(0.06), in: Capsule())
-                        }
-                    }
-                    HStack(spacing: 8) {
-                        metric("초기", formatTotalCost(brand.totalInitialManwon))
-                        metric("폐점률", brand.closureRatePct.map { String(format: "%.1f%%", $0) } ?? "-",
-                               tint: brand.closureRatePct.map { $0 >= 20 ? BUColor.danger : $0 >= 10 ? BUColor.warn : BUColor.ink } ?? BUColor.ink)
-                    }
-                }
-                Spacer(minLength: 6)
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text(String(format: "%.0f", brand.overall))
-                        .font(.system(size: 17, weight: .heavy))
-                        .foregroundStyle(scoreColor(Int(brand.overall)))
-                        .monospacedDigit()
-                    Text("종합")
-                        .font(.system(size: 9, weight: .heavy))
-                        .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-                }
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(BUColor.inkMuted.opacity(0.6))
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: BUSpacing.minTapTarget)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
+    /// 행 재사용마다 디스크를 다시 읽지 않도록 메모리 캐시(목록 1,600행).
+    private static var cache: [String: UIImage] = [:]
+
+    private var logo: UIImage? {
+        if let hit = Self.cache[brandId] { return hit }
+        guard let url = FranchiseBrandVisual.logoURL(brandId: brandId),
+              let img = UIImage(contentsOfFile: url.path) else { return nil }
+        Self.cache[brandId] = img
+        return img
     }
 
-    private func metric(_ label: String, _ value: String, tint: Color = BUColor.ink) -> some View {
-        HStack(spacing: 3) {
-            Text(label)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted)
-            Text(value)
-                .font(.system(size: 11.5, weight: .bold))
-                .foregroundStyle(tint)
-                .monospacedDigit()
+    var body: some View {
+        let tint = FranchiseBrandVisual.tint(categoryId: categoryId)
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
+                .fill(logo == nil ? Color(buHex: tint.bgHex) : Color.white)
+            if let logo {
+                Image(uiImage: logo)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(size * 0.14)
+            } else {
+                Text(FranchiseBrandVisual.monogram(name))
+                    .font(.system(size: size * (FranchiseBrandVisual.monogram(name).count > 1 ? 0.34 : 0.42), weight: .bold))
+                    .tracking(-0.4)
+                    .foregroundStyle(Color(buHex: tint.fgHex))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay(
+            RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
+                .strokeBorder(BUColor.ink.opacity(0.06), lineWidth: 0.5)
+        )
+    }
+}
+
+/// 목록 행 — 아이콘 · 상호 · (업종 · 창업비용 · 폐점률) · 종합점수.
+private struct FranchiseBrandRow: View {
+    let brand: FranchiseBrandView
+    let onTapInfoDisclosure: () -> Void
+    @State private var pressed = false
+
+    var body: some View {
+        Button(action: onTapInfoDisclosure) {
+            HStack(spacing: 12) {
+                FranchiseBrandTile(brandId: brand.id, name: brand.name, categoryId: brand.categoryId)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 5) {
+                        Text(brand.name)
+                            .font(.system(size: 16, weight: .semibold))
+                            .tracking(-0.4)
+                            .foregroundStyle(BUColor.ink)
+                            .lineLimit(1)
+                        if brand.isKftc {
+                            Text("공정위")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(BUColor.inkMuted.opacity(0.8))
+                                .padding(.horizontal, 5).padding(.vertical, 1.5)
+                                .background(BUColor.ink.opacity(0.05), in: Capsule())
+                        }
+                    }
+                    metaLine
+                }
+
+                Spacer(minLength: 6)
+
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(String(format: "%.0f", brand.overall))
+                        .font(.system(size: 18, weight: .bold))
+                        .tracking(-0.5)
+                        .monospacedDigit()
+                        .foregroundStyle(scoreColor(Int(brand.overall)))
+                    Text(FranchiseBrandVisual.scoreLabel(Int(brand.overall)))
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .foregroundStyle(BUColor.inkMuted.opacity(0.65))
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.45))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: BUSpacing.minTapTarget)
+            .background(pressed ? BUColor.midnight.opacity(0.05) : Color.clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, pressing: { pressed = $0 }, perform: {})
+    }
+
+    /// 업종 · 창업비용 · 폐점률 한 줄 — 업종은 색으로, 숫자는 monospacedDigit 으로 정렬감.
+    private var metaLine: some View {
+        let tint = FranchiseBrandVisual.tint(categoryId: brand.categoryId)
+        return HStack(spacing: 6) {
+            Text(brand.category)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(buHex: tint.fgHex))
                 .lineLimit(1)
+                .layoutPriority(1)
+            dot
+            Text(brand.totalInitialManwon > 0 ? formatTotalCost(brand.totalInitialManwon) : "비용 미공개")
+                .font(.system(size: 12, weight: .medium))
+                .monospacedDigit()
+                .foregroundStyle(BUColor.inkSecondary)
+                .lineLimit(1)
+            if let rate = brand.closureRatePct, rate > 0 {
+                dot
+                Text("폐점 \(String(format: "%.1f", rate))%")
+                    .font(.system(size: 12, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(closureColor(rate))
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var dot: some View {
+        Circle()
+            .fill(BUColor.inkMuted.opacity(0.35))
+            .frame(width: 2.5, height: 2.5)
+    }
+
+    private func closureColor(_ rate: Double) -> Color {
+        switch FranchiseBrandVisual.closureBand(rate) {
+        case .risk:  return BUColor.danger
+        case .watch: return BUColor.warn
+        case .safe:  return BUColor.inkSecondary
         }
     }
 
     private func formatTotalCost(_ manwon: Int) -> String {
         if manwon >= 10000 {
-            let eok = Double(manwon) / 10000.0
-            return String(format: "%.1f억", eok)
-        } else {
-            return "\(manwon.formatted())만원"
+            return String(format: "%.1f억", Double(manwon) / 10000.0)
         }
+        return "\(manwon.formatted())만원"
     }
 
     private func scoreColor(_ value: Int) -> Color {

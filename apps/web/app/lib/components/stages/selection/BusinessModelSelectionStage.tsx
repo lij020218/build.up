@@ -280,7 +280,7 @@ export function BusinessModelSelectionStage() {
           startup-tech / online-digital 만 표시. 외식·뷰티 등은 자동 "one-time".
           ═════════════════════════════════════════════════════════ */}
       {showRevenueModel && (
-        <div style={{ marginTop: "24px", padding: "20px 22px", borderRadius: "20px", background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)", border: `1px solid ${MIDNIGHT_BORDER}`, boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)" }}>
+        <div style={{ marginTop: "24px", padding: "20px 22px", borderRadius: "var(--card-radius)", background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)", border: `1px solid ${MIDNIGHT_BORDER}`, boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
             <div style={{ padding: "3px 9px", borderRadius: "6px", background: MIDNIGHT, color: "#fff", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em" }}>
               {ko ? "수익 모델" : "REVENUE MODEL"}

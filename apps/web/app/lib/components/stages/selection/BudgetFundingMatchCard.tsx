@@ -118,7 +118,7 @@ export function BudgetFundingMatchCard() {
     <div
       style={{
         margin: "16px 0",
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 100%)",
         border: "1px solid rgba(25,25,112,0.08)",
         boxShadow: "0 4px 12px rgba(17,17,17,0.04)",

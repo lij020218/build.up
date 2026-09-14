@@ -37,7 +37,7 @@ export function StoreSetupStage() {
         </div>
       )}
       {/* 플랫폼별 스토어 세팅 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "플랫폼별 스토어 세팅" : "Platform Store Setup"}</div>
           <div style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "각 플랫폼의 필수 설정 항목을 빠짐없이 완료하세요" : "Complete all required settings for each platform"}</div>
@@ -126,7 +126,7 @@ export function StoreSetupStage() {
       </div>
 
       {/* 택배사 계약 가이드 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "택배 계약 가이드" : "Courier Contract Guide"}</div>
           <div style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "초기에는 우체국택배 → 물량 늘면 계약택배로 전환" : "Start with post office → switch to contract when volume grows"}</div>
@@ -162,7 +162,7 @@ export function StoreSetupStage() {
       </div>
 
       {/* 필수 설정 체크리스트 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "var(--card-radius)", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", marginBottom: "10px" }}>{ko ? "오픈 전 필수 확인 사항" : "Pre-launch Checklist"}</div>
         <div style={{ display: "grid", gap: "6px" }}>
           {(ko ? [

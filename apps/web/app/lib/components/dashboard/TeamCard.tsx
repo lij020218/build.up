@@ -63,7 +63,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
   return (
     <article
       style={{
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         border: "1px solid rgba(25,25,112,0.10)",
         background: "#fff",
         padding: "18px 22px",

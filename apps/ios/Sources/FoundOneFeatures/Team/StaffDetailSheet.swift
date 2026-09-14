@@ -22,14 +22,25 @@ public struct StaffDetailSheet: View {
     private let rules: [TeamScheduleRule]
     private let leaves: [TeamLeaveRequest]
     private let categoryId: String?
+    /// 상시 근로자 수 — 5인 미만이면 가산수당 의무가 없다(근기법 §11).
+    private let headcount: Int
+    /// 이번 달 승인된 추가 수당 (연장·야간·휴일).
+    private let approvedAllowances: [TeamAllowanceRequest]
+    /// 사장이 정한 급여일 — 명세서 "임금지급일" 기재용.
+    private let paydayDay: Int?
     private let onWageSaved: () -> Void
     private let onJobSaved: () -> Void
 
-    public init(member: TeamMember, rules: [TeamScheduleRule], leaves: [TeamLeaveRequest], categoryId: String? = nil, onWageSaved: @escaping () -> Void, onJobSaved: @escaping () -> Void = {}) {
+    public init(member: TeamMember, rules: [TeamScheduleRule], leaves: [TeamLeaveRequest], categoryId: String? = nil,
+                headcount: Int = 1, approvedAllowances: [TeamAllowanceRequest] = [], paydayDay: Int? = nil,
+                onWageSaved: @escaping () -> Void, onJobSaved: @escaping () -> Void = {}) {
         self.member = member
         self.rules = rules
         self.leaves = leaves
         self.categoryId = categoryId
+        self.headcount = headcount
+        self.approvedAllowances = approvedAllowances
+        self.paydayDay = paydayDay
         self.onWageSaved = onWageSaved
         self.onJobSaved = onJobSaved
         _wageInput = State(initialValue: member.hourlyWage.map(String.init) ?? "")
@@ -73,12 +84,40 @@ public struct StaffDetailSheet: View {
         }
     }
     private var weeklyHours: Double { Double(weeklyMin) / 60 }
-    private var hasJuhyu: Bool { weeklyHours >= 15 }
-    private var weeklyAllowance: Double { (wage != nil && hasJuhyu) ? (weeklyHours / 5) * Double(wage!) : 0 }
-    private var monthlyPay: Int? {
-        guard let wage else { return nil }
-        return Int(((Double(wage) * weeklyHours + weeklyAllowance) * 4.345).rounded())
+
+    // 2026-09-12: 종전 계산은 4대보험·세금·가산수당을 전부 빼고 "예상 월급"이라 불렀다.
+    //  사장님이 그 숫자를 그대로 주면 공제를 안 한 셈이 되고, 가산수당은 누락된다.
+    //  이제 BUPayroll(웹 SSOT 미러)로 지급·공제·실지급을 나눠 계산한다.
+    private var payrollPeriod: String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return f.string(from: Date())
     }
+
+    /// 이번 달 승인된 수당 시간 (유형별).
+    private func approvedHours(_ type: String) -> Double {
+        approvedAllowances
+            .filter { $0.status == "approved" && $0.allowanceType == type && $0.workDate.hasPrefix(payrollPeriod) }
+            .reduce(0) { $0 + Double($1.minutes) / 60 }
+    }
+
+    private var payroll: BUPayrollResult? {
+        guard let wage, wage > 0, weeklyHours > 0 else { return nil }
+        // 화면 곳곳이 같은 근속 일수를 말해야 한다 — daysSinceHire 하나만 쓴다.
+        let tenure: Int? = daysSinceHire > 0 ? daysSinceHire : nil
+        return BUPayroll.calculate(BUPayrollInput(
+            period: payrollPeriod,
+            headcount: headcount,
+            hourlyWage: wage,
+            contractedWeeklyHours: weeklyHours,
+            overtimeHours: approvedHours("overtime"),
+            nightHours: approvedHours("night"),
+            holidayHours: approvedHours("holiday"),
+            tenureDays: tenure
+        ))
+    }
+
+    @State private var showPayslip = false
 
     public var body: some View {
         NavigationStack {
@@ -96,6 +135,16 @@ public struct StaffDetailSheet: View {
                     }
                     .padding(.horizontal, BUSpacing.md)
                     .padding(.top, BUSpacing.sm)
+                }
+            }
+            .sheet(isPresented: $showPayslip) {
+                if let p = payroll {
+                    PayslipSheet(
+                        memberName: member.name,
+                        period: p.period,
+                        paydayLabel: paydayDay.map { "매월 \($0)일" },
+                        result: p
+                    )
                 }
             }
             .navigationTitle("직원 상세")
@@ -286,15 +335,49 @@ public struct StaffDetailSheet: View {
                     Text("⚠ 2026 최저시급 \(Self.minimumWage2026.formatted())원 미달")
                         .font(.system(size: 11.5, weight: .heavy)).foregroundStyle(BUColor.danger)
                 }
-                HStack(spacing: 6) {
-                    statCell(weeklyMin > 0 ? durLabel(weeklyMin) : "—", "주 근무 (근무표)")
-                    statCell(wage != nil && weeklyMin > 0 ? (hasJuhyu ? "\(Int(weeklyAllowance.rounded()).formatted())원" : "해당 없음") : "—", "주휴수당 (주 15h↑)")
-                    statCell(monthlyPay != nil && weeklyMin > 0 ? "\(monthlyPay!.formatted())원" : "—", "예상 월급")
+                // 2026-09-12: "예상 월급" 한 칸이던 것을 지급·공제·실지급으로 나눴다.
+                //  종전 숫자는 4대보험·세금·가산수당을 뺀 값이라, 그대로 주면 공제를 안 한 셈이 됐다.
+                if let p = payroll {
+                    BUHairline().padding(.vertical, 4)
+                    payRow("주 근무 (근무표)", durLabel(weeklyMin))
+                    payRow("지급 총액", "\(p.grossPay.formatted())원")
+                    payRow("공제 총액", "−\(p.deductionTotal.formatted())원")
+                    payRow("실지급액", "\(p.netPay.formatted())원", emphasized: true)
+                    Button { showPayslip = true } label: {
+                        Text("임금명세서 보기")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+                    if p.warnings.contains(where: { $0.level == .violation }) {
+                        Text("바로잡아야 할 항목이 있습니다 — 명세서에서 확인하세요.")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(BUColor.danger)
+                    }
+                } else {
+                    Text("시급과 근무표를 등록하면 지급액·공제액을 계산해 드립니다.")
+                        .font(.system(size: 15)).foregroundStyle(BUColor.inkMuted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("근무표 기준 추정치 (주휴수당 포함, 4대보험·세금 미반영).")
-                    .font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
             }
         }
+    }
+
+    private func payRow(_ label: String, _ value: String, emphasized: Bool = false) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 15))
+                .foregroundStyle(BUColor.inkMuted)
+            Spacer(minLength: 8)
+            Text(value)
+                .font(.system(size: emphasized ? 20 : 17, weight: emphasized ? .bold : .regular))
+                .foregroundStyle(BUColor.ink)
+                .monospacedDigit()
+        }
+        .frame(minHeight: 40)
     }
 
     // ── ②-b 퇴직금 의무 (직원 화면과 동일 판정 — 분쟁 방지, 2026-07-13) ──

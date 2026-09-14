@@ -54,6 +54,7 @@ const INTENTIONAL_FIXED_COLUMNS: Record<string, string> = {
   "60px 1fr auto auto": "행 레이아웃.",
   "60px 48px 1fr 28px": "행 레이아웃(원가 구조 표 한 줄).",
   "minmax(80px, 90px) 1fr": "행 레이아웃(라벨|값).",
+  "max-content 1fr": "행 레이아웃(라벨|값) — app-compliance 상품 명세 템플릿 줄. 라벨은 max-content(2~5어절)라 폰에서도 넘치지 않고, 접으면 '라벨: 값' 짝이 깨진다.",
   "minmax(0, 1fr) auto": "행 레이아웃(본문|금액).",
   "repeat(${startupTypeOptions.length}, 1fr)": "옵션 수가 2~4 → 런타임 값이 repeat(2,/repeat(3,/repeat(4, 로 백스톱에 걸린다.",
   "repeat(${rowCards.length}, minmax(0, 1fr))": "isWide 가 false 면 1열로 계산되는 JS 게이트가 이미 있다.",

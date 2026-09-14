@@ -3,6 +3,7 @@ import { requireApiUser } from "../../../_lib/auth";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import {
   getMemeWeekKey,
+  isItemFresh,
   MEME_FIT_CATEGORIES,
   type MemeItem,
   type MemeSource,
@@ -16,9 +17,13 @@ import { ensureStringKeys, MEME_ITEM_REQUIRED_STRINGS } from "../../../_lib/ios-
  * GET /api/ai/marketing/meme-pack?categoryId=food
  *
  * 폴백 체인 (정직성 — 모닝브리핑 stale 교훈: 없는 걸 있는 척하지 않고, 오래된 건 오래됐다고 표시):
- *   1) 이번 주 팩 (marketing_meme_packs, cron 이 주 1회 생성)
+ *   1) 이번 주 팩 (marketing_meme_packs, cron 이 매일 갱신)
  *   2) 지난 주 팩 → stale: true
  *   3) 코드 내 시드 팩 (2026-W30 큐레이션) → stale: 주차 다르면 true
+ *
+ * 수명 게이트(2026-09-12): DB 팩에서 **발행일이 없거나 수명이 지난 항목은 서빙하지 않는다**
+ *   (밈 45일·포맷 120일). 저장 시점 정리만으로는 cron 이 멈춘 주에 오래된 소재가 계속 노출된다.
+ *   필터 후 남는 게 없으면 다음 폴백으로 넘어간다.
  *
  * 업종 필터: industryFit 에 categoryId 가 있는 항목을 앞으로 정렬(fit 우선),
  *   범용("all") 항목이 뒤를 채움. 최대 6개. 생성·수집이 아니라 DB 읽기라 저비용.
@@ -45,6 +50,11 @@ function sanitizeMemeItems(items: unknown): MemeItem[] {
       ...ensureStringKeys(it, MEME_ITEM_REQUIRED_STRINGS),
       industryFit: Array.isArray(it.industryFit) ? it.industryFit.map(String) : [],
     }));
+}
+
+/** 수명 지난 소재 제거 — DB 팩 전용(시드는 최종 폴백이라 stale 표기로 통과시킨다). */
+function freshOnly(items: MemeItem[], now = new Date()): MemeItem[] {
+  return items.filter((it) => isItemFresh(it, now));
 }
 
 function orderForCategory(rawItems: unknown, categoryId: string | null): MemeItem[] {
@@ -76,16 +86,20 @@ export async function GET(request: Request) {
       .select("week_key, items, sources, generated_at")
       .in("week_key", [thisWeek, lastWeek]);
     const rows = (data ?? []) as PackRow[];
-    const pick =
-      rows.find((r) => r.week_key === thisWeek && Array.isArray(r.items) && r.items.length > 0)
-      ?? rows.find((r) => r.week_key === lastWeek && Array.isArray(r.items) && r.items.length > 0);
+    const usable = (weekKeyWanted: string) => {
+      const row = rows.find((r) => r.week_key === weekKeyWanted && Array.isArray(r.items));
+      if (!row) return null;
+      const items = freshOnly(sanitizeMemeItems(row.items));
+      return items.length > 0 ? { row, items } : null;
+    };
+    const pick = usable(thisWeek) ?? usable(lastWeek);
     if (pick) {
       return NextResponse.json({
-        weekKey: pick.week_key,
-        stale: pick.week_key !== thisWeek,
+        weekKey: pick.row.week_key,
+        stale: pick.row.week_key !== thisWeek,
         items: orderForCategory(pick.items, categoryId),
-        sources: (Array.isArray(pick.sources) ? pick.sources : []).map((src) => ensureStringKeys(src ?? {}, ["name", "url"] as const)),
-        generatedAt: pick.generated_at,
+        sources: (Array.isArray(pick.row.sources) ? pick.row.sources : []).map((src) => ensureStringKeys(src ?? {}, ["name", "url"] as const)),
+        generatedAt: pick.row.generated_at,
       });
     }
   }

@@ -189,6 +189,10 @@ public struct TeamManagementView: View {
                     rules: rules.filter { $0.memberUserId == m.memberUserId },
                     leaves: leaves.filter { $0.memberUserId == m.memberUserId },
                     categoryId: categoryId,
+                    // 급여 계산 입력 — 5인 기준선·승인된 수당·급여일이 있어야 정확해진다.
+                    headcount: max(activeMembers.count, 1),
+                    approvedAllowances: allowances.filter { $0.memberUserId == m.memberUserId },
+                    paydayDay: paydayDay,
                     onWageSaved: { Task { await load() } },
                     onJobSaved: { Task { await load() } }
                 )
@@ -281,8 +285,26 @@ public struct TeamManagementView: View {
         for wd in [0,6] { rulesRows.append("{\"id\":\"cccc0000-0000-0000-0000-00000000000\(wd)\",\"member_user_id\":\"33333333-3333-3333-3333-333333333333\",\"weekday\":\(wd),\"start_time\":\"10:00:00\",\"end_time\":\"18:00:00\",\"active\":true}") }
         let rulesJSON = "[\(rulesRows.joined(separator: ","))]"
         let dec = JSONDecoder()
+        // 승인 큐 시각 검증용 대기 건 (2026-09-12) — 이 화면에서 가장 자주 쓰는 동작인데
+        //  시드에 대기 건이 없어 승인/반려 UI 를 한 번도 눈으로 못 보고 있었다.
+        let leavesJSON = """
+        [
+          {"id":"dddd0000-0000-0000-0000-000000000001","member_user_id":"11111111-1111-1111-1111-111111111111",
+           "leave_type":"annual","start_date":"2026-09-18","end_date":"2026-09-19","reason":"가족 행사","status":"pending"},
+          {"id":"dddd0000-0000-0000-0000-000000000002","member_user_id":"33333333-3333-3333-3333-333333333333",
+           "leave_type":"half","start_date":"2026-09-20","end_date":"2026-09-20","reason":null,"status":"pending"}
+        ]
+        """
+        let allowancesJSON = """
+        [
+          {"id":"eeee0000-0000-0000-0000-000000000001","member_user_id":"22222222-2222-2222-2222-222222222222",
+           "work_date":"2026-09-11","allowance_type":"overtime","minutes":90,"reason":"마감 정리","status":"pending"}
+        ]
+        """
         members = (try? dec.decode([TeamMember].self, from: Data(membersJSON.utf8))) ?? []
         rules = (try? dec.decode([TeamScheduleRule].self, from: Data(rulesJSON.utf8))) ?? []
+        leaves = (try? dec.decode([TeamLeaveRequest].self, from: Data(leavesJSON.utf8))) ?? []
+        allowances = (try? dec.decode([TeamAllowanceRequest].self, from: Data(allowancesJSON.utf8))) ?? []
         paydayDay = 10
         paidThisMonth = true
         loadFailed = false
@@ -290,17 +312,15 @@ public struct TeamManagementView: View {
 
     // ── 헤더 (시트 전용 — 탭 화면은 BUPageHeader) ──
     private var headerBlock: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("근무표 · 연차 관리")
-                .font(.system(size: 19, weight: .heavy))
-                .foregroundStyle(BUColor.ink)
-            Text("직원별 근무 요일·시간을 정하고, 연차 신청을 승인/반려하세요. 여기서 정한 근무표는 직원 화면에 그대로 표시됩니다.")
-                .font(.system(size: 12.5))
-                .foregroundStyle(BUColor.inkSecondary)
-                .lineSpacing(3)
-                .padding(.top, 2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // 2026-09-12: 제목("근무표 · 연차 관리")을 지웠다 — 페이지 헤더가 이미 "직원 / 근무표·연차·급여"
+        //  라고 말한다. 같은 말을 두 번 하지 않는다. 설명만 한 줄로 남긴다.
+        Text("근무 요일·시간을 정하고 연차를 승인하세요. 여기서 정한 근무표가 직원 화면에 그대로 보입니다.")
+            .font(.system(size: 15))
+            .foregroundStyle(BUColor.inkMuted)
+            .lineSpacing(3)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
     }
 
     // ── 세그먼트 컨트롤 (헤더 accessory / 시트 상단) ──
@@ -361,52 +381,22 @@ public struct TeamManagementView: View {
     }
 
     // ── 처리할 일 요약 (연차 대기 · 수당 대기 · 퇴사 정산) — 탭하면 해당 세그먼트로 ──
+    @ViewBuilder
     private var todoSummaryCard: some View {
+        // 2026-09-12: 틴트 칩 3개(연차 대기 2 ›)를 나란히 놓던 것을 애플식 행으로.
+        //  칩은 개수가 늘면 줄바꿈으로 깨지고, 무엇이 급한지 크기로 구분되지 않았다.
+        //  0건이면 카드 자체를 숨긴다 — "처리할 일 없음" 카드는 자리만 차지한다.
         let items: [(label: String, count: Int, target: TeamSegment)] = [
-            ("연차 대기", pendingLeaves.count, .leavePay),
-            ("수당 대기", pendingAllowances.count, .leavePay),
+            ("연차 승인", pendingLeaves.count, .leavePay),
+            ("수당 승인", pendingAllowances.count, .leavePay),
             ("퇴사 정산", leavers.count, .staff),
-        ]
-        let total = items.reduce(0) { $0 + $1.count }
-        return BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 6) {
-                    Image(systemName: "checklist")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                    Text("처리할 일")
-                        .font(.system(size: 15, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    if total > 0 {
-                        Text("\(total)")
-                            .font(.system(size: 11, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 7).padding(.vertical, 2)
-                            .background(BUColor.midnight, in: Capsule())
-                    }
-                }
-                if total == 0 {
-                    Text("지금 처리할 일이 없어요.")
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                } else {
-                    HStack(spacing: 8) {
-                        ForEach(items.filter { $0.count > 0 }, id: \.label) { item in
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.15)) { segment = item.target }
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Text(item.label).font(.system(size: 12, weight: .heavy))
-                                    Text("\(item.count)").font(.system(size: 12, weight: .heavy)).monospacedDigit()
-                                    Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold))
-                                }
-                                .foregroundStyle(BUColor.midnight)
-                                .padding(.horizontal, 11).padding(.vertical, 8)
-                                .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        Spacer(minLength: 0)
+        ].filter { $0.count > 0 }
+
+        if !items.isEmpty {
+            BUListSection("처리할 일") {
+                items.map { item in
+                    BUListRow.link(item.label, subtitle: "\(item.count)건") {
+                        withAnimation(.easeInOut(duration: 0.15)) { segment = item.target }
                     }
                 }
             }
@@ -460,86 +450,79 @@ public struct TeamManagementView: View {
 
     // ── 빈 상태 (웹 미러: 초대 유도) ──
     private var emptyState: some View {
+        // 애플은 빈 상태를 "제목 + 한 줄 설명 + 동작 하나"로 둔다. 장식 아이콘을 키우지 않는다.
         BUCard(.outer) {
-            VStack(spacing: 10) {
-                Image(systemName: "person.badge.plus")
-                    .font(.system(size: 30, weight: .light))
-                    .foregroundStyle(BUColor.inkMuted)
+            VStack(alignment: .leading, spacing: 12) {
                 Text("아직 연결된 직원이 없어요")
-                    .font(.system(size: 15, weight: .heavy))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(BUColor.ink)
-                Text("초대를 만들어 직원에게 보내세요.\n직원이 연결되면 여기서 근무표·연차·출퇴근을 관리할 수 있어요.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(BUColor.inkSecondary)
-                    .multilineTextAlignment(.center)
+                Text("초대를 만들어 보내면 직원 화면이 생깁니다. 그때부터 근무표·연차·출퇴근을 함께 볼 수 있어요.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(BUColor.inkMuted)
                     .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
                 Button { showInviteSheet = true } label: {
-                    Label("직원 초대 만들기", systemImage: "plus")
-                        .font(.system(size: 13, weight: .heavy))
+                    Text("직원 초대 만들기")
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 18).padding(.vertical, 10)
-                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .padding(.top, 2)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
         }
     }
 
     private var loadErrorCard: some View {
         BUCard(.outer) {
-            VStack(spacing: 10) {
-                Text("직원 목록을 불러오지 못했어요. 네트워크 확인 후 다시 시도해 주세요.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(BUColor.inkSecondary)
-                    .frame(maxWidth: .infinity)
-                Button("다시 시도") { Task { await load() } }
-                    .font(.system(size: 13, weight: .bold))
-                    .buttonStyle(.borderedProminent)
-                    .tint(BUColor.midnight)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("직원 목록을 불러오지 못했어요")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
+                Text("네트워크를 확인한 뒤 다시 시도해 주세요.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(BUColor.inkMuted)
+                Button { Task { await load() } } label: {
+                    Text("다시 시도")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
-            .padding(.vertical, 6)
         }
     }
 
     // ── 급여일 (2026-07-15, 웹 TeamSurface 「급여일」 카드 미러) ──
     //   읽기 default + 「수정」 (사장님 데이터 카드 표준 패턴). 미설정이면 바로 입력.
     private var paydayCard: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                Label("급여일", systemImage: "wonsign.circle")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(BUColor.ink)
-
-                if paydayDay == nil || editingPayday {
-                    if paydayDay == nil {
-                        Text("급여일을 정하면 그날 사장님과 직원 모두에게 알림이 갑니다. 지급 확인을 안 하시면 3일 간격으로 다시 알려드려요.")
-                            .font(.system(size: 12.5))
-                            .foregroundStyle(BUColor.inkSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    paydayEditor
-                } else if let day = paydayDay {
-                    HStack {
-                        Text("매월 \(day)일")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(BUColor.ink)
-                        Spacer()
-                        Button("수정") { editingPayday = true }
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(BUColor.midnight)
-                    }
-                    if effectivePayday(day) != day {
-                        Text("이번 달은 \(effectivePayday(day))일(말일)에 알려드려요.")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(BUColor.inkMuted)
-                    }
-                    payrollConfirmBlock(day: day)
-                }
+        // 2026-09-12: 카드 안 Label 제목 + 14pt 행 → 섹션 제목 밖으로, 행은 17pt.
+        //  "수정" 은 섹션 제목 오른쪽(애플이 섹션 동작을 두는 자리)으로 옮겼다.
+        BUListSection(
+            "급여일",
+            actionLabel: (paydayDay != nil && !editingPayday) ? "수정" : nil,
+            action: { editingPayday = true },
+            footer: paydayFooter
+        ) {
+            if paydayDay == nil || editingPayday {
+                BUListRow.content("지급일") { paydayEditor }
+            } else if let day = paydayDay {
+                BUListRow.value("지급일", "매월 \(day)일")
+                BUListRow.content("지급 확인") { payrollConfirmBlock(day: day) }
             }
         }
+    }
+
+    /// 급여일 각주 — 미설정 안내 또는 말일 보정 안내. 둘 다 아니면 없음.
+    private var paydayFooter: String? {
+        if paydayDay == nil {
+            return "급여일을 정하면 그날 사장님과 직원 모두에게 알림이 갑니다. 지급 확인을 안 하시면 3일 간격으로 다시 알려드려요."
+        }
+        if let day = paydayDay, effectivePayday(day) != day {
+            return "이번 달은 \(effectivePayday(day))일(말일)에 알려드려요."
+        }
+        return nil
     }
 
     private var paydayEditor: some View {
@@ -627,17 +610,12 @@ public struct TeamManagementView: View {
     private var offboardingCard: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                HStack(spacing: 8) {
-                    Label("퇴사자 정산", systemImage: "person.badge.minus")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(BUColor.ink)
-                    Text("\(leavers.count)")
-                        .font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(BUColor.inkMuted, in: Capsule())
-                }
+                // 개수 캡슐 배지 제거 — 아래 목록이 이미 몇 명인지 보여준다.
+                Text("퇴사자 정산")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
                 Text("퇴직 시 임금·퇴직금 등 일체의 금품은 퇴사일부터 14일 이내에 지급해야 합니다(근로기준법 §36). 정산을 마치면 완료 표시해 주세요.")
-                    .font(.system(size: 12.5))
+                    .font(.system(size: 15))
                     .foregroundStyle(BUColor.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 ForEach(leavers) { m in
@@ -651,58 +629,51 @@ public struct TeamManagementView: View {
 
     // ── 연차 승인 큐 ──
     private var leaveApprovalCard: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 6) {
-                    Image(systemName: "clock.badge.checkmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                    Text("연차·휴가 승인")
-                        .font(.system(size: 15, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("\(pendingLeaves.count)")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(BUColor.midnight, in: Capsule())
-                }
-                ForEach(pendingLeaves) { leave in
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(memberName(leave.memberUserId)) · \(leaveLabel(leave.leaveType))")
-                                .font(.system(size: 13.5, weight: .heavy))
-                                .foregroundStyle(BUColor.ink)
-                            Text(leave.startDate == leave.endDate ? leave.startDate : "\(leave.startDate) ~ \(leave.endDate)")
-                                .font(.system(size: 12))
-                                .foregroundStyle(BUColor.inkSecondary)
-                            if let reason = leave.reason, !reason.isEmpty {
-                                Text(reason).font(.system(size: 11.5)).foregroundStyle(BUColor.inkMuted).lineLimit(1)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                        Button {
-                            Task { await runOwnerAction("연차 승인") { try await repo.decideLeave(id: leave.id, approved: true) } }
-                        } label: {
-                            Label("승인", systemImage: "checkmark")
-                                .font(.system(size: 12.5, weight: .heavy))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12).padding(.vertical, 7)
-                                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
-                        }
-                        Button {
-                            Task { await runOwnerAction("연차 반려") { try await repo.decideLeave(id: leave.id, approved: false) } }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 12.5, weight: .heavy))
-                                .foregroundStyle(BUColor.inkSecondary)
-                                .padding(8)
-                                .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 9))
-                        }
-                    }
-                    .padding(10)
-                    .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12))
+                // 2026-09-12: 카드 안 아이콘 제목 + 개수 캡슐 + **행마다 회색 상자**(카드 중첩)를
+                //  제목 밖으로 + 헤어라인 구분으로 바꿨다. 개수는 목록이 이미 보여준다.
+                //  본문 13.5/12/11.5pt → 17/15pt (애플 리스트 기준).
+        BUListSection("연차·휴가 승인") {
+            pendingLeaves.map { leave in
+                BUListRow.content(
+                    "\(memberName(leave.memberUserId)) · \(leaveLabel(leave.leaveType))",
+                    subtitle: leaveDetailLine(leave)
+                ) {
+                    approvalButtons(
+                        approve: { await runOwnerAction("연차 승인") { try await repo.decideLeave(id: leave.id, approved: true) } },
+                        reject: { await runOwnerAction("연차 반려") { try await repo.decideLeave(id: leave.id, approved: false) } }
+                    )
                 }
             }
+        }
+    }
+
+    /// "2026-09-12 ~ 09-13 · 가족 행사" — 날짜와 사유를 한 줄로.
+    private func leaveDetailLine(_ leave: TeamLeaveRequest) -> String {
+        let range = leave.startDate == leave.endDate ? leave.startDate : "\(leave.startDate) ~ \(leave.endDate)"
+        guard let reason = leave.reason, !reason.isEmpty else { return range }
+        return "\(range) · \(reason)"
+    }
+
+    /// 승인/반려 한 쌍 — 두 큐가 같은 모양을 쓴다.
+    @ViewBuilder
+    private func approvalButtons(approve: @escaping () async -> Void, reject: @escaping () async -> Void) -> some View {
+        HStack(spacing: 8) {
+            Button { Task { await reject() } } label: {
+                Text("반려")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(BUColor.subtleFill, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            Button { Task { await approve() } } label: {
+                Text("승인")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -743,83 +714,37 @@ public struct TeamManagementView: View {
 
     // ── 추가 수당 승인 큐 (2026-07-13, 웹 TeamSurface 미러) ──
     private var allowanceApprovalCard: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 6) {
-                    Image(systemName: "wonsign.circle")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                    Text("추가 수당 승인")
-                        .font(.system(size: 15, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Text("\(pendingAllowances.count)")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(BUColor.midnight, in: Capsule())
+                // 2026-09-12: 카드 안 아이콘 제목 + 개수 캡슐 + **행마다 회색 상자**(카드 중첩)를
+                //  제목 밖으로 + 헤어라인 구분으로 바꿨다. 개수는 목록이 이미 보여준다.
+                //  본문 13.5/12/11.5pt → 17/15pt (애플 리스트 기준).
+        BUListSection("추가 수당 승인") {
+            pendingAllowances.map { a in
+                BUListRow.content(
+                    "\(memberName(a.memberUserId)) · \(allowanceLabel(a.allowanceType))",
+                    subtitle: allowanceDetailLine(a)
+                ) {
+                    approvalButtons(
+                        approve: { await runOwnerAction("수당 승인") { try await repo.decideAllowance(id: a.id, approved: true) } },
+                        reject: { await runOwnerAction("수당 반려") { try await repo.decideAllowance(id: a.id, approved: false) } }
+                    )
                 }
-                ForEach(pendingAllowances) { a in
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(memberName(a.memberUserId)) · \(allowanceLabel(a.allowanceType))")
-                                .font(.system(size: 13.5, weight: .heavy))
-                                .foregroundStyle(BUColor.ink)
-                            Text("\(mdLabel(a.workDate)) · \(minLabel(a.minutes))")
-                                .font(.system(size: 12))
-                                .foregroundStyle(BUColor.inkSecondary)
-                            if let reason = a.reason, !reason.isEmpty {
-                                Text(reason).font(.system(size: 11.5)).foregroundStyle(BUColor.inkMuted).lineLimit(1)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                        Button {
-                            Task { await runOwnerAction("수당 승인") { try await repo.decideAllowance(id: a.id, approved: true) } }
-                        } label: {
-                            Label("승인", systemImage: "checkmark")
-                                .font(.system(size: 12.5, weight: .heavy))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12).padding(.vertical, 7)
-                                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
-                        }
-                        Button {
-                            Task { await runOwnerAction("수당 반려") { try await repo.decideAllowance(id: a.id, approved: false) } }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 12.5, weight: .heavy))
-                                .foregroundStyle(BUColor.inkSecondary)
-                                .padding(8)
-                                .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 9))
-                        }
-                    }
-                    .padding(10)
-                    .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12))
-                }
-                Text("연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과분 시급 지급.")
-                    .font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
             }
         }
     }
 
+    /// "9월 12일 · 2시간 30분 · 마감 정리" — 날짜·시간·사유를 한 줄로.
+    private func allowanceDetailLine(_ a: TeamAllowanceRequest) -> String {
+        let base = "\(mdLabel(a.workDate)) · \(minLabel(a.minutes))"
+        guard let reason = a.reason, !reason.isEmpty else { return base }
+        return "\(base) · \(reason)"
+    }
     // ── 직원별 근무표 배정 ──
     private func memberScheduleList(_ members: [TeamMember]) -> some View {
+        // 2026-09-12: 아이콘 + 개수 캡슐 + "이름 탭 = 상세 · 수정 = 근무표" 힌트를 지웠다.
+        //  사용법을 글로 적어야 한다는 건 어포던스가 부족하다는 뜻이다 →
+        //  이름 행에 셰브론(상세), 오른쪽에 "수정"(근무표)으로 눌러야 할 곳을 보이게 했다.
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                Image(systemName: "person.2")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(BUColor.midnight)
-                Text("직원 명단")
-                    .font(.system(size: 15, weight: .heavy))
-                    .foregroundStyle(BUColor.ink)
-                Text("\(members.count)")
-                    .font(.system(size: 11, weight: .heavy))
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(BUColor.midnight.opacity(0.07), in: Capsule())
-                Spacer(minLength: 0)
-                Text("이름 탭 = 상세 · 수정 = 근무표")
-                    .font(.system(size: 11))
-                    .foregroundStyle(BUColor.inkMuted)
-            }
+            BUSectionTitle("직원 명단")
             ForEach(members) { member in
                 MemberScheduleCard(
                     member: member,
@@ -845,28 +770,13 @@ public struct TeamManagementView: View {
 
     // ── 수동 급여 명단 연결 (별개 모집단 안내) ──
     private var payrollLinkCard: some View {
-        Button { showPayrollSheet = true } label: {
-            BUCard(.outer) {
-                HStack(spacing: 10) {
-                    Image(systemName: "wonsign.circle")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("급여·인건비 명단 (수동 입력)")
-                            .font(.system(size: 13.5, weight: .heavy))
-                            .foregroundStyle(BUColor.ink)
-                        Text("월 인건비·4대보험 계산용 직원 명단은 여기서 관리해요")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(BUColor.inkSecondary)
-                    }
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(BUColor.inkMuted)
-                }
-            }
+        BUListSection("급여 명단") {
+            BUListRow.link(
+                "급여·인건비 명단",
+                subtitle: "월 인건비·4대보험 계산용 직원 명단 (수동 입력)"
+            ) { showPayrollSheet = true }
+                .icon("wonsign.circle")
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -880,6 +790,8 @@ private struct InviteCreateCard: View {
     @State private var directedEmail: String? = nil
     @State private var showEmailField = false
     @State private var email = ""
+    @State private var preview: BUInvitePreviewResult? = nil
+    @State private var previewing = false
     @State private var copied = false
 
     private enum InviteStatus { case idle, loading, ready, error }
@@ -888,6 +800,31 @@ private struct InviteCreateCard: View {
     private var inviteUrl: String {
         guard let code else { return "" }
         return "\(BUSupabase.shared.env.webAppURL)/invite/\(code)"
+    }
+
+    /// 2026-09-14: 초대 전 **대상 확인** 단계. 오타 하나로 엉뚱한 사람에게 채용 초대장이 가고,
+    ///  사장은 보냈다고 믿는 사고를 막는다. 서버는 가린 이름만 준다(김*현).
+    private func previewTint(_ tone: BUInvitePreviewTone) -> Color {
+        switch tone {
+        case .found:   return BUColor.midnight
+        case .new:     return BUColor.inkMuted
+        case .blocked: return BUColor.warn
+        case .error:   return BUColor.danger
+        }
+    }
+
+    private func lookup() {
+        Task {
+            previewing = true
+            defer { previewing = false }
+            do {
+                // RPC 미배포 환경이면 확인을 건너뛰고 종전처럼 바로 보낼 수 있게 둔다.
+                preview = try await repo.previewInviteTarget(email: email)
+                    ?? .notRegistered(maskedEmail: email, pendingInvite: false)
+            } catch {
+                preview = .notRegistered(maskedEmail: email, pendingInvite: false)
+            }
+        }
     }
 
     private func create(invitedEmail: String?) {
@@ -930,6 +867,8 @@ private struct InviteCreateCard: View {
                             .textInputAutocapitalization(.never)
                             .keyboardType(.emailAddress)
                             .autocorrectionDisabled()
+                            // 주소를 고치면 앞서 확인한 결과는 더 이상 그 주소의 것이 아니다.
+                            .onChange(of: email) { _, _ in preview = nil }
                     }
                     HStack(spacing: 8) {
                         Button { create(invitedEmail: nil) } label: {
@@ -945,13 +884,13 @@ private struct InviteCreateCard: View {
 
                         Button {
                             if !showEmailField { showEmailField = true; return }
-                            if email.contains("@") { create(invitedEmail: email); return }
+                            if email.contains("@") { lookup(); return }
                             showEmailField = false // 빈 입력 상태에서 다시 누르면 접기
                         } label: {
                             let armed = showEmailField && email.contains("@")
-                            Text(status == .loading && showEmailField
-                                 ? "생성 중…"
-                                 : armed ? "✉ 이 이메일로 초대" : "✉ 이메일로 초대")
+                            Text(previewing
+                                 ? "확인 중…"
+                                 : armed ? "계정 확인" : "✉ 이메일로 초대")
                                 .font(.system(size: 13, weight: .heavy))
                                 .foregroundStyle(armed ? .white : BUColor.midnight)
                                 .frame(maxWidth: .infinity)
@@ -964,6 +903,46 @@ private struct InviteCreateCard: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(status == .loading)
+                    }
+                    // 확인 결과 — 여기서 비로소 「추가」를 누른다. 누르면 직원에게 확인 요청이 가고,
+                    //  직원이 수락해야 등록된다(사장이 이메일을 안다고 자동 연결되지 않는다).
+                    if let preview {
+                        let v = BUInvitePreview.view(preview)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(v.title)
+                                .font(.system(size: 13.5, weight: .bold))
+                                .foregroundStyle(previewTint(v.tone))
+                            if case .found(_, let maskedEmail, _, _) = preview {
+                                Text(maskedEmail).font(.system(size: 12).monospaced()).foregroundStyle(BUColor.ink)
+                            } else if case .notRegistered(let maskedEmail, _) = preview {
+                                Text(maskedEmail).font(.system(size: 12).monospaced()).foregroundStyle(BUColor.ink)
+                            }
+                            Text(v.detail)
+                                .font(.system(size: 11.5))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if v.canInvite {
+                                Button { create(invitedEmail: email) } label: {
+                                    Text(status == .loading ? "보내는 중…" : "추가 — 직원에게 확인 요청")
+                                        .font(.system(size: 13, weight: .heavy))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 11)
+                                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(status == .loading)
+                                .padding(.top, 4)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(13)
+                        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(previewTint(v.tone).opacity(0.2), lineWidth: 1)
+                        )
                     }
                     if showEmailField {
                         Text("이미 가입한 직원에게 추천 — 그 계정만 수락할 수 있고, 로그인하면 「받은 초대」로 표시됩니다.")
@@ -1113,29 +1092,23 @@ private struct MemberScheduleCard: View {
     }
 
     /// 오늘 출근여부 배지 — 신호등 색 대신 채움 강조: 근무중=채운 네이비 · 완료=소프트 · 미출근=아웃라인 (웹 미러)
-    @ViewBuilder private var attendanceBadge: some View {
-        if let att = attToday {
-            if att.clockOutAt == nil {
-                Label("출근 \(Self.hhmmKST(att.clockInAt))", systemImage: "clock.fill")
-                    .font(.system(size: 10, weight: .heavy))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8).padding(.vertical, 2.5)
-                    .background(BUColor.midnight, in: Capsule())
-            } else {
-                Label("근무 완료", systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 10, weight: .heavy))
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 8).padding(.vertical, 2.5)
-                    .background(BUColor.midnight.opacity(0.10), in: Capsule())
-            }
-        } else {
-            Text("미출근")
-                .font(.system(size: 10, weight: .heavy))
-                .foregroundStyle(BUColor.inkMuted)
-                .padding(.horizontal, 8).padding(.vertical, 2.5)
-                .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
-        }
+    /// "직원 · 근속 195일차 · 미출근" — 부가 정보를 캡슐 3개 대신 한 줄로.
+    private var memberMetaLine: String {
+        var parts: [String] = [member.role == "manager" ? "매니저" : "직원"]
+        if let tenure = tenureDays { parts.append("근속 \(tenure)일차") }
+        parts.append(attendanceText)
+        return parts.joined(separator: " · ")
     }
+
+    /// 오늘 출근 상태 — 캡슐이 아니라 글자로.
+    private var attendanceText: String {
+        guard let att = attToday else { return "미출근" }
+        return att.clockOutAt == nil ? "출근 \(Self.hhmmKST(att.clockInAt))" : "근무 완료"
+    }
+
+    /// 지금 근무 중일 때만 한 줄을 강조한다(색은 신호).
+    private var isWorkingNow: Bool { attToday?.clockOutAt == nil && attToday != nil }
+
 
     /// ISO timestamptz → KST HH:mm (초 유무 모두 파싱)
     private static func hhmmKST(_ iso: String) -> String {
@@ -1156,50 +1129,41 @@ private struct MemberScheduleCard: View {
     var body: some View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    // 이름 탭 → 직원 상세(시급·근태) 시트 (2026-07-13, 웹 미러)
+                // 2026-09-12: 같은 크기 캡슐 3개(직원·미출근·근속)를 나란히 두던 것을
+                //  이름(17pt) + 회색 한 줄로. 셋 다 부가 정보라 크기로 구분될 이유가 없었다.
+                //  출근 중일 때만 색을 쓴다 — 색은 신호이지 장식이 아니다.
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Button(action: onOpenDetail) {
                         HStack(spacing: 4) {
                             Text(member.name)
-                                .font(.system(size: 14, weight: .heavy))
+                                .font(.system(size: 17, weight: .semibold))
                                 .foregroundStyle(BUColor.ink)
-                                .underline(true, color: BUColor.midnight.opacity(0.25))
-                            Text("상세 ›")
-                                .font(.system(size: 10.5, weight: .heavy))
-                                .foregroundStyle(BUColor.inkMuted)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(BUColor.ink.opacity(0.25))
                         }
                     }
                     .buttonStyle(.plain)
-                    Text(member.role == "manager" ? "매니저" : "직원")
-                        .font(.system(size: 10, weight: .heavy))
-                        .foregroundStyle(BUColor.midnight)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(BUColor.midnight.opacity(0.07), in: Capsule())
-                    attendanceBadge   // 오늘 출근여부 (2026-07-14)
-                    if let tenure = tenureDays {
-                        Text("근속 \(tenure)일차")
-                            .font(.system(size: 10, weight: .heavy))
-                            .foregroundStyle(BUColor.inkMuted)
-                    }
-                    Spacer(minLength: 0)
+                    .accessibilityHint("직원 상세 — 시급·근태")
+                    Spacer(minLength: 8)
                     if !editing {
                         if saveStatus == .saved {
-                            Label("저장됨", systemImage: "checkmark.circle")
-                                .font(.system(size: 11, weight: .heavy))
-                                .foregroundStyle(BUColor.midnight)
+                            Text("저장됨")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(BUColor.success)
                         }
-                        Button {
-                            startEdit()
-                        } label: {
-                            Text("수정")
-                                .font(.system(size: 12, weight: .heavy))
-                                .foregroundStyle(BUColor.midnight)
-                                .padding(.horizontal, 13).padding(.vertical, 6)
-                                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
+                        Button("수정") { startEdit() }
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(BUColor.midnightInk)
+                            .buttonStyle(.plain)
+                            .accessibilityHint("근무 요일·시간 배정")
                     }
                 }
+
+                Text(memberMetaLine)
+                    .font(.system(size: 13))
+                    .foregroundStyle(isWorkingNow ? BUColor.midnightInk : BUColor.inkMuted)
+                    .lineLimit(1)
 
                 if !editing {
                     // ── 읽기 모드 — 저장된 근무표 요약 ──
@@ -1223,11 +1187,11 @@ private struct MemberScheduleCard: View {
                             return u < Self.todayYmd() ? " · 기간 만료 (\(u))" : " · ~\(u)까지"
                         }()
                         Text("\(readTimeLabel(first.startTime)) – \(readTimeLabel(first.endTime))\(member.hireDate.map { " · 입사일 \($0)" } ?? "")\(untilSuffix)")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: 15))
                             .foregroundStyle((first.effectiveUntil.map { $0 < Self.todayYmd() } ?? false) ? BUColor.danger : BUColor.ink)
                     } else {
                         Text("근무표 미설정 — 「수정」을 눌러 요일과 시간을 배정하세요.")
-                            .font(.system(size: 12.5))
+                            .font(.system(size: 15))
                             .foregroundStyle(BUColor.inkSecondary)
                     }
                 } else {

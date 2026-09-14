@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { readAcquisition } from "../acquisition";
 
 export type FoundOneAuthClient = SupabaseClient;
 
@@ -96,6 +97,9 @@ export async function signUpWithEmail(
         last_name: params.lastName,
         name: displayName,
         ...(params.birthYear ? { birth_year: String(params.birthYear) } : {}),
+        // 가입 유입 출처(first-touch) — 트리거가 user_profiles.acquisition 으로 복사한다.
+        //  광고 소재별 "가입자 1명당 비용"을 재기 위한 유일한 연결고리. 없으면 생략.
+        ...(readAcquisition() ? { acquisition: readAcquisition() } : {}),
       },
       // flow=confirm — 콜백이 "이메일 인증 도착"임을 알고, 자동로그인(PKCE 교환) 실패 시에도
       //   "인증 실패"가 아니라 "인증 완료 — 로그인해 주세요"를 보여주기 위한 마커.

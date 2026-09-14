@@ -683,7 +683,7 @@ const rowCard: React.CSSProperties = {
 /* ─── Styles — 미드나이트 블루 + Apple 톤 통일 ─── */
 
 const container: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "var(--card-radius)",
   background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",

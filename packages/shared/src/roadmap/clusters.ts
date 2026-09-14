@@ -245,3 +245,28 @@ export function getStageVisibility(
 ): StageVisibility {
   return STAGE_VISIBILITY_BY_MODE[mode]?.[stageId] ?? "required";
 }
+
+// ─────────────────────────────────────────────────────────────
+//  앱·플랫폼 규제·계약(app-compliance) 콘텐츠 노출 — 2026-09 구함 사례
+// ─────────────────────────────────────────────────────────────
+
+/** app-compliance(본인인증 채널·PG 심사·위치정보법 D+30·개정 고지) 를 company-setup 에 추가 페이지로 붙이는 클러스터. */
+export const APP_COMPLIANCE_CLUSTERS: readonly ClusterId[] = ["tech-software"];
+
+/** 소프트웨어가 아닌 startup-tech 세부 업종(하드웨어·딥테크) — iOS IndustryCluster.isSoftwareStartup 미러 (테스트로 동기화). */
+export const NON_SOFTWARE_STARTUP_SUB_INDUSTRIES: readonly string[] = Object.entries(CLUSTER_BY_SUB_INDUSTRY)
+  .filter(([, cluster]) => isStartupCluster(cluster) && cluster !== "tech-software")
+  .map(([id]) => id);
+
+/**
+ * company-setup 에 app-compliance 페이지를 보여줄지.
+ *  - 세부 업종이 있으면 클러스터로 판단(tech-software 만), 없으면 startup-tech 카테고리 폴백(=tech-software).
+ *  - 하드웨어·딥테크는 본인인증/PG 흐름이 핵심이 아니라 제외.
+ */
+export function showsAppCompliance(
+  subIndustryId: string | undefined,
+  industryCategoryId: string,
+): boolean {
+  const cluster = getClusterForSubIndustry(subIndustryId, industryCategoryId);
+  return cluster !== null && APP_COMPLIANCE_CLUSTERS.includes(cluster);
+}

@@ -1,0 +1,72 @@
+{
+  "themes": [
+    {
+      "id": "midnight",
+      "label": {
+        "ko": "미드나잇",
+        "en": "Midnight"
+      },
+      "hint": {
+        "ko": "기본 · 신뢰감",
+        "en": "Default · trustworthy"
+      },
+      "coverFrom": "#191970",
+      "coverTo": "#10104a",
+      "bodyBg": "#F7F8FE",
+      "ink": "#10104a",
+      "accent": "#191970",
+      "accentOnDark": "#B9BBFF",
+      "ctaBg": "#F7F6F1"
+    },
+    {
+      "id": "cream",
+      "label": {
+        "ko": "크림",
+        "en": "Cream"
+      },
+      "hint": {
+        "ko": "카페·베이커리·디저트",
+        "en": "Cafe & bakery"
+      },
+      "coverFrom": "#6B4A2F",
+      "coverTo": "#3D2817",
+      "bodyBg": "#FBF6EE",
+      "ink": "#3D2817",
+      "accent": "#A9714B",
+      "accentOnDark": "#F0C9A0",
+      "ctaBg": "#FBF6EE"
+    },
+    {
+      "id": "mono",
+      "label": {
+        "ko": "모노",
+        "en": "Mono"
+      },
+      "hint": {
+        "ko": "뷰티·피트니스·스튜디오",
+        "en": "Beauty & fitness"
+      },
+      "coverFrom": "#1A1A1A",
+      "coverTo": "#000000",
+      "bodyBg": "#F4F4F4",
+      "ink": "#111111",
+      "accent": "#111111",
+      "accentOnDark": "#FFFFFF",
+      "ctaBg": "#FFFFFF"
+    }
+  ],
+  "defaultThemeId": "midnight",
+  "defaultByCategory": {
+    "food": "midnight",
+    "cafe-dessert": "cream",
+    "retail": "midnight",
+    "beauty": "mono",
+    "fitness": "mono",
+    "education": "midnight",
+    "pet": "midnight",
+    "living-service": "midnight",
+    "space": "midnight",
+    "online-digital": "midnight",
+    "startup-tech": "midnight"
+  }
+}

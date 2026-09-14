@@ -96,6 +96,37 @@ public struct StaffDashboardView: View {
                      rules: rules, exceptions: exceptions)
     }
     private var workdays: Set<Int> { Set(rules.map(\.weekday)) }
+
+    @State private var showMyPayslip = false
+    /// 명세서 성명 칸 — 본인 이름. 상호를 쓰면 명세서 필수 기재사항(근로자 특정)이 틀린다.
+    @State private var myName: String? = nil
+
+    /// 이번 달 (KST).
+    private var payrollPeriod: String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return f.string(from: Date())
+    }
+
+    /// 내 임금명세서 — 사장님 화면과 **같은 엔진**. 시급·근무표가 없으면 만들지 않는다(가짜 숫자 금지).
+    private var myPayslip: BUPayrollResult? {
+        guard let ctx, let wage = ctx.hourlyWage, wage > 0, weeklyMinutes > 0 else { return nil }
+        func approvedHours(_ type: String) -> Double {
+            allowances
+                .filter { $0.status == "approved" && $0.allowanceType == type && $0.workDate.hasPrefix(payrollPeriod) }
+                .reduce(0) { $0 + Double($1.minutes) / 60 }
+        }
+        return BUPayroll.calculate(BUPayrollInput(
+            period: payrollPeriod,
+            // 인원을 모르면 5인 미만으로 낮춰 잡지 않는다 — 가산 의무를 없는 것처럼 보이면 안 된다.
+            headcount: ctx.staffHeadcount ?? BUPayrollRates.premiumPayMinHeadcount,
+            hourlyWage: wage,
+            contractedWeeklyHours: Double(weeklyMinutes) / 60,
+            overtimeHours: approvedHours("overtime"),
+            nightHours: approvedHours("night"),
+            holidayHours: approvedHours("holiday")
+        ))
+    }
     // 정규 시간 초과 근무 자동 감지 (웹 overtimeCandidates 미러) — 이미 신청한 날짜 제외, 10분↑만
     private var overtimeCandidates: [OvertimeCandidate] {
         let requested = Set(allowances.map(\.workDate))
@@ -181,6 +212,15 @@ public struct StaffDashboardView: View {
                             case .rightsPay:
                                 // 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 노출.
                                 //   미설정이면 카드 자체를 숨긴다(추측값 표시 금지 = 가짜 숫자 금지 원칙).
+                                // 내 급여 — 사장님이 주는 명세서와 같은 계산을 직원도 확인한다(근기법 §48②).
+                                if let p = myPayslip {
+                                    BUListSection("내 급여") {
+                                        BUListRow.value("지급 총액", "\(p.grossPay.formatted())원")
+                                        BUListRow.value("공제 총액", "−\(p.deductionTotal.formatted())원")
+                                        BUListRow.value("실지급액", "\(p.netPay.formatted())원")
+                                        BUListRow.link("임금명세서 보기") { showMyPayslip = true }
+                                    }
+                                }
                                 if let payday = ctx.paydayDay {
                                     StaffPaydayCard(paydayDay: payday) { await reportUnpaid() }
                                 }
@@ -207,6 +247,19 @@ public struct StaffDashboardView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteDataChanged)) { _ in
             Task { await load() }
+        }
+        .sheet(isPresented: $showMyPayslip) {
+            // 사업주 부담은 명세서 기재사항이 아니다 → 직원 화면에서는 보여주지 않는다.
+            if let p = myPayslip, let ctx {
+                PayslipSheet(
+                    // 이름을 못 읽으면 "본인" 으로 둔다 — 상호를 성명 칸에 넣지 않는다.
+                    memberName: myName ?? "본인",
+                    period: p.period,
+                    paydayLabel: ctx.paydayDay.map { "매월 \($0)일" },
+                    result: p,
+                    showsEmployerBurden: false
+                )
+            }
         }
         .sheet(isPresented: $showLeaveSheet) {
             StaffLeaveSheet { type, start, end, reason in
@@ -271,8 +324,69 @@ public struct StaffDashboardView: View {
     }
 
     // ── 데이터 로드 (웹 loadAll 미러) ──
+    #if DEBUG
+    /// 시뮬 캡처용 직원 화면 시드 — 사장 화면 seedDemoTeam 과 같은 규칙(로컬 @State 만).
+    private func seedDemoStaff() {
+        let dec = JSONDecoder()
+        let ctxJSON = """
+        {"connected":true,"owner_user_id":"99999999-9999-9999-9999-999999999999","role":"staff",
+         "store_name":"성심당 본점","joined_at":"2026-03-02","hire_date":"2026-03-02",
+         "hourly_wage":11000,"employment_type":"full_time","job_duties":["hall","cashier"],
+         "payday_day":10,"left_at":null,"leave_basis":"hire_date","staff_headcount":6}
+        """
+        let rulesJSON = "[" + (1...5).map { wd in
+            "{\"id\":\"aaaa0000-0000-0000-0000-00000000000\(wd)\",\"member_user_id\":\"11111111-1111-1111-1111-111111111111\",\"weekday\":\(wd),\"start_time\":\"08:00:00\",\"end_time\":\"16:00:00\",\"active\":true}"
+        }.joined(separator: ",") + "]"
+        let leavesJSON = """
+        [
+          {"id":"dddd0000-0000-0000-0000-000000000001","member_user_id":"11111111-1111-1111-1111-111111111111",
+           "leave_type":"annual","start_date":"2026-09-18","end_date":"2026-09-19","reason":"가족 행사","status":"pending"},
+          {"id":"dddd0000-0000-0000-0000-000000000002","member_user_id":"11111111-1111-1111-1111-111111111111",
+           "leave_type":"half","start_date":"2026-08-14","end_date":"2026-08-14","reason":null,"status":"approved"}
+        ]
+        """
+        let allowancesJSON = """
+        [
+          {"id":"eeee0000-0000-0000-0000-000000000001","member_user_id":"11111111-1111-1111-1111-111111111111",
+           "work_date":"2026-09-11","allowance_type":"overtime","minutes":90,"reason":"마감 정리","status":"pending"}
+        ]
+        """
+        ctx = try? dec.decode(StaffStoreContext.self, from: Data(ctxJSON.utf8))
+        rules = (try? dec.decode([TeamScheduleRule].self, from: Data(rulesJSON.utf8))) ?? []
+        leaves = (try? dec.decode([TeamLeaveRequest].self, from: Data(leavesJSON.utf8))) ?? []
+        leaveLedger = leaves
+        allowances = (try? dec.decode([TeamAllowanceRequest].self, from: Data(allowancesJSON.utf8))) ?? []
+        loading = false
+        loadFailed = false
+    }
+    #else
+    private func seedDemoStaff() {}
+    #endif
+
     private func load() async {
         loadFailed = false
+        // 명세서 성명용 — 실패해도 화면은 살아 있어야 하므로 조용히 무시.
+        if myName == nil {
+            myName = (try? await BUSupabase.shared.client.auth.user())
+                .flatMap { user in
+                    (user.userMetadata["name"]?.stringValue)
+                        .map { $0.trimmingCharacters(in: .whitespaces) }
+                        .flatMap { $0.isEmpty ? nil : $0 }
+                }
+        }
+        // 시뮬 시각 검증 데모 시드 (사장 화면 BU_DEMO_SEED_TEAM 패턴, 2026-09-12) —
+        //  서버 없이 직원 화면을 구성한다. BU_DEMO_ALLOW=1 + BU_DEMO_SEED_STAFF=1 둘 다 있어야 진입
+        //  (실계정 오염 불가: 로컬 @State 만 채운다). 직원 역할 계정이 없어 이 화면을
+        //  한 번도 눈으로 못 보고 있었다.
+        if ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
+           ProcessInfo.processInfo.environment["BU_DEMO_SEED_STAFF"] == "1" {
+            seedDemoStaff()
+            if let raw = ProcessInfo.processInfo.environment["BU_DEMO_STAFF_TAB"],
+               let seg = StaffSegment(rawValue: raw) {
+                segment = seg
+            }
+            return
+        }
         do {
             let context = try await repo.staffContext()
             ctx = context
@@ -359,70 +473,40 @@ public struct StaffDashboardView: View {
 
     // ── ① 가게 헤더 ──
     private func headerCard(_ ctx: StaffStoreContext) -> some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                // 가게명·역할은 페이지 헤더(제목·부제)로 흡수 (2026-08-19) — 여기는 근속·직무·근무 요일만
-                HStack(spacing: 6) {
-                    Text("내 근무 정보")
-                        .font(.system(size: 15, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Spacer(minLength: 0)
-                    if let t = tenure(ctx), t >= 1 { chip("근속 · \(t)일차") }
-                }
-                // 고용형태 · 직무 (사장 설정, 2026-07-13)
-                if ctx.employmentType != nil || !ctx.jobDuties.isEmpty {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 6)], alignment: .leading, spacing: 6) {
-                        if let emp = JobDutyRegistry.employmentLabel(ctx.employmentType, ko: true) {
-                            Text(emp).font(.system(size: 11.5, weight: .heavy)).foregroundStyle(.white)
-                                .frame(maxWidth: .infinity).padding(.horizontal, 10).padding(.vertical, 5)
-                                .background(BUColor.midnight, in: Capsule())
-                        }
-                        ForEach(ctx.jobDuties, id: \.self) { k in
-                            Text(JobDutyRegistry.dutyLabel(k, ko: true)).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(BUColor.midnight).lineLimit(1)
-                                .frame(maxWidth: .infinity).padding(.horizontal, 10).padding(.vertical, 5)
-                                .background(BUColor.midnight.opacity(0.06), in: Capsule())
-                        }
-                    }
-                }
-                // 근무 요일 스트립
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("근무 요일")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .textCase(.uppercase)
-                        .tracking(0.4)
-                    HStack(spacing: 6) {
-                        ForEach(0..<7, id: \.self) { wd in
-                            let on = workdays.contains(wd)
-                            Text(WEEKDAYS_KO[wd])
-                                .font(.system(size: 12.5, weight: .heavy))
-                                .foregroundStyle(on ? .white : (wd == 0 ? LEAVE_COLOR : BUColor.inkMuted))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 7)
-                                .background(
-                                    on ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.06)),
-                                    in: RoundedRectangle(cornerRadius: 10)
-                                )
-                        }
-                    }
-                    if workdays.isEmpty {
-                        Text("근무 요일 미정 — 사장님이 근무표를 등록하면 표시됩니다.")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(BUColor.inkMuted)
-                    }
-                }
-                .padding(.top, 4)
+        // 2026-09-12: 카드 안 제목 + 근속 캡슐 + 직무 캡슐 그리드 + 대문자 소제목("근무 요일")을
+        //  애플식 그룹 리스트로. 직무는 캡슐 여러 개가 격자로 흩어져 있어 몇 개인지 세게 됐다 → 한 줄 값.
+        BUListSection("내 근무 정보", footer: workdays.isEmpty ? "사장님이 근무표를 등록하면 근무 요일이 표시됩니다." : nil) {
+            if let t = tenure(ctx), t >= 1 {
+                BUListRow.value("근속", "\(t)일차")
+            }
+            if let emp = JobDutyRegistry.employmentLabel(ctx.employmentType, ko: true) {
+                BUListRow.value("고용형태", emp)
+            }
+            if !ctx.jobDuties.isEmpty {
+                BUListRow.value("직무", ctx.jobDuties.map { JobDutyRegistry.dutyLabel($0, ko: true) }.joined(separator: " · "))
+            }
+            BUListRow.content("근무 요일") { weekdayStrip }
+        }
+    }
+
+    /// 요일 스트립 — 한 주를 한눈에. 리스트 행 안에 전체 폭으로 놓는다.
+    private var weekdayStrip: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<7, id: \.self) { wd in
+                let on = workdays.contains(wd)
+                Text(WEEKDAYS_KO[wd])
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(on ? .white : (wd == 0 ? LEAVE_COLOR : BUColor.inkMuted))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 9)
+                    .background(
+                        on ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.subtleFill),
+                        in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    )
             }
         }
     }
 
-    private func chip(_ label: String) -> some View {
-        Text(label)
-            .font(.system(size: 11.5, weight: .semibold))
-            .foregroundStyle(BUColor.inkSecondary)
-            .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(BUColor.midnight.opacity(0.05), in: Capsule())
-    }
 
     private func tenure(_ ctx: StaffStoreContext) -> Int? {
         let base = ctx.hireDate ?? ctx.joinedAt.map { String($0.prefix(10)) }
@@ -518,120 +602,57 @@ public struct StaffDashboardView: View {
 
     // ── ④ 연차·휴가 ──
     private var leaveCard: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text("연차 · 휴가")
-                        .font(.system(size: 15, weight: .heavy))
-                        .foregroundStyle(BUColor.ink)
-                    Spacer()
-                    Button { showLeaveSheet = true } label: {
-                        Text("+ 신청")
-                            .font(.system(size: 12.5, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12).padding(.vertical, 7)
-                            .background(LEAVE_COLOR, in: RoundedRectangle(cornerRadius: 9))
-                    }
-                }
-
-                // 잔여 요약 — 신청 목록보다 먼저 (직원이 가장 궁금한 것). 웹 LeaveCard 미러.
-                myLeaveSummary
-
-                if leaves.isEmpty {
-                    Text("신청 내역이 없어요. 연차·반차·병가를 신청하면 사장님이 승인합니다.")
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                } else {
-                    ForEach(leaves) { l in
-                        HStack(spacing: 8) {
-                            Text(leaveLabel(l.leaveType))
-                                .font(.system(size: 11, weight: .heavy))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background(LEAVE_COLOR, in: Capsule())
-                            Text(l.startDate == l.endDate ? l.startDate : "\(l.startDate) ~ \(l.endDate)")
-                                .font(.system(size: 12.5, weight: .semibold))
-                                .foregroundStyle(BUColor.ink)
-                            Spacer(minLength: 0)
-                            Text(statusLabel(l.status))
-                                .font(.system(size: 11, weight: .heavy))
-                                .foregroundStyle(l.status == "approved" ? Color.white : BUColor.inkSecondary)
-                                .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background(
-                                    l.status == "approved" ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.07)),
-                                    in: Capsule()
-                                )
-                            if l.status == "pending" {
-                                Button {
-                                    Task { try? await repo.cancelLeave(id: l.id); await load() }
-                                } label: {
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(BUColor.inkMuted)
-                                        .padding(5)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.vertical, 2)
-                    }
+        // 2026-09-12: 카드 안 제목 + 색 버튼 + 신청마다 캡슐 2개(종류·상태) →
+        //  섹션 제목 밖으로, "신청"은 제목 오른쪽, 신청 내역은 라벨/값 행.
+        //  잔여 요약은 보라색 박스(카드 안 카드)였다 → 값 행 + 각주.
+        BUListSection(
+            "연차 · 휴가",
+            actionLabel: "신청",
+            action: { showLeaveSheet = true },
+            footer: leaveFooter
+        ) {
+            leaveSummaryRows
+            if leaves.isEmpty {
+                BUListRow.plain("신청 내역이 없어요", subtitle: "연차·반차·병가를 신청하면 사장님이 승인합니다.")
+            } else {
+                leaves.map { l in
+                    BUListRow.value(
+                        "\(leaveLabel(l.leaveType)) · \(l.startDate == l.endDate ? l.startDate : "\(l.startDate) ~ \(l.endDate)")",
+                        statusLabel(l.status)
+                    )
                 }
             }
         }
     }
 
-    /// 내 연차 잔여 — 근로기준법 제60조 계산(BUAnnualLeave SSOT).
-    /// 5인 미만은 법정 의무가 없어 숫자를 만들지 않고 안내만 한다 (제11조).
-    @ViewBuilder
-    private var myLeaveSummary: some View {
+    /// 잔여 요약 행 — 계산 불가일 땐 숫자를 만들지 않는다(법적 단정 금지).
+    private var leaveSummaryRows: [BUListRow] {
         let basis = BULeaveBasis(rawValue: ctx?.leaveBasis ?? "") ?? .hireDate
         // 🔴 미상을 0 으로 강등하지 않는다 — "5인 미만 = 연차 없음"이라는 법적 단정이 된다 (2026-08-01)
         let head = ctx?.staffHeadcount
-        let calc = BUAnnualLeave.calc(hireDate: ctx?.hireDate, basis: basis, headcount: head ?? 0)
+        guard let head else {
+            return [.plain("남은 연차", subtitle: "직원 수를 불러오지 못해 계산할 수 없어요. 잠시 후 다시 열어보시거나 사장님께 문의해 주세요.")]
+        }
+        let calc = BUAnnualLeave.calc(hireDate: ctx?.hireDate, basis: basis, headcount: head)
+        guard calc.statutory, calc.days > 0 else { return [] }
         let range = BUAnnualLeave.yearRange(basis: basis, hireDate: ctx?.hireDate)
         let used = BUAnnualLeave.usedDays(
             leaveLedger.map { (leaveType: $0.leaveType, startDate: $0.startDate, endDate: $0.endDate, status: $0.status) },
             yearStart: range.start, yearEnd: range.end
         )
         let left = BUAnnualLeave.remaining(granted: calc.days, used: used)
+        return [.value("남은 연차", "\(leaveNum(left))일",
+                       subtitle: "올해 \(calc.days)일 중 \(leaveNum(used))일 사용 (예상)")]
+    }
 
-        VStack(alignment: .leading, spacing: 6) {
-            if head == nil {
-                Text("직원 수를 불러오지 못해 연차 일수를 계산할 수 없어요. 잠시 후 다시 열어보시거나 사장님께 문의해 주세요.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(BUColor.inkSecondary)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else if calc.statutory && calc.days > 0 {
-                HStack(alignment: .firstTextBaseline, spacing: 7) {
-                    Text(leaveNum(left) + "일")
-                        .font(.system(size: 20, weight: .heavy))
-                        .foregroundStyle(LEAVE_COLOR)
-                        .monospacedDigit()
-                    Text("남았어요")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(BUColor.ink)
-                    Text("올해 \(calc.days)일 중 \(leaveNum(used))일 사용")
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .monospacedDigit()
-                    Text("예상")
-                        .font(.system(size: 10, weight: .heavy))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(Color.black.opacity(0.06), in: Capsule())
-                    Spacer(minLength: 0)
-                }
-            }
-            Text(calc.basisNoteKo)
-                .font(.system(size: 11))
-                .foregroundStyle(BUColor.inkSecondary)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.horizontal, 14).padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(LEAVE_COLOR.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    /// 연차 계산 근거 — 신청마다 반복하지 않고 각주에서 한 번.
+    ///  🔴 미상(nil)을 0 으로 강등하지 않는다 — "5인 미만 = 연차 없음"이라는 법적 단정이 된다 (2026-08-01).
+    ///     인원을 모르면 근거 문장 자체를 내보내지 않는다.
+    private var leaveFooter: String? {
+        guard let headcount = ctx?.staffHeadcount else { return nil }
+        let basis = BULeaveBasis(rawValue: ctx?.leaveBasis ?? "") ?? .hireDate
+        let calc = BUAnnualLeave.calc(hireDate: ctx?.hireDate, basis: basis, headcount: headcount)
+        return calc.basisNoteKo
     }
 
     private func leaveNum(_ v: Double) -> String {
@@ -649,46 +670,58 @@ public struct StaffDashboardView: View {
     // 연결 조회 RPC 실패 — "미연결"과 구분해 재시도 유도(서버엔 연결이 있어도 일시 오류일 수 있음).
     private var loadFailedCard: some View {
         BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("연결 정보를 불러오지 못했어요").font(.system(size: 17, weight: .heavy)).foregroundStyle(BUColor.ink)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("연결 정보를 불러오지 못했어요")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
                 Text("일시적인 오류일 수 있어요. 잠시 후 다시 시도해 주세요. 연결은 그대로 유지됩니다.")
-                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                HStack(spacing: 8) {
-                    Button { Task { loading = true; await load() } } label: {
-                        Label("다시 시도", systemImage: "arrow.clockwise")
-                            .font(.system(size: 13, weight: .heavy)).foregroundStyle(.white)
-                            .padding(.horizontal, 16).padding(.vertical, 10)
-                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
-                    }
-                    .buttonStyle(.plain)
-                    Button(action: onSignOut) {
-                        Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
-                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.inkSecondary)
-                            .padding(.horizontal, 16).padding(.vertical, 10)
-                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.midnight.opacity(0.14), lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                }
+                    .font(.system(size: 15))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                staffPrimaryButton("다시 시도") { Task { loading = true; await load() } }
+                staffSecondaryButton("로그아웃", action: onSignOut)
             }
         }
     }
 
     private var notConnectedCard: some View {
         BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("아직 가게에 연결되지 않았어요").font(.system(size: 17, weight: .heavy)).foregroundStyle(BUColor.ink)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("아직 가게에 연결되지 않았어요")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
                 Text("사장님께 받은 초대 링크를 다시 열거나, 초대 코드를 다시 확인해 주세요. 초대는 7일간 유효합니다.")
-                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                Button(action: onSignOut) {
-                    Label("로그아웃", systemImage: "rectangle.portrait.and.arrow.right")
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 16).padding(.vertical, 10)
-                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
-                }
-                .buttonStyle(.plain)
+                    .font(.system(size: 15))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                staffSecondaryButton("로그아웃", action: onSignOut)
             }
         }
+    }
+
+    /// 빈 상태·오류 상태의 주 동작 — 전체폭 50pt (애플 최소 탭 영역 이상).
+    private func staffPrimaryButton(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func staffSecondaryButton(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(BUColor.inkMuted)
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(BUColor.subtleFill, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -990,7 +1023,15 @@ private struct StaffRightsCard: View {
 
     private var juhyuBadge: String { juhyuEligible ? "대상" : "비대상" }
     private var severanceBadge: String { severanceEligible ? "대상 도달" : (severanceApproaching ? "임박" : "미도달") }
-    private var leaveBadge: String { daysSinceHire >= 365 ? "15일 발생" : "1년 미만" }
+    /// 주 15시간 미만은 연차 자체가 적용되지 않는다(근기법 §18③) — 근속과 무관.
+    ///  2026-09-14: 이 조건이 빠져 있어 단시간 근로자에게 "연차 15일 발생"이라 표시됐고,
+    ///  같은 계정의 임금명세서는 "연차 의무 없음"이라 적혀 두 화면이 서로 반대를 말했다.
+    private var leaveApplies: Bool { weeklyHours >= BUPayrollRates.shortTimeWeeklyHours }
+    private var leaveAccrued: Bool { leaveApplies && daysSinceHire >= 365 }
+    private var leaveBadge: String {
+        guard leaveApplies else { return "비대상" }
+        return daysSinceHire >= 365 ? "15일 발생" : "1년 미만"
+    }
 
     var body: some View {
         BUCard(.outer) {
@@ -999,13 +1040,11 @@ private struct StaffRightsCard: View {
                     withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { expanded.toggle() }
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "checkmark.shield")
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
-                        Text("내 근로 권리").font(.system(size: 15, weight: .heavy)).foregroundStyle(BUColor.ink)
+                        Text("내 근로 권리").font(.system(size: 20, weight: .bold)).foregroundStyle(BUColor.ink)
                         Spacer(minLength: 0)
-                        Text(expanded ? "접기" : "펼치기").font(.system(size: 11.5, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                        Text(expanded ? "접기" : "펼치기").font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnightInk)
                         Image(systemName: "chevron.down")
-                            .font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.midnight)
+                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.midnightInk)
                             .rotationEffect(.degrees(expanded ? 180 : 0))
                     }
                     .contentShape(Rectangle())
@@ -1014,15 +1053,17 @@ private struct StaffRightsCard: View {
                 .accessibilityValue(expanded ? "펼침" : "접힘")
 
                 if !expanded {
-                    // 요약 배지 3개 — 펼치지 않아도 자격 상태가 한눈에
-                    HStack(spacing: 6) {
-                        summaryBadge("주휴수당", value: juhyuBadge, on: juhyuEligible)
-                        summaryBadge("퇴직금", value: severanceBadge, on: severanceEligible)
-                        summaryBadge("연차", value: leaveBadge, on: daysSinceHire >= 365)
+                    // 2026-09-12: 요약 박스 3개(라벨 10.5pt + 값 12pt)를 애플식 라벨/값 행으로.
+                    //  세 칸에 나눠 넣느라 값이 줄어들고 잘렸다. 행이면 값이 온전히 보인다.
+                    VStack(spacing: 0) {
+                        summaryRow("주휴수당", value: juhyuBadge, on: juhyuEligible, first: true)
+                        summaryRow("퇴직금", value: severanceBadge, on: severanceEligible, first: false)
+                        summaryRow("연차", value: leaveBadge, on: leaveAccrued, first: false)
                     }
                     if hourlyWage == nil {
                         Text("사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 표시됩니다.")
-                            .font(.system(size: 11.5)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                            .font(.system(size: 13)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
@@ -1060,12 +1101,16 @@ private struct StaffRightsCard: View {
                 // ③ 연차
                 rightRow(
                     title: "연차유급휴가",
-                    badge: daysSinceHire >= 365 ? "15일 발생" : "1년 미만",
-                    on: daysSinceHire >= 365,
-                    body: daysSinceHire >= 365
-                        ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요."
-                        : "근속 1년 도달 시 연차 15일이 발생합니다. D-\(dDay)",
-                    law: "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)."
+                    badge: leaveBadge,
+                    on: leaveAccrued,
+                    body: !leaveApplies
+                        ? "주 소정근로 15시간 미만 — 연차유급휴가가 적용되지 않습니다."
+                        : leaveAccrued
+                            ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요."
+                            : "근속 1년 도달 시 연차 15일이 발생합니다. D-\(dDay)",
+                    law: !leaveApplies
+                        ? "근로기준법 §18③ · 4주 평균 주 15시간 미만 근로자는 §60 미적용."
+                        : "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)."
                 )
                 } // expanded
 
@@ -1091,46 +1136,60 @@ private struct StaffRightsCard: View {
     }
 
     /// 접힘 요약 배지 — 라벨 + 상태 (자격 충족 = ok 톤, 미충족 = 뮤트)
-    private func summaryBadge(_ label: String, value: String, on: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 10.5, weight: .heavy)).foregroundStyle(BUColor.inkMuted)
-            Text(value).font(.system(size: 12, weight: .heavy)).foregroundStyle(on ? ok : BUColor.inkSecondary).lineLimit(1).minimumScaleFactor(0.85)
+    /// 요약 한 줄 — 라벨 왼쪽, 자격 오른쪽. 해당될 때만 색(색은 신호).
+    private func summaryRow(_ label: String, value: String, on: Bool, first: Bool) -> some View {
+        VStack(spacing: 0) {
+            if !first { BUHairline() }
+            HStack {
+                Text(label)
+                    .font(.system(size: 17))
+                    .foregroundStyle(BUColor.ink)
+                Spacer(minLength: 8)
+                Text(value)
+                    .font(.system(size: 17, weight: on ? .semibold : .regular))
+                    .foregroundStyle(on ? ok : BUColor.inkMuted)
+                    .lineLimit(1)
+            }
+            .frame(minHeight: 44)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 10).padding(.vertical, 8)
-        .background((on ? ok.opacity(0.06) : BUColor.midnight.opacity(0.05)), in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(on ? ok.opacity(0.25) : Color.clear, lineWidth: 1))
     }
 
     @ViewBuilder
     private func rightRow(title: String, badge: String, on: Bool, body: String, law: String, link: (URL, String)? = nil) -> some View {
+        // 2026-09-12: 항목마다 색 상자 + 테두리 + 캡슐 배지를 두던 것을 헤어라인 구분 + 값 텍스트로.
+        //  적용 여부는 오른쪽 값으로 말한다 — 해당될 때만 색(색은 신호).
         VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Text(title).font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.midnight)
-                Spacer(minLength: 0)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
+                Spacer(minLength: 8)
                 Text(badge)
-                    .font(.system(size: 11, weight: .heavy))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(on ? ok : BUColor.inkMuted)
-                    .padding(.horizontal, 9).padding(.vertical, 2)
-                    .background((on ? ok : BUColor.inkMuted).opacity(0.10), in: Capsule())
-                    .overlay(Capsule().strokeBorder((on ? ok : BUColor.inkMuted).opacity(0.22), lineWidth: 1))
             }
-            Text(body).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.ink).lineSpacing(2)
-            Text(law).font(.system(size: 11)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            Text(body)
+                .font(.system(size: 15))
+                .foregroundStyle(BUColor.inkMuted)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(law)
+                .font(.system(size: 13))
+                .foregroundStyle(BUColor.inkMuted)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
             if let link {
                 Link(destination: link.0) {
-                    HStack(spacing: 3) {
-                        Text(link.1).font(.system(size: 11, weight: .semibold))
-                        Image(systemName: "arrow.up.right.square").font(.system(size: 10))
-                    }.foregroundStyle(BUColor.midnight)
+                    Text(link.1)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.midnightInk)
                 }
                 .padding(.top, 2)
             }
         }
-        .padding(12)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background((on ? ok.opacity(0.06) : BUColor.midnight.opacity(0.05)), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(on ? ok.opacity(0.25) : Color.clear, lineWidth: 1))
+        .overlay(alignment: .top) { BUHairline() }
     }
 }
 
@@ -1170,81 +1229,46 @@ private struct StaffAllowanceCard: View {
     private let ok = Color(red: 26 / 255, green: 122 / 255, blue: 54 / 255)
 
     var body: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    Image(systemName: "wonsign.circle").font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
-                    Text("추가 수당 신청").font(.system(size: 15, weight: .heavy)).foregroundStyle(BUColor.ink)
-                    Spacer(minLength: 0)
-                    Button(action: onOpenForm) {
-                        Label("직접 신청", systemImage: "plus")
-                            .font(.system(size: 12, weight: .heavy)).foregroundStyle(BUColor.midnight)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                // ① 자동 감지 연장근로
-                if !candidates.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("정규 시간을 초과한 근무가 있어요", systemImage: "clock")
-                            .font(.system(size: 12.5, weight: .heavy)).foregroundStyle(LEAVE_COLOR)
-                        ForEach(candidates) { c in
-                            HStack(spacing: 10) {
-                                Text(mdShort(c.workDate)).font(.system(size: 12.5, weight: .heavy)).foregroundStyle(BUColor.ink)
-                                Text("연장 \(minsLabel(c.minutes))").font(.system(size: 12.5, weight: .heavy)).foregroundStyle(BUColor.midnight)
-                                Spacer(minLength: 0)
-                                Button { onQuickRequest(c) } label: {
-                                    Text("신청").font(.system(size: 12, weight: .heavy)).foregroundStyle(.white)
-                                        .padding(.horizontal, 14).padding(.vertical, 6)
-                                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 9))
-                                }
-                                .buttonStyle(.plain)
+        // 2026-09-12: 카드 안 아이콘 제목 + 테두리 캡슐 버튼 + 후보마다 보라색 상자 +
+        //  신청마다 캡슐 2개(유형·상태) → 섹션 제목 밖으로, 후보·신청은 라벨/값 행.
+        VStack(alignment: .leading, spacing: BUSpacing.shellGap) {
+            if !candidates.isEmpty {
+                BUListSection(
+                    "초과 근무",
+                    footer: "정규 시간을 초과해 근무하면 자동으로 감지됩니다."
+                ) {
+                    candidates.map { c in
+                        BUListRow.content("\(mdShort(c.workDate)) · 연장 \(minsLabel(c.minutes))") {
+                            Button { onQuickRequest(c) } label: {
+                                Text("이 건 신청하기")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
                             }
-                            .padding(10)
-                            .background(LEAVE_COLOR.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(LEAVE_COLOR.opacity(0.22), lineWidth: 1))
+                            .buttonStyle(.plain)
                         }
                     }
                 }
+            }
 
-                // ② 내 신청 목록
-                if !allowances.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(allowances) { a in
-                            HStack(spacing: 8) {
-                                Text(allowanceTypeLabel(a.allowanceType))
-                                    .font(.system(size: 11, weight: .heavy)).foregroundStyle(.white)
-                                    .padding(.horizontal, 8).padding(.vertical, 3)
-                                    .background(a.allowanceType == "night" ? LEAVE_COLOR : BUColor.midnight, in: Capsule())
-                                Text("\(mdShort(a.workDate)) · \(minsLabel(a.minutes))")
-                                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.ink)
-                                Spacer(minLength: 0)
-                                Text(a.status == "approved" ? "승인" : a.status == "rejected" ? "반려" : "대기")
-                                    .font(.system(size: 11, weight: .heavy))
-                                    .foregroundStyle(a.status == "approved" ? Color.white : BUColor.inkSecondary)
-                                    .padding(.horizontal, 8).padding(.vertical, 3)
-                                    .background(a.status == "approved" ? AnyShapeStyle(BUColor.midnight) : AnyShapeStyle(BUColor.midnight.opacity(0.07)), in: Capsule())
-                                if a.status == "pending" {
-                                    Button { onCancel(a.id) } label: {
-                                        Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.inkMuted).padding(5)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.vertical, 2)
-                        }
+            BUListSection(
+                "추가 수당 신청",
+                actionLabel: "직접 신청",
+                action: onOpenForm,
+                footer: "연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과 시간분 시급 지급. 정확한 금액은 사장님과 확인하세요."
+            ) {
+                if allowances.isEmpty {
+                    BUListRow.plain("신청 내역이 없어요", subtitle: "연장·야간·휴일 근로가 있으면 여기서 신청하세요.")
+                } else {
+                    allowances.map { a in
+                        BUListRow.value(
+                            "\(allowanceTypeLabel(a.allowanceType)) · \(mdShort(a.workDate))",
+                            a.status == "approved" ? "승인" : a.status == "rejected" ? "반려" : "대기",
+                            subtitle: minsLabel(a.minutes)
+                        )
                     }
                 }
-
-                if candidates.isEmpty && allowances.isEmpty {
-                    Text("연장·야간·휴일 근로가 있으면 여기서 신청하세요. 정규 시간을 초과해 근무하면 자동으로 감지됩니다.")
-                        .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                }
-
-                Text("연장·야간·휴일근로는 상시 5인 이상 사업장에서 통상임금 50% 가산(근로기준법 §56). 5인 미만은 초과 시간분 시급 지급. 정확한 금액은 사장님과 확인하세요.")
-                    .font(.system(size: 11)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
             }
         }
     }
@@ -1358,34 +1382,14 @@ struct StaffPaydayCard: View {
     }
 
     var body: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Label("급여일", systemImage: "wonsign.circle")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(BUColor.ink)
-                    Spacer()
-                    Text(effectivePayday != paydayDay
-                         ? "매월 \(paydayDay)일 · 이번 달 \(effectivePayday)일"
-                         : "매월 \(paydayDay)일")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                }
-
-                if Calendar.current.component(.day, from: Date()) < effectivePayday {
-                    Text("이번 달 급여일은 \(effectivePayday)일이에요.")
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                } else if state == .sent {
-                    Text("✓ 사장님께 전달했어요. 확인하시면 연락이 올 거예요.")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(BUColor.midnight)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text("급여가 아직 안 들어왔다면 사장님께 알릴 수 있어요.")
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+        // 2026-09-12: 카드 안 Label 제목 + 오른쪽 작은 값 + 작은 버튼 →
+        //  섹션 제목 밖으로, 값은 행, 동작은 전체폭 버튼(44pt 이상).
+        BUListSection("급여일", footer: paydayFooter) {
+            BUListRow.value("지급일", effectivePayday != paydayDay
+                            ? "매월 \(paydayDay)일 (이번 달 \(effectivePayday)일)"
+                            : "매월 \(paydayDay)일")
+            if Calendar.current.component(.day, from: Date()) >= effectivePayday && state != .sent {
+                BUListRow.content("급여 확인") {
                     Button {
                         Task {
                             state = .sending
@@ -1394,20 +1398,25 @@ struct StaffPaydayCard: View {
                         }
                     } label: {
                         Text(state == .sending ? "보내는 중…" : "급여가 안 들어왔어요")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 16).padding(.vertical, 9)
-                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
                     }
+                    .buttonStyle(.plain)
                     .disabled(state == .sending)
-                    .opacity(state == .sending ? 0.5 : 1)
-                    if state == .failed {
-                        Text("전달에 실패했어요. 잠시 후 다시 시도해 주세요.")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(BUColor.inkMuted)
-                    }
                 }
             }
         }
+    }
+
+    /// 상황별 각주 — 급여일 전 안내 / 전달 완료 / 실패.
+    private var paydayFooter: String? {
+        if state == .sent { return "사장님께 전달했어요. 확인하시면 연락이 올 거예요." }
+        if state == .failed { return "전달하지 못했어요. 잠시 후 다시 시도해 주세요." }
+        if Calendar.current.component(.day, from: Date()) < effectivePayday {
+            return "이번 달 급여일은 \(effectivePayday)일이에요."
+        }
+        return "급여가 아직 안 들어왔다면 사장님께 알릴 수 있어요."
     }
 }

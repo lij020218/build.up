@@ -64,7 +64,7 @@ export function SubscriptionWebhookConnectCard({ ko = true }: { ko?: boolean }) 
 
   return (
     <article style={{
-      borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)",
+      borderRadius: "var(--card-radius)", border: "1px solid rgba(0,0,0,0.06)",
       background: "#fff", overflow: "hidden",
     }}>
       <div style={{ padding: "18px 22px 6px" }}>
@@ -233,7 +233,7 @@ function ConnectSheet({
     >
       <div style={{
         width: "min(480px, 100%)", maxHeight: "85vh", overflowY: "auto",
-        background: "#fff", borderRadius: "20px", padding: "24px",
+        background: "#fff", borderRadius: "var(--card-radius)", padding: "24px",
         boxShadow: "0 32px 80px rgba(0,0,0,0.18)",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>

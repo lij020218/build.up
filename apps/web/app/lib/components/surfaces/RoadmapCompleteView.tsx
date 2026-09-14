@@ -23,7 +23,7 @@ export function RoadmapCompleteView({
       <div style={styles.sectionTitle}>{ko ? "로드맵 완료" : "Roadmap Complete"}</div>
       <article style={{
         background: "rgba(255,255,255,0.92)",
-        borderRadius: "20px",
+        borderRadius: "var(--card-radius)",
         border: "1px solid rgba(0,0,0,0.08)",
         padding: "40px 32px",
         display: "flex",

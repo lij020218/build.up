@@ -10,7 +10,7 @@
 //   │  Row 1 — 인사 영역                                                  │
 //   │    [36×36 icon box] eyebrow(날짜·모드)                              │
 //   │                     [pill 운영N일째] [pill 단계] [pill WoW%]          │
-//   │                     "좋은 아침, 사장님"                              │
+//   │                     "좋은 아침, 김사장님"                            │
 //   │                     "상호명 · 운영 N일째"                            │
 //   │                                                                   │
 //   │  Row 1.5 — 위험신호 박스 (HEALTH_COLORS, radius 14)                 │
@@ -100,6 +100,11 @@ public struct TodayView: View {
     @State private var showNotifications = false
     /// 초대된 직원(store_members) — 팀카드 인원·명단. 종전 팀카드는 수동 급여명단만 세어 초대직원 누락 (2026-07-14)
     @State private var invitedStaff: [TeamMember] = []
+    /// 홈 직원 구획용 승인 대기 건수 (연차·수당). 직원이 있을 때만 조회한다.
+    @State private var pendingLeaveCount = 0
+    @State private var pendingAllowanceCount = 0
+    /// 오늘 근무 명단 — 판정은 BUTodayRoster(웹 today-roster.ts 미러)가 한다.
+    @State private var todayRoster: [BUTodayRosterEntry] = []
     /// storeInfo 변경 감지용 — storeInfo 는 plain let 이라 자체 관찰이 안 되므로
     /// objectWillChange 를 구독해 이 값을 bump → 홈 카드(재고·직원·고객) 즉시 재렌더.
     @State private var storeRevision = 0
@@ -187,8 +192,6 @@ public struct TodayView: View {
                     case .more:  moreSegment
                     }
 
-                    // 하단 탭바 회피
-                    Color.clear.frame(height: 110)
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
                 .padding(.bottom, BUSpacing.md)
@@ -325,8 +328,40 @@ public struct TodayView: View {
             mock: mock,
             healthResult: healthResult,
             hero: hero,
-            aiActions: aiActions
+            aiActions: aiActions,
+            onCta: handleHeroCta
         )
+
+        // ①-b 직원 — **직원이 있을 때만** 히어로 바로 아래로 승격 (2026-09-12).
+        //   2026-09-14: "함께 일하는 사람 N명" 한 줄 → **오늘 출근 카드 줄**.
+        //   숫자는 오늘 무엇을 할지 알려주지 않는다. 아침에 필요한 건 누가 몇 시에 오는가와
+        //   왔는가뿐이라, 사람당 카드 하나를 이른 시간부터 왼쪽에 놓는다.
+        if hasTeam {
+            VStack(alignment: .leading, spacing: 10) {
+                BUSectionTitle(rosterTitle, actionLabel: "관리", action: { showTeamSheet = true })
+
+                if displayRoster.isEmpty {
+                    // 근무표가 아직 없을 수도 있다 — 0명이라 단정하지 않고 할 일을 준다.
+                    BUListSection {
+                        BUListRow.link(
+                            "오늘 근무 예정 없음",
+                            subtitle: "근무표를 등록하면 여기에 출근 현황이 보입니다"
+                        ) { showTeamSheet = true }
+                    }
+                } else {
+                    // 가로 줄은 화면 끝까지 흐르게 — 부모의 좌우 여백을 상쇄한다.
+                    //  카드가 가장자리에서 잘려 보여야 "옆에 더 있다"가 읽힌다.
+                    TodayRosterStrip(entries: displayRoster) { showTeamSheet = true }
+                        .padding(.horizontal, -BUSpacing.screenMargin)
+                }
+
+                if demoPendingLeave + demoPendingAllowance > 0 {
+                    BUListSection {
+                        BUListRow.link("승인 대기", subtitle: pendingSummary) { showTeamSheet = true }
+                    }
+                }
+            }
+        }
 
         // ② 매출 흐름 (PortOne·TossPlace 등 자동수집 매출 합산 — autoSourceCount 배지)
         ActivitySnapshotCard(
@@ -458,6 +493,19 @@ public struct TodayView: View {
             breakdown: u.breakdown, cardOverlap: u.cardOverlap,
             hasPopbill: u.sources.popbill, basis: u.basis
         )
+    }
+
+    /// "오늘 할 일" 버튼 → 실제 화면. 웹 handleBriefingCta 의 iOS 거울 (카드 스크롤 대신 시트·탭).
+    private func handleHeroCta(_ target: HeroCtaTarget) {
+        switch target {
+        case .sales:      showInputSheet = true
+        case .team:       showTeamSheet = true
+        case .inventory:  showInventorySheet = true
+        case .users:      showCustomerSheet = true
+        case .marketing:  onSwitchTab?(.marketing)
+        case .cashflow, .costs, .primeCost: onSwitchTab?(.finance)
+        case .operations: onSwitchTab?(.offerings)
+        }
     }
 
     private func loadAIActions() async {
@@ -753,6 +801,148 @@ public struct TodayView: View {
         } catch {
             logger.error("invitedStaff 로드 실패(기존 값 유지): \(error.localizedDescription)")
         }
+        // 승인 대기는 **직원이 있을 때만** 조회한다 — 나홀로 사장님에게 불필요한 왕복을 만들지 않는다.
+        guard !invitedStaff.isEmpty else {
+            pendingLeaveCount = 0
+            pendingAllowanceCount = 0
+            return
+        }
+        async let leaves = try? repo.leaveRequests()
+        async let allowances = try? repo.allowanceRequests()
+        async let rules = try? repo.scheduleRules()
+        async let attendance = try? repo.ownerTodayAttendance()
+
+        let today = BUTodayRoster.localDateKey()
+        async let exceptions = try? repo.ownerMonthExceptions(monthStart: today, monthEnd: today)
+
+        let loadedLeaves = await leaves ?? []
+        pendingLeaveCount = loadedLeaves.filter { $0.status == "pending" }.count
+        pendingAllowanceCount = (await allowances ?? []).filter { $0.status == "pending" }.count
+
+        todayRoster = Self.buildRoster(
+            today: today,
+            members: invitedStaff,
+            rules: await rules ?? [],
+            exceptions: await exceptions ?? [],
+            attendance: await attendance ?? [],
+            leaves: loadedLeaves
+        )
+    }
+
+    /// Repository 타입 → SSOT 입력으로 변환 후 판정. 판정 자체는 BUTodayRoster 가 한다.
+    private static func buildRoster(
+        today: String,
+        members: [TeamMember],
+        rules: [TeamScheduleRule],
+        exceptions: [OwnerScheduleException],
+        attendance: [OwnerTodayAttendance],
+        leaves: [TeamLeaveRequest]
+    ) -> [BUTodayRosterEntry] {
+        let weekday = BUTodayRoster.weekday(of: today)
+        let inputs = members.filter { !$0.hasLeft }.map { m in
+            BURosterMemberInput(
+                memberUserId: m.memberUserId.uuidString,
+                name: m.name,
+                rules: rules.filter { $0.memberUserId == m.memberUserId },
+                exceptions: exceptions.filter { $0.memberUserId == m.memberUserId }
+            )
+        }
+        return BUTodayRoster.build(
+            dateStr: today,
+            weekday: weekday,
+            members: inputs,
+            attendance: attendance.map {
+                BURosterAttendance(
+                    memberUserId: $0.memberUserId.uuidString,
+                    clockInAt: $0.clockInAt,
+                    clockOutAt: $0.clockOutAt
+                )
+            },
+            leaves: leaves.map {
+                BURosterLeave(
+                    memberUserId: $0.memberUserId.uuidString,
+                    startDate: $0.startDate,
+                    endDate: $0.endDate,
+                    status: $0.status
+                )
+            }
+        )
+    }
+
+    /// 시뮬 캡처 전용 — 직원 구획을 눈으로 확인하기 위한 가짜 인원. BU_DEMO_ALLOW 이중 가드.
+    ///  (직원 있는 실계정이 아직 없어 양성 케이스를 볼 방법이 이것뿐이다.)
+    private var demoTeamSize: Int {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        guard env["BU_DEMO_ALLOW"] == "1", let raw = env["BU_DEMO_TEAM"], let n = Int(raw) else { return 0 }
+        return max(0, n)
+        #else
+        return 0
+        #endif
+    }
+
+    /// 홈에 직원 구획을 올릴지 — 직원이 하나도 없으면 아예 숨긴다(빈 카드 금지).
+    ///  근거(2026-09-12 검토): 우리 사용자·시장 다수가 나홀로 사장이다. 직원 관리는
+    ///  광고 훅으로 유지하되, 화면은 실제로 직원을 둔 점주에게만 올린다.
+    private var hasTeam: Bool { !invitedStaff.isEmpty || !realEmployees.isEmpty || demoTeamSize > 0 }
+
+    /// 화면에 쓰는 인원 수 — 초대 직원과 수동 급여 명단 중 큰 쪽(두 모집단이 별개다).
+    private var teamHeadcount: Int { max(max(invitedStaff.count, realEmployees.count), demoTeamSize) }
+
+    /// 홈에 그릴 오늘 명단 — 휴무자는 빼고(오늘과 무관), 연차는 남긴다(왜 없는지의 답).
+    private var displayRoster: [BUTodayRosterEntry] {
+        let base = demoRoster ?? todayRoster
+        return BUTodayRoster.visibleForHome(base)
+    }
+
+    /// "오늘 출근 · 3명 중 1명" — 제목이 곧 요약이라 따로 줄을 쓰지 않는다.
+    private var rosterTitle: String {
+        let expected = BUTodayRoster.expectedCount(displayRoster)
+        guard expected > 0 else { return "오늘 출근" }
+        return "오늘 출근 · \(expected)명 중 \(BUTodayRoster.clockedInCount(displayRoster))명"
+    }
+
+    /// 시뮬 캡처 전용 — 근무표가 있는 실계정이 아직 없어 양성 케이스를 볼 방법이 이것뿐이다.
+    ///  BU_DEMO_ALLOW 이중 가드. 실계정에서는 항상 nil.
+    private var demoRoster: [BUTodayRosterEntry]? {
+        #if DEBUG
+        guard demoTeamSize > 0 else { return nil }
+        let today = BUTodayRoster.localDateKey()
+        // 실제 판정과 같은 순서로 둔다 — 이른 시간이 왼쪽, 시간 없는 연차가 맨 뒤.
+        let plan: [(name: String, start: String, end: String, status: BUTodayShiftStatus)] = [
+            ("최서준", "07:00:00", "13:00:00", .done),
+            ("김미소", "09:00:00", "15:00:00", .working),
+            ("정다은", "13:00:00", "21:00:00", .scheduled),
+            ("박준영", "15:00:00", "22:00:00", .scheduled),
+            ("이하늘", "11:00:00", "17:00:00", .leave),
+        ]
+        return plan.prefix(demoTeamSize).enumerated().map { i, p in
+            BUTodayRosterEntry(
+                memberUserId: "demo-\(i)",
+                name: p.name,
+                status: p.status,
+                startTime: p.status == .leave ? nil : p.start,
+                endTime: p.status == .leave ? nil : p.end,
+                startMinutes: p.status == .leave ? nil : BUWorkSchedule.timeToMinutes(p.start),
+                clockInAt: p.status == .working || p.status == .done ? "\(today)T00:02:00Z" : nil,
+                clockOutAt: p.status == .done ? "\(today)T09:05:00Z" : nil
+            )
+        }
+        #else
+        return nil
+        #endif
+    }
+
+    /// 표시용 대기 건수 — 데모 모드면 예시 값(연차 2·수당 1).
+    private var demoPendingLeave: Int { demoTeamSize > 0 ? max(pendingLeaveCount, 2) : pendingLeaveCount }
+    private var demoPendingAllowance: Int { demoTeamSize > 0 ? max(pendingAllowanceCount, 1) : pendingAllowanceCount }
+
+    /// "연차 2건 · 수당 1건" — 0 인 종류는 쓰지 않는다.
+    private var pendingSummary: String {
+        var parts: [String] = []
+        if demoPendingLeave > 0 { parts.append("연차 \(demoPendingLeave)건") }
+        if demoPendingAllowance > 0 { parts.append("수당 \(demoPendingAllowance)건") }
+        return parts.joined(separator: " · ")
     }
 
     private var dailyKpiCells: [KpiCellData] {
@@ -853,14 +1043,18 @@ private struct HeroOuterCard: View {
     /// 2026-05-27 P0-A: 서버에서 받은 AI 액션. nil 이면 mock 데이터로 fallback.
     /// AI fetch 완료 시 onAppear / .task 에서 채워짐.
     let aiActions: [AiAction]?
+    /// "오늘 할 일" 버튼 라우팅 — TodayView 가 시트·탭 전환을 안다.
+    let onCta: (HeroCtaTarget) -> Void
 
     @AppStorage("roadmap.selectedIndustryId") private var specialtyId = ""
 
-    init(mock: MockData, healthResult: UnifiedHealthResult, hero: Hero, aiActions: [AiAction]? = nil) {
+    init(mock: MockData, healthResult: UnifiedHealthResult, hero: Hero, aiActions: [AiAction]? = nil,
+         onCta: @escaping (HeroCtaTarget) -> Void = { _ in }) {
         self.mock = mock
         self.healthResult = healthResult
         self.hero = hero
         self.aiActions = aiActions
+        self.onCta = onCta
     }
 
     var body: some View {
@@ -868,20 +1062,18 @@ private struct HeroOuterCard: View {
             VStack(alignment: .leading, spacing: BUSpacing.heroGap) {
                 Row1Greeting(mock: mock, healthResult: healthResult)
                 Row1_5RiskSignals(healthResult: healthResult)
-                Row2NSMNested(mock: mock, hero: hero, healthResult: healthResult)
+                // 순서 (2026-09-12 승인 미리보기): 할 일이 주인공, 매출은 그 아래 한 줄.
+                //  큰 매출 숫자는 바로 아래 '매출 흐름' 카드가 이미 보여준다 — 여기서 또 크게 쓰지 않는다.
                 // AI 데이터 있으면 그것 사용, 없으면 정적 fallback (mock.resolverInput.aiTopActions)
+                // 피드백("도움이 됐나요?")은 히어로에서 빼고 시트 맨 아래로 — 실제 AI 코칭일 때만.
                 Row3CoachingNested(
                     hero: hero,
-                    actions: aiActions ?? mock.resolverInput.aiTopActions
+                    actions: aiActions ?? mock.resolverInput.aiTopActions,
+                    onCta: onCta,
+                    feedbackIndustryCategoryId: (aiActions?.isEmpty == false) ? mock.category.benchmarkCategoryId : nil,
+                    feedbackSpecialtyId: specialtyId.isEmpty ? nil : specialtyId
                 )
-                // 실제 AI 코칭일 때만 피드백 — "안 맞아요"는 다음 코칭 prompt 에 주입돼 자가개선.
-                if let acts = aiActions, !acts.isEmpty {
-                    CoachingFeedbackRow(
-                        headline: hero.analysisKo,
-                        industryCategoryId: mock.category.benchmarkCategoryId,
-                        specialtyId: specialtyId.isEmpty ? nil : specialtyId
-                    )
-                }
+                Row2NSMNested(mock: mock, hero: hero, healthResult: healthResult)
             }
         }
     }
@@ -907,11 +1099,15 @@ private struct Row1Greeting: View {
         return "\(timeOfDay), \(displayUserName)"
     }
 
-    /// 호칭용 사용자명 — 이메일이면 사장님으로, 빈 값이면 사장님으로.
+    /// 호칭용 사용자명 — 규칙은 OwnerAddress 한 곳(웹 SSOT 미러).
+    ///  2026-09-12 사장님 지시: 이름만 부르지 말고 "님"을 꼭 붙인다("김사장" → "김사장님").
     private var displayUserName: String {
-        let raw = mock.userName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if raw.isEmpty || raw.contains("@") { return "사장님" }
-        return raw
+        OwnerAddress.ko(mock.userName, fallbackTitle: ownerTitle)
+    }
+
+    /// 업종별 호칭 — 스타트업은 "대표님", 그 밖은 "사장님" (웹 onboarding-profile ownerTitle 규칙).
+    private var ownerTitle: String {
+        mock.category == .startupTech ? "대표님" : "사장님"
     }
 
     private var periodIcon: String {
@@ -963,28 +1159,33 @@ private struct Row1Greeting: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                // Eyebrow + chips 통합 (날짜는 너무 자명한 정보라 한 라인 압축)
-                HStack(spacing: 5) {
-                    Text(dateString)
-                        .buHeroEyebrowStyle()
-                        .lineLimit(1)
-                    if mock.resolverInput.businessLaunched {
-                        ChipFilled(text: "\(mock.daysSinceLaunch + 1)일째")
-                    }
-                    ChipSoft(text: shortStageLabel)
-                    if let wow = weeklyChangePct {
-                        ChipTrend(pct: wow)
-                    }
-                    Spacer(minLength: 0)
-                }
-
+                // 2026-09-12: 칩 3개(`248일째`·`성장`·`↗+4%`) → 한 줄 텍스트.
+                //  셋 다 같은 크기·같은 무게의 캡슐이라 무엇이 중요한지 알 수 없었고,
+                //  증감률은 바로 아래 "어제 매출" 구획에 같은 값이 또 있었다(중복).
+                //  애플은 이런 부가 정보를 인사말 아래 회색 한 줄로 둔다.
                 Text(greetingLine1)
                     .buHeroGreetingStyle()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+
+                Text(contextLine)
+                    .font(.system(size: 15))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             Spacer(minLength: 0)
         }
+    }
+
+    /// 인사말 아래 한 줄 — 날짜 · 운영 일수 · 단계. 증감률은 아래 매출 구획이 이미 보여준다.
+    private var contextLine: String {
+        var parts: [String] = [dateString]
+        if mock.resolverInput.businessLaunched {
+            parts.append("운영 \(mock.daysSinceLaunch + 1)일째")
+        }
+        parts.append(shortStageLabel)
+        return parts.joined(separator: " · ")
     }
 
     /// 모바일 viewport 에 맞는 짧은 단계 라벨
@@ -1104,14 +1305,6 @@ private struct Row2NSMNested: View {
         return ((r7 - p7) / p7) * 100
     }
 
-    private var deltaTone: (color: Color, bg: Color) {
-        guard let pct = weeklyChangePct else {
-            return (BUColor.inkMuted, BUColor.midnight08)
-        }
-        if pct >= 0 { return (BUColor.success, BUColor.success08) }
-        return (BUColor.danger, BUColor.danger08)
-    }
-
     private var avgDaily7: Double {
         let sorted = mock.entries.sorted { $0.date < $1.date }
         let last7 = sorted.suffix(7)
@@ -1123,147 +1316,126 @@ private struct Row2NSMNested: View {
         // 모바일 압축 (2026-05-14):
         //   7일 막대 차트는 ActivitySnapshotCard 와 동일 → Hero 에서 제거.
         //   Hero 는 "어제 매출 한 숫자 + WoW" 핵심만, 차트는 아래 카드로.
+        // 2026-09-12: 히어로 크기 축소 — 큰 숫자(34pt)와 증감 캡슐 대신 애플 리스트 행처럼
+        //  "라벨 ······ 값" 한 줄 + 비교 문장 한 줄. 미입력이면 "미입력"이라고만 쓴다(대시 한 개 금지).
         BUCard(.nested) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .center, spacing: 8) {
-                    Text(nsmLabel).buNsmEyebrowStyle()
-                    Spacer(minLength: 0)
-                    if let pct = weeklyChangePct {
-                        DeltaPill(pct: pct, label: "WoW", tone: deltaTone)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(nsmLabel)
+                        .font(.system(size: 15))
+                        .foregroundStyle(BUColor.inkMuted)
+                    Spacer(minLength: 8)
+                    if nsmValue == "—" {
+                        Text("미입력")
+                            .font(.system(size: 17))
+                            .foregroundStyle(BUColor.inkMuted)
+                    } else {
+                        Text("\(nsmValue)원")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(BUColor.ink)
+                            .monospacedDigit()
                     }
                 }
-
-                Text(nsmValue)
-                    .buNsmValueStyle()
-
-                if avgDaily7 > 0 {
+                if let pct = weeklyChangePct {
+                    Text(pct >= 0
+                         ? "7일 평균보다 \(String(format: "%.1f", abs(pct)))% 높음"
+                         : "7일 평균보다 \(String(format: "%.1f", abs(pct)))% 낮음")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(pct >= 0 ? BUColor.success : BUColor.danger)
+                } else if avgDaily7 > 0 {
                     Text("7일 일평균 \(Int(avgDaily7).formatted())원")
-                        .buNsmDescriptionStyle()
+                        .font(.system(size: 13))
+                        .foregroundStyle(BUColor.inkMuted)
                 }
             }
         }
     }
 
-}
-
-private struct DeltaPill: View {
-    let pct: Double
-    let label: String
-    let tone: (color: Color, bg: Color)
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: pct >= 0 ? "arrow.up.right" : "arrow.down.right")
-                .font(.system(size: 10, weight: .heavy))
-            Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct))%")
-                .font(.system(size: 12.5, weight: .bold))
-                .monospacedDigit()
-        }
-        .foregroundStyle(tone.color)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(tone.bg, in: Capsule())
-        .fixedSize()
-    }
 }
 
 // MARK: - Row 3 — AI 코칭 nested card (CEOMorningHero 의 hero CTA)
 
 private struct Row3CoachingNested: View {
     let hero: Hero
-    /// 우선순위 정렬된 행동 추천. Hero 카드엔 첫 번째만, 탭하면 전체 (최대 3개) popup.
+    /// 우선순위 정렬된 행동 추천. 카드엔 1순위만, 나머지는 시트.
     let actions: [AiAction]
+    /// 버튼 하나가 향하는 곳 — 라우팅은 TodayView 가 한다(시트·탭 전환을 여기서 알 필요 없음).
+    let onCta: (HeroCtaTarget) -> Void
+    /// 실제 AI 코칭일 때만 non-nil → 시트 맨 아래에 피드백 한 줄.
+    let feedbackIndustryCategoryId: String?
+    let feedbackSpecialtyId: String?
 
     @State private var showActionsSheet = false
 
-    private var toneColor: Color {
-        switch hero.tone {
-        case .crisis:  return BUColor.danger
-        case .warning: return BUColor.warn
-        case .neutral: return BUColor.midnight
-        }
-    }
+    // 2026-09-12 B안 (사장님 승인). 종전: 태그 + 진단 문단(최대 6줄·300자) + 행동 문장 + "+N개 더" 칩 +
+    //  "도움이 됐나요?" 피드백 줄 = 히어로의 31%, 첫 화면의 19%.
+    //  운영 DB 실측(7/1~9/11): 코칭 116회 생성, 피드백 0건, 실행 표시 0건 — 문단을 읽고 반응한 사람이 없다.
+    //  로그인 화면의 약속은 "매일 30초 코칭 — 오늘 할 일 하나". 그 한 줄로 되돌린다:
+    //   제목(할 일) 2줄 + 이유 2줄 + 버튼 하나. 긴 진단·나머지 할 일·피드백은 전부 시트로.
+    //  데이터가 없을 땐 AI 흉내를 내지 않고 "매출 기록하기" 버튼만 둔다.
 
-    private var toneIcon: String {
-        switch hero.tone {
-        case .crisis:  return "exclamationmark.octagon.fill"
-        case .warning: return "exclamationmark.triangle.fill"
-        case .neutral: return "sparkles"
-        }
-    }
-
-    /// 2개 이상일 때만 "+N개 더" 표시 + 탭 가능.
     private var hasMoreActions: Bool { actions.count >= 2 }
+    private var isEmptyState: Bool { hero.source == .drucker }
+
+    /// AI 액션은 actionKo 가 제목(≤10자)·analysisKo 가 이유(≤40자)지만,
+    /// 이상 신호·위기 히어로는 analysisKo 가 진단(제목 역할)·actionKo 가 권고(이유 역할)라 뒤집힌다.
+    private var titleText: String { hero.source == .aiAction ? hero.actionKo : hero.analysisKo }
+    private var reasonText: String { hero.source == .aiAction ? hero.analysisKo : hero.actionKo }
 
     var body: some View {
-        Button {
-            if hasMoreActions { showActionsSheet = true }
-        } label: {
-            BUCard(.nested) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        Image(systemName: toneIcon)
-                            .font(.system(size: 10, weight: .bold))
-                        Text(hero.tagKo)
-                            .font(.system(size: 9.5, weight: .bold))
-                            .tracking(0.9)
-                            .textCase(.uppercase)
-                            .lineLimit(1)
-                        Spacer(minLength: 0)
-                        if hasMoreActions {
-                            HStack(spacing: 3) {
-                                Text("+\(actions.count - 1)개 더")
-                                    .font(.system(size: 9.5, weight: .bold))
-                                    .tracking(0.2)
-                                Image(systemName: "arrow.up.right.square")
-                                    .font(.system(size: 9, weight: .bold))
-                            }
-                            .foregroundStyle(BUColor.midnight)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(BUColor.midnight08, in: Capsule())
-                        } else if let ref = hero.referencedCase {
-                            HStack(spacing: 3) {
-                                Image(systemName: "bookmark.fill")
-                                    .font(.system(size: 8))
-                                Text(ref.name)
-                                    .font(.system(size: 9.5, weight: .bold))
-                                    .tracking(0.2)
-                                    .lineLimit(1)
-                            }
-                            .foregroundStyle(BUColor.midnight)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(BUColor.midnight08, in: Capsule())
+        BUCard(.nested) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("오늘 할 일")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(BUColor.inkMuted)
+                    Spacer(minLength: 8)
+                    if hasMoreActions {
+                        Button { showActionsSheet = true } label: {
+                            Text("다른 할 일 \(actions.count - 1)개")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(BUColor.midnightInk)
                         }
-                    }
-                    .foregroundStyle(toneColor)
-
-                    Text(hero.analysisKo)
-                        .font(.system(size: 13.5, weight: .medium))
-                        .foregroundStyle(BUColor.ink)
-                        .lineSpacing(2)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(6)   // 2026-08-19: 3줄에서 문장 중간 잘림(실렌더) → 여유. 긴 진단은 '+N개 더' 시트에서 전체
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if !hero.actionKo.isEmpty {
-                        Text(hero.actionKo)
-                            .font(.system(size: 12.5, weight: .regular))
-                            .foregroundStyle(BUColor.inkSecondary)
-                            .lineSpacing(1.5)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        .buttonStyle(.plain)
+                        .accessibilityHint("우선순위 전체와 진단을 봅니다")
                     }
                 }
+
+                if isEmptyState {
+                    Text("매출 한 건만 기록하면 내일부터 오늘 할 일을 골라 드립니다.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(titleText)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(BUColor.ink)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(reasonText)
+                        .font(.system(size: 15))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Button { onCta(hero.ctaTarget) } label: {
+                    Text(hero.ctaKo)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
         }
-        .buttonStyle(.plain)
-        .disabled(!hasMoreActions)
         .sheet(isPresented: $showActionsSheet) {
-            AIActionsSheet(actions: actions, hero: hero)
+            AIActionsSheet(
+                actions: actions,
+                hero: hero,
+                feedbackIndustryCategoryId: feedbackIndustryCategoryId,
+                feedbackSpecialtyId: feedbackSpecialtyId
+            )
         }
     }
 }
@@ -1273,6 +1445,9 @@ private struct Row3CoachingNested: View {
 private struct AIActionsSheet: View {
     let actions: [AiAction]
     let hero: Hero
+    /// non-nil 이면 실제 AI 코칭 → 맨 아래 피드백 한 줄(자가개선 루프 입력).
+    var feedbackIndustryCategoryId: String? = nil
+    var feedbackSpecialtyId: String? = nil
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -1294,9 +1469,38 @@ private struct AIActionsSheet: View {
                             .lineSpacing(3)
                             .padding(.bottom, 4)
 
+                        // 진단 전문 — 홈 카드는 2줄만 보여주므로 여기서 다 읽는다.
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("진단")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(BUColor.inkMuted)
+                            Text(hero.analysisKo)
+                                .font(.system(size: 15))
+                                .foregroundStyle(BUColor.ink)
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if !hero.actionKo.isEmpty {
+                                Text(hero.actionKo)
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(BUColor.inkMuted)
+                                    .lineSpacing(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(.bottom, 6)
+
                         // 우선순위 행동 카드 (1, 2, 3)
                         ForEach(Array(actions.enumerated()), id: \.offset) { idx, action in
                             actionCard(rank: idx + 1, action: action)
+                        }
+
+                        if let industry = feedbackIndustryCategoryId {
+                            CoachingFeedbackRow(
+                                headline: hero.analysisKo,
+                                industryCategoryId: industry,
+                                specialtyId: feedbackSpecialtyId
+                            )
+                            .padding(.top, 6)
                         }
 
                         // 안내 footer
@@ -1718,58 +1922,6 @@ private struct CashflowSetupPrompt: View {
     }
 }
 
-// MARK: - Chip helpers (Row 1)
-
-private struct ChipFilled: View {
-    let text: String
-    var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.white)
-            .tracking(0.6)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(BUColor.midnight, in: Capsule())
-    }
-}
-
-private struct ChipSoft: View {
-    let text: String
-    var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(BUColor.midnight)
-            .tracking(0.5)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(BUColor.midnight08, in: Capsule())
-    }
-}
-
-private struct ChipTrend: View {
-    let pct: Double
-
-    var body: some View {
-        let positive = pct >= 0
-        HStack(spacing: 2) {
-            Image(systemName: positive ? "arrow.up.right" : "arrow.down.right")
-                .font(.system(size: 9, weight: .heavy))
-            Text("\(positive ? "+" : "")\(String(format: "%.0f", pct))%")
-                .font(.system(size: 10, weight: .bold))
-                .monospacedDigit()
-        }
-        .foregroundStyle(positive ? BUColor.success : BUColor.danger)
-        .tracking(0.4)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
-        .background(
-            (positive ? BUColor.success : BUColor.danger).opacity(0.10),
-            in: Capsule()
-        )
-        .fixedSize()
-    }
-}
-
 // MARK: - More Insights — 운영 대시보드 안의 깊이 (popup sheet)
 //
 // 사장님 UX 원칙 (2026-05-19):
@@ -1793,13 +1945,14 @@ private struct MoreInsightsStrip: View {
     var subscription: SubscriptionStore? = nil
 
     enum SheetID: String, Identifiable {
-        case weeklyPulse, growth
+        case weeklyPulse, growth, coachingLog
         var id: String { rawValue }
 
         var title: String {
             switch self {
             case .weeklyPulse: return "주간 점검"
             case .growth:      return "성장 도구"
+            case .coachingLog: return "코칭 일지"
             }
         }
     }
@@ -1813,20 +1966,22 @@ private struct MoreInsightsStrip: View {
         let subtitle: String
     }
 
-    private let insights: [Insight] = [
-        .init(id: .weeklyPulse, icon: "doc.richtext",   label: "주간 점검",  subtitle: "WoW · BEP · 벤치마크"),
-        .init(id: .growth,      icon: "megaphone.fill", label: "성장 도구",  subtitle: "고객 · 마케팅 · 정책자금"),
-    ]
+    private var insights: [Insight] {
+        var items: [Insight] = [
+            .init(id: .weeklyPulse, icon: "doc.richtext",   label: "주간 점검",  subtitle: "WoW · BEP · 벤치마크"),
+            .init(id: .growth,      icon: "megaphone.fill", label: "성장 도구",  subtitle: "고객 · 마케팅 · 정책자금"),
+        ]
+        if coaching != nil {
+            items.append(.init(id: .coachingLog, icon: "clock.arrow.circlepath", label: "코칭 일지", subtitle: "14일 누적 · 실행 기록"))
+        }
+        return items
+    }
 
     var body: some View {
         // ── 오늘 상세 — 인라인 ──
         DailyKpiStrip(cells: dailyKpiCells)
 
-        // 코칭 14일 누적 일지 (웹과 동일 Supabase) — 매일 히어로 신호 + 사장님 대응 시간선
-        if let coaching {
-            CoachingHistoryCard(store: coaching)
-        }
-
+        // 코칭 일지는 "더 알아보기" 시트로 (2026-09-12 B안) — 홈에 코칭 구획이 둘이었다.
         DailyOpsRitualCard(category: mock.category)
 
         // ── 주간 점검 · 성장 도구 — 행 → 시트 ──
@@ -1897,6 +2052,12 @@ private struct MoreInsightsStrip: View {
         switch id {
         case .weeklyPulse:
             WeeklyPulseView(mock: mock, saas: saas, subscription: subscription)
+        case .coachingLog:
+            if let coaching {
+                CoachingHistoryCard(store: coaching)
+                    .padding(.horizontal, BUSpacing.screenMargin)
+                    .padding(.top, BUSpacing.md)
+            }
         case .growth:
             GrowthForecastView(
                 mock: mock,

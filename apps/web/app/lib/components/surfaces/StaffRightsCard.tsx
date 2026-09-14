@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { ShieldCheck, ExternalLink, ChevronDown } from "lucide-react";
-import { checkSeveranceObligation, checkAnnualLeaveAccrual, MINIMUM_WAGE_2026 } from "@foundone/shared";
+import { checkSeveranceObligation, checkAnnualLeaveAccrual, MINIMUM_WAGE_2026, SHORT_TIME_WEEKLY_HOURS } from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
@@ -54,7 +54,14 @@ export function StaffRightsCard({ ko, hourlyWage, hireDate, joinedAt, weeklyMinu
   const [expanded, setExpanded] = useState(false);
   const juhyuBadge = juhyuEligible ? (ko ? "대상" : "Eligible") : (ko ? "비대상" : "Not eligible");
   const severanceBadge = severanceEligible ? (ko ? "대상 도달" : "Eligible") : severanceApproaching ? (ko ? "임박" : "Soon") : (ko ? "미도달" : "Not yet");
-  const leaveBadge = daysSinceHire >= 365 ? (ko ? "15일 발생" : "15 days") : (ko ? "1년 미만" : "<1yr");
+  // 주 15시간 미만은 연차 자체가 적용되지 않는다(근기법 §18③) — 근속과 무관.
+  //  2026-09-14: 이 조건이 빠져 있어 단시간 근로자에게 "연차 15일 발생"이라고 표시됐다.
+  //  같은 계정의 임금명세서는 "연차 의무 없음"이라 적혀 두 화면이 서로 반대를 말했다.
+  const leaveApplies = weeklyHours >= SHORT_TIME_WEEKLY_HOURS;
+  const leaveAccrued = leaveApplies && daysSinceHire >= 365;
+  const leaveBadge = !leaveApplies
+    ? (ko ? "비대상" : "Not eligible")
+    : leaveAccrued ? (ko ? "15일 발생" : "15 days") : (ko ? "1년 미만" : "<1yr");
   const summaryTile = (on: boolean): React.CSSProperties => ({
     flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: 10,
     background: on ? "rgba(26,122,54,0.06)" : "rgba(25,25,112,0.05)",
@@ -99,7 +106,7 @@ export function StaffRightsCard({ ko, hourlyWage, hireDate, joinedAt, weeklyMinu
             {[
               { label: ko ? "주휴수당" : "Holiday pay", value: juhyuBadge, on: juhyuEligible },
               { label: ko ? "퇴직금" : "Severance", value: severanceBadge, on: severanceEligible },
-              { label: ko ? "연차" : "Leave", value: leaveBadge, on: daysSinceHire >= 365 },
+              { label: ko ? "연차" : "Leave", value: leaveBadge, on: leaveAccrued },
             ].map((t) => (
               <div key={t.label} style={summaryTile(t.on)}>
                 <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED }}>{t.label}</div>
@@ -166,16 +173,20 @@ export function StaffRightsCard({ ko, hourlyWage, hireDate, joinedAt, weeklyMinu
         <div style={itemBox(leave?.level === "due" || leave?.level === "overdue")}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={sectionTitle}>{ko ? "연차유급휴가" : "Annual leave"}</span>
-            <span style={{ marginLeft: "auto", ...badge(daysSinceHire >= 365) }}>
-              {daysSinceHire >= 365 ? (ko ? "15일 발생" : "15 days") : (ko ? "1년 미만" : "<1yr")}
-            </span>
+            <span style={{ marginLeft: "auto", ...badge(leaveAccrued) }}>{leaveBadge}</span>
           </div>
           <div style={{ fontSize: 12.5, color: INK, fontWeight: 600 }}>
-            {daysSinceHire >= 365
-              ? (ko ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요." : "1yr+ — 15 days accrued.")
-              : (ko ? `근속 1년 도달 시 연차 15일이 발생합니다. D-${Math.max(0, 365 - daysSinceHire)}` : `15 days at 1 year. D-${Math.max(0, 365 - daysSinceHire)}`)}
+            {!leaveApplies
+              ? (ko ? "주 소정근로 15시간 미만 — 연차유급휴가가 적용되지 않습니다." : "Under 15h/week — annual leave does not apply.")
+              : leaveAccrued
+                ? (ko ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요." : "1yr+ — 15 days accrued.")
+                : (ko ? `근속 1년 도달 시 연차 15일이 발생합니다. D-${Math.max(0, 365 - daysSinceHire)}` : `15 days at 1 year. D-${Math.max(0, 365 - daysSinceHire)}`)}
           </div>
-          <div style={lawRef}>{ko ? "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)." : "Labor Standards Act §60 · workplaces with 5+ staff."}</div>
+          <div style={lawRef}>
+            {!leaveApplies
+              ? (ko ? "근로기준법 §18③ · 4주 평균 주 15시간 미만 근로자는 §60 미적용." : "Labor Standards Act §18(3) · §60 excluded under 15h/week.")
+              : (ko ? "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)." : "Labor Standards Act §60 · workplaces with 5+ staff.")}
+          </div>
         </div>
         </>)}
 

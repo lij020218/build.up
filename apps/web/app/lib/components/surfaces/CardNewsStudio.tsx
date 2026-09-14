@@ -6,7 +6,7 @@
  *  흐름: 주제 입력(또는 추천 칩) + 장수 선택 → /api/ai/marketing/cardnews →
  *        4:5 미리보기 + 장별 텍스트 수정 → PNG 저장(1080×1350 canvas) + 캡션·해시태그 복사.
  *
- *  템플릿 2종 (styleVariant — 서버가 업종으로 결정):
+ *  템플릿 (styleVariant — 서버가 업종으로 결정) · 테마 3종(shared cardnews-themes SSOT):
  *   · photo (카페·음식점 특화, 사장님 관찰 반영): 1장 = 사진+가게명/주제 타이틀 오버레이,
  *     2장~ = 사진이 주인공 + 하단 한 줄 띠, 마지막 장 = 가게 로고(업로드, 없으면 상호 워드마크).
  *     사진은 장별 업로드 → canvas 가 텍스트 합성. 업로드 전엔 촬영 가이드 자리표시.
@@ -23,6 +23,8 @@ import { useOperationsStore } from "../../stores/operations-store";
 import { useStoreInfoStore } from "../../stores/store-info-store";
 import { deriveRegionFromAddress } from "../../utils/region";
 import type { CardNewsCard, CardNewsResult } from "../../../api/ai/marketing/cardnews/route";
+import { resolveCardNewsTheme, defaultThemeForCategory, CARDNEWS_THEMES, type CardNewsTheme, type CardNewsThemeId } from "@foundone/shared";
+import { logMarketingEvent } from "./MarketingSurface";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_DEEP = "#10104a";
@@ -115,15 +117,30 @@ function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, W:
 
 const FONT = "'Apple SD Gothic Neo', 'Pretendard', sans-serif";
 
+/** #RRGGBB → rgba(). 테마 색에서 옅은 보조선·배경을 만들 때. */
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 /** 공통 마무리 — 페이지 도트 + AI 소표기 (AI 기본법 생성물 표시) */
-function drawFooter(ctx: CanvasRenderingContext2D, W: number, H: number, index: number, total: number, onDark: boolean) {
+function drawFooter(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  index: number,
+  total: number,
+  onDark: boolean,
+  theme: CardNewsTheme,
+) {
   const dotY = H - 74;
   for (let i = 0; i < total; i++) {
     ctx.beginPath();
     ctx.arc(W / 2 - ((total - 1) * 22) / 2 + i * 22, dotY, i === index ? 8 : 5, 0, Math.PI * 2);
     ctx.fillStyle = onDark
       ? (i === index ? "#ffffff" : "rgba(255,255,255,0.4)")
-      : (i === index ? MIDNIGHT : "rgba(25,25,112,0.25)");
+      : (i === index ? theme.accent : hexToRgba(theme.accent, 0.25));
     ctx.fill();
   }
   ctx.font = `500 24px ${FONT}`;
@@ -133,12 +150,99 @@ function drawFooter(ctx: CanvasRenderingContext2D, W: number, H: number, index: 
   ctx.textAlign = "left";
 }
 
+/**
+ * 텍스트 카드 — **사진 없이도 그대로 올릴 수 있는 완성 결과물**.
+ *
+ * 2026-09-12: 종전에는 사진형(카페·음식점)에서 사진을 올리기 전에 PNG 를 저장하면
+ *   "📷 사진을 넣어주세요" 안내가 박힌 이미지가 나왔다. 그건 결과물이 아니라 자리표시였다.
+ *   이제 사진이 없으면 이 카드로 완성해 내보내고, 촬영 가이드는 화면에서만 안내한다.
+ */
+function drawTextCard(
+  ctx: CanvasRenderingContext2D,
+  card: CardNewsCard,
+  index: number,
+  total: number,
+  storeName: string,
+  theme: CardNewsTheme,
+  W: number,
+  H: number,
+  PAD: number,
+) {
+  if (card.role === "cover") {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, theme.coverFrom);
+    g.addColorStop(1, theme.coverTo);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = `600 34px ${FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.fillText(storeName, PAD, 150);
+    ctx.font = `800 96px ${FONT}`;
+    const afterTitle = drawTitle(ctx, card.title, card.highlight, PAD, 500, W - PAD * 2, 122, "#ffffff", theme.accentOnDark);
+    ctx.font = `500 44px ${FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    let cy = afterTitle + 48;
+    for (const line of card.lines.slice(0, 2)) {
+      ctx.fillText(line, PAD, cy);
+      cy += 62;
+    }
+    ctx.font = `600 34px ${FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.fillText("→ 옆으로 넘겨보세요", PAD, H - 140);
+    drawFooter(ctx, W, H, index, total, true, theme);
+    return;
+  }
+  if (card.role === "cta") {
+    ctx.fillStyle = theme.ctaBg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = hexToRgba(theme.accent, 0.1);
+    ctx.fillRect(0, 0, W, H * 0.34);
+    ctx.font = `800 84px ${FONT}`;
+    const afterTitle = drawTitle(ctx, card.title, card.highlight, PAD, 480, W - PAD * 2, 108, theme.ink, theme.accent);
+    ctx.font = `500 46px ${FONT}`;
+    ctx.fillStyle = hexToRgba(theme.ink, 0.72);
+    let cy = afterTitle + 44;
+    for (const line of card.lines.slice(0, 3)) {
+      ctx.fillText(line, PAD, cy);
+      cy += 66;
+    }
+    ctx.font = `800 56px ${FONT}`;
+    ctx.fillStyle = theme.accent;
+    ctx.fillText(storeName, PAD, H - 220);
+    drawFooter(ctx, W, H, index, total, false, theme);
+    return;
+  }
+  ctx.fillStyle = theme.bodyBg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(0, 0, W, 18);
+  ctx.font = `700 34px ${FONT}`;
+  ctx.fillStyle = theme.accent;
+  ctx.fillText(`${String(index).padStart(2, "0")}`, PAD, 190);
+  ctx.font = `800 76px ${FONT}`;
+  const afterTitle = drawTitle(ctx, card.title, card.highlight, PAD, 320, W - PAD * 2, 98, theme.ink, theme.accent);
+  ctx.fillStyle = hexToRgba(theme.accent, 0.14);
+  ctx.fillRect(PAD, afterTitle - 20, 120, 6);
+  ctx.font = `500 48px ${FONT}`;
+  ctx.fillStyle = hexToRgba(theme.ink, 0.8);
+  let cy = afterTitle + 72;
+  for (const line of card.lines.slice(0, 3)) {
+    for (const wrapped of wrapText(ctx, line, W - PAD * 2)) {
+      ctx.fillText(wrapped, PAD, cy);
+      cy += 74;
+    }
+    cy += 14;
+  }
+  drawFooter(ctx, W, H, index, total, false, theme);
+}
+
 async function renderCardToCanvas(
   card: CardNewsCard,
   index: number,
   total: number,
   storeName: string,
   variant: "photo" | "text",
+  theme: CardNewsTheme,
   photoUrl?: string,
   logoUrl?: string,
 ): Promise<HTMLCanvasElement> {
@@ -150,102 +254,83 @@ async function renderCardToCanvas(
   const ctx = canvas.getContext("2d")!;
   const PAD = 96;
 
-  if (variant === "photo") {
-    // ── 사진형 (카페·음식점 공식: 1장 사진+타이틀 / 2장~ 사진 / 마지막 로고) ──
-    if (card.role === "cta") {
-      // 로고 마무리 장
-      ctx.fillStyle = "#F7F6F1";
-      ctx.fillRect(0, 0, W, H);
-      if (logoUrl) {
-        try {
-          const img = await loadImage(logoUrl);
-          const size = 460;
-          const scale = Math.min(size / img.width, size / img.height);
-          const dw = img.width * scale;
-          const dh = img.height * scale;
-          ctx.drawImage(img, (W - dw) / 2, H / 2 - 340 + (size - dh) / 2, dw, dh);
-        } catch { /* 로고 로드 실패 — 워드마크 폴백 */ }
-      }
-      if (!logoUrl) {
-        // 워드마크 폴백 — 상호를 로고처럼
-        ctx.fillStyle = MIDNIGHT;
-        ctx.font = `800 108px ${FONT}`;
-        ctx.textAlign = "center";
-        for (const [i, line] of wrapText(ctx, storeName, W - PAD * 2).entries()) {
-          ctx.fillText(line, W / 2, H / 2 - 200 + i * 130);
-        }
-        ctx.textAlign = "left";
-        ctx.fillStyle = "rgba(25,25,112,0.35)";
-        ctx.fillRect(W / 2 - 60, H / 2 - 90, 120, 6);
-      }
+  if (variant === "photo" && card.role === "cta") {
+    // 로고 마무리 장
+    ctx.fillStyle = theme.ctaBg;
+    ctx.fillRect(0, 0, W, H);
+    if (logoUrl) {
+      try {
+        const img = await loadImage(logoUrl);
+        const size = 460;
+        const scale = Math.min(size / img.width, size / img.height);
+        const dw = img.width * scale;
+        const dh = img.height * scale;
+        ctx.drawImage(img, (W - dw) / 2, H / 2 - 340 + (size - dh) / 2, dw, dh);
+      } catch { /* 로고 로드 실패 — 워드마크 폴백 */ }
+    }
+    if (!logoUrl) {
+      // 워드마크 폴백 — 상호를 로고처럼
+      ctx.fillStyle = theme.accent;
+      ctx.font = `800 108px ${FONT}`;
       ctx.textAlign = "center";
-      ctx.font = `800 52px ${FONT}`;
-      ctx.fillStyle = MIDNIGHT_DEEP;
-      if (logoUrl) ctx.fillText(storeName, W / 2, H / 2 + 260);
-      ctx.font = `500 42px ${FONT}`;
-      ctx.fillStyle = "rgba(15,23,42,0.6)";
-      for (const [i, line] of card.lines.slice(0, 2).entries()) {
-        ctx.fillText(line, W / 2, H / 2 + (logoUrl ? 340 : 120) + i * 60);
+      for (const [i, line] of wrapText(ctx, storeName, W - PAD * 2).entries()) {
+        ctx.fillText(line, W / 2, H / 2 - 200 + i * 130);
       }
       ctx.textAlign = "left";
-      drawFooter(ctx, W, H, index, total, false);
-      return canvas;
+      ctx.fillStyle = hexToRgba(theme.accent, 0.35);
+      ctx.fillRect(W / 2 - 60, H / 2 - 90, 120, 6);
     }
+    ctx.textAlign = "center";
+    ctx.font = `800 52px ${FONT}`;
+    ctx.fillStyle = theme.ink;
+    if (logoUrl) ctx.fillText(storeName, W / 2, H / 2 + 260);
+    ctx.font = `500 42px ${FONT}`;
+    ctx.fillStyle = hexToRgba(theme.ink, 0.6);
+    for (const [i, line] of card.lines.slice(0, 2).entries()) {
+      ctx.fillText(line, W / 2, H / 2 + (logoUrl ? 340 : 120) + i * 60);
+    }
+    ctx.textAlign = "left";
+    drawFooter(ctx, W, H, index, total, false, theme);
+    return canvas;
+  }
 
-    // cover/body — 사진 배경
+  if (variant === "photo") {
     let hasPhoto = false;
     if (photoUrl) {
       try {
         const img = await loadImage(photoUrl);
         drawImageCover(ctx, img, W, H);
         hasPhoto = true;
-      } catch { /* 자리표시 폴백 */ }
+      } catch { /* 로드 실패 — 텍스트 카드로 완성 */ }
     }
     if (!hasPhoto) {
-      // 사진 자리표시 — 촬영 가이드 안내
-      ctx.fillStyle = "#EDEFF8";
-      ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "rgba(25,25,112,0.25)";
-      ctx.setLineDash([18, 14]);
-      ctx.lineWidth = 4;
-      ctx.strokeRect(60, 60, W - 120, H - 120);
-      ctx.setLineDash([]);
-      ctx.textAlign = "center";
-      ctx.font = `700 54px ${FONT}`;
-      ctx.fillStyle = "rgba(25,25,112,0.5)";
-      ctx.fillText("📷 사진을 넣어주세요", W / 2, H / 2 - 160);
-      if (card.photoIdea) {
-        ctx.font = `500 40px ${FONT}`;
-        ctx.fillStyle = "rgba(15,23,42,0.5)";
-        for (const [i, line] of wrapText(ctx, card.photoIdea, W - PAD * 3).entries()) {
-          ctx.fillText(line, W / 2, H / 2 - 60 + i * 56);
-        }
-      }
-      ctx.textAlign = "left";
+      // 사진이 없으면 자리표시가 아니라 **완성된 텍스트 카드**를 내보낸다 (2026-09-12).
+      drawTextCard(ctx, card, index, total, storeName, theme, W, H, PAD);
+      return canvas;
     }
 
     if (card.role === "cover") {
       // 하단 그라데이션 + 가게명(상단) + 타이틀·부제(하단) — 사진 위 오버레이
       const g = ctx.createLinearGradient(0, H * 0.45, 0, H);
-      g.addColorStop(0, "rgba(10,10,40,0)");
-      g.addColorStop(1, "rgba(10,10,40,0.78)");
+      g.addColorStop(0, hexToRgba(theme.coverTo, 0));
+      g.addColorStop(1, hexToRgba(theme.coverTo, 0.82));
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
       ctx.font = `700 40px ${FONT}`;
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.fillText(storeName, PAD, 140);
       ctx.font = `800 100px ${FONT}`;
-      const after = drawTitle(ctx, card.title, card.highlight, PAD, H - 320, W - PAD * 2, 120, "#ffffff", LAVENDER);
+      const after = drawTitle(ctx, card.title, card.highlight, PAD, H - 320, W - PAD * 2, 120, "#ffffff", theme.accentOnDark);
       ctx.font = `500 46px ${FONT}`;
       ctx.fillStyle = "rgba(255,255,255,0.85)";
       if (card.lines[0]) ctx.fillText(card.lines[0], PAD, after + 28);
-      drawFooter(ctx, W, H, index, total, true);
+      drawFooter(ctx, W, H, index, total, true, theme);
     } else {
       // body — 사진이 주인공, 하단 띠에 라벨 + 한 줄
       const bandH = 190;
       const g = ctx.createLinearGradient(0, H - bandH - 120, 0, H);
-      g.addColorStop(0, "rgba(10,10,40,0)");
-      g.addColorStop(1, "rgba(10,10,40,0.72)");
+      g.addColorStop(0, hexToRgba(theme.coverTo, 0));
+      g.addColorStop(1, hexToRgba(theme.coverTo, 0.76));
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
       ctx.font = `800 56px ${FONT}`;
@@ -254,88 +339,25 @@ async function renderCardToCanvas(
       ctx.font = `500 42px ${FONT}`;
       ctx.fillStyle = "rgba(255,255,255,0.85)";
       if (card.lines[0]) ctx.fillText(card.lines[0], PAD, H - 108);
-      drawFooter(ctx, W, H, index, total, true);
+      drawFooter(ctx, W, H, index, total, true, theme);
     }
     return canvas;
   }
 
-  // ── 텍스트형 (기존 — 일반 업종) ──
-  if (card.role === "cover") {
-    const g = ctx.createLinearGradient(0, 0, W, H);
-    g.addColorStop(0, MIDNIGHT);
-    g.addColorStop(1, MIDNIGHT_DEEP);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-    ctx.font = `600 34px ${FONT}`;
-    ctx.fillStyle = "rgba(255,255,255,0.72)";
-    ctx.fillText(storeName, PAD, 150);
-    ctx.font = `800 96px ${FONT}`;
-    const afterTitle = drawTitle(ctx, card.title, card.highlight, PAD, 500, W - PAD * 2, 122, "#ffffff", LAVENDER);
-    ctx.font = `500 44px ${FONT}`;
-    ctx.fillStyle = "rgba(255,255,255,0.78)";
-    let cy = afterTitle + 48;
-    for (const line of card.lines.slice(0, 2)) {
-      ctx.fillText(line, PAD, cy);
-      cy += 62;
-    }
-    ctx.font = `600 34px ${FONT}`;
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.fillText("→ 옆으로 넘겨보세요", PAD, H - 140);
-    drawFooter(ctx, W, H, index, total, true);
-  } else if (card.role === "cta") {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#EEF0FB");
-    g.addColorStop(1, "#DFE3FF");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-    ctx.font = `800 84px ${FONT}`;
-    const afterTitle = drawTitle(ctx, card.title, card.highlight, PAD, 480, W - PAD * 2, 108, MIDNIGHT_DEEP, MIDNIGHT);
-    ctx.font = `500 46px ${FONT}`;
-    ctx.fillStyle = "rgba(15,23,42,0.72)";
-    let cy = afterTitle + 44;
-    for (const line of card.lines.slice(0, 3)) {
-      ctx.fillText(line, PAD, cy);
-      cy += 66;
-    }
-    ctx.font = `800 56px ${FONT}`;
-    ctx.fillStyle = MIDNIGHT;
-    ctx.fillText(storeName, PAD, H - 220);
-    drawFooter(ctx, W, H, index, total, false);
-  } else {
-    ctx.fillStyle = "#F7F8FE";
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = MIDNIGHT;
-    ctx.fillRect(0, 0, W, 18);
-    ctx.font = `700 34px ${FONT}`;
-    ctx.fillStyle = MIDNIGHT;
-    ctx.fillText(`${String(index).padStart(2, "0")}`, PAD, 190);
-    ctx.font = `800 76px ${FONT}`;
-    const afterTitle = drawTitle(ctx, card.title, card.highlight, PAD, 320, W - PAD * 2, 98, MIDNIGHT_DEEP, MIDNIGHT);
-    ctx.fillStyle = "rgba(25,25,112,0.14)";
-    ctx.fillRect(PAD, afterTitle - 20, 120, 6);
-    ctx.font = `500 48px ${FONT}`;
-    ctx.fillStyle = "rgba(15,23,42,0.8)";
-    let cy = afterTitle + 72;
-    for (const line of card.lines.slice(0, 3)) {
-      for (const wrapped of wrapText(ctx, line, W - PAD * 2)) {
-        ctx.fillText(wrapped, PAD, cy);
-        cy += 74;
-      }
-      cy += 14;
-    }
-    drawFooter(ctx, W, H, index, total, false);
-  }
+  // ── 텍스트형 (일반 업종) ──
+  drawTextCard(ctx, card, index, total, storeName, theme, W, H, PAD);
   return canvas;
 }
 
 // ── 미리보기 (DOM, 4:5 축소판 — canvas 와 같은 톤) ────────────────────────
 
-function PreviewCard({ card, index, total, storeName, variant, photoUrl, logoUrl }: {
+function PreviewCard({ card, index, total, storeName, variant, theme, photoUrl, logoUrl }: {
   card: CardNewsCard;
   index: number;
   total: number;
   storeName: string;
   variant: "photo" | "text";
+  theme: CardNewsTheme;
   photoUrl?: string;
   logoUrl?: string;
 }) {
@@ -348,66 +370,61 @@ function PreviewCard({ card, index, total, storeName, variant, photoUrl, logoUrl
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
-    border: "1px solid rgba(25,25,112,0.10)",
+    border: `1px solid ${hexToRgba(theme.accent, 0.12)}`,
     position: "relative",
   };
-  const onDark = variant === "photo" ? card.role !== "cta" : card.role === "cover";
+  // 사진형이라도 **사진이 없으면 텍스트 카드로 저장**된다(canvas 와 동일) → 미리보기도 같게 보여준다.
+  const usePhoto = variant === "photo" && card.role !== "cta" && !!photoUrl;
+  const asText = variant === "text" || (variant === "photo" && card.role !== "cta" && !photoUrl);
+  const onDark = usePhoto || (asText && card.role === "cover");
   const dots = (
     <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 4, zIndex: 2 }}>
       {Array.from({ length: total }, (_, i) => (
         <span key={i} style={{
           width: i === index ? 6 : 4, height: i === index ? 6 : 4, borderRadius: 99,
-          background: onDark ? (i === index ? "#fff" : "rgba(255,255,255,0.4)") : (i === index ? MIDNIGHT : "rgba(25,25,112,0.25)"),
+          background: onDark ? (i === index ? "#fff" : "rgba(255,255,255,0.4)") : (i === index ? theme.accent : hexToRgba(theme.accent, 0.25)),
         }} />
       ))}
     </div>
   );
+  const titleNode = card.highlight && card.title.includes(card.highlight)
+    ? (<>
+        {card.title.split(card.highlight)[0]}
+        <span style={{ color: onDark ? theme.accentOnDark : theme.accent }}>{card.highlight}</span>
+        {card.title.split(card.highlight).slice(1).join(card.highlight)}
+      </>)
+    : card.title;
 
-  if (variant === "photo") {
-    if (card.role === "cta") {
-      // 로고 마무리 장
-      return (
-        <div style={{ ...base, background: "#F7F6F1", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-          {logoUrl
-            ? <img src={logoUrl} alt="logo" style={{ maxWidth: 110, maxHeight: 90, objectFit: "contain" }} />
-            : <div style={{ fontSize: 19, fontWeight: 800, color: MIDNIGHT, letterSpacing: "-0.02em", wordBreak: "keep-all" }}>{storeName}</div>}
-          <div style={{ marginTop: 8, fontSize: 9.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>
-            {card.lines.slice(0, 2).map((l, i) => <div key={i}>{l}</div>)}
-          </div>
-          {dots}
-        </div>
-      );
-    }
-    const photoBg: React.CSSProperties = photoUrl
-      ? { backgroundImage: `url(${photoUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-      : { background: "#EDEFF8" };
+  if (variant === "photo" && card.role === "cta") {
+    // 로고 마무리 장
     return (
-      <div style={{ ...base, ...photoBg, justifyContent: "flex-end", padding: 0 }}>
-        {!photoUrl && (
-          <div style={{
-            position: "absolute", inset: 10, border: "1.5px dashed rgba(25,25,112,0.3)", borderRadius: 8,
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            padding: 10, textAlign: "center", gap: 4,
-          }}>
-            <span style={{ fontSize: 14 }}>📷</span>
-            <span style={{ fontSize: 8.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>{card.photoIdea ?? "사진을 넣어주세요"}</span>
-          </div>
-        )}
+      <div style={{ ...base, background: theme.ctaBg, alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+        {logoUrl
+          ? <img src={logoUrl} alt="logo" style={{ maxWidth: 110, maxHeight: 90, objectFit: "contain" }} />
+          : <div style={{ fontSize: 19, fontWeight: 800, color: theme.accent, letterSpacing: "-0.02em", wordBreak: "keep-all" }}>{storeName}</div>}
+        <div style={{ marginTop: 8, fontSize: 9.5, color: hexToRgba(theme.ink, 0.6), lineHeight: 1.5 }}>
+          {card.lines.slice(0, 2).map((l, i) => <div key={i}>{l}</div>)}
+        </div>
+        {dots}
+      </div>
+    );
+  }
+
+  if (usePhoto) {
+    return (
+      <div style={{
+        ...base, justifyContent: "flex-end", padding: 0,
+        backgroundImage: `url(${photoUrl})`, backgroundSize: "cover", backgroundPosition: "center",
+      }}>
         <div style={{
           position: "relative", zIndex: 1, padding: "26px 12px 18px",
-          background: "linear-gradient(180deg, rgba(10,10,40,0) 0%, rgba(10,10,40,0.75) 100%)",
+          background: `linear-gradient(180deg, ${hexToRgba(theme.coverTo, 0)} 0%, ${hexToRgba(theme.coverTo, 0.8)} 100%)`,
         }}>
           {card.role === "cover" && (
             <div style={{ fontSize: 7.5, fontWeight: 700, color: "rgba(255,255,255,0.9)", position: "absolute", top: -230 + 14, left: 12 }}>{storeName}</div>
           )}
           <div style={{ fontSize: card.role === "cover" ? 15 : 12.5, fontWeight: 800, color: "#fff", lineHeight: 1.3, wordBreak: "keep-all", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
-            {card.highlight && card.title.includes(card.highlight)
-              ? (<>
-                  {card.title.split(card.highlight)[0]}
-                  <span style={{ color: LAVENDER }}>{card.highlight}</span>
-                  {card.title.split(card.highlight).slice(1).join(card.highlight)}
-                </>)
-              : card.title}
+            {titleNode}
           </div>
           {card.lines[0] && (
             <div style={{ marginTop: 3, fontSize: 9, color: "rgba(255,255,255,0.88)", lineHeight: 1.45, textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}>
@@ -420,19 +437,13 @@ function PreviewCard({ card, index, total, storeName, variant, photoUrl, logoUrl
     );
   }
 
-  // ── 텍스트형 (기존) ──
+  // ── 텍스트 카드 (사진형의 사진 없음 상태 포함) ──
   if (card.role === "cover") {
     return (
-      <div style={{ ...base, background: `linear-gradient(135deg, ${MIDNIGHT} 0%, ${MIDNIGHT_DEEP} 100%)`, justifyContent: "center" }}>
+      <div style={{ ...base, background: `linear-gradient(135deg, ${theme.coverFrom} 0%, ${theme.coverTo} 100%)`, justifyContent: "center" }}>
         <div style={{ position: "absolute", top: 12, left: 14, fontSize: 8, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{storeName}</div>
         <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", lineHeight: 1.3, letterSpacing: "-0.02em", wordBreak: "keep-all" }}>
-          {card.highlight && card.title.includes(card.highlight)
-            ? (<>
-                {card.title.split(card.highlight)[0]}
-                <span style={{ color: LAVENDER }}>{card.highlight}</span>
-                {card.title.split(card.highlight).slice(1).join(card.highlight)}
-              </>)
-            : card.title}
+          {titleNode}
         </div>
         <div style={{ marginTop: 8, fontSize: 9.5, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
           {card.lines.slice(0, 2).map((l, i) => <div key={i}>{l}</div>)}
@@ -443,23 +454,24 @@ function PreviewCard({ card, index, total, storeName, variant, photoUrl, logoUrl
   }
   if (card.role === "cta") {
     return (
-      <div style={{ ...base, background: "linear-gradient(180deg, #EEF0FB 0%, #DFE3FF 100%)", justifyContent: "center" }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: MIDNIGHT_DEEP, lineHeight: 1.3, wordBreak: "keep-all" }}>{card.title}</div>
-        <div style={{ marginTop: 8, fontSize: 9.5, color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
+      <div style={{ ...base, background: theme.ctaBg, justifyContent: "center" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 86, background: hexToRgba(theme.accent, 0.1) }} />
+        <div style={{ position: "relative", fontSize: 15, fontWeight: 800, color: theme.ink, lineHeight: 1.3, wordBreak: "keep-all" }}>{titleNode}</div>
+        <div style={{ marginTop: 8, fontSize: 9.5, color: hexToRgba(theme.ink, 0.7), lineHeight: 1.55 }}>
           {card.lines.slice(0, 3).map((l, i) => <div key={i}>{l}</div>)}
         </div>
-        <div style={{ marginTop: 12, fontSize: 11, fontWeight: 800, color: MIDNIGHT }}>{storeName}</div>
+        <div style={{ marginTop: 12, fontSize: 11, fontWeight: 800, color: theme.accent }}>{storeName}</div>
         {dots}
       </div>
     );
   }
   return (
-    <div style={{ ...base, background: "#F7F8FE" }}>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: MIDNIGHT }} />
-      <div style={{ fontSize: 9, fontWeight: 700, color: MIDNIGHT, marginTop: 6 }}>{String(index).padStart(2, "0")}</div>
-      <div style={{ marginTop: 6, fontSize: 13.5, fontWeight: 800, color: MIDNIGHT_DEEP, lineHeight: 1.3, wordBreak: "keep-all" }}>{card.title}</div>
-      <div style={{ width: 22, height: 2, background: "rgba(25,25,112,0.2)", margin: "7px 0" }} />
-      <div style={{ fontSize: 9.5, color: "rgba(15,23,42,0.78)", lineHeight: 1.6 }}>
+    <div style={{ ...base, background: theme.bodyBg }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: theme.accent }} />
+      <div style={{ fontSize: 9, fontWeight: 700, color: theme.accent, marginTop: 6 }}>{String(index).padStart(2, "0")}</div>
+      <div style={{ marginTop: 6, fontSize: 13.5, fontWeight: 800, color: theme.ink, lineHeight: 1.3, wordBreak: "keep-all" }}>{titleNode}</div>
+      <div style={{ width: 22, height: 2, background: hexToRgba(theme.accent, 0.2), margin: "7px 0" }} />
+      <div style={{ fontSize: 9.5, color: hexToRgba(theme.ink, 0.78), lineHeight: 1.6 }}>
         {card.lines.slice(0, 3).map((l, i) => <div key={i}>{l}</div>)}
       </div>
       {dots}
@@ -481,6 +493,9 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
   const [photos, setPhotos] = useState<Record<number, string>>({});
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  /** 렌더 테마 — 업종 기본값에서 시작하고 사장님이 칩으로 바꾼다 (2026-09-12: 템플릿 1종 → 3종). */
+  const [themeId, setThemeId] = useState<CardNewsThemeId>(() => defaultThemeForCategory(industryCategoryId));
+  const theme = useMemo(() => resolveCardNewsTheme(themeId), [themeId]);
 
   const displayStore = storeName?.trim() || (ko ? "내 가게" : "My store");
   const indLabel = subIndustryLabel?.trim() || (ko ? "우리 업종" : "my industry");
@@ -556,6 +571,7 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
         return;
       }
       setResult(data);
+      logMarketingEvent("cardnews_generate"); // 기능에 도달했는가 (2026-09-12: 이전엔 호출 기록이 아예 없었다)
     } catch {
       setError(ko ? "네트워크 오류가 발생했어요." : "Network error.");
     } finally {
@@ -582,10 +598,11 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
     if (!result) return;
     const canvas = await renderCardToCanvas(
       result.cards[idx], idx, result.cards.length, displayStore,
-      result.styleVariant, photos[idx], logoUrl ?? undefined,
+      result.styleVariant, theme, photos[idx], logoUrl ?? undefined,
     );
     canvas.toBlob((blob) => {
       if (!blob) return;
+      logMarketingEvent("cardnews_save"); // 만든 걸 실제로 가져갔는가
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `cardnews-${idx + 1}.png`;
@@ -636,7 +653,7 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
           </div>
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>
             {ko
-              ? "주제만 정하면 인스타 캐러셀용 카드뉴스 3~5장을 만들어 드려요. 카페·음식점은 사진형(1장 사진+타이틀, 2장~ 사진, 마지막 로고)으로."
+              ? "주제만 정하면 인스타 캐러셀용 카드뉴스 3~5장을 만들어 드려요. 사진을 넣으면 사진형으로, 안 넣어도 글자 카드로 바로 저장됩니다."
               : "Pick a topic — we draft a 3–5 card Instagram carousel. Food & cafés get the photo-first template."}
           </div>
         </div>
@@ -709,6 +726,36 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
       {/* 결과 */}
       {result && result.cards.length >= 3 && (
         <div style={{ marginTop: 16 }}>
+          {/* 테마 — 모든 가게가 같은 카드를 올리지 않도록 (2026-09-12) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: MIDNIGHT, marginRight: 2 }}>
+              {ko ? "카드 테마" : "Theme"}
+            </span>
+            {CARDNEWS_THEMES.map((t) => {
+              const on = t.id === themeId;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setThemeId(t.id)}
+                  title={ko ? t.hint.ko : t.hint.en}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 10px", borderRadius: 999, cursor: "pointer",
+                    border: on ? `1.5px solid ${MIDNIGHT}` : "1px solid rgba(25,25,112,0.14)",
+                    background: on ? "rgba(25,25,112,0.06)" : "white",
+                    fontSize: 11.5, fontWeight: on ? 700 : 600, color: MIDNIGHT_DEEP,
+                  }}
+                >
+                  <span style={{
+                    width: 12, height: 12, borderRadius: 4, flexShrink: 0,
+                    background: `linear-gradient(135deg, ${t.coverFrom} 0%, ${t.coverTo} 100%)`,
+                  }} />
+                  {ko ? t.label.ko : t.label.en}
+                </button>
+              );
+            })}
+          </div>
           {/* 미리보기 스트립 */}
           <div ref={scrollRef} style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, WebkitOverflowScrolling: "touch" }}>
             {result.cards.map((card, i) => {
@@ -718,10 +765,10 @@ export function CardNewsStudio({ ko, storeName, industryCategoryId, subIndustryI
                 <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, width: 216 }}>
                   <PreviewCard
                     card={card} index={i} total={result.cards.length} storeName={displayStore}
-                    variant={result.styleVariant} photoUrl={photos[i]} logoUrl={logoUrl ?? undefined}
+                    variant={result.styleVariant} theme={theme} photoUrl={photos[i]} logoUrl={logoUrl ?? undefined}
                   />
-                  {/* 함께 올릴 사진 가이드 (텍스트형) — 사진형은 카드 안 자리표시가 안내 */}
-                  {!isPhotoVariant && card.photoIdea && (
+                  {/* 함께 올릴 사진 가이드 — 카드 안에는 더 이상 자리표시를 넣지 않으므로(2026-09-12) 화면에서 안내 */}
+                  {card.photoIdea && (
                     <div style={{
                       fontSize: 10.5, lineHeight: 1.5, color: "rgba(15,23,42,0.6)",
                       background: "rgba(247,248,254,0.8)", border: "1px solid rgba(25,25,112,0.08)",

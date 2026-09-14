@@ -226,6 +226,18 @@ public actor TeamRepository {
             .execute().value
     }
 
+    /// 초대 대상 확인 — 가입 여부 + **가린 이름**. (마이그레이션 20260914000001)
+    ///  판정·문구는 BUInvitePreview 가 한다(웹 invite-preview.ts 미러).
+    ///  RPC 미배포 환경에선 throw → 호출부가 확인 단계를 건너뛴다.
+    public func previewInviteTarget(email: String) async throws -> BUInvitePreviewResult? {
+        struct Params: Encodable { let p_email: String }
+        let data = try await client
+            .rpc("preview_invite_target", params: Params(p_email: email.trimmingCharacters(in: .whitespaces)))
+            .execute().data
+        guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return BUInvitePreview.parse(obj)
+    }
+
     // ── 받은 초대 (직원 — 이메일 지정 초대) ──
     //   RPC 미배포(마이그레이션 미적용) 환경에선 throw → 호출부가 빈 목록 처리.
     public func pendingInvites() async throws -> [TeamPendingInvite] {

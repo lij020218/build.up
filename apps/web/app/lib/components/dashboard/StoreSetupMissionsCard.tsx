@@ -118,7 +118,7 @@ export function StoreSetupMissionsCard({
   return (
     <section
       style={{
-        borderRadius: 20,
+        borderRadius: "var(--card-radius)",
         border: "1px solid rgba(29,53,87,0.14)",
         background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.88) 100%)",
         boxShadow: "0 10px 26px rgba(25,25,112,0.07)",

@@ -37,7 +37,7 @@ export default function ShiftCalendarPreviewPage() {
   return (
     <div style={{ minHeight: "100vh", padding: "40px 20px", display: "flex", justifyContent: "center" }}>
       <div style={{
-        width: "100%", maxWidth: 420, padding: 20, borderRadius: 20,
+        width: "100%", maxWidth: 420, padding: 20, borderRadius: "var(--card-radius)",
         background: "rgba(255,255,255,0.9)", border: "1px solid rgba(25,25,112,0.10)",
         boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 32px rgba(25,25,112,0.06)",
         alignSelf: "flex-start",

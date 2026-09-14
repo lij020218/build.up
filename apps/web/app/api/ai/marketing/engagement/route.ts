@@ -6,14 +6,17 @@ import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 /**
  * 마케팅 실행 신호 계측 (2026-07-25) — POST { weekKey, event }.
  *
- * v2 개편의 성패 지표 수집: copy_click(실행물 복사) / meme_origin_click(밈 원본 보기).
+ * v2 개편의 성패 지표 수집: copy_click(실행물 복사) / meme_origin_click(밈 원본 보기)
+ *   + 2026-09-12 확장: cardnews_generate(생성 성공) / cardnews_save(PNG 저장·공유) / play_done(플레이 실행).
+ *   확장 이유: 프로드 점검에서 "카드뉴스가 쓰이는지 아닌지"를 알 방법이 아예 없었다(호출 로그 0건).
  * append-only insert, 실패해도 클라이언트는 무시(fire-and-forget) — UX 에 절대 개입하지 않는 계측.
  * 집계: service_role 쿼리 (user_id·week_key group by). 웹·iOS 공용.
  */
 
 export const runtime = "nodejs";
 
-const EVENTS = new Set(["copy_click", "meme_origin_click"]);
+// DB CHECK 제약과 같은 목록이어야 한다 — supabase/migrations/20260912_000001_*.sql
+const EVENTS = new Set(["copy_click", "meme_origin_click", "cardnews_generate", "cardnews_save", "play_done"]);
 const WEEK_RE = /^\d{4}-W\d{2}$/;
 
 export async function POST(request: Request) {

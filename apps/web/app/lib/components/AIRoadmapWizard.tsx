@@ -1265,7 +1265,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             <div style={{
               marginBottom: "20px",
               padding: "22px 26px",
-              borderRadius: "20px",
+              borderRadius: "var(--card-radius)",
               background: "linear-gradient(135deg, rgba(25,25,112,0.04) 0%, rgba(59,125,221,0.04) 100%)",
               border: "1px solid rgba(25,25,112,0.08)",
               display: "flex", flexDirection: "column" as const, gap: "10px",

@@ -13,6 +13,7 @@ import {
   signUpWithEmail,
   updateCurrentUserPassword,
   validatePassword,
+  captureAcquisition,
   type Language
 } from "@foundone/shared";
 import { MockupByIndex, HeroDashboardPreview } from "./mockups";
@@ -88,6 +89,10 @@ export default function AuthPage() {
   //   (이 페이지는 전부 client-side 라 useSearchParams 대신 window.location 을 effect 에서 읽어
   //    Suspense bailout 없이 처리 — 콜백 페이지와 달리 거대 컴포넌트라 Suspense 래핑을 피한다.)
   const [returnTo, setReturnTo] = useState<string | null>(null);
+
+  // 첫 방문의 utm_*·referrer 를 한 번만 저장한다(first-touch). 광고 소재별 가입 전환 측정용.
+  //  개인정보가 아니라 캠페인 식별자만 담는다 — packages/shared/src/acquisition.ts
+  useEffect(() => { captureAcquisition(); }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

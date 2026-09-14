@@ -27,6 +27,10 @@ import {
   signOutUser, employmentTypeLabel, jobDutyLabel, resolveShiftForDate, expandLeaveDates,
   calcAnnualLeave, usedLeaveDays, remainingLeaveDays, leaveYearRange, type LeaveBasis,
 } from "@foundone/shared";
+import { ListSection, ListRow } from "../ui/ListSection";
+import { PayslipView } from "../payroll/PayslipView";
+import { OverlayModal } from "../OverlayModal";
+import { calculatePayroll } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 import { FoundOneLogo } from "../ui/FoundOneLogo";
 import { StaffProfileView } from "./StaffProfileView";
@@ -116,6 +120,47 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const today = ymd(new Date());
   // 정해진 근무 요일 — 반복 규칙의 요일 집합
   const workdays = useMemo(() => new Set(rules.map((r) => r.weekday)), [rules]);
+  const [myPayslipOpen, setMyPayslipOpen] = useState(false);
+  /** 명세서 성명 칸 — 본인 이름. 상호를 쓰면 필수 기재사항(근로자 특정)이 틀린다. */
+  const [myName, setMyName] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      const meta = data.user?.user_metadata as { name?: string } | undefined;
+      const n = meta?.name?.trim();
+      if (alive && n) setMyName(n);
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  /** 내 명세서 — 사장님 화면과 같은 엔진. 시급·근무표가 없으면 만들지 않는다(가짜 숫자 금지). */
+  const myPayslip = useMemo(() => {
+    if (!ctx?.hourlyWage || ctx.hourlyWage <= 0) return null;
+    const weeklyMin = rules.reduce((sum, r) => {
+      const [sh, sm] = r.start_time.split(":").map(Number);
+      const [eh, em] = r.end_time.split(":").map(Number);
+      let d = eh * 60 + em - (sh * 60 + sm);
+      if (d <= 0) d += 1440;
+      return sum + d;
+    }, 0);
+    if (weeklyMin <= 0) return null;
+    const period = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }).slice(0, 7);
+    const approvedHours = (type: string) =>
+      allowances
+        .filter((a) => a.status === "approved" && a.allowance_type === type && a.work_date.startsWith(period))
+        .reduce((sum, a) => sum + a.minutes / 60, 0);
+    return calculatePayroll({
+      period,
+      // 인원을 모르면 5인 미만으로 낮춰 잡지 않는다 — 가산 의무를 없는 것처럼 보이면 안 된다.
+      headcount: ctx.staffHeadcount ?? 5,
+      hourlyWage: ctx.hourlyWage,
+      contractedWeeklyHours: weeklyMin / 60,
+      overtimeHours: approvedHours("overtime"),
+      nightHours: approvedHours("night"),
+      holidayHours: approvedHours("holiday"),
+    });
+  }, [ctx, rules, allowances]);
 
   // ── 데이터 로드 ──
   const loadAll = useCallback(async (y: number, m: number) => {
@@ -447,26 +492,40 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {tab === "today" && (
           <>
-            {/* 가게 컨텍스트 — 근속·고용형태·직무·근무 요일 (가게명·역할은 헤더로 흡수) */}
-            <section style={{ ...cardStyle, paddingBottom: 22 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em" }}>{ko ? "내 근무 정보" : "My job"}</div>
-                {(() => { const t = tenureDays(ctx.hireDate, ctx.joinedAt); return t != null && t >= 1 ? (
-                  <span style={{ ...chip, marginLeft: "auto" }}>{ko ? "근속" : "Day"} · <strong style={{ marginLeft: 3 }}>{ko ? `${t.toLocaleString()}일차` : t.toLocaleString()}</strong></span>
-                ) : null; })()}
-              </div>
-              {(ctx.employmentType || ctx.jobDuties.length > 0) && (
-                <div style={{ ...chipRow, marginBottom: 12 }}>
-                  {ctx.employmentType && (
-                    <span style={{ ...chip, background: MIDNIGHT, color: "white" }}>{employmentTypeLabel(ctx.employmentType, ko)}</span>
+            {/* 내 근무 정보 (2026-09-12: 근속 칩 + 직무 칩 나열 → 애플식 라벨/값 행. iOS 동일 규칙)
+                직무는 칩이 흩어져 있어 몇 개인지 세게 됐다 → 한 줄 값. */}
+            {(() => {
+              const t = tenureDays(ctx.hireDate, ctx.joinedAt);
+              return (
+                <ListSection
+                  title={ko ? "내 근무 정보" : "My job"}
+                  footer={workdays.size === 0
+                    ? (ko ? "사장님이 근무표를 등록하면 근무 요일이 표시됩니다." : "Your weekly schedule appears once your owner sets it.")
+                    : undefined}
+                >
+                  {t != null && t >= 1 && (
+                    <ListRow first label={ko ? "근속" : "Tenure"} value={ko ? `${t.toLocaleString()}일차` : t.toLocaleString()} />
                   )}
-                  {ctx.jobDuties.map((k) => (
-                    <span key={k} style={chip}>{jobDutyLabel(k, ko)}</span>
-                  ))}
-                </div>
-              )}
-              <WeekdayStrip ko={ko} days={workdays} />
-            </section>
+                  {ctx.employmentType && (
+                    <ListRow
+                      first={!(t != null && t >= 1)}
+                      label={ko ? "고용형태" : "Employment"}
+                      value={employmentTypeLabel(ctx.employmentType, ko) ?? undefined}
+                    />
+                  )}
+                  {ctx.jobDuties.length > 0 && (
+                    <ListRow
+                      label={ko ? "직무" : "Duties"}
+                      value={ctx.jobDuties.map((k) => jobDutyLabel(k, ko)).join(" · ")}
+                    />
+                  )}
+                  <ListRow
+                    label={ko ? "근무 요일" : "Workdays"}
+                    trailing={<div style={{ minWidth: 0, flex: 1 }}><WeekdayStrip ko={ko} days={workdays} /></div>}
+                  />
+                </ListSection>
+              );
+            })()}
 
             {/* ② 오늘 카드 — 출퇴근 */}
             <TodayCard
@@ -506,6 +565,20 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
 
         {tab === "rightsPay" && (
           <>
+            {/* 내 임금명세서 (2026-09-12) — 사장님이 주는 명세서와 **같은 계산**을 직원도 본다.
+                근기법 §48② 교부 의무의 내용을 직원이 스스로 확인할 수 있게 한다.
+                사업주 부담은 명세서 기재사항이 아니라 숨긴다. */}
+            {myPayslip && (
+              <ListSection title={ko ? "내 급여" : "My pay"}>
+                <ListRow first label={ko ? "지급 총액" : "Gross"} value={`${myPayslip.grossPay.toLocaleString()}원`} />
+                <ListRow label={ko ? "공제 총액" : "Deductions"} value={`−${myPayslip.deductionTotal.toLocaleString()}원`} />
+                <ListRow label={ko ? "실지급액" : "Net pay"} value={`${myPayslip.netPay.toLocaleString()}원`} />
+                <ListRow
+                  label={ko ? "임금명세서 보기" : "View payslip"}
+                  onClick={() => setMyPayslipOpen(true)}
+                />
+              </ListSection>
+            )}
             {/* 급여일 + 미지급 문의 (2026-07-15) — 사장이 급여일을 정했을 때만 표시 */}
             {ctx.paydayDay != null && (
               <StaffPaydayCard ko={ko} paydayDay={ctx.paydayDay} onReportUnpaid={reportUnpaid} />
@@ -531,6 +604,18 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
       </div>
 
       {leaveOpen && <LeaveSheet ko={ko} onClose={() => setLeaveOpen(false)} onSubmit={submitLeave} />}
+
+      {/* 내 임금명세서 — 사업주 부담은 명세서 기재사항이 아니라 직원 화면에서 숨긴다. */}
+      {myPayslipOpen && myPayslip && ctx && (
+        <OverlayModal label={ko ? "내 임금명세서" : "My payslip"} onClose={() => setMyPayslipOpen(false)} maxWidth={640}>
+          <PayslipView
+            memberName={myName ?? (ko ? "본인" : "Me")}
+            result={myPayslip}
+            paydayLabel={ctx.paydayDay != null ? (ko ? `매월 ${ctx.paydayDay}일` : `Day ${ctx.paydayDay}`) : undefined}
+            showEmployerBurden={false}
+          />
+        </OverlayModal>
+      )}
     </main>
   );
 }
@@ -804,38 +889,41 @@ function StaffPaydayCard({ ko, paydayDay, onReportUnpaid }: {
     const r = await onReportUnpaid();
     setState(r === "error" ? "error" : "sent");   // duplicate 도 사용자에겐 '전달됨'
   };
+  // 2026-09-12 (iOS 동일): 카드 안 제목 + 오른쪽 작은 값 + 작은 버튼 →
+  //  섹션 제목 밖으로, 값은 행, 동작은 전체폭 버튼. 상황 설명은 각주로.
+  const footer = state === "sent"
+    ? (ko ? "사장님께 전달했어요. 확인하시면 연락이 올 거예요." : "Sent to your manager.")
+    : state === "error"
+      ? (ko ? "전달에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed. Try again.")
+      : !due
+        ? (ko ? `이번 달 급여일은 ${eff}일이에요.` : `Payday is on the ${eff}th.`)
+        : (ko ? "급여가 아직 안 들어왔다면 사장님께 알릴 수 있어요." : "Not paid yet? Let your manager know.");
+
   return (
-    <section style={cardStyle}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em" }}>{ko ? "급여일" : "Payday"}</div>
-        <span style={{ fontSize: 12.5, fontWeight: 700, color: MIDNIGHT }}>
-          {ko ? `매월 ${paydayDay}일` : `Day ${paydayDay}`}
-          {eff !== paydayDay && (ko ? ` · 이번 달 ${eff}일` : ` · ${eff} this month`)}
-        </span>
-      </div>
-      {!due ? (
-        <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>
-          {ko ? `이번 달 급여일은 ${eff}일이에요.` : `Payday is on the ${eff}th.`}
-        </div>
-      ) : state === "sent" ? (
-        <div style={{ fontSize: 12.5, color: MIDNIGHT, fontWeight: 600, lineHeight: 1.5 }}>
-          {ko ? "✓ 사장님께 전달했어요. 확인하시면 연락이 올 거예요." : "✓ Sent to your manager."}
-        </div>
-      ) : (
-        <>
-          <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 10 }}>
-            {ko ? "급여가 아직 안 들어왔다면 사장님께 알릴 수 있어요." : "Not paid yet? Let your manager know."}
-          </div>
-          <button type="button" onClick={() => void send()} disabled={state === "sending"}
-            style={{ ...smallBtn, opacity: state === "sending" ? 0.5 : 1, cursor: state === "sending" ? "wait" : "pointer" }}>
-            {state === "sending" ? (ko ? "보내는 중..." : "Sending...") : (ko ? "급여가 안 들어왔어요" : "Payroll not received")}
-          </button>
-          {state === "error" && (
-            <div style={{ fontSize: 11.5, color: MUTED, marginTop: 8 }}>{ko ? "전달에 실패했어요. 잠시 후 다시 시도해 주세요." : "Failed. Try again."}</div>
-          )}
-        </>
+    <ListSection title={ko ? "급여일" : "Payday"} footer={footer}>
+      <ListRow
+        first
+        label={ko ? "지급일" : "Pay date"}
+        value={eff !== paydayDay
+          ? (ko ? `매월 ${paydayDay}일 (이번 달 ${eff}일)` : `Day ${paydayDay} (${eff} this month)`)
+          : (ko ? `매월 ${paydayDay}일` : `Day ${paydayDay}`)}
+      />
+      {due && state !== "sent" && (
+        <ListRow
+          label={ko ? "급여 확인" : "Payroll check"}
+          trailing={
+            <button type="button" onClick={() => void send()} disabled={state === "sending"}
+              style={{
+                minHeight: 44, padding: "0 18px", borderRadius: 10, border: "none",
+                background: MIDNIGHT, color: "#fff", fontSize: 15, fontWeight: 600,
+                cursor: state === "sending" ? "wait" : "pointer", opacity: state === "sending" ? 0.5 : 1,
+              }}>
+              {state === "sending" ? (ko ? "보내는 중…" : "Sending…") : (ko ? "급여가 안 들어왔어요" : "Not received")}
+            </button>
+          }
+        />
       )}
-    </section>
+    </ListSection>
   );
 }
 
@@ -855,81 +943,87 @@ function LeaveCard({ ko, leaves, ledger, ledgerFailed, onOpen, onCancel, hireDat
   const range = leaveYearRange(leaveBasis, hireDate);
   const usedDays = usedLeaveDays(ledger, { yearStart: range.start, yearEnd: range.end });
   const leftDays = remainingLeaveDays(leaveCalc.days, usedDays);
-  return (
-    <section style={cardStyle}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ fontSize: 15, fontWeight: 750, color: INK, letterSpacing: "-0.01em" }}>{ko ? "연차·휴가" : "Time off"}</div>
-        <button type="button" style={smallBtn} onClick={onOpen}><Plus size={14} strokeWidth={2} /> {ko ? "신청" : "Request"}</button>
-      </div>
+  // 2026-09-12 (iOS 동일 규칙): 카드 안 제목 + 보라색 잔여 박스(카드 안 카드) +
+  //  신청마다 캡슐 2개(종류·상태) → 섹션 제목 밖으로, 잔여·신청은 라벨/값 행, 근거는 각주에서 한 번.
+  const summaryValue = (() => {
+    if (headcount == null) return null;
+    if (!leaveCalc.statutory || leaveCalc.days <= 0) return null;
+    if (ledgerFailed) return null;
+    return ko ? `${leftDays}일` : `${leftDays}d`;
+  })();
 
-      {/* 잔여 요약 — 신청 목록보다 먼저 (직원이 가장 궁금한 것) */}
-      <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(139,127,212,0.08)", marginBottom: 12 }}>
-        {!headcountKnown ? (
-          <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55 }}>
-            {ko
-              ? "직원 수를 불러오지 못해 연차 일수를 계산할 수 없어요. 잠시 후 다시 열어보시거나 사장님께 문의해 주세요."
-              : "Can't compute leave — staff count unavailable."}
-          </div>
-        ) : ledgerFailed && leaveCalc.statutory && leaveCalc.days > 0 ? (
-          <div style={{ fontSize: 12, color: "#b64c4c", lineHeight: 1.55 }}>
-            {ko
-              ? `올해 ${leaveCalc.days}일 발생 — 사용 일수를 불러오지 못해 잔여를 계산할 수 없어요.`
-              : `${leaveCalc.days} granted — usage unavailable.`}
-          </div>
-        ) : leaveCalc.statutory && leaveCalc.days > 0 ? (
-          <>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: LEAVE, fontVariantNumeric: "tabular-nums" }}>
-                {ko ? `${leftDays}일` : `${leftDays}d`}
-              </span>
-              <span style={{ fontSize: 12.5, fontWeight: 650, color: INK }}>{ko ? "남았어요" : "left"}</span>
-              <span style={{ fontSize: 11.5, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
-                {ko ? `올해 ${leaveCalc.days}일 중 ${usedDays}일 사용` : `${usedDays} of ${leaveCalc.days} used`}
-              </span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, background: "rgba(15,23,42,0.06)", borderRadius: 999, padding: "2px 7px" }}>
-                {ko ? "예상" : "est."}
-              </span>
-            </div>
-            <div style={{ fontSize: 11, color: MUTED, marginTop: 6, lineHeight: 1.5 }}>
-              {ko ? leaveCalc.basisNote.ko : leaveCalc.basisNote.en}
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55 }}>
-            {ko ? leaveCalc.basisNote.ko : leaveCalc.basisNote.en}
-          </div>
-        )}
-      </div>
+  return (
+    <ListSection
+      title={ko ? "연차 · 휴가" : "Time off"}
+      actionLabel={ko ? "신청" : "Request"}
+      onAction={onOpen}
+      footer={headcount == null ? undefined : (ko ? leaveCalc.basisNote.ko : leaveCalc.basisNote.en)}
+    >
+      {headcount == null ? (
+        <ListRow
+          first
+          label={ko ? "남은 연차" : "Remaining"}
+          subtitle={ko
+            ? "직원 수를 불러오지 못해 계산할 수 없어요. 잠시 후 다시 열어보시거나 사장님께 문의해 주세요."
+            : "Couldn't load headcount, so entitlement can't be calculated."}
+        />
+      ) : ledgerFailed && leaveCalc.statutory && leaveCalc.days > 0 ? (
+        <ListRow
+          first
+          label={ko ? "남은 연차" : "Remaining"}
+          subtitle={ko
+            ? `올해 ${leaveCalc.days}일 발생 · 사용 일수를 불러오지 못해 잔여를 계산할 수 없어요`
+            : `${leaveCalc.days} granted · usage unavailable`}
+        />
+      ) : summaryValue ? (
+        <ListRow
+          first
+          label={ko ? "남은 연차" : "Remaining"}
+          value={summaryValue}
+          subtitle={ko ? `올해 ${leaveCalc.days}일 중 ${usedDays}일 사용 (예상)` : `${usedDays} of ${leaveCalc.days} used (est.)`}
+        />
+      ) : null}
+
       {leaves.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, padding: "8px 0" }}>
-          {ko ? "신청 내역이 없어요. 연차·휴가가 필요하면 「신청」을 눌러 사장님께 요청하세요." : "No requests yet."}
-        </div>
+        <ListRow
+          label={ko ? "신청 내역이 없어요" : "No requests yet"}
+          subtitle={ko ? "연차·휴가가 필요하면 「신청」을 눌러 사장님께 요청하세요." : "Tap Request to ask your owner."}
+        />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {leaves.map((l) => (
-            <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: MIDNIGHT_SOFT }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "white", background: LEAVE, padding: "3px 8px", borderRadius: 999, flexShrink: 0 }}>{ko ? LEAVE_LABEL[l.leave_type].ko : LEAVE_LABEL[l.leave_type].en}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{md(l.start_date)}{l.start_date !== l.end_date ? ` – ${md(l.end_date)}` : ""}</div>
-                {l.reason && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.reason}</div>}
-              </div>
-              <StatusPill ko={ko} status={l.status} />
-              {l.status === "pending" && (
-                <button type="button" onClick={() => onCancel(l.id)} aria-label={ko ? "취소" : "Cancel"} style={{ background: "none", border: "none", cursor: "pointer", color: MIDNIGHT_MUTED, padding: 2, display: "flex" }}><X size={15} strokeWidth={2} /></button>
-              )}
-            </div>
-          ))}
-        </div>
+        leaves.map((l) => (
+          <ListRow
+            key={l.id}
+            label={`${ko ? LEAVE_LABEL[l.leave_type].ko : LEAVE_LABEL[l.leave_type].en} · ${md(l.start_date)}${l.start_date !== l.end_date ? ` – ${md(l.end_date)}` : ""}`}
+            subtitle={l.reason ?? undefined}
+            trailing={
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                <StatusPill ko={ko} status={l.status} />
+                {l.status === "pending" && (
+                  <button type="button" onClick={() => onCancel(l.id)} aria-label={ko ? "취소" : "Cancel"}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: MIDNIGHT_MUTED, padding: 2, display: "flex" }}>
+                    <X size={16} strokeWidth={2} />
+                  </button>
+                )}
+              </span>
+            }
+          />
+        ))
       )}
-    </section>
+    </ListSection>
   );
 }
 
 // 신호등 컬러 대신 미드나잇 톤으로 상태 구분
+// 2026-09-12: 캡슐 3종 → 값 텍스트. 승인만 진하게(상태가 확정된 것), 나머지는 회색.
 function StatusPill({ ko, status }: { ko: boolean; status: LeaveStatus }) {
-  if (status === "approved") return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "white", background: MIDNIGHT, padding: "3px 9px", borderRadius: 999 }}><CheckCircle2 size={11} strokeWidth={2.2} />{ko ? "승인" : "Approved"}</span>;
-  if (status === "rejected") return <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT_MUTED, background: "transparent", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "3px 9px", borderRadius: 999, textDecoration: "line-through" }}>{ko ? "반려" : "Declined"}</span>;
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: MIDNIGHT_SOFT2, padding: "3px 9px", borderRadius: 999 }}><Clock3 size={11} strokeWidth={2.2} />{ko ? "대기" : "Pending"}</span>;
+  const label = status === "approved" ? (ko ? "승인" : "Approved")
+    : status === "rejected" ? (ko ? "반려" : "Declined")
+    : (ko ? "대기" : "Pending");
+  return (
+    <span style={{ fontSize: 15, fontWeight: status === "approved" ? 600 : 400, color: status === "approved" ? MIDNIGHT : MUTED }}>
+      {label}
+    </span>
+  );
 }
 
 /* ══════════════════════ 연차 신청 시트 ══════════════════════ */
@@ -1011,7 +1105,7 @@ const pageStyle: React.CSSProperties = {
   justifyContent: "center", padding: "var(--staff-page-top, 24px) 20px 48px",
 };
 const cardStyle: React.CSSProperties = {
-  width: "100%", background: "white", borderRadius: 20, padding: "22px 22px",
+  width: "100%", background: "white", borderRadius: "var(--card-radius)", padding: "22px 22px",
   boxShadow: "0 6px 30px rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.05)",
 };
 const eyebrow: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MIDNIGHT_MUTED, marginBottom: 8 };

@@ -117,13 +117,14 @@ public struct WeeklyPulseView: View {
                 MonthlyRevenueProgressBlock(entries: mock.entries)
                 WeeklyInsightsBlock(entries: mock.entries, ratios: ratios, category: mock.category)
 
-                Color.clear.frame(height: 110)
             }
             .padding(.horizontal, BUSpacing.md)
             .padding(.top, BUSpacing.md)
             .padding(.bottom, BUSpacing.md)
         }
-        .background(BUBackgroundSurface())
+        // 배경은 셸(FoundOneMobileShell)이 한 번만 그린다 — 여기서 다시 깔지 않는다.
+        //  탭 화면은 NavigationStack 을 쓰지 않아 셸 캔버스가 그대로 비친다.
+        //  (로드맵·시트는 NavigationStack 이 불투명 배경을 칠하므로 예외로 자체 배경을 둔다.)
     }
 
     private var sectionEyebrow: some View {

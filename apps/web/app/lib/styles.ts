@@ -157,7 +157,7 @@ export const styles = {
     gap: "12px"
   },
   homeStageRailCard: {
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     padding: "16px 18px",
     border: "1px solid rgba(17,17,17,0.06)",
     background: "rgba(255,255,255,0.74)",
@@ -284,7 +284,7 @@ export const styles = {
     gap: "12px"
   },
   homePrincipleCard: {
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     padding: "16px 18px",
     border: "1px solid rgba(17,17,17,0.06)",
     background: "rgba(255,255,255,0.82)",
@@ -349,7 +349,7 @@ export const styles = {
     gap: "12px"
   },
   financeResultCard: {
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     padding: "16px",
     border: "1px solid rgba(17,17,17,0.06)",
     background: "rgba(255,255,255,0.84)",
@@ -476,7 +476,7 @@ export const styles = {
     //   상수 16px 대신 max(16px, env(safe-area-inset-bottom)) — 노치 없는 기기는 그대로 16px.
     bottom: "max(16px, env(safe-area-inset-bottom))",
     padding: "12px",
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     border: "1px solid rgba(255,255,255,0.72)",
     background: "rgba(247,246,243,0.74)",
     backdropFilter: "blur(18px)",
@@ -508,7 +508,7 @@ export const styles = {
     alignItems: "center",
     gap: "16px",
     padding: "20px 24px",
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     border: "1px solid rgba(255,255,255,0.78)",
     background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.8) 100%)",
     cursor: "pointer",
@@ -938,7 +938,7 @@ export const styles = {
   roadmapRow: {
     display: "grid",
     gap: "6px",
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     border: "1px solid rgba(0,0,0,0.04)",
     // 배경(라벤더 미스트)이 비쳐야 흰 판이 이어 붙은 화면으로 보이지 않는다 (2026-08-06).
     background: "linear-gradient(180deg, rgba(255,255,255,0.58) 0%, rgba(247,248,254,0.52) 100%)",
@@ -1031,7 +1031,7 @@ export const styles = {
     gap: "12px"
   },
   profileItem: {
-    borderRadius: "20px",
+    borderRadius: "var(--card-radius)",
     border: "1px solid var(--border)",
     background: "#fff",
     padding: "16px",

@@ -14,7 +14,6 @@
  */
 
 import { useMemo } from "react";
-import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
@@ -22,6 +21,7 @@ import { UserActivityCard } from "../UserActivityCard";
 import { CEOMorningHero } from "../CEOMorningHero";
 import { useMorningBriefingBrain } from "../../../hooks/useMorningBriefingBrain";
 import { resolveHero, type Hero } from "../heroInsight";
+import { dispatchHeroCta } from "../heroCta";
 import { useProfileStore } from "../../../stores/profile-store";
 
 const MIDNIGHT = "#191970";
@@ -60,6 +60,16 @@ export function TodaySummarySection({ d, c, ko, fmt, onOpenCalendar, briefingExp
   const showUserActivity = !hiddenCards.includes("user-activity");
 
   const isCrisisTone = briefing.tone === "crisis";
+  // 데이터가 없을 땐(drucker 폴백) AI 흉내를 내지 않고 "매출 기록" 버튼만 둔다.
+  const isEmptyState = briefing.source === "drucker";
+  // AI 액션은 actionKo 가 제목(≤10자)·analysisKo 가 이유. 이상 신호·위기 히어로는 반대.
+  const isAiAction = briefing.source === "ai-action";
+  const titleText = ko
+    ? (isAiAction ? briefing.actionKo : briefing.analysisKo)
+    : (isAiAction ? briefing.actionEn : briefing.analysisEn);
+  const reasonText = ko
+    ? (isAiAction ? briefing.analysisKo : briefing.actionKo)
+    : (isAiAction ? briefing.analysisEn : briefing.actionEn);
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
@@ -67,60 +77,64 @@ export function TodaySummarySection({ d, c, ko, fmt, onOpenCalendar, briefingExp
         {ko ? "오늘의 요약" : "Today at a glance"}
       </div>
 
-      {/* ① AI 경영 코칭 — 첫 줄 전체 폭. brain 요약 + [자세히 보기](아래에 전체 브리핑 펼침) */}
+      {/* ① 오늘 할 일 — B안 (2026-09-12 사장님 승인).
+          종전: 스파클 아이콘 + "AI 경영 코칭" + 태그 칩 + 진단 문단 + 행동 2줄 + [자세히 보기] 버튼.
+          운영 DB 실측(7/1~9/11): 코칭 116회 생성, 피드백 0건, 실행 표시 0건 — 문단에 반응한 사람이 없다.
+          로그인 화면의 약속("오늘 할 일 하나")대로: 제목 + 이유 2줄 + 버튼 하나. 진단 전문은 [자세히]로. */}
       <div style={{
-          background: isCrisisTone
-            ? "linear-gradient(180deg, rgba(182,76,76,0.05) 0%, #ffffff 60%)"
-            : "linear-gradient(135deg, #F7F8FE 0%, #ffffff 55%)",
-          border: isCrisisTone ? "1px solid rgba(182,76,76,0.25)" : "1px solid rgba(25,25,112,0.12)",
-          borderRadius: 16,
-          boxShadow: "0 1px 3px rgba(25,25,112,0.04)",
-          padding: "16px 20px",
-          display: "flex",
-          alignItems: "center",
-          gap: 18,
-          flexWrap: "wrap" as const,
+          background: "var(--surface)",
+          border: isCrisisTone ? "1px solid rgba(182,76,76,0.35)" : "0.5px solid rgba(17,19,26,0.07)",
+          borderRadius: "var(--card-radius)",
+          boxShadow: "0 3px 10px rgba(17,19,26,0.05)",
+          padding: "18px 20px",
+          display: "grid",
+          gap: 10,
           minWidth: 0,
         }}>
-          <div style={{ flex: "1 1 420px", minWidth: 0, display: "grid", gap: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" as const }}>
-              <span style={{
-                width: 24, height: 24, borderRadius: 8, background: "rgba(25,25,112,0.08)",
-                display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>
-                <Sparkles size={13.5} strokeWidth={1.8} color={MIDNIGHT} />
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 800, color: MIDNIGHT, letterSpacing: "0.04em" }}>
-                {ko ? "AI 경영 코칭" : "AI Coaching"}
-              </span>
-              <span style={{
-                padding: "2px 9px", borderRadius: 999, fontSize: 10.5, fontWeight: 700,
-                background: isCrisisTone ? "rgba(182,76,76,0.10)" : "rgba(25,25,112,0.06)",
-                color: isCrisisTone ? DANGER : "rgba(25,25,112,0.75)",
-              }}>{ko ? briefing.tagKo : briefing.tagEn}</span>
-            </div>
-            <div style={{ fontSize: 14.5, fontWeight: 750, color: "#10104a", lineHeight: 1.5, letterSpacing: "-0.01em" }}>
-              {ko ? briefing.analysisKo : briefing.analysisEn}
-            </div>
-            <div style={{
-              fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.55,
-              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
-            }}>
-              {ko ? briefing.actionKo : briefing.actionEn}
-            </div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>
+              {ko ? "오늘 할 일" : "Today's one thing"}
+            </span>
+            <button
+              type="button"
+              onClick={onToggleBriefing}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--primary)" }}
+            >
+              {briefingExpanded ? (ko ? "접기" : "Collapse") : (ko ? "자세히" : "Details")}
+            </button>
           </div>
+
+          {isEmptyState ? (
+            <div style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.5 }}>
+              {ko ? "매출 한 건만 기록하면 내일부터 오늘 할 일을 골라 드립니다." : "Log one sale and we will pick your one thing from tomorrow."}
+            </div>
+          ) : (
+            <>
+              <div style={{
+                fontSize: 20, fontWeight: 700, color: "var(--text)", lineHeight: 1.35, letterSpacing: "-0.01em",
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
+              }}>
+                {titleText}
+              </div>
+              <div style={{
+                fontSize: 15, color: "var(--muted)", lineHeight: 1.5,
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
+              }}>
+                {reasonText}
+              </div>
+            </>
+          )}
+
           <button
             type="button"
-            onClick={onToggleBriefing}
+            onClick={() => dispatchHeroCta(briefing)}
             style={{
-              display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
-              padding: "9px 16px", borderRadius: 11, border: "none",
-              background: MIDNIGHT, color: "#fff", fontSize: 12.5, fontWeight: 700,
-              cursor: "pointer", boxShadow: "0 2px 8px rgba(25,25,112,0.22)",
+              width: "100%", minHeight: 48, borderRadius: 10, border: "none",
+              background: isCrisisTone ? DANGER : MIDNIGHT, color: "#fff", fontSize: 16, fontWeight: 600,
+              cursor: "pointer",
             }}
           >
-            {briefingExpanded ? (ko ? "접기" : "Collapse") : (ko ? "자세히 보기" : "Details")}
-            {briefingExpanded ? <ChevronUp size={13} strokeWidth={2.4} /> : <ChevronDown size={13} strokeWidth={2.4} />}
+            {ko ? briefing.ctaKo : briefing.ctaEn}
           </button>
         </div>
 

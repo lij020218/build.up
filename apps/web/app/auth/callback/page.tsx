@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import { updateCurrentUserPassword, validatePassword } from "@foundone/shared";
+import { updateCurrentUserPassword, validatePassword, backfillAcquisition } from "@foundone/shared";
 
 /**
  * 인증 완료 후 복귀 경로 결정 — auth 페이지가 sessionStorage 에 남긴 returnTo 를 소비.
@@ -179,6 +179,9 @@ function AuthCallbackInner() {
       if (data.session) { setStatus("recovery-form"); return; }
       setTimeout(async () => {
         const { data: d2 } = await supabase.auth.getSession();
+        // OAuth(애플·카카오)는 signUp metadata 를 넘길 수 없다 → 세션이 생긴 여기서만 유입 출처가 기록된다.
+        //  이미 값이 있으면 덮어쓰지 않는다(first-touch). 실패는 무시 — 측정이 로그인을 막으면 안 된다.
+        if (d2.session) { void backfillAcquisition(supabase); }
         if (d2.session) setStatus("recovery-form");
         else {
           setStatus("error");

@@ -238,7 +238,7 @@ export function LocationMapPanel(props: {
 
   return (
     <div style={{
-      borderRadius: "20px",
+      borderRadius: "var(--card-radius)",
       overflow: "hidden",
       border: "1px solid var(--border)",
       background: "#e8e8ed",
