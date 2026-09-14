@@ -30,7 +30,9 @@ import {
 } from "@foundone/shared";
 import type { DashboardHook } from "../../../useDashboard";
 
-type StoreMember = { user_id: string; name?: string | null };
+// get_store_members RPC 는 member_user_id 로 내려준다(user_id 아님).
+//  종전 코드는 인원 수만 세서 이 이름이 드러나지 않았다 — 2026-09-14 렌더 검증에서 발견.
+type StoreMember = { member_user_id: string; name?: string | null; left_at?: string | null };
 type Rule = { member_user_id: string; weekday: number; start_time: string; end_time: string; active: boolean; effective_until?: string | null };
 type Exception = { member_user_id: string; work_date: string; start_time: string | null; end_time: string | null; is_off: boolean | null };
 type Att = { member_user_id: string; clock_in_at: string; clock_out_at: string | null };
@@ -72,12 +74,15 @@ export function HomeTeamSection({ d, ko }: { d: DashboardHook; ko: boolean }) {
       const ruleRows = (rules.data ?? []) as Rule[];
       const exRows = (exceptions.data ?? []) as Exception[];
 
-      const inputs: RosterMemberInput[] = members.map((m) => ({
-        memberUserId: m.user_id,
-        name: m.name?.trim() || (ko ? "직원" : "Staff"),
-        rules: ruleRows.filter((r) => r.member_user_id === m.user_id),
-        exceptions: exRows.filter((x) => x.member_user_id === m.user_id),
-      }));
+      // 퇴사자는 오늘 명단에 넣지 않는다(행은 법정 보존이라 RPC 가 계속 내려준다).
+      const inputs: RosterMemberInput[] = members
+        .filter((m) => !m.left_at)
+        .map((m) => ({
+          memberUserId: m.member_user_id,
+          name: m.name?.trim() || (ko ? "직원" : "Staff"),
+          rules: ruleRows.filter((r) => r.member_user_id === m.member_user_id),
+          exceptions: exRows.filter((x) => x.member_user_id === m.member_user_id),
+        }));
 
       setRoster(buildTodayRoster({
         dateStr: today,

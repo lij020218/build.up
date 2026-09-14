@@ -1023,7 +1023,15 @@ private struct StaffRightsCard: View {
 
     private var juhyuBadge: String { juhyuEligible ? "대상" : "비대상" }
     private var severanceBadge: String { severanceEligible ? "대상 도달" : (severanceApproaching ? "임박" : "미도달") }
-    private var leaveBadge: String { daysSinceHire >= 365 ? "15일 발생" : "1년 미만" }
+    /// 주 15시간 미만은 연차 자체가 적용되지 않는다(근기법 §18③) — 근속과 무관.
+    ///  2026-09-14: 이 조건이 빠져 있어 단시간 근로자에게 "연차 15일 발생"이라 표시됐고,
+    ///  같은 계정의 임금명세서는 "연차 의무 없음"이라 적혀 두 화면이 서로 반대를 말했다.
+    private var leaveApplies: Bool { weeklyHours >= BUPayrollRates.shortTimeWeeklyHours }
+    private var leaveAccrued: Bool { leaveApplies && daysSinceHire >= 365 }
+    private var leaveBadge: String {
+        guard leaveApplies else { return "비대상" }
+        return daysSinceHire >= 365 ? "15일 발생" : "1년 미만"
+    }
 
     var body: some View {
         BUCard(.outer) {
@@ -1050,7 +1058,7 @@ private struct StaffRightsCard: View {
                     VStack(spacing: 0) {
                         summaryRow("주휴수당", value: juhyuBadge, on: juhyuEligible, first: true)
                         summaryRow("퇴직금", value: severanceBadge, on: severanceEligible, first: false)
-                        summaryRow("연차", value: leaveBadge, on: daysSinceHire >= 365, first: false)
+                        summaryRow("연차", value: leaveBadge, on: leaveAccrued, first: false)
                     }
                     if hourlyWage == nil {
                         Text("사장님이 시급을 등록하면 주휴수당·퇴직금 자격이 표시됩니다.")
@@ -1093,12 +1101,16 @@ private struct StaffRightsCard: View {
                 // ③ 연차
                 rightRow(
                     title: "연차유급휴가",
-                    badge: daysSinceHire >= 365 ? "15일 발생" : "1년 미만",
-                    on: daysSinceHire >= 365,
-                    body: daysSinceHire >= 365
-                        ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요."
-                        : "근속 1년 도달 시 연차 15일이 발생합니다. D-\(dDay)",
-                    law: "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)."
+                    badge: leaveBadge,
+                    on: leaveAccrued,
+                    body: !leaveApplies
+                        ? "주 소정근로 15시간 미만 — 연차유급휴가가 적용되지 않습니다."
+                        : leaveAccrued
+                            ? "근속 1년 이상 — 연차 15일 발생. 미사용분은 수당으로 받을 수 있어요."
+                            : "근속 1년 도달 시 연차 15일이 발생합니다. D-\(dDay)",
+                    law: !leaveApplies
+                        ? "근로기준법 §18③ · 4주 평균 주 15시간 미만 근로자는 §60 미적용."
+                        : "근로기준법 §60 · 상시 5인 이상 사업장 한정 (4인 이하 미적용)."
                 )
                 } // expanded
 
