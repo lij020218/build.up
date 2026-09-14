@@ -20,6 +20,7 @@
 import { useState } from "react";
 import { Link2, Copy, Check as CheckIcon } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
+import { invitePreviewView, parseInvitePreview, type InvitePreviewResult } from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
@@ -47,6 +48,22 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
   const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [directedEmail, setDirectedEmail] = useState<string | null>(null);
+  // 2026-09-14: 초대 전에 **대상 확인** 단계를 둔다. 오타 하나로 엉뚱한 사람에게
+  //   채용 초대장이 가고, 사장은 보냈다고 믿는 사고를 막는다.
+  //   서버는 가린 이름만 준다(김*현) — 실명은 직원이 수락한 뒤에 보인다.
+  const [preview, setPreview] = useState<InvitePreviewResult | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+
+  const lookup = async () => {
+    setPreviewing(true);
+    try {
+      const { data } = await supabase.rpc("preview_invite_target" as never, { p_email: email.trim() } as never);
+      // 마이그레이션 미적용 환경이면 응답 모양이 다르다 → 확인 단계를 건너뛰고 종전처럼 바로 보낼 수 있게 둔다.
+      setPreview(parseInvitePreview(data) ?? { ok: true, exists: false, masked_email: email.trim(), already_member: false, pending_invite: false });
+    } finally {
+      setPreviewing(false);
+    }
+  };
 
   const inviteUrl = code && typeof window !== "undefined" ? `${window.location.origin}/invite/${code}` : "";
 
@@ -128,7 +145,7 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setPreview(null); }}
               autoFocus
               placeholder={ko ? "직원 이메일 (그 계정만 수락 가능)" : "Employee email (only that account can accept)"}
               style={{
@@ -163,7 +180,7 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
               disabled={status === "loading" || (showEmail && !email.trim().includes("@") && email.trim() !== "")}
               onClick={() => {
                 if (!showEmail) { setShowEmail(true); return; }
-                if (email.trim().includes("@")) { void generate(); return; }
+                if (email.trim().includes("@")) { void lookup(); return; }
                 setShowEmail(false); // 빈 입력 상태에서 다시 누르면 접기
               }}
               style={{
@@ -179,13 +196,46 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
                 opacity: status === "loading" ? 0.5 : 1,
               }}
             >
-              {status === "loading" && showEmail
-                ? (ko ? "생성 중…" : "Creating…")
+              {previewing
+                ? (ko ? "확인 중…" : "Checking…")
                 : showEmail && email.trim().includes("@")
-                  ? (ko ? "✉ 이 이메일로 초대" : "✉ Invite this email")
+                  ? (ko ? "계정 확인" : "Check account")
                   : (ko ? "✉ 이메일로 초대" : "✉ Invite by email")}
             </button>
           </div>
+          {/* 확인 결과 — 여기서 비로소 「추가」를 누른다. 누르면 직원에게 확인 요청이 가고,
+              직원이 수락해야 등록된다(사장이 이메일을 안다고 자동 연결되지 않는다). */}
+          {preview && (() => {
+            const v = invitePreviewView(preview, ko);
+            const accent = v.tone === "found" ? MIDNIGHT : v.tone === "new" ? "#5b616e" : v.tone === "blocked" ? "#c58b2a" : "#b64c4c";
+            return (
+              <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 10, background: "white", border: `1px solid ${accent}33` }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: accent }}>{v.title}</div>
+                {preview.ok && (
+                  <div style={{ fontSize: 12, color: "#0f172a", marginTop: 3, fontFamily: "ui-monospace, monospace" }}>
+                    {preview.masked_email}
+                  </div>
+                )}
+                <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>{v.detail}</div>
+                {v.canInvite && (
+                  <button
+                    type="button"
+                    disabled={status === "loading"}
+                    onClick={() => { void generate(); }}
+                    style={{
+                      marginTop: 10, width: "100%", padding: "11px 12px", borderRadius: 10,
+                      border: "none", background: MIDNIGHT, color: "white",
+                      fontSize: 13, fontWeight: 700, cursor: "pointer",
+                      opacity: status === "loading" ? 0.5 : 1,
+                    }}
+                  >
+                    {status === "loading" ? (ko ? "보내는 중…" : "Sending…") : ko ? "추가 — 직원에게 확인 요청" : "Add — ask them to confirm"}
+                  </button>
+                )}
+              </div>
+            );
+          })()}
+
           {showEmail && (
             <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)", lineHeight: 1.5 }}>
               {ko
@@ -261,7 +311,7 @@ export function InviteLinkSection({ ko }: { ko: boolean }) {
           </div>
           <button
             type="button"
-            onClick={() => { setCode(null); setStatus("idle"); setCopied(false); setDirectedEmail(null); setEmail(""); setShowEmail(false); }}
+            onClick={() => { setCode(null); setStatus("idle"); setCopied(false); setDirectedEmail(null); setEmail(""); setShowEmail(false); setPreview(null); }}
             style={{ alignSelf: "flex-start", fontSize: 11.5, fontWeight: 600, color: MIDNIGHT, background: "none", border: "none", padding: 0, cursor: "pointer" }}
           >
             {ko ? "다른 직원용 새 초대 생성" : "Create another"}

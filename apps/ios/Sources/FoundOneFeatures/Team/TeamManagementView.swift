@@ -790,6 +790,8 @@ private struct InviteCreateCard: View {
     @State private var directedEmail: String? = nil
     @State private var showEmailField = false
     @State private var email = ""
+    @State private var preview: BUInvitePreviewResult? = nil
+    @State private var previewing = false
     @State private var copied = false
 
     private enum InviteStatus { case idle, loading, ready, error }
@@ -798,6 +800,31 @@ private struct InviteCreateCard: View {
     private var inviteUrl: String {
         guard let code else { return "" }
         return "\(BUSupabase.shared.env.webAppURL)/invite/\(code)"
+    }
+
+    /// 2026-09-14: 초대 전 **대상 확인** 단계. 오타 하나로 엉뚱한 사람에게 채용 초대장이 가고,
+    ///  사장은 보냈다고 믿는 사고를 막는다. 서버는 가린 이름만 준다(김*현).
+    private func previewTint(_ tone: BUInvitePreviewTone) -> Color {
+        switch tone {
+        case .found:   return BUColor.midnight
+        case .new:     return BUColor.inkMuted
+        case .blocked: return BUColor.warn
+        case .error:   return BUColor.danger
+        }
+    }
+
+    private func lookup() {
+        Task {
+            previewing = true
+            defer { previewing = false }
+            do {
+                // RPC 미배포 환경이면 확인을 건너뛰고 종전처럼 바로 보낼 수 있게 둔다.
+                preview = try await repo.previewInviteTarget(email: email)
+                    ?? .notRegistered(maskedEmail: email, pendingInvite: false)
+            } catch {
+                preview = .notRegistered(maskedEmail: email, pendingInvite: false)
+            }
+        }
     }
 
     private func create(invitedEmail: String?) {
@@ -840,6 +867,8 @@ private struct InviteCreateCard: View {
                             .textInputAutocapitalization(.never)
                             .keyboardType(.emailAddress)
                             .autocorrectionDisabled()
+                            // 주소를 고치면 앞서 확인한 결과는 더 이상 그 주소의 것이 아니다.
+                            .onChange(of: email) { _, _ in preview = nil }
                     }
                     HStack(spacing: 8) {
                         Button { create(invitedEmail: nil) } label: {
@@ -855,13 +884,13 @@ private struct InviteCreateCard: View {
 
                         Button {
                             if !showEmailField { showEmailField = true; return }
-                            if email.contains("@") { create(invitedEmail: email); return }
+                            if email.contains("@") { lookup(); return }
                             showEmailField = false // 빈 입력 상태에서 다시 누르면 접기
                         } label: {
                             let armed = showEmailField && email.contains("@")
-                            Text(status == .loading && showEmailField
-                                 ? "생성 중…"
-                                 : armed ? "✉ 이 이메일로 초대" : "✉ 이메일로 초대")
+                            Text(previewing
+                                 ? "확인 중…"
+                                 : armed ? "계정 확인" : "✉ 이메일로 초대")
                                 .font(.system(size: 13, weight: .heavy))
                                 .foregroundStyle(armed ? .white : BUColor.midnight)
                                 .frame(maxWidth: .infinity)
@@ -874,6 +903,46 @@ private struct InviteCreateCard: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(status == .loading)
+                    }
+                    // 확인 결과 — 여기서 비로소 「추가」를 누른다. 누르면 직원에게 확인 요청이 가고,
+                    //  직원이 수락해야 등록된다(사장이 이메일을 안다고 자동 연결되지 않는다).
+                    if let preview {
+                        let v = BUInvitePreview.view(preview)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(v.title)
+                                .font(.system(size: 13.5, weight: .bold))
+                                .foregroundStyle(previewTint(v.tone))
+                            if case .found(_, let maskedEmail, _, _) = preview {
+                                Text(maskedEmail).font(.system(size: 12).monospaced()).foregroundStyle(BUColor.ink)
+                            } else if case .notRegistered(let maskedEmail, _) = preview {
+                                Text(maskedEmail).font(.system(size: 12).monospaced()).foregroundStyle(BUColor.ink)
+                            }
+                            Text(v.detail)
+                                .font(.system(size: 11.5))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if v.canInvite {
+                                Button { create(invitedEmail: email) } label: {
+                                    Text(status == .loading ? "보내는 중…" : "추가 — 직원에게 확인 요청")
+                                        .font(.system(size: 13, weight: .heavy))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 11)
+                                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 10))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(status == .loading)
+                                .padding(.top, 4)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(13)
+                        .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(previewTint(v.tone).opacity(0.2), lineWidth: 1)
+                        )
                     }
                     if showEmailField {
                         Text("이미 가입한 직원에게 추천 — 그 계정만 수락할 수 있고, 로그인하면 「받은 초대」로 표시됩니다.")

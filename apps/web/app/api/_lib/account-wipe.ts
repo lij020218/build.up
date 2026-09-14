@@ -77,6 +77,8 @@ export const USER_TABLES = [
 export const OWNER_TABLES = [
   "store_invites", "store_members", "payroll_settings",
   "shift_availability", "shift_availability_submissions",
+  // 초대 대상 확인 기록 (2026-09-14) — 누구를 찾아봤는지는 사장 개인 기록이다. 초기화 시 함께 지운다.
+  "invite_lookup_log",
 ] as const;
 
 // recipient_user_id 컬럼 테이블 — 알림함은 user_id 가 아니라 수신자 기준.
